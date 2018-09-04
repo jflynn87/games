@@ -16,7 +16,6 @@ import urllib3
 import json
 import datetime
 import scipy.stats as ss
-from dal import autocomplete
 from django.forms import formset_factory
 
 
