@@ -1,0 +1,110 @@
+{%extends "fb_app/base.html"%}
+{%load staticfiles%}
+{%load mathfilters%}
+{%block body_block%}
+{%load static%}
+
+<table class="table table-striped">
+
+  <thead>
+    <th>week {{week}}</th>
+    {%for player in players%}
+    <th>{{player}}</th>
+      {%endfor%}
+  </thead>
+  <tbody>
+      <tr>
+        <td>rank</td>
+        {%for rank in ranks%}
+        <td class="ranks">{{rank}}</td>
+        {%endfor%}
+      </tr>
+      <tr>
+        <td>score</td>
+        {%for score in scores%}
+        <td>{{score}}</td>
+        {%endfor%}
+      </tr>
+      <tr>
+        <td>projected</td>
+        {%for score in projected_scores%}
+        <td>{{score}}</td>
+        {%endfor%}
+      </tr>
+
+      {%for pick_num, picks in picks.items%}
+      <tr>
+        <td>{{pick_num}}</td>
+        {%for pick in picks%}
+        <td>{{pick}}</td>
+        {%endfor%}
+      </tr>
+      {%endfor%}
+  </tbody>
+</table>
+{%if pending%}
+<p>Picks Pending from: {%for player in pending%} {{player}}  {%endfor%} {%endif%}</p>
+<div class="row">
+<div class="column">
+
+<h4>NFL Scoreboard</h4>
+<table class="table table-sm">
+  <thead>
+  <th>Home</th>
+  <th>Score</th>
+  <th>Visitor</th>
+  <th>Score</th>
+  <th>QTR</th>
+  </thead>
+  <tbody>
+    {%for game in games%}
+    <tr>
+      <td>{{game.home.nfl_abbr}}</td>
+      <td>{{game.home_score}}</td>
+      <td>{{game.away.nfl_abbr}}</td>
+      <td>{{game.away_score}}</td>
+      <td>{{game.qtr}}</td>
+    </tr>
+    {%endfor%}
+  </tbody>
+
+</table>
+</div>
+<div class="column">
+  <h4>Winner/Projected</h4>
+  <table class="table table-sm">
+    <thead>
+    <th>Team</th>
+    </thead>
+    <tbody>
+      {%for game in games%}
+      <form method="post">
+      {%csrf_token%}
+      <tr>
+        {%if game.qtr == "Final"%}
+        <input name="winner" type="hidden" value={{game.winner.nfl_abbr}}>
+        <td>{{game.winner.nfl_abbr}}</td>
+        {%else%}
+        <td><select name='winners'>
+          <option  selected>{{game.winner.nfl_abbr}}</option>
+          <option>{{game.loser.nfl_abbr}}</option>
+        </td>
+      {%endif%}
+      </tr>
+      {%endfor%}
+      </tbody>
+      </table>
+      <button type="submit" class="btn btn-primary">Update Scores</button>
+
+
+</div>
+  </form>
+</div>
+
+<!--
+<script
+  <script src="http://code.jquery.com/jquery-3.3.1.js"
+  integrity="sha256-2Kok7MbOyxpgUVvAk/HJ2jigOSYS2auK4Pfzbm7uH60="
+  crossorigin="anonymous"></script> -->
+  <script src="{% static "fb_app/js/scores.js"%}" type="text/javascript" ></script>
+{%endblock%}

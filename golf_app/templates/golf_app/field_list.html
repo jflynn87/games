@@ -1,0 +1,58 @@
+{% extends "golf_app/golf_app_base.html" %}
+{% block body_block %}
+{% regroup field_list by group as ordered_field_list %}
+
+    <div class="jumbotron">
+
+        {% if user.is_authenticated %}
+        <h1>Hi, {{user.get_username}}!</h1>
+        {%for t in tournament%}
+        <h2>Welcome to the {{t.name}}  </h2>
+        {%endfor%}
+        {%else%}
+        <h1>Please Login <a class="navbar-link" href="{% url 'golf_app:user_login' %}"> <span class="glyphicon glyphicon-user"></span></a></h1>
+        {%endif%}
+
+
+        {% if error_message %}
+          <div class="alert alert-danger">
+          <h2>{{error_message}}</h2>
+          </div>
+
+        {%else%}
+        {%if user.is_authenticated%}
+        <h2>Please make 1 pick for each group below: </h2>
+        {%endif%}
+        {%endif%}
+
+        {% for group in ordered_field_list%}
+        <table class="table">
+          <th>Group:  {{group.grouper}}</th>
+          <th>Name</th>
+          <th>World Golf Ranking</th>
+          <th>Select</th>
+
+        {% for player in group.list%}
+        <tbody>
+            <tr>
+              <td></td>
+              <td>{{player.playerName}}</td>
+              <td>{{player.currentWGR}}</td>
+              <form method="post">
+              {%csrf_token%}
+
+
+              <td> <input type="radio" name="{{group.grouper}}" value="{{player.id}}">  </td>
+            </tr>
+          </tbody>
+              {%endfor%}
+          </table>
+
+          {%endfor%}
+
+  <input type="hidden" name="userid" value="{{user.id}}">
+  <input type="submit" class="btn btn-primary" value="Submit">
+</div>
+</form>
+
+{% endblock %}

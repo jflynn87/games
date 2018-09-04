@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+{%load staticfiles%}
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="utf-8">
+
+
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.6-rc.0/css/select2.min.css" rel="stylesheet" />
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.0/css/bootstrap.min.css" integrity="sha384-9gVQ4dYFwwWSjIDZnLEWnxCjeSWFphJiwGPXr1jddIhOegiu1FwO5qRGvFXOdJZ4" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+  <!-- Optional theme -->
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css" integrity="sha384-rHyoN1iRsVXV4nD0JutlnGaslCJuC7uwjduW9SVrLvRYooPp2bWYgmgJQIXwl/Sp" crossorigin="anonymous">
+  <link rel="stylesheet" href={%static "fb_app/css/my_style.css" %}>
+  <script
+    <script src="http://code.jquery.com/jquery-3.3.1.js"
+    integrity="sha256-2Kok7MbOyxpgUVvAk/HJ2jigOSYS2auK4Pfzbm7uH60="
+    crossorigin="anonymous"></script>
+
+
+
+  <title>Weekly Picks!</title>
+</head>
+<body>
+  <div class="container">
+      <nav class="navbar navbar-default navbar-left">
+        <ul class="nav nav-navbar">
+          <li> <a class="navbar-link" href="{% url 'index' %}">Home</a> </li>
+          <li> <a class="navbar-link" href="{% url 'fb_app:games_list' %}">Make Picks</a></li>
+          <li> <a class="navbar-link" href="{% url 'fb_app:picks_list' %}">View Picks</a></li>
+          <li> <a class="navbar-link" href="{% url 'fb_app:scores_list' %}">Scores</a> </li>
+          {% if user.is_authenticated %}
+          <li> <a class="navbar-link" href="{% url 'logout' %}">Logout</a> </li>
+          {%else%}
+          <li> <a class="navbar-link" href="{% url 'fb_app:user_login' %}"> <span class="glyphicon glyphicon-user"></span></a> </li>
+          {%endif%}
+
+        </ul>
+      </nav>
+  </div>
+
+
+  <div class="container">
+        {%block body_block%}
+
+
+        {%endblock%}
+  </div>
+
+
+</body>
+
+
+</html>

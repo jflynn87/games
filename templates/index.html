@@ -1,0 +1,21 @@
+{% extends 'base.html' %}
+
+{% block body_block %}
+  <div class="jumbotron">
+    <h1>Please choose the game you would like to play from the list below</h1>
+    <p></p>
+    <p></p>
+    <p>Click this button to play the golf game:</p>
+    <a href="{% url 'golf_app:field' %}"> <button class="btn btn-primary">Golf Game</button></a>
+    <p></p>
+    <p>Click this button to play the football game</p>
+    <a href="{% url 'fb_app:games_list' %}"> <button class="btn btn-primary">Football</button></a>
+    <p></p>
+    <p>Click this button to see the Football Fools Scores</p>
+    <p><a href="{% url 'fb_app:scores_list' %}"> <button class="btn btn-primary">Football Fools Scores</button></a>
+    <p></p>
+    <p></p>
+
+
+  </div>
+{% endblock %}

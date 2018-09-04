@@ -1,0 +1,4 @@
+Tournament Name = A Military Tribute at the Greenbrier
+Start Date = 2018-07-05
+Field URL = https://statdata.pgatour.com/r/490/field.json
+Score URL = https://statdata.pgatour.com/r/490/2018/leaderboard-v2mini.json

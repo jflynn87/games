@@ -1,0 +1,25 @@
+{% extends "golf_app/golf_app_base.html" %}
+{% block body_block %}
+
+  <div class="jumbotron">
+
+{%for t in tournament_list%}
+    <h1>{{user.get_username}}, here are your picks for the {{t}}.  Good luck!</h1>
+{%endfor%}
+
+      <ul>
+        {% for pick in picks_list%}
+
+        <li>Group {{pick.playerName.group}}:    {{pick.playerName}}</li>
+
+        {%endfor%}
+      </ul>
+<form method="post">
+  {%csrf_token%}
+  <input type="submit" class="btn btn-primary" value="Delete Picks">
+
+</form>
+  </div>
+
+
+{% endblock %}

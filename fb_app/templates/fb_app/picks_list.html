@@ -1,0 +1,27 @@
+{%extends "fb_app/base.html"%}
+{%load staticfiles%}
+{%load mathfilters%}
+{%block body_block%}
+
+
+  <div class="jumbotron">
+
+
+    <h1>{{user.get_username}}, here are your picks for week {{week.week}}.  Good luck!</h1>
+
+
+      <ul>
+        {% for pick in picks_list%}
+
+        <li>Pick {{pick.pick_num}}:    {{pick.team.mike_abbr}}</li>
+
+        {%endfor%}
+      </ul>
+      <a href="{% url 'fb_app:games_list' %}"> <button class="btn btn-primary">Update Picks</button></a>
+  </div>
+
+
+
+
+
+{%endblock%}

@@ -1,0 +1,87 @@
+{%extends "fb_app/base.html"%}
+{%load staticfiles%}
+{%load mathfilters%}
+{%block body_block%}
+
+<div class="row">
+<div class="column">
+  <p>Drag and drop your pick to the pick list.  CAPS = home team, lowercase = road team</p>
+
+<div class="games">
+   <table class='table table-sm'>
+     <thead>
+       <th>Game Day/Time</th>
+      <th>Favorite</th>
+      <th>Opening Line</th>
+      <th>Current Line</th>
+      <th>Dog</th>
+    </thead>
+    <tbody id="game_tbl">
+      {%for game in games_list%}
+      <tr id='game{{forloop.counter}}'>
+        <td>{{game.day}} {{game.time}}</td>
+        {%if game.fav == game.home%}
+        <td id="fav{{forloop.counter}}" draggable="true" ondragstart="drag(event)">{%if game.fav%} {{game.fav}} {%else%} {{game.home}}{%endif%}</td>
+        {%else%}
+        <td id="fav{{forloop.counter}}" draggable="true" ondragstart="drag(event)">{%if game.fav%} {{game.fav | lower}} {%else%} {{game.home}}{%endif%}</td>
+        {%endif%}
+        <td class="spread">{{game.opening}}</td>
+        <td class="spread"> {{game.spread}} </td>
+        {%if game.dog == game.home%}
+        <td id="dog{{forloop.counter}}" draggable="true" ondragstart="drag(event)">{%if game.dog%}{{game.dog}} {%else%} {{game.away}} {%endif%}</td>
+        {%else%}
+        <td id="dog{{forloop.counter}}" draggable="true" ondragstart="drag(event)">{%if game.dog%}{{game.dog | lower}} {%else%} {{game.away | lower}} {%endif%}</td>
+        {%endif%}
+      </tr>
+
+      {%endfor%}
+    </tbody>
+   </table>
+</div>
+</div>
+
+<div class="column">
+  <p>Drop teams here to make picks.  Double click on a pick to reset</p>
+  <input type="radio" id="style1" name="style" value="">
+  <label for="style1">Type</label>
+  <input type="radio" id="style2" name="style" value="">
+  <label for="style2">drag/drop</label>
+
+  <div id="pickstbl" class="table table-sm">
+
+    <table>
+    <thead>
+        <th>Pick#</th>
+        <th>Pick List</th>
+    </thead>
+    <tbody>
+      {%if picks_list%}
+      {%for pick in picks_list%}
+      <tr>
+        <td>{{17|sub:forloop.counter}}</td>
+        <form id="pick_form" class="picks" method="POST">
+          {%csrf_token%}
+          <td id=pick{{17|sub:forloop.counter}}  ondragstart="return false" class="dropzone" ondrop="drop(event)" ondragover="allowDrop(event)">{{pick.team}}</td>
+          <input type="hidden" id=pick_list{{17|sub:forloop.counter}} name="pick_list" >
+      {%endfor%}
+
+      {%else%}
+      {%for game in games_list%}
+      <tr>
+        <td>{{17|sub:forloop.counter}}</td>
+        <form id="pick_form" class="picks" name="pick_list" method="POST">
+        <!-- <form id="pick_form" class="picks" method="POST"> -->
+        {%csrf_token%}
+        <td id=pick{{17|sub:forloop.counter}}  ondragstart="return false" class="dropzone" ondrop="drop(event)" ondragover="allowDrop(event)"></td>
+        <input type="hidden" id=pick_list{{17|sub:forloop.counter}} name="pick_list" value="">
+      {%endfor%}
+      {%endif%}
+      </tbody>
+  </table>
+
+  <button type="submit" onclick="submitpicks()" class="btn btn-primary">Submit Picks</button>
+</form>
+  </div>
+</div>
+
+{%endblock%}

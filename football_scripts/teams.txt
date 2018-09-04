@@ -1,0 +1,32 @@
+CIN,CIN,cincinnati,CINN
+IND,IND,indianapolis,None
+ATL,ATL,atlanta,None
+MIA,MIA,miami,None
+JETS,NYJ,ny jets,None
+PHI,PHI,philadelphia,None
+CLE,CLE,cleveland,None
+DET,DET,detroit,None
+GIA,NYG,ny giants,None
+NE,NE,new england,None
+BAL,BAL,baltimore,None
+WAS,WAS,washington,None
+PITT,PIT,pittsburgh,PIT
+CAR,CAR,carolina,None
+TB,TB,tampa bay,None
+JAX,JAX,jacksonville,JAC
+CHI,CHI,chicago,None
+BUF,BUF,buffalo,None
+TEN,TEN,tennessee,TENN
+MIN,MIN,minnesota,MINN
+NO,NO,new orleans,None
+LAR,LA,la rams,STL
+HOU,HOU,houston,None
+DAL,DAL,dallas,None
+KC,KC,kansas city,None
+GB,GB,green bay,None
+ARI,ARI,arizona,None
+DEN,DEN,denver,None
+SF,SF,san francisco,None
+LAC,LAC,la chargers,SD
+SEA,SEA,seattle,None
+OAK,OAK,oakland,None
