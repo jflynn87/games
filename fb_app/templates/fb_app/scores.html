@@ -7,10 +7,10 @@
 <table class="table table-striped">
 
   <thead>
-    <th>week {{week}}</th>
+     <th>week {{week}}</th>
     {%for player in players%}
     <th>{{player}}</th>
-      {%endfor%}
+      {%endfor%} 
   </thead>
   <tbody>
       <tr>
@@ -40,6 +40,21 @@
         {%endfor%}
       </tr>
       {%endfor%}
+      <tr>
+        <td>total</td>
+      {%for score in scores%}
+        <td class="ranks">{{score}}</td>
+      {%endfor%}
+      </tr>
+      <tr>
+        <td>season rank</td>
+        {%for rank in season_ranks%}
+        <td class="ranks">{{rank}}</td>
+        {%endfor%}
+      </tr>
+
+
+
   </tbody>
 </table>
 {%if pending%}

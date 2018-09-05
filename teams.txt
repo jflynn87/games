@@ -19,7 +19,7 @@ BUF,BUF,buffalo,None
 TEN,TEN,tennessee,TENN
 MIN,MIN,minnesota,MINN
 NO,NO,new orleans,None
-LAR,LA,la rams,STL
+RAMS,LA,la rams,STL
 HOU,HOU,houston,None
 DAL,DAL,dallas,None
 KC,KC,kansas city,None

@@ -55,11 +55,11 @@ def readSheet(file,numPlayers):
             scores.save()
 
             i = 1
-            while i <= app_week.game_cnt: #change this to the len of games from games.py
+            while i <= app_week.game_cnt:
                 pick = sheet[(player_i + (numPlayers * i))]
                 #game.append(sheet[(player_i + (numPlayers * i))])
                 #picks[player] = game
-
+                
                 pick_team = Teams.objects.get(mike_abbr=pick)
                 sheet_picks = Picks()
                 sheet_picks.player = player
