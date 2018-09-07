@@ -10,7 +10,7 @@
      <th>week {{week}}</th>
     {%for player in players%}
     <th>{{player}}</th>
-      {%endfor%} 
+      {%endfor%}
   </thead>
   <tbody>
       <tr>
@@ -31,6 +31,14 @@
         <td>{{score}}</td>
         {%endfor%}
       </tr>
+      <tr>
+        <td>projected rank</td>
+        {%for rank in projected_ranks%}
+        <td class=ranks>{{rank}}</td>
+        {%endfor%}
+      </tr>
+
+
 
       {%for pick_num, picks in picks.items%}
       <tr>
@@ -41,9 +49,9 @@
       </tr>
       {%endfor%}
       <tr>
-        <td>total</td>
+        <td>season total</td>
       {%for score in scores%}
-        <td class="ranks">{{score}}</td>
+        <td> {{score}}</td>
       {%endfor%}
       </tr>
       <tr>
@@ -97,12 +105,12 @@
       {%csrf_token%}
       <tr>
         {%if game.qtr == "Final"%}
-        <input name="winner" type="hidden" value={{game.winner.nfl_abbr}}>
+        <input name="winners" type="hidden" value={{game.winner.nfl_abbr}}>
         <td>{{game.winner.nfl_abbr}}</td>
         {%else%}
-        <td><select name='winners'>
-          <option  selected>{{game.winner.nfl_abbr}}</option>
-          <option>{{game.loser.nfl_abbr}}</option>
+        <td><select name='projected'>
+          <option  selected>{{game.home.nfl_abbr}}</option>
+          <option>{{game.away.nfl_abbr}}</option>
         </td>
       {%endif%}
       </tr>

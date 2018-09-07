@@ -46,11 +46,11 @@ class Teams(models.Model):
 
 class Games(models.Model):
     eid = models.CharField(max_length=30)
-    week = models.ForeignKey(Week,on_delete=models.CASCADE)
+    week = models.ForeignKey(Week,on_delete=models.CASCADE, db_index=True)
     fav = models.ForeignKey(Teams, on_delete=models.CASCADE,null=True, related_name='fav')
     dog = models.ForeignKey(Teams, on_delete=models.CASCADE,null=True, related_name='dog')
-    home = models.ForeignKey(Teams, on_delete=models.CASCADE,null=True, related_name='home')
-    away = models.ForeignKey(Teams, on_delete=models.CASCADE,null=True, related_name='away')
+    home = models.ForeignKey(Teams, on_delete=models.CASCADE,null=True, related_name='home', db_index=True)
+    away = models.ForeignKey(Teams, on_delete=models.CASCADE,null=True, related_name='away', db_index=True)
     opening = models.CharField(max_length=10, null=True)
     spread = models.CharField(max_length=10,null=True)
     winner = models.ForeignKey(Teams, on_delete=models.CASCADE,null=True, related_name='winner')
@@ -66,6 +66,9 @@ class Games(models.Model):
 
     def __str__(self):
         return str(self.home) + str(self.away)
+
+    class Meta:
+        index_together = ['week', 'home', 'away']
 
 
     #def get_game_id(self):
@@ -86,13 +89,16 @@ class Player(models.Model):
         return str(self.name)
 
 class Picks(models.Model):
-    week = models.ForeignKey(Week,on_delete=models.CASCADE)
-    player  = models.ForeignKey(Player,on_delete=models.CASCADE,related_name="picks")
+    week = models.ForeignKey(Week,on_delete=models.CASCADE, db_index=True)
+    player  = models.ForeignKey(Player,on_delete=models.CASCADE,related_name="picks", db_index=True)
     pick_num = models.PositiveIntegerField()
     team = models.ForeignKey(Teams, on_delete=models.CASCADE, related_name="picksteam")
 
     def __str__(self):
         return str(self.player)
+
+    class Meta:
+        index_together = ['week', 'player']
 
 class WeekScore(models.Model):
     week = models.ForeignKey(Week, on_delete=models.CASCADE)

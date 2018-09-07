@@ -25,6 +25,10 @@ body {
   height: 60%;
 }
 
+.footnote {
+  color: blue;
+}
+
 #teams tr {
   cursor: move;
 }

@@ -5,6 +5,8 @@ import django
 django.setup()
 from fb_app.models import Week, Player, Picks, Teams, MikeScore
 from django.contrib.auth.models import User
+from django.core.exceptions import ObjectDoesNotExist
+from fb_app import validate_picks
 
 
 def readSheet(file,numPlayers):
@@ -40,37 +42,58 @@ def readSheet(file,numPlayers):
             if tag.text not in (' ', '1','2','3','4','5','6','7','8','9','10','11','12','13','14','15','16'):
                 if len(tag.text) > 1:
                     sheet.append(tag.text)
-        #print (sheet)
+        print (sheet)
 
         player_i = 0
+        pick_list = []
         while player_i < numPlayers:
             player = sheet[player_i]
+            print (player)
             #winner = 1
             user = User.objects.get(username=player)
             player = Player.objects.get(name=user)
-            scores = MikeScore()
-            scores.week = app_week
-            scores.player = player
-            scores.total = sheet[(player_i + (numPlayers * 16) + numPlayers)]
-            scores.save()
+            #scores = MikeScore()
+            #scores.week = app_week
+            #scores.player = player
+            #scores.total = sheet[(player_i + (numPlayers * 16) + numPlayers)]
+            #scores.save()
 
             i = 1
             while i <= app_week.game_cnt:
                 pick = sheet[(player_i + (numPlayers * i))]
                 #game.append(sheet[(player_i + (numPlayers * i))])
                 #picks[player] = game
-                
-                pick_team = Teams.objects.get(mike_abbr=pick)
+
+                try:
+                    pick_team = Teams.objects.get(mike_abbr=pick)
+                except ObjectDoesNotExist:
+                    print ('mike abbr not found', player, pick)
+                    try:
+                        pick_team = Teams.objects.get(typo_name=pick)
+                    except ObjectDoesNotExist:
+                        pick_team = Teams.objects.get(typo_name1=pick)
+                except Exception as e:
+                        print (e)
+                        print ('pick exception' + str(player) + str(pick))
+
+
+
                 sheet_picks = Picks()
                 sheet_picks.player = player
                 sheet_picks.week = app_week
                 sheet_picks.pick_num = (17 - i)
                 sheet_picks.team = pick_team
                 sheet_picks.save()
-
+                pick_list.append(str(pick_team))
                 i += 1
+
+            picks_check = validate_picks.validate(pick_list)
+            if not picks_check[0]:
+                print (picks_check[0], picks_check[1])
+
+            pick_list = []
             player_i +=1
 
 
 
-readSheet('C:/Users/John/Documents/pooltest3.xml', 24)
+readSheet('C:/Users/John/Documents/18-19 FOOTBALL FOOLS.xml', 25)

@@ -11,7 +11,7 @@ def load_users():
 
     user_list=['NU', 'JABO',	'CAKE',	'Wheel', 'DMC',	'NORM',	'NITNY', 'HANK',
 	   'ADOLF', 'CU', 'MILT', 'OB', 'SQUIG', 'TOKYO', 'LEFTY', 'FSU', 'SIEG',
-       'JB', 'FISH', 'WHALE', 'SLIM', '4JULY',	'KEY LARGO', 'NJN EER']
+       'JB', 'LiL B', 'WHALE', 'SLIM', '4JULY',	'KEY LARGO', 'NJN EER', 'ESPN PALS']
 
     for userID in user_list:
         user=User()
