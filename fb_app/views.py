@@ -239,11 +239,16 @@ class ScoresView(TemplateView):
                 game = Games.objects.get(winner=team_obj)
                 loser_list.append(Teams.objects.get(nfl_abbr=game.loser))
             projected = self.request.POST.getlist('projected')
+            print (self.request.POST, 'tie')
+            for team in self.request.POST.getlist('tie'):
+                print ('ties',team)
+                projected.append(team)
+
 
             for proj in projected:
 
                 proj_obj = Teams.objects.get(nfl_abbr=proj)
-                print (proj_obj)
+
                 try:
                     if Games.objects.get(winner=proj_obj, week=week):
                         game = Games.objects.get(winner=proj_obj, week=week)
@@ -447,24 +452,14 @@ class ScoresView(TemplateView):
             projected_score = 0
 
             for pick in Picks.objects.filter(Q(player=player) & Q(week=week) & (Q(team__in=loser_list) | Q(team__in=proj_loser_list))):
-                        print (pick)
-                #game = Games.objects.get((Q(home=pick.team) | Q(away=pick.team)) & Q(week=week))
-                #if game.qtr == "Final":
-                #    if game.tie:
-                #        score += pick.pick_num
-                #    elif pick.team == game.loser:
-                #        score += pick.pick_num
-                #else:
-                #    if winner_list:
+                if pick.team in loser_list:
+                    score += pick.pick_num
+                elif pick.team in proj_loser_list:
+                    projected_score += pick.pick_num
 
-                        if pick.team in loser_list:
-                            score += pick.pick_num
-                        elif pick.team in proj_loser_list:
-                            projected_score += pick.pick_num
-
-                        setattr (score_obj, "score", score)
-                        setattr (score_obj, "projected_score", projected_score)
-                        score_obj.save()
+                setattr (score_obj, "score", score)
+                setattr (score_obj, "projected_score", projected_score)
+                score_obj.save()
 
 
             scores_list.append(score)
