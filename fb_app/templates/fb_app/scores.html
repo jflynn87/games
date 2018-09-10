@@ -115,8 +115,10 @@
       <tr>
         {%if game.qtr == "final overtime" and game.tie%}
         <td>Tie, no winner </td>
-        <input name='tie' type="hidden" value={{game.home.nfl_abbr}}</td>
-        <input name='tie' type="hidden" value={{game.away.nfl_abbr}}</td>
+        <input name='tie' type="hidden" value={{game.home.nfl_abbr}}>
+        <input name='tie' type="hidden" value={{game.away.nfl_abbr}}>
+        <td hidden>{{game.home.nfl_abbr}}</td>
+        <td hidden>{{game.away.nfl_abbr}}</td>
 
         {%elif game.qtr == "Final" %}
         <input name="winners" type="hidden" value={{game.winner.nfl_abbr}}>
