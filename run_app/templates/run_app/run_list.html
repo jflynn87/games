@@ -1,0 +1,35 @@
+{%extends "run_app/base.html"%}
+{%load staticfiles%}
+
+
+{%block body_block%}
+
+<h1>Run List</h1>
+<br>
+<a href="{% url 'run_app:add_run' %}"> <button class="btn btn-primary">Add Run</button></a>
+
+<br>
+<br>
+<table class="table">
+  <thead>
+    <th>Date</th>
+    <th>Dist</th>
+    <th>Time</th>
+    <th>Cals</th>
+    <th>Where</th>
+    <th>Shoes</th>
+  </thead>
+  <tbody>
+    {%for run in run_list%}
+    <tr>
+      <td><a href='/run_app/update_run/{{run.id}}/'>{{run.date}}</td>
+      <td>{{run.dist}}</td>
+      <td>{{run.tiem}}</td>
+      <td>{{run.cals}}</td>
+      <td>{{run.location}}</td>
+      <td>{{run.shoes}}</td>
+    </tr>
+    {%endfor%}
+  </tbody>
+</table>
+{%endblock%}

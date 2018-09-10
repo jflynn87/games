@@ -15,7 +15,7 @@
   <body>
     <div class="container">
         <nav class="navbar navbar-default navbar-left">
-          <ul class="nav nav-navbar">
+          <ul class='navbar nav'>
             {% if user.is_authenticated %}
             <li> <a class="navbar-link" href="{% url 'logout' %}">Logout</a> </li>
             {%else%}

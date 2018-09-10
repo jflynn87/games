@@ -4,6 +4,8 @@
 {%block body_block%}
 {%load static%}
 
+
+
 <table class="table table-striped">
 
   <thead>
@@ -22,9 +24,10 @@
       <tr>
         <td>score</td>
         {%for score in scores%}
-        <td>{{score}}</td>
+        <td class=>{{score}}</td>
         {%endfor%}
       </tr>
+
       <tr>
         <td>projected</td>
         {%for score in projected_scores%}
@@ -59,6 +62,12 @@
         {%for rank in season_ranks%}
         <td class="ranks">{{rank}}</td>
         {%endfor%}
+      </tr>
+      <tr>
+         <th>week {{week}}</th>
+        {%for player in players%}
+        <th>{{player}}</th>
+          {%endfor%}
       </tr>
 
 
@@ -104,7 +113,10 @@
       <form method="post">
       {%csrf_token%}
       <tr>
-        {%if game.qtr == "Final"%}
+        {%if game.qtr == "final overtime" and game.tie%}
+        <td>Tie, no winner </td>
+
+        {%elif game.qtr == "Final" %}
         <input name="winners" type="hidden" value={{game.winner.nfl_abbr}}>
         <td>{{game.winner.nfl_abbr}}</td>
         {%else%}

@@ -17,6 +17,7 @@
     <p></p>
     {%if user.is_superuser%}
       <p><a href="{% url 'admin:index' %}"> <button class="btn btn-primary">Admin</button></a>
+      <p><a href="{% url 'run_app:add_run' %}"> <button class="btn btn-primary">Add Run </button></a>
     {%endif%}
 
 

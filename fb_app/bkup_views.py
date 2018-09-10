@@ -215,34 +215,139 @@ class ScoresView(TemplateView):
     def get_context_data(self, **kwargs):
         context = super(ScoresView, self).get_context_data(**kwargs)
 
+        base_data = self.get_base_data()
+
+        user = base_data[0]
+        player = base_data[1]
+        league = base_data[2]
+        week = base_data[3]
+
+
+        pick_data = self.get_picks(player, league, week)
+
+        player_list = pick_data[0]
+        pick_pending = pick_data[1]
+        pick_dict = pick_data[2]
+
+        if self.request.POST:
+            winners = self.request.POST.getlist('winners')
+            projected = self.request.POST.getlist('projected')
+            win_list = winners + projected
+            scores = self.calc_scores(player, week, player_list, pick_dict, win_list)
+        else:
+            scores = self.calc_scores(player, week, player_list, pick_dict)
+
+        scores_list = scores[0]
+        ranks = scores[1]
+        projected_scores = scores[2]
+        projected_ranks = scores[3]
+        total_score_list = scores[4]
+        season_ranks = scores[5]
+        #gets picks for any player with picks
+        #get scores
+
+        #get game id's to look up score in json files
+        #add a query to skip if all games are done and updated in db
+
+        context.update({
+        'players': player_list,
+        'picks': pick_dict,
+        'week': week,
+        'pending': pick_pending,
+        'games': Games.objects.filter(week=week).order_by('eid'),
+        'scores': scores_list,
+        'projected_ranks': projected_ranks,
+        'projected_scores': projected_scores,
+        'ranks': ranks,
+        'totals': total_score_list,
+        'season_ranks': season_ranks,
+        })
+        #print (context)
+        return context
+
+    def post(self, request):
+
+        context = self.get_context_data()
+        #print (context)
+
+        return render(request, 'fb_app/scores.html', {
+        'players': context['players'],
+        'picks': context['picks'],
+        'week': context['week'],
+        'pending': context['pending'],
+        'games': context['games'],
+        'scores': context['scores'],
+        'projected_ranks': context['projected_ranks'],
+        'projected_scores': context['projected_scores'],
+        'ranks': context['ranks'],
+        'totals': context['totals'],
+        'season_ranks': context['season_ranks'],
+        })
+
+
+
+#        base_data = get_base_data()
+
+#        user = base_data[0]
+#        player = base_data[1]
+#        league = base_data[2]
+#        week = base_data[3]
+
+#        scores = calc_score.calc_score(league, win_list)
+
+#        ranks = ss.rankdata(scores[0], method='min')
+#        projected_ranks = ss.rankdata(scores[1], method='min')
+
+#        return render('fb_app:scores', {
+#            'players': player_list,
+#            'picks': pick_dict,
+#            'week': week,
+#            'pending': pick_pending,
+#            'games': Games.objects.filter(week=week),
+#            'scores': scores[0],
+#            'projected_ranks': projected_ranks,
+#            'projected_scores': scores[1],
+#            'ranks': ranks,
+#            'totals': total_score_list,
+#            'season_ranks': season_ranks,
+#        })
+
+
+    def get_base_data(self):
+        '''takes in self object and calculates the user, player, league and week,
+         returns a tuple of objects'''
+
+        week = Week.objects.get(current=True)
+
         if self.request.user.is_authenticated:
             user = User.objects.get(username=self.request.user)
             player = Player.objects.get(name=user)
             league = player.league
+
         else:
             league = League.objects.get(league="Football Fools")
+            user= None
+            player = None
+
+        return (user, player, league, week)
 
 
-        week = Week.objects.get(current=True)
+
+    def get_picks(self, player, league, week):
+        '''takes in objects from base and returns a tuple with player lists and
+        a dictionary of picks'''
 
         player_list = []
-        pick_dict = {}
         pick_list = []
-        pick_num = 16
         pick_pending = []
+        pick_dict = {}
+        pick_num = 16
 
-        #if league.league == "Football Fools":
-        #    for player in Player.objects.filter(league=league):
-        #        player_list.append(player)
-        #else:
-        #player list for header or footnote if no picks
         for player in Player.objects.filter(league=league).order_by('name'):
             if Picks.objects.filter(week=week, player=player):
                 player_list.append(player)
             else:
                 pick_pending.append(player)
-
-        #gets picks for any player with picks
 
         while pick_num > 0:
             if Picks.objects.filter(week=week, pick_num=pick_num, player__league=league):
@@ -252,80 +357,76 @@ class ScoresView(TemplateView):
                pick_list = []
             pick_num -= 1
 
-        print (pick_dict)
-        #get scores
+        return (player_list, pick_pending, pick_dict)
 
-        #get game id's to look up score in json files
-        #add a query to skip if all games are done and updated in db
+
+    def calc_scores(self, player, week, player_list, pick_dict, winner_list=None):
+
         print ('starting nfl json lookup')
         print (datetime.datetime.now())
-        json_url = 'http://www.nfl.com/liveupdate/scores/scores.json'
 
-        with urllib.request.urlopen(json_url) as field_json_url:
-            data = json.loads(field_json_url.read().decode())
+        if Games.objects.filter(week=week).exclude(final=True).exists():
+            json_url = 'http://www.nfl.com/liveupdate/scores/scores.json'
 
-        #use for testing
-        #with open ('c:/users/john/pythonProjects/games/gamesProj/fb_app/nfl_scores.json') as f:
-        #    data = json.load(f)
+            with urllib.request.urlopen(json_url) as field_json_url:
+                data = json.loads(field_json_url.read().decode())
 
+            #use for testing
+            #with open ('c:/users/john/pythonProjects/games/gamesProj/fb_app/nfl_scores.json') as f:
+            #    data = json.load(f)
 
+            try:
+                    for game in Games.objects.filter(week=week).exclude(final=True):
+                        home_score = data[game.eid]['home']['score']['T']
+                        home_team = data[game.eid]['home']["abbr"]
+                        away_team = data[game.eid]['away']["abbr"]
+                        away_score = data[game.eid]['away']['score']['T']
+                        qtr = data[game.eid]["qtr"]
 
+                        if home_score == away_score:
+                            tie = True
+                            winner = None
+                            loser = None
+                        elif home_score > away_score:
+                            winner = Teams.objects.get(nfl_abbr=home_team)
+                            loser = Teams.objects.get(nfl_abbr=away_team)
+                            tie = False
+                        else:
+                            winner = Teams.objects.get(nfl_abbr=away_team)
+                            loser = Teams.objects.get(nfl_abbr=home_team)
+                            tie = False
 
-        try:
-          #for game in Games.objects.filter(week=0):
-          for game in Games.objects.filter(week=week).exclude(final=True):
-            home_score = data[game.eid]['home']['score']['T']
-            home_team = data[game.eid]['home']["abbr"]
-            away_team = data[game.eid]['away']["abbr"]
-            away_score = data[game.eid]['away']['score']['T']
-            qtr = data[game.eid]["qtr"]
+                        setattr(game, 'home_score',home_score)
+                        setattr(game, 'away_score',away_score)
+                        setattr(game, 'winner', winner)
+                        setattr(game, 'loser', loser)
+                        setattr(game, 'qtr',qtr)
+                        if qtr == "Final":
+                            setattr(game, 'final', True)
+                            setattr(game, 'tie', tie)
+                        else:
+                            setattr(game, 'tie', False)
 
-            if home_score == away_score:
-                tie = True
-                winner = None
-                loser = None
-            elif home_score > away_score:
-                winner = Teams.objects.get(nfl_abbr=home_team)
-                loser = Teams.objects.get(nfl_abbr=away_team)
-                tie = False
-            else:
-                winner = Teams.objects.get(nfl_abbr=away_team)
-                loser = Teams.objects.get(nfl_abbr=home_team)
-                tie = False
-
-
-
-            setattr(game, 'home_score',home_score)
-            setattr(game, 'away_score',away_score)
-            setattr(game, 'winner', winner)
-            setattr(game, 'loser', loser)
-            setattr(game, 'qtr',qtr)
-            if qtr == "Final":
-                setattr(game, 'final', True)
-                setattr(game, 'tie', tie)
-            else:
-                setattr(game, 'tie', False)
-
-            game.save()
+                        game.save()
 
 
-        except KeyError:
-            print ('NFL score file not ready for the week')
-            pass
+            except KeyError:
+                    print ('NFL score file not ready for the week')
+                    pass
 
         print ('player and score object creation start')
         print (datetime.datetime.now())
         scores_list = []
         projected_scores_list = []
         total_score_list = []
-        for player in Player.objects.filter(league=league):
+
+
+        for player in player_list:
             score_obj, created = WeekScore.objects.get_or_create(player=player, week=week)
-            #score_obj = WeekScore.objects.get_or_create(player=player, week=week)
             score = 0
             projected_score = 0
 
             for pick in Picks.objects.filter(player=player, week=week):
-
                 game = Games.objects.get((Q(home=pick.team) | Q(away=pick.team)) & Q(week=week))
                 if game.qtr == "Final":
                     if game.tie:
@@ -333,8 +434,12 @@ class ScoresView(TemplateView):
                     elif pick.team == game.loser:
                         score += pick.pick_num
                 else:
-                    if pick.team == game.loser:
-                        projected_score += pick.pick_num
+                    if winner_list:
+                        if pick.team.nfl_abbr not in winner_list:
+                            projected_score += pick.pick_num
+                    else:
+                        if pick.team == game.loser:
+                            projected_score += pick.pick_num
 
                 setattr (score_obj, "score", score)
                 setattr (score_obj, "projected_score", projected_score)
@@ -344,8 +449,6 @@ class ScoresView(TemplateView):
             projected_scores_list.append(score + projected_score)
 
             #calculate season totals
-
-
             total_score = 0
 
             for weeks in WeekScore.objects.filter(player=player, week__week__lte=week.week):
@@ -359,64 +462,7 @@ class ScoresView(TemplateView):
         print ('sending context')
         print (datetime.datetime.now())
 
-        context.update({
-        'players': player_list,
-        'picks': pick_dict,
-        'week': week,
-        'pending': pick_pending,
-        'games': Games.objects.filter(week=week),
-        'scores': scores_list,
-        'projected_ranks': projected_ranks,
-        'projected_scores': projected_scores_list,
-        'ranks': ranks,
-        'totals': total_score_list,
-        'season_ranks': season_ranks,
-        })
-        #print (context)
-        return context
-
-    def post(self, request):
-        winners = request.POST.getlist('winners')
-        projected = request.POST.getlist('projected')
-
-        win_list = winners + projected
-
-        if self.request.user.is_authenticated:
-            user = User.objects.get(username=self.request.user)
-            player = Player.objects.get(name=user)
-            league = player.league
-        else:
-            league = League.objects.get(league="Football Fools")
-
-        scores = calc_score.calc_score(league, win_list)
-
-        ranks = ss.rankdata(scores[0], method='min')
-        projected_ranks = ss.rankdata(scores[1], method='min')
-
-        print (scores)
-
-        return render('fb_app:scores', {
-            'players': player_list,
-            'picks': pick_dict,
-            'week': week,
-            'pending': pick_pending,
-            'games': Games.objects.filter(week=week),
-            'scores': scores[0],
-            'projected_ranks': projected_ranks,
-            'projected_scores': scores[1],
-            'ranks': ranks,
-            'totals': total_score_list,
-            'season_ranks': season_ranks,
-        })
-
-def build_scores_context(player):
-    total_score = 0
-
-    for weeks in WeekScore.objects.filter(player=player, week__week__lte=week.week):
-        total_score += weeks.score
-    total_score_list.append(total_score)
-
-
+        return (scores_list, ranks, projected_scores_list, projected_ranks, total_score, season_ranks)
 
 
 @login_required

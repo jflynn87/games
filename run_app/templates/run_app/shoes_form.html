@@ -1,0 +1,19 @@
+{%extends "run_app/base.html"%}
+{%include staticfiles%}
+{%load bootstrap%}
+
+{%block body_block%}
+{% if not form.instance.pk %}
+Create Shoe
+{% else %}
+Update Shoe
+{% endif %}
+
+<form method="POST">
+  {% csrf_token %}
+  {{form|bootstrap}}
+  <input type="submit" class='btn btn-primary' value="Submit">
+
+</form>
+
+{%endblock%}

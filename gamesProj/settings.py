@@ -44,8 +44,10 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'golf_app',
     'fb_app',
+    'run_app',
     'mathfilters',
     'django_select2',
+    'bootstrapform',
 ]
 
 MIDDLEWARE = [

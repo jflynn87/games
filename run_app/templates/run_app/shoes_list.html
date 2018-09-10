@@ -1,0 +1,26 @@
+{%extends "run_app/base.html"%}
+{%load staticfiles%}
+
+{%block body_block%}
+
+<h1>Shoe List</h1>
+<br>
+<a href="{% url 'run_app:add_shoe' %}"> <button class="btn btn-primary">Add Shoe</button></a>
+
+<br>
+<br>
+<table class="table">
+  <thead>
+    <th>Shoe Name</th>
+    <th>Is Active?</th>
+  </thead>
+  <tbody>
+    {%for shoe in shoes_list%}
+    <tr>
+      <td><a href='/run_app/update_shoe/{{shoe.id}}/'>{{shoe.name}}</td>
+        <td>{{shoe.active}}</td>
+    </tr>
+    {%endfor%}
+  </tbody>
+</table>
+{%endblock%}

@@ -5,6 +5,7 @@ body {
     height: 100%;
 }
 
+
 * {
     box-sizing: border-box;
 
@@ -37,3 +38,9 @@ body {
   padding-left: 15px;
   padding-right: 20px;
 }
+
+
+/*tbody {
+  posiion: fixed;
+}
+*/

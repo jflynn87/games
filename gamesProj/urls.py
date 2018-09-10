@@ -25,4 +25,5 @@ urlpatterns = [
     url(r'^logout/$',views.user_logout,name='logout'),
     url(r'^fb_app/', include('fb_app.urls',namespace='fb_app')),
     url(r'^golf_app/', include('golf_app.urls',namespace='golf_app')),
+    url(r'^run_app/', include('run_app.urls',namespace='run_app')),
 ]
