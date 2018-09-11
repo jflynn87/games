@@ -28,16 +28,20 @@ class ShoeListView(ListView):
         num_runs = Run.objects.all().count()
         total_dist = Run.objects.aggregate(Sum('dist'))
         runtime = Run.objects.aggregate(Sum('time'))
-        total_time = str(datetime.timedelta(seconds=runtime))
-        total_cals = Run.objects.aggregate(Sum('time'))
+        total_time = runtime.get('time__sum')
+        total_cals = Run.objects.aggregate(Sum('cals'))
         start_date = Run.objects.earliest('date')
         summary_list = [num_runs, total_dist, total_time, total_cals, start_date]
-        print (num_runs, total_dist,  total_time, start_date.date)
+
         context.update({
              'shoes_list': list,
-             'summary_list': summary_list
+             'total_dist': total_dist,
+             'num_runs': num_runs,
+             'total_time': total_time,
+             'total_cals': total_cals,
+             'start_date': start_date
          })
-        print (context)
+        
         return context
 
 

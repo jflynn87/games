@@ -1,7 +1,12 @@
 {%extends "run_app/base.html"%}
 {%load staticfiles%}
-
+{% load humanize %}
 {%block body_block%}
+
+<h1>Summary</h1>
+
+<h4>since {{start_date.date}} - {{num_runs}} runs; {{total_dist.dist__sum|floatformat}}km; {{total_cals.cals__sum|intcomma}} cals; {{total_time}}</h4>
+
 
 <h1>Shoe List</h1>
 <br>
@@ -9,7 +14,6 @@
 
 <br>
 <br>
-{{summary_list}}
 
 <table class="table">
   <thead>

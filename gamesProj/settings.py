@@ -48,6 +48,7 @@ INSTALLED_APPS = [
     'mathfilters',
     'django_select2',
     'bootstrapform',
+    'django.contrib.humanize',
 ]
 
 MIDDLEWARE = [
