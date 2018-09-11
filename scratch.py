@@ -1,15 +1,16 @@
 import os
-os.environ.setdefault("DJANGO_SETTINGS_MODULE","fb_proj.settings")
+os.environ.setdefault("DJANGO_SETTINGS_MODULE","gamesProj.settings")
 
 import django
 django.setup()
-from fb_app.models import Week, Games, Teams
+from run_app.models import Run, Shoes
+from django.db.models import Sum
+
 
 def dump_teams():
 
-     team = Teams.objects.get(nfl_abbr__iexact="nYg")
-     print (team.get_mike_abbr())
-
+    dist = Run.objects.values('shoes__name').annotate(total_dist=Sum('dist'))
+    print (dist)
     #print (Teams.objects.get(nfl_abbr="NYG")
     # f = open("teams.txt", "w")
     # for team in Teams.objects.all():

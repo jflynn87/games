@@ -11,13 +11,14 @@ from fb_app.forms import UserForm, CreatePicksForm, PickFormSet
 from django.core.exceptions import ObjectDoesNotExist
 from fb_app.validate_picks import validate
 from django.contrib.auth.models import User
-from django.db.models import Q
+from django.db.models import Q, Min
 import urllib3
 import json
 import datetime
 import scipy.stats as ss
 from django.forms import formset_factory
 from fb_app import calc_score
+
 
 
 # Create your views here.
@@ -443,9 +444,6 @@ class ScoresView(TemplateView):
                 else:
                     print ('losers list issue', game)
 
-        print ('loser', loser_list)
-        print (proj_loser_list)
-
         for player in player_list:
             score_obj, created = WeekScore.objects.get_or_create(player=player, week=week)
             score = 0
@@ -479,7 +477,81 @@ class ScoresView(TemplateView):
         print ('sending context')
         print (datetime.datetime.now())
 
-        return (scores_list, ranks, projected_scores_list, projected_ranks, total_score, season_ranks)
+        return (scores_list, ranks, projected_scores_list, projected_ranks, total_score_list, season_ranks)
+
+class SeasonTotals(ListView):
+    model = WeekScore
+    template_name = 'fb_app/season_total.html'
+
+    def get_context_data(self,**kwargs):
+        context = super(SeasonTotals, self).get_context_data(**kwargs)
+
+        base_data = self.get_base_data()
+        score_dict = {}
+        week = base_data[3]
+        week_cnt = 1
+        winner_dict = {}
+
+        #week by week scores and winner
+        while week_cnt <= week.week:
+            score_list = []
+            score_week = Week(week=week_cnt)
+            week_score = WeekScore.objects.filter(week__week=week_cnt, player__league__league=base_data[2])
+            for score in week_score:
+                score_list.append(score.score)
+            winner = Player.objects.get(pk=(week_score.filter()\
+                      .values_list('player').annotate(Min('score'))\
+                      .order_by('score')[0])[0])
+            score_list.append(winner)
+            winner_dict[winner]= score
+
+            score_dict[week_cnt]=score_list
+            week_cnt +=1
+
+        #total scores
+        total_score_list = []
+
+        for player in Player.objects.filter(league=base_data[2]):
+            total_score = 0
+            for weeks in WeekScore.objects.filter(player=player, week__week__lte=week.week):
+                total_score += weeks.score
+            total_score_list.append(total_score)
+
+        #winnings section
+        for key, value in winner_dict.items():
+            winner_dict[key] = len(winner_dict.values()), '$' + str((len(winner_dict.values())*25))
+        print (winner_dict)
+
+
+        context.update({
+        'players': Player.objects.filter(league=base_data[2]),
+        'scores': score_dict,
+        'totals': total_score_list,
+        'wins': winner_dict
+
+        })
+        return context
+
+
+    def get_base_data(self):
+        '''takes in self object and calculates the user, player, league and week,
+         returns a tuple of objects'''
+
+        week = Week.objects.get(current=True)
+
+        if self.request.user.is_authenticated:
+            user = User.objects.get(username=self.request.user)
+            player = Player.objects.get(name=user)
+            league = player.league
+
+        else:
+            league = League.objects.get(league="Football Fools")
+            user= None
+            player = None
+
+        return (user, player, league, week)
+
+
 
 
 @login_required

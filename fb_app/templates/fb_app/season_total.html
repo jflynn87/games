@@ -1,0 +1,59 @@
+{%extends "fb_app/base.html"%}
+{%load staticfiles%}
+{%load mathfilters%}
+{%load static%}
+{{form.media.css}}
+{%block body_block%}
+
+<div class="row">
+  <div class="column">
+<h4>Weekly Results</h4>
+<table class="table">
+  <thead>
+    <th>Week</th>
+    {%for player in players%}
+      <th>{{player}}</th>
+    {%endfor%}
+    <th>Winner</th>
+  </thead>
+  <tbody>
+    {%for week, scores in scores.items%}
+    <tr>
+      <td>{{week}}</td>
+      {%for score in scores%}
+      <td>{{score}}</td>
+      {%endfor%}
+    </tr>
+    {%endfor%}
+    <tr>
+      <td>Totals</td>
+      {%for total in totals%}
+      <td>{{total}}</td>
+      {%endfor%}
+    </tr>
+  </tbody>
+</table>
+</div>
+
+<div class="column">
+<h4>Summary</h4>
+<table class='table'>
+  <thead>
+    <th>Name</th>
+    <th>Weeks Won</th>
+    <th>Prize $</th>
+  </thead>
+  <tbody>
+    <tr>
+      {%for name, wins in wins.items%}
+      <td>{{name.name}}</td>
+      {%for dollars in wins%}
+      <td>{{dollars}}</td>
+      {%endfor%}
+      {%endfor%}
+    </tr>
+  </tbody>
+</table>
+</div>
+</div>
+{%endblock%}

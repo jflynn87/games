@@ -13,6 +13,7 @@ urlpatterns = [
     url(r'^games_list/$',views.GameListView.as_view(),name='games_list'),
     url(r'^scores_list/$',views.ScoresView.as_view(),name='scores_list'),
     url(r'^picks_list/$',views.PicksListView.as_view(),name='picks_list'),
-    
+    url(r'^season_total/$',views.SeasonTotals.as_view(),name='season_total'),
+
 
     ]
