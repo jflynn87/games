@@ -494,16 +494,21 @@ class SeasonTotals(ListView):
 
         #week by week scores and winner
         while week_cnt <= week.week:
+            print (week_cnt, week.week)
             score_list = []
             score_week = Week(week=week_cnt)
             week_score = WeekScore.objects.filter(week__week=week_cnt, player__league__league=base_data[2])
             for score in week_score:
                 score_list.append(score.score)
-            winner = Player.objects.get(pk=(week_score.filter()\
+            try:
+                winner = Player.objects.get(pk=(week_score.filter()\
                       .values_list('player').annotate(Min('score'))\
                       .order_by('score')[0])[0])
-            score_list.append(winner)
-            winner_dict[winner]= score
+                score_list.append(winner)
+                winner_dict[winner]= score
+            except IndexError:
+                winner = None
+
 
             score_dict[week_cnt]=score_list
             week_cnt +=1
@@ -518,6 +523,7 @@ class SeasonTotals(ListView):
             total_score_list.append(total_score)
 
         #winnings section
+        print (winner_dict)
         for key, value in winner_dict.items():
             if base_data[2].league == "Golfers":
                 winner_dict[key] = len(winner_dict.values()), '$' + str((len(winner_dict.values())*25))
