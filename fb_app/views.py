@@ -519,7 +519,7 @@ class SeasonTotals(ListView):
 
         #winnings section
         for key, value in winner_dict.items():
-            if base_data[2] == "Golfers":
+            if base_data[2].league == "Golfers":
                 winner_dict[key] = len(winner_dict.values()), '$' + str((len(winner_dict.values())*25))
             else:
                 winner_dict[key] = len(winner_dict.values()), '$' + '0'
