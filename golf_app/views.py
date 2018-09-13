@@ -196,7 +196,8 @@ def user_login(request):
                 return HttpResponse("Your account is not active")
         else:
             print ("someone tried to log in and failed")
-            print ("Username: {} and password {}".format(username,password))
+            #print ("Username: {} and password {}".format(username,password))
+            print ("Username: {} ".format(username))
             return HttpResponse("invalid login details supplied")
     else:
         return render(request, 'golf_app/login.html', {})

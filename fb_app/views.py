@@ -1,5 +1,5 @@
 from django.shortcuts import render, redirect
-from django.views.generic import ListView, TemplateView, View
+from django.views.generic import ListView, TemplateView, View, DetailView, UpdateView
 import urllib.request
 from fb_app.models import Games, Week, Picks, Player, League, Teams, WeekScore
 from django.contrib.auth.decorators import login_required
@@ -208,22 +208,28 @@ class PicksListView(LoginRequiredMixin,ListView):
 
 class ScoresView(TemplateView):
     template_name="fb_app/scores.html"
-    model = Picks
+    model = Week
 
-    def get_queryset(self):
-        return Picks.objects.all().order_by('-pick_num')
+
+    def dispatch(self, request, *args, **kwargs):
+        if kwargs.get('pk') == None:
+            week = Week.objects.get(current=True)
+            self.kwargs['pk'] = str(week.pk)
+        #if self.request.POST:
+        #    kwargs.pop('pk',None)
+        print (kwargs)
+        return super(ScoresView, self).dispatch(request, *args, **kwargs)
 
     def get_context_data(self, **kwargs):
         context = super(ScoresView, self).get_context_data(**kwargs)
-        print (self.request.GET)
+        print (self.kwargs)
+        week = Week.objects.get(pk=self.kwargs.get('pk'))
+        print (week)
         base_data = self.get_base_data()
 
         user = base_data[0]
         player = base_data[1]
         league = base_data[2]
-        week = base_data[3]
-
-
         pick_data = self.get_picks(player, league, week)
 
         player_list = pick_data[0]
@@ -235,36 +241,33 @@ class ScoresView(TemplateView):
             proj_loser_list = []
             winners = self.request.POST.getlist('winners')
             for winner in winners:
-
                 team_obj = Teams.objects.get(nfl_abbr=winner)
                 game = Games.objects.get(winner=team_obj)
                 loser_list.append(Teams.objects.get(nfl_abbr=game.loser))
-            projected = self.request.POST.getlist('projected')
-            print (self.request.POST, 'tie')
-            for team in self.request.POST.getlist('tie'):
-                print ('ties',team)
-                projected.append(team)
 
+            projected = self.request.POST.getlist('projected')
+
+            for team in self.request.POST.getlist('tie'):
+                loser_list.append(team)
 
             for proj in projected:
-
                 proj_obj = Teams.objects.get(nfl_abbr=proj)
-
                 try:
                     if Games.objects.get(winner=proj_obj, week=week):
                         game = Games.objects.get(winner=proj_obj, week=week)
-                        loser_list.append(Teams.objects.get(nfl_abbr=game.loser))
+                        proj_loser_list.append(Teams.objects.get(nfl_abbr=game.loser))
                 except ObjectDoesNotExist:
                     try:
                         if Games.objects.get(home=proj_obj, week=week):
                             game = Games.objects.get(home=proj_obj, week=week)
-                            loser_list.append(Teams.objects.get(nfl_abbr=game.away))
+                            proj_loser_list.append(Teams.objects.get(nfl_abbr=game.away))
                     except ObjectDoesNotExist:
                          if Games.objects.get(away=proj_obj, week=week):
                             game = Games.objects.get(away=proj_obj, week=week)
-                            loser_list.append(Teams.objects.get(nfl_abbr=game.home))
-            print (loser_list)
-            scores = self.calc_scores(player, week, player_list, pick_dict, loser_list)
+                            proj_loser_list.append(Teams.objects.get(nfl_abbr=game.home))
+
+            print ('players', player_list)
+            scores = self.calc_scores(player, week, player_list, pick_dict, loser_list, proj_loser_list)
         else:
             scores = self.calc_scores(player, week, player_list, pick_dict)
 
@@ -291,7 +294,7 @@ class ScoresView(TemplateView):
         #print (context)
         return context
 
-    def post(self, request):
+    def post(self, request, **kwargs):
 
         context = self.get_context_data()
         #print (context)
@@ -358,7 +361,7 @@ class ScoresView(TemplateView):
         return (player_list, pick_pending, pick_dict_by_num)
 
 
-    def calc_scores(self, player, week, player_list, pick_dict, loser_list=None):
+    def calc_scores(self, player, week, player_list, pick_dict, loser_list=None, proj_loser_list=None):
 
         print ('starting nfl json lookup')
         print (datetime.datetime.now())
@@ -421,10 +424,9 @@ class ScoresView(TemplateView):
         projected_scores_list = []
         total_score_list = []
 
-        proj_loser_list = []
-
-        if not loser_list:
+        if not loser_list and not proj_loser_list:
             loser_list = []
+            proj_loser_list = []
             games = Games.objects.filter(week=week).exclude(qtr=None)
             for game in games:
                 if game.final:
@@ -449,7 +451,7 @@ class ScoresView(TemplateView):
             score = 0
             projected_score = 0
 
-            for pick in Picks.objects.filter(Q(player=player) & Q(week=week) & (Q(team__in=loser_list) | Q(team__in=proj_loser_list))):
+            for pick in Picks.objects.filter(Q(player=player) & Q(week=week) & (Q(team__nfl_abbr__in=loser_list) | Q(team__nfl_abbr__in=proj_loser_list))):
                 if pick.team in loser_list:
                     score += pick.pick_num
                 elif pick.team in proj_loser_list:
@@ -467,6 +469,8 @@ class ScoresView(TemplateView):
             total_score = 0
 
             for weeks in WeekScore.objects.filter(player=player, week__week__lte=week.week):
+                if weeks.score == None:
+                    weeks.score = 0
                 total_score += weeks.score
             total_score_list.append(total_score)
 
@@ -494,36 +498,38 @@ class SeasonTotals(ListView):
 
         #week by week scores and winner
         while week_cnt <= week.week:
-            print (week_cnt, week.week)
             score_list = []
-            score_week = Week(week=week_cnt)
-            week_score = WeekScore.objects.filter(week__week=week_cnt, player__league__league=base_data[2])
-            for score in week_score:
-                score_list.append(score.score)
-            try:
-                winner = Player.objects.get(pk=(week_score.filter()\
+            score_week = Week.objects.get(week=week_cnt)
+            week_score = WeekScore.objects.filter(week=score_week, player__league__league=base_data[2])
+            if len(week_score) == len(Player.objects.filter(league__league=base_data[2])):
+                for score in week_score:
+                    print (score.week, score.player, score.score)
+                    score_list.append(score.score)
+
+                try:
+                    winner = Player.objects.get(pk=(week_score.filter()\
                       .values_list('player').annotate(Min('score'))\
                       .order_by('score')[0])[0])
-                score_list.append(winner)
-                winner_dict[winner]= score
-            except IndexError:
-                winner = None
+                    score_list.append(winner)
+                    winner_dict[winner]= score
+                except IndexError:
+                    winner = None
 
+                score_dict[score_week]=score_list
 
-            score_dict[week_cnt]=score_list
             week_cnt +=1
 
         #total scores
         total_score_list = []
-
         for player in Player.objects.filter(league=base_data[2]):
             total_score = 0
             for weeks in WeekScore.objects.filter(player=player, week__week__lte=week.week):
+                if weeks.score == None:
+                    weeks.score = 0
                 total_score += weeks.score
             total_score_list.append(total_score)
 
         #winnings section
-        print (winner_dict)
         for key, value in winner_dict.items():
             if base_data[2].league == "Golfers":
                 winner_dict[key] = len(winner_dict.values()), '$' + str((len(winner_dict.values())*25))
@@ -615,7 +621,8 @@ def user_login(request):
                 return HttpResponse("Your account is not active")
         else:
             print ("someone tried to log in and failed")
-            print ("Username: {} and".format(username))
+            #print ("Username: {} and".format(username))
+            print ("Username:" (username))
             return HttpResponse("invalid login details supplied")
     else:
         return render(request, 'fb_app/login.html', {})

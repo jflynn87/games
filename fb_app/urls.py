@@ -12,6 +12,7 @@ urlpatterns = [
     #url(r'^setup_games/$',views.setup_games,name='setup_games'),
     url(r'^games_list/$',views.GameListView.as_view(),name='games_list'),
     url(r'^scores_list/$',views.ScoresView.as_view(),name='scores_list'),
+    url(r'^scores_list/(?P<pk>\d+)/$',views.ScoresView.as_view(),name='scores_list'),
     url(r'^picks_list/$',views.PicksListView.as_view(),name='picks_list'),
     url(r'^season_total/$',views.SeasonTotals.as_view(),name='season_total'),
 

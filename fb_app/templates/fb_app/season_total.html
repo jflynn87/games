@@ -19,7 +19,7 @@
   <tbody>
     {%for week, scores in scores.items%}
     <tr>
-      <td>{{week}}</td>
+      <td> <a href="{%url 'fb_app:scores_list' pk=week.pk %}">{{week}}</td>
       {%for score in scores%}
       <td>{{score}}</td>
       {%endfor%}

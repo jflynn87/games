@@ -29,7 +29,7 @@
           <li> <a class="navbar-link" href="{% url 'index' %}">Home</a> </li>
           <li> <a class="navbar-link" href="{% url 'fb_app:games_list' %}">Make Picks</a></li>
           <li> <a class="navbar-link" href="{% url 'fb_app:picks_list' %}">View Picks</a></li>
-          <li> <a class="navbar-link" href="{% url 'fb_app:scores_list' %}">Weekly Scores</a> </li>
+          <!-- <li> <a class="navbar-link" href="{% url 'fb_app:scores_list' %}">Weekly Scores</a> </li> -->
           <li> <a class="navbar-link" href="{% url 'fb_app:season_total' %}">Season Totals</a> </li>
           {% if user.is_authenticated %}
           <li> <a class="navbar-link" href="{% url 'logout' %}">Logout</a> </li>
