@@ -116,6 +116,7 @@ class GameListView(LoginRequiredMixin,ListView):
          #print (request.POST)
          week = Week.objects.get(current=True)
          player = Player.objects.get(name=request.user)
+         print (player, week, "Making picks")
          team_dict = {}
          for team in Teams.objects.all():
              team_dict[team.id] = team.nfl_abbr
@@ -503,23 +504,22 @@ class SeasonTotals(ListView):
         while week_cnt <= week.week:
             score_list = []
             score_week = Week.objects.get(week=week_cnt)
-            week_score = WeekScore.objects.filter(week=score_week, player__league__league=base_data[2])
+            week_score = WeekScore.objects.filter(week=score_week, player__league__league=base_data[2]).order_by('player__name')
             if len(week_score) == len(Player.objects.filter(league__league=base_data[2])):
                 for score in week_score:
                     print (score.week, score.player, score.score)
                     score_list.append(score.score)
-
-                try:
-                    winner = Player.objects.get(pk=(week_score.filter()\
-                      .values_list('player').annotate(Min('score'))\
-                      .order_by('score')[0])[0])
-                    score_list.append(winner)
-                    winner_dict[winner]= score
-                except IndexError:
-                    winner = None
+                if not score_week.current:
+                    try:
+                        winner = Player.objects.get(pk=(week_score.filter()\
+                        .values_list('player').annotate(Min('score'))\
+                        .order_by('score')[0])[0])
+                        score_list.append(winner)
+                        winner_dict[winner]= score
+                    except IndexError:
+                        winner = None
 
                 score_dict[score_week]=score_list
-
             week_cnt +=1
 
         #total scores
