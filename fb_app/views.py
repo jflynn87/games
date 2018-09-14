@@ -71,6 +71,9 @@ class GameListView(LoginRequiredMixin,ListView):
     model=Games
     PickFormSet = formset_factory(CreatePicksForm)
 
+    #def dispatch(self, *args, **kwargs):
+    #    return super(GameListView, self).dispatch(*args, **kwargs)
+
     def get_context_data(self, **kwargs):
         context = super(GameListView, self).get_context_data(**kwargs)
         week = Week.objects.get(current=True)

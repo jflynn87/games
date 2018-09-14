@@ -5,16 +5,16 @@
     <h1>Choose a game from the list below</h1>
     <p></p>
     <p></p>
-    <p>Click this button to play the golf game:</p>
-    <a href="{% url 'golf_app:field' %}"> <button class="btn btn-primary">Golf Game</button></a>
-    <p></p>
-    <p>Click this button to play the football game</p>
-    <a href="{% url 'fb_app:games_list' %}"> <button class="btn btn-primary">Football</button></a>
-    <p></p>
-    <p>Click this button to see the Football Fools Scores</p>
-    <p><a href="{% url 'fb_app:scores_list' %}"> <button class="btn btn-primary">Football Fools Scores</button></a>
-    <p></p>
-    <p></p>
+    <p>Golf Game Options</p>
+    <a href="{% url 'golf_app:field' %}"> <button class="btn btn-primary">Make Golf picks</button></a>
+    <a href="{% url 'golf_app:scores' %}"> <button class="btn btn-primary">Golf Scores</button></a>
+    <br>
+    <br>
+    <p>Football Game Options</p>
+    <a href="{% url 'fb_app:games_list' %}"> <button class="btn btn-primary">Make Football Picks</button></a>
+    <a href="{% url 'fb_app:scores_list' %}"> <button class="btn btn-primary">Football Scores</button></a>
+    <br>
+    <br>
     {%if user.is_superuser%}
       <p><a href="{% url 'admin:index' %}"> <button class="btn btn-primary">Admin</button></a>
       <p><a href="{% url 'run_app:run_list' %}"> <button class="btn btn-primary">Run List</button></a>

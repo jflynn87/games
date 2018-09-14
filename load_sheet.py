@@ -19,9 +19,9 @@ def readSheet(file,numPlayers):
         sheet = []
         picks = {}
 
-
         #test this for a single digit week....This gets the week from the start of the shhet
         week = []
+
         for data in soup.findAll('t')[0:1]:
             week.append(data.text)
         week_str = ''.join(week)
@@ -41,22 +41,29 @@ def readSheet(file,numPlayers):
         for tag in soup.findAll('t'):
             if tag.text not in (' ', '1','2','3','4','5','6','7','8','9','10','11','12','13','14','15','16'):
                 if len(tag.text) > 1:
-                    sheet.append(tag.text)
-        print (sheet)
+                    if tag.text == "LiL":
+                        sheet.append("LiL B")
+                    elif tag.text == "B":
+                        print (tag.text)
+                    else:
+                        sheet.append(tag.text)
+
+        print (len(sheet))
 
         player_i = 0
         pick_list = []
         while player_i < numPlayers:
             player = sheet[player_i]
-            print (player)
+            #print (player)
             #winner = 1
             user = User.objects.get(username=player)
             player = Player.objects.get(name=user)
-            #scores = MikeScore()
-            #scores.week = app_week
-            #scores.player = player
-            #scores.total = sheet[(player_i + (numPlayers * 16) + numPlayers)]
-            #scores.save()
+            scores = MikeScore()
+            scores.week = app_week
+            scores.player = player
+            scores.total = sheet[(player_i + (numPlayers * 16) + numPlayers)]
+            print (scores)
+            scores.save()
 
             i = 1
             while i <= app_week.game_cnt:
@@ -85,6 +92,7 @@ def readSheet(file,numPlayers):
                 sheet_picks.team = pick_team
                 sheet_picks.save()
                 pick_list.append(str(pick_team))
+                #print (player, pick_list)
                 i += 1
 
             picks_check = validate_picks.validate(pick_list)

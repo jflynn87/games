@@ -95,7 +95,7 @@ class Picks(models.Model):
     team = models.ForeignKey(Teams, on_delete=models.CASCADE, related_name="picksteam")
 
     def __str__(self):
-        return str(self.player)
+        return str(self.player) + str(self.pick_num) + str(self.team)
 
     class Meta:
         index_together = ['week', 'player']

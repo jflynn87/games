@@ -20,10 +20,13 @@ class CreatePicksForm(ModelForm):
         team = forms.ModelChoiceField(queryset=Teams.objects.all(),
         widget = ModelSelect2Widget)
 
+    #def __init__(self, *args, **kwargs):
+    #    super (CreatePicksForm, self).__init__(*args,**kwargs)
+    #    self.fields['team'].required =True
+    #    print (user)
 
-    def __init__(self, *args, **kwargs):
-        super (CreatePicksForm, self).__init__(*args,**kwargs)
-        self.fields['team'].required =True
+
+
 
     #def clean(self):
     #    cleaned_data = super(CreatePicksForm, self).clean()
