@@ -3,7 +3,7 @@ os.environ.setdefault("DJANGO_SETTINGS_MODULE","gamesProj.settings")
 
 import django
 django.setup()
-from fb_app.models import Week, Player, Picks, Teams, MikeScore
+from fb_app.models import Week, Player, Picks, Teams, MikeScore, WeekScore
 from django.contrib.auth.models import User
 from django.core.exceptions import ObjectDoesNotExist
 from fb_app import validate_picks
@@ -28,6 +28,7 @@ def readSheet(file,numPlayers):
         print ('week: ' + week_str)
 
         app_week = Week.objects.get(current=True)
+        mike_score_week = Week.objects.get(week=app_week.week - 1)
 
         if str(app_week.week) != week_str:
             print ("sheet week doesn't match model")
@@ -59,11 +60,21 @@ def readSheet(file,numPlayers):
             user = User.objects.get(username=player)
             player = Player.objects.get(name=user)
             scores = MikeScore()
-            scores.week = app_week
+            scores.week = mike_score_week
             scores.player = player
             scores.total = sheet[(player_i + (numPlayers * 16) + numPlayers)]
-            print (scores)
             scores.save()
+
+            my_total = 0
+            for score in WeekScore.objects.filter(week__lte=mike_score_week, player=player):
+                my_total += score.score
+
+
+            if int(my_total) != int(scores.total):
+                print ("score mismatch", player, my_total, scores.total)
+            else:
+                print ("score good", player, my_total, scores.total)
+
 
             i = 1
             while i <= app_week.game_cnt:
@@ -74,7 +85,7 @@ def readSheet(file,numPlayers):
                 try:
                     pick_team = Teams.objects.get(mike_abbr=pick)
                 except ObjectDoesNotExist:
-                    print ('mike abbr not found', player, pick)
+                    #print ('mike abbr not found', player, pick)
                     try:
                         pick_team = Teams.objects.get(typo_name=pick)
                     except ObjectDoesNotExist:
@@ -104,4 +115,4 @@ def readSheet(file,numPlayers):
 
 
 
-readSheet('C:/Users/John/Documents/18-19 FOOTBALL FOOLS.xml', 25)
+readSheet('18-19 FOOTBALL FOOLS.xml', 25)
