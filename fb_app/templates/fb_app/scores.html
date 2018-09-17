@@ -1,11 +1,11 @@
 {%extends "fb_app/base.html"%}
 {%load staticfiles%}
 {%load mathfilters%}
-{%block body_block%}
 {%load static%}
 
+{%block body_block%} {%endblock%}
 
-
+{%block summary_block%}
 <table class="table table-striped">
 
   <thead>
@@ -40,17 +40,26 @@
         <td class=ranks>{{rank}}</td>
         {%endfor%}
       </tr>
-
-
+{%endblock%}
+{%block pick_block%}
 
       {%for pick_num, picks in picks.items%}
       <tr>
         <td>{{pick_num}}</td>
         {%for pick in picks%}
-        <td>{{pick}}</td>
+
+        {% if pick.is_loser%}
+        <td class="loser">{{pick.team}}</td>
+        {%else%}
+        <td>{{pick.team}}</td>
+        {%endif%}
         {%endfor%}
       </tr>
       {%endfor%}
+{%endblock%}
+
+
+{%block totals_block%}
       <tr>
         <td>season total</td>
       {%for score in totals%}
@@ -70,14 +79,14 @@
           {%endfor%}
       </tr>
 
-
-
   </tbody>
 </table>
 {%if pending%}
 <p>Picks Pending from: {%for player in pending%} {{player}}  {%endfor%} {%endif%}</p>
 <div class="row">
 <div class="column">
+{%endblock%}
+{%block games_block%}
 
 <h4>NFL Scoreboard</h4>
 <table class="table table-sm">

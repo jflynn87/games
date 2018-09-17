@@ -1,4 +1,5 @@
 from django.db import models
+from django.db.models import Sum
 
 # Create your models here.
 class Shoes(models.Model):
@@ -12,7 +13,6 @@ class Shoes(models.Model):
 
     def get_absolute_url(self):
         return reverse("run_app:list")
-
 
     def save(self, *args, **kwargs):
         if self.main_shoe:
@@ -47,7 +47,7 @@ class Run(models.Model):
     def get_absolute_url(self):
         return reverse("run_app:list")
 
-    def shoe_dist(self):
-        dist = Run.objects.values('shoes').annotate(total_dist=Sum('dist'))
-        print ('dist', dist)
-        return dist
+    #def shoe_dist(self):
+    #    dist = Run.objects.values('shoes').annotate(total_dist=Sum('dist'))
+    #    print ('dist', dist)
+    #    return dist

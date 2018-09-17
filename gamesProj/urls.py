@@ -18,6 +18,7 @@ from django.urls import path
 from django.conf.urls import include, url
 from golf_app import views
 from fb_app import views
+from django.conf import settings
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -26,4 +27,11 @@ urlpatterns = [
     url(r'^fb_app/', include('fb_app.urls',namespace='fb_app')),
     url(r'^golf_app/', include('golf_app.urls',namespace='golf_app')),
     url(r'^run_app/', include('run_app.urls',namespace='run_app')),
+
 ]
+
+if settings.DEBUG:
+    import debug_toolbar
+    urlpatterns = [
+    url(r'^__debug__/',include(debug_toolbar.urls))
+    ]  + urlpatterns

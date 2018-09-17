@@ -42,14 +42,23 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'golf_app',
-    'fb_app',
-    'run_app',
+    'debug_toolbar',
+    'template_timings_panel',
     'mathfilters',
     'django_select2',
     'bootstrapform',
     'django.contrib.humanize',
+    'golf_app',
+    'fb_app',
+    'run_app',
+
 ]
+
+DEBUG_TOOLBAR_PANELS = [
+      'template_timings_panel.panels.TemplateTimings.TemplateTimings',
+      'debug_toolbar.panels.sql.SQLPanel',
+  ]
+
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -59,6 +68,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'debug_toolbar.middleware.DebugToolbarMiddleware',
 ]
 
 ROOT_URLCONF = 'gamesProj.urls'
@@ -136,3 +146,5 @@ STATICFILES_DIRS = [
 ]
 
 LOGIN_REDIRECT_URL = '/'
+
+INTERNAL_IPS = ['127.0.0.1']

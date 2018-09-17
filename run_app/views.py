@@ -5,12 +5,35 @@ from django.views.generic import (View,TemplateView,
                                 ListView,DetailView,
                                 CreateView,DeleteView,
                                 UpdateView)
+from braces.views import SelectRelatedMixin
 from run_app.models import Shoes, Run
 from run_app.forms import CreateRunForm
-from django.db.models import Sum
+from django.db.models import Sum, Count
 import datetime
+from dateutil.relativedelta import relativedelta
+from django.db.models.functions import ExtractWeek, ExtractYear
 
 # Create your views here.
+
+class DashboardView(ListView):
+    model = Run
+    #select_related = ('shoes',)
+    template_name = 'run_app/dashboard.html'
+
+    def get_context_data(self, **kwargs):
+        context = super(DashboardView, self).get_context_data(**kwargs)
+        year_data = (Run.objects.filter(date__gt='2011-12-31').annotate(year=ExtractYear('date')).values('year')
+        .annotate(dist=Sum('dist')))
+        week_data = (Run.objects.filter(date__gte="2017-12-31").annotate(week=ExtractWeek('date')).values('week')
+        .annotate(dist=Sum('dist')))
+        for year in year_data:
+            print (year)
+        year = "2018"
+        for week in week_data:
+            d = str(year) + str('-W') + str(week.get('week'))
+            w = datetime.datetime.strptime(d + '-0', '%Y-W%W-%w')
+            print (w, week.get('dist'))
+        return context
 
 class ShoeCreateView(CreateView):
     fields = ("name","active","main_shoe")
@@ -41,7 +64,7 @@ class ShoeListView(ListView):
              'total_cals': total_cals,
              'start_date': start_date
          })
-        
+
         return context
 
 

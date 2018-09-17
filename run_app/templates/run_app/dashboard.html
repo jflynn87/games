@@ -1,0 +1,14 @@
+{% extends "run_app/base.html" %}
+{%load staticfiles%}
+
+{%block body_block%}
+<h1>Dashboad</h1>
+
+  <ul>
+
+
+  {%for run in run_list%}
+    <li>{{run}}</li>
+  {%endfor%}
+  </ul>
+{%endblock%}

@@ -195,17 +195,12 @@ class PicksListView(LoginRequiredMixin,ListView):
     model = Picks
 
     def get_queryset(self):
-        print ('in queryset' + str(self.request.user))
-        user = User.objects.get(username=self.request.user)
-        player = Player.objects.get(name=user)
-        #picks = Picks.objects.filter(player=player).order_by('-pick_num')
-        return Picks.objects.filter(player=player, week__current=True).order_by('-pick_num')
+        return Picks.objects.filter(player__name__username=self.request.user, week__current=True).order_by('-pick_num')
 
     def get_context_data(self,**kwargs):
         context = super(PicksListView, self).get_context_data(**kwargs)
         context.update({
         'week': Week.objects.get(current=True),
-        'picks_list': self.get_queryset(),
         })
         return context
 
@@ -246,13 +241,13 @@ class ScoresView(TemplateView):
             winners = self.request.POST.getlist('winners')
             for winner in winners:
                 team_obj = Teams.objects.get(nfl_abbr=winner)
-                game = Games.objects.get(winner=team_obj)
+                game = Games.objects.get(winner=team_obj,week=week)
                 loser_list.append(Teams.objects.get(nfl_abbr=game.loser))
 
             projected = self.request.POST.getlist('projected')
 
             for team in self.request.POST.getlist('tie'):
-                loser_list.append(team)
+                loser_list.append(Teams.objects.get(nfl_abbr=team))
 
             for proj in projected:
                 proj_obj = Teams.objects.get(nfl_abbr=proj)
@@ -271,9 +266,15 @@ class ScoresView(TemplateView):
                             proj_loser_list.append(Teams.objects.get(nfl_abbr=game.home))
 
             print ('players', player_list)
-            scores = self.calc_scores(player, week, player_list, pick_dict, loser_list, proj_loser_list)
+            print ('losers', loser_list)
+            print ('proj', proj_loser_list)
+            scores = self.calc_scores(league, player, week, player_list, pick_dict, loser_list, proj_loser_list)
         else:
-            scores = self.calc_scores(player, week, player_list, pick_dict)
+            scores = self.calc_scores(league, player, week, player_list, pick_dict)
+
+        print ('back from calc score')
+        print (datetime.datetime.now())
+
 
         scores_list = scores[0]
         ranks = scores[1]
@@ -282,9 +283,11 @@ class ScoresView(TemplateView):
         total_score_list = scores[4]
         season_ranks = scores[5]
 
+
         context.update({
         'players': player_list,
         'picks': pick_dict,
+        #'picks': Picks.objects.filter(week=week, player__league=league).order_by('-pick_num', 'player'),
         'week': week,
         'pending': pick_pending,
         'games': Games.objects.filter(week=week).order_by('eid'),
@@ -295,6 +298,11 @@ class ScoresView(TemplateView):
         'totals': total_score_list,
         'season_ranks': season_ranks,
         })
+
+        print ('context built')
+        print (datetime.datetime.now())
+
+
         #print (context)
         return context
 
@@ -357,7 +365,7 @@ class ScoresView(TemplateView):
         while pick_num > 0:
             if Picks.objects.filter(week=week, pick_num=pick_num, player__league=league):
                for picks in Picks.objects.filter(week=week, pick_num=pick_num, player__league=league).order_by('player__name'):
-                   pick_list_by_num.append(picks.team)
+                   pick_list_by_num.append(picks)    #was picks.team
                pick_dict_by_num[pick_num]=pick_list_by_num
                pick_list_by_num = []
             pick_num -= 1
@@ -365,7 +373,7 @@ class ScoresView(TemplateView):
         return (player_list, pick_pending, pick_dict_by_num)
 
 
-    def calc_scores(self, player, week, player_list, pick_dict, loser_list=None, proj_loser_list=None):
+    def calc_scores(self, league, player, week, player_list, pick_dict, loser_list=None, proj_loser_list=None):
 
         print ('starting nfl json lookup')
         print (datetime.datetime.now())
@@ -427,44 +435,39 @@ class ScoresView(TemplateView):
         scores_list = []
         projected_scores_list = []
         total_score_list = []
+        scores = {}
+        score = 0
+        proj_scores = {}
+        proj_score = 0
 
-        if not loser_list and not proj_loser_list:
-            loser_list = []
-            proj_loser_list = []
-            games = Games.objects.filter(week=week).exclude(qtr=None)
-            for game in games:
-                if game.final:
-                    if game.tie:
-                        loser_list.append((game.home))
-                        loser_list.append((game.away))
-                    else:
-                        loser_list.append((game.loser))
-                elif game.qtr == "None" or (game.qtr != "None" and game.home_score == game.away_score):
-                    print ('no loser yet', game.home)
-                    continue
-                elif game.home_score > game.away_score:
-                    proj_loser_list.append((game.away))
-                elif game.away_score > game.home_score:
-                    print (home_team)
-                    proj_loser_list.append((game.home))
-                else:
-                    print ('losers list issue', game)
+        for player in player_list:
+            scores[player]=score
+            proj_scores[player] = proj_score
+        for game in Games.objects.filter(week=week, final=True):
+            if game.tie:
+                picks = Picks.objects.filter(Q(team=game.home) | Q(team=game.away), week=week, player__league=league)
+            else:
+                picks = Picks.objects.filter(team=game.loser, player__league=league, week=week)
+            for loser in picks:
+                score = scores.get(loser.player)
+                scores[loser.player]= score + loser.pick_num
+        print (scores)
+
+        for game in Games.objects.filter(week=week, final=False):
+            picks = Picks.objects.filter(team=game.loser, player__league=league, week=week)
+            for loser in picks:
+                proj_score = scores.get(loser.player)
+                proj_scores[loser.player]= score + loser.pick_num
+        print (proj_scores)
 
         for player in player_list:
             score_obj, created = WeekScore.objects.get_or_create(player=player, week=week)
-            score = 0
-            projected_score = 0
+            score = scores.get(player)
+            projected_score = proj_scores.get(player)
 
-            for pick in Picks.objects.filter(Q(player=player) & Q(week=week) & (Q(team__nfl_abbr__in=loser_list) | Q(team__nfl_abbr__in=proj_loser_list))):
-                if pick.team in loser_list:
-                    score += pick.pick_num
-                elif pick.team in proj_loser_list:
-                    projected_score += pick.pick_num
-
-                setattr (score_obj, "score", score)
-                setattr (score_obj, "projected_score", projected_score)
-                score_obj.save()
-
+            setattr (score_obj, "score", score)
+            setattr (score_obj, "projected_score", projected_score)
+            score_obj.save()
 
             scores_list.append(score)
             projected_scores_list.append(score + projected_score)

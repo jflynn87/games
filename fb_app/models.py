@@ -1,7 +1,8 @@
 from django.db import models
 from django.contrib.auth.models import User
 from django.conf import settings
-
+from django.db.models import Q
+from django.core.exceptions import ObjectDoesNotExist
 
 # Create your models here.
 
@@ -71,6 +72,7 @@ class Games(models.Model):
         index_together = ['week', 'home', 'away']
 
 
+
     #def get_game_id(self):
     #    return self.eid
 
@@ -94,11 +96,50 @@ class Picks(models.Model):
     pick_num = models.PositiveIntegerField()
     team = models.ForeignKey(Teams, on_delete=models.CASCADE, related_name="picksteam")
 
+
     def __str__(self):
         return str(self.player) + str(self.pick_num) + str(self.team)
 
     class Meta:
         index_together = ['week', 'player']
+
+    def is_loser(self):
+        try:
+            game = Games.objects.get(Q(final=True), Q(week__current=True), (Q(home=self.team) | (Q(away= self.team))))
+            if self.team == game.loser:
+                return True
+            elif self.team == game.winner:
+                return False
+            elif game.tie:
+                return True
+            else:
+                print ('something wrong in is_loser')
+                return False
+        except ObjectDoesNotExist:
+            return False
+
+    def is_proj_loser(self):
+        try:
+            game = Games.objects.get(Q(final=False), Q(week__current=True), (Q(home=self.team) | Q(away=self.team)))
+            if game.home_score == game.away_score:
+                return False
+            elif game.home == self.team:
+                if home_score < away_score:
+                    return True
+                else:
+                    return False
+            elif game.away == self.team:
+                if away_score < home_score:
+                    return True
+                else:
+                    return False
+            else:
+                return False
+                print ('projected issue', game)
+        except ObjectDoesNotExist:
+            return False
+
+
 
 class WeekScore(models.Model):
     week = models.ForeignKey(Week, on_delete=models.CASCADE)
