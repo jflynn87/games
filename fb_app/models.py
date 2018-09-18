@@ -17,6 +17,14 @@ class Week(models.Model):
     def __str__(self):
         return str(self.week)
 
+    def save(self, *args, **kwargs):
+        if self.current==True:
+            last_week = Week.objects.get(current=True)
+            last_week.current = False
+            last_week.save()
+        super(Week, self).save()
+
+
 #class TeamManager(models.Manager):
 #    def as_choices(self):
 #        for team in self.all():

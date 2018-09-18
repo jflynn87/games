@@ -79,7 +79,7 @@ class GameListView(LoginRequiredMixin,ListView):
         week = Week.objects.get(current=True)
         player=Player.objects.get(name=self.request.user)
         get_spreads()
-        games=Games.objects.filter(week=week)
+        games=Games.objects.filter(week=week).order_by("eid")
         #form = CreatePicksForm()
 
         PickFormSet = formset_factory(CreatePicksForm, extra=week.game_cnt)
@@ -510,7 +510,7 @@ class SeasonTotals(ListView):
             week_score = WeekScore.objects.filter(week=score_week, player__league__league=base_data[2]).order_by('player__name')
             if len(week_score) == len(Player.objects.filter(league__league=base_data[2])):
                 for score in week_score:
-                    print (score.week, score.player, score.score)
+                    #print (score.week, score.player, score.score)
                     score_list.append(score.score)
                 if not score_week.current:
                     try:
@@ -518,7 +518,8 @@ class SeasonTotals(ListView):
                         .values_list('player').annotate(Min('score'))\
                         .order_by('score')[0])[0])
                         score_list.append(winner)
-                        winner_dict[winner]= score
+                        winner_dict.setdefault(winner, [])
+                        winner_dict[winner].append(score)
                     except IndexError:
                         winner = None
 
@@ -535,13 +536,14 @@ class SeasonTotals(ListView):
                 total_score += weeks.score
             total_score_list.append(total_score)
 
+        print (winner_dict)
         #winnings section
         for key, value in winner_dict.items():
             if base_data[2].league == "Golfers":
-                winner_dict[key] = len(winner_dict.values()), '$' + str((len(winner_dict.values())*25))
+                winner_dict[key] = len(winner_dict[key]), '$' + str((len(winner_dict[key])*25))
             else:
                 winner_dict[key] = len(winner_dict.values()), '$' + '0'
-
+        print (winner_dict)
 
         context.update({
         'players': Player.objects.filter(league=base_data[2]),
