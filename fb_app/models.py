@@ -113,7 +113,7 @@ class Picks(models.Model):
 
     def is_loser(self):
         try:
-            game = Games.objects.get(Q(final=True), Q(week__current=True), (Q(home=self.team) | (Q(away= self.team))))
+            game = Games.objects.get(Q(final=True), Q(week=self.week), (Q(home=self.team) | (Q(away= self.team))))
             if self.team == game.loser:
                 return True
             elif self.team == game.winner:
@@ -128,7 +128,7 @@ class Picks(models.Model):
 
     def is_proj_loser(self):
         try:
-            game = Games.objects.get(Q(final=False), Q(week__current=True), (Q(home=self.team) | Q(away=self.team)))
+            game = Games.objects.get(Q(final=False), Q(week=self.week), (Q(home=self.team) | Q(away=self.team)))
             if game.home_score == game.away_score:
                 return False
             elif game.home == self.team:
