@@ -519,7 +519,7 @@ class SeasonTotals(ListView):
                         .order_by('score')[0])[0])
                         score_list.append(winner)
                         winner_dict.setdefault(winner, [])
-                        winner_dict[winner].append(score)
+                        winner_dict[winner].append(score_week)
                     except IndexError:
                         winner = None
 
@@ -539,10 +539,11 @@ class SeasonTotals(ListView):
         print (winner_dict)
         #winnings section
         for key, value in winner_dict.items():
+            print (key, value)
             if base_data[2].league == "Golfers":
                 winner_dict[key] = len(winner_dict[key]), '$' + str((len(winner_dict[key])*25))
             else:
-                winner_dict[key] = len(winner_dict.values()), '$' + '0'
+                winner_dict[key] = len(winner_dict[key]), '$' + '0'
         print (winner_dict)
 
         context.update({

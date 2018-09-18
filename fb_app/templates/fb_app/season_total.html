@@ -45,8 +45,8 @@
     <th>Prize $</th>
   </thead>
   <tbody>
+    {%for name, wins in wins.items%}
     <tr>
-      {%for name, wins in wins.items%}
       <td>{{name.name}}</td>
       {%for dollars in wins%}
       <td>{{dollars}}</td>
