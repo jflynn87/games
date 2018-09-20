@@ -7,7 +7,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth import authenticate, login, logout
 from django.http import HttpResponseRedirect, HttpResponse
 from django.urls import reverse, reverse_lazy
-from fb_app.forms import UserForm, CreatePicksForm, PickFormSet
+from fb_app.forms import UserForm, CreatePicksForm, PickFormSet, NoPickFormSet
 from django.core.exceptions import ObjectDoesNotExist
 from fb_app.validate_picks import validate
 from django.contrib.auth.models import User
@@ -16,7 +16,7 @@ import urllib3
 import json
 import datetime
 import scipy.stats as ss
-from django.forms import formset_factory
+from django.forms import formset_factory, modelformset_factory
 from fb_app import calc_score
 
 
@@ -69,7 +69,7 @@ def get_spreads():
 class GameListView(LoginRequiredMixin,ListView):
     login_url = '/fb_app/user_login'
     model=Games
-    PickFormSet = formset_factory(CreatePicksForm)
+    #PickFormSet = formset_factory(CreatePicksForm)
 
     #def dispatch(self, *args, **kwargs):
     #    return super(GameListView, self).dispatch(*args, **kwargs)
@@ -80,20 +80,24 @@ class GameListView(LoginRequiredMixin,ListView):
         player=Player.objects.get(name=self.request.user)
         get_spreads()
         games=Games.objects.filter(week=week).order_by("eid")
-        #form = CreatePicksForm()
 
-        PickFormSet = formset_factory(CreatePicksForm, extra=week.game_cnt)
-
-        form = PickFormSet()
+        # PickFormSet = formset_factory(CreatePicksForm, extra=week.game_cnt)
+        #
+        # form = PickFormSet()
+        #PickFormSet = modelformset_factory(Picks, fields=('team',), extra=week.game_cnt)
+        if Picks.objects.filter(player=player, week=week).exists():
+            form = PickFormSet(queryset=Picks.objects.filter(week=week, player=player))
+        else:
+            form = NoPickFormSet(queryset=Picks.objects.none())
 
         team_dict = {}
         for team in Teams.objects.all():
             team_dict[team.id] = team.nfl_abbr
 
         if Picks.objects.filter(week=week, player=player).count() > 0:
-            picks = Picks.objects.filter(week=week, player=player).order_by('-pick_num')
+            #picks = Picks.objects.filter(week=week, player=player).order_by('-pick_num')
             context.update({
-            'picks_list': picks,
+            #'picks_list': picks,
             'games_list': games,
             'form': form,
             'teams': team_dict
@@ -120,8 +124,9 @@ class GameListView(LoginRequiredMixin,ListView):
          team_dict = {}
          for team in Teams.objects.all():
              team_dict[team.id] = team.nfl_abbr
-         #PickFormSet = formset_factory(CreatePicksForm, extra=week.game_cnt)
+
          formset = PickFormSet(request.POST)
+
          if formset.is_valid():
             print ('valid')
             pick_list = []
@@ -130,7 +135,6 @@ class GameListView(LoginRequiredMixin,ListView):
                 team = cd.get('team')
                 pick_list.append(team)
          else:
-
             print (formset.errors)
             return render (request, 'fb_app/games_list.html', {
             'form': formset,
@@ -144,7 +148,7 @@ class GameListView(LoginRequiredMixin,ListView):
          while i < len(pick_list):
              picks_chk.append(str(Teams.objects.get(nfl_abbr=pick_list[i])))
              i +=1
-         print (picks_chk)
+         #print (picks_chk)
          picks_check = validate(picks_chk)
 
          if picks_check[0]:

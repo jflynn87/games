@@ -83,7 +83,7 @@ class RunCreateView(CreateView):
     success_url = reverse_lazy("run_app:run_list")
 
 class RunListView(ListView):
-    model = Shoes
+    model = Run
     queryset = Run.objects.all().order_by('-date')
     paginate_by = 50
 
@@ -91,11 +91,11 @@ class RunDetailView(DetailView):
     pass
 
 class RunUpdateView(UpdateView):
-    fields = ('active',)
-    model = Shoes
+    fields = ('date','dist', 'cals', 'time', 'location', 'shoes')
+    model = Run
     success_url = reverse_lazy("run_app:shoe_list")
 
 
 class RunDeleteView(DeleteView):
-    model= Shoes
+    model= Run
     success_url = reverse_lazy("run_app:shoe_list")

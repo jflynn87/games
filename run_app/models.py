@@ -47,6 +47,7 @@ class Run(models.Model):
     def get_absolute_url(self):
         return reverse("run_app:list")
 
+
     #def shoe_dist(self):
     #    dist = Run.objects.values('shoes').annotate(total_dist=Sum('dist'))
     #    print ('dist', dist)

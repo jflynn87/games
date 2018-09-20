@@ -81,12 +81,13 @@
       {{ form.media.js }}
       <form id="pick_form" method="POST">
         {%csrf_token%}
+
         {{ form.management_form}}
         {%for pick in form%}
       <tr>
         <td>{{17|sub:forloop.counter}}</td>
-
         <td id=pick{{17|sub:forloop.counter}}>{{pick.team}} </td>
+        <td class="hidden">{{pick.id}}</td>
       </tr>
         {%endfor%}
       </tbody>

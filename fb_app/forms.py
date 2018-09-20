@@ -1,7 +1,8 @@
 from django import forms
 from django.contrib.auth.models import User
 from django.forms import ModelForm
-from fb_app.models import Games, Picks, Teams
+from django.forms.models import modelformset_factory
+from fb_app.models import Games, Picks, Teams, Week
 #from dal import autocomplete
 from django_select2 import *
 from django_select2.forms import ModelSelect2Widget
@@ -20,44 +21,18 @@ class CreatePicksForm(ModelForm):
         team = forms.ModelChoiceField(queryset=Teams.objects.all(),
         widget = ModelSelect2Widget)
 
-    #def __init__(self, *args, **kwargs):
-    #    super (CreatePicksForm, self).__init__(*args,**kwargs)
-    #    self.fields['team'].required =True
-    #    print (user)
+week = Week.objects.get(current=True)
+PickFormSet = modelformset_factory(Picks, form=CreatePicksForm, max_num=(week.game_cnt))
+NoPickFormSet = modelformset_factory(Picks, form=CreatePicksForm, extra=(week.game_cnt))
 
-
-
-
-    #def clean(self):
-    #    cleaned_data = super(CreatePicksForm, self).clean()
-    #    return cleaned_data
-
-
-class PickFormSet(BaseFormSet):
-    absolute_max = 16
-    min_num = 12
-    form = CreatePicksForm
-    can_order=False
-    can_delete=False
-    validate_max = False
-    validate_min =False
-
-    #def clean(self):
-
-    #    cleaned_data = super(PickFormSet, self).clean()
-    #    print ('clean set')
-    #    print (cleaned_data)
-    #    #self.add_error('team',"Please picks errors")
-    #    return cleaned_data
-                    #def clean(self):
-                #    cleaned_data = super(AppointmentForm, self).clean()
-                #    print (cleaned_data['date'])
-                #    if self.cleaned_data.get('date') == None and self.cleaned_data.get('comments') == '':
-                #        self.add_error('comments',"Please enter either a message or a meeting date/time")
-                #        #return forms.ValidationError('Please enter either a message or a meeting date/time')
-                #    else:
-                #        return cleaned_data
-
+# class PickFormSet(BaseModelFormSet):
+#     absolute_max = 16
+#     min_num = 12
+#     form = CreatePicksForm
+#     can_order=False
+#     can_delete=False
+#     validate_max = False
+#     validate_min =False
 
 
 class UserForm(forms.ModelForm):
