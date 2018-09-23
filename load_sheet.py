@@ -31,8 +31,10 @@ def readSheet(file,numPlayers):
         mike_score_week = Week.objects.get(week=app_week.week - 1)
 
         if str(app_week.week) != week_str:
-            print ("sheet week doesn't match model")
+            print ("sheet week doesn't match model", week_str)
+            exit()
         elif Picks.objects.filter(player__league__league="Football Fools", week=app_week):
+            print ('deleting picks')
             Picks.objects.filter(player__league__league="Football Fools", week=app_week).delete()
             MikeScore.objects.filter(player__league__league="Football Fools", week=app_week).delete()
 
@@ -50,6 +52,7 @@ def readSheet(file,numPlayers):
                         sheet.append(tag.text)
 
         print (len(sheet))
+        print (sheet)
 
         player_i = 0
         pick_list = []
@@ -89,6 +92,7 @@ def readSheet(file,numPlayers):
                     try:
                         pick_team = Teams.objects.get(typo_name=pick)
                     except ObjectDoesNotExist:
+                        print (pick)
                         pick_team = Teams.objects.get(typo_name1=pick)
                 except Exception as e:
                         print (e)

@@ -1,14 +1,101 @@
 {% extends "run_app/base.html" %}
 {%load staticfiles%}
-
+{%load humanize%}
 {%block body_block%}
-<h1>Dashboad</h1>
 
-  <ul>
+<script src="{% static "run_app/js/dashboard.js"%}" type="text/javascript" ></script>
+
+<div class="row">
+  <div class="col">
 
 
-  {%for run in run_list%}
-    <li>{{run}}</li>
-  {%endfor%}
-  </ul>
+
+  <table class="table">
+    <thead>
+      <th>Date</th>
+      <th>Dist</th>
+      <th>Time</th>
+      <th>Cals</th>
+      <th>Runs</th>
+      </thead>
+    <tbody>
+      {%for year in years%}
+      <tr>
+        <td>{{year.year}}</td>
+        <td>{{year.dist|floatformat:"0"}}</td>
+        <td>{{year.time}}</td>
+        <td>{{year.cals}}</td>
+        <td>{{year.num}}</td>
+      </tr>
+      {%endfor%}
+      <tr>
+        <td>Totals</td>
+        <td>{{totals.tot_dist|floatformat:"0"|intcomma}}</td>
+        <td>{{totals.tot_time}}</td>
+        <td>{{totals.tot_cals|intcomma}}</td>
+        <td>{{totals.num}}</td>
+      </tr>
+    </tbody>
+  </table>
+  </div>
+
+  <div class="col">
+    <table class="table">
+      <thead>
+        <th>Shoe</th>
+        <th>Dist</th>
+        <th>Runs</th>
+      </thead>
+      <tbody>
+        {%for shoe in shoes%}
+        <tr >
+          <td>{{shoe.shoes__name}}</td>
+          <td class="dist">{{shoe.dist|floatformat:"0"}}</td>
+          <td>{{shoe.num}}</td>
+        </tr>
+        {%endfor%}
+      </tbody>
+    </table>
+    <a href="{% url 'run_app:add_run' %}"> <button class="btn btn-primary">Add Run</button></a>
+  </div>
+</div>
+
+<table class="table">
+  <thead>
+  <th>Week Starting</th>
+  <th>Dist</th>
+  <th>Time</th>
+  <th>Cals</th>
+  <th>Runs</th>
+  <th>Long Run</th>
+  <th>2 week % change</th>
+  <th>2 week % change</th>
+    <head>
+      <meta charset="utf-8">
+      <title></title>
+    </head>
+    <body>
+
+    </body>
+  </html>
+  </thead>
+  <tbody>
+    {%for week in weeks%}
+    <tr>
+      <td>{{week.date}}</td>
+      <td>{{week.total_dist|floatformat:"0"}}</td>
+      <td>{{week.time}}</td>
+      <td>{{week.cals}}</td>
+      <td>{{week.num}}</td>
+      <td>{{week.max_dist}}</td>
+      <td class="change">{{week.tot_change|floatformat:"0"}}</td>
+      <td class="change">{{week.long_change|floatformat:"0"}}</td>
+    </tr>
+    {%endfor%}
+  </tbody>
+</table>
+
+
+
+
 {%endblock%}

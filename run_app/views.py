@@ -8,10 +8,12 @@ from django.views.generic import (View,TemplateView,
 from braces.views import SelectRelatedMixin
 from run_app.models import Shoes, Run
 from run_app.forms import CreateRunForm
-from django.db.models import Sum, Count
+from django.db.models import Sum, Count, Max
 import datetime
+from datetime import timedelta
 from dateutil.relativedelta import relativedelta
 from django.db.models.functions import ExtractWeek, ExtractYear
+from django.core.exceptions import ObjectDoesNotExist
 
 # Create your views here.
 
@@ -22,17 +24,67 @@ class DashboardView(ListView):
 
     def get_context_data(self, **kwargs):
         context = super(DashboardView, self).get_context_data(**kwargs)
+
         year_data = (Run.objects.filter(date__gt='2011-12-31').annotate(year=ExtractYear('date')).values('year')
-        .annotate(dist=Sum('dist')))
-        week_data = (Run.objects.filter(date__gte="2017-12-31").annotate(week=ExtractWeek('date')).values('week')
-        .annotate(dist=Sum('dist')))
-        for year in year_data:
-            print (year)
-        year = "2018"
+        .annotate(dist=Sum('dist'), time=Sum('time'), cals=Sum('cals'), num=Count('date')))
+
+        total_data = (Run.objects.aggregate(tot_dist=Sum('dist'), tot_time=Sum('time'), tot_cals=Sum('cals'), num=Count('date')))
+
+        shoe_data = Run.objects.filter(shoes__active=True).values('shoes__name', 'shoes_id').annotate(dist=Sum('dist'), num=(Count('date'))).order_by('-dist')
+
+        week_data = (Run.objects.filter(date__gte="2017-9-1").annotate(year=ExtractYear('date')).annotate(week=ExtractWeek('date')).values('year', 'week')
+        .annotate(total_dist=Sum('dist'), time=Sum('time'), cals=Sum('cals'), num=Count('date'), max_dist=(Max('dist'))).order_by('-year', '-week'))
+
+        print (total_data)
+
         for week in week_data:
-            d = str(year) + str('-W') + str(week.get('week'))
-            w = datetime.datetime.strptime(d + '-0', '%Y-W%W-%w')
-            print (w, week.get('dist'))
+            #print (week)
+
+            # format date for display and add to dict for context
+            d = str(week.get('year')) + str("-W") + str(week.get('week'))
+            w = datetime.datetime.strptime(d + '-1', '%Y-W%W-%w')
+            week['date']=w.strftime("%b %d, %Y")
+
+            # % change calcs
+            week_i = 1
+            long_run = 0
+            weekly_total = 0
+
+            while week_i <= 2:
+                start_week = w - timedelta(weeks=week_i)
+                try:
+                    compare_week = week_data.get(year=str(datetime.datetime.strftime(start_week, '%Y')), week=str(datetime.datetime.strftime(start_week, '%W')))
+                    wk_total_dist = compare_week.get('total_dist')
+                    wk_long_run = compare_week.get('max_dist')
+                except ObjectDoesNotExist:
+                    wk_total_dist = 0
+                    wk_long_run = 0
+                if wk_total_dist > weekly_total:
+                    weekly_total = wk_total_dist
+                if wk_long_run > long_run:
+                    long_run = wk_long_run
+                week_i += 1
+                #print (start_week, weekly_total, long_run)
+
+            if weekly_total > 0:
+                week['tot_change']= (((week.get('total_dist') - weekly_total)/weekly_total) *100)
+            else:
+                week['tot_change'] = 100
+            if long_run > 0:
+                week['long_change'] = (((week.get('max_dist') - long_run)/long_run) * 100)
+            else:
+                week['long_change'] = 100
+            #print (week)
+
+
+
+
+        context.update({
+        'years': year_data,
+        'weeks': week_data,
+        'shoes': shoe_data,
+        'totals': total_data,
+        })
         return context
 
 class ShoeCreateView(CreateView):

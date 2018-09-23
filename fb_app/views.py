@@ -457,12 +457,22 @@ class ScoresView(TemplateView):
                 scores[loser.player]= score + loser.pick_num
         print (scores)
 
-        for game in Games.objects.filter(week=week, final=False):
-            picks = Picks.objects.filter(team=game.loser, player__league=league, week=week)
-            for loser in picks:
-                proj_score = scores.get(loser.player)
-                proj_scores[loser.player]= score + loser.pick_num
-        print (proj_scores)
+        if proj_loser_list != None:
+            for team in proj_loser_list:
+                team_obj = Teams.objects.get(nfl_abbr=team)
+                picks = Picks.objects.filter(team=team_obj, player__league=league, week=week)
+                for loser in picks:
+                    print (loser.pick_num, loser.team, loser.player)
+                    proj_score = proj_scores.get(loser.player)
+                    proj_scores[loser.player]= proj_score + loser.pick_num
+            print (proj_scores)
+        else:
+            for game in Games.objects.filter(week=week, final=False):
+                picks = Picks.objects.filter(team=game.loser, player__league=league, week=week)
+                for loser in picks:
+                    proj_score = proj_scores.get(loser.player)
+                    proj_scores[loser.player]= proj_score + loser.pick_num
+            print (proj_scores)
 
         for player in player_list:
             score_obj, created = WeekScore.objects.get_or_create(player=player, week=week)
