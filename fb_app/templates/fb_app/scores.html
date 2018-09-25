@@ -129,7 +129,7 @@
         <td hidden>{{game.home.nfl_abbr}}</td>
         <td hidden>{{game.away.nfl_abbr}}</td>
 
-        {%elif game.qtr == "Final" %}
+        {%elif game.qtr in "Final, final overtime" %}
         <input name="winners" type="hidden" value={{game.winner.nfl_abbr}}>
         <td>{{game.winner.nfl_abbr}}</td>
         {%else%}
