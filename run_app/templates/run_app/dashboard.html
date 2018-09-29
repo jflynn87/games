@@ -15,6 +15,7 @@
       <th>Date</th>
       <th>Dist</th>
       <th>Time</th>
+      <th>Pace</th>
       <th>Cals</th>
       <th>Runs</th>
       </thead>
@@ -24,6 +25,7 @@
         <td>{{year.year}}</td>
         <td>{{year.dist|floatformat:"0"}}</td>
         <td>{{year.time}}</td>
+        <td>{{year.pace}}</td>
         <td>{{year.cals}}</td>
         <td>{{year.num}}</td>
       </tr>
@@ -32,6 +34,7 @@
         <td>Totals</td>
         <td>{{totals.tot_dist|floatformat:"0"|intcomma}}</td>
         <td>{{totals.tot_time}}</td>
+        <td>{{totals.tot_pace}}</td>
         <td>{{totals.tot_cals|intcomma}}</td>
         <td>{{totals.num}}</td>
       </tr>
@@ -68,8 +71,9 @@
   <th>Cals</th>
   <th>Runs</th>
   <th>Long Run</th>
-  <th>2 week % change</th>
-  <th>2 week % change</th>
+  <th>Pace</th>
+  <th>Total % chg</th>
+  <th>Long % chg</th>
     <head>
       <meta charset="utf-8">
       <title></title>
@@ -88,6 +92,7 @@
       <td>{{week.cals}}</td>
       <td>{{week.num}}</td>
       <td>{{week.max_dist}}</td>
+      <td>{{week.pace}}</td>
       <td class="change">{{week.tot_change|floatformat:"0"}}</td>
       <td class="change">{{week.long_change|floatformat:"0"}}</td>
     </tr>

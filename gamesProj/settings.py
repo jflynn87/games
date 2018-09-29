@@ -42,8 +42,6 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'debug_toolbar',
-    'template_timings_panel',
     'mathfilters',
     'django_select2',
     'bootstrapform',
@@ -54,11 +52,6 @@ INSTALLED_APPS = [
 
 ]
 
-DEBUG_TOOLBAR_PANELS = [
-      'template_timings_panel.panels.TemplateTimings.TemplateTimings',
-      'debug_toolbar.panels.sql.SQLPanel',
-  ]
-
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -68,7 +61,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'debug_toolbar.middleware.DebugToolbarMiddleware',
+
 ]
 
 ROOT_URLCONF = 'gamesProj.urls'

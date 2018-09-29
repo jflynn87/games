@@ -11,6 +11,10 @@ class GamesAdmin(admin.ModelAdmin):
     list_display = ['week', 'home', 'away']
     list_filter = ['week']
 
+class WeekScoreAdmin(admin.ModelAdmin):
+    list_display = ['week', 'player', 'score']
+    list_filter = ['week', 'player']
+
 admin.site.register(Week)
 admin.site.register(Games, GamesAdmin)
 admin.site.register(Picks, PicksAdmin)
@@ -18,4 +22,4 @@ admin.site.register(Player)
 admin.site.register(League)
 admin.site.register(Teams)
 admin.site.register(MikeScore)
-admin.site.register(WeekScore)
+admin.site.register(WeekScore, WeekScoreAdmin)

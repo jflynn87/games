@@ -35,10 +35,16 @@ class DashboardView(ListView):
         week_data = (Run.objects.filter(date__gte="2017-9-1").annotate(year=ExtractYear('date')).annotate(week=ExtractWeek('date')).values('year', 'week')
         .annotate(total_dist=Sum('dist'), time=Sum('time'), cals=Sum('cals'), num=Count('date'), max_dist=(Max('dist'))).order_by('-year', '-week'))
 
-        print (total_data)
+        for year in year_data:
+            pace = datetime.timedelta(minutes=year.get('time').total_seconds() / year.get('dist'))
+            year['pace']=str(pace)[:4]
+
+        tot_pace = datetime.timedelta(minutes=total_data.get('tot_time').total_seconds() / total_data.get('tot_dist'))
+        total_data['tot_pace'] = str(tot_pace)[:4]
 
         for week in week_data:
-            #print (week)
+            pace = datetime.timedelta(minutes=week.get('time').total_seconds() / week.get('total_dist'))
+            week['pace']=str(pace)[:4]
 
             # format date for display and add to dict for context
             d = str(week.get('year')) + str("-W") + str(week.get('week'))
@@ -64,7 +70,6 @@ class DashboardView(ListView):
                 if wk_long_run > long_run:
                     long_run = wk_long_run
                 week_i += 1
-                #print (start_week, weekly_total, long_run)
 
             if weekly_total > 0:
                 week['tot_change']= (((week.get('total_dist') - weekly_total)/weekly_total) *100)
@@ -74,10 +79,6 @@ class DashboardView(ListView):
                 week['long_change'] = (((week.get('max_dist') - long_run)/long_run) * 100)
             else:
                 week['long_change'] = 100
-            #print (week)
-
-
-
 
         context.update({
         'years': year_data,

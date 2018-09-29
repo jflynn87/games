@@ -51,8 +51,17 @@ def readSheet(file,numPlayers):
                     else:
                         sheet.append(tag.text)
 
+        sheet_scores = True
         print (len(sheet))
         print (sheet)
+        if len(sheet)/numPlayers == app_week.game_cnt + 2:
+            print ('full sheet')
+        elif len(sheet)/numPlayers == app_week.game_cnt +1:
+            print ('scores missing')
+            sheet_scores = False
+        else:
+            print ('bad sheet')
+            exit()
 
         player_i = 0
         pick_list = []
@@ -62,21 +71,22 @@ def readSheet(file,numPlayers):
             #winner = 1
             user = User.objects.get(username=player)
             player = Player.objects.get(name=user)
-            scores = MikeScore()
-            scores.week = mike_score_week
-            scores.player = player
-            scores.total = sheet[(player_i + (numPlayers * 16) + numPlayers)]
-            scores.save()
+            if sheet_scores:
+                scores = MikeScore()
+                scores.week = mike_score_week
+                scores.player = player
+                scores.total = sheet[(player_i + (numPlayers * app_week.game_cnt) + numPlayers)]
+                scores.save()
 
-            my_total = 0
-            for score in WeekScore.objects.filter(week__lte=mike_score_week, player=player):
-                my_total += score.score
+                my_total = 0
+                for score in WeekScore.objects.filter(week__lte=mike_score_week, player=player):
+                    my_total += score.score
 
 
-            if int(my_total) != int(scores.total):
-                print ("score mismatch", player, my_total, scores.total)
-            else:
-                print ("score good", player, my_total, scores.total)
+                if int(my_total) != int(scores.total):
+                    print ("score mismatch", player, my_total, scores.total)
+                else:
+                    print ("score good", player, my_total, scores.total)
 
 
             i = 1
@@ -92,7 +102,7 @@ def readSheet(file,numPlayers):
                     try:
                         pick_team = Teams.objects.get(typo_name=pick)
                     except ObjectDoesNotExist:
-                        print (pick)
+                        print (str(pick) + str(player))
                         pick_team = Teams.objects.get(typo_name1=pick)
                 except Exception as e:
                         print (e)
@@ -112,7 +122,9 @@ def readSheet(file,numPlayers):
 
             picks_check = validate_picks.validate(pick_list)
             if not picks_check[0]:
-                print (picks_check[0], picks_check[1])
+                print (str(player), picks_check[0], picks_check[1])
+            else:
+                print ('picks valid', str(player))
 
             pick_list = []
             player_i +=1

@@ -48,7 +48,20 @@ class Run(models.Model):
         return reverse("run_app:list")
 
 
-    #def shoe_dist(self):
-    #    dist = Run.objects.values('shoes').annotate(total_dist=Sum('dist'))
-    #    print ('dist', dist)
-    #    return dist
+class Plan(models.Model):
+    name = models.CharField(max_length=100)
+    start_date = models.DateField()
+    end_date = models.DateField()
+
+    def __str__(self):
+        return self.name
+
+class Schedule(models.Model):
+    plan = models.ForeignKey(Plan, on_delete=models.CASCADE)
+    week = models.CharField(max_length=5)
+    date = models.DateField()
+    dist = models.PositiveIntegerField(null=True)
+    type = models.CharField(max_length=100)
+
+    def __str__(self):
+        return str(self.plan) + str(self.week)
