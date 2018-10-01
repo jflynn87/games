@@ -1,0 +1,82 @@
+{%extends "run_app/base.html"%}
+{%include staticfiles%}
+{%load bootstrap%}
+
+{%block body_block%}
+
+<h3>{{plan.name}}</h3>
+<table class="table">
+  <thead>
+    <th>Actual Distance</th>
+    <th>Plan Distance</th>
+    <th>Actual Num of Runs</th>
+    <th>Plan Num of Runs</th>
+    <th>Dist % </th>
+    <th>Num %</th>
+    <tbody>
+      <tr>
+        <td>{{actual.dist__sum}}</td>
+        <td>{{expected.plan_km|floatformat}}</td>
+        <td>{{actual.date__count}}</td>
+        <td>{{expected.date__count}}</td>
+        <td>{{actual.dist_percent|floatformat:"0"}}</td>
+        <td>{{actual.run_percent|floatformat:"0"}}</td>
+      </tr>
+    </tbody>
+  </thead>
+
+</table>
+
+
+<table class='table'>
+  <thead>
+    <th>Week</th>
+    <th>Day</th>
+    <th>Dist</th>
+    <th>Description</th>
+    <th>Actual</th>
+  </thead>
+  <tbody>
+    {%for day in current_week%}
+    <tr class='schedule'>
+      <td>{{day.week}}</td>
+      <td>{{day.date | date:"D, n/j"}}</td>
+      <td>{{day.dist}}</td>
+      <td>{{day.type}}</td>
+      <td>{{day.run.dist}}</td>
+    </tr>
+    {%endfor%}
+    {%for day in next_week%}
+    <tr class='schedule'>
+      <td>{{day.week}}</td>
+      <td>{{day.date | date:"l"}}</td>
+      <td>{{day.dist}}</td>
+      <td>{{day.type}}</td>
+      <td>{{day.run.dist}}</td>
+    </tr>
+    {%endfor%}
+    {%for day in last_week%}
+    <tr class='schedule'>
+      <td>{{day.week}}</td>
+      <td>{{day.date | date:"l"}}</td>
+      <td>{{day.dist}}</td>
+      <td>{{day.type}}</td>
+      <td>{{day.run.dist}}</td>
+    </tr>
+    {%endfor%}
+
+
+
+    {%for day in schedule%}
+    <tr class='schedule'>
+      <td>{{day.week}}</td>
+      <td>{{day.date | date:"l"}}</td>
+      <td>{{day.dist}}</td>
+      <td>{{day.type}}</td>
+      <td>{{day.run.dist}}</td>
+    </tr>
+    {%endfor%}
+  </tbody>
+</table>
+
+{%endblock%}

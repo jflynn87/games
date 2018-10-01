@@ -1,12 +1,12 @@
 from django.shortcuts import render
 from django.urls import reverse_lazy
-from django.http import HttpResponse
+from django.http import HttpResponse, HttpResponseRedirect
 from django.views.generic import (View,TemplateView,
                                 ListView,DetailView,
                                 CreateView,DeleteView,
                                 UpdateView)
 from braces.views import SelectRelatedMixin
-from run_app.models import Shoes, Run
+from run_app.models import Shoes, Run, Schedule, Plan
 from run_app.forms import CreateRunForm
 from django.db.models import Sum, Count, Max
 import datetime
@@ -14,11 +14,14 @@ from datetime import timedelta
 from dateutil.relativedelta import relativedelta
 from django.db.models.functions import ExtractWeek, ExtractYear
 from django.core.exceptions import ObjectDoesNotExist
+from django.db.models import Q
+
 
 # Create your views here.
 
 class DashboardView(ListView):
-    model = Run
+    model = Plan
+    #model = Run
     #select_related = ('shoes',)
     template_name = 'run_app/dashboard.html'
 
@@ -45,6 +48,7 @@ class DashboardView(ListView):
         for week in week_data:
             pace = datetime.timedelta(minutes=week.get('time').total_seconds() / week.get('total_dist'))
             week['pace']=str(pace)[:4]
+
 
             # format date for display and add to dict for context
             d = str(week.get('year')) + str("-W") + str(week.get('week'))
@@ -80,11 +84,13 @@ class DashboardView(ListView):
             else:
                 week['long_change'] = 100
 
+
         context.update({
         'years': year_data,
         'weeks': week_data,
         'shoes': shoe_data,
         'totals': total_data,
+        #'schedules': Plan.objects.filter(end_date__gt=datetime.datetime.now())
         })
         return context
 
@@ -135,6 +141,12 @@ class RunCreateView(CreateView):
     form_class = CreateRunForm
     success_url = reverse_lazy("run_app:run_list")
 
+    def form_valid(self, form):
+        self.object = form.save()
+        date = form.cleaned_data.get('date')
+        Schedule.objects.filter(date=date).update(run=Run.objects.get(date=date))
+        return HttpResponseRedirect(self.get_success_url())
+
 class RunListView(ListView):
     model = Run
     queryset = Run.objects.all().order_by('-date')
@@ -152,3 +164,37 @@ class RunUpdateView(UpdateView):
 class RunDeleteView(DeleteView):
     model= Run
     success_url = reverse_lazy("run_app:shoe_list")
+
+class ScheduleView(DetailView):
+    model=Plan
+
+    def get_context_data(self, **kwargs):
+            context = super(ScheduleView, self).get_context_data(**kwargs)
+            plan = Plan.objects.get(pk=self.kwargs.get('pk'))
+            today = datetime.datetime.now()
+            current_week = Schedule.objects.filter(date=today).values('week').first()
+            last_week = Schedule.objects.filter(week=int(current_week.get('week'))-1).values('week').first()
+            next_week = Schedule.objects.filter(week=int(current_week.get('week'))+1).values('week').first()
+            print (last_week, current_week, next_week)
+
+            expected = Schedule.objects.filter(Q(plan__id=plan.id) & Q(date__lte=today) & Q(dist__gt=0)).aggregate((Sum('dist')), (Count('date')))
+            actual = Run.objects.filter(Q(date__lte=today) & Q(date__gte=plan.start_date)).aggregate(Sum('dist'), (Count('date')))
+
+            plan_km = expected.get('dist__sum')*1.6
+            expected['plan_km']=plan_km
+            actual['dist_percent']= (actual.get('dist__sum')/expected.get('plan_km')) * 100
+            actual['run_percent']= (actual.get('date__count')/expected.get('date__count')) * 100
+            print (actual)
+
+            context.update( {
+            'plan': plan,
+            'last_week': Schedule.objects.filter(plan__pk=self.kwargs.get('pk'), week__in=[last_week.get('week')]),
+            'current_week': Schedule.objects.filter(plan__pk=self.kwargs.get('pk'), week__in=[current_week.get('week')]),
+            'next_week': Schedule.objects.filter(plan__pk=self.kwargs.get('pk'), week__in=[next_week.get('week')]),
+            'schedule': Schedule.objects.filter(plan__pk=self.kwargs.get('pk')).exclude(week__in=[last_week.get('week'), current_week.get('week'), next_week.get('week')]),
+            'expected': expected,
+            'actual': actual,
+
+            })
+            #print (context)
+            return context

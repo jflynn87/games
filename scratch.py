@@ -25,7 +25,7 @@ def get_schedule():
     for row in schedule.find_all('tr')[1:]:
         col = row.find_all('td')
         if len(col) >0:
-            week = col[0]
+            week = col[0].string
             for day in col[1:]:
                 schedule = Schedule()
                 schedule.plan = plan
@@ -58,8 +58,9 @@ def get_schedule():
                     schedule.dist = 26
 
                 schedule.type = day.string
+                print (schedule.date, schedule.week, schedule.dist, schedule.type)
                 schedule.save()
-                print (date, schedule.week, schedule.dist, schedule.type)
+                #print (date, schedule.week, schedule.dist, schedule.type)
                 date = date + timedelta(days=1)
 
 

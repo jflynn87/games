@@ -2,6 +2,7 @@ from django.db import models
 from django.urls import reverse
 
 # Create your models here.
+
 class Shoes(models.Model):
     name = models.CharField(max_length=30, unique=True)
     active = models.BooleanField()
@@ -41,6 +42,7 @@ class Run(models.Model):
     shoes = models.ForeignKey(Shoes, on_delete=models.CASCADE,related_name='run')
     location = models.CharField(choices=LOCATION_CHOICES, max_length=30)
 
+
     def __str__(self):
         return str(self.date) + ' - ' + str(self.location)
 
@@ -62,6 +64,8 @@ class Schedule(models.Model):
     date = models.DateField()
     dist = models.PositiveIntegerField(null=True)
     type = models.CharField(max_length=100)
+    run = models.ForeignKey(Run, on_delete=models.CASCADE, null=True, related_name='schedule')
+
 
     def __str__(self):
-        return str(self.plan) + str(self.week)
+        return str(self.plan) + str(self.week) + str(self.date)

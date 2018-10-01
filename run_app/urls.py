@@ -16,5 +16,6 @@ urlpatterns = [
     url(r'^update_run/(?P<pk>\d+)/$',views.RunUpdateView.as_view(),name='update_run'),
     url(r'^delete_run/(?P<pk>\d+)/$',views.RunDeleteView.as_view(),name='delete_run'),
     url(r'^dashboard/$',views.DashboardView.as_view(),name='dashboard'),
+    url(r'^plan/(?P<pk>\d+)/$',views.ScheduleView.as_view(),name='plan'),
 
     ]

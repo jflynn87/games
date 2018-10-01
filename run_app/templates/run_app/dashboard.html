@@ -60,6 +60,10 @@
       </tbody>
     </table>
     <a href="{% url 'run_app:add_run' %}"> <button class="btn btn-primary">Add Run</button></a>
+    <h4></h4>
+    {%for schedule in plan_list%}
+    <a href="/run_app/plan/{{schedule.id}}"> <button class="btn btn-primary">Schedule: {{schedule}}</button></a>
+    {%endfor%}
   </div>
 </div>
 
