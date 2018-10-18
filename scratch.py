@@ -8,19 +8,21 @@ from datetime import datetime, timedelta
 
 def get_schedule():
 
-    plan = Plan.objects.get(name="Nagano 19")
+    import urllib3.request
+    import urllib
+    import urllib3
+    from bs4 import BeautifulSoup
 
-    for day in Schedule.objects.all():
-        if day.type[-4:] in ['hill', 'empo', 'tlek', ' 200', ' 400',]:
-            day.dist = 2
-            day.save()
-#
-
-
-
-
-
-    #pull out the games and spreads from the NFL section
+    html = urllib.request.urlopen("https://connect.garmin.com/modern/activities")
+    soup = BeautifulSoup(html, 'html.parser')
+    print (soup)
+    #find nfl section within the html
+    #
+    # nfl_sect = (soup.find("div", {'id': 'line-nfl'}))
+    # #nfl_sect = (soup.find("div", {'id': 'line-mlb'}))
+    #
+    #
+    # #pull out the games and spreads from the NFL section
     #
     # spreads = {}
     # sep = ' '
@@ -37,13 +39,7 @@ def get_schedule():
     #
     #      week = Week.objects.get(current=True)
     #
-    #      try:
-    #         Games.objects.get(week=week, home=fav_obj)
-    #         Games.objects.filter(week=week, home=fav_obj).update(fav=fav_obj, dog=dog_obj, opening=opening, spread=spread)
-    #
-    #      except ObjectDoesNotExist:
-    #         Games.objects.filter(week=week,away=fav_obj).update(fav=fav_obj, dog=dog_obj, opening=opening, spread=spread)
-    #
-    # return
+
+
 
 get_schedule()

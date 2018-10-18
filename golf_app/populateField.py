@@ -91,7 +91,7 @@ def get_field(tournament_number):
     tourny.start_date = start_date
     #tourny.start_date = data["Tournament"]["yyyy"] + '-' +data["Tournament"]["mm"] + '-' + data["Tournament"]["dd"]
     tourny.field_json_url = json_url
-    tourny.score_json_url = 'https://statdata.pgatour.com/r/' + str(tournament_number) +'/2018/leaderboard-v2mini.json'
+    tourny.score_json_url = 'https://statdata.pgatour.com/r/' + str(tournament_number) +'/2019/leaderboard-v2mini.json'
     Tournament.objects.get_or_create(name=tourny.name,start_date=tourny.start_date, field_json_url=tourny.field_json_url, score_json_url=tourny.score_json_url)
 
 
