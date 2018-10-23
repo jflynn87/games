@@ -88,7 +88,7 @@ class Picks(models.Model):
 
 class ScoreDetails(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
-    pick = models.ForeignKey(Picks, on_delete=models.CASCADE)
+    pick = models.ForeignKey(Picks, on_delete=models.CASCADE, null=True)
     score = models.PositiveIntegerField(null=True)
     toPar = models.CharField(max_length=10, null=True)
     today_score = models.CharField(max_length = 10, null=True)
@@ -116,5 +116,3 @@ class TotalScore(models.Model):
 
     def __str__(self):
         return str(self.user) + str(self.score)
-
-    
