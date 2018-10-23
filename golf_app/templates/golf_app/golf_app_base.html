@@ -21,11 +21,12 @@
             <li> <a class='navbar-brand' href="{% url 'index' %}">Home</a>  </li>
             <li> <a class="navbar-link" href="{% url 'golf_app:field' %}">Make Picks</a> </li>
             <li> <a class="navbar-link" href="{% url 'golf_app:picks_list'%}">View Picks</a> </li>
-            <li> <a class="navbar-link" href="{% url 'golf_app:scores'%}">View Score</a> </li>
+            <li> <a class="navbar-link" href="{% url 'golf_app:scores'%}">Current Week Score</a> </li> 
+            <li> <a class="navbar-link" href="{% url 'golf_app:total_score'%}">Total Scores</a> </li>
             {% if user.is_authenticated %}
             <li> <a class="navbar-link" href="{% url 'logout' %}">Logout</a> </li>
             {%else%}
-            <li> <a class="navbar-link" href="{% url 'golf_app:user_login' %}"> <span class="glyphicon glyphicon-user"></span></a> </li>
+            <li> <a class="navbar-link" href="{% url 'login' %}"> <span class="glyphicon glyphicon-user"></span></a> </li>
             {%endif%}
           </ul>
         </nav>

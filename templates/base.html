@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 {%load staticfiles%}
 {%load static%}
-{% load humanize %} 
+{% load humanize %}
 <html lang="en" dir="ltr">
   <head>
     <meta charset="utf-8">
@@ -20,16 +20,11 @@
             {% if user.is_authenticated %}
             <li> <a class="navbar-link" href="{% url 'logout' %}">Logout</a> </li>
             {%else%}
-            <li> <a class="navbar-link" href="{% url 'golf_app:user_login' %}"> <span class="glyphicon glyphicon-user"></span></a> </li>
+            <li> <a class="navbar-link" href="{% url 'login' %}"> <span class="glyphicon glyphicon-user"></span></a> </li>
             {%endif%}
-            <!-- <li> <a class="navbar-link" href="{% url 'golf_app:field' %}">Make Picks</a> </li>
-            <li> <a class="navbar-link" href="{% url 'golf_app:picks_list'%}">View Picks</a> </li>
-              <li> <a class="navbar-link" href="{% url 'golf_app:scores'%}">View Score</a> </li>
-              <li> <a class="navbar-link" href="{% url 'golf_app:setup'%}">Setup</a> </li> -->
           </ul>
         </nav>
           </div>
-
 
     <div class="container">
           {%block body_block%}

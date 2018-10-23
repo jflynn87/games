@@ -18,20 +18,17 @@ from django.urls import path
 from django.conf.urls import include, url
 from golf_app import views
 from fb_app import views
+from main import views as main_views
 from django.conf import settings
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    url(r'^$', views.index,name='index'),
-    url(r'^logout/$',views.user_logout,name='logout'),
+    url(r'^$', main_views.index,name='index'),
+    url(r'^register/$',main_views.register,name='register'),
+    url(r'^login/$',main_views.user_login,name='login'),
+    url(r'^logout/$',main_views.user_logout,name='logout'),
     url(r'^fb_app/', include('fb_app.urls',namespace='fb_app')),
     url(r'^golf_app/', include('golf_app.urls',namespace='golf_app')),
     url(r'^run_app/', include('run_app.urls',namespace='run_app')),
 
 ]
-
-#if settings.DEBUG:
-#    import debug_toolbar
-#    urlpatterns = [
-#    url(r'^__debug__/',include(debug_toolbar.urls))
-#    ]  + urlpatterns

@@ -3,8 +3,10 @@ os.environ.setdefault("DJANGO_SETTINGS_MODULE","golfProj.settings")
 
 import django
 django.setup()
-from golf_app.models import Picks, Field, Group, Tournament, TotalScore, ScoreDetails, Name
+from golf_app.models import Picks, Field, Group, Tournament, TotalScore, ScoreDetails, Name, Season
 import urllib3
+from django.core.exceptions import ObjectDoesNotExist
+from golf_app import calc_score
 
 
 def clean_db():
@@ -75,6 +77,14 @@ def get_field(tournament_number):
     import urllib.request
     import datetime
 
+    season = Season.objects.get(current=True)
+
+    # try:
+    #     last_tournament = Tournament.objects.get(current=True)
+    #     last_tournament.current = False
+    #     last_tournament.save()
+    # except ObjectDoesNotExist:
+    #     print ("no current tournament")
 
     json_url = 'https://statdata.pgatour.com/r/' + str(tournament_number) +'/field.json'
     print (json_url)
@@ -84,6 +94,7 @@ def get_field(tournament_number):
 
     tourny = Tournament()
     tourny.name = data["Tournament"]["TournamentName"]
+    tourny.season = season
     start_date = datetime.date.today()
     print (start_date)
     while start_date.weekday() != 3:
@@ -91,15 +102,21 @@ def get_field(tournament_number):
     tourny.start_date = start_date
     #tourny.start_date = data["Tournament"]["yyyy"] + '-' +data["Tournament"]["mm"] + '-' + data["Tournament"]["dd"]
     tourny.field_json_url = json_url
-    tourny.score_json_url = 'https://statdata.pgatour.com/r/' + str(tournament_number) +'/2019/leaderboard-v2mini.json'
-    Tournament.objects.get_or_create(name=tourny.name,start_date=tourny.start_date, field_json_url=tourny.field_json_url, score_json_url=tourny.score_json_url)
+    tourny.score_json_url = 'https://statdata.pgatour.com/r/' + str(tournament_number) +'/' + str(season) + '/leaderboard-v2mini.json'
+    tourny.pga_tournament_num = tournament_number
+    tourny.current=True
+    tourny.complete=False
+    tourny.save()
+
+    #Tournament.objects.get_or_create(season=season, name=tourny.name,start_date=tourny.start_date, field_json_url=tourny.field_json_url, score_json_url=tourny.score_json_url, current=True, complete=False)
 
 
     field_list = {}
 
 
     for player in data["Tournament"]["Players"][0:]:
-        name = (' '.join(reversed(player["PlayerName"].split(', ')))).replace('Jr. ','')
+        #name = (' '.join(reversed(player["PlayerName"].split(', ')))).replace('Jr.','')
+        name = (' '.join(reversed(player["PlayerName"].split(', '))))
         try:
             if player["isAlternate"] == "Yes":
                 #exclude alternates from the field
@@ -155,7 +172,7 @@ def configure_groups(field_list):
 
 
     for k,v in groups.items():
-        Group.objects.get_or_create(number=k,playerCnt=v)[0]
+        Group.objects.get_or_create(tournament=Tournament.objects.get(current=True), number=k,playerCnt=v)[0]
 
     print (groups)
     return groups
@@ -165,35 +182,44 @@ def create_groups(tournament_number):
 
     '''takes in a date as a pick deadline and a tournament number for pgatour.com to get json files for the field and score'''
 
+    season = Season.objects.get(current=True)
 
-    #import re
+    if Tournament.objects.filter(season=season).count() > 0:
+        try:
+            last_tournament = Tournament.objects.get(current=True, complete=True, season=season)
+            last_tournament.current = False
+            last_tournament.save()
+            key = {}
+            key['pk']=last_tournament.pk
+            calc_score.calc_score(key)
 
-    Picks.objects.all().delete()
-    Group.objects.all().delete()
-    Field.objects.all().delete()
-    Tournament.objects.all().delete()
-    ScoreDetails.objects.all().delete()
-    TotalScore.objects.all().delete()
-
+        except ObjectDoesNotExist:
+            print ('no current tournament')
+    else:
+        print ('setting up first tournament of season')
 
     field = get_field(tournament_number)
     OWGR_rankings =  get_worldrank()
     PGA_rankings = get_pga_worldrank()
     configure_groups(field)
 
+    tournament = Tournament.objects.get(current=True, season=season)
+
     print (len(field))
 
     group_dict = {}
-    name_switch = ''
+    name_switch = False
 
     for player in field:
 
-        #print (player)
+        print ('player before', player)
         if Name.objects.filter(PGA_name=player).exists():
             name_switch = True
             name = Name.objects.get(PGA_name=player)
             player = name.OWGR_name
-            print (player)
+            print ('owgr after', player)
+            print ('pga player', name)
+
 
         rank = OWGR_rankings.get(player)
 
@@ -213,21 +239,21 @@ def create_groups(tournament_number):
     player_cnt = 1
     group_num = 1
 
-    groups = Group.objects.get(number=group_num)
+    groups = Group.objects.get(tournament=tournament, number=group_num)
 
     print (group_dict)
     for k, v in sorted(group_dict.items(), key=lambda x: x[1]):
         if player_cnt < groups.playerCnt:
           #print (k,v[0], str(groups.number), str(groups.playerCnt))
-          Field.objects.get_or_create(tournament=Tournament.objects.filter().first(), playerName=k, currentWGR=v[0], group=groups, alternate=v[1])[0]
+          Field.objects.get_or_create(tournament=tournament, playerName=k, currentWGR=v[0], group=groups, alternate=v[1])[0]
           player_cnt +=1
         elif player_cnt == groups.playerCnt:
           #print (k,v[0], str(groups.number), str(groups.playerCnt))
-          Field.objects.get_or_create(tournament=Tournament.objects.filter().first(), playerName=k, currentWGR=v[0], group=groups, alternate=v[1])[0]
+          Field.objects.get_or_create(tournament=tournament, playerName=k, currentWGR=v[0], group=groups, alternate=v[1])[0]
           group_num +=1
           player_cnt = 1
-          if Field.objects.count() < len(field):
-             groups = Group.objects.get(number=group_num)
+          if Field.objects.filter(tournament=tournament).count() < len(field):
+             groups = Group.objects.get(tournament=tournament,number=group_num)
 
 
 if __name__ == '__main__':

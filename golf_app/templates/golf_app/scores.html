@@ -1,8 +1,15 @@
 {%extends 'golf_app/golf_app_base.html'%}
 {%block body_block%}
-{% regroup detail_list by user as ordered_detail_list %}
+<!-- {% regroup detail_list by user as ordered_detail_list %} -->
 
 <div class="jumbotron">
+
+{%if lookup_errors%}
+  <h4>The following picks have withdrawn or have name lookup issues:</h4>
+  {%for key, values in lookup_errors.items%}
+  <p>{{key}}:  {{values}}</p>
+  {%endfor%}
+{%endif%}
 
 
 <h2>Overall Scores:</h2>
@@ -41,8 +48,11 @@
 <p></p>
 <h3 class="p-3 mb-2 bg-secondary text-white">Score  Details</h3>
 <ol>
-  {%for user in ordered_detail_list%}
-  <li class="display-4">{{user.grouper}}</li>
+  <!-- {%for user in ordered_detail_list%}
+  <li class="display-4">{{user.grouper}}</li> -->
+
+  {%for user, golfers in detail_list.items%}
+  <li class="display-4">{{user}}</li>
   <table class="table">
     <th>Golfer</th>
     <th>Rank</th>
@@ -50,25 +60,59 @@
     <th>Current Round Score</th>
     <th>Start of Day Position</th>
 
-  {%for pick in user.list%}
-    <tr>
-      <td>{{pick.player}}</td>
-      <td>{{pick.score}}</td>
-      <td>{{pick.toPar}}</td>
-      {%if pick.today_score == 'cut' or pick.today_score == 'not started'%}
+    {%for pick in golfers%}
+      {%if pick.pick.is_winner%}
+
+      <tr style="color:red">
+        <td>{{pick.pick.playerName}}</td>
+        <td>{{pick.score}}</td>
+        <td>{{pick.toPar}}</td>
+        {%if pick.today_score == 'cut' or pick.today_score == 'not started'%}
           <td>{{pick.today_score}}</td>
-      {%else%}
+        {%else%}
           <td>{{pick.today_score}} thru {{pick.thru}} holes</td>
+        {%endif%}
+        <td>{{pick.sod_position}}</td>
+      </tr>
+
+      {%else%}
+
+      <tr>
+        {%if pick.model_name == scoredetails%}
+        <td>{{pick.pick.playerName}}</td>
+        <td>{{pick.model_name}}</td>
+        <td>{{pick.score}}</td>
+        <td>{{pick.toPar}}</td>
+        {%if pick.today_score == 'cut' or pick.today_score == 'not started'%}
+          <td>{{pick.today_score}}</td>
+        {%else%}
+          <td>{{pick.today_score}} thru {{pick.thru}} holes</td>
+        {%endif%}
+        <td>{{pick.sod_position}}</td>
+      </tr>
+        {%endif%}
+      {%if pick.winner_bonus%}
+      <tr style="color:red">
+        <td>Winner Bonus</td>
+        <td>-{{pick.winner_bonus}}</td>
+      </tr>
       {%endif%}
-      <td>{{pick.sod_position}}</td>
-    </tr>
-
-  {%endfor%}
+      {%if pick.cut_bonus%}
+      <tr style="color:red">
+        <td>No Cut Bonus</td>
+        <td>-{{pick.cut_bonus}}</td>
+      </tr>
+      {%endif%}
+      {%endif%}
+    {%endfor%}
   </table>
-
-
-{%endfor%}
+  {%endfor%}
 </ol>
+{%endfor%}
+
+
+
+
 
 
 </div>

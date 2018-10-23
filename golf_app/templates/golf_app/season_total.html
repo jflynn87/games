@@ -1,0 +1,32 @@
+{%extends 'golf_app/golf_app_base.html'%}
+{%block body_block%}
+
+<table class="table">
+<thead>
+  <th>Tournament</th>
+  {%for user in user_list%}
+  <th>{{user}}</th>
+  {%endfor%}
+  <th>Winner</th>
+</thead>
+<tbody>
+  <tr>
+  {%for t, score in display_dict.items%}
+
+  <td> <a href="{%url 'golf_app:scores' pk=t.pk %}">{{t.name}}</td>
+  {%for s in score%}
+    {%if s.score%}
+      <td>{{s.score}}</td>
+    {%endif%}
+    {%if s.username%}
+    <td>{{s.username}}</td>
+    {%endif%}
+  {%endfor%}
+
+  </tr>
+  {%endfor%}
+</tbody>
+</table>
+
+
+{%endblock body_block%}

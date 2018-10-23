@@ -1,9 +1,9 @@
-{% extends 'golf_app/golf_app_base.html'%}
+{% extends 'base.html'%}
 {%block body_block%}
 
 <div class="jumbotron">
   <h1>Please Login</h1>
-  <form method="post" action="{% url 'golf_app:user_login'%}">
+  <form method="post" action="{% url 'login'%}">
     {%csrf_token%}
     <label for="username">Username:</label>
     <input type="text" name="username" placeholder="Enter Username">
@@ -18,7 +18,7 @@
   <p></p>
 
   <p>
-  <a href="{% url 'golf_app:register' %}"> <button class="btn btn-link">Click here to register</button></a></p>
+  <a href="{% url 'register' %}"> <button class="btn btn-link">Click here to register</button></a></p>
 
 </div>
 

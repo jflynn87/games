@@ -6,9 +6,7 @@
 
         {% if user.is_authenticated %}
         <h1>Hi, {{user.get_username}}!</h1>
-        {%for t in tournament%}
-        <h2>Welcome to the {{t.name}}  </h2>
-        {%endfor%}
+        <h2>Welcome to the {{tournament.name}}  </h2>
         {%else%}
         <h1>Please Login <a class="navbar-link" href="{% url 'golf_app:user_login' %}"> <span class="glyphicon glyphicon-user"></span></a></h1>
         {%endif%}

@@ -3,14 +3,14 @@
 
   <div class="jumbotron">
 
-{%for t in tournament_list%}
-    <h1>{{user.get_username}}, here are your picks for the {{t}}.  Good luck!</h1>
-{%endfor%}
+
+  <h1>{{user.get_username}}, here are your picks for the {{tournament}}.  Good luck!</h1>
+
 
       <ul>
         {% for pick in picks_list%}
 
-        <li>Group {{pick.playerName.group}}:    {{pick.playerName}}</li>
+        <li>Group {{pick.playerName.group}}:    {{pick.playerName.playerName}}</li>
 
         {%endfor%}
       </ul>
