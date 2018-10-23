@@ -67,7 +67,7 @@ class Name(models.Model):
 
 
 class Picks(models.Model):
-    playerName = models.ForeignKey(Field, on_delete=models.CASCADE)
+    playerName = models.ForeignKey(Field, on_delete=models.CASCADE, blank=True)
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     score = models.PositiveIntegerField(null=True)
 
