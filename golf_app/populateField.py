@@ -35,7 +35,7 @@ def get_pga_worldrank():
         try:
             player = (row.find('td', {'class': 'player-name'}).text).strip('\n')
             rank = row.find('td').text.strip('\n').strip(' ')
-            ranks[player] = int(rank)
+            ranks[player.capitalize()] = int(rank)
         except Exception as e:
             print(e)
 
@@ -62,7 +62,7 @@ def get_worldrank():
         try:
             player = (row.find('td', {'class': 'name'}).text).replace('(Am)','').replace(' Jr','').replace('Am)','')
             rank = row.find('td').text
-            ranks[player] = int(rank)
+            ranks[player.capitalize()] = int(rank)
         except Exception as e:
             print(e)
 
@@ -221,10 +221,10 @@ def create_groups(tournament_number):
             print ('pga player', name)
 
 
-        rank = OWGR_rankings.get(player)
+        rank = OWGR_rankings.get(player.capitalize())
 
         if rank == None:
-            rank = PGA_rankings.get(player)
+            rank = PGA_rankings.get(player.capitalize())
 
             if rank == None:
                 print (player)

@@ -6,21 +6,21 @@ from django.conf import settings
 # Create your models here.
 
 class Season(models.Model):
-    season = models.CharField(max_length=10)
+    season = models.CharField(max_length=10, null=True)
     current = models.BooleanField()
 
     def __str__(self):
         return self.season
 
 class Tournament(models.Model):
-    season = models.ForeignKey(Season, on_delete=models.CASCADE)
+    season = models.ForeignKey(Season, on_delete=models.CASCADE, blank=True, default='', null=True)
     name = models.CharField(max_length=264)
     start_date = models.DateField(null=True)
     field_json_url = models.URLField(null=True)
     score_json_url = models.URLField(null=True)
     current = models.BooleanField(default=False)
     complete = models.BooleanField(default=False)
-    pga_tournament_num = models.CharField(max_length=10)
+    pga_tournament_num = models.CharField(max_length=10, null=True)
 
     def get_queryset(self):
         return self.objects.filter().first()
@@ -30,7 +30,7 @@ class Tournament(models.Model):
 
 
 class Group(models.Model):
-    tournament= models.ForeignKey(Tournament, on_delete=models.CASCADE)
+    tournament= models.ForeignKey(Tournament, on_delete=models.CASCADE, null=True)
     number = models.PositiveIntegerField()
     playerCnt = models.PositiveIntegerField()
 
@@ -39,7 +39,7 @@ class Group(models.Model):
 
 
 class Field(models.Model):
-    playerName = models.CharField(max_length = 256)
+    playerName = models.CharField(max_length = 256, null=True)
     currentWGR = models.IntegerField(unique=False, null=True)
     tournament = models.ForeignKey(Tournament, on_delete=models.CASCADE)
     group = models.ForeignKey(Group, on_delete=models.CASCADE, null=True)
@@ -67,7 +67,7 @@ class Name(models.Model):
 
 
 class Picks(models.Model):
-    playerName = models.ForeignKey(Field, on_delete=models.CASCADE, blank=True)
+    playerName = models.ForeignKey(Field, on_delete=models.CASCADE, blank=True, default='', null=True)
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     score = models.PositiveIntegerField(null=True)
 
@@ -88,7 +88,7 @@ class Picks(models.Model):
 
 class ScoreDetails(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
-    pick = models.ForeignKey(Picks, on_delete=models.CASCADE, null=True)
+    pick = models.ForeignKey(Picks, on_delete=models.CASCADE, blank=True, null=True)
     score = models.PositiveIntegerField(null=True)
     toPar = models.CharField(max_length=10, null=True)
     today_score = models.CharField(max_length = 10, null=True)

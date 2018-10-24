@@ -3,8 +3,9 @@ os.environ.setdefault("DJANGO_SETTINGS_MODULE","gamesProj.settings")
 
 import django
 django.setup()
-from run_app.models import Plan, Schedule
+from golf_app.models import BonusDetails
 from datetime import datetime, timedelta
+import sqlite3
 
 def get_schedule():
 
@@ -13,9 +14,19 @@ def get_schedule():
     import urllib3
     from bs4 import BeautifulSoup
 
-    html = urllib.request.urlopen("https://connect.garmin.com/modern/activities")
-    soup = BeautifulSoup(html, 'html.parser')
-    print (soup)
+    connection  = sqlite3.connect("db.sqlite3")
+
+    cursor = connection.cursor()
+
+    dropTableStatement = "DROP TABLE golf_app_tournament"
+
+    cursor.execute(dropTableStatement)
+
+    connection.close()
+
+
+    #BonusDetails.objects.all().delete()
+    #Group.objects.all().delete()
     #find nfl section within the html
     #
     # nfl_sect = (soup.find("div", {'id': 'line-nfl'}))
