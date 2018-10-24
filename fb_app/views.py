@@ -67,7 +67,7 @@ def get_spreads():
 
 
 class GameListView(LoginRequiredMixin,ListView):
-    login_url = '/fb_app/user_login'
+    login_url = 'login'
     model=Games
     #PickFormSet = formset_factory(CreatePicksForm)
 
@@ -194,7 +194,7 @@ class GameListView(LoginRequiredMixin,ListView):
 
 
 class PicksListView(LoginRequiredMixin,ListView):
-    login_url = '/fb_app/user_login/'
+    login_url = 'login/'
     redirect_field_name = 'fb_app/pick_list.html'
     model = Picks
 

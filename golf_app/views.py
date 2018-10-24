@@ -19,7 +19,7 @@ from django.db.models import Min, Q
 # Create your views here.
 
 class CreatePicksView(LoginRequiredMixin,CreateView):
-    login_url = '/golf_app/user_login/'
+    login_url = 'login'
     template_name = 'golf_app/make_picks.html'
     model = Picks
     #redirect_field_name = 'golf_app/picks_list.html'
@@ -45,7 +45,7 @@ class CreatePicksView(LoginRequiredMixin,CreateView):
 
 ####  below here works in v1
 class FieldListView(LoginRequiredMixin,ListView):
-    login_url = '/golf_app/user_login/'
+    login_url = 'login'
     template_name = 'golf_app/field_list.html'
     model = Field
     redirect_field_name = 'golf_app/picks_list.html'
@@ -99,7 +99,7 @@ class FieldListView(LoginRequiredMixin,ListView):
 
 
 class PicksListView(LoginRequiredMixin,ListView):
-    login_url = '/golf_app/user_login/'
+    login_url = 'login'
     redirect_field_name = 'golf_app/pick_list.html'
     model = Picks
 
