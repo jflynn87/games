@@ -194,7 +194,7 @@ class GameListView(LoginRequiredMixin,ListView):
 
 
 class PicksListView(LoginRequiredMixin,ListView):
-    login_url = 'login/'
+    login_url = 'login'
     redirect_field_name = 'fb_app/pick_list.html'
     model = Picks
 

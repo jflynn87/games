@@ -79,7 +79,7 @@ class Picks(models.Model):
 
     def is_winner(self):
         winner = ScoreDetails.objects.get(pick=self, score=1)
-        print (winner)
+        
         if (self.playerName == winner.pick.playerName and self.playerName.tournament.complete):
            return True
         else:
@@ -105,11 +105,15 @@ class BonusDetails(models.Model):
     winner_bonus = models.IntegerField(null=True)
     cut_bonus = models.IntegerField(null=True)
 
+    def __str__(self):
+        return str(self.user)
+
 
 class TotalScore(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     tournament = models.ForeignKey(Tournament, on_delete=models.CASCADE, null=True)
     score = models.IntegerField(null=True)
+
 
     class Meta():
         unique_together = ('tournament', 'user')

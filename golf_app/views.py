@@ -14,6 +14,7 @@ from golf_app import populateField, calc_score
 from django.utils import timezone
 from django.core.exceptions import ObjectDoesNotExist
 from django.db.models import Min, Q
+import scipy.stats as ss
 
 
 # Create your views here.
@@ -144,19 +145,19 @@ class ScoreListView(DetailView):
         if kwargs.get('pk') == None:
             tournament = Tournament.objects.get(current=True)
             self.kwargs['pk'] = str(tournament.pk)
-        #if self.request.POST:
-        #    kwargs.pop('pk',None)
         print ('dispatch', self.kwargs)
         return super(ScoreListView, self).dispatch(request, *args, **kwargs)
 
     def get(self, request, **kwargs):
 
-        print (self.kwargs)
-        print (request)
-        tournament = Tournament.objects.get(pk=self.kwargs.get('pk'))
+        #print (self.kwargs)
 
+        tournament = Tournament.objects.get(pk=self.kwargs.get('pk'))
+        start_time = datetime.datetime.now()
         if datetime.date.today() >= tournament.start_date:
             scores = calc_score.calc_score(self.kwargs, request)
+            end_time= datetime.datetime.now()
+            print ('exec time: ', start_time, end_time, end_time-start_time)
             return render(request, 'golf_app/scores.html', {'scores':scores[0],
                                                         'detail_list':scores[1],
                                                         'leader_list':scores[2],
@@ -175,18 +176,22 @@ class SeasonTotalView(ListView):
         display_dict = {}
         user_list = []
         winner_dict = {}
+        winner_list = []
+        total_scores = {}
 
         for user in TotalScore.objects.values('user_id').distinct().order_by('user_id'):
-            user_list.append(User.objects.get(pk=user.get('user_id')))
-            print (user_list)
-
+            user_key = user.get('user_id')
+            user_list.append(User.objects.get(pk=user_key))
+            winner_dict[User.objects.get(pk=user_key)]=0
+            total_scores[User.objects.get(pk=user_key)]=0
 
         for tournament in Tournament.objects.filter(season__current=True):
             score_list = []
             for score in TotalScore.objects.filter(tournament=tournament).order_by('user_id'):
                 score_list.append(score)
+                total_score = total_scores.get(score.user)
+                total_scores[score.user] = total_score + score.score
             if tournament.complete:
-                winner_list = []
                 winner = TotalScore.objects.filter(tournament=tournament).order_by('score')
                 winning_score = winner.annotate(Min('score'))
                 num_of_winners = winner.filter(score=score.score, tournament=tournament).count()
@@ -204,21 +209,44 @@ class SeasonTotalView(ListView):
                     winner_list.append(winner_data)
                 else:
                      print ('something wrong with winner lookup', 'num of winners: ', len(winner))
+
             display_dict[tournament] = score_list
-            # print ('winner list', winner_list[0][1])
-            # print (len(winner_list))
-            # for winner in winner_list[0]:
-            #     winner_dict[winner.user]: tournament
-            # print (winner_dict)
+
+        #for user in TotalScore.objects.values('user').distinct().order_by('user_id'):
+        #    winner_dict[(User.objects.get(pk=user.get('user')))]=0
+
+        for data in winner_list:
+            #print ('data', data)
+            for winner in data[1]:
+                prize = winner_dict.get(winner)
+                prize = prize + (30/data[2])
+                winner_dict[winner] = prize
+
+        total_score_list = []
+        for score in total_scores.values():
+            total_score_list.append(score)
+        #display_dict['totals']=total_score_list
+
+        ranks = ss.rankdata(total_score_list, method='min')
+        rank_list = []
+        for rank in ranks:
+            rank_list.append(rank)
 
 
+        print ('display_dict')
+        print (display_dict)
+        print ('winner dict')
+        print (winner_dict)
 
         context = super(SeasonTotalView, self).get_context_data(**kwargs)
         context.update({
         'display_dict':  display_dict,
         'user_list': user_list,
+        'rank_list': rank_list,
+        'totals_list': total_score_list,
+        'prize_list': winner_dict,
+        
         })
-        print (context)
         return context
 
 
@@ -239,3 +267,6 @@ def setup(request):
         except ObjectDoesNotExist:
             populateField.create_groups(url_number)
             return HttpResponseRedirect(reverse('golf_app:field'))
+
+class AboutView(TemplateView):
+    template_name='golf_app/about.html'

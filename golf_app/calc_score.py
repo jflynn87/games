@@ -69,7 +69,7 @@ def calc_score(t_args, request=None):
                     totalScore += pickRank
 
                     #if ScoreDetails.objects.filter(user=user, pick__playerName__tournament=tournament, pick__playerName__playerName=pick).exists():
-                    print (user, pick, tournament)
+                    #print (user, pick, tournament)
                     pick_obj = Picks.objects.get(user=user, playerName__playerName=pick, playerName__tournament=tournament)
                     score_detail, created = ScoreDetails.objects.get_or_create(user=user, pick__playerName__tournament=tournament, pick=pick_obj)
 
@@ -141,8 +141,6 @@ def calc_score(t_args, request=None):
 
         display_scores = TotalScore.objects.filter(tournament=tournament).order_by('score')
 
-
-
         print ("scores dict:")
         print (display_detail)
 
@@ -164,7 +162,6 @@ def getPicks(tournament):
                     picks_dict[str(user)] = pick_list
                     pick_list = []
 
-            print (picks_dict)
             return (picks_dict)
 
 
