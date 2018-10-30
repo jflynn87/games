@@ -60,7 +60,7 @@ def get_worldrank():
 
     for row in rankslist.find_all('tr')[1:]:
         try:
-            player = (row.find('td', {'class': 'name'}).text).replace('(Am)','').replace(' Jr','').replace('Am)','')
+            player = (row.find('td', {'class': 'name'}).text).replace('(Am)','').replace(' Jr','').replace('(am)','')
             rank = row.find('td').text
             ranks[player.capitalize()] = int(rank)
         except Exception as e:

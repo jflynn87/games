@@ -13,7 +13,7 @@ class Season(models.Model):
         return self.season
 
 class Tournament(models.Model):
-    season = models.ForeignKey(Season, on_delete=models.CASCADE, blank=True, default='', null=True)
+    season = models.ForeignKey(Season, on_delete=models.CASCADE)
     name = models.CharField(max_length=264)
     start_date = models.DateField(null=True)
     field_json_url = models.URLField(null=True)
@@ -30,7 +30,7 @@ class Tournament(models.Model):
 
 
 class Group(models.Model):
-    tournament= models.ForeignKey(Tournament, on_delete=models.CASCADE, null=True)
+    tournament= models.ForeignKey(Tournament, on_delete=models.CASCADE)
     number = models.PositiveIntegerField()
     playerCnt = models.PositiveIntegerField()
 
@@ -79,7 +79,7 @@ class Picks(models.Model):
 
     def is_winner(self):
         winner = ScoreDetails.objects.get(pick=self, score=1)
-        
+
         if (self.playerName == winner.pick.playerName and self.playerName.tournament.complete):
            return True
         else:

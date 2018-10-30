@@ -5,8 +5,12 @@ from django.contrib import admin
 from golf_app.models import Season, Tournament, Field, Picks, Group, TotalScore, ScoreDetails, Name, BonusDetails
 
 class GroupAdmin(admin.ModelAdmin):
-    list_display = ['number', 'playerCnt']
-    list_filter = ['tournament']
+    list_display = ('tournament', 'number', 'playerCnt')
+    list_filter = ['tournament',]
+
+class FieldAdmin(admin.ModelAdmin):
+    list_display = ['tournament', 'playerName']
+    list_filter = ['tournament',]
 
 
 admin.site.register(Tournament)

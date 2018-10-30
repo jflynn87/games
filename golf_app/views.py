@@ -192,21 +192,31 @@ class SeasonTotalView(ListView):
                 total_score = total_scores.get(score.user)
                 total_scores[score.user] = total_score + score.score
             if tournament.complete:
-                winner = TotalScore.objects.filter(tournament=tournament).order_by('score')
-                winning_score = winner.annotate(Min('score'))
-                num_of_winners = winner.filter(score=score.score, tournament=tournament).count()
+                winner = TotalScore.objects.filter(tournament=tournament).order_by('score').values('score')
+                winning_score = winner[0].get('score')
+                #winning_score = winner[0].score
+                num_of_winners = winner.filter(score=winning_score, tournament=tournament).count()
+                win_user_list = []
                 if num_of_winners == 1:
-                    score_list.append(User.objects.get(pk=score.user.pk))
-                    winner_data = (tournament, [User.objects.get(pk=score.user.pk)], num_of_winners)
+                    winner_data = ([TotalScore.objects.get(tournament=tournament, score=winning_score)], num_of_winners)
+                    win_user_list.append(User.objects.get(pk=winner_data[0][0].user.pk))
+                    score_list.append(User.objects.get(pk=winner_data[0][0].user.pk))
+                    winner_data = (win_user_list, num_of_winners)
                     winner_list.append(winner_data)
+                    print ('win1', winner_list)
                 elif num_of_winners > 1:
-                    users = TotalScore.objects.filter(tournament=tournament, score=score.score)
-                    win_user_list = []
-                    for user in users:
-                        score_list.append(User.objects.get(pk=user.user.pk))
-                        win_user_list.append(User.objects.get(pk=user.user.pk))
-                    winner_data = (tournament, win_user_list, num_of_winners)
-                    winner_list.append(winner_data)
+                    winner_data = ([TotalScore.objects.filter(tournament=tournament, score=winning_score)], num_of_winners)
+                    #win_user_list = []
+                    for user in winner_data[0]:
+                        print ('this', user)
+                        for name in user:
+                            print ('this 2', name)
+                        #score_list.append(User.objects.get(pk=name.user.pk))
+                            win_user_list.append(User.objects.get(pk=name.user.pk))
+                            winner_data = (win_user_list, num_of_winners)
+                            score_list.append(User.objects.get(pk=name.user.pk))
+                        winner_list.append(winner_data)
+
                 else:
                      print ('something wrong with winner lookup', 'num of winners: ', len(winner))
 
@@ -215,12 +225,13 @@ class SeasonTotalView(ListView):
         #for user in TotalScore.objects.values('user').distinct().order_by('user_id'):
         #    winner_dict[(User.objects.get(pk=user.get('user')))]=0
 
-        for data in winner_list:
-            #print ('data', data)
-            for winner in data[1]:
-                prize = winner_dict.get(winner)
-                prize = prize + (30/data[2])
-                winner_dict[winner] = prize
+        print ('this 4', winner_list)
+        for winner in winner_list:
+            for data in winner[0]:
+                print ('this 3', winner[1])
+                prize = winner_dict.get(data)
+                prize = prize + (30/winner[1])
+                winner_dict[data] = prize
 
         total_score_list = []
         for score in total_scores.values():
@@ -245,7 +256,7 @@ class SeasonTotalView(ListView):
         'rank_list': rank_list,
         'totals_list': total_score_list,
         'prize_list': winner_dict,
-        
+
         })
         return context
 

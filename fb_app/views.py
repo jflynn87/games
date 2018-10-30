@@ -98,12 +98,14 @@ class GameListView(LoginRequiredMixin,ListView):
             #picks = Picks.objects.filter(week=week, player=player).order_by('-pick_num')
             context.update({
             #'picks_list': picks,
+            'week': Week.objects.get(current=True),
             'games_list': games,
             'form': form,
             'teams': team_dict
             })
         else:
             context.update({
+            'week': Week.objects.get(current=True),
             'games_list': games,
             'form': form,
             'teams': team_dict
