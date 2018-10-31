@@ -217,13 +217,23 @@ class ScoresView(TemplateView):
 
 
     def dispatch(self, request, *args, **kwargs):
-        if kwargs.get('pk') == None:
+        if kwargs.get('pk')  == None:
             week = Week.objects.get(current=True)
-            self.kwargs['pk'] = str(week.pk)
-        #if self.request.POST:
-        #    kwargs.pop('pk',None)
-        print (kwargs)
+            if request.user.is_anonymous and \
+            Picks.objects.filter(week__pk=week.pk, player__league__league="Football Fools").count() == 0:
+                last_week = Week.objects.get(pk=(week.pk-1))
+                self.kwargs['pk'] = str(last_week.pk)
+            else:
+                self.kwargs['pk']= str(week.pk)
         return super(ScoresView, self).dispatch(request, *args, **kwargs)
+
+
+        # works before changes to attempt to make football fools show old week till picks created
+        # if kwargs.get('pk') == None:
+        #     week = Week.objects.get(current=True)
+        #     self.kwargs['pk'] = str(week.pk)
+        # print (kwargs)
+        # return super(ScoresView, self).dispatch(request, *args, **kwargs)
 
     def get_context_data(self, **kwargs):
         context = super(ScoresView, self).get_context_data(**kwargs)

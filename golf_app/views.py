@@ -19,31 +19,6 @@ import scipy.stats as ss
 
 # Create your views here.
 
-class CreatePicksView(LoginRequiredMixin,CreateView):
-    login_url = 'login'
-    template_name = 'golf_app/make_picks.html'
-    model = Picks
-    #redirect_field_name = 'golf_app/picks_list.html'
-    fields = ('playerName',)
-
-    def post(self, request):
-        if request.method == "POST":
-            form = CreatePicksForm(request.POST)
-
-        if form.is_valid():
-            print (form)
-        else:
-            print ("bad form")
-
-    def get_context_data(self,**kwargs):
-        context = super(CreatePicksView, self).get_context_data(**kwargs)
-        context.update({
-        'field_list': Field.objects.all(),
-        'picks': Picks.objects.all(),
-        })
-        return context
-
-
 ####  below here works in v1
 class FieldListView(LoginRequiredMixin,ListView):
     login_url = 'login'

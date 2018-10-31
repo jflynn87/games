@@ -14,9 +14,9 @@ class FieldAdmin(admin.ModelAdmin):
 
 
 admin.site.register(Tournament)
-admin.site.register(Field)
+admin.site.register(Field, FieldAdmin)
 admin.site.register(Picks)
-admin.site.register(Group)
+admin.site.register(Group, GroupAdmin)
 admin.site.register(TotalScore)
 admin.site.register(ScoreDetails)
 admin.site.register(Name)

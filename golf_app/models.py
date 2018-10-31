@@ -22,8 +22,8 @@ class Tournament(models.Model):
     complete = models.BooleanField(default=False)
     pga_tournament_num = models.CharField(max_length=10, null=True)
 
-    def get_queryset(self):
-        return self.objects.filter().first()
+    #def get_queryset(self):
+    #    return self.objects.filter().first()
 
     def __str__(self):
         return self.name
@@ -35,7 +35,7 @@ class Group(models.Model):
     playerCnt = models.PositiveIntegerField()
 
     def __str__(self):
-        return str(self.number)
+        return str(self.number) + '-' + str(self.tournament)
 
 
 class Field(models.Model):
