@@ -3,7 +3,9 @@
 {%block body_block%}
 <!-- {% regroup detail_list by user as ordered_detail_list %} -->
 
+
 <div class="jumbotron">
+
 
 {%if lookup_errors%}
   <h4>The following picks have withdrawn or have name lookup issues:</h4>
@@ -111,12 +113,6 @@
   {%endfor%}
 </ol>
 {%endfor%}
-
-
-
-
-
-
 </div>
 
 {%endblock%}

@@ -1,9 +1,9 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.views.generic import View, TemplateView, ListView, DetailView, CreateView, UpdateView, FormView
 from golf_app.models import Field, Tournament, Picks, Group, TotalScore, ScoreDetails
-from golf_app.forms import  CreatePicksForm
+#from golf_app.forms import  CreatePicksForm, PickFormSet, NoPickFormSet
 from django.contrib.auth.decorators import login_required
-from django.http import HttpResponseRedirect, HttpResponse
+from django.http import HttpResponseRedirect, HttpResponse, Http404
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.views.generic.base import TemplateResponseMixin
@@ -13,13 +13,12 @@ import datetime
 from golf_app import populateField, calc_score
 from django.utils import timezone
 from django.core.exceptions import ObjectDoesNotExist
-from django.db.models import Min, Q
+from django.db.models import Min, Q, Count
 import scipy.stats as ss
+from django.http import JsonResponse
+import json
 
 
-# Create your views here.
-
-####  below here works in v1
 class FieldListView(LoginRequiredMixin,ListView):
     login_url = 'login'
     template_name = 'golf_app/field_list.html'
@@ -36,10 +35,15 @@ class FieldListView(LoginRequiredMixin,ListView):
 
 
     def post(self, request):
+
         tournament = Tournament.objects.get(current=True)
         group = Group.objects.filter(tournament=tournament)
         form = request.POST
-        user = User()
+        picks = []
+        for key, pick in form.items():
+            if key not in  ('csrfmiddlewaretoken', 'userid'):
+                picks.append(pick)
+        print (picks)
 
         if datetime.date.today() >= tournament.start_date:
             print (tournament.start_date)
@@ -47,12 +51,8 @@ class FieldListView(LoginRequiredMixin,ListView):
             return HttpResponse ("Sorry it is too late to submit picks.")
 
 
-        if len(Picks.objects.filter(playerName__tournament=tournament, user=form['userid'])) > 0:
-            return render (request, 'golf_app/field_list.html',
-                 {'field_list': Field.objects.filter(tournament=tournament),
-                  'picks_list': Picks.objects.filter(tournament=tournament, user=form['userid']),
-                  'error_message':  "You have already made picks, please select view picks above",
-                        })
+        if Picks.objects.filter(playerName__tournament__current=True, user=form.get('userid')).count()>0:
+            Picks.objects.filter(playerName__tournament__current=True, user=form.get('userid')).delete()
 
         print (len(form), len(group))
         if (len(form)-2) == len(group):
@@ -63,25 +63,47 @@ class FieldListView(LoginRequiredMixin,ListView):
                    picks.playerName = Field.objects.get(pk=v)
                    picks.save()
         else:
-            #return reverse ('FieldListView')
+            print (form)
+            group_list = []
+            for key, value in form.items():
+                if key not in ('userid', 'csrfmiddlewaretoken'):
+                    group_list.append(key.split('-')[0])
+            missing_group = []
+            for num in group:
+                if str(num.number) not in group_list:
+                    missing_group.append(num.number)
+            print (missing_group)
+
+
+
             return render (request, 'golf_app/field_list.html',
                 {'field_list': Field.objects.filter(tournament=tournament),
-                 'picks_list': Picks.objects.filter(playerName__tournament__current=True, user=form['userid']),
+                 #'picks_list': Picks.objects.filter(playerName__tournament__current=True, user=form['userid']),
                  'form':form,
-                 'error_message':  "Missing Picks, try again",
+                 'picks': picks,
+                 'error_message':  "Missing Picks for the following groups: " + str(missing_group),
                      })
 
         return redirect('golf_app:picks_list')
+
+
+def get_picks(request):
+    if request.is_ajax():
+        print (request.user)
+        pick_list = []
+        for pick in Picks.objects.filter(user__username=request.user, playerName__tournament__current=True):
+            pick_list.append(pick.playerName.pk)
+        data = json.dumps(pick_list)
+        return HttpResponse(data, content_type="application/json")
+    else:
+        print ('not ajax')
+        raise Http404
 
 
 class PicksListView(LoginRequiredMixin,ListView):
     login_url = 'login'
     redirect_field_name = 'golf_app/pick_list.html'
     model = Picks
-
-    #def get_queryset(self):
-    #    print (self.request.user)
-    #    return Picks.objects.filter(playerName__tournament__current=True,user=self.request.user)
 
     def get_context_data(self,**kwargs):
         context = super(PicksListView, self).get_context_data(**kwargs)
@@ -91,25 +113,6 @@ class PicksListView(LoginRequiredMixin,ListView):
         'picks_list': Picks.objects.filter(playerName__tournament__current=True,user=self.request.user),
         })
         return context
-
-    def post(self,request):
-        form = request.POST
-        user = User()
-
-        tournament = Tournament.objects.all()
-
-        for t in tournament:
-            if datetime.date.today() >= t.start_date:
-                return HttpResponse ("Sorry it is too late to change picks.")
-
-        for pick in self.get_queryset():
-            pick.delete()
-
-        return render (request, 'golf_app/field_list.html',
-            {'field_list': Field.objects.all(),
-             'picks_list': Picks.objects.all(),
-             'error_message':  "Picks Deleted.  Please enter new picks.",
-                 })
 
 
 class ScoreListView(DetailView):
@@ -140,7 +143,15 @@ class ScoreListView(DetailView):
                                                         'lookup_errors': scores[4],
                                                         })
         else:
-           return HttpResponse("Come back on the tournament start day!")
+            tournament = Tournament.objects.get(current=True)
+            user_dict = {}
+            for user in Picks.objects.filter(playerName__tournament=tournament).values('user__username').annotate(Count('playerName')):
+                user_dict[user.get('user__username')]=user.get('playerName__count')
+            scores=calc_score.calc_score(self.kwargs, request)
+            return render(request, 'golf_app/pre_start.html', {'user_dict': user_dict,
+                                                            'tournament': tournament,
+                                                            'lookup_errors': scores[4]
+                                                            })
 
 
 class SeasonTotalView(ListView):

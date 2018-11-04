@@ -12,10 +12,15 @@ class FieldAdmin(admin.ModelAdmin):
     list_display = ['tournament', 'playerName']
     list_filter = ['tournament',]
 
+class PicksAdmin(admin.ModelAdmin):
+    list_display = ['user', 'playerName']
+    list_filter = ['user']
+
+
 
 admin.site.register(Tournament)
 admin.site.register(Field, FieldAdmin)
-admin.site.register(Picks)
+admin.site.register(Picks, PicksAdmin)
 admin.site.register(Group, GroupAdmin)
 admin.site.register(TotalScore)
 admin.site.register(ScoreDetails)

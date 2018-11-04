@@ -16,7 +16,7 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path
 from django.conf.urls import include, url
-from golf_app import views
+from golf_app import views as golf_views
 from fb_app import views
 from main import views as main_views
 from django.conf import settings
@@ -30,5 +30,6 @@ urlpatterns = [
     url(r'^fb_app/', include('fb_app.urls',namespace='fb_app')),
     url(r'^golf_app/', include('golf_app.urls',namespace='golf_app')),
     url(r'^run_app/', include('run_app.urls',namespace='run_app')),
+
 
 ]

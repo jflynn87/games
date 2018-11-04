@@ -58,6 +58,9 @@ class Field(models.Model):
         group = self.objects.filter(group=args)
         return group
 
+    def current_field(self):
+        return self.objects.filter(tournament__current=True)
+
 class Name(models.Model):
     OWGR_name = models.CharField(max_length=256)
     PGA_name = models.CharField(max_length=256)
@@ -67,7 +70,8 @@ class Name(models.Model):
 
 
 class Picks(models.Model):
-    playerName = models.ForeignKey(Field, on_delete=models.CASCADE, blank=True, default='', null=True)
+    #playerName = models.ForeignKey(Field, on_delete=models.CASCADE, blank=True, default='', null=True)
+    playerName = models.ForeignKey(Field, on_delete=models.CASCADE, related_name='picks')
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     score = models.PositiveIntegerField(null=True)
 

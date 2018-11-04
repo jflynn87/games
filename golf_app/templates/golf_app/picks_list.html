@@ -14,11 +14,10 @@
 
         {%endfor%}
       </ul>
-<form method="post">
-  {%csrf_token%}
-  <input type="submit" class="btn btn-primary" value="Delete Picks">
 
-</form>
+
+  <a href="{% url 'golf_app:field' %}"> <button class="btn btn-primary">Update Picks</button></a>
+  
   </div>
 
 
