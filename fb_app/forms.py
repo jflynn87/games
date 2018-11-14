@@ -22,8 +22,10 @@ class CreatePicksForm(ModelForm):
         widget = ModelSelect2Widget)
 
 week = Week.objects.get(current=True)
+print (week.week, week.game_cnt)
 PickFormSet = modelformset_factory(Picks, form=CreatePicksForm, max_num=(week.game_cnt))
 NoPickFormSet = modelformset_factory(Picks, form=CreatePicksForm, extra=(week.game_cnt))
+
 
 # class PickFormSet(BaseModelFormSet):
 #     absolute_max = 16

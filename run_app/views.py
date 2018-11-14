@@ -25,9 +25,13 @@ class DashboardView(ListView):
     #select_related = ('shoes',)
     template_name = 'run_app/dashboard.html'
 
+
+
     def get_context_data(self, **kwargs):
         context = super(DashboardView, self).get_context_data(**kwargs)
 
+        week_start = datetime.datetime.today() - timedelta(days=180)
+        
         year_data = (Run.objects.filter(date__gt='2011-12-31').annotate(year=ExtractYear('date')).values('year')
         .annotate(dist=Sum('dist'), time=Sum('time'), cals=Sum('cals'), num=Count('date')))
 
@@ -35,7 +39,7 @@ class DashboardView(ListView):
 
         shoe_data = Run.objects.filter(shoes__active=True).values('shoes__name', 'shoes_id').annotate(dist=Sum('dist'), num=(Count('date'))).order_by('-dist')
 
-        week_data = (Run.objects.filter(date__gte="2017-9-1").annotate(year=ExtractYear('date')).annotate(week=ExtractWeek('date')).values('year', 'week')
+        week_data = (Run.objects.filter(date__gte=week_start).annotate(year=ExtractYear('date')).annotate(week=ExtractWeek('date')).values('year', 'week')
         .annotate(total_dist=Sum('dist'), time=Sum('time'), cals=Sum('cals'), num=Count('date'), max_dist=(Max('dist'))).order_by('-year', '-week'))
 
         for year in year_data:

@@ -23,54 +23,93 @@ from fb_app import calc_score
 
 # Create your views here.
 
-#def index(request):
-#    return render(request, 'index.html')
-
 def get_spreads():
     import urllib3.request
     from bs4 import BeautifulSoup
 
-    html = urllib.request.urlopen("https://nypost.com/sports/")
+    html = urllib.request.urlopen("https://nypost.com/odds/")
     soup = BeautifulSoup(html, 'html.parser')
-
+    #print (soup)
     #find nfl section within the html
 
-    nfl_sect = (soup.find("div", {'id': 'line-nfl'}))
-    #nfl_sect = (soup.find("div", {'id': 'line-mlb'}))
-
+    nfl_sect = (soup.find("div", {'class':'odds__table-inner'}))
 
     #pull out the games and spreads from the NFL section
 
-    spreads = {}
-    sep = ' '
-
     for row in nfl_sect.find_all('tr')[1:]:
-         col = row.find_all('td')
-         fav = col[0].string
-         opening = col[1].string
-         spread = col[2].string.split(sep, 1)[0]
-         dog =  col[3].string
+          col = row.find_all('td')
+          teams = col[0].text.split()
+          line = col[5].text.split()
+          if line[0][0] == '-':
+              fav = teams[0]
+              dog = teams[1]
+              spread = line[0]
+              #print ('o/a', line[1])
+          else:
+              fav = teams[1]
+              dog = teams[0]
+              spread = line [1]
+              #print ('o/a', line[0])
 
-         fav_obj = Teams.objects.get(long_name__iexact=fav)
-         dog_obj = Teams.objects.get(long_name__iexact=dog)
+          fav_obj = Teams.objects.get(long_name__iexact=fav)
+          dog_obj = Teams.objects.get(long_name__iexact=dog)
 
-         week = Week.objects.get(current=True)
+          week = Week.objects.get(current=True)
 
-         try:
-            Games.objects.get(week=week, home=fav_obj)
-            Games.objects.filter(week=week, home=fav_obj).update(fav=fav_obj, dog=dog_obj, opening=opening, spread=spread)
+          try:
+             Games.objects.get(week=week, home=fav_obj)
+             Games.objects.filter(week=week, home=fav_obj).update(fav=fav_obj, dog=dog_obj, spread=spread)
 
-         except ObjectDoesNotExist:
-            Games.objects.filter(week=week,away=fav_obj).update(fav=fav_obj, dog=dog_obj, opening=opening, spread=spread)
+          except ObjectDoesNotExist:
+             Games.objects.filter(week=week,away=fav_obj).update(fav=fav_obj, dog=dog_obj, spread=spread)
 
     return
+
+
+#old post logic, keep for a while in case they go back
+# def get_spreads():
+#     import urllib3.request
+#     from bs4 import BeautifulSoup
+#
+#     html = urllib.request.urlopen("https://nypost.com/sports/")
+#     soup = BeautifulSoup(html, 'html.parser')
+#
+#     #find nfl section within the html
+#
+#     nfl_sect = (soup.find("div", {'id': 'line-nfl'}))
+#     #nfl_sect = (soup.find("div", {'id': 'line-mlb'}))
+#
+#
+#     #pull out the games and spreads from the NFL section
+#
+#     spreads = {}
+#     sep = ' '
+#
+#     for row in nfl_sect.find_all('tr')[1:]:
+#          col = row.find_all('td')
+#          fav = col[0].string
+#          opening = col[1].string
+#          spread = col[2].string.split(sep, 1)[0]
+#          dog =  col[3].string
+#
+#          fav_obj = Teams.objects.get(long_name__iexact=fav)
+#          dog_obj = Teams.objects.get(long_name__iexact=dog)
+#
+#          week = Week.objects.get(current=True)
+#
+#          try:
+#             Games.objects.get(week=week, home=fav_obj)
+#             Games.objects.filter(week=week, home=fav_obj).update(fav=fav_obj, dog=dog_obj, opening=opening, spread=spread)
+#
+#          except ObjectDoesNotExist:
+#             Games.objects.filter(week=week,away=fav_obj).update(fav=fav_obj, dog=dog_obj, opening=opening, spread=spread)
+#
+#     return
 
 
 class GameListView(LoginRequiredMixin,ListView):
     login_url = 'login'
     model=Games
-    #PickFormSet = formset_factory(CreatePicksForm)
-
     #def dispatch(self, *args, **kwargs):
     #    return super(GameListView, self).dispatch(*args, **kwargs)
 
@@ -217,6 +256,8 @@ class ScoresView(TemplateView):
 
 
     def dispatch(self, request, *args, **kwargs):
+        print ('kwargs', kwargs)
+
         if kwargs.get('pk')  == None:
             week = Week.objects.get(current=True)
             if request.user.is_anonymous and \
@@ -227,13 +268,6 @@ class ScoresView(TemplateView):
                 self.kwargs['pk']= str(week.pk)
         return super(ScoresView, self).dispatch(request, *args, **kwargs)
 
-
-        # works before changes to attempt to make football fools show old week till picks created
-        # if kwargs.get('pk') == None:
-        #     week = Week.objects.get(current=True)
-        #     self.kwargs['pk'] = str(week.pk)
-        # print (kwargs)
-        # return super(ScoresView, self).dispatch(request, *args, **kwargs)
 
     def get_context_data(self, **kwargs):
         context = super(ScoresView, self).get_context_data(**kwargs)
@@ -287,8 +321,6 @@ class ScoresView(TemplateView):
             week_scores = WeekScore
             scores = calc_scores(week_scores, league, week, loser_list, proj_loser_list)
         else:
-            #scores = self.calc_scores(league, player, week, player_list, pick_dict)
-            #scores = self.calc_scores(league, week)
             week_scores = WeekScore
             scores = calc_scores(week_scores, league, week)
 
@@ -307,7 +339,6 @@ class ScoresView(TemplateView):
         context.update({
         'players': player_list,
         'picks': pick_dict,
-        #'picks': Picks.objects.filter(week=week, player__league=league).order_by('-pick_num', 'player'),
         'week': week,
         'pending': pick_pending,
         'games': Games.objects.filter(week=week).order_by('eid'),
@@ -329,7 +360,6 @@ class ScoresView(TemplateView):
     def post(self, request, **kwargs):
 
         context = self.get_context_data()
-        #print (context)
 
         return render(request, 'fb_app/scores.html', {
         'players': context['players'],
@@ -350,9 +380,14 @@ class ScoresView(TemplateView):
         '''takes in self object and calculates the user, player, league and week,
          returns a tuple of objects'''
 
-        week = Week.objects.get(current=True)
+        print ('base', self.kwargs)
 
-        if self.request.user.is_authenticated:
+        if self.kwargs.get('league') == 'ff' and self.request.user.is_superuser:
+            user = User.objects.get(username=self.request.user)
+            player = Player.objects.get(name=user)
+            league = League.objects.get(league="Football Fools")
+
+        elif self.request.user.is_authenticated:
             user = User.objects.get(username=self.request.user)
             player = Player.objects.get(name=user)
             league = player.league
@@ -362,8 +397,7 @@ class ScoresView(TemplateView):
             user= None
             player = None
 
-        return (user, player, league, week)
-
+        return (user, player, league)
 
 
     def get_picks(self, player, league, week):
@@ -403,26 +437,31 @@ class SeasonTotals(ListView):
         base_data = self.get_base_data()
         score_dict = {}
         week = base_data[3]
+        league = base_data[2]
         week_cnt = 1
         winner_dict = {}
+        winners_dict = {}
+
+        for player in Player.objects.filter(league=league):
+            winners_dict[player.name] = 0
 
         #week by week scores and winner
         while week_cnt <= week.week:
             score_list = []
             score_week = Week.objects.get(week=week_cnt)
-            week_score = WeekScore.objects.filter(week=score_week, player__league__league=base_data[2]).order_by('player__name')
-            if len(week_score) == len(Player.objects.filter(league__league=base_data[2])):
+            week_score = WeekScore.objects.filter(week=score_week, player__league__league=league).order_by('player__name')
+            if len(week_score) == len(Player.objects.filter(league__league=league)):
                 for score in week_score:
-                    #print (score.week, score.player, score.score)
                     score_list.append(score.score)
                 if not score_week.current:
                     try:
-                        winner = Player.objects.get(pk=(week_score.filter()\
-                        .values_list('player').annotate(Min('score'))\
-                        .order_by('score')[0])[0])
-                        score_list.append(winner)
-                        winner_dict.setdefault(winner, [])
-                        winner_dict[winner].append(score_week)
+                        winning_score = WeekScore.objects.filter(player__league=league, week=score_week).aggregate(Min('score'))
+                        winners = WeekScore.objects.filter(score=winning_score.get('score__min'), week=score_week, player__league=league)
+                        for winner in winners:
+                                score = winners_dict.get(winner.player.name)
+                                winners_dict[winner.player.name] = score + 25/len(winners)
+                                score_list.append(winner.player.name)
+
                     except IndexError:
                         winner = None
 
@@ -439,23 +478,13 @@ class SeasonTotals(ListView):
                 total_score += weeks.score
             total_score_list.append(total_score)
 
-        print (winner_dict)
-        #winnings section
-        for key, value in winner_dict.items():
-            print (key, value)
-            if base_data[2].league == "Golfers":
-                winner_dict[key] = len(winner_dict[key]), '$' + str((len(winner_dict[key])*25))
-            else:
-                winner_dict[key] = len(winner_dict[key]), '$' + '0'
-        print (winner_dict)
-
         context.update({
-        'players': Player.objects.filter(league=base_data[2]),
+        'players': Player.objects.filter(league=league),
         'scores': score_dict,
         'totals': total_score_list,
-        'wins': winner_dict
-
+        'wins': winners_dict,
         })
+
         return context
 
 

@@ -22,12 +22,14 @@
   <thead class='thead-dark'>
     <th>Player</th>
     <th>Score</th>
+    <th># of Cut Picks</th>
   </thead>
 <tbody>
 {%for player in scores%}
   <tr>
     <td>{{player.user}}</td>
     <td>{{player.score}}</td>
+    <td>{{player.cut_count}}</td>
   </tr>
 {%endfor%}
 </tbody>

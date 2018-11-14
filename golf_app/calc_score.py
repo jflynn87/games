@@ -3,6 +3,7 @@ from golf_app.models import Field, Tournament, Picks, Group, TotalScore, ScoreDe
 from django.contrib.auth.models import User
 from django.shortcuts import render, get_object_or_404, redirect
 from django.core.exceptions import ObjectDoesNotExist
+from django.db.models import Count
 
 def calc_score(t_args, request=None):
         '''takes in a request, caclulates and returns the score to the web site.
@@ -123,7 +124,13 @@ def calc_score(t_args, request=None):
 
             bonus_detail, created = BonusDetails.objects.get_or_create(user=user, tournament=tournament, winner_bonus=winner_bonus, cut_bonus=cut)
             display_list.append(bonus_detail)
-            scores[user] = totalScore
+            ## trying to add a cut count to player overall score display
+            cut_count = ScoreDetails.objects.filter(pick__playerName__tournament=tournament, today_score="cut", user=user).aggregate(cuts=Count('user'))
+            scores[user] = (cut_count.get('cuts'), totalScore)
+        ## end of cut count section
+
+
+            #scores[user] = totalScore  #commented because now covered just above
             totalScore = 0
             picked_winner = False
             cut_bonus = True
@@ -135,7 +142,8 @@ def calc_score(t_args, request=None):
             #total_score.user = User.objects.get(username=k)
             #player = User(request.user.id)
             print (total_score)
-            total_score.score = int(v)
+            total_score.score = int(v[1])
+            total_score.cut_count = int(v[0])
             total_score.save()
 
 

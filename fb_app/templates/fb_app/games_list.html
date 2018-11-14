@@ -39,7 +39,6 @@
      <thead>
        <th>Game Day/Time</th>
       <th>Favorite</th>
-      <th>Opening Line</th>
       <th>Current Line</th>
       <th>Dog</th>
     </thead>
@@ -52,7 +51,6 @@
         {%else%}
         <td id="fav{{forloop.counter}}" >{%if game.fav%} {{game.fav | lower}} {%else%} {{game.home}}{%endif%}</td>
         {%endif%}
-        <td class="spread">{{game.opening}}</td>
         <td class="spread"> {{game.spread}} </td>
         {%if game.dog == game.home%}
         <td id="dog{{forloop.counter}}" >{%if game.dog%}{{game.dog}} {%else%} {{game.away}} {%endif%}</td>

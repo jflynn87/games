@@ -18,6 +18,12 @@
     <th>Winner</th>
   </thead>
   <tbody>
+    <tr>
+      <th>Winnings</th>
+    {%for player, total in wins.items%}
+      <td>${{total}}</td>
+    {%endfor%}
+    </tr>
     {%for week, scores in scores.items%}
     <tr>
       <td> <a href="{%url 'fb_app:scores_list' pk=week.pk %}">{{week}}</td>
@@ -30,27 +36,6 @@
       <td>Totals</td>
       {%for total in totals%}
       <td>{{total}}</td>
-      {%endfor%}
-    </tr>
-  </tbody>
-</table>
-</div>
-
-<div class="column">
-<h4>Summary</h4>
-<table class='table'>
-  <thead>
-    <th>Name</th>
-    <th>Weeks Won</th>
-    <th>Prize $</th>
-  </thead>
-  <tbody>
-    {%for name, wins in wins.items%}
-    <tr>
-      <td>{{name.name}}</td>
-      {%for dollars in wins%}
-      <td>{{dollars}}</td>
-      {%endfor%}
       {%endfor%}
     </tr>
   </tbody>

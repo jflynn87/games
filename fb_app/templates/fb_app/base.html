@@ -60,10 +60,13 @@
           <li class="nav-item btn btn-outline-success"> <a class="navbar-link" href="{% url 'fb_app:picks_list' %}">View Picks</a></li>
           <li class="nav-item btn btn-outline-success"> <a class="navbar-link" href="{% url 'fb_app:scores_list' %}">Current Week Scores</a> </li>
           <li class="nav-item btn btn-outline-success"> <a class="navbar-link" href="{% url 'fb_app:season_total' %}">Season Totals</a> </li>
+          {%if user.is_superuser%}
+          <li class="nav-item btn btn-outline-success"> <a class="navbar-link" href="{% url 'fb_app:fools' %} ">FF Scores</a> </li>
+          {%endif%}
           {% if user.is_authenticated %}
           <li class="nav-item btn btn-outline-success"> <a class="navbar-link" href="{% url 'logout' %}">Logout</a> </li>
           {%else%}
-          <li class="nav-item btn btn-outline-success"> <a class="navbar-link" href="{% url 'login' %}"> <span class="glyphicon glyphicon-user"></span></a> </li>
+          <li class="nav-item btn btn-outline-success"> <a class="navbar-link" href="{% url 'login' %}"> <span class="glyphicon glyphicon-user"></span>Login</a></li>
           {%endif%}
 
         </ul>

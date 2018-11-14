@@ -117,6 +117,7 @@ class TotalScore(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     tournament = models.ForeignKey(Tournament, on_delete=models.CASCADE, null=True)
     score = models.IntegerField(null=True)
+    cut_count = models.IntegerField(null=True)
 
 
     class Meta():
