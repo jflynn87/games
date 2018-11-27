@@ -31,7 +31,7 @@ class DashboardView(ListView):
         context = super(DashboardView, self).get_context_data(**kwargs)
 
         week_start = datetime.datetime.today() - timedelta(days=180)
-        
+
         year_data = (Run.objects.filter(date__gt='2011-12-31').annotate(year=ExtractYear('date')).values('year')
         .annotate(dist=Sum('dist'), time=Sum('time'), cals=Sum('cals'), num=Count('date')))
 
@@ -146,6 +146,7 @@ class RunCreateView(CreateView):
     success_url = reverse_lazy("run_app:run_list")
 
     def form_valid(self, form):
+        cd = form.cleaned_data
         self.object = form.save()
         date = form.cleaned_data.get('date')
         Schedule.objects.filter(date=date).update(run=Run.objects.get(date=date))

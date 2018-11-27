@@ -154,6 +154,14 @@ def configure_groups(field_list):
         while group_cnt < remaining_groups + 5:
              groups[group_cnt] = group_size
              group_cnt += 1
+    elif len(field_list) < 20:
+        print ('less than 20')
+        group_size = 3
+        total_groups = int(len(field_list)/group_size)
+        remainder = len(field_list) % (total_groups*group_size)
+        while group_cnt < total_groups:
+            groups[group_cnt] = group_size
+            group_cnt +=1
     else:
         group_size = int(len(field_list)/10)
         remainder = len(field_list) % (group_size*10)

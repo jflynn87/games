@@ -262,8 +262,13 @@ def setup(request):
                 error_msg = ("tournament already exists" + str(url_number))
                 return render(request, 'golf_app/setup.html', {'error_msg': error_msg})
         except ObjectDoesNotExist:
+            print ('creating field')
             populateField.create_groups(url_number)
             return HttpResponseRedirect(reverse('golf_app:field'))
+        except Exception as e:
+            print ('error', e)
+            error_msg = (e)
+            return render(request, 'golf_app/setup.html', {'error_msg': error_msg})
 
 class AboutView(TemplateView):
     template_name='golf_app/about.html'
