@@ -17,7 +17,8 @@ import json
 import datetime
 import scipy.stats as ss
 from django.forms import formset_factory, modelformset_factory
-from fb_app import calc_score
+#from fb_app import calc_score
+
 
 
 
@@ -55,6 +56,13 @@ def get_spreads():
           dog_obj = Teams.objects.get(long_name__iexact=dog)
 
           week = Week.objects.get(current=True)
+
+          #fix this so that is on;y updates on the active week.  now it is updating
+          # new spreads on last weeks game before week is over
+          if Games.objects.filter(week=week, home__in=[fav_obj, dog_obj], away__in=[fav_obj, dog_obj]).exists():
+              print ('found game', fav_obj, dog_obj)
+          else:
+              print ('not found', fav_obj, dog_obj)
 
           try:
              Games.objects.get(week=week, home=fav_obj)
@@ -161,7 +169,7 @@ class GameListView(LoginRequiredMixin,ListView):
          #print (request.POST)
          week = Week.objects.get(current=True)
          player = Player.objects.get(name=request.user)
-         print (player, week, "Making picks")
+         print (player, week, "Making picks", datetime.datetime.now())
          team_dict = {}
          for team in Teams.objects.all():
              team_dict[team.id] = team.nfl_abbr
@@ -206,7 +214,7 @@ class GameListView(LoginRequiredMixin,ListView):
 
          if Picks.objects.filter(week=week, player=player).count() >0:
             Picks.objects.filter(week=week, player=player).delete()
-            print ('updating picks')
+            print (datetime.datetime.now(), request.user, 'updating picks')
 
 
          #pick_dict = {}
@@ -229,7 +237,7 @@ class GameListView(LoginRequiredMixin,ListView):
              i +=1
              pick_num -=1
 
-
+         print (datetime.datetime.now(), request.user, 'saved picks')
          return redirect('fb_app:picks_list')
 
 
@@ -270,6 +278,7 @@ class ScoresView(TemplateView):
 
 
     def get_context_data(self, **kwargs):
+
         context = super(ScoresView, self).get_context_data(**kwargs)
         print (self.kwargs)
         week = Week.objects.get(pk=self.kwargs.get('pk'))
@@ -321,10 +330,12 @@ class ScoresView(TemplateView):
             week_scores = WeekScore
             scores = calc_scores(week_scores, league, week, loser_list, proj_loser_list)
         else:
+            print ("IN GET calling CALC scores", datetime.datetime.now())
             week_scores = WeekScore
             scores = calc_scores(week_scores, league, week)
+            print ("BACK from calc scores", datetime.datetime.now())
 
-        print ('back from calc score')
+
         print (datetime.datetime.now())
 
 

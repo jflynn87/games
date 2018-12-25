@@ -3,7 +3,7 @@ os.environ.setdefault("DJANGO_SETTINGS_MODULE","gamesProj.settings")
 
 import django
 django.setup()
-from fb_app.models import Week, WeekScore, Player, League
+from fb_app.models import Week, WeekScore, Player, League, Games
 from datetime import datetime, timedelta
 import sqlite3
 from django.db.models import Min, Q, Count
@@ -14,107 +14,86 @@ def get_schedule():
     import urllib
     import urllib3
     from bs4 import BeautifulSoup
+    import json
 
     import urllib3.request
     from bs4 import BeautifulSoup
 
-    html = urllib.request.urlopen("https://nypost.com/odds/")
-    soup = BeautifulSoup(html, 'html.parser')
-    #print (soup)
-    #find nfl section within the html
-
-    nfl_sect = (soup.find("div", {'class':'odds__table-inner'}))
-    #nfl_sect = (soup.find("tbody", {'id': 'primary'}))
-    #print (nfl_sect)
-    #nfl_sect = (soup.find("div", {'id': 'line-mlb'}))
+    from docx import Document
+    # import win32com.client as win32
+    # word = win32.Dispatch("Word.Application")
+    # word.Visible = 0
+    # word.Documents.Open("18-19 FOOTBALL FOOLS")
 
 
-    #pull out the games and spreads from the NFL section
+#most recent logic to test
+    #doc = Document("18-19 FOOTBALL FOOLS")
 
-    # spreads = {}
-    # sep = ' '
+    #for table in doc.tables:
+    #    for row in table.rows:
+    #        for cell in row.cells:
+    #            print (cell.text)
+    # json_url = 'http://www.nfl.com/liveupdate/scores/scores.json'
     #
-    for row in nfl_sect.find_all('tr')[1:]:
-          col = row.find_all('td')
-    #      print (col[0].text)
-          #home = col[0].text.split()[0][10:20]
-          #print (home)
-          teams = col[0].text.split()
-          #print (teams)
-          line = col[5].text.split()
-          #print (line)
-          if line[0][0] == '-':
-              print ('fav', teams[0])
-              print ('dog', teams[1])
-              print ('line', line[0])
-              print ('o/a', line[1])
-          else:
-              print ('fav', teams[1])
-              print ('dog', teams[0])
-              print ('line', line [1])
-              print ('o/a', line[0])
-              
+    # with urllib.request.urlopen(json_url) as field_json_url:
+    #     data = json.loads(field_json_url.read().decode())
+    #
+    # for k, v in data.items():
+    #     print (k, v['home']['abbr'], v['away']['abbr'])
+
+    # home_team = data[score.eid]['home']["abbr"]
+    # away_team = data[score.eid]['away']["abbr"]
+    # away_score = data[score.eid]['away']['score']['T']
+
+    result = {}
+    fav_total = 0
+    dog_total = 0
+
+    for week in Week.objects.all():
+        work_list = []
+        fav_count = 0
+        dog_count = 0
+        tie_count = 0
+        for game in Games.objects.filter(week=week):
+            print (game.week, game.eid, game.fav, game.dog)
+            if game.winner == game.fav:
+                fav_count += 1
+            elif game.winner == game.dog:
+                dog_count += 1
+            elif game.tie:
+                tie_count += 1
+            else:
+                print ('else', game.week, game.eid, game.fav, game.dog)
+        work_list.append(fav_count)
+        work_list.append(dog_count)
+        work_list.append(tie_count)
+        result[week.week]=work_list
+        fav_total += fav_count
+        dog_total += dog_count
+    print (result)
+    print ('fav', fav_total)
+    print ('dog', dog_total)
+
+    # table = doc.Tables(1)
+    # row_i = 1
+    #
+    #
+    #
+    # while row_i < 37:
+    #     col_i = 1
+    #     while col_i < 28:
+    #         if (row_i, col_i, table.Cell(Row=row_i,Column=col_i).Range.Text) == None  and col_i == 1:
+    #             col_i = 29
+    #         else:
+    #             cell = table.Cell(Row=row_i,Column=col_i).Range.Text
+    #             print (row_i, col_i, len(cell))
+    #
+    #             col_i += 1
+    #     row_i += 1
+    #
 
 
-          #col[5].text)
-    #      fav = col[0].string
-    #      opening = col[1].string
-    #      spread = col[2].string.split(sep, 1)[0]
-    #      dog =  col[3].string
-    #
-    #      fav_obj = Teams.objects.get(long_name__iexact=fav)
-    #      dog_obj = Teams.objects.get(long_name__iexact=dog)
-    #
-    #      week = Week.objects.get(current=True)
-    #
-    #      try:
-    #         Games.objects.get(week=week, home=fav_obj)
-    #         Games.objects.filter(week=week, home=fav_obj).update(fav=fav_obj, dog=dog_obj, opening=opening, spread=spread)
-    #
-    #      except ObjectDoesNotExist:
-    #         Games.objects.filter(week=week,away=fav_obj).update(fav=fav_obj, dog=dog_obj, opening=opening, spread=spread)
-    #
-    # return
 
-
-
-
-    # connection  = sqlite3.connect("db.sqlite3")
-    #
-    # cursor = connection.cursor()
-    #
-    # dropTableStatement = "DROP TABLE golf_app_tournament"
-    #
-    # cursor.execute(dropTableStatement)
-    #
-    # connection.close()
-
-
-    #BonusDetails.objects.all().delete()
-    #Group.objects.all().delete()
-    #find nfl section within the html
-    #
-    # nfl_sect = (soup.find("div", {'id': 'line-nfl'}))
-    # #nfl_sect = (soup.find("div", {'id': 'line-mlb'}))
-    #
-    #
-    # #pull out the games and spreads from the NFL section
-    #
-    # spreads = {}
-    # sep = ' '
-    #
-    # for row in nfl_sect.find_all('tr')[1:]:
-    #      col = row.find_all('td')
-    #      fav = col[0].string
-    #      opening = col[1].string
-    #      spread = col[2].string.split(sep, 1)[0]
-    #      dog =  col[3].string
-    #
-    #      fav_obj = Teams.objects.get(long_name__iexact=fav)
-    #      dog_obj = Teams.objects.get(long_name__iexact=dog)
-    #
-    #      week = Week.objects.get(current=True)
-    #
 
 
 

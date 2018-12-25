@@ -63,7 +63,6 @@ class FieldListView(LoginRequiredMixin,ListView):
                    picks.playerName = Field.objects.get(pk=v)
                    picks.save()
         else:
-            print (form)
             group_list = []
             for key, value in form.items():
                 if key not in ('userid', 'csrfmiddlewaretoken'):
@@ -72,10 +71,10 @@ class FieldListView(LoginRequiredMixin,ListView):
             for num in group:
                 if str(num.number) not in group_list:
                     missing_group.append(num.number)
-            print (missing_group)
+            print (request.user, 'picks missing group', missing_group)
 
 
-
+            print (datetime.datetime.now(), request.user, form)
             return render (request, 'golf_app/field_list.html',
                 {'field_list': Field.objects.filter(tournament=tournament),
                  #'picks_list': Picks.objects.filter(playerName__tournament__current=True, user=form['userid']),
@@ -83,7 +82,7 @@ class FieldListView(LoginRequiredMixin,ListView):
                  'picks': picks,
                  'error_message':  "Missing Picks for the following groups: " + str(missing_group),
                      })
-
+        print ('submitting picks', datetime.datetime.now(), request.user, form)
         return redirect('golf_app:picks_list')
 
 

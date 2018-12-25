@@ -182,15 +182,17 @@ class MikeScore(models.Model):
 
 def calc_scores(self, league, week, loser_list=None, proj_loser_list=None):
 
-    print ('starting nfl json lookup')
+    print ('MODELS starting nfl json lookup')
     print (datetime.datetime.now())
     print (week)
 
     if Games.objects.filter(week=week).exclude(final=True).exists():
+        print ('MODELS games exist')
         json_url = 'http://www.nfl.com/liveupdate/scores/scores.json'
 
         with urllib.request.urlopen(json_url) as field_json_url:
             data = json.loads(field_json_url.read().decode())
+            #print (data)
 
         #use for testing
         #with open ('c:/users/john/pythonProjects/games/gamesProj/fb_app/nfl_scores.json') as f:
@@ -234,8 +236,8 @@ def calc_scores(self, league, week, loser_list=None, proj_loser_list=None):
                     score.save()
 
 
-        except KeyError:
-                print ('NFL score file not ready for the week')
+        except KeyError as e:
+                print ('NFL score file not ready for the week', e)
                 pass
 
     print ('player and score object creation start')
