@@ -128,29 +128,31 @@ class ScoreListView(DetailView):
     def get(self, request, **kwargs):
 
         #print (self.kwargs)
-
-        tournament = Tournament.objects.get(pk=self.kwargs.get('pk'))
-        start_time = datetime.datetime.now()
-        if datetime.date.today() >= tournament.start_date:
-            scores = calc_score.calc_score(self.kwargs, request)
-            end_time= datetime.datetime.now()
-            print ('exec time: ', start_time, end_time, end_time-start_time)
-            return render(request, 'golf_app/scores.html', {'scores':scores[0],
-                                                        'detail_list':scores[1],
-                                                        'leader_list':scores[2],
-                                                        'cut_data':scores[3],
-                                                        'lookup_errors': scores[4],
-                                                        })
-        else:
-            tournament = Tournament.objects.get(current=True)
-            user_dict = {}
-            for user in Picks.objects.filter(playerName__tournament=tournament).values('user__username').annotate(Count('playerName')):
-                user_dict[user.get('user__username')]=user.get('playerName__count')
-            scores=calc_score.calc_score(self.kwargs, request)
-            return render(request, 'golf_app/pre_start.html', {'user_dict': user_dict,
-                                                            'tournament': tournament,
-                                                            'lookup_errors': scores[4]
+        try:
+            tournament = Tournament.objects.get(pk=self.kwargs.get('pk'))
+            start_time = datetime.datetime.now()
+            if datetime.date.today() >= tournament.start_date:
+                scores = calc_score.calc_score(self.kwargs, request)
+                end_time= datetime.datetime.now()
+                print ('exec time: ', start_time, end_time, end_time-start_time)
+                return render(request, 'golf_app/scores.html', {'scores':scores[0],
+                                                            'detail_list':scores[1],
+                                                            'leader_list':scores[2],
+                                                            'cut_data':scores[3],
+                                                            'lookup_errors': scores[4],
                                                             })
+            else:
+                tournament = Tournament.objects.get(current=True)
+                user_dict = {}
+                for user in Picks.objects.filter(playerName__tournament=tournament).values('user__username').annotate(Count('playerName')):
+                    user_dict[user.get('user__username')]=user.get('playerName__count')
+                scores=calc_score.calc_score(self.kwargs, request)
+                return render(request, 'golf_app/pre_start.html', {'user_dict': user_dict,
+                                                                'tournament': tournament,
+                                                                'lookup_errors': scores[4]
+                                                                })
+        except Exception:
+            return HttpResponse("Error, please come back closer to the tournament start or Line John to tell him something is broken")
 
 
 class SeasonTotalView(ListView):

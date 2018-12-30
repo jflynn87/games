@@ -25,10 +25,15 @@ file_path = os.path.join(MODULE_DIR, 'name_fix.txt')
 # See https://docs.djangoproject.com/en/2.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = '2k5s=q7xp8w-iogzv&+ij=9(v8#i$9#dsf)8332^_rckt2hd^y'
+SECRET_KEY = os.environ.get('SECRET_KEY')
+#SECRET_KEY = '2k5s=q7xp8w-iogzv&+ij=9(v8#i$9#dsf)8332^_rckt2hd^y'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+if os.environ.get("DEBUG") == "True":
+   DEBUG = True
+else:
+   DEBUG = False
+
 
 ALLOWED_HOSTS = ['jflynn87.pythonanywhere.com', '127.0.0.1']
 
