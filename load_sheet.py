@@ -3,7 +3,7 @@ os.environ.setdefault("DJANGO_SETTINGS_MODULE","gamesProj.settings")
 
 import django
 django.setup()
-from fb_app.models import Week, Player, Picks, Teams, MikeScore, WeekScore
+from fb_app.models import Week, Player, Picks, Teams, MikeScore, WeekScore, League
 from django.contrib.auth.models import User
 from django.core.exceptions import ObjectDoesNotExist
 from fb_app import validate_picks
@@ -43,7 +43,7 @@ def readSheet(file,numPlayers):
         #create a sheet with just players, picks and totals (totals assumes that the total is 2 digits and more than 16).
 
         for tag in soup.findAll('t'):
-            if tag.text not in (' ', '1','2','3','4','5','6','7','8','9','10','11','12','13','14','15','16'):
+            if tag.text not in (' ', '1','2','3','4','5','6','7','8','9','10','11','12','13','14','15','16', '17'):
                 if len(tag.text) > 1:
                     if tag.text == "LiL":
                         sheet.append("LiL B")
@@ -62,6 +62,14 @@ def readSheet(file,numPlayers):
             sheet_scores = False
         else:
             print ('bad sheet')
+            exit()
+
+        try:
+            league = League.objects.get(league="Football Fools")
+            Picks.objects.filter(week=app_week, player__league=league).delete()
+            print ('deleting picks on rerun')
+        except Exception as e:
+            print ("no picks exists, proceeding", e)
             exit()
 
         player_i = 0

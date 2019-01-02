@@ -184,6 +184,20 @@ class ScheduleView(DetailView):
 
             expected = Schedule.objects.filter(Q(plan__id=plan.id) & Q(date__lte=today) & Q(dist__gt=0)).aggregate((Sum('dist')), (Count('date')))
             actual = Run.objects.filter(Q(date__lte=today) & Q(date__gte=plan.start_date)).aggregate(Sum('dist'), (Count('date')))
+            base_expected = Schedule.objects.filter(Q(plan__id=plan.id) & Q(date__lte='2018-12-16') & Q(dist__gt=0)).aggregate((Sum('dist')), (Count('date')))
+            base_actual = Run.objects.filter(Q(date__lte='2018-12-16') & Q(date__gte=plan.start_date)).aggregate(Sum('dist'), (Count('date')))
+            race_expected = Schedule.objects.filter(Q(plan__id=plan.id) & Q(date__lte=today) & Q(date__gte='2018-12-17') & Q(dist__gt=0)).aggregate((Sum('dist')), (Count('date')))
+            race_actual = Run.objects.filter(Q(date__lte=today) & Q(date__gte='2018-12-17')).aggregate(Sum('dist'), (Count('date')))
+
+            base_plan_km = base_expected.get('dist__sum')*1.6
+            base_expected['plan_km']=base_plan_km
+            base_actual['dist_percent']= (base_actual.get('dist__sum')/base_expected.get('plan_km')) * 100
+            base_actual['run_percent']= (base_actual.get('date__count')/base_expected.get('date__count')) * 100
+
+            race_plan_km = race_expected.get('dist__sum')*1.6
+            race_expected['plan_km']=race_plan_km
+            race_actual['dist_percent']= (race_actual.get('dist__sum')/race_expected.get('plan_km')) * 100
+            race_actual['run_percent']= (race_actual.get('date__count')/race_expected.get('date__count')) * 100
 
             plan_km = expected.get('dist__sum')*1.6
             expected['plan_km']=plan_km
@@ -199,6 +213,10 @@ class ScheduleView(DetailView):
             'schedule': Schedule.objects.filter(plan__pk=self.kwargs.get('pk')).exclude(week__in=[last_week.get('week'), current_week.get('week'), next_week.get('week')]),
             'expected': expected,
             'actual': actual,
+            'base_expected': base_expected,
+            'base_actual': base_actual,
+            'race_expected': race_expected,
+            'race_actual': race_actual,
 
             })
             #print (context)

@@ -25,14 +25,17 @@ class Week(models.Model):
         return str(self.week)
 
     def save(self, *args, **kwargs):
-        for league in League.objects.all():
-            scores = WeekScore()
-            calc_scores(scores, league, self)
+        print ('model self', self)
+        print ('model kwargs', kwargs)
+        if self.pk != None:
+            for league in League.objects.all():
+                scores = WeekScore()
+                calc_scores(scores, league, self)
 
-        if self.current==True:
-            last_week = Week.objects.get(current=True)
-            last_week.current = False
-            last_week.save()
+            if self.current==True:
+                last_week = Week.objects.get(current=True)
+                last_week.current = False
+                last_week.save()
         super(Week, self).save()
 
 

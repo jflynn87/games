@@ -7,6 +7,7 @@
 <h3>{{plan.name}}</h3>
 <table class="table">
   <thead>
+    <th>Phase</th>
     <th>Actual Distance</th>
     <th>Plan Distance</th>
     <th>Actual Num of Runs</th>
@@ -15,6 +16,26 @@
     <th>Num %</th>
     <tbody>
       <tr>
+        <td>Race</td>
+        <td>{{race_actual.dist__sum|floatformat:"0"}}</td>
+        <td>{{race_expected.plan_km|floatformat}}</td>
+        <td>{{race_actual.date__count}}</td>
+        <td>{{race_expected.date__count}}</td>
+        <td>{{race_actual.dist_percent|floatformat:"0"}}</td>
+        <td>{{race_actual.run_percent|floatformat:"0"}}</td>
+      </tr>
+      <tr>
+        <td>Base</td>
+        <td>{{base_actual.dist__sum|floatformat:"0"}}</td>
+        <td>{{base_expected.plan_km|floatformat}}</td>
+        <td>{{base_actual.date__count}}</td>
+        <td>{{base_expected.date__count}}</td>
+        <td>{{base_actual.dist_percent|floatformat:"0"}}</td>
+        <td>{{base_actual.run_percent|floatformat:"0"}}</td>
+      </tr>
+
+      <tr>
+        <td>Total</td>
         <td>{{actual.dist__sum|floatformat:"0"}}</td>
         <td>{{expected.plan_km|floatformat}}</td>
         <td>{{actual.date__count}}</td>

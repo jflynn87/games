@@ -3,10 +3,10 @@ os.environ.setdefault("DJANGO_SETTINGS_MODULE","gamesProj.settings")
 
 import django
 django.setup()
-from fb_app.models import Week, WeekScore, Player, League, Games, User, Picks, Player
+from run_app.models import Schedule, Plan
 from datetime import datetime, timedelta
 import sqlite3
-from django.db.models import Min, Q, Count
+from django.db.models import Min, Q, Count, Sum
 
 def get_schedule():
 
@@ -44,17 +44,11 @@ def get_schedule():
     # home_team = data[score.eid]['home']["abbr"]
     # away_team = data[score.eid]['away']["abbr"]
     # away_score = data[score.eid]['away']['score']['T']
-
-    week = Week()
-    week.season = '2018'
-    week.week = 18
-    week.game_cnt = 0
-    week.save()
-
-    for week in Week.objects.all().order_by('week'):
-        print (week.season, week.week, week.game_cnt)
-
-    # result = {}
+    plan = Plan.objects.get(pk=1)
+    today = datetime.now()
+    print (Schedule.objects.filter(Q(plan__id=plan.id) & Q(date__lte=today) & Q(date__gte='2018-12-17') & Q(dist__gt=0)).aggregate((Sum('dist')), (Count('date'))))
+    for  run in Schedule.objects.filter(Q(plan__id=plan.id) & Q(date__lte=today) & Q(date__gte='2018-12-17') & Q(dist__gt=0)):
+        print (run)
     # fav_total = 0
     # dog_total = 0
     #
