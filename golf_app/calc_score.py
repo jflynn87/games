@@ -89,8 +89,11 @@ def calc_score(t_args, request=None):
                         pickRank = (len(ranks)-4) + 1
                         #pickRank = 71
                     else:
-                        pickRank = cutNum +1
-                    cut_bonus = False
+                        if ranks.get('cut_status')[0] == "No cut this week":
+                            pickRank = (len(ranks)-4) + 1
+                        else:
+                            pickRank = cutNum +1
+                            cut_bonus = False
                     totalScore += pickRank
 
 
