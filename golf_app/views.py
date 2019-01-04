@@ -151,8 +151,9 @@ class ScoreListView(DetailView):
                                                                 'tournament': tournament,
                                                                 'lookup_errors': scores[4]
                                                                 })
-        except Exception:
-            return HttpResponse("Error, please come back closer to the tournament start or Line John to tell him something is broken")
+        except Exception as e:
+            print ('score error msg:', e)
+            return HttpResponse("Error, please come back closer to the tournament start or Line John to tell him something is broken.")
 
 
 class SeasonTotalView(ListView):

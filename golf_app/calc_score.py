@@ -17,7 +17,7 @@ def calc_score(t_args, request=None):
         winner_bonus = False
         picked_winner = False
 
-        picks = getPicks(t_args)
+        picks_dict = getPicks(t_args)
         ranks = getRanks(t_args)
 
         if ranks.get('round') == 1:
@@ -42,17 +42,21 @@ def calc_score(t_args, request=None):
         lookup_errors_dict = {}
         display_detail = {}
 
-        for player, picks in picks.items():
+        for player, picks in picks_dict.items():
             user = User.objects.get(username=player)
             tournament = Tournament.objects.get(pk=t_args.get('pk'))
             lookup_errors_list = []
             display_list = []
+
             for pick in picks:
                 try:
                     if ranks[pick][0] == 'cut':
                         cut_bonus = False
                         if ranks.get('round') == 1:
-                            pickRank = 71
+                            if len(len(ranks)-4) + 1 > 70:
+                                pickRank = 71
+                            else:
+                                pickRank = (len(ranks)-4) + 1
                         else:
                             pickRank = cutNum +1
                     elif ranks[pick][0]== '':
@@ -69,21 +73,6 @@ def calc_score(t_args, request=None):
                             cut_bonus = False
                     totalScore += pickRank
 
-                    #if ScoreDetails.objects.filter(user=user, pick__playerName__tournament=tournament, pick__playerName__playerName=pick).exists():
-                    #print (user, pick, tournament)
-                    pick_obj = Picks.objects.get(user=user, playerName__playerName=pick, playerName__tournament=tournament)
-                    score_detail, created = ScoreDetails.objects.get_or_create(user=user, pick__playerName__tournament=tournament, pick=pick_obj)
-
-                    #score_detail.user = user
-                    #score_detail.pick = Picks.objects.get(user=user, playerName__playerName=pick)
-                    score_detail.score = pickRank
-                    score_detail.toPar = ranks[pick][1]
-                    score_detail.today_score = ranks[pick][2]
-                    score_detail.thru = ranks[pick][3]
-                    score_detail.sod_position = ranks[pick][4]
-                    score_detail.save()
-                    display_list.append(score_detail)
-
                     if pickRank == 1 and ranks.get('finished'):
                         picked_winner = True
                         winner_group = pick_obj.playerName.group.number
@@ -95,12 +84,35 @@ def calc_score(t_args, request=None):
                     lookup_errors_dict[user]=lookup_errors_list
 
                     if ranks.get('round') == 1:
-                        pickRank = 71
+                        print ('hitting hard code', len(ranks)-4)
+                        #len subtrack 4 non players from ranks to get # and add 1 for penalty
+                        pickRank = (len(ranks)-4) + 1
+                        #pickRank = 71
                     else:
                         pickRank = cutNum +1
                     cut_bonus = False
                     totalScore += pickRank
 
+
+                pick_obj = Picks.objects.get(user=user, playerName__playerName=pick, playerName__tournament=tournament)
+                score_detail, created = ScoreDetails.objects.get_or_create(user=user, pick__playerName__tournament=tournament, pick=pick_obj)
+
+                if ranks.get(pick) != None:
+                    score_detail.score = pickRank
+                    score_detail.toPar = ranks[pick][1]
+                    score_detail.today_score = ranks[pick][2]
+                    score_detail.thru = ranks[pick][3]
+                    score_detail.sod_position = ranks[pick][4]
+                    score_detail.save()
+                    display_list.append(score_detail)
+                else:
+                    score_detail.score = pickRank
+                    score_detail.topPar = "WD"
+                    score_detail.today_score = "WD"
+                    score_detail.thru = "0"
+                    score_detail.sod_position = "WD"
+                    score_detail.save()
+                    display_list.append(score_detail)
 
             base_bonus = 50
 
@@ -185,11 +197,13 @@ def getRanks(tournament):
             with urllib.request.urlopen(json_url) as field_json_url:
                     data = json.loads(field_json_url.read().decode())
 
-
             ranks = {}
 
+            print ('field size = ', len(Field.objects.filter(tournament__pk=tournament.get('pk'))))
+
             if data['leaderboard']['cut_line']['paid_players_making_cut'] == None:
-                ranks['cut number']=Field.objects.count()
+                #ranks['cut number']=len(Field.objects.filter(tournament__pk=tournament.get('pk')))
+                ranks['cut number']=0
                 cut_score = None
                 cut_state = "No cut this week"
                 print ("cut num = " + str(ranks))
