@@ -63,14 +63,15 @@ def calc_score(t_args, request=None):
                         pickRank = 0
 
                     else:
+                        print ('inside else')
                         pickRank_str = (formatRank(ranks[pick][0]))
                         pickRank = int(pickRank_str)
                         if ranks.get('round') == 1 and pickRank > 70:
                             pickRank = 71
                             cut_bonus = False
-                        elif ranks.get('round') == 2 and pickRank >cutNum:
-                            pickRank = cutNum +1
-                            cut_bonus = False
+                        #elif ranks.get('round') == 2 and pickRank >cutNum:
+                        #    pickRank = cutNum +1
+                        #    cut_bonus = False
                     totalScore += pickRank
 
                     if pickRank == 1 and ranks.get('finished'):
