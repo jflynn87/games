@@ -140,6 +140,7 @@ class ScoreListView(DetailView):
                                                             'leader_list':scores[2],
                                                             'cut_data':scores[3],
                                                             'lookup_errors': scores[4],
+                                                            'tournament': tournament,
                                                             })
             else:
                 tournament = Tournament.objects.get(current=True)

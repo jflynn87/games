@@ -61,6 +61,10 @@ class Field(models.Model):
     def current_field(self):
         return self.objects.filter(tournament__current=True)
 
+    def formatted_name(self):
+        return self.playerName.replace(' Jr.','').replace('(am)','')
+
+
 class Name(models.Model):
     OWGR_name = models.CharField(max_length=256)
     PGA_name = models.CharField(max_length=256)

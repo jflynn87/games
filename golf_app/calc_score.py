@@ -9,8 +9,6 @@ def calc_score(t_args, request=None):
         '''takes in a request, caclulates and returns the score to the web site.
             Deletes all before starting'''
 
-        #TotalScore.objects.all().delete()
-        #ScoreDetails.objects.all().delete()
         scores = {}
         totalScore = 0
         cut_bonus = True
@@ -19,14 +17,7 @@ def calc_score(t_args, request=None):
 
         picks_dict = getPicks(t_args)
         ranks = getRanks(t_args)
-
-        if ranks.get('round') == 1:
-            cutNum = 0
-        else:
-            if 'cut number' in ranks:
-                cutNum = ranks.get('cut number')
-            else:
-                print ("no cut line")
+        cutNum = getCutNum(ranks)
 
         leaders = {}
         for player, rank in ranks.items():
@@ -52,52 +43,24 @@ def calc_score(t_args, request=None):
                 try:
                     if ranks[pick][0] == 'cut':
                         cut_bonus = False
-                        if ranks.get('round') == 1:
-                            if len(len(ranks)-4) + 1 > 70:
-                                pickRank = 71
-                            else:
-                                pickRank = (len(ranks)-4) + 1
-                        else:
-                            pickRank = cutNum +1
+                        pickRank = cutNum +1
                     elif ranks[pick][0]== '':
                         pickRank = 0
 
                     else:
-                        print ('inside else')
                         pickRank_str = (formatRank(ranks[pick][0]))
                         pickRank = int(pickRank_str)
-                        if ranks.get('round') == 1 and pickRank > 70:
-                            pickRank = 71
-                            cut_bonus = False
-                        #elif ranks.get('round') == 2 and pickRank >cutNum:
-                        #    pickRank = cutNum +1
-                        #    cut_bonus = False
-                    totalScore += pickRank
 
-                    if pickRank == 1 and ranks.get('finished'):
-                        picked_winner = True
-                        winner_group = pick_obj.playerName.group.number
-
-
+                #shouldn't need the try/except, keeping just in case
                 except (ObjectDoesNotExist, KeyError) as e:
                     print (pick + ' lookup failed', e)
                     lookup_errors_list.append(pick)
                     lookup_errors_dict[user]=lookup_errors_list
 
-                    if ranks.get('round') == 1:
-                        print ('hitting hard code', len(ranks)-4)
-                        #len subtrack 4 non players from ranks to get # and add 1 for penalty
-                        pickRank = (len(ranks)-4) + 1
-                        #pickRank = 71
-                    else:
-                        if ranks.get('cut_status')[0] == "No cut this week":
-                            pickRank = (len(ranks)-4) + 1
-                        else:
-                            pickRank = cutNum +1
-                            cut_bonus = False
-                    totalScore += pickRank
+                    pickRank = cutNum +1
+                    cut_bonus = False
 
-
+                totalScore += pickRank
                 pick_obj = Picks.objects.get(user=user, playerName__playerName=pick, playerName__tournament=tournament)
                 score_detail, created = ScoreDetails.objects.get_or_create(user=user, pick__playerName__tournament=tournament, pick=pick_obj)
 
@@ -109,20 +72,16 @@ def calc_score(t_args, request=None):
                     score_detail.sod_position = ranks[pick][4]
                     score_detail.save()
                     display_list.append(score_detail)
-                else:
-                    score_detail.score = pickRank
-                    score_detail.topPar = "WD"
-                    score_detail.today_score = "WD"
-                    score_detail.thru = "0"
-                    score_detail.sod_position = "WD"
-                    score_detail.save()
-                    display_list.append(score_detail)
+
+                if pickRank == 1 and ranks.get('finished'):
+                    picked_winner = True
+                    winner_group = pick_obj.playerName.group.number
+                    print ('picked winner', score_detail.user.username, score_detail.pick.playerName, winner_group)
 
             base_bonus = 50
 
             if picked_winner:
-                #picks_obj = Picks.objects.get(user=user, playerName__playerName=pick)
-                #group = Field.objects.get(playerName=picks_obj.playerName)
+                print ('in picked_winner if')
                 winner_bonus = base_bonus + (winner_group * 2)
                 print ('winner bonus', winner_bonus)
                 totalScore -= winner_bonus
@@ -143,10 +102,8 @@ def calc_score(t_args, request=None):
             ## trying to add a cut count to player overall score display
             cut_count = ScoreDetails.objects.filter(pick__playerName__tournament=tournament, today_score="cut", user=user).aggregate(cuts=Count('user'))
             scores[user] = (cut_count.get('cuts'), totalScore)
-        ## end of cut count section
+            ## end of cut count section
 
-
-            #scores[user] = totalScore  #commented because now covered just above
             totalScore = 0
             picked_winner = False
             cut_bonus = True
@@ -155,8 +112,6 @@ def calc_score(t_args, request=None):
 
         for k, v in sorted(scores.items(), key=lambda x:x[1]):
             total_score, created = TotalScore.objects.get_or_create(user=User.objects.get(username=k), tournament=tournament)
-            #total_score.user = User.objects.get(username=k)
-            #player = User(request.user.id)
             print (total_score)
             total_score.score = int(v[1])
             total_score.cut_count = int(v[0])
@@ -164,9 +119,6 @@ def calc_score(t_args, request=None):
 
 
         display_scores = TotalScore.objects.filter(tournament=tournament).order_by('score')
-
-        print ("scores dict:")
-        print (display_detail)
 
         return display_scores, display_detail, leaders, cut_data, lookup_errors_dict
 
@@ -203,11 +155,9 @@ def getRanks(tournament):
 
             ranks = {}
 
-            print ('field size = ', len(Field.objects.filter(tournament__pk=tournament.get('pk'))))
-
             if data['leaderboard']['cut_line']['paid_players_making_cut'] == None:
-                #ranks['cut number']=len(Field.objects.filter(tournament__pk=tournament.get('pk')))
-                ranks['cut number']=0
+                ranks['cut number']=len(data["leaderboard"]['players'])
+                #ranks['cut number']=0
                 cut_score = None
                 cut_state = "No cut this week"
                 print ("cut num = " + str(ranks))
@@ -263,6 +213,17 @@ def getRanks(tournament):
 
                 ranks[player] = rank, score, today_score, thru, sod_position
 
+            print ('field size from json', len(data["leaderboard"]['players']))
+            print ('field size from db ', len(Field.objects.filter(tournament__pk=tournament.pk)))
+
+            if len(ranks) - 4 == len(Field.objects.filter(tournament__pk=tournament.pk)):
+                print ("no WDs")
+            else:
+                for golfer in Field.objects.filter(tournament__pk=tournament.pk):
+                    if golfer.formatted_name() not in ranks.keys():
+                        ranks[golfer.formatted_name()] = ('cut', 'WD', 'cut', '', 'cut')
+
+
             print (ranks)
             return ranks
 
@@ -288,3 +249,23 @@ def formatRank(rank):
        return rank[1:]
     else:
        return rank
+
+def getCutNum(ranks):
+    """takes in a dict made from the PGA json file and returns an int of the cut
+    number to apply to cut picks.  also applies for witdrawls"""
+    if ranks.get('cut_status')[0] == "No cut this week":
+        print ('adjusting for withdrawls')
+        wd = 0
+        for key, value in ranks.items():
+            if key not in ['cut number', 'cut_status', 'round', 'finished']:
+                 if value[0] == 'cut':
+                     wd += 1
+        cutNum = (len(ranks) - 4) - wd  # -4 non players in dict then -WD
+    else:
+        if ranks.get('round') == 1:
+            cutNum = 71
+        else:
+            cutNum = ranks.get('cut number')
+
+    print ('cut num function', cutNum)
+    return cutNum
