@@ -133,13 +133,12 @@ def calc_score(t_args, request=None):
                 print ('display with no save for old tournament')
                 for pick in ScoreDetails.objects.filter(user=user, pick__playerName__tournament=tournament):
                     display_list.append(pick)
-                if BonusDetails.objects.filter(user=user, tournament=tournament).exists():
-                    display_list.append(BonusDetails.objects.filter(user=user, tournament=tournament))
-                    print (display_list)
+                display_list.append(BonusDetails.objects.get(user=user, tournament=tournament))
                 display_detail[user]=display_list
                 display_list = []
 
         display_scores = TotalScore.objects.filter(tournament=tournament).order_by('score')
+        print ('display det', display_detail)
 
         return display_scores, display_detail, leaders, cut_data, lookup_errors_dict
 
