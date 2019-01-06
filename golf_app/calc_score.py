@@ -16,7 +16,10 @@ def calc_score(t_args, request=None):
         picked_winner = False
 
         picks_dict = getPicks(t_args)
-        ranks = getRanks(t_args)
+        ranks_tuple = getRanks(t_args)
+        print ('tuple', ranks_tuple)
+        ranks = ranks_tuple[0]
+        lookup_errors = ranks_tuple[1]
         cutNum = getCutNum(ranks)
 
         leaders = {}
@@ -32,91 +35,109 @@ def calc_score(t_args, request=None):
 
         lookup_errors_dict = {}
         display_detail = {}
+        tournament = Tournament.objects.get(pk=t_args.get('pk'))
 
         for player, picks in picks_dict.items():
             user = User.objects.get(username=player)
-            tournament = Tournament.objects.get(pk=t_args.get('pk'))
+
             lookup_errors_list = []
             display_list = []
+            if tournament.complete == False:
+                print ('current tourny score logic')
+                for pick in picks:
+                    try:
+                        if ranks[pick][0] == 'cut':
+                            cut_bonus = False
+                            pickRank = cutNum +1
+                        elif ranks[pick][0]== '':
+                            pickRank = 0
 
-            for pick in picks:
-                try:
-                    if ranks[pick][0] == 'cut':
-                        cut_bonus = False
+                        else:
+                            pickRank_str = (formatRank(ranks[pick][0]))
+                            pickRank = int(pickRank_str)
+
+                    #shouldn't need the try/except, keeping just in case
+                    except (ObjectDoesNotExist, KeyError) as e:
+                        print (pick + ' lookup failed', e)
+                        #lookup_errors_list.append(pick)
+                        #lookup_errors_dict[user]=lookup_errors_list
                         pickRank = cutNum +1
-                    elif ranks[pick][0]== '':
-                        pickRank = 0
+                        cut_bonus = False
 
-                    else:
-                        pickRank_str = (formatRank(ranks[pick][0]))
-                        pickRank = int(pickRank_str)
+                    if pick in lookup_errors:
+                        lookup_errors_list.append(pick)
 
-                #shouldn't need the try/except, keeping just in case
-                except (ObjectDoesNotExist, KeyError) as e:
-                    print (pick + ' lookup failed', e)
-                    lookup_errors_list.append(pick)
+                    totalScore += pickRank
+                    pick_obj = Picks.objects.get(user=user, playerName__playerName=pick, playerName__tournament=tournament)
+                    score_detail, created = ScoreDetails.objects.get_or_create(user=user, pick__playerName__tournament=tournament, pick=pick_obj)
+
+                    if ranks.get(pick) != None:
+                        score_detail.score = pickRank
+                        score_detail.toPar = ranks[pick][1]
+                        score_detail.today_score = ranks[pick][2]
+                        score_detail.thru = ranks[pick][3]
+                        score_detail.sod_position = ranks[pick][4]
+                        score_detail.save()
+                        display_list.append(score_detail)
+
+                    if pickRank == 1 and ranks.get('finished'):
+                        picked_winner = True
+                        winner_group = pick_obj.playerName.group.number
+                        print ('picked winner', score_detail.user.username, score_detail.pick.playerName, winner_group)
+
+                if lookup_errors_list:
                     lookup_errors_dict[user]=lookup_errors_list
 
-                    pickRank = cutNum +1
-                    cut_bonus = False
+                base_bonus = 50
 
-                totalScore += pickRank
-                pick_obj = Picks.objects.get(user=user, playerName__playerName=pick, playerName__tournament=tournament)
-                score_detail, created = ScoreDetails.objects.get_or_create(user=user, pick__playerName__tournament=tournament, pick=pick_obj)
+                if picked_winner:
+                    print ('in picked_winner if')
+                    winner_bonus = base_bonus + (winner_group * 2)
+                    print ('winner bonus', winner_bonus)
+                    totalScore -= winner_bonus
+                else:
+                    winner_bonus = 0
 
-                if ranks.get(pick) != None:
-                    score_detail.score = pickRank
-                    score_detail.toPar = ranks[pick][1]
-                    score_detail.today_score = ranks[pick][2]
-                    score_detail.thru = ranks[pick][3]
-                    score_detail.sod_position = ranks[pick][4]
-                    score_detail.save()
-                    display_list.append(score_detail)
-
-                if pickRank == 1 and ranks.get('finished'):
-                    picked_winner = True
-                    winner_group = pick_obj.playerName.group.number
-                    print ('picked winner', score_detail.user.username, score_detail.pick.playerName, winner_group)
-
-            base_bonus = 50
-
-            if picked_winner:
-                print ('in picked_winner if')
-                winner_bonus = base_bonus + (winner_group * 2)
-                print ('winner bonus', winner_bonus)
-                totalScore -= winner_bonus
-            else:
-                winner_bonus = 0
-
-            if ranks.get('cut_status')[0] != "No cut this week":
-                if cut_bonus and ranks.get('round') >2:
-                    cut = base_bonus
-                    totalScore -= cut
+                if ranks.get('cut_status')[0] != "No cut this week":
+                    if cut_bonus and ranks.get('round') >2:
+                        cut = base_bonus
+                        totalScore -= cut
+                    else:
+                        cut = 0
                 else:
                     cut = 0
+
+                bonus_detail, created = BonusDetails.objects.get_or_create(user=user, tournament=tournament)
+                bonus_detail.winner_bonus=winner_bonus
+                bonus_detail.cut_bonus=cut
+                bonus_detail.save()
+                display_list.append(bonus_detail)
+                ## trying to add a cut count to player overall score display
+                cut_count = ScoreDetails.objects.filter(pick__playerName__tournament=tournament, today_score="cut", user=user).aggregate(cuts=Count('user'))
+                scores[user] = (cut_count.get('cuts'), totalScore)
+                ## end of cut count section
+
+                totalScore = 0
+                picked_winner = False
+                cut_bonus = True
+
+                display_detail[user]=display_list
+
+                for k, v in sorted(scores.items(), key=lambda x:x[1]):
+                    total_score, created = TotalScore.objects.get_or_create(user=User.objects.get(username=k), tournament=tournament)
+                    print (total_score)
+                    total_score.score = int(v[1])
+                    total_score.cut_count = int(v[0])
+                    total_score.save()
             else:
-                cut = 0
-
-            bonus_detail, created = BonusDetails.objects.get_or_create(user=user, tournament=tournament, winner_bonus=winner_bonus, cut_bonus=cut)
-            display_list.append(bonus_detail)
-            ## trying to add a cut count to player overall score display
-            cut_count = ScoreDetails.objects.filter(pick__playerName__tournament=tournament, today_score="cut", user=user).aggregate(cuts=Count('user'))
-            scores[user] = (cut_count.get('cuts'), totalScore)
-            ## end of cut count section
-
-            totalScore = 0
-            picked_winner = False
-            cut_bonus = True
-
-            display_detail[user]=display_list
-
-        for k, v in sorted(scores.items(), key=lambda x:x[1]):
-            total_score, created = TotalScore.objects.get_or_create(user=User.objects.get(username=k), tournament=tournament)
-            print (total_score)
-            total_score.score = int(v[1])
-            total_score.cut_count = int(v[0])
-            total_score.save()
-
+                print ('display with no save for old tournament')
+                for pick in ScoreDetails.objects.filter(user=user, pick__playerName__tournament=tournament):
+                    display_list.append(pick)
+                if BonusDetails.objects.filter(user=user, tournament=tournament).exists():
+                    display_list.append(BonusDetails.objects.filter(user=user, tournament=tournament))
+                    print (display_list)
+                display_detail[user]=display_list
+                display_list = []
 
         display_scores = TotalScore.objects.filter(tournament=tournament).order_by('score')
 
@@ -216,16 +237,17 @@ def getRanks(tournament):
             print ('field size from json', len(data["leaderboard"]['players']))
             print ('field size from db ', len(Field.objects.filter(tournament__pk=tournament.pk)))
 
+            lookup_errors = []
             if len(ranks) - 4 == len(Field.objects.filter(tournament__pk=tournament.pk)):
                 print ("no WDs")
             else:
                 for golfer in Field.objects.filter(tournament__pk=tournament.pk):
                     if golfer.formatted_name() not in ranks.keys():
                         ranks[golfer.formatted_name()] = ('cut', 'WD', 'cut', '', 'cut')
+                        lookup_errors.append(golfer.formatted_name())
 
-
-            print (ranks)
-            return ranks
+            print (ranks, lookup_errors)
+            return ranks, lookup_errors
 
 def format_score(score):
     '''takes in a sting and returns a string formatted for the right display or calc'''

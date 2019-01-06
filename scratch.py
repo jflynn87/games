@@ -4,6 +4,7 @@ os.environ.setdefault("DJANGO_SETTINGS_MODULE","gamesProj.settings")
 import django
 django.setup()
 from fb_app.models import Week, WeekScore, Player, League, Games, User, Picks, Player
+from golf_app.models import BonusDetails
 from datetime import datetime, timedelta
 import sqlite3
 from django.db.models import Min, Q, Count
@@ -45,65 +46,10 @@ def get_schedule():
     # away_team = data[score.eid]['away']["abbr"]
     # away_score = data[score.eid]['away']['score']['T']
 
-    week = Week()
-    week.season = '2018'
-    week.week = 18
-    week.game_cnt = 0
-    week.save()
+    bonus = BonusDetails.objects.all().order_by('tournament')
 
-    for week in Week.objects.all().order_by('week'):
-        print (week.season, week.week, week.game_cnt)
-
-    # result = {}
-    # fav_total = 0
-    # dog_total = 0
-    #
-    # for week in Week.objects.all():
-    #     work_list = []
-    #     fav_count = 0
-    #     dog_count = 0
-    #     tie_count = 0
-    #     for game in Games.objects.filter(week=week):
-    #         print (game.week, game.eid, game.fav, game.dog)
-    #         if game.winner == game.fav:
-    #             fav_count += 1
-    #         elif game.winner == game.dog:
-    #             dog_count += 1
-    #         elif game.tie:
-    #             tie_count += 1
-    #         else:
-    #             print ('else', game.week, game.eid, game.fav, game.dog)
-    #     work_list.append(fav_count)
-    #     work_list.append(dog_count)
-    #     work_list.append(tie_count)
-    #     result[week.week]=work_list
-    #     fav_total += fav_count
-    #     dog_total += dog_count
-    # print (result)
-    # print ('fav', fav_total)
-    # print ('dog', dog_total)
-
-    # table = doc.Tables(1)
-    # row_i = 1
-    #
-    #
-    #
-    # while row_i < 37:
-    #     col_i = 1
-    #     while col_i < 28:
-    #         if (row_i, col_i, table.Cell(Row=row_i,Column=col_i).Range.Text) == None  and col_i == 1:
-    #             col_i = 29
-    #         else:
-    #             cell = table.Cell(Row=row_i,Column=col_i).Range.Text
-    #             print (row_i, col_i, len(cell))
-    #
-    #             col_i += 1
-    #     row_i += 1
-    #
-
-
-
-
+    for b in bonus:
+        print (b.tournament, b.user, b.winner_bonus, b.cut_bonus)
 
 
 get_schedule()

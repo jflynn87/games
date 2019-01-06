@@ -127,7 +127,6 @@ class ScoreListView(DetailView):
 
     def get(self, request, **kwargs):
 
-        #print (self.kwargs)
         try:
             tournament = Tournament.objects.get(pk=self.kwargs.get('pk'))
             start_time = datetime.datetime.now()

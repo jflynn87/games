@@ -16,6 +16,10 @@ class PicksAdmin(admin.ModelAdmin):
     list_display = ['user', 'playerName']
     list_filter = ['user']
 
+class BonusDetailsAdmin(admin.ModelAdmin):
+    list_display = ['tournament', 'user', 'winner_bonus', 'cut_bonus']
+    list_filter = ['tournament', 'user']
+
 
 
 admin.site.register(Tournament)
@@ -25,5 +29,5 @@ admin.site.register(Group, GroupAdmin)
 admin.site.register(TotalScore)
 admin.site.register(ScoreDetails)
 admin.site.register(Name)
-admin.site.register(BonusDetails)
+admin.site.register(BonusDetails, BonusDetailsAdmin)
 admin.site.register(Season)
