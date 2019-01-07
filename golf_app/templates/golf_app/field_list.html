@@ -11,23 +11,20 @@
 {% regroup field_list by group as ordered_field_list %}
 
     <div class="jumbotron">
-        {% if user.is_authenticated %}
         <h1>Hi, {{user.get_username}}!</h1>
         <h2>Welcome to the {{tournament.name}}  </h2>
-        {%else%}
-        <h1>Please Login <a class="navbar-link" href="{% url 'golf_app:user_login' %}"> <span class="glyphicon glyphicon-user"></span></a></h1>
-        {%endif%}
+        <h2>Please make 1 pick for each group below</h2>
+        <form name="random" method="post">
+          {%csrf_token%}
+          <input type="text" name="random" value="random" hidden>
+          <h5>or click for random picks  <input type="submit" class="btn btn-primary" value="Random"> </h5>
+        </form>
 
 
         {% if error_message %}
           <div class="alert alert-danger">
           <h2>{{error_message}}</h2>
           </div>
-
-        {%else%}
-        {%if user.is_authenticated%}
-        <h2>Please make 1 pick for each group below: </h2>
-        {%endif%}
         {%endif%}
 
         {% for group in ordered_field_list%}

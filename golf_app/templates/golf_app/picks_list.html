@@ -10,14 +10,14 @@
       <ul>
         {% for pick in picks_list%}
 
-        <li>Group {{pick.playerName.group.number}}:    {{pick.playerName.playerName}}</li>
+        <li>Group {{pick.playerName.group.number}}:    {{pick.playerName.playerName}}, OWGR: {{pick.playerName.currentWGR}}</li>
 
         {%endfor%}
       </ul>
 
 
   <a href="{% url 'golf_app:field' %}"> <button class="btn btn-primary">Update Picks</button></a>
-  
+
   </div>
 
 

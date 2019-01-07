@@ -13,8 +13,13 @@ class FieldAdmin(admin.ModelAdmin):
     list_filter = ['tournament',]
 
 class PicksAdmin(admin.ModelAdmin):
+
     list_display = ['user', 'playerName']
     list_filter = ['user']
+
+    #def get_tournament(self):
+    #    return self.playerName.tournament
+    #get_tournament.short_description = "tournament"
 
 class BonusDetailsAdmin(admin.ModelAdmin):
     list_display = ['tournament', 'user', 'winner_bonus', 'cut_bonus']

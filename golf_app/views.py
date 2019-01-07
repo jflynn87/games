@@ -17,6 +17,7 @@ from django.db.models import Min, Q, Count
 import scipy.stats as ss
 from django.http import JsonResponse
 import json
+import random
 
 
 class FieldListView(LoginRequiredMixin,ListView):
@@ -35,54 +36,72 @@ class FieldListView(LoginRequiredMixin,ListView):
 
 
     def post(self, request):
-
         tournament = Tournament.objects.get(current=True)
         group = Group.objects.filter(tournament=tournament)
-        form = request.POST
-        picks = []
-        for key, pick in form.items():
-            if key not in  ('csrfmiddlewaretoken', 'userid'):
-                picks.append(pick)
-        print (picks)
+        user = User.objects.get(username=request.user)
+        print ('user', user)
+
+        random_picks = []
+        picks_list = []
 
         if datetime.date.today() >= tournament.start_date:
             print (tournament.start_date)
             print (timezone.now())
             return HttpResponse ("Sorry it is too late to submit picks.")
 
-
-        if Picks.objects.filter(playerName__tournament__current=True, user=form.get('userid')).count()>0:
-            Picks.objects.filter(playerName__tournament__current=True, user=form.get('userid')).delete()
-
-        print (len(form), len(group))
-        if (len(form)-2) == len(group):
-            for k, v in form.items():
-               if k != 'csrfmiddlewaretoken' and k!= 'userid':
-                   picks = Picks()
-                   picks.user = User.objects.get(pk=form['userid'])
-                   picks.playerName = Field.objects.get(pk=v)
-                   picks.save()
+        if request.POST.get('random') == 'random':
+            for g in group:
+                random_picks.append(random.choice(Field.objects.filter(tournament=tournament, group=g)))
+            print ('random picks', random_picks)
         else:
-            group_list = []
-            for key, value in form.items():
-                if key not in ('userid', 'csrfmiddlewaretoken'):
-                    group_list.append(key.split('-')[0])
-            missing_group = []
-            for num in group:
-                if str(num.number) not in group_list:
-                    missing_group.append(num.number)
-            print (request.user, 'picks missing group', missing_group)
+            form = request.POST
+            picks = []
+            for key, pick in form.items():
+                if key not in  ('csrfmiddlewaretoken', 'userid'):
+                    picks_list.append(pick)
+            print (picks_list)
+
+        if Picks.objects.filter(playerName__tournament__current=True, user=user).count()>0:
+            Picks.objects.filter(playerName__tournament__current=True, user=user).delete()
+
+        if request.POST.get('random'):
+            for picks in random_picks:
+                pick = Picks()
+                pick.user = user
+                pick.playerName = Field.objects.get(playerName=picks, tournament=tournament)
+                pick.save()
+        else:
+            print (len(form), len(group))
+            if (len(form)-2) == len(group):
+                for k, v in form.items():
+                   if k != 'csrfmiddlewaretoken' and k!= 'userid':
+                       picks = Picks()
+                       picks.user = User.objects.get(pk=form['userid'])
+                       picks.playerName = Field.objects.get(pk=v)
+                       picks.save()
+            else:
+                group_list = []
+                for key, value in form.items():
+                    if key not in ('userid', 'csrfmiddlewaretoken'):
+                        group_list.append(key.split('-')[0])
+                missing_group = []
+                for num in group:
+                    if str(num.number) not in group_list:
+                        missing_group.append(num.number)
+                print (request.user, 'picks missing group', missing_group)
 
 
-            print (datetime.datetime.now(), request.user, form)
-            return render (request, 'golf_app/field_list.html',
-                {'field_list': Field.objects.filter(tournament=tournament),
-                 #'picks_list': Picks.objects.filter(playerName__tournament__current=True, user=form['userid']),
-                 'form':form,
-                 'picks': picks,
-                 'error_message':  "Missing Picks for the following groups: " + str(missing_group),
-                     })
-        print ('submitting picks', datetime.datetime.now(), request.user, form)
+                print (datetime.datetime.now(), request.user, form)
+                return render (request, 'golf_app/field_list.html',
+                    {'field_list': Field.objects.filter(tournament=tournament),
+                     #'picks_list': Picks.objects.filter(playerName__tournament__current=True, user=form['userid']),
+                     'form':form,
+                     'picks': picks,
+                     'tournament': Tournament.objects.get(current=True),
+                     'error_message':  "Missing Picks for the following groups: " + str(missing_group),
+                         })
+
+        print ('submitting picks', datetime.datetime.now(), request.user, picks_list, 'random:', random_picks)
         return redirect('golf_app:picks_list')
 
 
