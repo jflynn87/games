@@ -129,6 +129,7 @@ def calc_score(t_args, request=None):
                     total_score.score = int(v[1])
                     total_score.cut_count = int(v[0])
                     total_score.save()
+
             else:
                 print ('display with no save for old tournament')
                 for pick in ScoreDetails.objects.filter(user=user, pick__playerName__tournament=tournament):
@@ -139,6 +140,11 @@ def calc_score(t_args, request=None):
 
         display_scores = TotalScore.objects.filter(tournament=tournament).order_by('score')
         print ('display det', display_detail)
+
+        if tournament.complete is False and ranks.get('finished') == True:
+            tournament.complete = True
+            tournament.save()
+
 
         return display_scores, display_detail, leaders, cut_data, lookup_errors_dict
 
@@ -198,10 +204,10 @@ def getRanks(tournament):
 
             finished = data['leaderboard']['is_finished']
             ranks['finished']=finished
-            tournament = Tournament.objects.get(pk=tournament.get('pk'))
-            if tournament.complete is False and finished:
-                tournament.complete = True
-                tournament.save()
+            #tournament = Tournament.objects.get(pk=tournament.get('pk'))
+            #if tournament.complete is False and finished:
+            #    tournament.complete = True
+            #    tournament.save()
 
             print ('finished = ' + str(finished))
 
@@ -234,13 +240,13 @@ def getRanks(tournament):
                 ranks[player] = rank, score, today_score, thru, sod_position
 
             print ('field size from json', len(data["leaderboard"]['players']))
-            print ('field size from db ', len(Field.objects.filter(tournament__pk=tournament.pk)))
+            print ('field size from db ', len(Field.objects.filter(tournament__pk=tournament.get('pk'))))
 
             lookup_errors = []
-            if len(ranks) - 4 == len(Field.objects.filter(tournament__pk=tournament.pk)):
+            if len(ranks) - 4 == len(Field.objects.filter(tournament__pk=tournament.get('pk'))):
                 print ("no WDs")
             else:
-                for golfer in Field.objects.filter(tournament__pk=tournament.pk):
+                for golfer in Field.objects.filter(tournament__pk=tournament.get('pk')):
                     if golfer.formatted_name() not in ranks.keys():
                         ranks[golfer.formatted_name()] = ('cut', 'WD', 'cut', '', 'cut')
                         lookup_errors.append(golfer.formatted_name())

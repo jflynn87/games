@@ -1,11 +1,8 @@
 {%extends 'golf_app/golf_app_base.html'%}
 {%load golf_extras%}
+
 {%block body_block%}
-<!-- {% regroup detail_list by user as ordered_detail_list %} -->
-
-
-<!-- <div class="jumbotron"> -->
-
+<meta http-equiv="refresh" content="60" >
 
 {%if lookup_errors%}
   <h4>The following picks have withdrawn or have name lookup issues:</h4>
@@ -54,8 +51,6 @@
 <p></p>
 <h3 class="p-3 mb-2 bg-secondary text-white">Score  Details</h3>
 <ul class="list-unstyled">
-  <!-- {%for user in ordered_detail_list%}
-  <li class="display-4">{{user.grouper}}</li> -->
 
   {%for user, golfers in detail_list.items%}
   <li class="display-4">{{user}}</li>
@@ -97,15 +92,15 @@
         {%endif%}
       {%elif pick|model_name == 'bonus details'%}
       {%if pick.winner_bonus != 0%}
-      <tr>
+      <tr style="color:red">
           <td>Winner Bonus</td>
-          <td>{{pick.winner_bonus}}</td>
+          <td>-{{pick.winner_bonus}}</td>
         </tr>
       {%endif%}
       {%if pick.cut_bonus != 0%}
-        <tr>
+        <tr style="color:red">
           <td>Cut Bonus</td>
-          <td>{{pick.cut_bonus}}</td>
+          <td>-{{pick.cut_bonus}}</td>
         </tr>
       {%endif%}
         {%endif%}
@@ -113,7 +108,7 @@
   </table>
   {%endfor%}
 </ul>
-{%endfor%}
-<!-- </div> -->
+
+
 
 {%endblock%}
