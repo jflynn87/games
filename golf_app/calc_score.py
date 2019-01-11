@@ -21,6 +21,7 @@ def calc_score(t_args, request=None):
         ranks = ranks_tuple[0]
         lookup_errors = ranks_tuple[1]
         cutNum = getCutNum(ranks)
+        print ('test', cutNum)
 
         leaders = {}
         for player, rank in ranks.items():
@@ -51,10 +52,13 @@ def calc_score(t_args, request=None):
                             pickRank = cutNum +1
                         elif ranks[pick][0]== '':
                             pickRank = 0
-
                         else:
                             pickRank_str = (formatRank(ranks[pick][0]))
-                            pickRank = int(pickRank_str)
+                            if ranks['round'] == 1 and int(pickRank_str) > 70:
+                                pickRank = 71
+                            else:
+                                pickRank = int(pickRank_str)
+
 
                     #shouldn't need the try/except, keeping just in case
                     except (ObjectDoesNotExist, KeyError) as e:
