@@ -146,6 +146,8 @@ class ScoreListView(DetailView):
 
     def get(self, request, **kwargs):
 
+        no_thru_display = ['cut', 'mdf', 'not started']
+
         try:
             tournament = Tournament.objects.get(pk=self.kwargs.get('pk'))
             start_time = datetime.datetime.now()
@@ -159,6 +161,7 @@ class ScoreListView(DetailView):
                                                             'cut_data':scores[3],
                                                             'lookup_errors': scores[4],
                                                             'tournament': tournament,
+                                                            'thru_list': no_thru_display
                                                             })
             else:
                 tournament = Tournament.objects.get(current=True)
@@ -168,7 +171,8 @@ class ScoreListView(DetailView):
                 scores=calc_score.calc_score(self.kwargs, request)
                 return render(request, 'golf_app/pre_start.html', {'user_dict': user_dict,
                                                                 'tournament': tournament,
-                                                                'lookup_errors': scores[4]
+                                                                'lookup_errors': scores[4],
+                                                                'thru_list': no_thru_display
                                                                 })
         except Exception as e:
             print ('score error msg:', e)

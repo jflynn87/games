@@ -69,7 +69,7 @@
           <td>{{pick.pick.playerName}}</td>
           <td>{{pick.score}}</td>
           <td>{{pick.toPar}}</td>
-          {%if pick.today_score == 'cut' or pick.today_score == 'not started'%}
+          {%if pick.today_score in thru_list %}
             <td>{{pick.today_score}}</td>
           {%else%}
             <td>{{pick.today_score}} thru {{pick.thru}} holes</td>
@@ -81,7 +81,7 @@
           <td>{{pick.pick.playerName}}</td>
           <td>{{pick.score}}</td>
           <td>{{pick.toPar}}</td>
-          {%if pick.today_score == 'cut' or pick.today_score == 'not started'%}
+          {%if pick.today_score in thru_list %}
             <td>{{pick.today_score}}</td>
             <td>{{pick.sod_position}}</td>
           {%else%}

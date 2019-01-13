@@ -52,13 +52,38 @@ def calc_score(t_args, request=None):
                             pickRank = cutNum +1
                         elif ranks[pick][0]== '':
                             pickRank = 0
+                        elif ranks[pick][0] == "mdf":
+                            mdfNum = 0
+                            for k, v in ranks.items():
+                                if k not in ('cut number', 'round', 'cut_status', 'finished') \
+                                and v[0] != 'cut':
+                                  if v[1] == 'even':
+                                      mdf_score = 0
+                                  else:
+                                      mdf_score = int(v[1])
+                                  if ranks[pick][1] == 'even':
+                                      score = 0
+                                  else:
+                                      score = int(ranks[pick][1])
+
+                                  if mdf_score < score:
+                                    mdfNum += 1
+                            pickRank = mdfNum + 1
+                            print ("MDF", pick, pickRank)
                         else:
                             pickRank_str = (formatRank(ranks[pick][0]))
-                            if ranks['round'] == 1 and int(pickRank_str) > 70:
-                                pickRank = 71
-                            else:
-                                pickRank = int(pickRank_str)
+                            print ('in not cut logic', pick, cutNum, int(pickRank_str))
+                            if ranks.get('cut number') != None and cutNum > 0:
+                                if int(pickRank_str) > cutNum:
+                                    pickRank = cutNum +1
 
+#                            if ranks['round'] in [1, 2] and int(pickRank_str) > 70:
+#                                pickRank = 71
+                                else:
+                                    pickRank = int(pickRank_str)
+                            else:
+                                print ('cut num none but > 0, can not get here')
+                                pickRank = int(pickRank_str)
 
                     #shouldn't need the try/except, keeping just in case
                     except (ObjectDoesNotExist, KeyError) as e:
@@ -220,7 +245,7 @@ def getRanks(tournament):
                 last_name = row['player_bio']['last_name'].replace(', Jr.', '')
                 first_name = row['player_bio']['first_name']
                 player = (first_name + ' ' + last_name)
-                if (row["current_position"] is '' and round in (2,3,4)) or row["status"] == "wd":
+                if (row["current_position"] is '' and round in (2,3,4)) and row['status'] != 'mdf' or row["status"] == "wd":
                     rank = 'cut'
                     if row['status'] == 'wd':
                         score = "WD"
@@ -232,9 +257,15 @@ def getRanks(tournament):
                     thru = ''
 
                 else:
-                    rank = row["current_position"]
-                    score = format_score(row["total"])
-                    today_score = format_score(row["today"])
+                    if row['status'] == 'mdf':
+                        score = format_score(row["total"])
+                        rank = 'mdf'
+                        sod_position = row["start_position"]
+                        today_score = "mdf"
+                    else:
+                        rank = row["current_position"]
+                        score = format_score(row["total"])
+                        today_score = format_score(row["today"])
                     if today_score == 'not started':
                         thru = ''
                     else:
