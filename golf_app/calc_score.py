@@ -66,7 +66,8 @@ def calc_score(t_args, request=None):
                                   else:
                                       score = int(ranks[pick][1])
 
-                                  if mdf_score < score:
+                                  if mdf_score < score or v[0] not in ['cut', 'mdf']:
+                                  #if v[0] not in ['cut', 'mdf']:
                                     mdfNum += 1
                             pickRank = mdfNum + 1
                             print ("MDF", pick, pickRank)
@@ -170,9 +171,9 @@ def calc_score(t_args, request=None):
         display_scores = TotalScore.objects.filter(tournament=tournament).order_by('score')
         print ('display det', display_detail)
 
-        if tournament.complete is False and ranks.get('finished') == True:
-            tournament.complete = True
-            tournament.save()
+        #if tournament.complete is False and ranks.get('finished') == True:
+        #    tournament.complete = True
+        #    tournament.save()
 
 
         return display_scores, display_detail, leaders, cut_data, lookup_errors_dict
