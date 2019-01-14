@@ -171,9 +171,9 @@ def calc_score(t_args, request=None):
         display_scores = TotalScore.objects.filter(tournament=tournament).order_by('score')
         print ('display det', display_detail)
 
-        #if tournament.complete is False and ranks.get('finished') == True:
-        #    tournament.complete = True
-        #    tournament.save()
+        if tournament.complete is False and ranks.get('finished') == True:
+            tournament.complete = True
+            tournament.save()
 
 
         return display_scores, display_detail, leaders, cut_data, lookup_errors_dict
