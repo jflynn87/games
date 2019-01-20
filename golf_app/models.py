@@ -58,11 +58,13 @@ class Field(models.Model):
         group = self.objects.filter(group=args)
         return group
 
-    def current_field(self):
-        return self.objects.filter(tournament__current=True)
+    #def current_field(self):
+    #    return self.objects.filter(tournament__current=True)
 
     def formatted_name(self):
         return self.playerName.replace(' Jr.','').replace('(am)','')
+
+
 
 
 class Name(models.Model):

@@ -144,6 +144,26 @@ STATICFILES_DIRS = [
     STATIC_DIR,
 ]
 
+EMAIL_USE_TLS = True
+EMAIL_HOST = 'smtp.gmail.com'
+user = os.environ.get('GOLF_email_id')
+pwd = os.environ.get('GOLF_email_password')
+
+
+# using debug setting to determine test vs. prod
+if DEBUG  == True:
+    user_no_quotes = user.strip("'")
+    pwd_no_quotes= pwd.strip("'")
+    EMAIL_HOST_USER = user_no_quotes
+    EMAIL_HOST_PASSWORD = pwd_no_quotes
+else:
+    EMAIL_HOST_USER = user
+    EMAIL_HOST_PASSWORD = pwd
+
+EMAIL_PORT = 587
+
+
+
 LOGIN_REDIRECT_URL = '/'
 
 INTERNAL_IPS = ['127.0.0.1']

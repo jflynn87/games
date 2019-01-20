@@ -4,10 +4,11 @@ os.environ.setdefault("DJANGO_SETTINGS_MODULE","gamesProj.settings")
 import django
 django.setup()
 from fb_app.models import Week, WeekScore, Player, League, Games, User, Picks, Player
-from golf_app.models import BonusDetails
+from golf_app.models import BonusDetails, Tournament, Field, Picks
 from datetime import datetime, timedelta
 import sqlite3
 from django.db.models import Min, Q, Count
+from golf_app import calc_score
 
 def get_schedule():
 
@@ -46,10 +47,18 @@ def get_schedule():
     # away_team = data[score.eid]['away']["abbr"]
     # away_score = data[score.eid]['away']['score']['T']
 
-    bonus = BonusDetails.objects.all().order_by('tournament')
+    wd_list = []
+    tournament = Tournament.objects.get(current=True)
+    score_file = calc_score.getRanks({'pk': tournament.pk})
 
-    for b in bonus:
-        print (b.tournament, b.user, b.winner_bonus, b.cut_bonus)
+    for golfer in Field.objects.filter(tournament=tournament):
+        if golfer.playerName not in score_file[0].keys():
+            wd_list.append(golfer.playerName)
+                    
+    print ('withdrals', wd_list)
+
+
+
 
 
 get_schedule()

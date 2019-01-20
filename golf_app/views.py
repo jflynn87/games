@@ -10,7 +10,7 @@ from django.views.generic.base import TemplateResponseMixin
 from django.urls import reverse, reverse_lazy
 from django.contrib.auth.models import User
 import datetime
-from golf_app import populateField, calc_score
+from golf_app import populateField, calc_score, optimal_picks
 from django.utils import timezone
 from django.core.exceptions import ObjectDoesNotExist
 from django.db.models import Min, Q, Count
@@ -28,9 +28,27 @@ class FieldListView(LoginRequiredMixin,ListView):
 
     def get_context_data(self,**kwargs):
         context = super(FieldListView, self).get_context_data(**kwargs)
+        tournament = Tournament.objects.get(current=True)
+
+        #check for withdrawls and create msg if there is any
+        try:
+            score_file = calc_score.getRanks({'pk': tournament.pk})
+            wd_list = []
+            for golfer in Field.objects.filter(tournament=tournament):
+                if golfer.playerName not in score_file[0].keys():
+                    wd_list.append(golfer.playerName)
+            if len(wd_list) > 0:
+                error_message = 'Caution, the following golfers have withdrawn:' + str(wd_list)
+            else:
+                error_message = None
+        except Exception as e:
+            print ('score file lookup issue', e)
+            error_message = None
+
         context.update({
         'field_list': Field.objects.filter(tournament=Tournament.objects.get(current=True)),
-        'tournament': Tournament.objects.get(current=True),
+        'tournament': tournament,
+        'error_message': error_message
         })
         return context
 
@@ -154,6 +172,8 @@ class ScoreListView(DetailView):
             if datetime.date.today() >= tournament.start_date:
                 scores = calc_score.calc_score(self.kwargs, request)
                 end_time= datetime.datetime.now()
+                summary_data = optimal_picks.optimal_picks(tournament)
+                print('sum', summary_data)
                 print ('exec time: ', start_time, end_time, end_time-start_time)
                 return render(request, 'golf_app/scores.html', {'scores':scores[0],
                                                             'detail_list':scores[1],
@@ -161,7 +181,10 @@ class ScoreListView(DetailView):
                                                             'cut_data':scores[3],
                                                             'lookup_errors': scores[4],
                                                             'tournament': tournament,
-                                                            'thru_list': no_thru_display
+                                                            'thru_list': no_thru_display,
+                                                            'optimal_picks': summary_data[0],
+                                                            'best_score': summary_data[1],
+                                                            'cuts': summary_data[2]
                                                             })
             else:
                 tournament = Tournament.objects.get(current=True)
@@ -169,6 +192,7 @@ class ScoreListView(DetailView):
                 for user in Picks.objects.filter(playerName__tournament=tournament).values('user__username').annotate(Count('playerName')):
                     user_dict[user.get('user__username')]=user.get('playerName__count')
                 scores=calc_score.calc_score(self.kwargs, request)
+                print ('lookup_errors', scores[4])
                 return render(request, 'golf_app/pre_start.html', {'user_dict': user_dict,
                                                                 'tournament': tournament,
                                                                 'lookup_errors': scores[4],

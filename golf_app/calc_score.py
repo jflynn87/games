@@ -89,8 +89,8 @@ def calc_score(t_args, request=None):
                     #shouldn't need the try/except, keeping just in case
                     except (ObjectDoesNotExist, KeyError) as e:
                         print (pick + ' lookup failed', e)
-                        #lookup_errors_list.append(pick)
-                        #lookup_errors_dict[user]=lookup_errors_list
+                        lookup_errors_list.append(pick)
+                        lookup_errors_dict[user]=lookup_errors_list
                         pickRank = cutNum +1
                         cut_bonus = False
 
@@ -326,7 +326,7 @@ def getCutNum(ranks):
         cutNum = (len(ranks) - 4) - wd  # -4 non players in dict then -WD
     else:
         if ranks.get('round') == 1:
-            cutNum = 71
+            cutNum = 70
         else:
             cutNum = ranks.get('cut number')
 
