@@ -307,9 +307,13 @@ def setup(request):
         url_number = request.POST.get('tournament_number')
         print (url_number, type(url_number))
         try:
-            if Tournament.objects.get(pga_tournament_num=str(url_number), season__current=True).exists():
+            if Tournament.objects.filter(pga_tournament_num=str(url_number), season__current=True).exists():
                 error_msg = ("tournament already exists" + str(url_number))
                 return render(request, 'golf_app/setup.html', {'error_msg': error_msg})
+            else:
+                print ('creating field A')
+                populateField.create_groups(url_number)
+                return HttpResponseRedirect(reverse('golf_app:field'))
         except ObjectDoesNotExist:
             print ('creating field')
             populateField.create_groups(url_number)
