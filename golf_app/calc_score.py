@@ -232,8 +232,8 @@ def getRanks(tournament):
             round = data['debug']["current_round_in_setup"]
             ranks['round']=round
 
-            started = data['leaderboard']['is_started']
-            ranks['started'] = started
+            #started = data['leaderboard']['is_started']
+            #ranks['started'] = started
 
             finished = data['leaderboard']['is_finished']
             ranks['finished']=finished
