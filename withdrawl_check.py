@@ -1,6 +1,12 @@
 import os
 os.environ.setdefault("DJANGO_SETTINGS_MODULE","gamesProj.settings")
 
+from dotenv import load_dotenv
+project_folder = os.path.expanduser('~')
+load_dotenv(os.path.join(project_folder, '.env'))
+
+SECRET_KEY = os.environ['SECRET_KEY']
+
 import django
 django.setup()
 from golf_app.models import Tournament, Field, Picks, User

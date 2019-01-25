@@ -22,7 +22,7 @@ def optimal_picks(tournament):
        tournament=Tournament.objects.get(pk=tournament.pk)
        ranks = calc_score.getRanks({'pk': tournament.pk})[0]
        #field = Field.objects.filter(tournament=tournament)
-       print ('ranks', ranks)
+       #print ('ranks', ranks)
 
        for group in Group.objects.filter(tournament=tournament):
            group_cuts = 0
@@ -43,13 +43,11 @@ def optimal_picks(tournament):
            score_list = {}
            total_score = 0
 
-       if len(score_list) != 0:
+       if len(scores) != 0:
           for group, golfers in scores.items():
-                    #print (group, golfers)
-                leader = (min(golfers, key=golfers.get))
-                #print ("Group " + str(group) + ": " + "pos: " + str(golfers.get(leader)) + "   " +str(leader))
-                #print ("Group ", str(group), ": " , "pos: ", str(golfers.get(leader)), "   ", str(leader))
-                total_score += golfers.get(leader)
-                min_score[group] = leader, golfers.get(leader)
+              leader = (min(golfers, key=golfers.get))
+              total_score += golfers.get(leader)
+              min_score[group] = leader, golfers.get(leader)
+
 
        return min_score, total_score, cuts_dict
