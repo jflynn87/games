@@ -14,8 +14,9 @@ def calc_score(t_args, request=None):
         cut_bonus = True
         winner_bonus = False
         picked_winner = False
-
+        print ('calc scores getting picks')
         picks_dict = getPicks(t_args)
+        print ('calc score back from picks')
         ranks_tuple = getRanks(t_args)
         print ('tuple', ranks_tuple)
         ranks = ranks_tuple[0]
@@ -65,9 +66,7 @@ def calc_score(t_args, request=None):
                                       score = 0
                                   else:
                                       score = int(ranks[pick][1])
-
                                   if mdf_score < score or v[0] not in ['cut', 'mdf']:
-                                  #if v[0] not in ['cut', 'mdf']:
                                     mdfNum += 1
                             pickRank = mdfNum + 1
                             print ("MDF", pick, pickRank)
@@ -77,9 +76,6 @@ def calc_score(t_args, request=None):
                             if ranks.get('cut number') != None and cutNum > 0:
                                 if int(pickRank_str) > cutNum:
                                     pickRank = cutNum +1
-
-#                            if ranks['round'] in [1, 2] and int(pickRank_str) > 70:
-#                                pickRank = 71
                                 else:
                                     pickRank = int(pickRank_str)
                             else:
@@ -161,7 +157,7 @@ def calc_score(t_args, request=None):
                     total_score.save()
 
             else:
-                print ('display with no save for old tournament')
+                print ('display with no save for old tournament', user)
                 for pick in ScoreDetails.objects.filter(user=user, pick__playerName__tournament=tournament):
                     display_list.append(pick)
                 display_list.append(BonusDetails.objects.get(user=user, tournament=tournament))
@@ -169,12 +165,17 @@ def calc_score(t_args, request=None):
                 display_list = []
 
         display_scores = TotalScore.objects.filter(tournament=tournament).order_by('score')
-        print ('display det', display_detail)
+
+        sorted_scores = {}
+
+        #sorted_scores[request.user]=ScoreDetails.objects.filter(user=request.user, pick__playerName__tournament=tournament)
+        #for score in TotalScore.objects.filter(tournament=tournament).exclude(user=request.user).order_by('score'):
+        #    print ('score', score)
+        #    sorted_scores[score.user]=ScoreDetails.objects.filter(user=score.user, pick__playerName__tournament=tournament)
 
         if tournament.complete is False and ranks.get('finished') == True:
             tournament.complete = True
             tournament.save()
-
 
         return display_scores, display_detail, leaders, cut_data, lookup_errors_dict
 

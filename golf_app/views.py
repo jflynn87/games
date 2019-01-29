@@ -35,8 +35,9 @@ class FieldListView(LoginRequiredMixin,ListView):
             score_file = calc_score.getRanks({'pk': tournament.pk})
             wd_list = []
             for golfer in Field.objects.filter(tournament=tournament):
-                if golfer.playerName not in score_file[0].keys():
+                if golfer.playerName not in score_file[0].keys().replace(' Jr.','').replace('(am)',''):
                     wd_list.append(golfer.playerName)
+                    print ('wd list', wd_list)
             if len(wd_list) > 0:
                 error_message = 'Caution, the following golfers have withdrawn:' + str(wd_list)
             else:
@@ -175,6 +176,7 @@ class ScoreListView(DetailView):
                 summary_data = optimal_picks.optimal_picks(tournament)
                 print('sum', summary_data)
                 print ('exec time: ', start_time, end_time, end_time-start_time)
+
                 return render(request, 'golf_app/scores.html', {'scores':scores[0],
                                                             'detail_list':scores[1],
                                                             'leader_list':scores[2],
