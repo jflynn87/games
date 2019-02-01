@@ -116,7 +116,7 @@ def get_field(tournament_number):
 
     for player in data["Tournament"]["Players"][0:]:
         #name = (' '.join(reversed(player["PlayerName"].split(', ')))).replace('Jr.','')
-        name = (' '.join(reversed(player["PlayerName"].split(', '))))
+        name = (' '.join(reversed(player["PlayerName"].split(', '))).replace(' Jr.','').replace('(am)',''))
         try:
             if player["isAlternate"] == "Yes":
                 #exclude alternates from the field

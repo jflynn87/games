@@ -46,6 +46,7 @@ def calc_score(t_args, request=None):
             display_list = []
             if tournament.complete == False:
                 print ('current tourny score logic')
+                print (picks)
                 for pick in picks:
                     try:
                         if ranks[pick][0] == 'cut':
