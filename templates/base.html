@@ -20,7 +20,7 @@
             {% if user.is_authenticated %}
             <li> <a class="navbar-link" href="{% url 'logout' %}">Logout</a> </li>
             {%else%}
-            <li> <a class="navbar-link" href="{% url 'login' %}"> <span class="glyphicon glyphicon-user"></span></a> </li>
+            <li> <a class="navbar-link" href="{% url 'login' %}"> <span class="glyphicon glyphicon-user">Login</span></a> </li>
             {%endif%}
           </ul>
         </nav>
