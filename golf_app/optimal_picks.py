@@ -45,10 +45,13 @@ def optimal_picks(tournament):
 
        if len(scores) != 0:
           for group, golfers in scores.items():
-              print ('f me', len(scores))
-              leader = (min(golfers, key=golfers.get))
-              total_score += golfers.get(leader)
-              min_score[group] = leader, golfers.get(leader)
+              try:
+                  leader = (min(golfers, key=golfers.get))
+                  total_score += golfers.get(leader)
+                  min_score[group] = leader, golfers.get(leader)
+              except Exception as e:
+                  print ('optimal scores exception', e)
+                  min_score[group] = "None", None
 
 
        return min_score, total_score, cuts_dict

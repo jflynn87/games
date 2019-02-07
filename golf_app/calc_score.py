@@ -169,16 +169,43 @@ def calc_score(t_args, request=None):
 
         sorted_scores = {}
 
-        #sorted_scores[request.user]=ScoreDetails.objects.filter(user=request.user, pick__playerName__tournament=tournament)
-        #for score in TotalScore.objects.filter(tournament=tournament).exclude(user=request.user).order_by('score'):
-        #    print ('score', score)
-        #    sorted_scores[score.user]=ScoreDetails.objects.filter(user=score.user, pick__playerName__tournament=tournament)
+        if not request.user.is_authenticated:
+            sorted_list = []
+            for score in TotalScore.objects.filter(tournament=tournament).order_by('score'):
+                for sd in ScoreDetails.objects.filter(user=score.user, pick__playerName__tournament=tournament):
+                    sorted_list.append(sd)
+                bd, created = BonusDetails.objects.get_or_create(user=score.user, tournament=tournament)
+                sorted_list.append(bd)
+                user= User.objects.get(pk=score.user.pk)
 
+                sorted_scores[user]= sorted_list
+                sorted_list = []
+        else:
+            sorted_list = []
+            for s in ScoreDetails.objects.filter(user=request.user, pick__playerName__tournament=tournament):
+                sorted_list.append(s)
+            bd, created = BonusDetails.objects.get_or_create(user=request.user, tournament=tournament)
+            sorted_list.append(bd)
+            user = User.objects.get(pk=request.user.pk)
+            sorted_scores[user]=sorted_list
+            for score in TotalScore.objects.filter(tournament=tournament).exclude(user=request.user).order_by('score'):
+                sorted_list = []
+                for sd in ScoreDetails.objects.filter(user=score.user, pick__playerName__tournament=tournament):
+                    sorted_list.append(sd)
+                bd, created = BonusDetails.objects.get_or_create(user=score.user, tournament=tournament)
+                sorted_list.append(bd)
+                sorted_scores[score.user]= sorted_list
+
+                #bd = BonusDetails.objects.get(user=score.user, tournament=tournament)
+                #sorted_scores[score.user].append(bd)
+        print ('sortd scores', sorted_scores)
+        print ('display det', display_detail)
         if tournament.complete is False and ranks.get('finished') == True:
             tournament.complete = True
             tournament.save()
 
-        return display_scores, display_detail, leaders, cut_data, lookup_errors_dict
+        #return display_scores, display_detail, leaders, cut_data, lookup_errors_dict
+        return display_scores, sorted_scores, leaders, cut_data, lookup_errors_dict
 
 
 def getPicks(tournament):
@@ -290,10 +317,10 @@ def getRanks(tournament):
             else:
                 for golfer in Field.objects.filter(tournament__pk=tournament.get('pk')):
                     if golfer.formatted_name() not in ranks.keys():
-                        ranks[golfer.formatted_name()] = ('cut', 'WD', 'cut', '', 'cut')
+                        #ranks[golfer.formatted_name()] = ('cut', 'WD', 'cut', '', 'cut')
                         lookup_errors.append(golfer.formatted_name())
 
-            print (ranks, lookup_errors)
+            print ('calc_score.getRanks()', ranks, lookup_errors)
             return ranks, lookup_errors
 
 def format_score(score):

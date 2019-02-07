@@ -26,7 +26,7 @@ def withdrawls():
     try:
         score_file = calc_score.getRanks({'pk': tournament.pk})
         print (score_file[0].get('is_started'), score_file[0].get('finished'))
-        if datetime.date.today() < tournament.start_date and datetime.date.today() > datetime.date.today() - datetime.timedelta(days=2): 
+        if datetime.date.today() < tournament.start_date and datetime.date.today() > datetime.date.today() - datetime.timedelta(days=3):
         #if score_file[0].get('is_started') == False and score_file[0].get('finished') == False:
             field_wd_list = []
             pick_wd_dict = {}

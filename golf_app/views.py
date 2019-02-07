@@ -35,7 +35,8 @@ class FieldListView(LoginRequiredMixin,ListView):
             score_file = calc_score.getRanks({'pk': tournament.pk})
             wd_list = []
             for golfer in Field.objects.filter(tournament=tournament):
-                if golfer.playerName not in score_file[0].keys().replace(' Jr.','').replace('(am)',''):
+                if golfer.playerName not in score_file[0]:
+                    print ('debug')
                     wd_list.append(golfer.playerName)
                     print ('wd list', wd_list)
             if len(wd_list) > 0:
