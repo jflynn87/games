@@ -51,9 +51,9 @@ def withdrawls():
                 mail_picks = "picks that have WD (please update): " + str(pick_wd_dict) + "\r"
             elif len(field_wd_list) > 0:
                 mail_field = "golfers who have withdrawn: " + str(field_wd_list) + "\r"
-                mail_picks = "No picks for withdrawls"+ "\r"
+                mail_picks = "No picks for withdrawals"+ "\r"
             else:
-                mail_field = "No withdrawls" + "\r"
+                mail_field = "No withdrawals" + "\r"
                 mail_picks = '' + "\r"
 
             mail_recipients = []
@@ -72,8 +72,8 @@ def withdrawls():
         mail_recipients = ['jflynn87@hotmail.com']
         print ('score file lookup issue', e)
 
-    mail_sub = "Golf Game Withdrawl Update"
-    mail_t = "Tornament: " + tournament.name + "\r"
+    mail_sub = "Golf Game Withdrawal Update"
+    mail_t = "Tournament: " + tournament.name + "\r"
     mail_url = "Website to make changes or picks: " + "http://jflynn87.pythonanywhere.com"
 
     mail_content = mail_t + "\r" + mail_field + "\r" +mail_picks + "\r"+ mail_url
