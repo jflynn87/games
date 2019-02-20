@@ -8,7 +8,7 @@ from django.db.models import Count
 def calc_score(t_args, request=None):
         '''takes in a request, caclulates and returns the score to the web site.
             Deletes all before starting'''
-
+        print('running calc scores')
         scores = {}
         totalScore = 0
         cut_bonus = True
@@ -227,11 +227,11 @@ def getPicks(tournament):
 
 
 def getRanks(tournament):
-            '''takes no input. goes to the PGA web site and pulls back json file of tournament ranking/scores'''
+            '''takes a dict with a touenamnet number. goes to the PGA web site and pulls back json file of tournament ranking/scores'''
 
             import urllib.request
             import json
-
+            print (tournament.get('pk'))
             json_url = Tournament.objects.get(pk=tournament.get('pk')).score_json_url
             print (json_url)
 
@@ -312,15 +312,15 @@ def getRanks(tournament):
             print ('field size from db ', len(Field.objects.filter(tournament__pk=tournament.get('pk'))))
 
             lookup_errors = []
-            if len(ranks) - 4 == len(Field.objects.filter(tournament__pk=tournament.get('pk'))):
-                print ("no WDs")
-            else:
-                for golfer in Field.objects.filter(tournament__pk=tournament.get('pk')):
+            #if len(ranks) - 4 == len(Field.objects.filter(tournament__pk=tournament.get('pk'))):
+            #    print ("no WDs")
+            #else:
+            for golfer in Field.objects.filter(tournament__pk=tournament.get('pk')):
                     if golfer.formatted_name() not in ranks.keys():
                         #ranks[golfer.formatted_name()] = ('cut', 'WD', 'cut', '', 'cut')
                         lookup_errors.append(golfer.formatted_name())
 
-            print ('calc_score.getRanks()', ranks, lookup_errors)
+            #print ('calc_score.getRanks()', ranks, lookup_errors)
             return ranks, lookup_errors
 
 def format_score(score):

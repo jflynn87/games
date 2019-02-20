@@ -36,11 +36,12 @@ def withdrawls():
             for user in User.objects.all():
                 if Picks.objects.filter(user=user, playerName__tournament=tournament).exists():
                     pick_wd_list = []
-                    for pick in Picks.objects.filter(playerName__tournament=tournament):
+                    for pick in Picks.objects.filter(user=user, playerName__tournament=tournament):
                         if pick.playerName.playerName not in score_file[0].keys():
                             pick_wd_list.append(pick.playerName.playerName)
+                            #print ('pick ED list', pick_wd_list)
                     if len(pick_wd_list) > 0:
-                        pick_wd_dict[user]=pick_wd_list
+                        pick_wd_dict[str(user)]=pick_wd_list
             print (field_wd_list, pick_wd_dict)
 
             print ('field list', len(field_wd_list))
