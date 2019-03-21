@@ -18,8 +18,6 @@ class Week(models.Model):
     week = models.PositiveIntegerField()
     game_cnt = models.PositiveIntegerField()
     current = models.BooleanField(default=False)
-    #start_date = models.DateField()
-    #end_date = models.DateField()
 
     def __str__(self):
         return str(self.week)
@@ -37,12 +35,6 @@ class Week(models.Model):
                 last_week.current = False
                 last_week.save()
         super(Week, self).save()
-
-
-#class TeamManager(models.Manager):
-#    def as_choices(self):
-#        for team in self.all():
-#            yield (team.pk, force_text(nfl_abbr))
 
 
 class Teams(models.Model):

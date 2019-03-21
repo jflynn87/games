@@ -4,7 +4,7 @@ os.environ.setdefault("DJANGO_SETTINGS_MODULE","gamesProj.settings")
 import django
 django.setup()
 from fb_app.models import Week, WeekScore, Player, League, Games, User, Picks, Player
-from golf_app.models import BonusDetails, Tournament, Field, Picks, Group
+from golf_app.models import BonusDetails, Tournament, Field, Picks, Group, TotalScore
 from datetime import datetime, timedelta
 import sqlite3
 from django.db.models import Min, Q, Count
@@ -26,21 +26,24 @@ def get_schedule():
     # word = win32.Dispatch("Word.Application")
     # word.Visible = 0
     # word.Documents.Open("18-19 FOOTBALL FOOLS")
-    i = 0
-    while i < 10:
-        for tournament in Tournament.objects.all():
-            key = {}
-            key['pk'] = tournament.pk
-            print (tournament.pk, tournament.name, key)
-            scores = calc_score.getRanks(key)
+    user = User.objects.get(username="Laroqm")
 
-            for group in Group.objects.filter(tournament=tournament):
-                for golfer in Field.objects.filter(group=group):
-                    if golfer.playerName not in scores[1] and golfer.playerName not in scores[0]:
-                        #score = scores[0][golfer.playerName]
-                        print (golfer.playerName, tournament.name)
-            i +=1
+    for tournament in Tournament.objects.all():
+            total_score = TotalScore()
+            bonus_detal = BonusDetails()
 
+            total_score.user = user
+            total_score.tournament = tournament
+            total_score.score = 999
+            total_score.cut_count = 0
+
+            bonus_detal.user = user
+            bonus_detal.tournament = tournament
+            bonus_detal.winner_bonus = 0
+            bonus_detal.cut_bonus = 0
+
+            total_score.save()
+            bonus_detal.save()
 
 
 

@@ -249,14 +249,14 @@ def create_groups(tournament_number):
 
     groups = Group.objects.get(tournament=tournament, number=group_num)
 
-    print (group_dict)
+    print ('group_dict before field save', group_dict)
     for k, v in sorted(group_dict.items(), key=lambda x: x[1]):
         if player_cnt < groups.playerCnt:
-          #print (k,v[0], str(groups.number), str(groups.playerCnt))
+          print (k,v[0], str(groups.number), str(groups.playerCnt))
           Field.objects.get_or_create(tournament=tournament, playerName=k, currentWGR=v[0], group=groups, alternate=v[1])[0]
           player_cnt +=1
         elif player_cnt == groups.playerCnt:
-          #print (k,v[0], str(groups.number), str(groups.playerCnt))
+          print (k,v[0], str(groups.number), str(groups.playerCnt))
           Field.objects.get_or_create(tournament=tournament, playerName=k, currentWGR=v[0], group=groups, alternate=v[1])[0]
           group_num +=1
           player_cnt = 1

@@ -8,21 +8,21 @@ from django.db.models import Count
 def calc_score(t_args, request=None):
         '''takes in a request, caclulates and returns the score to the web site.
             Deletes all before starting'''
-        print('running calc scores')
+        #print('running calc scores')
         scores = {}
         totalScore = 0
         cut_bonus = True
         winner_bonus = False
         picked_winner = False
-        print ('calc scores getting picks')
+        #print ('calc scores getting picks')
         picks_dict = getPicks(t_args)
-        print ('calc score back from picks')
+        #print ('calc score back from picks')
         ranks_tuple = getRanks(t_args)
-        print ('tuple', ranks_tuple)
+        #print ('tuple', ranks_tuple)
         ranks = ranks_tuple[0]
         lookup_errors = ranks_tuple[1]
         cutNum = getCutNum(ranks)
-        print ('test', cutNum)
+        #print ('test', cutNum)
 
         leaders = {}
         for player, rank in ranks.items():
@@ -45,8 +45,8 @@ def calc_score(t_args, request=None):
             lookup_errors_list = []
             display_list = []
             if tournament.complete == False:
-                print ('current tourny score logic')
-                print (picks)
+                #print ('current tourny score logic')
+                #print (picks)
                 for pick in picks:
                     try:
                         if ranks[pick][0] == 'cut':
@@ -70,22 +70,22 @@ def calc_score(t_args, request=None):
                                   if mdf_score < score or v[0] not in ['cut', 'mdf']:
                                     mdfNum += 1
                             pickRank = mdfNum + 1
-                            print ("MDF", pick, pickRank)
+                            #print ("MDF", pick, pickRank)
                         else:
                             pickRank_str = (formatRank(ranks[pick][0]))
-                            print ('in not cut logic', pick, cutNum, int(pickRank_str))
+                            #print ('in not cut logic', pick, cutNum, int(pickRank_str))
                             if ranks.get('cut number') != None and cutNum > 0:
                                 if int(pickRank_str) > cutNum:
                                     pickRank = cutNum +1
                                 else:
                                     pickRank = int(pickRank_str)
                             else:
-                                print ('cut num none but > 0, can not get here')
+                            #    print ('cut num none but > 0, can not get here')
                                 pickRank = int(pickRank_str)
 
                     #shouldn't need the try/except, keeping just in case
                     except (ObjectDoesNotExist, KeyError) as e:
-                        print (pick + ' lookup failed', e)
+                    #    print (pick + ' lookup failed', e)
                         lookup_errors_list.append(pick)
                         lookup_errors_dict[user]=lookup_errors_list
                         pickRank = cutNum +1
@@ -110,7 +110,7 @@ def calc_score(t_args, request=None):
                     if pickRank == 1 and ranks.get('finished'):
                         picked_winner = True
                         winner_group = pick_obj.playerName.group.number
-                        print ('picked winner', score_detail.user.username, score_detail.pick.playerName, winner_group)
+                        #print ('picked winner', score_detail.user.username, score_detail.pick.playerName, winner_group)
 
                 if lookup_errors_list:
                     lookup_errors_dict[user]=lookup_errors_list
@@ -118,9 +118,9 @@ def calc_score(t_args, request=None):
                 base_bonus = 50
 
                 if picked_winner:
-                    print ('in picked_winner if')
+                    #print ('in picked_winner if')
                     winner_bonus = base_bonus + (winner_group * 2)
-                    print ('winner bonus', winner_bonus)
+                    #print ('winner bonus', winner_bonus)
                     totalScore -= winner_bonus
                 else:
                     winner_bonus = 0
@@ -152,13 +152,13 @@ def calc_score(t_args, request=None):
 
                 for k, v in sorted(scores.items(), key=lambda x:x[1]):
                     total_score, created = TotalScore.objects.get_or_create(user=User.objects.get(username=k), tournament=tournament)
-                    print (total_score)
+                    #print (total_score)
                     total_score.score = int(v[1])
                     total_score.cut_count = int(v[0])
                     total_score.save()
 
             else:
-                print ('display with no save for old tournament', user)
+                #print ('display with no save for old tournament', user)
                 for pick in ScoreDetails.objects.filter(user=user, pick__playerName__tournament=tournament):
                     display_list.append(pick)
                 display_list.append(BonusDetails.objects.get(user=user, tournament=tournament))
@@ -170,7 +170,7 @@ def calc_score(t_args, request=None):
         sorted_scores = {}
         if request:
             if not request.user.is_authenticated:
-                print ('debug setup A', request)
+                #print ('debug setup A', request)
                 sorted_list = []
                 for score in TotalScore.objects.filter(tournament=tournament).order_by('score'):
                     for sd in ScoreDetails.objects.filter(user=score.user, pick__playerName__tournament=tournament):
@@ -182,7 +182,7 @@ def calc_score(t_args, request=None):
                     sorted_scores[user]= sorted_list
                     sorted_list = []
             else:
-                print ('debug setup', request)
+                #print ('debug setup', request)
                 sorted_list = []
                 for s in ScoreDetails.objects.filter(user=request.user, pick__playerName__tournament=tournament):
                     sorted_list.append(s)
@@ -198,8 +198,8 @@ def calc_score(t_args, request=None):
                     sorted_list.append(bd)
                     sorted_scores[score.user]= sorted_list
 
-        print ('sortd scores', sorted_scores)
-        print ('display det', display_detail)
+        #print ('sortd scores', sorted_scores)
+        #print ('display det', display_detail)
         if tournament.complete is False and ranks.get('finished') == True:
             tournament.complete = True
             tournament.save()
@@ -231,9 +231,9 @@ def getRanks(tournament):
 
             import urllib.request
             import json
-            print (tournament.get('pk'))
+            #print (tournament.get('pk'))
             json_url = Tournament.objects.get(pk=tournament.get('pk')).score_json_url
-            print (json_url)
+            #print (json_url)
 
             with urllib.request.urlopen(json_url) as field_json_url:
                     data = json.loads(field_json_url.read().decode())
@@ -245,7 +245,7 @@ def getRanks(tournament):
                 #ranks['cut number']=0
                 cut_score = None
                 cut_state = "No cut this week"
-                print ("cut num = " + str(ranks))
+                #print ("cut num = " + str(ranks))
             else:
                 cut_section = data['leaderboard']['cut_line']
                 cut_players = cut_section["cut_count"]
@@ -272,7 +272,7 @@ def getRanks(tournament):
             #    tournament.complete = True
             #    tournament.save()
 
-            print ('finished = ' + str(finished))
+            #print ('finished = ' + str(finished))
 
 
             for row in data["leaderboard"]['players']:
@@ -308,8 +308,8 @@ def getRanks(tournament):
 
                 ranks[player] = rank, score, today_score, thru, sod_position
 
-            print ('field size from json', len(data["leaderboard"]['players']))
-            print ('field size from db ', len(Field.objects.filter(tournament__pk=tournament.get('pk'))))
+            #print ('field size from json', len(data["leaderboard"]['players']))
+            #print ('field size from db ', len(Field.objects.filter(tournament__pk=tournament.get('pk'))))
 
             lookup_errors = []
             #if len(ranks) - 4 == len(Field.objects.filter(tournament__pk=tournament.get('pk'))):
@@ -350,7 +350,7 @@ def getCutNum(ranks):
     """takes in a dict made from the PGA json file and returns an int of the cut
     number to apply to cut picks.  also applies for witdrawls"""
     if ranks.get('cut_status')[0] == "No cut this week":
-        print ('adjusting for withdrawls')
+        #print ('adjusting for withdrawls')
         wd = 0
         for key, value in ranks.items():
             if key not in ['cut number', 'cut_status', 'round', 'finished']:
@@ -363,5 +363,5 @@ def getCutNum(ranks):
         else:
             cutNum = ranks.get('cut number')
 
-    print ('cut num function', cutNum)
+    #print ('cut num function', cutNum)
     return cutNum

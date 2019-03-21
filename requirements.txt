@@ -1,0 +1,9 @@
+dajngo
+django-mathfilters
+django-select2
+django-bootstrap-form
+urllib3
+scipy
+django-braces
+python-dateutil
+pymysql

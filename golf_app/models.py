@@ -44,6 +44,7 @@ class Field(models.Model):
     tournament = models.ForeignKey(Tournament, on_delete=models.CASCADE)
     group = models.ForeignKey(Group, on_delete=models.CASCADE, null=True)
     alternate = models.NullBooleanField(null=True)
+    withdrawn = models.BooleanField(default=False)
 
     class Meta:
         ordering = ['group', 'currentWGR']
@@ -63,6 +64,9 @@ class Field(models.Model):
 
     def formatted_name(self):
         return self.playerName.replace(' Jr.','').replace('(am)','')
+
+    def withdrawal(self):
+        pass
 
 
 

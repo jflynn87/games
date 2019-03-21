@@ -18,6 +18,7 @@ import scipy.stats as ss
 from django.http import JsonResponse
 import json
 import random
+from django.db import transaction
 
 
 class FieldListView(LoginRequiredMixin,ListView):
@@ -40,7 +41,10 @@ class FieldListView(LoginRequiredMixin,ListView):
                     wd_list.append(golfer.playerName)
                     print ('wd list', wd_list)
             if len(wd_list) > 0:
-                error_message = 'Caution, the following golfers have withdrawn:' + str(wd_list)
+                error_message = 'The following golfers have withdrawn:' + str(wd_list)
+                for wd in wd_list:
+                    Field.objects.filter(tournament=tournament, playerName=wd).update(withdrawn=True)
+
             else:
                 error_message = None
         except Exception as e:
@@ -54,7 +58,7 @@ class FieldListView(LoginRequiredMixin,ListView):
         })
         return context
 
-
+    @transaction.atomic
     def post(self, request):
         tournament = Tournament.objects.get(current=True)
         group = Group.objects.filter(tournament=tournament)
@@ -71,7 +75,7 @@ class FieldListView(LoginRequiredMixin,ListView):
 
         if request.POST.get('random') == 'random':
             for g in group:
-                random_picks.append(random.choice(Field.objects.filter(tournament=tournament, group=g)))
+                random_picks.append(random.choice(Field.objects.filter(tournament=tournament, group=g, withdrawn=False)))
             print ('random picks', random_picks)
         else:
             form = request.POST
@@ -175,7 +179,7 @@ class ScoreListView(DetailView):
                 scores = calc_score.calc_score(self.kwargs, request)
                 end_time= datetime.datetime.now()
                 summary_data = optimal_picks.optimal_picks(tournament)
-                print('sum', summary_data)
+                #print('sum', summary_data)
                 print ('exec time: ', start_time, end_time, end_time-start_time)
 
                 return render(request, 'golf_app/scores.html', {'scores':scores[0],
@@ -216,19 +220,30 @@ class SeasonTotalView(ListView):
         winner_dict = {}
         winner_list = []
         total_scores = {}
+        second_half_scores = {}
+        mark_date = datetime.datetime.strptime('2019-3-20', '%Y-%m-%d')
 
         for user in TotalScore.objects.values('user_id').distinct().order_by('user_id'):
             user_key = user.get('user_id')
             user_list.append(User.objects.get(pk=user_key))
             winner_dict[User.objects.get(pk=user_key)]=0
             total_scores[User.objects.get(pk=user_key)]=0
+            #added second half for Mark
+            second_half_scores[User.objects.get(pk=user_key)]=0
 
         for tournament in Tournament.objects.filter(season__current=True):
             score_list = []
+            #second_half_score_list = []  #added for Mark
             for score in TotalScore.objects.filter(tournament=tournament).order_by('user_id'):
                 score_list.append(score)
                 total_score = total_scores.get(score.user)
                 total_scores[score.user] = total_score + score.score
+                #add second half for Mark
+                if tournament.start_date > mark_date.date():
+                    #second_half_score_list.append(score)
+                    second_half_score = second_half_scores.get(score.user)
+                    second_half_scores[score.user] = second_half_score + score.score
+
             if tournament.complete:
                 winner = TotalScore.objects.filter(tournament=tournament).order_by('score').values('score')
                 winning_score = winner[0].get('score')
@@ -241,14 +256,12 @@ class SeasonTotalView(ListView):
                     score_list.append(User.objects.get(pk=winner_data[0][0].user.pk))
                     winner_data = (win_user_list, num_of_winners)
                     winner_list.append(winner_data)
-                    print ('win1', winner_list)
                 elif num_of_winners > 1:
                     winner_data = ([TotalScore.objects.filter(tournament=tournament, score=winning_score)], num_of_winners)
                     #win_user_list = []
                     for user in winner_data[0]:
                         print ('this', user)
                         for name in user:
-                            print ('this 2', name)
                         #score_list.append(User.objects.get(pk=name.user.pk))
                             win_user_list.append(User.objects.get(pk=name.user.pk))
                             winner_data = (win_user_list, num_of_winners)
@@ -263,18 +276,22 @@ class SeasonTotalView(ListView):
         #for user in TotalScore.objects.values('user').distinct().order_by('user_id'):
         #    winner_dict[(User.objects.get(pk=user.get('user')))]=0
 
-        print ('this 4', winner_list)
+
         for winner in winner_list:
             for data in winner[0]:
-                print ('this 3', winner[1])
                 prize = winner_dict.get(data)
                 prize = prize + (30/winner[1])
                 winner_dict[data] = prize
 
         total_score_list = []
+        total_second_half_score_list = []
         for score in total_scores.values():
+            #print ('fh', total_score_list)
             total_score_list.append(score)
-        #display_dict['totals']=total_score_list
+        #added for Mark
+        for s in second_half_scores.values():
+            #print ('sh', second_half_score_list)
+            total_second_half_score_list.append(s)
 
         ranks = ss.rankdata(total_score_list, method='min')
         rank_list = []
@@ -282,10 +299,12 @@ class SeasonTotalView(ListView):
             rank_list.append(rank)
 
 
-        print ('display_dict')
-        print (display_dict)
-        print ('winner dict')
-        print (winner_dict)
+        print ()
+        print ('display_dict', display_dict)
+        print ()
+        print ('winner dict', winner_dict)
+        print ('second half totals', total_second_half_score_list)
+        print ('full season totals',total_score_list)
 
         context = super(SeasonTotalView, self).get_context_data(**kwargs)
         context.update({
@@ -293,6 +312,7 @@ class SeasonTotalView(ListView):
         'user_list': user_list,
         'rank_list': rank_list,
         'totals_list': total_score_list,
+        'second_half_list': total_second_half_score_list,
         'prize_list': winner_dict,
 
         })
