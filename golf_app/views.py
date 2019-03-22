@@ -165,7 +165,6 @@ class ScoreListView(DetailView):
         if kwargs.get('pk') == None:
             tournament = Tournament.objects.get(current=True)
             self.kwargs['pk'] = str(tournament.pk)
-        print ('dispatch', self.kwargs)
         return super(ScoreListView, self).dispatch(request, *args, **kwargs)
 
     def get(self, request, **kwargs):
@@ -177,10 +176,14 @@ class ScoreListView(DetailView):
             start_time = datetime.datetime.now()
             if datetime.date.today() >= tournament.start_date:
                 scores = calc_score.calc_score(self.kwargs, request)
-                end_time= datetime.datetime.now()
-                summary_data = optimal_picks.optimal_picks(tournament)
+                calc_finish = datetime.datetime.now()
+                print ('calc time', calc_finish - start_time)
+                summary_data = optimal_picks.optimal_picks(tournament, scores[5])
+                print ('summary time', datetime.datetime.now() - calc_finish)
                 #print('sum', summary_data)
-                print ('exec time: ', start_time, end_time, end_time-start_time)
+                #print ('exec time: ', start_time, end_time, end_time-start_time, self.request.user)
+                end_time= datetime.datetime.now()
+                print ('exec time: ', end_time-start_time, self.request.user)
 
                 return render(request, 'golf_app/scores.html', {'scores':scores[0],
                                                             'detail_list':scores[1],
@@ -231,7 +234,7 @@ class SeasonTotalView(ListView):
             #added second half for Mark
             second_half_scores[User.objects.get(pk=user_key)]=0
 
-        for tournament in Tournament.objects.filter(season__current=True):
+        for tournament in Tournament.objects.filter(season__current=True).order_by('-start_date'):
             score_list = []
             #second_half_score_list = []  #added for Mark
             for score in TotalScore.objects.filter(tournament=tournament).order_by('user_id'):

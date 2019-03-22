@@ -4,6 +4,7 @@ from django.contrib.auth.models import User
 from django.shortcuts import render, get_object_or_404, redirect
 from django.core.exceptions import ObjectDoesNotExist
 from django.db.models import Count
+import datetime
 
 def calc_score(t_args, request=None):
         '''takes in a request, caclulates and returns the score to the web site.
@@ -14,10 +15,14 @@ def calc_score(t_args, request=None):
         cut_bonus = True
         winner_bonus = False
         picked_winner = False
-        #print ('calc scores getting picks')
+        picks_dict_start_time = datetime.datetime.now()
         picks_dict = getPicks(t_args)
-        #print ('calc score back from picks')
+        picks_dict_end_time = datetime.datetime.now()
+        print ('build picks dict', picks_dict_end_time - picks_dict_start_time)
+        ranks_start_time = datetime.datetime.now()
         ranks_tuple = getRanks(t_args)
+        ranks_end_time = datetime.datetime.now()
+        print ('build ranks dict', ranks_end_time - ranks_start_time)
         #print ('tuple', ranks_tuple)
         ranks = ranks_tuple[0]
         lookup_errors = ranks_tuple[1]
@@ -38,16 +43,24 @@ def calc_score(t_args, request=None):
         lookup_errors_dict = {}
         display_detail = {}
         tournament = Tournament.objects.get(pk=t_args.get('pk'))
-
+        before_score_start_time = datetime.datetime.now()
+        print ('before for loops', before_score_start_time - ranks_end_time)
+        pick_dict_loop_start = datetime.datetime.now()
         for player, picks in picks_dict.items():
-            user = User.objects.get(username=player)
 
+            print ('starting for loops', datetime.datetime.now() - pick_dict_loop_start, player)
+            pick_dict_loop_start = datetime.datetime.now()
+
+            user = User.objects.get(username=player)
             lookup_errors_list = []
             display_list = []
             if tournament.complete == False:
                 #print ('current tourny score logic')
                 #print (picks)
+                each_pick_start_time = datetime.datetime.now()
                 for pick in picks:
+                    #print ('for pick in picks', datetime.datetime.now() - each_pick_start_time, pick)
+                    each_pick_start_time = datetime.datetime.now()
                     try:
                         if ranks[pick][0] == 'cut':
                             cut_bonus = False
@@ -205,7 +218,7 @@ def calc_score(t_args, request=None):
             tournament.save()
 
         #return display_scores, display_detail, leaders, cut_data, lookup_errors_dict
-        return display_scores, sorted_scores, leaders, cut_data, lookup_errors_dict
+        return display_scores, sorted_scores, leaders, cut_data, lookup_errors_dict, ranks
 
 
 def getPicks(tournament):
