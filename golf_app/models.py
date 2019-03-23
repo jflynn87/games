@@ -92,12 +92,10 @@ class Picks(models.Model):
         return str(self.playerName) if self.playerName else ''
 
     def is_winner(self):
-        winner = ScoreDetails.objects.get(pick=self, score=1)
-
-        if (self.playerName == winner.pick.playerName and self.playerName.tournament.complete):
-           return True
+        if ScoreDetails.objects.filter(pick=self, score=1, pick__playerName__tournament__complete=True):
+            return True
         else:
-           return False
+            return False
 
 
 class ScoreDetails(models.Model):

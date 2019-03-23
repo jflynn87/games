@@ -171,10 +171,10 @@ class ScoreListView(DetailView):
 
         no_thru_display = ['cut', 'mdf', 'not started']
 
-        try:
-            tournament = Tournament.objects.get(pk=self.kwargs.get('pk'))
-            start_time = datetime.datetime.now()
-            if datetime.date.today() >= tournament.start_date:
+        #try:
+        tournament = Tournament.objects.get(pk=self.kwargs.get('pk'))
+        start_time = datetime.datetime.now()
+        if datetime.date.today() >= tournament.start_date:
                 scores = calc_score.calc_score(self.kwargs, request)
                 calc_finish = datetime.datetime.now()
                 print ('calc time', calc_finish - start_time)
@@ -196,7 +196,7 @@ class ScoreListView(DetailView):
                                                             'best_score': summary_data[1],
                                                             'cuts': summary_data[2]
                                                             })
-            else:
+        else:
                 tournament = Tournament.objects.get(current=True)
                 user_dict = {}
                 for user in Picks.objects.filter(playerName__tournament=tournament).values('user__username').annotate(Count('playerName')):
@@ -208,9 +208,9 @@ class ScoreListView(DetailView):
                                                                 'lookup_errors': scores[4],
                                                                 'thru_list': no_thru_display
                                                                 })
-        except Exception as e:
-            print ('score error msg:', e)
-            return HttpResponse("Error, please come back closer to the tournament start or Line John to tell him something is broken.")
+        #except Exception as e:
+        #    print ('score error msg:', e)
+        #    return HttpResponse("Error, please come back closer to the tournament start or Line John to tell him something is broken.")
 
 
 class SeasonTotalView(ListView):
