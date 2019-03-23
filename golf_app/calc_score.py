@@ -206,7 +206,7 @@ def calc_score(t_args, request=None):
                 ts, created = TotalScore.objects.get_or_create(tournament=tournament, user=user)
                 ts.score = score.get('score__sum') - (winner_bonus + cut_bonus)
                 ts.cut_count = score.get('cuts')
-                print ('saving scores')
+                
                 ts.save()
         display_scores = TotalScore.objects.filter(tournament=tournament).order_by('score')
 
