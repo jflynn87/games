@@ -181,31 +181,33 @@ def calc_score(t_args, request=None):
         #
         # before_display_time = datetime.datetime.now()
 
-        base_bonus = 50
+        if not tournament.complete:
+            base_bonus = 50
 
-        total_scores = ScoreDetails.objects.filter(pick__playerName__tournament=tournament).values('user').annotate(Sum('score')).annotate(cuts=Count('today_score', filter=Q(today_score="cut")))
+            total_scores = ScoreDetails.objects.filter(pick__playerName__tournament=tournament).values('user').annotate(Sum('score')).annotate(cuts=Count('today_score', filter=Q(today_score="cut")))
 
-        for score in total_scores:
-            user = User.objects.get(pk=score.get('user'))
-            cut_bonus = 0
-            winner_bonus = 0
-            if ranks.get('cut_status')[0] != "No cut this week" and ranks.get('round') > 2 and score.get('cuts') == 0:
-                cut_bonus = base_bonus
-            if ranks.get('finished') and ScoreDetails.objects.filter(pick__playerName__tournament=tournament, user=user, score=1):
-                group = ScoreDetails.objects.get(pick__playerName__tournament=tournament, user=user, score=1)
-                group_number = (group.pick.playerName.group.number)
-                winner_bonus = base_bonus + (2 * group_number)
+            for score in total_scores:
+                user = User.objects.get(pk=score.get('user'))
+                cut_bonus = 0
+                winner_bonus = 0
+                if ranks.get('cut_status')[0] != "No cut this week" and ranks.get('round') > 2 and score.get('cuts') == 0:
+                    cut_bonus = base_bonus
+                if ranks.get('finished') and ScoreDetails.objects.filter(pick__playerName__tournament=tournament, user=user, score=1):
+                    group = ScoreDetails.objects.get(pick__playerName__tournament=tournament, user=user, score=1)
+                    group_number = (group.pick.playerName.group.number)
+                    winner_bonus = base_bonus + (2 * group_number)
 
 
-            bd, created = BonusDetails.objects.get_or_create(user=user, tournament=tournament)
-            bd.winner_bonus = winner_bonus
-            bd.cut_bonus = cut_bonus
-            bd.save()
+                bd, created = BonusDetails.objects.get_or_create(user=user, tournament=tournament)
+                bd.winner_bonus = winner_bonus
+                bd.cut_bonus = cut_bonus
+                bd.save()
 
-            ts, created = TotalScore.objects.get_or_create(tournament=tournament, user=user)
-            ts.score = score.get('score__sum') - (winner_bonus + cut_bonus)
-            ts.cut_count = score.get('cuts')
-            ts.save()
+                ts, created = TotalScore.objects.get_or_create(tournament=tournament, user=user)
+                ts.score = score.get('score__sum') - (winner_bonus + cut_bonus)
+                ts.cut_count = score.get('cuts')
+                print ('saving scores')
+                ts.save()
         display_scores = TotalScore.objects.filter(tournament=tournament).order_by('score')
 
 
