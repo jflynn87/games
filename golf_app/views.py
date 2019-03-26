@@ -301,6 +301,12 @@ class SeasonTotalView(ListView):
         for rank in ranks:
             rank_list.append(rank)
 
+        second_half_ranks = ss.rankdata(total_second_half_score_list, method='min')
+        second_half_rank_list = []
+        for rank in second_half_ranks:
+            second_half_rank_list.append(rank)
+
+
 
         print ()
         print ('display_dict', display_dict)
@@ -317,6 +323,7 @@ class SeasonTotalView(ListView):
         'totals_list': total_score_list,
         'second_half_list': total_second_half_score_list,
         'prize_list': winner_dict,
+        'second_half_rank_list': second_half_rank_list,
 
         })
         return context

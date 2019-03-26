@@ -1,0 +1,80 @@
+1
+Dustin Johnson (1)
+Hideki Matsuyama (24)
+Branden Grace (40)
+Chez Reavie (55)
+2
+Justin Rose (2)
+Gary Woodland (22)
+Eddie Pepperell (34)
+Emiliano Grillo (53)
+3
+Brooks Koepka (3)
+Alex Noren (27)
+HaoTong Li (36)
+Tom Lewis (60)
+4
+Rory McIlroy (4)
+Matthew Fitzpatrick (32)
+Justin Harding (47)
+Luke List (64)
+5
+Justin Thomas (5)
+Keegan Bradley (31)
+Matt Wallace (33)
+Lucas Bjerregaard (50)
+6
+Bryson DeChambeau (6)
+Marc Leishman (17)
+Kiradech Aphibarnrat (39)
+Russell Knox (59)
+7
+Francesco Molinari (7)
+Webb Simpson (21)
+Thorbjørn Olesen (45)
+Satoshi Kodaira (63)
+8
+Jon Rahm (8)
+Matt Kuchar (23)
+J.B. Holmes (43)
+Si Woo Kim (54)
+9
+Xander Schauffele (9)
+Rafa Cabrera Bello (29)
+Tyrrell Hatton (35)
+Lee Westwood (62)
+10
+Paul Casey (10)
+Cameron Smith (25)
+Charles Howell III (42)
+Abraham Ancer (58)
+11
+Tommy Fleetwood (11)
+Louis Oosthuizen (19)
+Kyle Stanley (41)
+Byeong Hun An (49)
+12
+Jason Day (12)
+Phil Mickelson (20)
+Henrik Stenson (37)
+Jim Furyk (52)
+13
+Tiger Woods (13)
+Patrick Cantlay (18)
+Brandt Snedeker (44)
+Aaron Wise (61)
+14
+Tony Finau (14)
+Ian Poulter (30)
+Kevin Kisner (48)
+Keith Mitchell (56)
+15
+Bubba Watson (15)
+Jordan Spieth (28)
+Billy Horschel (38)
+Kevin Na (57)
+16
+Patrick Reed (16)
+Sergio Garcia (26)
+Shane Lowry (46)
+Andrew Putnam (51)
