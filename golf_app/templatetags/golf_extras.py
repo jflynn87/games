@@ -16,7 +16,7 @@ def currency(dollars):
 @register.filter
 def line_break(count):
     user_cnt = Picks.objects.filter(playerName__tournament__current=True).values('playerName__tournament').annotate(Count('user', distinct=True))
-    if count % user_cnt[0].get('user__count') == 0:
+    if count % (user_cnt[0].get('user__count')+1) == 0 or count == 1:
         return True
     else:
         return False

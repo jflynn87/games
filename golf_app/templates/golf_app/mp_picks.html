@@ -9,30 +9,26 @@
 
 <table class="table table-bordered">
   <thead class='thead-dark'>
-    <th>Group</th>
     <th>Player</th>
     <th>Pick</th>
     <th>OWGR</th>
   </thead>
-<tbody>
-{%for pick in picks%}
-  <tr>
-    <td>{{pick.playerName.group.number}}</td>
-    <td>{{pick.user}}</td>
-    <td>{{pick.playerName}}</td>
-    <td>{{pick.playerName.currentWGR}}</td>
-  </tr>
-
-  {%if forloop.counter|line_break %}
-    <tr style='background-color: lightblue;'>
-      <td></td>
-      <td></td>
-      <td></td>
-      <td></td>
-    </tr>
-  {%endif%}
-{%endfor%}
-</tbody>
-
 </table>
+{%for pick in picks%}
+{%if forloop.counter|line_break %}
+  <table class="table table-bordered">
+  <tr style='background-color: lightblue; font-weight: bold;'>
+    <td>Group {{pick.playerName.group.number}}</td>
+  </tr>
+  </table>
+{%endif%}
+<table class="table table-bordered">
+  <tr>
+    <td style="width: 15%;">{{pick.user}}</td>
+    <td style="width: 30%;">{{pick.playerName}}</td>
+    <td style="width: 30%;">{{pick.playerName.currentWGR}}</td>
+  </tr>
+{%endfor%}
+</table>
+
 {%endblock%}
