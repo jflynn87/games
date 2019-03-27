@@ -15,6 +15,7 @@
   </thead>
 </table>
 {%for pick in picks%}
+</table>
 {%if forloop.counter|line_break %}
   <table class="table table-bordered">
   <tr style='background-color: lightblue; font-weight: bold;'>
@@ -22,6 +23,7 @@
   </tr>
   </table>
 {%endif%}
+
 <table class="table table-bordered">
   <tr>
     <td style="width: 15%;">{{pick.user}}</td>
@@ -29,6 +31,5 @@
     <td style="width: 30%;">{{pick.playerName.currentWGR}}</td>
   </tr>
 {%endfor%}
-</table>
 
 {%endblock%}
