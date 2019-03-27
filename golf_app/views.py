@@ -175,33 +175,44 @@ class ScoreListView(DetailView):
         tournament = Tournament.objects.get(pk=self.kwargs.get('pk'))
         start_time = datetime.datetime.now()
         if datetime.date.today() >= tournament.start_date:
-                scores = calc_score.calc_score(self.kwargs, request)
-                calc_finish = datetime.datetime.now()
-                print ('calc time', calc_finish - start_time)
-                summary_data = optimal_picks.optimal_picks(tournament, scores[5])
-                print ('summary time', datetime.datetime.now() - calc_finish)
-                #print('sum', summary_data)
-                #print ('exec time: ', start_time, end_time, end_time-start_time, self.request.user)
-                end_time= datetime.datetime.now()
-                print ('exec time: ', end_time-start_time, self.request.user)
+                if tournament.pga_tournament_num != '470': #special logic for match play
+                    scores = calc_score.calc_score(self.kwargs, request)
+                    calc_finish = datetime.datetime.now()
+                    print ('calc time', calc_finish - start_time)
+                    summary_data = optimal_picks.optimal_picks(tournament, scores[5])
+                    print ('summary time', datetime.datetime.now() - calc_finish)
+                    #print('sum', summary_data)
+                    #print ('exec time: ', start_time, end_time, end_time-start_time, self.request.user)
+                    end_time= datetime.datetime.now()
+                    print ('exec time: ', end_time-start_time, self.request.user)
 
-                return render(request, 'golf_app/scores.html', {'scores':scores[0],
-                                                            'detail_list':scores[1],
-                                                            'leader_list':scores[2],
-                                                            'cut_data':scores[3],
-                                                            'lookup_errors': scores[4],
+                    return render(request, 'golf_app/scores.html', {'scores':scores[0],
+                                                                'detail_list':scores[1],
+                                                                'leader_list':scores[2],
+                                                                'cut_data':scores[3],
+                                                                'lookup_errors': scores[4],
+                                                                'tournament': tournament,
+                                                                'thru_list': no_thru_display,
+                                                                'optimal_picks': summary_data[0],
+                                                                'best_score': summary_data[1],
+                                                                'cuts': summary_data[2]
+                                                                })
+                else:
+                # special logic for match play
+                    picks = Picks.objects.filter(playerName__tournament=tournament)
+                    return render(request, 'golf_app/mp_picks.html', {
+                                                            'picks': picks,
                                                             'tournament': tournament,
-                                                            'thru_list': no_thru_display,
-                                                            'optimal_picks': summary_data[0],
-                                                            'best_score': summary_data[1],
-                                                            'cuts': summary_data[2]
-                                                            })
+                    })
+
         else:
                 tournament = Tournament.objects.get(current=True)
                 user_dict = {}
                 for user in Picks.objects.filter(playerName__tournament=tournament).values('user__username').annotate(Count('playerName')):
                     user_dict[user.get('user__username')]=user.get('playerName__count')
-                scores=calc_score.calc_score(self.kwargs, request)
+                if tournament.pga_tournament_num == '470': #special logic for match player
+                    scores = (None, None, None, None,None)
+                else:  scores=calc_score.calc_score(self.kwargs, request)
                 print ('lookup_errors', scores[4])
                 return render(request, 'golf_app/pre_start.html', {'user_dict': user_dict,
                                                                 'tournament': tournament,
