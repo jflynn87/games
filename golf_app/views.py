@@ -1,6 +1,6 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.views.generic import View, TemplateView, ListView, DetailView, CreateView, UpdateView, FormView
-from golf_app.models import Field, Tournament, Picks, Group, TotalScore, ScoreDetails
+from golf_app.models import Field, Tournament, Picks, Group, TotalScore, ScoreDetails, mpScores
 #from golf_app.forms import  CreatePicksForm, PickFormSet, NoPickFormSet
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponseRedirect, HttpResponse, Http404
@@ -199,9 +199,14 @@ class ScoreListView(DetailView):
                                                                 })
                 else:
                 # special logic for match play
+                    from golf_app import mp_calc_scores
+                    mp_calc_scores.mp_calc_scores(tournament, request)
                     picks = Picks.objects.filter(playerName__tournament=tournament)
+                    scores = mpScores.objects.filter(player__tournament=tournament)
+                    #print (scores)
                     return render(request, 'golf_app/mp_picks.html', {
                                                             'picks': picks,
+                                                            'scores': scores,
                                                             'tournament': tournament,
                     })
 

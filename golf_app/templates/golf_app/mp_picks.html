@@ -6,12 +6,14 @@
 
 <h2>{{tournament.name}}</h2>
 
-
 <table class="table table-bordered">
   <thead class='thead-dark'>
-    <th>Player</th>
-    <th>Pick</th>
-    <th>OWGR</th>
+    <th style="width: 15%;">Player</th>
+    <th style="width: 15%;">Pick</th>
+    <th style="width: 15%;">First Round</th>
+    <th style="width: 10%;">Final 16</th>
+    <th style="width: 10%;">Final 8</th>
+    <th style="width: 10%;">Final 4</th>
   </thead>
 </table>
 {%for pick in picks%}
@@ -26,10 +28,15 @@
 
 <table class="table table-bordered">
   <tr>
-    <td style="width: 15%;">{{pick.user}}</td>
-    <td style="width: 30%;">{{pick.playerName}}</td>
-    <td style="width: 30%;">{{pick.playerName.currentWGR}}</td>
+    <td style="width: 15%;">{{pick.user.username}}</td>
+    <td style="width: 15%;">{{pick.playerName.playerName}} ({{pick.playerName.currentWGR}})</td>
+    <td style="width: 15%">{{pick.playerName.playerName|first_round}}</td>
+    <td style="width: 10%;">TBD</td>
+    <td style="width: 10%;">TBD</td>
+    <td style="width: 10%;">TBD</td>
   </tr>
 {%endfor%}
+
+
 
 {%endblock%}

@@ -133,3 +133,25 @@ class TotalScore(models.Model):
 
     def __str__(self):
         return str(self.user) + str(self.score)
+
+
+class mpScores(models.Model):
+    bracket = models.CharField(max_length=5)
+    round = models.PositiveIntegerField()
+    match_num = models.CharField(max_length=5)
+    #pick = models.ForeignKey(Picks, on_delete=models.CASCADE, null=True, related_name='picks')
+    result = models.CharField(max_length=10)
+    score = models.CharField(max_length=10)
+    player = models.ForeignKey(Field, on_delete=models.CASCADE, related_name='player', null=True)
+
+    class Meta():
+        unique_together = ('player', 'round')
+
+    def __str__(self):
+        return str(self.round) + str(self.player.playerName) + self.result
+
+    def leader(self):
+        pass
+        #field = Field.objects.filter(group=self.player.group).values('playerName').annotate(Count('result'))
+        #print (field)
+        #return

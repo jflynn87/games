@@ -1,5 +1,5 @@
 from django import template
-from golf_app.models import Picks
+from golf_app.models import Picks, mpScores, Field
 from django.db.models import Count
 
 register = template.Library()
@@ -20,3 +20,16 @@ def line_break(count):
         return True
     else:
         return False
+
+@register.filter
+def first_round(pick):
+    field = Field.objects.get(tournament__pga_tournament_num='470', playerName=pick)
+    wins = mpScores.objects.filter(player=field, round__lte=3, result="Yes").count()
+    losses = mpScores.objects.filter(player=field, round__lte=3, result="No").exclude(score="AS").count()
+    ties = mpScores.objects.filter(player=field, round__lte=3, score="AS").count()
+
+    return str(wins) + '-' + str(losses) + '-' + str(ties)
+
+@register.filter
+def leader(group):
+    pass
