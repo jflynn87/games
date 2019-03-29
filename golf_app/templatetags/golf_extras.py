@@ -1,5 +1,5 @@
 from django import template
-from golf_app.models import Picks, mpScores, Field
+from golf_app.models import Picks, mpScores, Field, Tournament, Group
 from django.db.models import Count
 
 register = template.Library()
@@ -32,4 +32,14 @@ def first_round(pick):
 
 @register.filter
 def leader(group):
-    pass
+    print ('group', group)
+    tournament = Tournament.objects.get(pga_tournament_num="470")
+    grp = Group.objects.get(tournament=tournament,number=group)
+    field = Field.objects.filter(tournament=tournament, group=grp)
+    golfer_dict = {}
+
+    for golfer in field:
+        golfer_dict[golfer] = int(first_round(golfer.playerName)[0]) + (.5*int(first_round(golfer.playerName)[4]))
+
+    print ('leader', [k for k, v in golfer_dict.items() if v == max(golfer_dict.values())])
+    return str([k for k, v in golfer_dict.items() if v == max(golfer_dict.values())])
