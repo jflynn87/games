@@ -21,7 +21,7 @@ def mp_calc_scores(tournament, request=None):
         data = json.loads(field_json_url.read().decode())
 
     field = data['rounds']
-    print (field[3].get('roundNum'))
+    #print (field[3].get('roundNum'))
 
     round = 1
     cur_round = data.get('curRnd')
@@ -33,8 +33,10 @@ def mp_calc_scores(tournament, request=None):
         max_round = int(cur_round) - 1
 
     print (round, max_round)
+
     #print (field[4].get('brackets')[2])
-    #print (field[5])
+    #print ((field[6]))
+    #print ((field[7]))
 
     #if int(cur_round) < 4:
     while round <= max_round:
@@ -51,8 +53,10 @@ def mp_calc_scores(tournament, request=None):
                 max_i = 4
             elif round == 5:
                 max_i = 4
-            else:
-                max_i = 4
+            elif round == 6:
+                max_i = 1
+            elif round == 7:
+                max_i = 2
             while i < max_i:
                 if round < 4:
                     bracket = field[round-1].get('brackets')[i]
@@ -67,7 +71,9 @@ def mp_calc_scores(tournament, request=None):
                 elif round == 5:
                     max_j = 1
                 elif round == 6:
-                    max_j = 1
+                    max_j = 2
+                elif round == 7:
+                    max_j =1
                 else:  #need to update as i understand bracket format for last 8 and semis/final
                     max_j = 1
                 print ('max j', max_j)
@@ -153,6 +159,13 @@ def mp_calc_scores(tournament, request=None):
     r5_loser_list = mpScores.objects.filter(round=5, result="No").values('player__playerName')
     print (r5_loser_list)
 
+    forth_place = mpScores.objects.filter(round=6.0, result="No").filter(round=7.0, result = "No")
+    third_place = mpScores.objects.filter(round=6.0, result="No").filter(round=7.0, result = "Yes")
+    second_place = mpScores.objects.filter(round=6.0, result="Yes").filter(round=7.0, result = "No")
+    winner = mpScores.objects.filter(round=6.0, result="Yes").filter(round=7.0, result = "Yes")
+
+    print ('winner', winner)
+
     for pick in Picks.objects.filter(playerName__tournament=tournament):
         if r4_loser_list.filter(player__playerName=pick.playerName).exists():
             sd = ScoreDetails.objects.get(pick=pick)
@@ -168,11 +181,36 @@ def mp_calc_scores(tournament, request=None):
             sd.score = 5
             sd.save()
 
+        if forth_place.filter(player__playerName=pick.playerName).exists():
+            sd = ScoreDetails.objects.get(pick=pick)
+            #sd.user = pick.user
+            #sd.pick = pick
+            sd.score = 4
+            sd.save()
 
+        if third_place.filter(player__playerName=pick.playerName).exists():
+            sd = ScoreDetails.objects.get(pick=pick)
+            #sd.user = pick.user
+            #sd.pick = pick
+            sd.score = 3
+            sd.save()
 
-    #for score in mpScores.objects.filter(round=4).order_by('match_num'):
-#        print (score.round, score.match_num, score.player.playerName, score.result, score.score)
-#    print ()
+        if second_place.filter(player__playerName=pick.playerName).exists():
+            sd = ScoreDetails.objects.get(pick=pick)
+            #sd.user = pick.user
+            #sd.pick = pick
+            sd.score = 2
+            sd.save()
+
+        if winner.filter(player__playerName=pick.playerName).exists():
+            sd = ScoreDetails.objects.get(pick=pick)
+            #sd.user = pick.user
+            #sd.pick = pick
+            sd.score = 1
+            sd.save()
+            bd = BonusDetails.objects.get_or_create(user=sd.user, tournament=tournament)
+            bd.winner_bonus = 50
+            bd.save()
 
 
     score = ScoreDetails.objects.filter(pick__playerName__tournament=tournament).values('user_id').annotate(score=Sum('score'))
