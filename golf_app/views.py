@@ -204,13 +204,13 @@ class ScoreListView(DetailView):
                     picks = Picks.objects.filter(playerName__tournament=tournament)
                     scores = mpScores.objects.filter(player__tournament=tournament)
                     score_details = ScoreDetails.objects.filter(pick__playerName__tournament=tournament).order_by('user')
-                    score = ScoreDetails.objects.filter(pick__playerName__tournament=tournament).values('user__username').annotate(score=Sum('score')).order_by('score')
+                    #score = ScoreDetails.objects.filter(pick__playerName__tournament=tournament).values('user__username').annotate(score=Sum('score')).order_by('score')
                     return render(request, 'golf_app/mp_picks.html', {
                                                             'picks': picks,
                                                             'scores': scores,
                                                             'tournament': tournament,
                                                             'score_details': score_details,
-                                                            'total_score': score
+                                                            'total_score': TotalScore.objects.filter(tournament=tournament).order_by('score')
                     })
 
         else:

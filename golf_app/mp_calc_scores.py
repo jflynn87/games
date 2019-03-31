@@ -176,10 +176,21 @@ def mp_calc_scores(tournament, request=None):
 
 
     score = ScoreDetails.objects.filter(pick__playerName__tournament=tournament).values('user_id').annotate(score=Sum('score'))
-    remaining = ScoreDetails.objects.filter(pick__playerName__tournament=tournament, score=0).values('user').annotate(playing=Count('pick'))
+    #remaining = ScoreDetails.objects.filter(pick__playerName__tournament=tournament, score=0).values('user').annotate(playing=Count('pick'))
+
+    for sd in score:
+        user = User.objects.get(pk=sd.get('user_id'))
+        bd, created = BonusDetails.objects.get_or_create(user=user, tournament=tournament)
+        if created:
+            bd.winner_bonus = 0
+            bd.cut_bonus = 0
+            bd.save()
+        ts, created = TotalScore.objects.get_or_create(user=user, tournament=tournament)
+        ts.score = sd.get('score') - bonus_detail.winner_bonus
+
+        ts.save()
 
 
-    print (score)
 
 
 

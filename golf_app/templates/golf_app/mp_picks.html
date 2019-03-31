@@ -6,11 +6,28 @@
 
 <h2>{{tournament.name}}</h2>
 <h4>Totals</h4>
-<ul>
-  {%for score in total_score%}
-  <li>{{score}}</li>
-</ul>
-  {%endfor%}
+<table class="table">
+  <thead>
+    <th>Player</th>
+    <th>Score</th>
+    
+  </thead>
+  <tbody>
+    {%for score in total_score%}
+    <tr>
+      <td>{{score.user}}</td>
+      <td>{{score.score}}     </td>
+
+    </tr>
+    {%endfor%}
+  </tbody>
+</table>
+
+
+<br>
+<br>
+<h4>Picks</h4>
+
 
 <table class='table table-bordered'>
   <thead>
