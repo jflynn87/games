@@ -8,6 +8,7 @@ import datetime
 from django.db import transaction
 import urllib
 import json
+from golf_app.templatetags import golf_extras
 
 @transaction.atomic
 def mp_calc_scores(tournament, request=None):
@@ -20,10 +21,11 @@ def mp_calc_scores(tournament, request=None):
         data = json.loads(field_json_url.read().decode())
 
     field = data['rounds']
-    #print (field)
+    print (field[3].get('roundNum'))
 
     round = 1
     cur_round = data.get('curRnd')
+
     round_status = data.get('curRndState')
     if round_status == 'Official':
         max_round = int(cur_round)
@@ -31,18 +33,45 @@ def mp_calc_scores(tournament, request=None):
         max_round = int(cur_round) - 1
 
     print (round, max_round)
+    #print (field[4].get('brackets')[2])
+    #print (field[5])
+
+    #if int(cur_round) < 4:
     while round <= max_round:
         print ('round', round)
+        #if round
         if mpScores.objects.filter(round=round).exists():
             print ('scores exist', round)
         else:
             i = 0
             print ('calculating scores', round)
-            while i < 4:
-                bracket = field[round-1].get('brackets')[i]
+            if round < 4:
+                max_i = 4
+            elif round == 4:
+                max_i = 4
+            elif round == 5:
+                max_i = 4
+            else:
+                max_i = 4
+            while i < max_i:
+                if round < 4:
+                    bracket = field[round-1].get('brackets')[i]
+                else:
+                    bracket = field[round].get('brackets')[i]
                 print ("Bracket: ", bracket.get('bracketNum'), bracket.get('name'))
                 j = 0
-                while j < 8:
+                if round < 4:
+                    max_j = 8
+                elif round == 4:
+                    max_j = 2
+                elif round == 5:
+                    max_j = 1
+                elif round == 6:
+                    max_j = 1
+                else:  #need to update as i understand bracket format for last 8 and semis/final
+                    max_j = 1
+                print ('max j', max_j)
+                while j < max_j:
                     match_num = bracket.get('groups')[j].get('matchNum')
                     match_score = bracket.get('groups')[j].get('players')[0].get('finalMatchScr')
 
@@ -86,9 +115,75 @@ def mp_calc_scores(tournament, request=None):
 
                     j +=1
                 i += 1
-#            else:
-#             print (round, 'round already exists')
-
         round += 1
 
-    return
+
+# for round 1 results
+    winners = {}
+    winners_list = []
+    for group in Group.objects.filter(tournament=tournament):
+        player = golf_extras.leader(group.number)
+        winners[group]=player
+        winners_list.append(player[0])
+
+    if ScoreDetails.objects.filter(pick__playerName__tournament=tournament).exists():
+        ScoreDetails.objects.filter(pick__playerName__tournament=tournament).delete()
+    for pick in Picks.objects.filter(playerName__tournament=tournament).order_by('user'):
+        if pick.playerName.playerName in winners_list:
+            #print ('winner', pick.user, pick.playerName.playerName)
+            sd = ScoreDetails()
+            sd.user = pick.user
+            sd.pick = pick
+            sd.score = 0
+            sd.save()
+        #elif str(pick.playerName.playerName) + ' ' in winners_list:
+        #    print ('winner 1', pick.user, pick.playerName.playerName)
+        else:
+            sd = ScoreDetails()
+            sd.user = pick.user
+            sd.pick = pick
+            sd.score = 17
+            sd.save()
+            #print ('not winner', pick.user, pick.playerName.playerName)
+
+# for final 16 results
+    r4_loser_list = mpScores.objects.filter(round=4, result="No").values('player__playerName')
+    print (r4_loser_list)
+
+    r5_loser_list = mpScores.objects.filter(round=5, result="No").values('player__playerName')
+    print (r5_loser_list)
+
+    for pick in Picks.objects.filter(playerName__tournament=tournament):
+        if r4_loser_list.filter(player__playerName=pick.playerName).exists():
+            sd = ScoreDetails.objects.get(pick=pick)
+            #sd.user = pick.user
+            #sd.pick = pick
+            sd.score = 9
+            sd.save()
+
+        if r5_loser_list.filter(player__playerName=pick.playerName).exists():
+            sd = ScoreDetails.objects.get(pick=pick)
+            #sd.user = pick.user
+            #sd.pick = pick
+            sd.score = 5
+            sd.save()
+
+
+
+    #for score in mpScores.objects.filter(round=4).order_by('match_num'):
+#        print (score.round, score.match_num, score.player.playerName, score.result, score.score)
+#    print ()
+
+
+    score = ScoreDetails.objects.filter(pick__playerName__tournament=tournament).values('user_id').annotate(score=Sum('score'))
+    remaining = ScoreDetails.objects.filter(pick__playerName__tournament=tournament, score=0).values('user').annotate(playing=Count('pick'))
+
+
+    print (score)
+
+
+
+
+
+
+    return score, remaining

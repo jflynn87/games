@@ -13,7 +13,7 @@ import datetime
 from golf_app import populateField, calc_score, optimal_picks
 from django.utils import timezone
 from django.core.exceptions import ObjectDoesNotExist
-from django.db.models import Min, Q, Count
+from django.db.models import Min, Q, Count, Sum
 import scipy.stats as ss
 from django.http import JsonResponse
 import json
@@ -203,11 +203,14 @@ class ScoreListView(DetailView):
                     mp_calc_scores.mp_calc_scores(tournament, request)
                     picks = Picks.objects.filter(playerName__tournament=tournament)
                     scores = mpScores.objects.filter(player__tournament=tournament)
-                    #print (scores)
+                    score_details = ScoreDetails.objects.filter(pick__playerName__tournament=tournament).order_by('user')
+                    score = ScoreDetails.objects.filter(pick__playerName__tournament=tournament).values('user__username').annotate(score=Sum('score')).order_by('score')
                     return render(request, 'golf_app/mp_picks.html', {
                                                             'picks': picks,
                                                             'scores': scores,
                                                             'tournament': tournament,
+                                                            'score_details': score_details,
+                                                            'total_score': score
                     })
 
         else:

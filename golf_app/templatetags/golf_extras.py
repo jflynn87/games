@@ -24,22 +24,23 @@ def line_break(count):
 @register.filter
 def first_round(pick):
     field = Field.objects.get(tournament__pga_tournament_num='470', playerName=pick)
-    wins = mpScores.objects.filter(player=field, round__lte=3, result="Yes").count()
-    losses = mpScores.objects.filter(player=field, round__lte=3, result="No").exclude(score="AS").count()
-    ties = mpScores.objects.filter(player=field, round__lte=3, score="AS").count()
+    wins = mpScores.objects.filter(player=field, round__lt=4, result="Yes").count()
+    losses = mpScores.objects.filter(player=field, round__lt=4, result="No").exclude(score="AS").count()
+    ties = mpScores.objects.filter(player=field, round__lt=4, score="AS").count()
 
     return str(wins) + '-' + str(losses) + '-' + str(ties)
 
 @register.filter
 def leader(group):
-    print ('group', group)
+    #print ('group', group)
     tournament = Tournament.objects.get(pga_tournament_num="470")
     grp = Group.objects.get(tournament=tournament,number=group)
     field = Field.objects.filter(tournament=tournament, group=grp)
     golfer_dict = {}
 
     for golfer in field:
-        golfer_dict[golfer] = int(first_round(golfer.playerName)[0]) + (.5*int(first_round(golfer.playerName)[4]))
+        golfer_dict[golfer.playerName] = int(first_round(golfer.playerName)[0]) + (.5*int(first_round(golfer.playerName)[4]))
 
-    print ('leader', [k for k, v in golfer_dict.items() if v == max(golfer_dict.values())])
-    return str([k for k, v in golfer_dict.items() if v == max(golfer_dict.values())])
+    #print ('leader', [k for k, v in golfer_dict.items() if v == max(golfer_dict.values())])
+    winner= [k for k, v in golfer_dict.items() if v == max(golfer_dict.values())]
+    return winner

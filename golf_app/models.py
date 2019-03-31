@@ -137,7 +137,7 @@ class TotalScore(models.Model):
 
 class mpScores(models.Model):
     bracket = models.CharField(max_length=5)
-    round = models.PositiveIntegerField()
+    round = models.FloatField()
     match_num = models.CharField(max_length=5)
     #pick = models.ForeignKey(Picks, on_delete=models.CASCADE, null=True, related_name='picks')
     result = models.CharField(max_length=10)

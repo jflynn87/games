@@ -27,6 +27,7 @@ class BonusDetailsAdmin(admin.ModelAdmin):
 
 
 
+
 admin.site.register(Tournament)
 admin.site.register(Field, FieldAdmin)
 admin.site.register(Picks, PicksAdmin)
