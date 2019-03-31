@@ -186,15 +186,9 @@ def mp_calc_scores(tournament, request=None):
             bd.cut_bonus = 0
             bd.save()
         ts, created = TotalScore.objects.get_or_create(user=user, tournament=tournament)
-        ts.score = sd.get('score') - bonus_detail.winner_bonus
+        ts.score = sd.get('score') - bd.winner_bonus
 
         ts.save()
 
 
-
-
-
-
-
-
-    return score, remaining
+    return
