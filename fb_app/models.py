@@ -73,7 +73,7 @@ class Games(models.Model):
     final = models.BooleanField(default=False)
     home_score = models.PositiveIntegerField(null=True)
     away_score = models.PositiveIntegerField(null=True)
-    qtr = models.CharField(max_length=5, null=True)
+    qtr = models.CharField(max_length=25, null=True)
     tie = models.BooleanField(default=False)
     date = models.DateField(null=True)
     time = models.CharField(max_length=20, null=True)

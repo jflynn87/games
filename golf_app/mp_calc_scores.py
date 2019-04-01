@@ -200,9 +200,7 @@ def mp_calc_scores(tournament, request=None):
             sd.score = 5
             sd.save()
 
-        print ('4th check', type(forth_place.player.playerName), type(pick.playerName))
         if forth_place.player.playerName == str(pick.playerName):
-            print ('4th match', pick.playerName, pick.user)
             sd = ScoreDetails.objects.get(pick=pick)
             #sd.user = pick.user
             #sd.pick = pick

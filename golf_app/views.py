@@ -200,7 +200,8 @@ class ScoreListView(DetailView):
                 else:
                 # special logic for match play
                     from golf_app import mp_calc_scores
-                    mp_calc_scores.mp_calc_scores(tournament, request)
+                    if not tournament.complete:
+                        mp_calc_scores.mp_calc_scores(tournament, request)
                     picks = Picks.objects.filter(playerName__tournament=tournament)
                     scores = mpScores.objects.filter(player__tournament=tournament)
                     score_details = ScoreDetails.objects.filter(pick__playerName__tournament=tournament).order_by('user')

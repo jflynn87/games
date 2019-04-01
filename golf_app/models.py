@@ -102,7 +102,7 @@ class ScoreDetails(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     pick = models.ForeignKey(Picks, on_delete=models.CASCADE, blank=True, null=True)
     score = models.PositiveIntegerField(null=True)
-    toPar = models.CharField(max_length=10, null=True)
+    toPar = models.CharField(max_length=30, null=True)
     today_score = models.CharField(max_length = 10, null=True)
     thru = models.CharField(max_length=100, null=True)
     sod_position = models.CharField(max_length=30, null=True)

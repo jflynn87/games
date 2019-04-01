@@ -26,7 +26,7 @@ file_path = os.path.join(MODULE_DIR, 'name_fix.txt')
 
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = os.environ.get('SECRET_KEY')
-#SECRET_KEY = '2k5s=q7xp8w-iogzv&+ij=9(v8#i$9#dsf)8332^_rckt2hd^y'
+
 
 # SECURITY WARNING: don't run with debug turned on in production!
 
@@ -96,12 +96,12 @@ WSGI_APPLICATION = 'gamesProj.wsgi.application'
 
 
 #before google cloud, used to line 104
-DATABASES = {
-     'default': {
-         'ENGINE': 'django.db.backends.sqlite3',
-         'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
-     }
-}
+#DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.sqlite3',
+#         'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+#     }
+#}
 
 #for google cloud deployment
 # Database
@@ -110,41 +110,34 @@ DATABASES = {
 # Install PyMySQL as mysqlclient/MySQLdb to use Django's mysqlclient adapter
 # See https://docs.djangoproject.com/en/2.1/ref/databases/#mysql-db-api-drivers
 # for more information
-# import pymysql  # noqa: 402
-# pymysql.install_as_MySQLdb()
+import pymysql  # noqa: 402
+pymysql.install_as_MySQLdb()
 #
 # # [START db_setup]
 #
-# if os.environ.get("DEBUG") != "True":
-#      # Running on production App Engine, so connect to Google Cloud SQL using
-#      # the unix socket at /cloudsql/<your-cloudsql-connection string>
-#      DATABASES = {
-#          'default': {
-#              'ENGINE': 'django.db.backends.mysql',
-#              'HOST': '/cloudsql/golf-pick-em',
-#              'USER': 'golf_game',
-#              'PASSWORD': 'jjrbsj2019',
-#              'NAME': 'games',
-#          }
-#      }
-# else:
-#      # Running locally so connect to either a local MySQL instance or connect to
-#      # Cloud SQL via the proxy. To start the proxy via command line:
-#      #
-#      #     $ cloud_sql_proxy -instances=[INSTANCE_CONNECTION_NAME]=tcp:3307 (was 3306 but that is used on my machine)
-#      #
-#      # See https://cloud.google.com/sql/docs/mysql-connect-proxy
-#      print ('local')
-#      DATABASES = {
-#          'default': {
-#              'ENGINE': 'django.db.backends.mysql',
+db_password = os.environ.get('orig_games_db_password')
+if os.environ.get("DEBUG") != "True":
+      DATABASES = {
+          'default': {
+              'ENGINE': 'django.db.backends.mysql',
+              'HOST': 'jflynn87.mysql.pythonanywhere-services.com',
+              'USER': 'orig_games',
+              'PASSWORD': db_password,
+              'NAME': 'orig_games',
+          }
+      }
+else:
+      print ('local')
+      DATABASES = {
+          'default': {
+              'ENGINE': 'django.db.backends.mysql',
 #              'HOST': '127.0.0.1',
 #              'PORT': '3306',
-#              'NAME': 'games',
-#              'USER': 'golf_game',
-#              'PASSWORD': 'jjrbsj2019',
-#          }
-#      }
+              'NAME': 'orig_games',
+              'USER': 'orig_games',
+              'PASSWORD': db_password
+          }
+      }
 # [END db_setup]
 
 
