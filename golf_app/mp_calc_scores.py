@@ -159,12 +159,31 @@ def mp_calc_scores(tournament, request=None):
     r5_loser_list = mpScores.objects.filter(round=5, result="No").values('player__playerName')
     print (r5_loser_list)
 
-    forth_place = mpScores.objects.filter(round=6.0, result="No").filter(round=7.0, result = "No")
-    third_place = mpScores.objects.filter(round=6.0, result="No").filter(round=7.0, result = "Yes")
-    second_place = mpScores.objects.filter(round=6.0, result="Yes").filter(round=7.0, result = "No")
-    winner = mpScores.objects.filter(round=6.0, result="Yes").filter(round=7.0, result = "Yes")
+    finalist = mpScores.objects.filter(round=6.0, result="Yes")
+    for player in finalist:
+        if mpScores.objects.filter(player=player.player, round=7.0, result="Yes"):
+            winner = player
+        else:
+            second_place = player
+
+    consolation = mpScores.objects.filter(round=6.0, result="No")
+    for player in consolation:
+        if mpScores.objects.filter(player=player.player, round=7.0, result="Yes"):
+            third_place = player
+        else:
+            forth_place = player
+
+
+    #forth_place = mpScores.objects.filter(round=6.0, result="No").filter(round=7.0, result = "No")
+    #third_place = mpScores.objects.filter(round=6.0, result="No").filter(round=7.0, result = "Yes")
+    #second_place = mpScores.objects.filter(round=6.0, result="Yes").filter(round=7.0, result = "No")
+    #winner = mpScores.objects.filter(round=6.0, result="Yes").filter(round=7.0, result = "Yes")
 
     print ('winner', winner)
+    print ('2', second_place)
+    print ('3', third_place)
+    print ('4', forth_place)
+
 
     for pick in Picks.objects.filter(playerName__tournament=tournament):
         if r4_loser_list.filter(player__playerName=pick.playerName).exists():
@@ -181,34 +200,36 @@ def mp_calc_scores(tournament, request=None):
             sd.score = 5
             sd.save()
 
-        if forth_place.filter(player__playerName=pick.playerName).exists():
+        print ('4th check', type(forth_place.player.playerName), type(pick.playerName))
+        if forth_place.player.playerName == str(pick.playerName):
+            print ('4th match', pick.playerName, pick.user)
             sd = ScoreDetails.objects.get(pick=pick)
             #sd.user = pick.user
             #sd.pick = pick
             sd.score = 4
             sd.save()
 
-        if third_place.filter(player__playerName=pick.playerName).exists():
+        if third_place.player.playerName == str(pick.playerName):
             sd = ScoreDetails.objects.get(pick=pick)
             #sd.user = pick.user
             #sd.pick = pick
             sd.score = 3
             sd.save()
 
-        if second_place.filter(player__playerName=pick.playerName).exists():
+        if second_place.player.playerName == str(pick.playerName):
             sd = ScoreDetails.objects.get(pick=pick)
             #sd.user = pick.user
             #sd.pick = pick
             sd.score = 2
             sd.save()
 
-        if winner.filter(player__playerName=pick.playerName).exists():
+        if winner.player.playerName == str(pick.playerName):
             sd = ScoreDetails.objects.get(pick=pick)
             #sd.user = pick.user
             #sd.pick = pick
             sd.score = 1
             sd.save()
-            bd = BonusDetails.objects.get_or_create(user=sd.user, tournament=tournament)
+            bd = BonusDetails.objects.get(user=sd.user, tournament=tournament)
             bd.winner_bonus = 50
             bd.save()
 
