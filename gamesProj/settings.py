@@ -121,9 +121,10 @@ if os.environ.get("DEBUG") != "True":
           'default': {
               'ENGINE': 'django.db.backends.mysql',
               'HOST': 'jflynn87.mysql.pythonanywhere-services.com',
-              'USER': 'orig_games',
+              'USER': 'jflynn87',
               'PASSWORD': db_password,
-              'NAME': 'orig_games',
+              'NAME': 'jflyn87$orig_games',
+              'init_command': "SET sql_mode='STRICT_TRANS_TABLES'",
           }
       }
 else:
@@ -135,7 +136,8 @@ else:
 #              'PORT': '3306',
               'NAME': 'orig_games',
               'USER': 'orig_games',
-              'PASSWORD': db_password
+              'PASSWORD': db_password,
+              'init_command': "SET sql_mode='STRICT_TRANS_TABLES'",
           }
       }
 # [END db_setup]
