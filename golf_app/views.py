@@ -19,6 +19,8 @@ from django.http import JsonResponse
 import json
 import random
 from django.db import transaction
+import urllib.request
+
 
 
 class FieldListView(LoginRequiredMixin,ListView):
@@ -353,7 +355,15 @@ def setup(request):
 
     if request.method == "GET":
         if request.user.is_superuser:
-           return render(request, 'golf_app/setup.html')
+            t = Tournament.objects.get(current=True)
+            json_url = 'https://statdata.pgatour.com/r/current/message.json'
+            #print (json_url)
+
+            with urllib.request.urlopen(json_url) as field_json_url:
+                data = json.loads(field_json_url.read().decode())
+
+            return render(request, 'golf_app/setup.html', {'status': data,
+                                                            'tournament': t})
         else:
            return HttpResponse('Not Authorized')
     if request.method == "POST":

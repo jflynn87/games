@@ -23,14 +23,15 @@ def optimal_picks(tournament, ranks):
        #ranks = calc_score.getRanks({'pk': tournament.pk})[0]
        #field = Field.objects.filter(tournament=tournament)
        #print ('ranks', ranks)
-
+       #print (ranks)
        for group in Group.objects.filter(tournament=tournament):
            group_cuts = 0
            for player in Field.objects.filter(tournament=tournament, group=group):
                if str(player) in ranks.keys():  #needed to deal wiht WD's before start of tourn.
                   #if ranks[player.playerName][0] != "cut":
-                    if ranks[player.playerName][0] not in  ["cut", "mdf"] and ranks[player.playerName][0] != '':
-                        score_list[str(player)] = int(formatRank(ranks[player.playerName][0]))
+                    if ranks[player.playerName][0] not in  ["cut", "mdf", "wd"] and ranks[player.playerName][0] != '':
+                        #print (player.playerName, ranks[player.playerName][0], type(ranks[player.playerName][0]))
+                        score_list[str(player)] = int(formatRank(str(ranks[player.playerName][0])))
                     else:
                         if ranks[player.playerName][0] == "cut":
                             group_cuts += 1

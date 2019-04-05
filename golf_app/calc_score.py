@@ -257,32 +257,39 @@ def getPicks(tournament, ranks):
             pick_list = []
             cut_num = getCutNum(ranks)
 
+
             tournament = Tournament.objects.get(pk=tournament.get('pk'))
-            if tournament.current:
-                try:
-                    ScoreDetails.objects.filter(pick__playerName__tournament=tournament).delete()
-                except Exception as e:
-                    print ('delete score details', e)
+            #if tournament.current:
+            #    try:
+            #        print ('skipping')
+                    #ScoreDetails.objects.filter(pick__playerName__tournament=tournament).delete()
+            #    except Exception as e:
+            #        print ('delete score details', e)
 
             #users = User.objects.all()
             #for user in User.objects.all():
             #if Picks.objects.filter(user=user, playerName__tournament__name=tournament) and tournament.current:
             #        for pick in Picks.objects.filter(user=user, playerName__tournament__name=tournament).order_by('playerName__group__number'):
-            if Picks.objects.filter(playerName__tournament__name=tournament) and tournament.current:
-                for pick in Picks.objects.filter(playerName__tournament__name=tournament).order_by('playerName__group__number'):
+
+            if Picks.objects.filter(playerName__tournament=tournament) and tournament.current:
+                for pick in Picks.objects.filter(playerName__tournament=tournament).order_by('playerName__group__number'):
                         golfer = pick.playerName.playerName
                         #print (golfer)
                         pick_list.append(str(pick.playerName))
                         #print (ranks[golfer], pick.user)
-                        sd = ScoreDetails()
-                        sd.user=pick.user
-                        sd.pick=pick
+                        sd = sd, created = ScoreDetails.objects.get_or_create(user=pick.user, pick=pick)
+                        #sd.user=pick.user
+                        #sd.pick=pick
                         if ranks[golfer][0] in ('cut', 'wd'):
+                            #print ('cut/wd', ranks[golfer][0], pick.playerName.playerName)
                             sd.score = cut_num + 1
                         elif ranks[golfer][0] == 'mdf':
                             sd.score = formatRank(ranks[golfer][4]) #mdf score is in the SOD in json
+                        #elif ranks.get('round') != 1 and ranks['cut number'] != '' and int(formatRank(ranks[golfer][0])) > int(ranks['cut number']):
+                        #    print ('in new elif')
+                        #    sd.score = cut_num +1
                         else:
-                            sd.score=formatRank(ranks[golfer][0])
+                            sd.score=formatRank(str(ranks[golfer][0]))
                         sd.toPar = ranks[golfer][1]
                         sd.today_score = ranks[golfer][2]
                         sd.thru = ranks[golfer][3]
@@ -373,7 +380,12 @@ def getRanks(tournament):
                             else:
                                 rank = row["current_position"]
                         else:
-                            rank = row["current_position"]
+                            #print (row['player_bio']['last_name'], row['current_position'])
+                            if int(formatRank(row['current_position'])) > int(ranks['cut number']):
+                                rank = int(ranks['cut number']) + 1
+                            else:
+                                rank = row["current_position"]
+                            #print (row['player_bio']['last_name'], int(formatRank(rank)))
                         score = format_score(row["total"])
                         today_score = format_score(row["today"])
                     if today_score == 'not started':
@@ -413,6 +425,7 @@ def format_score(score):
 
 def formatRank(rank):
     '''takes in a sting and returns a string formatted for the right display or calc'''
+
     if rank == '':
        return 0
     elif rank[0] != 'T':
@@ -439,5 +452,5 @@ def getCutNum(ranks):
         else:
             cutNum = ranks.get('cut number')
 
-    print ('cut num function', cutNum)
+    #print ('cut num function', cutNum)
     return cutNum
