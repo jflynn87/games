@@ -123,7 +123,7 @@ if os.environ.get("DEBUG") != "True":
               'HOST': 'jflynn87.mysql.pythonanywhere-services.com',
               'USER': 'jflynn87',
               'PASSWORD': db_password,
-              'NAME': 'jflyn87$orig_games',
+              'NAME': 'jflynn87$orig_games',
               'init_command': "SET sql_mode='STRICT_TRANS_TABLES'",
           }
       }

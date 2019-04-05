@@ -280,7 +280,7 @@ def getPicks(tournament, ranks):
                         if ranks[golfer][0] in ('cut', 'wd'):
                             sd.score = cut_num + 1
                         elif ranks[golfer][0] == 'mdf':
-                            sd.score = formatRank(ranks[golfer][4]) #mdf score is in teh SOD in json
+                            sd.score = formatRank(ranks[golfer][4]) #mdf score is in the SOD in json
                         else:
                             sd.score=formatRank(ranks[golfer][0])
                         sd.toPar = ranks[golfer][1]
@@ -359,7 +359,6 @@ def getRanks(tournament):
                         sod_position = 'cut'
                     today_score = 'cut'
                     thru = ''
-
                 else:
                     if row['status'] == 'mdf':
                         score = format_score(row["total"])
@@ -367,7 +366,14 @@ def getRanks(tournament):
                         sod_position = row["start_position"]
                         today_score = "mdf"
                     else:
-                        rank = row["current_position"]
+                        if ranks['round'] == 1:
+                            score = formatRank(row['current_position'])
+                            if int(score) > 70:
+                                rank = '71'
+                            else:
+                                rank = row["current_position"]
+                        else:
+                            rank = row["current_position"]
                         score = format_score(row["total"])
                         today_score = format_score(row["today"])
                     if today_score == 'not started':
@@ -433,5 +439,5 @@ def getCutNum(ranks):
         else:
             cutNum = ranks.get('cut number')
 
-    #print ('cut num function', cutNum)
+    print ('cut num function', cutNum)
     return cutNum

@@ -311,7 +311,10 @@ def getRanks(tournament):
                         sod_position = row["start_position"]
                         today_score = "mdf"
                     else:
-                        rank = row["current_position"]
+                        if ranks['round'] == 1 and int(formatRank(row['current_position'])) > 70:
+                            rank = 71
+                        else:
+                            rank = row["current_position"]
                         score = format_score(row["total"])
                         today_score = format_score(row["today"])
                     if today_score == 'not started':
