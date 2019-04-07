@@ -284,7 +284,12 @@ def getPicks(tournament, ranks):
                             #print ('cut/wd', ranks[golfer][0], pick.playerName.playerName)
                             sd.score = cut_num + 1
                         elif ranks[golfer][0] == 'mdf':
-                            sd.score = formatRank(ranks[golfer][4]) #mdf score is in the SOD in json
+                            if ranks[golfer][1] == 'even':
+                                rank = '0'
+                            else:
+                                rank = ranks[golfer][1]
+                            sd.score = ((get_mdf_rank(int(formatRank(rank)), ranks)))
+                            #sd.score = formatRank(ranks[golfer][4]) #mdf score is in the SOD in json
                         #elif ranks.get('round') != 1 and ranks['cut number'] != '' and int(formatRank(ranks[golfer][0])) > int(ranks['cut number']):
                         #    print ('in new elif')
                         #    sd.score = cut_num +1
@@ -369,7 +374,8 @@ def getRanks(tournament):
                 else:
                     if row['status'] == 'mdf':
                         score = format_score(row["total"])
-                        rank = 'mdf'
+                        #print(score)
+                        rank = 'mdf'  #calc score in the picks sect once ranks dict is complete
                         sod_position = row["start_position"]
                         today_score = "mdf"
                     else:
@@ -454,3 +460,16 @@ def getCutNum(ranks):
 
     #print ('cut num function', cutNum)
     return cutNum
+
+def get_mdf_rank(score, ranks):
+    '''takes an int score and a dict of ranks and calulates to rank for an mdf'''
+    mdf_rank = 0
+    for k,v in ranks.items():
+        if k not in ('cut number', 'round', 'cut_status', 'finished'):
+            if v[1] == 'even':
+                golfer_score = 0
+            else:
+                golfer_score = v[1]
+            if v[0] != 'cut' and int(golfer_score) < score:
+                mdf_rank += 1
+    return mdf_rank + 1
