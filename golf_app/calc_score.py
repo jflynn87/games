@@ -470,6 +470,6 @@ def get_mdf_rank(score, ranks):
                 golfer_score = 0
             else:
                 golfer_score = v[1]
-            if v[0] != 'cut' and int(golfer_score) < score:
+            if v[0] != 'cut' and (int(golfer_score) < score or v[0] != "mdf"):
                 mdf_rank += 1
     return mdf_rank + 1
