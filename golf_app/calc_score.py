@@ -180,31 +180,38 @@ def calc_score(t_args, request=None):
         #         display_list = []
         #
         # before_display_time = datetime.datetime.now()
-
+        #print (ranks)
         if not tournament.complete:
             base_bonus = 50
 
             total_scores = ScoreDetails.objects.filter(pick__playerName__tournament=tournament).values('user').annotate(Sum('score')).annotate(cuts=Count('today_score', filter=Q(today_score="cut")))
 
+            if ranks.get('cut_status')[0] == "Actual" \
+             and TotalScore.objects.filter(tournament=tournament, cut_count=0).exists():
+                ts = TotalScore.objects.filter(tournament=tournament, cut_count=0)
+                for score in ts:
+                    bd, created = BonusDetails.objects.get_or_create(user=score.user, tournament=tournament)
+                    bd.cut_bonus = base_bonus
+                    bd.save()
+                    print (bd, bd.cut_bonus)
+
+
             for score in total_scores:
                 user = User.objects.get(pk=score.get('user'))
-                cut_bonus = 0
+                #cut_bonus = 0
                 winner_bonus = 0
-                if ranks.get('cut_status')[0] != "No cut this week" and ranks.get('round') > 2 and score.get('cuts') == 0:
-                    cut_bonus = base_bonus
                 if ranks.get('finished') and ScoreDetails.objects.filter(pick__playerName__tournament=tournament, user=user, score=1):
                     group = ScoreDetails.objects.get(pick__playerName__tournament=tournament, user=user, score=1)
                     group_number = (group.pick.playerName.group.number)
                     winner_bonus = base_bonus + (2 * group_number)
 
-
                 bd, created = BonusDetails.objects.get_or_create(user=user, tournament=tournament)
                 bd.winner_bonus = winner_bonus
-                bd.cut_bonus = cut_bonus
+                #bd.cut_bonus = cut_bonus
                 bd.save()
 
                 ts, created = TotalScore.objects.get_or_create(tournament=tournament, user=user)
-                ts.score = score.get('score__sum') - (winner_bonus + cut_bonus)
+                ts.score = score.get('score__sum') - (bd.winner_bonus + bd.cut_bonus)
                 ts.cut_count = score.get('cuts')
                 ts.save()
         display_scores = TotalScore.objects.filter(tournament=tournament).order_by('score')
@@ -280,26 +287,32 @@ def getPicks(tournament, ranks):
                         sd = sd, created = ScoreDetails.objects.get_or_create(user=pick.user, pick=pick)
                         #sd.user=pick.user
                         #sd.pick=pick
-                        if ranks[golfer][0] in ('cut', 'wd'):
-                            #print ('cut/wd', ranks[golfer][0], pick.playerName.playerName)
-                            sd.score = cut_num + 1
-                        elif ranks[golfer][0] == 'mdf':
-                            if ranks[golfer][1] == 'even':
-                                rank = '0'
+                        try:
+                            if ranks[golfer][0] in ('cut', 'wd'):
+                                #print ('cut/wd', ranks[golfer][0], pick.playerName.playerName)
+                                sd.score = cut_num + 1
+                            elif ranks[golfer][0] == 'mdf':
+                                if ranks[golfer][1] == 'even':
+                                    rank = '0'
+                                else:
+                                    rank = ranks[golfer][1]
+                                sd.score = ((get_mdf_rank(int(formatRank(rank)), ranks)))
+                                #sd.score = formatRank(ranks[golfer][4]) #mdf score is in the SOD in json
+                            #elif ranks.get('round') != 1 and ranks['cut number'] != '' and int(formatRank(ranks[golfer][0])) > int(ranks['cut number']):
+                            #    print ('in new elif')
+                            #    sd.score = cut_num +1
                             else:
-                                rank = ranks[golfer][1]
-                            sd.score = ((get_mdf_rank(int(formatRank(rank)), ranks)))
-                            #sd.score = formatRank(ranks[golfer][4]) #mdf score is in the SOD in json
-                        #elif ranks.get('round') != 1 and ranks['cut number'] != '' and int(formatRank(ranks[golfer][0])) > int(ranks['cut number']):
-                        #    print ('in new elif')
-                        #    sd.score = cut_num +1
-                        else:
-                            sd.score=formatRank(str(ranks[golfer][0]))
-                        sd.toPar = ranks[golfer][1]
-                        sd.today_score = ranks[golfer][2]
-                        sd.thru = ranks[golfer][3]
-                        sd.sod_position = ranks[golfer][4]
-                        sd.save()
+                                sd.score=formatRank(str(ranks[golfer][0]))
+                            sd.toPar = ranks[golfer][1]
+                            sd.today_score = ranks[golfer][2]
+                            sd.thru = ranks[golfer][3]
+                            sd.sod_position = ranks[golfer][4]
+                            sd.save()
+                        except Exception as e:
+                            print ('pick not in ranks dict', pick)
+                            sd.score = cut_num + 1
+                            sd.today_score = "WD"
+                            sd.save()
 
 
                 picks_dict[str(pick.user)] = pick_list

@@ -26,6 +26,10 @@
 
 
 <h2>{{tournament.name}}</h2>
+{%if user.is_superuser%}
+<p><a href="{{tournament.field_json_url}}">Field JSON</a></p>
+<p><a href="{{tournament.score_json_url}}">Score JSON</a></p>
+{%endif%}
 
 
 <table class="table table-bordered">

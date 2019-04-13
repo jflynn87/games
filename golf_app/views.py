@@ -27,7 +27,7 @@ class FieldListView(LoginRequiredMixin,ListView):
     login_url = 'login'
     template_name = 'golf_app/field_list.html'
     model = Field
-    redirect_field_name = 'golf_app/picks_list.html'
+    #redirect_field_name = 'next'
 
     def get_context_data(self,**kwargs):
         context = super(FieldListView, self).get_context_data(**kwargs)
