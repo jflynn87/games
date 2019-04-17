@@ -14,11 +14,15 @@ from golf_app import calc_score
 
 def test():
 
-    t = Tournament.objects.get(current=True)
+    users = TotalScore.objects.filter(tournament__pga_tournament_num="014")
+    for user in users:
+        bd = BonusDetails()
+        bd.user = user.user
+        bd.tournament = Tournament.objects.get(current=True)
+        bd.cut_bonus = 0
+        bd.winner_bonus = 0
+        bd.save()
 
-    for sd in ScoreDetails.objects.filter(pick__playerName__tournament=t).order_by('user'):
-        print (sd.user, sd.pick, sd.score)
-
-
+    print (BonusDetails.objects.filter(tournament=Tournament.objects.get(current=True)))
 
 test()

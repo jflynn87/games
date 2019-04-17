@@ -3,10 +3,12 @@ os.environ.setdefault("DJANGO_SETTINGS_MODULE","golfProj.settings")
 
 import django
 django.setup()
-from golf_app.models import Picks, Field, Group, Tournament, TotalScore, ScoreDetails, Name, Season
+from golf_app.models import (Picks, Field, Group, Tournament, TotalScore,
+    ScoreDetails, Name, Season, User, BonusDetails)
 import urllib3
 from django.core.exceptions import ObjectDoesNotExist
 from golf_app import calc_score
+from django.db import transaction
 
 
 def clean_db():
@@ -185,10 +187,10 @@ def configure_groups(field_list):
     print (groups)
     return groups
 
-
+@transaction.atomic
 def create_groups(tournament_number):
 
-    '''takes in a date as a pick deadline and a tournament number for pgatour.com to get json files for the field and score'''
+    '''takes in a tournament number for pgatour.com to get json files for the field and score.  initializes all tables for the tournament'''
 
     season = Season.objects.get(current=True)
 
@@ -263,6 +265,15 @@ def create_groups(tournament_number):
           if Field.objects.filter(tournament=tournament).count() < len(field):
              groups = Group.objects.get(tournament=tournament,number=group_num)
 
+    # fix the hard coded tournament, change to identify users who are in the golf game
+    users = TotalScore.objects.filter(tournament__pga_tournament_num="014")
+    for user in users:
+        bd = BonusDetails()
+        bd.user = user.user
+        bd.tournament = tournament
+        bd.cut_bonus = 0
+        bd.winner_bonus = 0
+        bd.save()
 
 if __name__ == '__main__':
     print ('populating script!')

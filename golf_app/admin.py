@@ -27,7 +27,7 @@ class BonusDetailsAdmin(admin.ModelAdmin):
 
 class ScoreDetailsAdmin(admin.ModelAdmin):
     list_display = ['user', 'pick', 'score']
-    list_filter = ['user']
+    list_filter = ['pick__playerName__tournament', 'user']
 
 
 
