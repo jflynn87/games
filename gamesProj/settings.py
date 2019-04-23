@@ -55,6 +55,7 @@ INSTALLED_APPS = [
     'fb_app',
     'golf_app',
     'run_app',
+    'port_app',
 
 ]
 

@@ -1,0 +1,20 @@
+{% extends 'port_app/port_app_base.html' %}
+{%load static%}
+{%block body_block%}
+{%load bootstrap%}
+<script type="text/javascript" src="{%static 'port_app/js/position.js'%}"></script>
+<link rel="stylesheet" href={%static "port_app/css/position.css" %}>
+
+<div class="container" style="width:330px;">
+  <h2 align="center">Symbol Lookup</h2>
+  <br />
+  <div align="center" style="width:330px;">
+      <input type="text" id="search" name="search" placeholder="Symbol..." class="form-control">
+  </div>
+  <ul class='list-group' id="result"> </ul>
+
+</div>
+
+
+
+{%endblock%}

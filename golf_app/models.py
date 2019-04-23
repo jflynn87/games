@@ -45,6 +45,8 @@ class Field(models.Model):
     group = models.ForeignKey(Group, on_delete=models.CASCADE, null=True)
     alternate = models.NullBooleanField(null=True)
     withdrawn = models.BooleanField(default=False)
+    partner = models.CharField(max_length=100, null=True, blank=True)
+    teamID = models.CharField(max_length=3, null=True, blank=True)
 
     class Meta:
         ordering = ['group', 'currentWGR']

@@ -266,14 +266,14 @@ def create_groups(tournament_number):
              groups = Group.objects.get(tournament=tournament,number=group_num)
 
     # fix the hard coded tournament, change to identify users who are in the golf game
-    users = TotalScore.objects.filter(tournament__pga_tournament_num="014")
-    for user in users:
-        bd = BonusDetails()
-        bd.user = user.user
-        bd.tournament = tournament
-        bd.cut_bonus = 0
-        bd.winner_bonus = 0
-        bd.save()
+    # users = TotalScore.objects.filter(tournament__pga_tournament_num="014")
+    # for user in users:
+    #     bd = BonusDetails()
+    #     bd.user = user.user
+    #     bd.tournament = tournament
+    #     bd.cut_bonus = 0
+    #     bd.winner_bonus = 0
+    #     bd.save()
 
 if __name__ == '__main__':
     print ('populating script!')
