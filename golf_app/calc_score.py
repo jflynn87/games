@@ -52,13 +52,13 @@ def calc_score(t_args, request=None):
             base_bonus = 50
 
             total_scores = ScoreDetails.objects.filter(pick__playerName__tournament=tournament).values('user').annotate(Sum('score')).annotate(cuts=Count('today_score', filter=Q(today_score="cut")))
-            print (ranks)
+
             if ranks.get('cut_status')[0] == "Actual" \
              and int(ranks.get('round')) >  1 \
              and TotalScore.objects.filter(tournament=tournament, cut_count=0).exists():
                 ts = TotalScore.objects.filter(tournament=tournament, cut_count=0)
                 for score in ts:
-                    print ('why here?')
+                    print ('no cut bonus', score)
                     bd, created = BonusDetails.objects.get_or_create(user=score.user, tournament=tournament)
                     bd.cut_bonus = base_bonus
                     bd.save()
