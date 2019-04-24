@@ -76,7 +76,8 @@ def calc_score(t_args, request=None):
 
                 bd, created = BonusDetails.objects.get_or_create(user=user, tournament=tournament)
                 bd.winner_bonus = winner_bonus
-                #bd.cut_bonus = cut_bonus
+                if created:
+                    bd.cut_bonus = 0
                 bd.save()
 
                 ts, created = TotalScore.objects.get_or_create(tournament=tournament, user=user)

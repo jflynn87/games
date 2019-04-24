@@ -41,10 +41,10 @@
               {%if player.withdrawn%}
               <td style="text-decoration: line-through;">{{player.playerName}}</td>
               {%else%}
-              <td>{{player.playerName}}</td>
+              <td>{{player.playerName}} & {{player.partner}}</td>
               {%endif%}
               <td>{{player.currentWGR}}</td>
-              <td>{{player.partner}}</td>
+
               {%if not player.withdrawn%}
               <form method="post">
               {%csrf_token%}
