@@ -46,7 +46,7 @@ class Field(models.Model):
     alternate = models.NullBooleanField(null=True)
     withdrawn = models.BooleanField(default=False)
     partner = models.CharField(max_length=100, null=True, blank=True)
-    teamID = models.CharField(max_length=3, null=True, blank=True)
+    teamID = models.CharField(max_length=30, null=True, blank=True)
 
     class Meta:
         ordering = ['group', 'currentWGR']

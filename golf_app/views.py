@@ -37,11 +37,12 @@ class FieldListView(LoginRequiredMixin,ListView):
         try:
             score_file = calc_score.getRanks({'pk': tournament.pk})
             wd_list = []
+            print (score_file[0])
             for golfer in Field.objects.filter(tournament=tournament):
                 if golfer.playerName not in score_file[0]:
                     print ('debug')
                     wd_list.append(golfer.playerName)
-                    print ('wd list', wd_list)
+                    #print ('wd list', wd_list)
             if len(wd_list) > 0:
                 error_message = 'The following golfers have withdrawn:' + str(wd_list)
                 for wd in wd_list:

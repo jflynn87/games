@@ -77,21 +77,24 @@ def test():
 
     #f = open('field.json', 'rb')
     for player in data['Tournament']['Players']:
+        if player['isAlternate'] == "Yes":
+            continue
         team = player['TeamID']
 
         name = (' '.join(reversed(player["PlayerName"].split(', '))).replace(' Jr.','').replace('(am)',''))
-        if name == "Roberto D?az":
-            name = "Roberto Diaz"
+        lookup_name = name
+        # if name == "Roberto D?az":
+        #     name = "Roberto Diaz"
         if name == "Freddie Jacobson":
-            name = "Freddie Jacobson(Sept1974)"
-        #if name == "Si Woo Kim":
-        #    name = "Siwoo Kim"
-        if name == "Whee Kim":
-            name = "Meenwhee Kim"
-        if name == "Kyoung-hoon Lee":
-            name = "Kyounghoon Lee"
+             lookup_name = "Freddie Jacobson(Sept1974)"
+        # #if name == "Si Woo Kim":
+        # #    name = "Siwoo Kim"
+        # if name == "Whee Kim":
+        #     name = "Meenwhee Kim"
+        # if name == "Kyoung-hoon Lee":
+        #     name = "Kyounghoon Lee"
         if name == "Dru Love":
-            name = "Dru Love IV"
+             lookup_name = "Dru Love IV"
 
 
         if field_dict.get(team) == None:
@@ -99,9 +102,9 @@ def test():
             try:
                 rank = pga_ranks[name.capitalize()]
             except Exception:
-                print ('except', name)
-                rank = owgr_ranks.get(name.capitalize())
-            tuple = (player['PlayerName'], rank)
+                rank = owgr_ranks.get(lookup_name.capitalize())
+            #tuple = (player['PlayerName'], rank)
+            tuple = (name, rank)
             team_list.append(tuple)
             field_dict[team] = team_list
         else:
@@ -109,15 +112,17 @@ def test():
             try:
                 rank = pga_ranks[name.capitalize()]
             except Exception:
-                print ('except', name)
-                rank = owgr_ranks.get(name.capitalize())
-            tuple = (player['PlayerName'], rank) #get owgr
+                #print ('except', name)
+                rank = owgr_ranks.get(lookup_name.capitalize())
+            #tuple = (player['PlayerName'], rank) #get owgr
+            tuple = (name, rank)
             team_list.append(tuple)
             field_dict[team] = team_list
     #print(field_dict)
     #print (len(field_dict))
-
+    print (field_dict)
     for k,v in field_dict.items():
+        print (k, v)
         if int(v[0][1]) < int(v[1][1]):
             s_field_dict[k] = (v[0], v[1], v[0][1]+v[1][1])
         else:
