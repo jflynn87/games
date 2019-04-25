@@ -116,8 +116,8 @@ class ScoreDetails(models.Model):
 class BonusDetails(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     tournament = models.ForeignKey(Tournament, on_delete=models.CASCADE, null=True)
-    winner_bonus = models.IntegerField(null=True)
-    cut_bonus = models.IntegerField(null=True)
+    winner_bonus = models.IntegerField(default=0)
+    cut_bonus = models.IntegerField(default=0)
 
     def __str__(self):
         return str(self.user)

@@ -83,7 +83,7 @@
       {% if pick|model_name == 'score details' %}
       {%if pick.pick.is_winner%}
         <tr style="color:red">
-          <td>{{pick.pick.playerName}}</td>
+          <td>{{pick.pick.playerName}} {%if pick.pick.playerName.partner%} & {{pick.pick.playerName.partner.0}} {%endif%}</td>
           <td>{{pick.score}}</td>
           <td>{{pick.toPar}}</td>
           {%if pick.today_score in thru_list %}
@@ -95,7 +95,7 @@
         </tr>
       {%else%}
         <tr>
-          <td>{{pick.pick.playerName}}</td>
+          <td>{{pick.pick.playerName}} {%if pick.pick.playerName.partner%} & {{pick.pick.playerName.partner|partner}} {%endif%}</td>
           <td>{{pick.score}}</td>
           <td>{{pick.toPar}}</td>
           {%if pick.today_score in thru_list %}

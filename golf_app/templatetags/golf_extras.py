@@ -1,6 +1,9 @@
 from django import template
 from golf_app.models import Picks, mpScores, Field, Tournament, Group
 from django.db.models import Count
+from string import ascii_letters
+import re
+
 
 register = template.Library()
 
@@ -44,3 +47,9 @@ def leader(group):
     #print ('leader', [k for k, v in golfer_dict.items() if v == max(golfer_dict.values())])
     winner= [k for k, v in golfer_dict.items() if v == max(golfer_dict.values())]
     return winner
+
+@register.filter
+def partner(partner):
+    regex = re.compile('[^a-zA-Z" "]')
+    name = (regex.sub('', partner))
+    return (name)

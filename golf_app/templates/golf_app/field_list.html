@@ -41,7 +41,7 @@
               {%if player.withdrawn%}
               <td style="text-decoration: line-through;">{{player.playerName}}</td>
               {%else%}
-              <td>{{player.playerName}} & {{player.partner}}</td>
+              <td>{{player.playerName}} {%if player.partner%} &  {{player.partner}} {%endif%}</td>
               {%endif%}
               <td>{{player.currentWGR}}</td>
 
