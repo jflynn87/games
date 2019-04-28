@@ -52,17 +52,36 @@ def calc_score(t_args, request=None):
             base_bonus = 50
 
             total_scores = ScoreDetails.objects.filter(pick__playerName__tournament=tournament).values('user').annotate(Sum('score')).annotate(cuts=Count('today_score', filter=Q(today_score="cut")))
+            print(total_scores)
+            for s in total_scores:
+                if s.get('cuts')==2:
+                    print(s)
 
             if ranks.get('cut_status')[0] == "Actual" \
-             and int(ranks.get('round')) >  1 \
-             and TotalScore.objects.filter(tournament=tournament, cut_count=0).exists():
-                ts = TotalScore.objects.filter(tournament=tournament, cut_count=0)
-                for score in ts:
-                    print ('no cut bonus', score)
-                    bd, created = BonusDetails.objects.get_or_create(user=score.user, tournament=tournament)
-                    bd.cut_bonus = base_bonus
-                    bd.save()
-                    print (bd, bd.cut_bonus)
+             and int(ranks.get('round')) >  1:
+                 for s in total_scores:
+                    if s.get('cuts')==0:
+                        print ('creating bons detail cut')
+                        bd, created = BonusDetails.objects.get_or_create(user__pk=s.get('user'), tournament=tournament)
+                        bd.cut_bonus = base_bonus
+                        bd.save()
+                    # if bad data leads to incorrect bonus detail, this should clean up automatically
+                    if BonusDetails.objects.filter(user__pk=s.get('user'), tournament=tournament, cut_bonus__gt=0).exists() \
+                     and s.get('cuts') > 0:
+                        print ('corercting bonus details-cut')
+                        bd = BonusDetails.objects.get(user__pk=s.get('user'), tournament=tournament, cut_bonus__gt=0)
+                        bd.cut_bonus = 0
+                        bd.save()
+
+
+             #and TotalScore.objects.filter(tournament=tournament, cut_count=0).exists():
+             #   ts = TotalScore.objects.filter(tournament=tournament, cut_count=0)
+            #    for score in ts:
+            #        print ('no cut bonus', score)
+            #        bd, created = BonusDetails.objects.get_or_create(user=score.user, tournament=tournament)
+            #        bd.cut_bonus = base_bonus
+            #        bd.save()
+            #        print (bd, bd.cut_bonus)
 
 
             for score in total_scores:
