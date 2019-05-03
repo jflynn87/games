@@ -11,9 +11,10 @@ from django.db.models.functions import ExtractWeek, ExtractYear
 
 def get_schedule():
 
-    tournament = Tournament.objects.get(current=True)
-    print (tournament)
-    print (TotalScore.objects.filter(tournament=tournament, cut_count=0).exists())
-    ts = TotalScore.objects.filter(tournament=tournament, cut_count=0)
-    print (ts)
+    for t in Tournament.objects.all():
+        scores = TotalScore.objects.filter(tournament=t).order_by('score').values('score')
+        i = 2
+        print (scores[0].get('score'), scores[i].get('score'), scores[i].get('score') - scores[0].get('score'), '{0:.0f}%'.format((scores[i].get('score') - scores[0].get('score')/scores[0].get('score'))/100))
+
+
 get_schedule()

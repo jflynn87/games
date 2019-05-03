@@ -16,12 +16,27 @@ class Portfolio(models.Model):
     symbol = models.ForeignKey(MarketData, on_delete=models.CASCADE)
     total_pos = models.IntegerField()
 
+    def __str__(self):
+        return self.name
+
+
+class CCY(models.Model):
+    code = models.CharField(max_length=5, unique=True)
+
+    def __str__(self):
+        return self.code
+
 class Position(models.Model):
+    CHOICES = ((1, 'Public'), (2, 'Private'))
     symbol = models.ForeignKey(MarketData, on_delete=models.CASCADE)
+    type = models.CharField(max_length=50, choices=CHOICES)
     qty = models.IntegerField()
     price = models.FloatField()
-    ccy = models.CharField(max_length=3)
+    ccy = models.ForeignKey(CCY, on_delete=models.CASCADE)
     status = models.CharField(max_length=100)
     open_date = models.DateField()
-    close_dat = models.DateField(null=True)
+    close_date = models.DateField(null=True)
     notes = models.CharField(max_length=300)
+
+    def __str__(self):
+        return self.symbol

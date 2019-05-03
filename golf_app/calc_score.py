@@ -51,7 +51,12 @@ def calc_score(t_args, request=None):
         if not tournament.complete:
             base_bonus = 50
 
-            total_scores = ScoreDetails.objects.filter(pick__playerName__tournament=tournament).values('user').annotate(Sum('score')).annotate(cuts=Count('today_score', filter=Q(today_score="cut")))
+            if ranks['cut_status'][0] == "Projected":
+                total_scores = ScoreDetails.objects.filter(pick__playerName__tournament=tournament).values('user').annotate(Sum('score'))\
+                 .annotate(cuts=Count('score', filter=Q(score__gt=ranks['cut number'])))
+            else:
+                total_scores = ScoreDetails.objects.filter(pick__playerName__tournament=tournament).values('user').annotate(Sum('score')).annotate(cuts=Count('today_score', filter=Q(today_score="cut")))
+
             print(total_scores)
             for s in total_scores:
                 if s.get('cuts')==2:
@@ -153,19 +158,7 @@ def getPicks(tournament, ranks):
             pick_list = []
             cut_num = getCutNum(ranks)
 
-
             tournament = Tournament.objects.get(pk=tournament.get('pk'))
-            #if tournament.current:
-            #    try:
-            #        print ('skipping')
-                    #ScoreDetails.objects.filter(pick__playerName__tournament=tournament).delete()
-            #    except Exception as e:
-            #        print ('delete score details', e)
-
-            #users = User.objects.all()
-            #for user in User.objects.all():
-            #if Picks.objects.filter(user=user, playerName__tournament__name=tournament) and tournament.current:
-            #        for pick in Picks.objects.filter(user=user, playerName__tournament__name=tournament).order_by('playerName__group__number'):
 
             if Picks.objects.filter(playerName__tournament=tournament) and tournament.current:
                 for pick in Picks.objects.filter(playerName__tournament=tournament).order_by('playerName__group__number'):
@@ -186,10 +179,6 @@ def getPicks(tournament, ranks):
                                 else:
                                     rank = ranks[golfer][1]
                                 sd.score = ((get_mdf_rank(int(formatRank(rank)), ranks)))
-                                #sd.score = formatRank(ranks[golfer][4]) #mdf score is in the SOD in json
-                            #elif ranks.get('round') != 1 and ranks['cut number'] != '' and int(formatRank(ranks[golfer][0])) > int(ranks['cut number']):
-                            #    print ('in new elif')
-                            #    sd.score = cut_num +1
                             else:
                                 sd.score=formatRank(str(ranks[golfer][0]))
                             sd.toPar = ranks[golfer][1]

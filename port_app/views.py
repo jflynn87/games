@@ -1,6 +1,7 @@
 from django.shortcuts import render
 from django.views.generic import View, TemplateView, ListView, DetailView, CreateView, UpdateView, FormView
 from port_app.models import MarketData, Portfolio, Position
+from port_app.forms import CreatePositionForm
 from django.http import HttpResponseRedirect, HttpResponse, Http404, HttpRequest
 
 import urllib.request
@@ -30,10 +31,13 @@ class DashboardView(TemplateView):
 
 
 class CreatePositionView(CreateView):
-    fields = "__all__"
+    #fields = "__all__"
     model = Position
+    form_class = CreatePositionForm
     success_url = 'port_app/dashboard'
 
+    def post(self, *args, **kwargs):
+        print (self.request.POST)
 
 
 def symbol_lookup(request):

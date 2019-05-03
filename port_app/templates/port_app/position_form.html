@@ -4,16 +4,27 @@
 {%load bootstrap%}
 <script type="text/javascript" src="{%static 'port_app/js/position.js'%}"></script>
 <link rel="stylesheet" href={%static "port_app/css/position.css" %}>
-
-<div class="container" style="width:330px;">
-  <h2 align="center">Symbol Lookup</h2>
-  <br />
+<form method="post">
+  {%csrf_token%}
+  <table class="table">
+    <tbody>
+<tr>
+  <div class="container" style="width:330px;">
+  <th align="center">Symbol Lookup:</th>
   <div  align="center" style="width:330px;">
-      <input type="text" id="search" name="search" placeholder="Symbol..." class="form-control">
+    <td>  <input type="text" id="search" name="search" placeholder="Symbol..." class="form-control"></td>
+    <div class='list-group' id="result"> </div>
+  </div>
+</div>
+</tr>
+  <tr>
+    {{form}}
+  </tr>
+  </tbody>
+  </table>
+  <button type="submit" name="button">submit</button>
 
-  <div class='list-group' id="result"> </div>
-</div>
-</div>
+</form>
 
 
 
