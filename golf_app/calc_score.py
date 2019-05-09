@@ -50,11 +50,14 @@ def calc_score(t_args, request=None):
 
         if not tournament.complete:
             base_bonus = 50
-
-            if ranks['cut_status'][0] == "Projected":
-                total_scores = ScoreDetails.objects.filter(pick__playerName__tournament=tournament).values('user').annotate(Sum('score'))\
-                 .annotate(cuts=Count('score', filter=Q(score__gt=ranks['cut number'])))
-            else:
+            try:
+                if ranks['cut_status'][0] == "Projected":
+                    total_scores = ScoreDetails.objects.filter(pick__playerName__tournament=tournament).values('user').annotate(Sum('score'))\
+                     .annotate(cuts=Count('score', filter=Q(score__gt=ranks['cut number'])))
+                else:
+                    total_scores = ScoreDetails.objects.filter(pick__playerName__tournament=tournament).values('user').annotate(Sum('score')).annotate(cuts=Count('today_score', filter=Q(today_score="cut")))
+            except Exception as e:
+                print ('total score exception')
                 total_scores = ScoreDetails.objects.filter(pick__playerName__tournament=tournament).values('user').annotate(Sum('score')).annotate(cuts=Count('today_score', filter=Q(today_score="cut")))
 
             print(total_scores)

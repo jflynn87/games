@@ -86,6 +86,7 @@ class Picks(models.Model):
     playerName = models.ForeignKey(Field, on_delete=models.CASCADE, related_name='picks')
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     score = models.PositiveIntegerField(null=True)
+    auto = models.NullBooleanField(default=False, null=True)
 
     class Meta():
         unique_together = ('playerName', 'user')

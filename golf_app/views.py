@@ -13,7 +13,7 @@ import datetime
 from golf_app import populateField, calc_score, optimal_picks
 from django.utils import timezone
 from django.core.exceptions import ObjectDoesNotExist
-from django.db.models import Min, Q, Count, Sum
+from django.db.models import Min, Q, Count, Sum, Max
 import scipy.stats as ss
 from django.http import JsonResponse
 import json
@@ -179,6 +179,27 @@ class ScoreListView(DetailView):
         start_time = datetime.datetime.now()
         if datetime.date.today() >= tournament.start_date:
                 if tournament.pga_tournament_num != '470': #special logic for match play
+                    expected_picks = Group.objects.filter(tournament=tournament).aggregate(Max('number'))
+                    #fix hard coded 7 to use a league object with player count
+                    #random_picks.append(random.choice(Field.objects.filter(tournament=tournament, group=g, withdrawn=False)))
+                    print ('expected', expected_picks, expected_picks['number__max'] * 7)
+                    print ('actual', Picks.objects.filter(playerName__tournament=tournament).count() - expected_picks['number__max'] * 7)
+                    if Picks.objects.filter(playerName__tournament=tournament).count() \
+                       == (expected_picks.get('number__max') * 7):
+                        print ('equal')
+                    elif (expected_picks.get('number__max') - Picks.objects.filter(playerName__tournament=tournament).count()) \
+                       % expected_picks.get('number__max') == 0:
+                        print ('missing full picks')
+                        #using first tournament, should update to use league
+                        for user in TotalScore.objects.filter(tournament__pk=4).values('user__username'):
+                            if not Picks.objects.filter(playerName__tournament=tournament, \
+                             user=User.objects.get(username=user.get('user__username'))).exists():
+                                print (user.get('user__username'), 'no picks so submit random')
+                                create_picks(tournament, User.objects.get(username=user.get('user__username')))
+
+
+                    else:
+                        print ('missing individual picks')
                     scores = calc_score.calc_score(self.kwargs, request)
                     calc_finish = datetime.datetime.now()
                     print ('calc time', calc_finish - start_time)
@@ -234,6 +255,19 @@ class ScoreListView(DetailView):
         #except Exception as e:
         #    print ('score error msg:', e)
         #    return HttpResponse("Error, please come back closer to the tournament start or Line John to tell him something is broken.")
+@transaction.atomic
+def create_picks(tournament, user):
+    '''takes tournament and user objects and generates random picks.  check for duplication with general pick submit class'''
+
+    for group in Group.objects.filter(tournament=tournament):
+        pick = Picks()
+        random_picks = random.choice(Field.objects.filter(tournament=tournament, group=group, withdrawn=False))
+        pick.playerName = Field.objects.get(playerName=random_picks.playerName, tournament=tournament)
+        pick.user = user
+        pick.auto = True
+        pick.save()
+    return
+
 
 
 class SeasonTotalView(ListView):
