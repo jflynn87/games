@@ -86,7 +86,7 @@ class Picks(models.Model):
     playerName = models.ForeignKey(Field, on_delete=models.CASCADE, related_name='picks')
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     score = models.PositiveIntegerField(null=True)
-    auto = models.NullBooleanField(default=False, null=True)
+    #auto = models.NullBooleanField(default=False, null=True)
 
     class Meta():
         unique_together = ('playerName', 'user')
@@ -101,6 +101,16 @@ class Picks(models.Model):
             return False
 
 
+class PickMethod(models.Model):
+    CHOICES = (('1', 'player'), ('2', 'random'), ('3', 'auto'))
+
+    method = models.CharField(max_length=20, choices=CHOICES)
+    tournament = models.ForeignKey(Tournament, on_delete=models.CASCADE)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+
+    def __str__(self):
+        return str(self.user) + self.method
+
 class ScoreDetails(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     pick = models.ForeignKey(Picks, on_delete=models.CASCADE, blank=True, null=True)
@@ -113,6 +123,9 @@ class ScoreDetails(models.Model):
     def __str__(self):
         return str(self.user) + str(self.pick) + str(self.score)
 
+    class Meta():
+        unique_together = ('user', 'pick')
+
 
 class BonusDetails(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
@@ -122,6 +135,10 @@ class BonusDetails(models.Model):
 
     def __str__(self):
         return str(self.user)
+
+    class Meta():
+        unique_together = ('tournament', 'user')
+
 
 
 class TotalScore(models.Model):

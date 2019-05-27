@@ -1,6 +1,6 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.views.generic import View, TemplateView, ListView, DetailView, CreateView, UpdateView, FormView
-from golf_app.models import Field, Tournament, Picks, Group, TotalScore, ScoreDetails, mpScores
+from golf_app.models import Field, Tournament, Picks, Group, TotalScore, ScoreDetails, mpScores, BonusDetails, PickMethod
 #from golf_app.forms import  CreatePicksForm, PickFormSet, NoPickFormSet
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponseRedirect, HttpResponse, Http404
@@ -92,20 +92,25 @@ class FieldListView(LoginRequiredMixin,ListView):
             Picks.objects.filter(playerName__tournament__current=True, user=user).delete()
 
         if request.POST.get('random'):
-            for picks in random_picks:
-                pick = Picks()
-                pick.user = user
-                pick.playerName = Field.objects.get(playerName=picks, tournament=tournament)
-                pick.save()
+            save_picks(user, tournament, random_picks)
+            pm = PickMethod()
+            pm.user = user
+            pm.tournament = tournament
+            pm.method = '2'
+            pm.save()
         else:
             print (len(form), len(group))
             if (len(form)-2) == len(group):
+                pick_list = []
                 for k, v in form.items():
                    if k != 'csrfmiddlewaretoken' and k!= 'userid':
-                       picks = Picks()
-                       picks.user = User.objects.get(pk=form['userid'])
-                       picks.playerName = Field.objects.get(pk=v)
-                       picks.save()
+                       pick_list.append(Field.objects.get(pk=v))
+                save_picks(user, tournament, pick_list)
+                pm = PickMethod()
+                pm.user = user
+                pm.tournament = tournament
+                pm.method = '1'
+                pm.save()
             else:
                 group_list = []
                 for key, value in form.items():
@@ -116,7 +121,6 @@ class FieldListView(LoginRequiredMixin,ListView):
                     if str(num.number) not in group_list:
                         missing_group.append(num.number)
                 print (request.user, 'picks missing group', missing_group)
-
 
                 print (datetime.datetime.now(), request.user, form)
                 return render (request, 'golf_app/field_list.html',
@@ -130,6 +134,26 @@ class FieldListView(LoginRequiredMixin,ListView):
 
         print ('submitting picks', datetime.datetime.now(), request.user, picks_list, 'random:', random_picks)
         return redirect('golf_app:picks_list')
+
+def save_picks(user, tournament, pick_list):
+    '''takes user obj, tournament obj and pick list and saves picks as well as sets up score detail and Bonus
+    details for the tournament'''
+
+    for picks in pick_list:
+        pick = Picks()
+        pick.user = user
+        pick.playerName = Field.objects.get(playerName=picks, tournament=tournament)
+        pick.save()
+        sd = ScoreDetails()
+        sd.user = user
+        sd.pick = pick
+        sd.save()
+
+    bd, created = BonusDetails.objects.get_or_create(tournament = tournament, \
+    user = user, winner_bonus = 0, cut_bonus = 0)
+    bd.save()
+
+    return
 
 
 def get_picks(request):
@@ -264,8 +288,15 @@ def create_picks(tournament, user):
         random_picks = random.choice(Field.objects.filter(tournament=tournament, group=group, withdrawn=False))
         pick.playerName = Field.objects.get(playerName=random_picks.playerName, tournament=tournament)
         pick.user = user
-        pick.auto = True
+        #pick.auto = True
         pick.save()
+
+    pm = PickMethod()
+    pm.user = user
+    pm.tournament = tournament
+    pm.method = '3'
+    pm.save()
+
     return
 
 

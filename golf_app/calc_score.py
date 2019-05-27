@@ -1,5 +1,6 @@
 import urllib3
-from golf_app.models import Field, Tournament, Picks, Group, TotalScore, ScoreDetails, BonusDetails
+from golf_app.models import Field, Tournament, Picks, Group, TotalScore, \
+                    ScoreDetails, BonusDetails, PickMethod
 from django.contrib.auth.models import User
 from django.shortcuts import render, get_object_or_404, redirect
 from django.core.exceptions import ObjectDoesNotExist
@@ -68,7 +69,8 @@ def calc_score(t_args, request=None):
             if ranks.get('cut_status')[0] == "Actual" \
              and int(ranks.get('round')) >  1:
                  for s in total_scores:
-                    if s.get('cuts')==0:
+                    if s.get('cuts')==0 and not \
+                      PickMethod.objects.filter(user=s.get('user'), tournament=tournament, method='3').exitst():
                         print ('creating bons detail cut')
                         bd, created = BonusDetails.objects.get_or_create(user__pk=s.get('user'), tournament=tournament)
                         bd.cut_bonus = base_bonus
@@ -80,26 +82,23 @@ def calc_score(t_args, request=None):
                         bd = BonusDetails.objects.get(user__pk=s.get('user'), tournament=tournament, cut_bonus__gt=0)
                         bd.cut_bonus = 0
                         bd.save()
-
-
-             #and TotalScore.objects.filter(tournament=tournament, cut_count=0).exists():
-             #   ts = TotalScore.objects.filter(tournament=tournament, cut_count=0)
-            #    for score in ts:
-            #        print ('no cut bonus', score)
-            #        bd, created = BonusDetails.objects.get_or_create(user=score.user, tournament=tournament)
-            #        bd.cut_bonus = base_bonus
-            #        bd.save()
-            #        print (bd, bd.cut_bonus)
+            # add elif to deal with bad data in round 2, before cut is set back to actual?
 
 
             for score in total_scores:
+                print ('score', score, type(score.get('user')),tournament, ranks.get('finished'))
                 user = User.objects.get(pk=score.get('user'))
                 #cut_bonus = 0
                 winner_bonus = 0
-                if ranks.get('finished') and ScoreDetails.objects.filter(pick__playerName__tournament=tournament, user=user, score=1):
-                    group = ScoreDetails.objects.get(pick__playerName__tournament=tournament, user=user, score=1)
-                    group_number = (group.pick.playerName.group.number)
-                    winner_bonus = base_bonus + (2 * group_number)
+
+#                if PickMethod.objects.filter(user__id=score.get('user'), tournament=tournament, method='3').exists():
+#                    print ('exists', score, PickMethod.objects.filter(user__id=score.get('user'), tournament=tournament, method='3'))
+
+                if ranks.get('finished') and ScoreDetails.objects.filter(pick__playerName__tournament=tournament, user=user, score=1) \
+                  and not PickMethod.objects.filter(user__id=score.get('user'), tournament=tournament, method='3').exists():
+                        group = ScoreDetails.objects.get(pick__playerName__tournament=tournament, user=user, score=1)
+                        group_number = (group.pick.playerName.group.number)
+                        winner_bonus = base_bonus + (2 * group_number)
 
                 bd, created = BonusDetails.objects.get_or_create(user=user, tournament=tournament)
                 bd.winner_bonus = winner_bonus
@@ -166,12 +165,8 @@ def getPicks(tournament, ranks):
             if Picks.objects.filter(playerName__tournament=tournament) and tournament.current:
                 for pick in Picks.objects.filter(playerName__tournament=tournament).order_by('playerName__group__number'):
                         golfer = pick.playerName.playerName
-                        #print (golfer)
                         pick_list.append(str(pick.playerName))
-                        #print (ranks[golfer], pick.user)
                         sd = sd, created = ScoreDetails.objects.get_or_create(user=pick.user, pick=pick)
-                        #sd.user=pick.user
-                        #sd.pick=pick
                         try:
                             if ranks[golfer][0] in ('cut', 'wd'):
                                 #print ('cut/wd', ranks[golfer][0], pick.playerName.playerName)
@@ -180,7 +175,8 @@ def getPicks(tournament, ranks):
                                 if ranks[golfer][1] == 'even':
                                     rank = '0'
                                 else:
-                                    rank = ranks[golfer][1]
+                                    rank = str(ranks[golfer][1])
+                                    print ('rank type', type(rank))
                                 sd.score = ((get_mdf_rank(int(formatRank(rank)), ranks)))
                             else:
                                 sd.score=formatRank(str(ranks[golfer][0]))
@@ -190,7 +186,7 @@ def getPicks(tournament, ranks):
                             sd.sod_position = ranks[golfer][4]
                             sd.save()
                         except Exception as e:
-                            print ('pick not in ranks dict', pick)
+                            print ('pick not in ranks dict', pick, e)
                             sd.score = cut_num + 1
                             sd.today_score = "WD"
                             sd.save()
@@ -308,7 +304,7 @@ def getRanks(tournament):
                         #ranks[golfer.formatted_name()] = ('cut', 'WD', 'cut', '', 'cut')
                         lookup_errors.append(golfer.formatted_name())
 
-            #print ('calc_score.getRanks()', ranks, lookup_errors)
+            print ('calc_score.getRanks()', ranks, lookup_errors)
             return ranks, lookup_errors
 
 def format_score(score):

@@ -39,16 +39,25 @@
             <tr>
               <td></td>
               {%if player.withdrawn%}
-              <td style="text-decoration: line-through;">{{player.playerName}}</td>
+              {%if player.playerName == 'Charles Howell III'%}
+                <td style="text-decoration: line-through;">Thurston Howell the third {%if player.partner%} &  {{player.partner}} {%endif%} </td>
               {%else%}
-              <td>{{player.playerName}} {%if player.partner%} &  {{player.partner}} {%endif%}</td>
+                <td style="text-decoration: line-through;"> {{player.playerName}} {%if player.partner%} &  {{player.partner}} {%endif%} </td>
               {%endif%}
+              {%else%}
+                {%if player.playerName == 'Charles Howell III'%}
+                <td style = "color:red;">Thurston Howell the third</td>
+                {%else%}
+                  <td> {{player.playerName}} {%if player.partner%} &  {{player.partner}} {%endif%}</td>
+
+                {%endif%}
               <td>{{player.currentWGR}}</td>
 
               {%if not player.withdrawn%}
               <form method="post">
               {%csrf_token%}
               <td> <input id="{{player.pk}}" type="radio" name="{{group.grouper}}" value="{{player.id}}">  </td>
+              {%endif%}
               {%endif%}
             </tr>
           </tbody>

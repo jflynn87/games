@@ -3,7 +3,7 @@ os.environ.setdefault("DJANGO_SETTINGS_MODULE","gamesProj.settings")
 
 import django
 django.setup()
-from golf_app.models import Tournament, TotalScore, ScoreDetails
+from golf_app.models import Tournament, TotalScore, ScoreDetails, Field, Picks, PickMethod
 from django.contrib.auth.models import User
 from datetime import datetime, timedelta
 import sqlite3
@@ -133,11 +133,36 @@ def get_schedule():
 #get_schedule()
 
 def check_scores():
-    t = Tournament.objects.get(current=True)
-    userL = ['john', 'jcarl62', 'BigDipper', 'Laroqm', 'ryosuke', 'shishmeister', 'JoeLong']
-    for u in userL:
-        print (u, ScoreDetails.objects.filter(user=User.objects.get(username=u), pick__playerName__tournament=t).values('user').aggregate(Count('user')))
+    from golf_app import calc_score
+
+    t = Tournament.objects.get(pga_tournament_num='019')
+    t.complete = False
+    t.current = True
+    t.save()
+    t_key = {}
+    t_key['pk']=t.pk
+
+    calc_score.calc_score(t_key)
+    #print (ranks)
+    #print (ranks[0].get('Sam Burns'))
+    #print (ranks[0].get('Sungjae Im'))
+    t.complete = True
+    t.current = False
+    t.save()
 
 
+    #for pick in Picks.objects.filter(user__username='john', playerName__tournament=t):
+    #    print (pick.playerName, ranks[0].get(str(pick.playerName)))
+    #print (Picks.objects.filter(playerName__tournament=t).values('user'))
 
-check_scores()
+#check_scores()
+
+def check():
+    tournament = Tournament.objects.get(pga_tournament_num='033')
+    if not PickMethod.objects.filter(user__id=32, tournament=tournament, method='3').exists():
+        print ('not')
+    else:
+        print ('else')
+
+
+check()
