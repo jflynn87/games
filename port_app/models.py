@@ -28,12 +28,14 @@ class CCY(models.Model):
 
 class Position(models.Model):
     CHOICES = ((1, 'Public'), (2, 'Private'))
-    symbol = models.ForeignKey(MarketData, on_delete=models.CASCADE)
+    CCY_CHOICES = ((1, 'USD'), (2, 'JPY'))
+    #symbol = models.ForeignKey(MarketData, on_delete=models.CASCADE)
+    symbol = models.CharField(max_length=100)
     type = models.CharField(max_length=50, choices=CHOICES)
     qty = models.IntegerField()
     price = models.FloatField()
-    ccy = models.ForeignKey(CCY, on_delete=models.CASCADE)
-    status = models.CharField(max_length=100)
+    ccy = models.CharField(max_length=3, choices=CCY_CHOICES)
+    #status = models.CharField(max_length=100)
     open_date = models.DateField()
     close_date = models.DateField(null=True)
     notes = models.CharField(max_length=300)

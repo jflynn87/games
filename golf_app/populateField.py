@@ -119,20 +119,21 @@ def get_field(tournament_number):
     for player in data["Tournament"]["Players"][0:]:
         #name = (' '.join(reversed(player["PlayerName"].split(', ')))).replace('Jr.','')
         name = (' '.join(reversed(player["PlayerName"].split(', '))).replace(' Jr.','').replace('(am)',''))
+        playerID = player['TournamentPlayerId']
         try:
             if player["isAlternate"] == "Yes":
                 #exclude alternates from the field
                 alternate = True
             else:
                 alternate = False
-                field_list[name] = alternate
+                field_list[name] = alternate, playerID
         except IndexError:
             alternate = False
             print (player + 'alternate lookup failed')
 
 
 
-
+    print (field_list)
     return field_list
 
 
@@ -255,11 +256,11 @@ def create_groups(tournament_number):
     for k, v in sorted(group_dict.items(), key=lambda x: x[1]):
         if player_cnt < groups.playerCnt:
           print (k,v[0], str(groups.number), str(groups.playerCnt))
-          Field.objects.get_or_create(tournament=tournament, playerName=k, currentWGR=v[0], group=groups, alternate=v[1])[0]
+          Field.objects.get_or_create(tournament=tournament, playerName=k, currentWGR=v[0], group=groups, alternate=v[1][0], playerID=v[1][1])[0]
           player_cnt +=1
         elif player_cnt == groups.playerCnt:
           print (k,v[0], str(groups.number), str(groups.playerCnt))
-          Field.objects.get_or_create(tournament=tournament, playerName=k, currentWGR=v[0], group=groups, alternate=v[1])[0]
+          Field.objects.get_or_create(tournament=tournament, playerName=k, currentWGR=v[0], group=groups, alternate=v[1][0], playerID=v[1][1])[0]
           group_num +=1
           player_cnt = 1
           if Field.objects.filter(tournament=tournament).count() < len(field):

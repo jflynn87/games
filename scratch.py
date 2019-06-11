@@ -158,11 +158,12 @@ def check_scores():
 #check_scores()
 
 def check():
-    tournament = Tournament.objects.get(pga_tournament_num='033')
-    if not PickMethod.objects.filter(user__id=32, tournament=tournament, method='3').exists():
-        print ('not')
-    else:
-        print ('else')
-
+    t = Tournament.objects.get(pga_tournament_num='033')
+    ts = TotalScore.objects.filter(user__id=1, tournament=t)
+    #if not PickMethod.objects.filter(user__id=32, tournament=tournament, method='3').exists():
+    #    print ('not')
+    #else:
+    #    print ('else')
+    print (t.select_related('pickmethod'))
 
 check()

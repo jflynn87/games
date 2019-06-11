@@ -41,7 +41,7 @@
 <tbody>
 {%for player in scores%}
   <tr>
-    <td>{{player.user}}</td>
+    <td>{{player.user}} {%if player.auto_pick%} - missed pick deadline (no bonuses) {%endif%}</td>
     <td>{{player.score}}</td>
     <td>{{player.cut_count}}</td>
   </tr>

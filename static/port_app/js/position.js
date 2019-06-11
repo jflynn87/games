@@ -34,12 +34,15 @@ $(document).ready(function() {
         console.log(searchField);
         data = json['bestMatches']
         $.each(data, function(index, value) {
+          console.log(index, value);
           var ticker = value['1. symbol']
           $('#result').append('<option id= "item' + index + '" class="list-group-item"' + 'value="' + ticker + '" >' + value['2. name'] + ' - ' + value['1. symbol'])
         })
+
           $('#search').val($('#item0').text())
           $('#item0').addClass('autocomplete-active')
           $('#result option').on('click', function() {$('#search').val($(this).text()); $('#search').text($(this).text());
+                  $('#id_symbol').text(ticker)
                   $('#result').css('display', 'none')})
       },
       failure: function(json) {

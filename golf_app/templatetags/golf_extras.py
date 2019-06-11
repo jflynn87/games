@@ -53,3 +53,8 @@ def partner(partner):
     regex = re.compile('[^a-zA-Z" "]')
     name = (regex.sub('', partner))
     return (name)
+
+
+@register.filter
+def get_pic(playerID):
+    return "https://pga-tour-res.cloudinary.com/image/upload/c_fill,d_headshots_default.png,f_auto,g_face:center,h_85,q_auto,r_max,w_85/headshots_" + playerID + ".png"

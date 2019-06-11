@@ -14,11 +14,14 @@ class DateInput(forms.DateInput):
 class CreatePositionForm(forms.ModelForm):
     class Meta:
         model=Position
-        exclude = ("symbol",)
+        fields = '__all__'
+        #exclude = ("symbol",)
         widgets = {'open_date': DateInput(),
                 'close_date': DateInput(),
                 }
 
-#    def __init__(self, *args, **kwargs):
-#        super().__init__(*args, **kwargs)
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['close_date'].required=False
+        self.fields['notes'].required = False
 #        self.fields['open_date'].widget.attrs({'datepicker'})

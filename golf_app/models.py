@@ -47,6 +47,7 @@ class Field(models.Model):
     withdrawn = models.BooleanField(default=False)
     partner = models.CharField(max_length=100, null=True, blank=True)
     teamID = models.CharField(max_length=30, null=True, blank=True)
+    playerID = models.CharField(max_length=100, null=True)
 
     class Meta:
         ordering = ['group', 'currentWGR']
@@ -153,6 +154,12 @@ class TotalScore(models.Model):
 
     def __str__(self):
         return str(self.user) + str(self.score)
+
+    def auto_pick(self):
+        if PickMethod.objects.filter(user=self.user, tournament=self.tournament, method='3'):
+            return True
+        else:
+            return False
 
 
 class mpScores(models.Model):
