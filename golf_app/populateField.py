@@ -9,7 +9,10 @@ import urllib3
 from django.core.exceptions import ObjectDoesNotExist
 from golf_app import calc_score
 from django.db import transaction
-
+import urllib
+from bs4 import BeautifulSoup
+import json
+import datetime
 
 def clean_db():
     print ('in clean db')
@@ -21,8 +24,8 @@ def clean_db():
 def get_pga_worldrank():
     '''Goes to PGA web site takes no input, goes to web to get world golf rankings and returns a dictionary with player name as a string and key, ranking as a string in values'''
 
-    from bs4 import BeautifulSoup
-    import urllib.request
+    #from bs4 import BeautifulSoup
+    #import urllib.request
 
     html = urllib.request.urlopen("https://www.pgatour.com/stats/stat.186.html")
     #html = request.get("https://www.pgatour.com/stats/stat.186.html")
@@ -48,8 +51,8 @@ def get_pga_worldrank():
 def get_worldrank():
     '''Goes to OWGR web site takes no input, goes to web to get world golf rankings and returns a dictionary with player name as a string and key, ranking as a string in values'''
 
-    from bs4 import BeautifulSoup
-    import urllib.request
+    #from bs4 import BeautifulSoup
+    #import urllib.request
 
     html = urllib.request.urlopen("http://www.owgr.com/ranking?pageNo=1&pageSize=All&country=All")
     soup = BeautifulSoup(html, 'html.parser')
@@ -74,10 +77,10 @@ def get_worldrank():
 def get_field(tournament_number):
     '''takes a tournament number, goes to web to get field and returns a list with player names'''
 
-    from bs4 import BeautifulSoup
-    import json
-    import urllib.request
-    import datetime
+    #from bs4 import BeautifulSoup
+    #import json
+    #import urllib.request
+    #import datetime
 
     season = Season.objects.get(current=True)
 
@@ -253,14 +256,41 @@ def create_groups(tournament_number):
     groups = Group.objects.get(tournament=tournament, number=group_num)
 
     print ('group_dict before field save', group_dict)
+
+    #create dict of player links for picture lookup
+    #import urllib
+
+    json_url = 'https://www.pgatour.com/players.html'
+    html = urllib.request.urlopen("https://www.pgatour.com/players.html")
+    soup = BeautifulSoup(html, 'html.parser')
+
+    players =  (soup.find("div", {'class': 'directory-select'}).find_all('option'))
+    golfer_dict = {}
+
+    for p in players:
+        link = ''
+        p_text = str(p)[47:]
+        for char in p_text:
+            if char == '"':
+                break
+            else:
+                link = link + char
+            golfer_dict[link[:5]]=link
+
     for k, v in sorted(group_dict.items(), key=lambda x: x[1]):
         if player_cnt < groups.playerCnt:
           print (k,v[0], str(groups.number), str(groups.playerCnt))
-          Field.objects.get_or_create(tournament=tournament, playerName=k, currentWGR=v[0], group=groups, alternate=v[1][0], playerID=v[1][1])[0]
+          Field.objects.get_or_create(tournament=tournament, playerName=k, \
+             currentWGR=v[0], group=groups, alternate=v[1][0], \
+             playerID=v[1][1], pic_link= get_pick_link(v[1][1]), \
+             map_link= get_pick_pic(v[1][1], golfer_dict))[0]
           player_cnt +=1
         elif player_cnt == groups.playerCnt:
           print (k,v[0], str(groups.number), str(groups.playerCnt))
-          Field.objects.get_or_create(tournament=tournament, playerName=k, currentWGR=v[0], group=groups, alternate=v[1][0], playerID=v[1][1])[0]
+          Field.objects.get_or_create(tournament=tournament, playerName=k, \
+             currentWGR=v[0], group=groups, alternate=v[1][0], \
+             playerID=v[1][1], pic_link= get_pick_link(v[1][1]), \
+             map_link= get_pick_pic(v[1][1], golfer_dict))[0]
           group_num +=1
           player_cnt = 1
           if Field.objects.filter(tournament=tournament).count() < len(field):
@@ -275,6 +305,27 @@ def create_groups(tournament_number):
     #     bd.cut_bonus = 0
     #     bd.winner_bonus = 0
     #     bd.save()
+
+def get_pick_link(playerID):
+    return "https://pga-tour-res.cloudinary.com/image/upload/c_fill,d_headshots_default.png,f_auto,g_face:center,h_85,q_auto,r_max,w_85/headshots_" + playerID + ".png"
+
+def get_pick_pic(playerID, golfer_dict):
+
+    link_text = golfer_dict.get(playerID)
+
+    if link_text != None:
+
+        link = "https://www.pgatour.com/players/player." + link_text
+        player_html = urllib.request.urlopen(link)
+        player_soup = BeautifulSoup(player_html, 'html.parser')
+        country = (player_soup.find('img', {'class': 's-flag'}))
+        flag = country.get('src')
+        print (playerID, flag)
+        return  "https://www.pgatour.com" + flag
+    else:
+        return None
+
+
 
 if __name__ == '__main__':
     print ('populating script!')

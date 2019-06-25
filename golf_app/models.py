@@ -48,6 +48,8 @@ class Field(models.Model):
     partner = models.CharField(max_length=100, null=True, blank=True)
     teamID = models.CharField(max_length=30, null=True, blank=True)
     playerID = models.CharField(max_length=100, null=True)
+    map_link = models.URLField(null=True)
+    pic_link = models.URLField(null=True)
 
     class Meta:
         ordering = ['group', 'currentWGR']
