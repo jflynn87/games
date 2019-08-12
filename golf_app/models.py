@@ -41,6 +41,8 @@ class Group(models.Model):
 class Field(models.Model):
     playerName = models.CharField(max_length = 256, null=True)
     currentWGR = models.IntegerField(unique=False, null=True)
+    sow_WGR = models.IntegerField(unique=False, null=True)
+    soy_WGR = models.IntegerField(unique=False, null=True)
     tournament = models.ForeignKey(Tournament, on_delete=models.CASCADE)
     group = models.ForeignKey(Group, on_delete=models.CASCADE, null=True)
     alternate = models.NullBooleanField(null=True)

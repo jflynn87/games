@@ -24,4 +24,11 @@ class CreatePositionForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
         self.fields['close_date'].required=False
         self.fields['notes'].required = False
+        self.fields['type'].initial = 1
 #        self.fields['open_date'].widget.attrs({'datepicker'})
+
+    def clean_symbol(self):
+        symbol = self.cleaned_data['symbol']
+        print ('clean symbol', symbol)
+
+        return symbol

@@ -70,7 +70,7 @@ def calc_score(t_args, request=None):
              and int(ranks.get('round')) >  1:
                  for s in total_scores:
                     if s.get('cuts')==0 and not \
-                      PickMethod.objects.filter(user=s.get('user'), tournament=tournament, method='3').exitst():
+                      PickMethod.objects.filter(user=s.get('user'), tournament=tournament, method='3').exists():
                         print ('creating bons detail cut')
                         bd, created = BonusDetails.objects.get_or_create(user__pk=s.get('user'), tournament=tournament)
                         bd.cut_bonus = base_bonus

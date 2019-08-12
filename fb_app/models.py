@@ -13,8 +13,15 @@ from django.db.models import Q
 
 # Create your models here.
 
+class Season(models.Model):
+    season = models.CharField(max_length=30,unique=True)
+
+    def __str__(self):
+        return (str)(self.season)
+
 class Week(models.Model):
-    season = models.CharField(max_length=30)
+    season = models.CharField(max_length=30, null=True)
+    season_model = models.ForeignKey(Season, on_delete=models.CASCADE,null=True)
     week = models.PositiveIntegerField()
     game_cnt = models.PositiveIntegerField()
     current = models.BooleanField(default=False)

@@ -41,6 +41,7 @@ class CreatePositionView(CreateView):
 
 
 def symbol_lookup(request):
+    print ('symbol lookup')
     if request.is_ajax():
         symbol = request.GET.get('symbol')
 

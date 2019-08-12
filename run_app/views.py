@@ -177,10 +177,11 @@ class ScheduleView(DetailView):
             context = super(ScheduleView, self).get_context_data(**kwargs)
             plan = Plan.objects.get(pk=self.kwargs.get('pk'))
             today = datetime.datetime.now()
-            current_week = Schedule.objects.filter(date=today).values('week').first()
-            last_week = Schedule.objects.filter(week=int(current_week.get('week'))-1).values('week').first()
-            next_week = Schedule.objects.filter(week=int(current_week.get('week'))+1).values('week').first()
-            print (last_week, current_week, next_week)
+            if today <= datetime.datetime.combine(plan.end_date, datetime.datetime.min.time()):
+                current_week = Schedule.objects.filter(date=today).values('week').first()
+                last_week = Schedule.objects.filter(week=int(current_week.get('week'))-1).values('week').first()
+                next_week = Schedule.objects.filter(week=int(current_week.get('week'))+1).values('week').first()
+                print (last_week, current_week, next_week)
 
             expected = Schedule.objects.filter(Q(plan__id=plan.id) & Q(date__lte=today) & Q(dist__gt=0)).aggregate((Sum('dist')), (Count('date')))
             actual = Run.objects.filter(Q(date__lte=today) & Q(date__gte=plan.start_date)).aggregate(Sum('dist'), (Count('date')))

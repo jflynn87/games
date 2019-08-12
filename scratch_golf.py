@@ -26,49 +26,43 @@ from selenium import webdriver
 import urllib
 import json
 
-def check():
-    json_url = 'https://www.pgatour.com/players.html'
-    html = urllib.request.urlopen("https://www.pgatour.com/players.html")
+
+def get_worldrank():
+    '''Goes to OWGR web site takes no input, goes to web to get world golf rankings and returns a dictionary with player name as a string and key, ranking as a string in values'''
+
+    #from bs4 import BeautifulSoup
+    #import urllib.request
+
+    html = urllib.request.urlopen("http://www.owgr.com/ranking?pageNo=1&pageSize=All&country=All")
     soup = BeautifulSoup(html, 'html.parser')
 
 
-    players =  (soup.find("div", {'class': 'directory-select'}).find_all('option'))
-    golfer_dict = {}
+    rankslist = (soup.find("div", {'class': 'table_container'}))
 
-    for p in players:
-    #    if first< 2:
-            link = ''
-            p_text = str(p)[47:]
-            for char in p_text:
-                if char == '"':
-                    break
-                else:
-                    link = link + char
-            golfer_dict[link[:5]]=link
-    #print(golfer_dict)
+    ranks = {}
 
-    for golfer in Field.objects.filter(tournament__pga_tournament_num='026'):
-        link_text = golfer_dict.get(golfer.playerID)
+    c = 0
+    for row in rankslist.find_all('tr')[1:]:
+        rank_data = row.find_all('td')
+        i = 0
+        rank_list = []
+        for data in rank_data:
+            rank_list.append(data.text)
+            i += 1
+            if i == 3:
+                print (rank_list)
+                break
+        c += 1
+        if c == 3:
 
-        if link_text != None:
-            link = "https://www.pgatour.com/players/player." + link_text
-            player_html = urllib.request.urlopen(link)
-            player_soup = BeautifulSoup(player_html, 'html.parser')
-            country = (player_soup.find('img', {'class': 's-flag'}))
-            flag = country.get('src')
-            flag_link = "https://www.pgatour.com" + flag
+            break
+        try:
+            player = (row.find('td', {'class': 'name'}).text).replace('(Am)','').replace(' Jr','').replace('(am)','')
+            rank = row.find('td').text
+            ranks[player.capitalize()] = int(rank)
+        except Exception as e:
+            print(e)
 
-            print (flag_link)
+    return ranks
 
-
-
-
-        #print ('value: {}, text: {}'.format(p['value'], p.text))
-        #if '08793' in p:
-        #    print ('in', p)
-    #print (players)
-
-
-
-
-check()
+get_worldrank()

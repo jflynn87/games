@@ -17,7 +17,7 @@ def load_sched(year):
     week_cnt = 1
     while week_cnt < 18:
         #html = urllib.request.urlopen("http://www.nfl.com/ajax/scorestrip?season=2018&seasonType=PRE&week=4")
-        html = urllib.request.urlopen("http://www.nfl.com/ajax/scorestrip?season=2018&seasonType=REG&week=" + str(week_cnt))
+        html = urllib.request.urlopen("http://www.nfl.com/ajax/scorestrip?season=" + str(year) + "&seasonType=REG&week=" + str(week_cnt))
         soup = BeautifulSoup(html, 'html.parser')
 
 
@@ -36,8 +36,15 @@ def load_sched(year):
 
             game.week = week
             game.eid = NFLgame.attrs['eid']
-            game.home = Teams.objects.get(nfl_abbr=NFLgame.attrs['h'])
-            game.away = Teams.objects.get(nfl_abbr=NFLgame.attrs['v'])
+            try:
+                game.home = Teams.objects.get(nfl_abbr=NFLgame.attrs['h'])
+            except Exception:
+                game.home = Teams.objects.get(mike_abbr=NFLgame.attrs['h'])
+
+            try:
+                game.away = Teams.objects.get(nfl_abbr=NFLgame.attrs['v'])
+            except Exception:
+                game.away = Teams.objects.get(mike_abbr=NFLgame.attrs['v'])
 
             date = NFLgame.attrs['eid'][0:4] + '-' + NFLgame.attrs['eid'][4:6] + '-' + NFLgame.attrs['eid'][6:8]
 
@@ -55,5 +62,5 @@ def load_sched(year):
 if __name__ == '__main__':
     print ('populating script!')
     #clean_db()
-    load_sched(2018)
+    load_sched(2019)
     print ("Populating Complete!")

@@ -1,6 +1,6 @@
 $(document).ready(function() {
- $('#id_type').change(function () {
-   if ($(this).val() == 1) {
+ /*$('#id_type').change(function () { */
+   if ($('#id_type').val() == 1) {
  var i = 0
  $('#search').focusout(function () {$('#result').css('display', 'none')})
   $('#search').keyup(function(e) {
@@ -52,7 +52,7 @@ $(document).ready(function() {
     })
 
 }
-})
+ })
 }
-})
+/* }) */
 })

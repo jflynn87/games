@@ -42,7 +42,7 @@ def get_pga_worldrank():
             rank = row.find('td').text.strip('\n').strip(' ')
             ranks[player.capitalize()] = int(rank)
         except Exception as e:
-            print(e)
+            print('exception 2', e)
 
     return ranks
 
@@ -65,11 +65,21 @@ def get_worldrank():
 
     for row in rankslist.find_all('tr')[1:]:
         try:
+            rank_data = row.find_all('td')
+            rank_list = []
+            i = 0
+            for data in rank_data:
+                if data.text != '':
+                    rank_list.append(int(data.text))
+                else:
+                    rank_list.append(9999)
+                i += 1
+                if i == 3:
+                    break
             player = (row.find('td', {'class': 'name'}).text).replace('(Am)','').replace(' Jr','').replace('(am)','')
-            rank = row.find('td').text
-            ranks[player.capitalize()] = int(rank)
+            ranks[player.capitalize()] = rank_list
         except Exception as e:
-            print(e)
+            print('exeption 1',row,e)
 
     return ranks
 
@@ -77,23 +87,10 @@ def get_worldrank():
 def get_field(tournament_number):
     '''takes a tournament number, goes to web to get field and returns a list with player names'''
 
-    #from bs4 import BeautifulSoup
-    #import json
-    #import urllib.request
-    #import datetime
-
     season = Season.objects.get(current=True)
-
-    # try:
-    #     last_tournament = Tournament.objects.get(current=True)
-    #     last_tournament.current = False
-    #     last_tournament.save()
-    # except ObjectDoesNotExist:
-    #     print ("no current tournament")
 
     json_url = 'https://statdata.pgatour.com/r/' + str(tournament_number) +'/field.json'
     print (json_url)
-
     with urllib.request.urlopen(json_url) as field_json_url:
         data = json.loads(field_json_url.read().decode())
 
@@ -225,24 +222,33 @@ def create_groups(tournament_number):
     name_switch = False
 
     for player in field:
-
-        print ('player before', player)
         if Name.objects.filter(PGA_name=player).exists():
             name_switch = True
             name = Name.objects.get(PGA_name=player)
             player = name.OWGR_name
-            print ('owgr after', player)
+            print ('owgr player', player)
             print ('pga player', name)
 
-
-        rank = OWGR_rankings.get(player.capitalize())
-
-        if rank == None:
-            rank = PGA_rankings.get(player.capitalize())
-
-            if rank == None:
-                print (player)
+        # fix this to get 0 index of ranking list
+        try:
+            rank = OWGR_rankings[player.capitalize()][0]
+        except Exception:
+            try:
+                print ('not in owgr', player)
+                rank = PGA_rankings[player.capitalize()]
+            except Exception:
+                print ('no rank found',player)
                 rank = 9999
+
+        #
+        # print ('rank', rank)
+        #
+        # if rank == None:  #failed to find owgr site
+        #     print ('not in owgr', player)
+        #     rank = PGA_rankings.get(player.capitalize())
+        #     if rank == None:
+        #         print ('no rank found',player)
+        #         rank = 9999
 
         if name_switch:
             player = name.PGA_name
@@ -277,18 +283,18 @@ def create_groups(tournament_number):
                 link = link + char
             golfer_dict[link[:5]]=link
 
-    for k, v in sorted(group_dict.items(), key=lambda x: x[1]):
+    for k, v in sorted(group_dict.items(), key=lambda x: x[1][0]):
         if player_cnt < groups.playerCnt:
           print (k,v[0], str(groups.number), str(groups.playerCnt))
           Field.objects.get_or_create(tournament=tournament, playerName=k, \
-             currentWGR=v[0], group=groups, alternate=v[1][0], \
+             currentWGR=v[0][0], sow_WGR=v[0][1], soy_WGR=v[0][2], group=groups, alternate=v[1][0], \
              playerID=v[1][1], pic_link= get_pick_link(v[1][1]), \
              map_link= get_pick_pic(v[1][1], golfer_dict))[0]
           player_cnt +=1
         elif player_cnt == groups.playerCnt:
           print (k,v[0], str(groups.number), str(groups.playerCnt))
           Field.objects.get_or_create(tournament=tournament, playerName=k, \
-             currentWGR=v[0], group=groups, alternate=v[1][0], \
+             currentWGR=v[0][0], sow_WGR=v[0][1], soy_WGR=v[0][2], group=groups, alternate=v[1][0], \
              playerID=v[1][1], pic_link= get_pick_link(v[1][1]), \
              map_link= get_pick_pic(v[1][1], golfer_dict))[0]
           group_num +=1
@@ -296,6 +302,7 @@ def create_groups(tournament_number):
           if Field.objects.filter(tournament=tournament).count() < len(field):
              groups = Group.objects.get(tournament=tournament,number=group_num)
 
+    print ('saved field objects')
     # fix the hard coded tournament, change to identify users who are in the golf game
     # users = TotalScore.objects.filter(tournament__pga_tournament_num="014")
     # for user in users:
