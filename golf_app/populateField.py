@@ -284,17 +284,20 @@ def create_groups(tournament_number):
             golfer_dict[link[:5]]=link
 
     for k, v in sorted(group_dict.items(), key=lambda x: x[1][0]):
+        print (k, v)
         if player_cnt < groups.playerCnt:
           print (k,v[0], str(groups.number), str(groups.playerCnt))
           Field.objects.get_or_create(tournament=tournament, playerName=k, \
-             currentWGR=v[0][0], sow_WGR=v[0][1], soy_WGR=v[0][2], group=groups, alternate=v[1][0], \
+             #currentWGR=v[0][0], sow_WGR=v[0][1], soy_WGR=v[0][2], group=groups, alternate=v[1][0], \
+             currentWGR=v[0], group=groups, alternate=v[1][0], \
              playerID=v[1][1], pic_link= get_pick_link(v[1][1]), \
              map_link= get_pick_pic(v[1][1], golfer_dict))[0]
           player_cnt +=1
         elif player_cnt == groups.playerCnt:
           print (k,v[0], str(groups.number), str(groups.playerCnt))
           Field.objects.get_or_create(tournament=tournament, playerName=k, \
-             currentWGR=v[0][0], sow_WGR=v[0][1], soy_WGR=v[0][2], group=groups, alternate=v[1][0], \
+             #currentWGR=v[0][0], sow_WGR=v[0][1], soy_WGR=v[0][2], group=groups, alternate=v[1][0], \
+             currentWGR=v[0], group=groups, alternate=v[1][0], \
              playerID=v[1][1], pic_link= get_pick_link(v[1][1]), \
              map_link= get_pick_pic(v[1][1], golfer_dict))[0]
           group_num +=1

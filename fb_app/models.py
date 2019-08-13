@@ -44,6 +44,12 @@ class Week(models.Model):
                 last_week.save()
         super(Week, self).save()
 
+    def started(self):
+        if Games.objects.filter(week=self, qtr__isnull=False).exists():
+            return True
+        else:
+            return False
+
 
 class Teams(models.Model):
     mike_abbr = models.CharField(max_length=4, null=True)
@@ -299,7 +305,7 @@ def calc_scores(self, league, week, loser_list=None, proj_loser_list=None):
         #calculate season totals
         total_score = 0
 
-        for weeks in WeekScore.objects.filter(player=player, week__week__lte=week.week):
+        for weeks in WeekScore.objects.filter(player=player, week__week__lte=week.week, week__season_model__current=True):
             if weeks.score == None:
                 weeks.score = 0
             total_score += weeks.score

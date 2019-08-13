@@ -3,7 +3,7 @@ os.environ.setdefault("DJANGO_SETTINGS_MODULE","gamesProj.settings")
 
 import django
 django.setup()
-from fb_app.models import Games, Week, Teams
+from fb_app.models import Games, Week, Teams, Season
 import urllib3
 from bs4 import BeautifulSoup
 import urllib.request
@@ -15,6 +15,7 @@ def load_sched(year):
 
     #changing weeks to load preseason weeks (make week 0 and cnt 1)
     week_cnt = 1
+    season = Season.objects.get(season=year)
     while week_cnt < 18:
         #html = urllib.request.urlopen("http://www.nfl.com/ajax/scorestrip?season=2018&seasonType=PRE&week=4")
         html = urllib.request.urlopen("http://www.nfl.com/ajax/scorestrip?season=" + str(year) + "&seasonType=REG&week=" + str(week_cnt))
@@ -28,6 +29,7 @@ def load_sched(year):
         week.game_cnt = gm_cnt = len(soup.findAll('g'))
         week.current = False
         #week.current = True
+        week.season_model = season
         week.save()
 
         for NFLgame in soup.findAll('g'):

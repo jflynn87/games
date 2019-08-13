@@ -28,7 +28,7 @@
   </div>
 {%endif%}
 
-<h3 style="background-color:lightblue">Week:  {{week.week}}</h3>
+<h3 style="background-color:lightblue">Week:  {{week.week}}  {%if week.started%} Week started - no changes {%endif%}</h3>
 <div class="row">
 
 <div class="column">
@@ -91,7 +91,9 @@
         {%endfor%}
       </tbody>
   </table>
+  {%if not week.started%}
   <button type="submit" onclick="validate()" class="btn btn-primary">Submit Picks</button>
+  {%endif%}
 </form>
   </div>
 </div>

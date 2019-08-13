@@ -22,9 +22,9 @@ class CreatePicksForm(ModelForm):
         widget = ModelSelect2Widget)
 
 #if migrating to new db, comment out week lookup and uncomment 2 lines below.
-#week = Week.objects.get(current=True)
-week=Week()
-week.game_cnt=1
+week = Week.objects.get(current=True)
+#week=Week()
+#week.game_cnt=1
 PickFormSet = modelformset_factory(Picks, form=CreatePicksForm, max_num=(week.game_cnt))
 NoPickFormSet = modelformset_factory(Picks, form=CreatePicksForm, extra=(week.game_cnt))
 

@@ -125,7 +125,10 @@ class GameListView(LoginRequiredMixin,ListView):
         context = super(GameListView, self).get_context_data(**kwargs)
         week = Week.objects.get(current=True)
         player=Player.objects.get(name=self.request.user)
-        get_spreads()
+        try:
+            get_spreads()
+        except Exception:
+            print ('no spreads available')
         games=Games.objects.filter(week=week).order_by("eid")
 
         # PickFormSet = formset_factory(CreatePicksForm, extra=week.game_cnt)
@@ -166,8 +169,10 @@ class GameListView(LoginRequiredMixin,ListView):
 
     def post(self,request):
 
+
          #print (request.POST)
          week = Week.objects.get(current=True)
+         print ('week started', week.started())
          player = Player.objects.get(name=request.user)
          print (player, week, "Making picks", datetime.datetime.now())
          team_dict = {}
@@ -459,7 +464,7 @@ class SeasonTotals(ListView):
         #week by week scores and winner
         while week_cnt <= week.week:
             score_list = []
-            score_week = Week.objects.get(week=week_cnt)
+            score_week = Week.objects.get(season_model__current=True, week=week_cnt)
             week_score = WeekScore.objects.filter(week=score_week, player__league__league=league).order_by('player__name')
             if len(week_score) == len(Player.objects.filter(league__league=league)):
                 for score in week_score:
@@ -483,7 +488,7 @@ class SeasonTotals(ListView):
         total_score_list = []
         for player in Player.objects.filter(league=base_data[2]):
             total_score = 0
-            for weeks in WeekScore.objects.filter(player=player, week__week__lte=week.week):
+            for weeks in WeekScore.objects.filter(player=player, week__week__lte=week.week, week__season_model__current=True):
                 if weeks.score == None:
                     weeks.score = 0
                 total_score += weeks.score

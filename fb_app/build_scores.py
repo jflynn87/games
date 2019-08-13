@@ -53,14 +53,14 @@ def build_scores_context(user, league, winner_list=None):
         #add a query to skip if all games are done and updated in db
         print ('starting nfl json lookup')
         print (datetime.datetime.now())
-        #json_url = 'http://www.nfl.com/liveupdate/scores/scores.json'
+        json_url = 'http://www.nfl.com/liveupdate/scores/scores.json'
 
-        #with urllib.request.urlopen(json_url) as field_json_url:
-        #    data = json.loads(field_json_url.read().decode())
+        with urllib.request.urlopen(json_url) as field_json_url:
+            data = json.loads(field_json_url.read().decode())
 
         #use for testing
-        with open ('c:/users/john/pythonProjects/games/gamesProj/fb_app/nfl_scores.json') as f:
-            data = json.load(f)
+        #with open ('c:/users/john/pythonProjects/games/gamesProj/fb_app/nfl_scores.json') as f:
+        #    data = json.load(f)
 
 
 
