@@ -34,16 +34,18 @@ def get_spreads():
     #print (soup)
     #find nfl section within the html
 
-    nfl_sect = (soup.find("div", {'class':'odds__table-inner--1'}))
-    print (nfl_sect)
+    nfl_sect = (soup.find("div", {'class':'odds__table-outer--1'}))
+    
     #pull out the games and spreads from the NFL section
     
     
     for row in nfl_sect.find_all('tr')[1:]:
+        
         try:
           col = row.find_all('td')
           teams = col[0].text.split()
           line = col[5].text.split()
+
           if line[0][0] == '-':
               fav = teams[0]
               dog = teams[1]
@@ -57,15 +59,15 @@ def get_spreads():
 
           fav_obj = Teams.objects.get(long_name__iexact=fav)
           dog_obj = Teams.objects.get(long_name__iexact=dog)
-
+          
           week = Week.objects.get(current=True)
           
-          game = Games.objects.get(Q(week=week) & Q(home=fav_obj) & Q(away=dog_obj)) 
-        except Exception:
-          try:
-             game = Games.objects.get(Q(week=week) & Q(home=dog_obj) & Q(away=fav_obj)) 
-          except Exception:
-             print ('not working ')
+          if Games.objects.filter(Q(week=week) & Q(home=fav_obj) & Q(away=dog_obj)).exists():
+             Games.objects.filter(Q(week=week) & Q(home=fav_obj) & Q(away=dog_obj)).update(fav=fav_obj, dog=dog_obj, spread=spread)
+          elif Games.objects.filter(Q(week=week) & Q(home=dog_obj) & Q(away=fav_obj)).exists():
+             Games.objects.filter(Q(week=week) & Q(home=dog_obj) & Q(away=fav_obj)).update(fav=fav_obj, dog=dog_obj, spread=spread)
+        except Exception as e:
+             print ('spread look up error', e)
 
           #fix this so that is on;y updates on the active week.  now it is updating
           # new spreads on last weeks game before week is over
