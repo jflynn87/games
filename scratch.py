@@ -29,7 +29,11 @@ from selenium import webdriver
 #
 
 def check():
+    week = Week.objects.get(current=True)
+    for i, game in enumerate(Games.objects.filter(week=week)):
+            game.fav = game.home
+            game.dog = game.away
+            game.spread = ('-' + str(i))
+            game.save()
 
-    for week in Week.objects.filter(season_model__current=True):
-        print (week, week.started())
 check()

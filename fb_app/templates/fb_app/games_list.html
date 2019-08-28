@@ -28,7 +28,17 @@
   </div>
 {%endif%}
 
-<h3 style="background-color:lightblue">Week:  {{week.week}}  {%if week.started%} Week started - no changes {%endif%}</h3>
+<h3 style="background-color:lightblue">Week:  {{week.week}}  {%if week.started and not late_picks%} Week started - no changes {%endif%}</h3>
+
+<div id='favs'>
+  <form method="POST" name='favs'>
+    {%csrf_token%}
+    <input type="text" name="favs" value="favs" hidden>
+  <input type="submit" class="btn btn-primary" value='Pick Favorites'></button> Picks largest spread to lowest
+</form>
+
+</div>
+
 <div class="row">
 
 <div class="column">
@@ -62,7 +72,13 @@
       {%endfor%}
     </tbody>
    </table>
-   <h4 class='footnote'>Home team in CAPS</h4>
+   <div class="footnote">
+     <h4>Lowest points win, losing picks get that number of points</h4>
+     <h4>Pick straight up winners, spreads are for reference</h4>
+     <h4>Ties are a loss</h4>
+     <h4>Home team in CAPS</h4>
+
+   </div>
 </div>
 </div>
 

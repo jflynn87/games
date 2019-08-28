@@ -26,16 +26,17 @@ def validate(pick_list):
 
         games_dict[game.eid] = str(game.home), str(game.away), count
 
-    if len(pick_list) != len(set(pick_list)):
-        picks_valid=False
-        error = "Duplicate Picks"
-    else:
-        for count in games_dict.values():
-            if count[2] > 1:
-               picks_valid = False
-               error.append("Picked the same game twice: " + str(count[0]) + '  ' + str(count[1]))
-            if count[2] == 0:
-               picks_valid = False
-               error.append("Missed picking: " + str(count[0]) + '  ' + str(count[1]))
+    #if len(pick_list) != len(set(pick_list)):
+     #   picks_valid=False
+      #  error = "Duplicate Picks"
+    #else:
+    print (games_dict)
+    for count in games_dict.values():
+        if count[2] > 1:
+            picks_valid = False
+            error.append("Picked the same game twice: " + str(count[0]) + '  ' + str(count[1]))
+        if count[2] == 0:
+            picks_valid = False
+            error.append("Missed picking: " + str(count[0]) + '  ' + str(count[1]))
 
     return [picks_valid, error]

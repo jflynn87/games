@@ -26,6 +26,7 @@ class Week(models.Model):
     week = models.PositiveIntegerField()
     game_cnt = models.PositiveIntegerField()
     current = models.BooleanField(default=False)
+    late_picks = models.BooleanField(default=False)
 
     def __str__(self):
         return str(self.week)
@@ -50,6 +51,28 @@ class Week(models.Model):
         else:
             return False
 
+    def get_spreads(self):
+
+        spread_dict = {}
+        for game in Games.objects.filter(week__current=True):
+            try:
+                s = float(game.spread[1:])
+                spread_dict[game.eid]=(game.fav, game.dog, float(game.spread[1:]))
+            except Exception:
+                spread = 0
+                for char in game.spread[1:]:
+                    if char == '-':
+                        break
+                    elif char == '½':
+                        spread = float(spread) + .5
+                        break
+                    else:
+                        spread = str(spread) + str(char)
+                spread_dict[game.eid]=(game.fav, game.dog, float(spread))
+
+        return spread_dict
+
+
 
 class Teams(models.Model):
     mike_abbr = models.CharField(max_length=4, null=True)
@@ -59,6 +82,7 @@ class Teams(models.Model):
     typo_name1 = models.CharField(max_length=30,null=True, blank=True)
     wins = models.PositiveIntegerField(default=0)
     losses = models.PositiveIntegerField(default=0)
+    pic = models.URLField(null=True)
 #    objects = TeamManager()
 
     class Meta:

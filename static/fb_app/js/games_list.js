@@ -27,6 +27,7 @@ function get_game_id(team_name) {
   return game_list[team_name]
 };
 
+
     $(document).on('change', $("select[id^='id_form_']"), function () {
     game = document.getElementById('game_tbl')
 
@@ -42,7 +43,6 @@ function get_game_id(team_name) {
        pick_list.push(document.getElementById('pick' + (17-p)).children[0].value)
 
     }
-
 
     for (var k=0; k < pick_list.length; k++) {
 

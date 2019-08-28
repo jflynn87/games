@@ -10,7 +10,7 @@ class PicksAdmin(admin.ModelAdmin):
 
 class GamesAdmin(admin.ModelAdmin):
     list_display = ['week', 'home', 'away']
-    list_filter = ['week']
+    list_filter = ['week__season', 'week']
 
 class WeekScoreAdmin(admin.ModelAdmin):
     list_display = ['week', 'player', 'score']

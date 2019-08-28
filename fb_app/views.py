@@ -7,7 +7,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth import authenticate, login, logout
 from django.http import HttpResponseRedirect, HttpResponse
 from django.urls import reverse, reverse_lazy
-from fb_app.forms import UserForm, CreatePicksForm, PickFormSet, NoPickFormSet
+from fb_app.forms import UserForm, CreatePicksForm#, PickFormSet, NoPickFormSet
 from django.core.exceptions import ObjectDoesNotExist
 from fb_app.validate_picks import validate
 from django.contrib.auth.models import User
@@ -17,6 +17,7 @@ import json
 import datetime
 import scipy.stats as ss
 from django.forms import formset_factory, modelformset_factory
+from collections import OrderedDict
 #from fb_app import calc_score
 
 
@@ -33,11 +34,13 @@ def get_spreads():
     #print (soup)
     #find nfl section within the html
 
-    nfl_sect = (soup.find("div", {'class':'odds__table-inner'}))
-
+    nfl_sect = (soup.find("div", {'class':'odds__table-inner--1'}))
+    print (nfl_sect)
     #pull out the games and spreads from the NFL section
-
+    
+    
     for row in nfl_sect.find_all('tr')[1:]:
+        try:
           col = row.find_all('td')
           teams = col[0].text.split()
           line = col[5].text.split()
@@ -56,20 +59,27 @@ def get_spreads():
           dog_obj = Teams.objects.get(long_name__iexact=dog)
 
           week = Week.objects.get(current=True)
+          
+          game = Games.objects.get(Q(week=week) & Q(home=fav_obj) & Q(away=dog_obj)) 
+        except Exception:
+          try:
+             game = Games.objects.get(Q(week=week) & Q(home=dog_obj) & Q(away=fav_obj)) 
+          except Exception:
+             print ('not working ')
 
           #fix this so that is on;y updates on the active week.  now it is updating
           # new spreads on last weeks game before week is over
-          if Games.objects.filter(week=week, home__in=[fav_obj, dog_obj], away__in=[fav_obj, dog_obj]).exists():
-              print ('found game', fav_obj, dog_obj)
-          else:
-              print ('not found', fav_obj, dog_obj)
+          #if Games.objects.filter(week=week, home__in=[fav_obj, dog_obj], away__in=[fav_obj, dog_obj]).exists():
+          #    print ('found game', fav_obj, dog_obj)
+          #else:
+          #    print ('not found', fav_obj, dog_obj)
 
-          try:
-             Games.objects.get(week=week, home=fav_obj)
-             Games.objects.filter(week=week, home=fav_obj).update(fav=fav_obj, dog=dog_obj, spread=spread)
+          #try:
+          #  Games.objects.get(week=week, home=fav_obj)
+          #   Games.objects.filter(week=week, home=fav_obj).update(fav=fav_obj, dog=dog_obj, spread=spread)
 
-          except ObjectDoesNotExist:
-             Games.objects.filter(week=week,away=fav_obj).update(fav=fav_obj, dog=dog_obj, spread=spread)
+          #except ObjectDoesNotExist:
+          #   Games.objects.filter(week=week,away=fav_obj).update(fav=fav_obj, dog=dog_obj, spread=spread)
 
     return
 
@@ -118,23 +128,19 @@ def get_spreads():
 class GameListView(LoginRequiredMixin,ListView):
     login_url = 'login'
     model=Games
-    #def dispatch(self, *args, **kwargs):
-    #    return super(GameListView, self).dispatch(*args, **kwargs)
 
     def get_context_data(self, **kwargs):
         context = super(GameListView, self).get_context_data(**kwargs)
         week = Week.objects.get(current=True)
         player=Player.objects.get(name=self.request.user)
+        PickFormSet = modelformset_factory(Picks, form=CreatePicksForm, max_num=(week.game_cnt))
+        NoPickFormSet = modelformset_factory(Picks, form=CreatePicksForm, extra=(week.game_cnt))
+
         try:
             get_spreads()
         except Exception:
             print ('no spreads available')
         games=Games.objects.filter(week=week).order_by("eid")
-
-        # PickFormSet = formset_factory(CreatePicksForm, extra=week.game_cnt)
-        #
-        # form = PickFormSet()
-        #PickFormSet = modelformset_factory(Picks, fields=('team',), extra=week.game_cnt)
         if Picks.objects.filter(player=player, week=week).exists():
             form = PickFormSet(queryset=Picks.objects.filter(week=week, player=player))
         else:
@@ -144,10 +150,9 @@ class GameListView(LoginRequiredMixin,ListView):
         for team in Teams.objects.all():
             team_dict[team.id] = team.nfl_abbr
 
+
         if Picks.objects.filter(week=week, player=player).count() > 0:
-            #picks = Picks.objects.filter(week=week, player=player).order_by('-pick_num')
             context.update({
-            #'picks_list': picks,
             'week': Week.objects.get(current=True),
             'games_list': games,
             'form': form,
@@ -169,8 +174,8 @@ class GameListView(LoginRequiredMixin,ListView):
 
     def post(self,request):
 
-
-         #print (request.POST)
+         print (request.POST)
+             
          week = Week.objects.get(current=True)
          print ('week started', week.started())
          player = Player.objects.get(name=request.user)
@@ -179,23 +184,33 @@ class GameListView(LoginRequiredMixin,ListView):
          for team in Teams.objects.all():
              team_dict[team.id] = team.nfl_abbr
 
-         formset = PickFormSet(request.POST)
-
-         if formset.is_valid():
-            print ('valid')
-            pick_list = []
-            for form in formset:
-                cd = form.cleaned_data
-                team = cd.get('team')
-                pick_list.append(team)
+         pick_list = []
+         if request.POST.get('favs') == 'favs':
+            sorted_spreads = sorted(week.get_spreads().items(), key=lambda x: x[1][2], reverse=True)
+            print ('sspreads', sorted_spreads)
+            #list of tuples returned by sort, use tuple to find fav
+            for g in sorted_spreads:
+                pick_list.append(g[1][0])
+            print (pick_list)
          else:
-            print (formset.errors)
-            return render (request, 'fb_app/games_list.html', {
-            'form': formset,
-            'message': formset.errors,
-            'games_list': Games.objects.filter(week=week),
-            'teams': team_dict
-            })
+            PickFormSet = modelformset_factory(Picks, form=CreatePicksForm, max_num=(week.game_cnt))
+            formset = PickFormSet(request.POST)
+
+            if formset.is_valid():
+                print ('valid')
+                
+                for form in formset:
+                    cd = form.cleaned_data
+                    team = cd.get('team')
+                    pick_list.append(team)
+            else:
+                print (formset.errors)
+                return render (request, 'fb_app/games_list.html', {
+                'form': formset,
+                'message': formset.errors,
+                'games_list': Games.objects.filter(week=week),
+                'teams': team_dict
+                })
 
          i = 0
          picks_chk = []
@@ -244,7 +259,6 @@ class GameListView(LoginRequiredMixin,ListView):
 
          print (datetime.datetime.now(), request.user, 'saved picks')
          return redirect('fb_app:picks_list')
-
 
 
 class PicksListView(LoginRequiredMixin,ListView):

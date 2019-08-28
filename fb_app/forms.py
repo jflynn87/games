@@ -14,29 +14,18 @@ from django.forms.formsets import BaseFormSet
 class CreatePicksForm(ModelForm):
     #team = forms.ModelChoiceField(queryset=Teams.objects.all(), widget=Select2Widget)
 
+    def __init__(self, *args, **kwargs):
+        super (CreatePicksForm, self).__init__(*args, **kwargs)
+        team_list = []
+        for game in Games.objects.filter(week__current=True):
+            team_list.append(game.home)
+            team_list.append(game.away)
+        self.fields['team'].queryset = Teams.objects.filter(nfl_abbr__in=team_list)
 
     class Meta:
         model = Picks
         fields = ('team',)
-        team = forms.ModelChoiceField(queryset=Teams.objects.all(),
-        widget = ModelSelect2Widget)
 
-#if migrating to new db, comment out week lookup and uncomment 2 lines below.
-week = Week.objects.get(current=True)
-#week=Week()
-#week.game_cnt=1
-PickFormSet = modelformset_factory(Picks, form=CreatePicksForm, max_num=(week.game_cnt))
-NoPickFormSet = modelformset_factory(Picks, form=CreatePicksForm, extra=(week.game_cnt))
-
-
-# class PickFormSet(BaseModelFormSet):
-#     absolute_max = 16
-#     min_num = 12
-#     form = CreatePicksForm
-#     can_order=False
-#     can_delete=False
-#     validate_max = False
-#     validate_min =False
 
 
 class UserForm(forms.ModelForm):
