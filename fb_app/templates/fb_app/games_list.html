@@ -107,7 +107,9 @@
         {%endfor%}
       </tbody>
   </table>
-  {%if not week.started%}
+  <p>lp{{week.late_picks}} </p>
+  <p>ws {{week.started}}</p>
+  {%if not week.started or week.late_picks%}
   <button type="submit" onclick="validate()" class="btn btn-primary">Submit Picks</button>
   {%endif%}
 </form>

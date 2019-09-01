@@ -46,22 +46,25 @@ class Week(models.Model):
         super(Week, self).save()
 
     def started(self):
+        print ('week started')
         if Games.objects.filter(week=self, qtr__isnull=False).exists():
+            print ('true')
             return True
         else:
+            print ('false')
             return False
 
     def get_spreads(self):
 
         spread_dict = {}
-        for game in Games.objects.filter(week__current=True):
+        for game in Games.objects.filter(week=self):
             try:
                 s = float(game.spread[1:])
                 spread_dict[game.eid]=(game.fav, game.dog, float(game.spread[1:]))
             except Exception:
                 spread = 0
                 for char in game.spread[1:]:
-                    if char == '-':
+                    if char in ['-', '+']:
                         break
                     elif char == '½':
                         spread = float(spread) + .5
@@ -72,6 +75,7 @@ class Week(models.Model):
 
         return spread_dict
 
+    
 
 
 class Teams(models.Model):
@@ -141,6 +145,12 @@ class Player(models.Model):
 
     def __str__(self):
         return str(self.name)
+
+    def picks_submitted(self, week):
+        if Picks.objects.filter(week=week, player=self).exist():
+            return True
+        else:
+            return False
 
 class Picks(models.Model):
     week = models.ForeignKey(Week,on_delete=models.CASCADE, db_index=True)

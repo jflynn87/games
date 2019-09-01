@@ -29,11 +29,18 @@ from selenium import webdriver
 #
 
 def check():
-    week = Week.objects.get(current=True)
-    for i, game in enumerate(Games.objects.filter(week=week)):
-            game.fav = game.home
-            game.dog = game.away
-            game.spread = ('-' + str(i))
-            game.save()
+    week=Week.objects.get(current=True)
+    print (week)
+    if Games.objects.filter(week=week, qtr__isnull=False).exists():
+       print ('true')
+       
+    else:
+       print ('false')
+       
 
+    for game in Games.objects.filter(week=week).order_by('eid'):
+        print (game.eid)
+
+
+    
 check()

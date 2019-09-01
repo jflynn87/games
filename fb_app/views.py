@@ -303,17 +303,30 @@ class ScoresView(TemplateView):
         context = super(ScoresView, self).get_context_data(**kwargs)
         print (self.kwargs)
         week = Week.objects.get(pk=self.kwargs.get('pk'))
+    
         print (week)
         base_data = self.get_base_data()
 
         user = base_data[0]
         player = base_data[1]
         league = base_data[2]
+
         pick_data = self.get_picks(player, league, week)
 
         player_list = pick_data[0]
         pick_pending = pick_data[1]
         pick_dict = pick_data[2]
+
+        if len(pick_pending) > 0 and week.started():
+            sorted_spreads = sorted(week.get_spreads().items(), key=lambda x: x[1][2],reverse=True)
+            for player in pick_pending:
+                for i, game in enumerate(sorted_spreads):
+                    pick = Picks()
+                    pick.week = week
+                    pick.player = player
+                    pick.pick_num = 16 - i
+                    pick.team = game[1][1]
+                    pick.save()
 
         if self.request.POST:
             loser_list = []
@@ -539,6 +552,8 @@ class SeasonTotals(ListView):
         return (user, player, league, week)
 
 
+class AboutView(TemplateView):
+    template_name = 'fb_app/about.html'
 
 
 @login_required
