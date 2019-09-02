@@ -16,9 +16,9 @@ def load_sched(year):
     #changing weeks to load preseason weeks (make week 0 and cnt 1)
     week_cnt = 1
     season = Season.objects.get(season=year)
-    while week_cnt < 2:
-        html = urllib.request.urlopen("http://www.nfl.com/ajax/scorestrip?season=2019&seasonType=PRE&week=4")
-        #html = urllib.request.urlopen("http://www.nfl.com/ajax/scorestrip?season=" + str(year) + "&seasonType=REG&week=" + str(week_cnt))
+    while week_cnt < 3:
+        #html = urllib.request.urlopen("http://www.nfl.com/ajax/scorestrip?season=2019&seasonType=PRE&week=4")
+        html = urllib.request.urlopen("http://www.nfl.com/ajax/scorestrip?season=" + str(year) + "&seasonType=REG&week=" + str(week_cnt))
         soup = BeautifulSoup(html, 'html.parser')
 
 

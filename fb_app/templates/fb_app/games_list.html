@@ -73,10 +73,10 @@
     </tbody>
    </table>
    <div class="footnote">
-     <h4>Lowest points win, losing picks get that number of points</h4>
-     <h4>Pick straight up winners, spreads are for reference</h4>
-     <h4>Ties are a loss</h4>
-     <h4>Home team in CAPS</h4>
+     <p>Lowest points win, losing picks get that number of points</p>
+     <p>Pick straight up winners, spreads are for reference</p>
+     <p>Ties are a loss</p>
+     <p>Home team in CAPS</p>
 
    </div>
 </div>
@@ -107,8 +107,6 @@
         {%endfor%}
       </tbody>
   </table>
-  <p>lp{{week.late_picks}} </p>
-  <p>ws {{week.started}}</p>
   {%if not week.started or week.late_picks%}
   <button type="submit" onclick="validate()" class="btn btn-primary">Submit Picks</button>
   {%endif%}
