@@ -102,6 +102,17 @@ class Teams(models.Model):
     def get_mike_abbr(self):
         return self.mike_abbr
 
+    def get_record(self, season=None):
+        '''takes a season object and returns a tuple with record)'''
+        if season == None:
+            season = Season.objects.get(current=True)
+
+        wins = Games.objects.filter(week__season=season, winner=self).count()
+        losses = Games.objects.filter(week__season=season, loser=self).count()
+        ties = Games.objects.filter(Q(week__season=season), (Q(home=self) | Q(away=self)), Q(tie=True)).count()
+
+        return (wins, losses, ties)
+
 
 
 class Games(models.Model):

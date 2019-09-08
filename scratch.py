@@ -4,7 +4,7 @@ os.environ.setdefault("DJANGO_SETTINGS_MODULE","gamesProj.settings")
 import django
 django.setup()
 #from golf_app.models import Tournament, TotalScore, ScoreDetails, Field, Picks, PickMethod
-from fb_app.models import Season, Week, Games
+from fb_app.models import Season, Week, Games, Teams
 from django.contrib.auth.models import User
 from datetime import datetime, timedelta
 import sqlite3
@@ -29,18 +29,10 @@ from selenium import webdriver
 #
 
 def check():
-    week=Week.objects.get(current=True)
-    print (week)
-    if Games.objects.filter(week=week, qtr__isnull=False).exists():
-       print ('true')
-       
-    else:
-       print ('false')
-       
+    
 
-    for game in Games.objects.filter(week=week).order_by('eid'):
-        print (game.eid)
-
+    for team in Teams.objects.all():
+       print (team.get_record())
 
     
 check()

@@ -47,9 +47,9 @@
 
    <table class='table table-sm game_tbl'>
      <thead>
-       <th>Game Day/Time</th>
-      <th>Favorite</th>
-      <th>Current Line</th>
+      <th>Game Time</th>
+      <th>Fav</th>
+      <th>Line</th>
       <th>Dog</th>
     </thead>
     <tbody id="game_tbl">
@@ -57,21 +57,22 @@
       <tr id='game{{forloop.counter}}'>
         <td>{{game.day}} {{game.time}}</td>
         {%if game.fav == game.home%}
-        <td id="fav{{forloop.counter}}" >{%if game.fav%} {{game.fav}} {%else%} {{game.home}}{%endif%}</td>
+        <td id="fav{{forloop.counter}}" >{%if game.fav%} {{game.fav}} <span class="record"> {{game.fav.get_record}} </span> {%else%} {{game.home}} <span class="record"> {{game.home.get_record}} </span>{%endif%}</td>
         {%else%}
-        <td id="fav{{forloop.counter}}" >{%if game.fav%} {{game.fav | lower}} {%else%} {{game.home}}{%endif%}</td>
+        <td id="fav{{forloop.counter}}" >{%if game.fav%} {{game.fav | lower}} <span class="record"> {{game.fav.get_record}} </span> {%else%} {{game.home}} <span class="record"> {{game.home.get_record}} </span> {%endif%}</td>
         {%endif%}
         <td class="spread"> {{game.spread}} </td>
         {%if game.dog == game.home%}
-        <td id="dog{{forloop.counter}}" >{%if game.dog%}{{game.dog}} {%else%} {{game.away}} {%endif%}</td>
+        <td id="dog{{forloop.counter}}" >{%if game.dog%}{{game.dog}} <span class="record"> {{game.dog.get_record}} </span> {%else%} {{game.away}} <span class="record"> {{game.away.get_record}} </span> {%endif%}</td>
         {%else%}
-        <td id="dog{{forloop.counter}}" >{%if game.dog%}{{game.dog | lower}} {%else%} {{game.away | lower}} {%endif%}</td>
+        <td id="dog{{forloop.counter}}" >{%if game.dog%}{{game.dog | lower}} <span class="record"> {{game.dog.get_record}} </span> {%else%} {{game.away | lower}} <span class="record"> {{game.away.get_record}} </span> {%endif%}</td>
         {%endif%}
       </tr>
 
       {%endfor%}
     </tbody>
    </table>
+   <br>
    <div class="footnote">
      <p>Lowest points win, losing picks get that number of points</p>
      <p>Pick straight up winners, spreads are for reference</p>

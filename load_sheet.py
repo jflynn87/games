@@ -29,10 +29,14 @@ def readSheet(file,numPlayers):
 
 
         app_week = Week.objects.get(current=True)
-        mike_score_week = Week.objects.get(week=app_week.week - 1)
+        if app_week.week == 1:
+            mike_score_week = app_week
+        else:
+            mike_score_week = Week.objects.get(week=app_week.week - 1)
+        
 
         if str(app_week.week) != week_str:
-            print ("sheet week doesn't match model", week_str)
+            print ("sheet week doesn't match model", week_str, app_week.week)
             exit()
         elif Picks.objects.filter(player__league__league="Football Fools", week=app_week):
             print ('deleting picks')
@@ -78,6 +82,7 @@ def readSheet(file,numPlayers):
             player = sheet[player_i]
             #print (player)
             #winner = 1
+            print ('player', player)
             user = User.objects.get(username=player)
             player = Player.objects.get(name=user)
             if sheet_scores:
@@ -140,4 +145,4 @@ def readSheet(file,numPlayers):
 
 
 
-readSheet('18-19 FOOTBALL FOOLS.xml', 25)
+readSheet('19-20 FOOTBALL FOOLS.xml', 26)
