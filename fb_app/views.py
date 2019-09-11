@@ -1,7 +1,7 @@
 from django.shortcuts import render, redirect
 from django.views.generic import ListView, TemplateView, View, DetailView, UpdateView
 import urllib.request
-from fb_app.models import Games, Week, Picks, Player, League, Teams, WeekScore, calc_scores
+from fb_app.models import Games, Week, Picks, Player, League, Teams, WeekScore, calc_scores, Season
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth import authenticate, login, logout
@@ -372,7 +372,6 @@ class ScoresView(TemplateView):
 
         print (datetime.datetime.now())
 
-
         scores_list = scores[0]
         ranks = scores[1]
         projected_scores = scores[2]
@@ -387,7 +386,8 @@ class ScoresView(TemplateView):
         'week': week,
         'pending': pick_pending,
         'games': Games.objects.filter(week=week).order_by('eid'),
-        'scores': scores_list,
+        #'scores': scores_list,
+        'scores': WeekScore.objects.filter(week=week, player__league=league).order_by('player__name_id'),
         'projected_ranks': projected_ranks,
         'projected_scores': projected_scores,
         'ranks': ranks,
@@ -454,8 +454,11 @@ class ScoresView(TemplateView):
         pick_pending = []
         pick_dict_by_num = {}
         pick_num = 16
+        old_seasons = []
+        for season in Season.objects.filter(current=False):
+            old_seasons.append(season.season) 
 
-        for player in Player.objects.filter(league=league).order_by('name'):
+        for pick in Picks.objects.filter(player__league=league, week__season_model__current=True).order_by('player__name'):
             if Picks.objects.filter(week=week, player=player):
                 player_list.append(player)
             else:
@@ -487,14 +490,14 @@ class SeasonTotals(ListView):
         winner_dict = {}
         winners_dict = {}
 
-        for player in Player.objects.filter(league=league):
+        for player in Player.objects.filter(league=league).order_by('name_id'):
             winners_dict[player.name] = 0
 
         #week by week scores and winner
         while week_cnt <= week.week:
             score_list = []
             score_week = Week.objects.get(season_model__current=True, week=week_cnt)
-            week_score = WeekScore.objects.filter(week=score_week, player__league__league=league).order_by('player__name')
+            week_score = WeekScore.objects.filter(week=score_week, player__league__league=league).order_by('player__name_id')
             if len(week_score) == len(Player.objects.filter(league__league=league)):
                 for score in week_score:
                     score_list.append(score.score)
@@ -515,16 +518,16 @@ class SeasonTotals(ListView):
 
         #total scores
         total_score_list = []
-        for player in Player.objects.filter(league=base_data[2]):
+        for player in Player.objects.filter(league=base_data[2]).order_by('name_id'):
             total_score = 0
-            for weeks in WeekScore.objects.filter(player=player, week__week__lte=week.week, week__season_model__current=True):
+            for weeks in WeekScore.objects.filter(player=player, week__week__lte=week.week, week__season_model__current=True).order_by('player_id'):
                 if weeks.score == None:
                     weeks.score = 0
                 total_score += weeks.score
             total_score_list.append(total_score)
 
         context.update({
-        'players': Player.objects.filter(league=league),
+        'players': Player.objects.filter(league=league).order_by('name_id'),
         'scores': score_dict,
         'totals': total_score_list,
         'wins': winners_dict,

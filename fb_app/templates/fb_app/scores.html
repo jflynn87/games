@@ -10,8 +10,8 @@
 
   <thead>
      <th>week {{week}}</th>
-    {%for player in players%}
-    <th>{{player}}</th>
+    {%for score in scores%}
+    <th>{{score.player}}</th>
       {%endfor%}
   </thead>
   <tbody>
@@ -24,14 +24,14 @@
       <tr>
         <td>score</td>
         {%for score in scores%}
-        <td class=>{{score}}</td>
+        <td class=>{{score.score}}</td>
         {%endfor%}
       </tr>
 
       <tr>
         <td>projected</td>
-        {%for score in projected_scores%}
-        <td>{{score}}</td>
+        {%for proj in projected_scores%}        
+        <td>{{proj}}</td>
         {%endfor%}
       </tr>
       <tr>

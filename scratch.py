@@ -4,7 +4,7 @@ os.environ.setdefault("DJANGO_SETTINGS_MODULE","gamesProj.settings")
 import django
 django.setup()
 #from golf_app.models import Tournament, TotalScore, ScoreDetails, Field, Picks, PickMethod
-from fb_app.models import Season, Week, Games, Teams
+from fb_app.models import Season, Week, Games, Teams, Picks, League, Player
 from django.contrib.auth.models import User
 from datetime import datetime, timedelta
 import sqlite3
@@ -29,10 +29,9 @@ from selenium import webdriver
 #
 
 def check():
-    
+    picks = Picks.objects.filter(week__season_model__current=True).values('player__name__username').annotate(count=Count('pick_num'))
+    for p in picks:
+        print (p)
 
-    for team in Teams.objects.all():
-       print (team.get_record())
-
-    
+   
 check()

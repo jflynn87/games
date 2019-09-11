@@ -227,6 +227,7 @@ class WeekScore(models.Model):
         return str(self.player)
 
 
+
 class MikeScore(models.Model):
     week = models.ForeignKey(Week, on_delete=models.CASCADE)
     player = models.ForeignKey(Player, on_delete=models.CASCADE)
@@ -319,7 +320,7 @@ def calc_scores(self, league, week, loser_list=None, proj_loser_list=None):
         for loser in picks:
             score = scores.get(loser.player)
             scores[loser.player]= score + loser.pick_num
-    print (scores)
+    print (scores)  
 
     if proj_loser_list != None:
         for team in proj_loser_list:
@@ -338,7 +339,7 @@ def calc_scores(self, league, week, loser_list=None, proj_loser_list=None):
                 proj_scores[loser.player]= proj_score + loser.pick_num
         print ('here', proj_scores)
 
-    for player in Player.objects.filter(league=league):
+    for player in Player.objects.filter(league=league).order_by('name_id'):
         score_obj, created = WeekScore.objects.get_or_create(player=player, week=week)
         score = scores.get(player)
         projected_score = proj_scores.get(player)
@@ -363,7 +364,7 @@ def calc_scores(self, league, week, loser_list=None, proj_loser_list=None):
     ranks = ss.rankdata(scores_list, method='min')
     projected_ranks = ss.rankdata(projected_scores_list, method='min')
     season_ranks = ss.rankdata(total_score_list, method='min')
-    print ('sending context')
+    print ('sending context', scores_list)
     print (datetime.datetime.now())
 
     return (scores_list, ranks, projected_scores_list, projected_ranks, total_score_list, season_ranks)

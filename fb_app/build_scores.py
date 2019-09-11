@@ -113,6 +113,7 @@ def build_scores_context(user, league, winner_list=None):
         projected_scores_list = []
         total_score_list = []
         for player in Player.objects.filter(league=league):
+            print ('player ne 2018')
             score_obj, created = WeekScore.objects.get_or_create(player=player, week=week)
             #score_obj = WeekScore.objects.get_or_create(player=player, week=week)
             score = 0
@@ -152,6 +153,7 @@ def build_scores_context(user, league, winner_list=None):
         season_ranks = ss.rankdata(total_score_list, method='min')
         print ('sending context')
         print (datetime.datetime.now())
+        print ('scores', scores_list)
 
         context.update({
         'players': player_list,
@@ -167,4 +169,4 @@ def build_scores_context(user, league, winner_list=None):
         'season_ranks': season_ranks,
         })
         #print (context)
-        return context
+        return context  
