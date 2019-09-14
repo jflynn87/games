@@ -148,6 +148,7 @@ class Games(models.Model):
 
 class League(models.Model):
     league = models.CharField(max_length=30)
+    ties_lose = models.BooleanField(default=True)
 
     def __str__(self):
         return self.league
@@ -155,6 +156,7 @@ class League(models.Model):
 class Player(models.Model):
     league = models.ForeignKey(League, on_delete=models.CASCADE)
     name = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    active = models.BooleanField(default=True)
 
 
     def __str__(self):
@@ -186,10 +188,9 @@ class Picks(models.Model):
                 return True
             elif self.team == game.winner:
                 return False
-            elif game.tie:
+            elif game.tie and self.player.league.ties_lose:
                 return True
-            else:
-                print ('something wrong in is_loser')
+            else:  #ties win
                 return False
         except ObjectDoesNotExist:
             return False
@@ -309,11 +310,11 @@ def calc_scores(self, league, week, loser_list=None, proj_loser_list=None):
     proj_score = 0
 
     #for player in player_list:
-    for player in Player.objects.filter(league=league):
+    for player in Player.objects.filter(league=league, active=True):
         scores[player]=score
         proj_scores[player] = proj_score
     for game in Games.objects.filter(week=week, final=True):
-        if game.tie:
+        if game.tie and league.ties_lose:
             picks = Picks.objects.filter(Q(team=game.home) | Q(team=game.away), week=week, player__league=league)
         else:
             picks = Picks.objects.filter(team=game.loser, player__league=league, week=week)
@@ -325,7 +326,7 @@ def calc_scores(self, league, week, loser_list=None, proj_loser_list=None):
     if proj_loser_list != None:
         for team in proj_loser_list:
             team_obj = Teams.objects.get(nfl_abbr=team)
-            picks = Picks.objects.filter(team=team_obj, player__league=league, week=week)
+            picks = Picks.objects.filter(team=team_obj, player__league=league, player__active=True, week=week)
             for loser in picks:
                 print (loser.pick_num, loser.team, loser.player)
                 proj_score = proj_scores.get(loser.player)
@@ -333,13 +334,13 @@ def calc_scores(self, league, week, loser_list=None, proj_loser_list=None):
         print ('there', proj_scores)
     else:
         for game in Games.objects.filter(week=week, final=False):
-            picks = Picks.objects.filter(team=game.loser, player__league=league, week=week)
+            picks = Picks.objects.filter(team=game.loser, player__league=league, player__active=True, week=week)
             for loser in picks:
                 proj_score = proj_scores.get(loser.player)
                 proj_scores[loser.player]= proj_score + loser.pick_num
         print ('here', proj_scores)
 
-    for player in Player.objects.filter(league=league).order_by('name_id'):
+    for player in Player.objects.filter(league=league, active=True).order_by('name_id'):
         score_obj, created = WeekScore.objects.get_or_create(player=player, week=week)
         score = scores.get(player)
         projected_score = proj_scores.get(player)

@@ -30,7 +30,7 @@ def validate(pick_list):
      #   picks_valid=False
       #  error = "Duplicate Picks"
     #else:
-    print (games_dict)
+    #print (games_dict)
     for count in games_dict.values():
         if count[2] > 1:
             picks_valid = False

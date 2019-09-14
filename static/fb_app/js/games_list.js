@@ -16,14 +16,13 @@ function get_game_id(team_name) {
   games = document.getElementById('game_tbl')
 
   for (var j = 1; j <= games.rows.length; j++){
-      game_list[$.trim(document.getElementById('fav'+j).innerHTML).toUpperCase()] =
+      game_list[$.trim(document.getElementById('fav'+j).innerHTML).split(" ")[0].toUpperCase()] =
         'game'+j
-      game_list[$.trim(document.getElementById('dog'+j).innerHTML).toUpperCase()] =
+      game_list[$.trim(document.getElementById('dog'+j).innerHTML).split(" ")[0].toUpperCase()] =
         'game'+j
 
         }
-
-
+  
   return game_list[team_name]
 };
 
@@ -43,7 +42,7 @@ function get_game_id(team_name) {
        pick_list.push(document.getElementById('pick' + (17-p)).children[0].value)
 
     }
-
+    
     for (var k=0; k < pick_list.length; k++) {
 
       if (pick_list[k] != '') {

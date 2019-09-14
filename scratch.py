@@ -29,9 +29,39 @@ from selenium import webdriver
 #
 
 def check():
-    picks = Picks.objects.filter(week__season_model__current=True).values('player__name__username').annotate(count=Count('pick_num'))
-    for p in picks:
-        print (p)
+
+    week = Week.objects.get(current=True)
+
+    old_c = 0
+    new_c = 0
+    for player in Player.objects.filter(league__league="Football Fools"):
+        if player.name.username[-4:] == '2018':
+            if Picks.objects.filter(player=player, week__season_model__current=True).exists():
+                print ('deleting picks', player)
+                Picks.objects.filter(player=player, week__season_model__current=True).delete()
+            player.active=False
+            player.save()
+            old_c += 1
+        else:
+            print ('current', player.name)
+            new_c += 1
+    print (old_c, new_c)
+
+    #picks = Picks.objects.filter(week=week).values('player__name__username').annotate(count=Count('pick_num'))
+    #for p in picks:
+    #    print (p)
+
+def picks():
+    league = League.objects.get(league="Football Fools")
+    for pick in Picks.objects.filter(player__league=league, week__week=2, week__season_model__current=True):
+        #pick.delete()
+        print (pick.week, pick.player)
 
    
+def weeks():
+    for week in Week.objects.all():
+        print (week.season, week, week.pk)
+
 check()
+#picks()
+#weeks()

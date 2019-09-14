@@ -32,7 +32,7 @@ def readSheet(file,numPlayers):
         if app_week.week == 1:
             mike_score_week = app_week
         else:
-            mike_score_week = Week.objects.get(week=app_week.week - 1)
+            mike_score_week = Week.objects.get(season_model__current=True, week=app_week.week - 1)
         
 
         if str(app_week.week) != week_str:

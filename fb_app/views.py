@@ -291,10 +291,13 @@ class ScoresView(TemplateView):
             week = Week.objects.get(current=True)
             if request.user.is_anonymous and \
             Picks.objects.filter(week__pk=week.pk, player__league__league="Football Fools").count() == 0:
+                print ('debug 1')
                 last_week = Week.objects.get(pk=(week.pk-1))
                 self.kwargs['pk'] = str(last_week.pk)
             else:
+                print ('debug 2')
                 self.kwargs['pk']= str(week.pk)
+        
         return super(ScoresView, self).dispatch(request, *args, **kwargs)
 
 
@@ -379,15 +382,15 @@ class ScoresView(TemplateView):
         total_score_list = scores[4]
         season_ranks = scores[5]
 
-
+    
         context.update({
         'players': player_list,
         'picks': pick_dict,
         'week': week,
         'pending': pick_pending,
         'games': Games.objects.filter(week=week).order_by('eid'),
-        #'scores': scores_list,
-        'scores': WeekScore.objects.filter(week=week, player__league=league).order_by('player__name_id'),
+        'scores': scores_list,
+        #'scores': WeekScore.objects.filter(week=week, player__league=league).order_by('player__name_id'),
         'projected_ranks': projected_ranks,
         'projected_scores': projected_scores,
         'ranks': ranks,
@@ -395,8 +398,8 @@ class ScoresView(TemplateView):
         'season_ranks': season_ranks,
         })
 
-        print ('context built')
         print (datetime.datetime.now())
+        
 
 
         #print (context)
@@ -454,24 +457,23 @@ class ScoresView(TemplateView):
         pick_pending = []
         pick_dict_by_num = {}
         pick_num = 16
-        old_seasons = []
-        for season in Season.objects.filter(current=False):
-            old_seasons.append(season.season) 
 
-        for pick in Picks.objects.filter(player__league=league, week__season_model__current=True).order_by('player__name'):
+        for player in Player.objects.filter(league=league, active=True).order_by('name_id'):
             if Picks.objects.filter(week=week, player=player):
                 player_list.append(player)
             else:
                 pick_pending.append(player)
 
+
         while pick_num > 0:
-            if Picks.objects.filter(week=week, pick_num=pick_num, player__league=league):
-               for picks in Picks.objects.filter(week=week, pick_num=pick_num, player__league=league).order_by('player__name'):
-                   pick_list_by_num.append(picks)    #was picks.team
+            if Picks.objects.filter(week=week, pick_num=pick_num, player__league=league, player__active=True):
+               for picks in Picks.objects.filter(week=week, pick_num=pick_num, player__league=league, player__active=True).order_by('player__name_id'):
+                    pick_list_by_num.append(picks)    #was picks.team
                pick_dict_by_num[pick_num]=pick_list_by_num
                pick_list_by_num = []
-            pick_num -= 1
+               pick_num -= 1
 
+        print ('pic dic', pick_dict_by_num)
         return (player_list, pick_pending, pick_dict_by_num)
 
 

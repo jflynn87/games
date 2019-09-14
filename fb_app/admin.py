@@ -6,7 +6,7 @@ from fb_app.models import Week, Games, Picks, Player, League, Teams, MikeScore, 
 
 class PicksAdmin(admin.ModelAdmin):
     list_display = ['week', 'player', 'pick_num', 'team']
-    list_filter = ['week', 'player']
+    list_filter = ['week__season_model', 'week', 'player']
 
 class GamesAdmin(admin.ModelAdmin):
     list_display = ['week', 'home', 'away']
