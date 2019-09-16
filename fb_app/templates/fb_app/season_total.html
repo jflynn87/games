@@ -5,6 +5,8 @@
 {{form.media.css}}
 {%block body_block%}
 
+<script src="{% static "fb_app/js/ranks.js"%}" type="text/javascript" ></script>
+
 <div class="row">
   <div class="column">
 <h4>Weekly Results</h4>
@@ -24,6 +26,17 @@
       <td>${{total}}</td>
     {%endfor%}
     </tr>
+    <tr>
+      <th>Totals</th>
+      {%for total in totals%}
+      <td>{{total}}</td>
+      {%endfor%}
+    </tr>
+    <tr> <th>Season Ranks </th>
+        {%for rank in ranks%}
+        <td class="ranks">{{rank}}</td>
+        {%endfor%}
+    </tr>
     {%for week, scores in scores.items%}
     <tr>
       <td> <a href="{%url 'fb_app:scores_list' pk=week.pk %}">{{week}}</td>
@@ -32,12 +45,6 @@
       {%endfor%}
     </tr>
     {%endfor%}
-    <tr>
-      <td>Totals</td>
-      {%for total in totals%}
-      <td>{{total}}</td>
-      {%endfor%}
-    </tr>
   </tbody>
 </table>
 </div>

@@ -19,6 +19,7 @@ urlpatterns = [
     url(r'^picks_list/$',views.PicksListView.as_view(),name='picks_list'),
     url(r'^season_total/$',views.SeasonTotals.as_view(),name='season_total'),
     url(r'^about/$', views.AboutView.as_view(),name='about'),
+    url(r'^all_time/$', views.AllTime.as_view(),name='all_time'),
 
 
     ]

@@ -492,15 +492,15 @@ class SeasonTotals(ListView):
         winner_dict = {}
         winners_dict = {}
 
-        for player in Player.objects.filter(league=league).order_by('name_id'):
+        for player in Player.objects.filter(league=league, active=True).order_by('name_id'):
             winners_dict[player.name] = 0
 
         #week by week scores and winner
         while week_cnt <= week.week:
             score_list = []
             score_week = Week.objects.get(season_model__current=True, week=week_cnt)
-            week_score = WeekScore.objects.filter(week=score_week, player__league__league=league).order_by('player__name_id')
-            if len(week_score) == len(Player.objects.filter(league__league=league)):
+            week_score = WeekScore.objects.filter(week=score_week, player__league__league=league, player__active=True).order_by('player__name_id')
+            if len(week_score) == len(Player.objects.filter(league__league=league, active=True)):
                 for score in week_score:
                     score_list.append(score.score)
                 if not score_week.current:
@@ -520,7 +520,7 @@ class SeasonTotals(ListView):
 
         #total scores
         total_score_list = []
-        for player in Player.objects.filter(league=base_data[2]).order_by('name_id'):
+        for player in Player.objects.filter(league=base_data[2], active=True).order_by('name_id'):
             total_score = 0
             for weeks in WeekScore.objects.filter(player=player, week__week__lte=week.week, week__season_model__current=True).order_by('player_id'):
                 if weeks.score == None:
@@ -528,11 +528,14 @@ class SeasonTotals(ListView):
                 total_score += weeks.score
             total_score_list.append(total_score)
 
+        season_ranks = ss.rankdata(total_score_list, method='min') 
+
         context.update({
-        'players': Player.objects.filter(league=league).order_by('name_id'),
+        'players': Player.objects.filter(league=league, active=True).order_by('name_id'),
         'scores': score_dict,
         'totals': total_score_list,
         'wins': winners_dict,
+        'ranks': season_ranks,
         })
 
         return context
@@ -619,3 +622,7 @@ def user_login(request):
             return HttpResponse("invalid login details supplied")
     else:
         return render(request, 'fb_app/login.html', {})
+
+
+class AllTime(TemplateView):
+    template_name="fb_app/all_time.html"

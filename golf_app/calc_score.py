@@ -50,6 +50,7 @@ def calc_score(t_args, request=None):
         pick_dict_loop_start = datetime.datetime.now()
 
         if not tournament.complete:
+            print ('check', len(ranks))
             base_bonus = 50
             try:
                 if ranks['cut_status'][0] == "Projected":
@@ -73,7 +74,8 @@ def calc_score(t_args, request=None):
                       PickMethod.objects.filter(user=s.get('user'), tournament=tournament, method='3').exists():
                         print ('creating bons detail cut')
                         bd, created = BonusDetails.objects.get_or_create(user__pk=s.get('user'), tournament=tournament)
-                        bd.cut_bonus = base_bonus
+                        #bd.cut_bonus = base_bonus
+                        bd.cut_bonus = len(ranks) - getCutNum()
                         bd.save()
                     # if bad data leads to incorrect bonus detail, this should clean up automatically
                     if BonusDetails.objects.filter(user__pk=s.get('user'), tournament=tournament, cut_bonus__gt=0).exists() \
@@ -99,6 +101,8 @@ def calc_score(t_args, request=None):
                         group = ScoreDetails.objects.get(pick__playerName__tournament=tournament, user=user, score=1)
                         group_number = (group.pick.playerName.group.number)
                         winner_bonus = base_bonus + (2 * group_number)
+                if tournament.major:
+                    winner_bonus += 100
 
                 bd, created = BonusDetails.objects.get_or_create(user=user, tournament=tournament)
                 bd.winner_bonus = winner_bonus

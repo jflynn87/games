@@ -3,7 +3,7 @@ os.environ.setdefault("DJANGO_SETTINGS_MODULE","gamesProj.settings")
 
 import django
 django.setup()
-#from golf_app.models import Tournament, TotalScore, ScoreDetails, Field, Picks, PickMethod
+from golf_app.models import Tournament, TotalScore, ScoreDetails, Field, Picks, PickMethod
 from fb_app.models import Season, Week, Games, Teams, Picks, League, Player
 from django.contrib.auth.models import User
 from datetime import datetime, timedelta
@@ -62,6 +62,14 @@ def weeks():
     for week in Week.objects.all():
         print (week.season, week, week.pk)
 
-check()
+def count():
+
+    for t in Tournament.objects.filter(season__season='2019'):
+        if t.name[:10] == "World Golf":
+            print (t)
+    
+
+#check()
 #picks()
 #weeks()
+count()

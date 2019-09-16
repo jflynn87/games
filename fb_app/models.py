@@ -249,13 +249,15 @@ def calc_scores(self, league, week, loser_list=None, proj_loser_list=None):
         print ('MODELS games exist')
         json_url = 'http://www.nfl.com/liveupdate/scores/scores.json'
 
-        with urllib.request.urlopen(json_url) as field_json_url:
-            data = json.loads(field_json_url.read().decode())
+        try:
+            with urllib.request.urlopen(json_url) as field_json_url:
+                data = json.loads(field_json_url.read().decode())
             #print (data)
-
-        #use for testing
-        #with open ('c:/users/john/pythonProjects/games/gamesProj/fb_app/nfl_scores.json') as f:
-        #    data = json.load(f)
+        except Exception as e:
+            #use for testing
+            print ('score file using local', e)
+            with open ('c:/users/john/pythonProjects/games/gamesProj/fb_app/nfl_scores.json') as f:
+               data = json.load(f)
 
         try:
                 for score in Games.objects.filter(week=week).exclude(final=True):

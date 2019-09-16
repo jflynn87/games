@@ -454,3 +454,6 @@ def setup(request):
 
 class AboutView(TemplateView):
     template_name='golf_app/about.html'
+
+class AllTime(TemplateView):
+    template_name='golf_app/all_time.html'

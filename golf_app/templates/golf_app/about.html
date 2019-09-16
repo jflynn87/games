@@ -3,10 +3,10 @@
 <h1>Game Rules and Logic</h1>
 
 <h3>Finances</h3>
-<p>$300 per player.  There are 6 of us, so $1800 total pot.  Weekly winner will get $30 and the app will keep a running point total for the season.  Low score for the full season (last tourney is the Tour Championship as part of the Fed Ex) wins the remaining $480.  Any ties result in a split of the pot for the week/year.</p>
-<p>Updated finances:  Mark joined on 3/21 (Valspar Championship).  He will pay $180 as 40% of the season is complete.  The weekly payout remains at $30 and for the season it will be $800 (assuming we figure out what to do for the Match Play).  If Mark doesn't win from the Valspar to the end of season totals, the winner of the full
-season from the original 6 players wins the $800.  If Mark wins, he will win $480 and the low score for the full season from the original 6 wins $320.</p>
-
+<p>$300 per player.  There are 9 of us, so $2700 total pot.</p> 
+<p>Normal event weekly prize is $30.  For majors, WGC and The Players the prize is $50.</p> 
+<p>The remaining money will be split with 70% going to the winner and 30% for second place.  That should be $915 for winner and $405 for second, assuming there are 39 tournaments.</p>
+<p>Note - there is a $30 web hosting fee deducted from the winners prize (John's crappy programming is free) </p>
 <h3>Weekly Field:</h3>
 <p>Thru the year there are different field sizes, with most tournaments have 156 player.  Groups are created by OWGR for the player.  The group logic works like this</p>
 <ul>
@@ -16,24 +16,26 @@ season from the original 6 players wins the $800.  If Mark wins, he will win $48
 
 <h3>Pick Deadline</h3>
 <p>The deadline is 23:59 the day prior to the tournament start date in Pacific Time.  This works for all US tournament,  for others let’s make sure we get picks in early and I will manually open it up the scoring page once they are all in (this is an issue the next few weeks when tournaments are in Asia as well as for the Open Championship).</p>
+<p>If you miss the pick deadline, you will get random picks and not be eligible for bonus points for winner or cut.</p>
+<p>If you win a major, WGC, or The Players you will get a -100 bonus for that tounament.</p>
 
 <h3>Scoring</h3>
 <ul>
   <li>Add up the ranks of each selected golfer</li>
-  <li>Any cut golfer gets a rank of the number of players making the cut +1 (in round 1 this is hard coded to 71, in round 2 it is based on the projected cut line so will change as that changes).</li>
-  <li>Note - If more than 78 players make the cut in a standard tournament, there is a second cut on Sat that resets the field to top 70 and ties.  Friday cuts will get a score of the Friday cut number +1.  Sat cuts will get the actual rank in the tournament.  For example, if 80 golfers make the cut on Friday all cut golfers get 81.  If 70 make it after Sat, the 10 golfers who are cut get their actual rank.</li>
+  <li>Any cut golfer gets a rank of the number of players making the cut +1 (in round 1 this is hard coded to 66, in round 2 it is based on the projected cut line so will change as that changes).</li>
+  <li>Note - If a tournament has an mdf, there is a second cut on Sat that resets the field to top 70 and ties.  Friday cuts will get a score of the Friday cut number +1.  Sat cuts will get the actual rank in the tournament.  For example, if 80 golfers make the cut on Friday all cut golfers get 81.  If 70 make it after Sat, the 10 golfers who are cut get their actual rank.</li>
 
 </ul>
 
 <h3>Bonus Points</h3>
 <ul>
-  <li>If none of your picks are cut you will get -50 from your score  (this is updated, it was 10 in the majors but since we never had it a bigger bonus seems justified).</li>
-  <li>If you pick the tournament winner you will get a bonus of –(50 + (group x2).  So if somehow your group 15 pick wins the tournament you will get -80.</li>
+  <li>If none of your picks are cut you will a bonus of the number of golfers in the original field - the golfers making the cut.  In s regular event that is 156 - 65 = 91</li>
+  <li>If you pick the tournament winner you will get a bonus of –(50 + (group x2)).  So if somehow your group 15 pick wins the tournament you will get -80.</li>
 </ul>
 
 <h3>Withdrawals</h3>
 <ul>
   <li>If a pick withdraws after the start of play, that counts as a cut.</li>
-  <li>WD’s before a tournament starts are hard to find.  The app shows it, but not until after all picks are all made and the PGA starts making their score file available (which is close to the tournament start).  My proposal is that we try first to look out for each other when we check the picks each week and let each other know if we see a WD on the score page.  If a replacement is nominated before 10am local time of the tournament we take that pick.  If it is after, the pick will be the golfer ranked at the middle of the group (and if there are multiple golfers, you can pick from them).</li>
+  <li>WD’s before a tournament starts wil be emailed at 12:00est on Wed before the tournament, please change any of those picks.  Also, if you notice any WD picks please line the group.  </li>
 </ul>
 {%endblock%}
