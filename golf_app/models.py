@@ -21,6 +21,7 @@ class Tournament(models.Model):
     current = models.BooleanField(default=False)
     complete = models.BooleanField(default=False)
     pga_tournament_num = models.CharField(max_length=10, null=True)
+    major = models.BooleanField(default=False)
 
     #def get_queryset(self):
     #    return self.objects.filter().first()
