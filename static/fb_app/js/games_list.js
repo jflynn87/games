@@ -74,3 +74,24 @@ function validate() {
 }
 
 };
+
+$('#week4').on('change', function () {
+  console.log('week change')
+  $.ajax({
+    type: "GET",
+    url: "/golf_app/ajax/ajax_get_games/",
+    dataType: 'json',
+    //context: document.body
+    success: function (json) {
+      var i;
+      for (i = 0; i < json.length; ++i) {
+          $('#' + json[i]).attr('checked', 'checked');
+        }
+    },
+    failure: function(json) {
+      console.log('fail');
+      console.log(json);
+    }
+  })
+
+})

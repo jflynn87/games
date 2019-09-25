@@ -20,6 +20,8 @@ urlpatterns = [
     url(r'^season_total/$',views.SeasonTotals.as_view(),name='season_total'),
     url(r'^about/$', views.AboutView.as_view(),name='about'),
     url(r'^all_time/$', views.AllTime.as_view(),name='all_time'),
+    url(r'^ajax_get_games/$', views.ajax_get_games,name='ajax_get_games'),
+
 
 
     ]

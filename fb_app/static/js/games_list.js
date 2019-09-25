@@ -74,4 +74,4 @@ function validate() {
         $('#pick_form').attr('onsubmit','return false');
 }
 
-};
+

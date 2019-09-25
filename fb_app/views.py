@@ -154,15 +154,19 @@ class GameListView(LoginRequiredMixin,ListView):
 
 
         if Picks.objects.filter(week=week, player=player).count() > 0:
+            print ('if')
             context.update({
             'week': Week.objects.get(current=True),
+            #'week': Week.objects.filter(season_model__current=True, week__gte=week.week),
             'games_list': games,
             'form': form,
             'teams': team_dict
             })
         else:
+            print ('else')
             context.update({
             'week': Week.objects.get(current=True),
+            #'week': Week.objects.filter(season_model__current=True, week__gte=week.week),
             'games_list': games,
             'form': form,
             'teams': team_dict
@@ -314,11 +318,14 @@ class ScoresView(TemplateView):
         player = base_data[1]
         league = base_data[2]
 
+        print ('before pick data')
         pick_data = self.get_picks(player, league, week)
 
         player_list = pick_data[0]
         pick_pending = pick_data[1]
         pick_dict = pick_data[2]
+
+        print (pick_data)
 
         if len(pick_pending) > 0 and week.started():
             sorted_spreads = sorted(week.get_spreads().items(), key=lambda x: x[1][2],reverse=True)
@@ -465,7 +472,8 @@ class ScoresView(TemplateView):
                 pick_pending.append(player)
 
 
-        while pick_num > 0:
+        #while pick_num > 0:
+        while pick_num > 16- week.game_cnt:
             if Picks.objects.filter(week=week, pick_num=pick_num, player__league=league, player__active=True):
                for picks in Picks.objects.filter(week=week, pick_num=pick_num, player__league=league, player__active=True).order_by('player__name_id'):
                     pick_list_by_num.append(picks)    #was picks.team
@@ -626,3 +634,14 @@ def user_login(request):
 
 class AllTime(TemplateView):
     template_name="fb_app/all_time.html"
+
+def ajax_get_games(request, week):
+    print ('in getting gamesS')
+    if request.is_ajax():
+        print (request)
+        games = Games.objects.filter(week__week='3')
+        data = json.dumps(games)
+        return HttpResponse(data, content_type="application/json")
+    else:
+        print ('not ajax')
+        raise Http404

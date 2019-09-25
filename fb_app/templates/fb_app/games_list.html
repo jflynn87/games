@@ -28,11 +28,15 @@
   </div>
 {%endif%}
 
+
 <h3 style="background-color:lightblue">Week:  {{week.week}}  {%if week.started and not late_picks%} Week started - no changes {%endif%}</h3>
+
 
 <div id='favs'>
   <form method="POST" name='favs'>
     {%csrf_token%}
+    
+    </h2>
     <input type="text" name="favs" value="favs" hidden>
   <input type="submit" class="btn btn-primary" value='Pick Favorites'></button> Picks largest spread to lowest
 </form>
