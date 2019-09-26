@@ -52,11 +52,28 @@ def check():
     #    print (p)
 
 def picks():
-    league = League.objects.get(league="Football Fools")
-    for pick in Picks.objects.filter(player__league=league, week__week=2, week__season_model__current=True):
-        #pick.delete()
-        print (pick.week, pick.player)
+    week = Week.objects.get(current=True)
+    player = Player.objects.get(name=User.objects.get(username="JoeLong"))
 
+    print(week, player)
+    Picks.objects.filter(week=week, player=player).delete()
+    print(Picks.objects.filter(week=week, player=player))
+
+    pick_num = 16
+    pick_list = ['LAC', 'LA', 'BAL', 'NE', 'IND', 'KC', 'SEA', 'GB', 'ATL', 'HOU', 'PIT', 'DAL', 'MIN', 'JAC', 'WAS']
+
+    for p in pick_list:
+        pick = Picks()
+        pick.week = week
+        pick.player = player
+        pick.pick_num = pick_num
+        pick.team = Teams.objects.get(nfl_abbr = p)
+        pick.save()
+        pick_num -= 1
+
+    print (Picks.objects.filter(week=week, player=player))
+
+    
    
 def weeks():
     for week in Week.objects.all():
@@ -70,6 +87,6 @@ def count():
     
 
 #check()
-#picks()
+picks()
 #weeks()
-count()
+#count()
