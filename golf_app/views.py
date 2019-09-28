@@ -199,23 +199,26 @@ class ScoreListView(DetailView):
         no_thru_display = ['cut', 'mdf', 'not started']
 
         #try:
+        t = Tournament.objects.filter(season__current=True).earliest('pk')
+        print (t)
+        c=  len(Picks.objects.filter(playerName__tournament=t).values('user').annotate(unum=Count('user')))
+        print (c)    
+
         tournament = Tournament.objects.get(pk=self.kwargs.get('pk'))
         start_time = datetime.datetime.now()
         if datetime.date.today() >= tournament.start_date:
                 if tournament.pga_tournament_num != '470': #special logic for match play
                     expected_picks = Group.objects.filter(tournament=tournament).aggregate(Max('number'))
-                    #fix hard coded 7 to use a league object with player count
-                    #random_picks.append(random.choice(Field.objects.filter(tournament=tournament, group=g, withdrawn=False)))
-                    print ('expected', expected_picks, expected_picks['number__max'] * 7)
-                    print ('actual', Picks.objects.filter(playerName__tournament=tournament).count() - expected_picks['number__max'] * 7)
+                    print ('expected', expected_picks, expected_picks['number__max'] * c)
+                    print ('actual', Picks.objects.filter(playerName__tournament=tournament).count() - expected_picks['number__max'] * c)
                     if Picks.objects.filter(playerName__tournament=tournament).count() \
-                       == (expected_picks.get('number__max') * 7):
+                       == (expected_picks.get('number__max') * c):
                         print ('equal')
                     elif (expected_picks.get('number__max') - Picks.objects.filter(playerName__tournament=tournament).count()) \
                        % expected_picks.get('number__max') == 0:
                         print ('missing full picks')
                         #using first tournament, should update to use league
-                        for user in TotalScore.objects.filter(tournament__pk=4).values('user__username'):
+                        for user in TotalScore.objects.filter(tournament=t).values('user__username'):
                             if not Picks.objects.filter(playerName__tournament=tournament, \
                              user=User.objects.get(username=user.get('user__username'))).exists():
                                 print (user.get('user__username'), 'no picks so submit random')
@@ -288,7 +291,6 @@ def create_picks(tournament, user):
         random_picks = random.choice(Field.objects.filter(tournament=tournament, group=group, withdrawn=False))
         pick.playerName = Field.objects.get(playerName=random_picks.playerName, tournament=tournament)
         pick.user = user
-        #pick.auto = True
         pick.save()
 
     pm = PickMethod()
