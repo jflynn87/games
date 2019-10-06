@@ -4,6 +4,7 @@ os.environ.setdefault("DJANGO_SETTINGS_MODULE","gamesProj.settings")
 import django
 django.setup()
 from fb_app.models import Games, Week, Teams, Season
+from django.db.models import Count
 import urllib3
 from bs4 import BeautifulSoup
 import urllib.request
@@ -14,9 +15,9 @@ from datetime import datetime
 def load_sched(year):
 
     #changing weeks to load preseason weeks (make week 0 and cnt 1)
-    week_cnt = 4
+    week_cnt = 6
     season = Season.objects.get(season=year)
-    while week_cnt < 6:
+    while week_cnt < 12:
         #html = urllib.request.urlopen("http://www.nfl.com/ajax/scorestrip?season=2019&seasonType=PRE&week=4")
         html = urllib.request.urlopen("http://www.nfl.com/ajax/scorestrip?season=" + str(year) + "&seasonType=REG&week=" + str(week_cnt))
         soup = BeautifulSoup(html, 'html.parser')
@@ -66,3 +67,6 @@ if __name__ == '__main__':
     #clean_db()
     load_sched(2019)
     print ("Populating Complete!")
+    curr_week = Week.objects.get(current=True)
+    print (Games.objects.filter(week__season_model__current=True, week__week__gt=curr_week.week).values('week__week').annotate(Count('week')))
+
