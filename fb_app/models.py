@@ -74,7 +74,10 @@ class Week(models.Model):
                             break
                         else:
                             spread = str(spread) + str(char)
-                spread_dict[game.eid]=(game.fav, game.dog, float(spread))
+                try:
+                    spread_dict[game.eid]=(game.fav, game.dog, float(spread))
+                except Exception:
+                    spread_dict[game.eid]=(game.fav, game.dog, 0)
 
         return spread_dict
 

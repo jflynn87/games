@@ -3,8 +3,8 @@ os.environ.setdefault("DJANGO_SETTINGS_MODULE","gamesProj.settings")
 
 import django
 django.setup()
-#from golf_app.models import Tournament, TotalScore, ScoreDetails, Field, Picks, PickMethod
-from fb_app.models import Season, Week, Games, Teams, Picks, League, Player, calc_scores, MikeScore, WeekScore
+from golf_app.models import Tournament, TotalScore, ScoreDetails, Field, Picks, PickMethod
+#from fb_app.models import Season, Week, Games, Teams, Picks, League, Player, calc_scores, MikeScore, WeekScore
 from django.contrib.auth.models import User
 from datetime import datetime, timedelta
 import sqlite3
@@ -88,7 +88,7 @@ def recalc(league):
                 #j_score = WeekScore.objects.get(week=w, player=player)
                 j_score = WeekScore.objects.filter(Q(player=player) & (Q(week__season_model__current=True) & Q(week__week__lte=w.week))).aggregate(Sum('score'))
                 if m_score.total != j_score.get('score__sum'):
-                    print (player, w, m_score.total, j_score.get('score__sum'))
+                    print (player, w, 'mike', m_score.total, 'john', j_score.get('score__sum'))
                 w = Week.objects.get(season_model__current=True, week=w.week+1)
 
     print (len(good_list))
@@ -99,5 +99,7 @@ def recalc(league):
 #check()
 #picks()
 #weeks()
-count()
+#count()
 #recalc('Football Fools')
+t = Tournament.objects.get(current=True)
+print (t.started())

@@ -69,19 +69,6 @@ def get_spreads():
         except Exception as e:
              print ('spread look up error', e)
 
-          #fix this so that is on;y updates on the active week.  now it is updating
-          # new spreads on last weeks game before week is over
-          #if Games.objects.filter(week=week, home__in=[fav_obj, dog_obj], away__in=[fav_obj, dog_obj]).exists():
-          #    print ('found game', fav_obj, dog_obj)
-          #else:
-          #    print ('not found', fav_obj, dog_obj)
-
-          #try:
-          #  Games.objects.get(week=week, home=fav_obj)
-          #   Games.objects.filter(week=week, home=fav_obj).update(fav=fav_obj, dog=dog_obj, spread=spread)
-
-          #except ObjectDoesNotExist:
-          #   Games.objects.filter(week=week,away=fav_obj).update(fav=fav_obj, dog=dog_obj, spread=spread)
 
     return
 
@@ -471,15 +458,14 @@ class ScoresView(TemplateView):
             else:
                 pick_pending.append(player)
 
-
-        #while pick_num > 0:
-        while pick_num > 16- week.game_cnt:
-            if Picks.objects.filter(week=week, pick_num=pick_num, player__league=league, player__active=True):
-               for picks in Picks.objects.filter(week=week, pick_num=pick_num, player__league=league, player__active=True).order_by('player__name_id'):
-                    pick_list_by_num.append(picks)    #was picks.team
-               pick_dict_by_num[pick_num]=pick_list_by_num
-               pick_list_by_num = []
-               pick_num -= 1
+        if len(player_list) > 0:
+            while pick_num > 16- week.game_cnt:
+                if Picks.objects.filter(week=week, pick_num=pick_num, player__league=league, player__active=True):
+                    for picks in Picks.objects.filter(week=week, pick_num=pick_num, player__league=league, player__active=True).order_by('player__name_id'):
+                         pick_list_by_num.append(picks)    #was picks.team
+                    pick_dict_by_num[pick_num]=pick_list_by_num
+                    pick_list_by_num = []
+                    pick_num -= 1
 
         print ('pic dic', pick_dict_by_num)
         return (player_list, pick_pending, pick_dict_by_num)

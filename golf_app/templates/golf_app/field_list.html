@@ -14,13 +14,18 @@
     <div class="jumbotron">
         <h1>Hi, {{user.get_username}}!</h1>
         <h2>Welcome to the {{tournament.name}}  </h2>
+
+        {%if not tournament.started or tournament.late_picks%}
         <h2>Please make 1 pick for each group below</h2>
         <form name="random" method="post">
           {%csrf_token%}
           <input type="text" name="random" value="random" hidden>
           <h5>or click for random picks  <input type="submit" class="btn btn-primary" value="Random"> </h5>
         </form>
+        {%else%}
+        <h2>Tournament Started - too late to make picks</h2>
 
+        {%endif%}
 
         {% if error_message %}
           <div class="alert alert-danger">
@@ -72,7 +77,9 @@
           {%endfor%}
 
   <input type="hidden" name="userid" value="{{user.id}}">
-  <input type="submit" class="btn btn-primary" value="Submit">
+  {%if not tournament.started or tournament.late_picks%}
+    <input type="submit" class="btn btn-primary" value="Submit">
+  {%endif%}
 </div>
 </form>
 

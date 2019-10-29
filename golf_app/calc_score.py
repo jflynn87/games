@@ -4,8 +4,9 @@ from golf_app.models import Field, Tournament, Picks, Group, TotalScore, \
 from django.contrib.auth.models import User
 from django.shortcuts import render, get_object_or_404, redirect
 from django.core.exceptions import ObjectDoesNotExist
-from django.db.models import Count, Sum, Q
+from django.db.models import Count, Sum, Q, Min
 import datetime
+import scipy.stats as ss
 
 def calc_score(t_args, request=None):
         '''takes in a request, caclulates and returns the score to the web site.
@@ -96,13 +97,18 @@ def calc_score(t_args, request=None):
 #                if PickMethod.objects.filter(user__id=score.get('user'), tournament=tournament, method='3').exists():
 #                    print ('exists', score, PickMethod.objects.filter(user__id=score.get('user'), tournament=tournament, method='3'))
 
+                # just try to get the top rank person for testing, belongs in the if below once it works
+                #ranks = ss.rankdata(total_score_list, method='min')
+                #print (type(total_scores), total_scores)
+                #print ('ranks', total_scores(Min('score__sum')))
+
                 if ranks.get('finished') and ScoreDetails.objects.filter(pick__playerName__tournament=tournament, user=user, score=1) \
                   and not PickMethod.objects.filter(user__id=score.get('user'), tournament=tournament, method='3').exists():
                         group = ScoreDetails.objects.get(pick__playerName__tournament=tournament, user=user, score=1)
                         group_number = (group.pick.playerName.group.number)
                         winner_bonus = base_bonus + (2 * group_number)
-                if tournament.major:
-                    winner_bonus += 100
+                        if tournament.major:
+                             winner_bonus += 100
 
                 bd, created = BonusDetails.objects.get_or_create(user=user, tournament=tournament)
                 bd.winner_bonus = winner_bonus

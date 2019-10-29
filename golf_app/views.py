@@ -32,7 +32,7 @@ class FieldListView(LoginRequiredMixin,ListView):
     def get_context_data(self,**kwargs):
         context = super(FieldListView, self).get_context_data(**kwargs)
         tournament = Tournament.objects.get(current=True)
-
+        print (tournament.started())
         #check for withdrawls and create msg if there is any
         try:
             score_file = calc_score.getRanks({'pk': tournament.pk})
@@ -198,15 +198,16 @@ class ScoreListView(DetailView):
 
         no_thru_display = ['cut', 'mdf', 'not started']
 
-        #try:
+        #assume everyone picked for the first tounament, use that to get the count of players
         t = Tournament.objects.filter(season__current=True).earliest('pk')
-        print (t)
         c=  len(Picks.objects.filter(playerName__tournament=t).values('user').annotate(unum=Count('user')))
-        print (c)    
+        
 
         tournament = Tournament.objects.get(pk=self.kwargs.get('pk'))
         start_time = datetime.datetime.now()
-        if datetime.date.today() >= tournament.start_date:
+        
+        #if datetime.date.today() >= tournament.start_date:
+        if tournament.started():
                 if tournament.pga_tournament_num != '470': #special logic for match play
                     expected_picks = Group.objects.filter(tournament=tournament).aggregate(Max('number'))
                     print ('expected', expected_picks, expected_picks['number__max'] * c)
@@ -223,17 +224,14 @@ class ScoreListView(DetailView):
                              user=User.objects.get(username=user.get('user__username'))).exists():
                                 print (user.get('user__username'), 'no picks so submit random')
                                 create_picks(tournament, User.objects.get(username=user.get('user__username')))
-
-
                     else:
                         print ('missing individual picks')
+                    
                     scores = calc_score.calc_score(self.kwargs, request)
                     calc_finish = datetime.datetime.now()
                     print ('calc time', calc_finish - start_time)
                     summary_data = optimal_picks.optimal_picks(tournament, scores[5])
                     print ('summary time', datetime.datetime.now() - calc_finish)
-                    #print('sum', summary_data)
-                    #print ('exec time: ', start_time, end_time, end_time-start_time, self.request.user)
                     end_time= datetime.datetime.now()
                     print ('exec time: ', end_time-start_time, self.request.user)
 
@@ -256,7 +254,6 @@ class ScoreListView(DetailView):
                     picks = Picks.objects.filter(playerName__tournament=tournament)
                     scores = mpScores.objects.filter(player__tournament=tournament)
                     score_details = ScoreDetails.objects.filter(pick__playerName__tournament=tournament).order_by('user')
-                    #score = ScoreDetails.objects.filter(pick__playerName__tournament=tournament).values('user__username').annotate(score=Sum('score')).order_by('score')
                     return render(request, 'golf_app/mp_picks.html', {
                                                             'picks': picks,
                                                             'scores': scores,
@@ -279,9 +276,7 @@ class ScoreListView(DetailView):
                                                                 'lookup_errors': scores[4],
                                                                 'thru_list': no_thru_display
                                                                 })
-        #except Exception as e:
-        #    print ('score error msg:', e)
-        #    return HttpResponse("Error, please come back closer to the tournament start or Line John to tell him something is broken.")
+
 @transaction.atomic
 def create_picks(tournament, user):
     '''takes tournament and user objects and generates random picks.  check for duplication with general pick submit class'''

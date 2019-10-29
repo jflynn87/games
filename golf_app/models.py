@@ -3,6 +3,7 @@ from django.contrib.auth.models import User
 from django.conf import settings
 
 
+
 # Create your models here.
 
 class Season(models.Model):
@@ -22,6 +23,7 @@ class Tournament(models.Model):
     complete = models.BooleanField(default=False)
     pga_tournament_num = models.CharField(max_length=10, null=True)
     major = models.BooleanField(default=False)
+    late_picks = models.BooleanField(default=False)
 
     #def get_queryset(self):
     #    return self.objects.filter().first()
@@ -29,6 +31,21 @@ class Tournament(models.Model):
     def __str__(self):
         return self.name
 
+    def started(self):
+        from golf_app import calc_score
+        args = {}
+        args['pk']=self.pk
+        try:
+            calc_score.calc_score(args)
+        except Exception as e:
+            print ('started logic exception', e)
+            return False
+        for pick in Picks.objects.filter(playerName__tournament=self):
+            sd = ScoreDetails.objects.get(pick=pick)
+            if sd.thru not in ["not started", None]:
+                return True 
+        return False
+        
 
 class Group(models.Model):
     tournament= models.ForeignKey(Tournament, on_delete=models.CASCADE)
