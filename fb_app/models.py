@@ -62,22 +62,23 @@ class Week(models.Model):
                 s = float(game.spread[1:])
                 spread_dict[game.eid]=(game.fav, game.dog, float(game.spread[1:]))
             except Exception:
-                spread = 0
-                #if game.spread == 'pk':
-                #    spread = 0
-                if game.spread != 'pk':    
+                try:
+                    spread = 0
+                    #if game.spread == 'pk':
+                    #    spread = 0
+                    #if game.spread != 'pk':    
                     for char in game.spread[1:]:
                         if char in ['-', '+']:
-                            break
+                           break
                         elif char == '½':
-                            spread = float(spread) + .5
-                            break
+                           spread = float(spread) + .5
+                           break
                         else:
-                            spread = str(spread) + str(char)
-                try:
+                           spread = str(spread) + str(char)
                     spread_dict[game.eid]=(game.fav, game.dog, float(spread))
                 except Exception:
-                    spread_dict[game.eid]=(game.fav, game.dog, 0)
+                    print (game, game.fav, game.dog)
+                    spread_dict[game.eid]=(game.home, game.away, 0)
 
         return spread_dict
 
