@@ -11,19 +11,19 @@ import sqlite3
 from django.db.models import Min, Q, Count, Sum, Max
 from django.db.models.functions import ExtractWeek, ExtractYear
 import time
-from requests import get
-from random import randint
+#from requests import get
+#from random import randint
 import sys
 # pip install PyQt5 and PyQtWebEngine
-from PyQt5.QtWidgets import QApplication, QWidget
-from PyQt5.QtCore import QUrl
+#from PyQt5.QtWidgets import QApplication, QWidget
+#from PyQt5.QtCore import QUrl
 #from PyQt5.QtWebEngineWidgets import QWebPage
 #from PyQt5.QtWebEngine import QtWebEngine as QWebPage
 
-from PyQt5.QtWebEngineWidgets import QWebEngineView
-from bs4 import BeautifulSoup
-from urllib.request import Request, urlopen
-from selenium import webdriver
+#from PyQt5.QtWebEngineWidgets import QWebEngineView
+#from bs4 import BeautifulSoup
+#from urllib.request import Request, urlopen
+#from selenium import webdriver
 #
 
 #
@@ -102,4 +102,5 @@ def recalc(league):
 #count()
 #recalc('Football Fools')
 t = Tournament.objects.get(current=True)
-print (t.started())
+print (t.winner())
+print (t.winner().values('user'))

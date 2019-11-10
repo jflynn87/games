@@ -1,6 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import User
 from django.conf import settings
+from django.db.models import Min, Q, Count, Sum, Max
 
 
 
@@ -46,6 +47,24 @@ class Tournament(models.Model):
                 return True 
         return False
         
+    def winning_picks(self, user):
+        winning_score= TotalScore.objects.filter(tournament=self).aggregate(Min('score'))
+        
+        if TotalScore.objects.filter(tournament=self, user=user, score=winning_score.get('score__min')).exists():
+            print ('true', TotalScore.objects.filter(tournament=self, user=user, score=winning_score.get('score__min')))
+            return True
+        else:
+            return False
+
+    def num_of_winners(self):
+        winning_score = TotalScore.objects.filter(tournament=self).aggregate(Min('score'))
+        return TotalScore.objects.filter(tournament=self, score=winning_score.get('score__min')).count()
+    
+    def winner(self):
+        winning_score = TotalScore.objects.filter(tournament=self).aggregate(Min('score'))
+        return TotalScore.objects.filter(tournament=self, score=winning_score.get('score__min'))
+
+
 
 class Group(models.Model):
     tournament= models.ForeignKey(Tournament, on_delete=models.CASCADE)
@@ -155,6 +174,7 @@ class BonusDetails(models.Model):
     tournament = models.ForeignKey(Tournament, on_delete=models.CASCADE, null=True)
     winner_bonus = models.IntegerField(default=0)
     cut_bonus = models.IntegerField(default=0)
+    major_bonus = models.IntegerField(default=0)
 
     def __str__(self):
         return str(self.user)

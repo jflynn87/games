@@ -3,11 +3,18 @@
 {%load mathfilters%}
 {%load static%}
 
-{%block body_block%} {%endblock%}
+{%block body_block%} 
 
-{%block summary_block%}
+{%if not week.started%}
+<h2>Week {{week}}: come back when the games begin.</h2>
+<br>
+<h4>Picks Submitted: {%for player in players%} {{player}} {%endfor%}</h4>
+{%if pending%}<h4>Picks Pending from: {%for player in pending%} {{player}}  {%endfor%} {%endif%}</h4>
+{%endif%}
+
+{%if week.started%}>
+
 <table class="table table-striped">
-
   <thead>
      <th>week {{week}}</th>
     {%for player in players%}
@@ -27,7 +34,6 @@
         <td class=>{{score}}</td>
         {%endfor%}
       </tr>
-
       <tr>
         <td>projected</td>
         {%for proj in projected_scores%}        
@@ -40,14 +46,11 @@
         <td class=ranks>{{rank}}</td>
         {%endfor%}
       </tr>
-{%endblock%}
-{%block pick_block%}
 
       {%for pick_num, picks in picks.items%}
       <tr>
         <td>{{pick_num}}</td>
         {%for pick in picks%}
-
         {% if pick.is_loser%}
         <td class="loser">{{pick.team}}</td>
         {%else%}
@@ -56,10 +59,7 @@
         {%endfor%}
       </tr>
       {%endfor%}
-{%endblock%}
 
-
-{%block totals_block%}
       <tr>
         <td>season total</td>
       {%for score in totals%}
@@ -78,17 +78,12 @@
         <th>{{player}}</th>
           {%endfor%}
       </tr>
-
   </tbody>
 </table>
-{%if pending%}
-<p>Picks Pending from: {%for player in pending%} {{player}}  {%endfor%} {%endif%}</p>
 <div class="row">
 <div class="column">
-{%endblock%}
-{%block games_block%}
 
-<h4>NFL Scoreboard</h4>
+  <h4>NFL Scoreboard</h4>
 <table class="table table-sm">
   <thead>
   <th>Home</th>
@@ -108,7 +103,6 @@
     </tr>
     {%endfor%}
   </tbody>
-
 </table>
 </div>
 <div class="column">
@@ -128,7 +122,6 @@
         <input name='tie' type="hidden" value={{game.away.nfl_abbr}}>
         <td hidden>{{game.home.nfl_abbr}}</td>
         <td hidden>{{game.away.nfl_abbr}}</td>
-
         {%elif game.qtr in "Final, final overtime" %}
         <input name="winners" type="hidden" value={{game.winner.nfl_abbr}}>
         <td>{{game.winner.nfl_abbr}}</td>
@@ -145,7 +138,6 @@
       {%if week.current%}
       <button type="submit" class="btn btn-primary">Update Scores</button>
       {%endif%}
-
 </div>
   </form>
 </div>
@@ -156,4 +148,8 @@
   integrity="sha256-2Kok7MbOyxpgUVvAk/HJ2jigOSYS2auK4Pfzbm7uH60="
   crossorigin="anonymous"></script> -->
   <script src="{% static "fb_app/js/ranks.js"%}" type="text/javascript" ></script>
+
+
+{%endif%}
 {%endblock%}
+

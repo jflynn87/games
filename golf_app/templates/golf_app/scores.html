@@ -120,6 +120,13 @@
           <td>-{{pick.cut_bonus}}</td>
         </tr>
       {%endif%}
+      {%if pick.major_bonus != 0%}
+        <tr style="color:red">
+          <td>Major Bonus</td>
+          <td>-{{pick.major_bonus}}</td>
+        </tr>
+      {%endif%}
+
         {%endif%}
       {%endfor%}
   </table>

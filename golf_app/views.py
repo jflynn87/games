@@ -319,6 +319,9 @@ class SeasonTotalView(ListView):
             #added second half for Mark
             second_half_scores[User.objects.get(pk=user_key)]=0
 
+        for user in TotalScore.objects.values('user').distinct().order_by('user_id'):
+            winner_dict[(User.objects.get(pk=user.get('user')))]=0
+
         for tournament in Tournament.objects.filter(season__current=True).order_by('-start_date'):
             score_list = []
             #second_half_score_list = []  #added for Mark
@@ -333,43 +336,55 @@ class SeasonTotalView(ListView):
                     second_half_scores[score.user] = second_half_score + score.score
 
             if tournament.complete:
-                winner = TotalScore.objects.filter(tournament=tournament).order_by('score').values('score')
-                winning_score = winner[0].get('score')
-                #winning_score = winner[0].score
-                num_of_winners = winner.filter(score=winning_score, tournament=tournament).count()
-                win_user_list = []
-                if num_of_winners == 1:
-                    winner_data = ([TotalScore.objects.get(tournament=tournament, score=winning_score)], num_of_winners)
-                    win_user_list.append(User.objects.get(pk=winner_data[0][0].user.pk))
-                    score_list.append(User.objects.get(pk=winner_data[0][0].user.pk))
-                    winner_data = (win_user_list, num_of_winners)
-                    winner_list.append(winner_data)
-                elif num_of_winners > 1:
-                    winner_data = ([TotalScore.objects.filter(tournament=tournament, score=winning_score)], num_of_winners)
-                    #win_user_list = []
-                    for user in winner_data[0]:
-                        print ('this', user)
-                        for name in user:
-                        #score_list.append(User.objects.get(pk=name.user.pk))
-                            win_user_list.append(User.objects.get(pk=name.user.pk))
-                            winner_data = (win_user_list, num_of_winners)
-                            score_list.append(User.objects.get(pk=name.user.pk))
-                        winner_list.append(winner_data)
+                print ('add new logic')
+                
+                for winner in tournament.winner():
+                    score_list.append(winner.user)
+                    
+                    if tournament.major:
+                        winner_dict[winner.user] = winner_dict.get(winner.user) + 50/tournament.num_of_winners()
+                    else:
+                        winner_dict[winner.user] = winner_dict.get(winner.user) + 30/tournament.num_of_winners()
 
-                else:
-                     print ('something wrong with winner lookup', 'num of winners: ', len(winner))
+                # winner = TotalScore.objects.filter(tournament=tournament).order_by('score').values('score')
+                # winning_score = winner[0].get('score')
+                # #winning_score = winner[0].score
+                # num_of_winners = winner.filter(score=winning_score, tournament=tournament).count()
+                # win_user_list = []
+                # if num_of_winners == 1:
+                #     winner_data = ([TotalScore.objects.get(tournament=tournament, score=winning_score)], num_of_winners)
+                #     win_user_list.append(User.objects.get(pk=winner_data[0][0].user.pk))
+                #     score_list.append(User.objects.get(pk=winner_data[0][0].user.pk))
+                #     winner_data = (win_user_list, num_of_winners)
+                #     winner_list.append(winner_data)
+                # elif num_of_winners > 1:
+                #     winner_data = ([TotalScore.objects.filter(tournament=tournament, score=winning_score)], num_of_winners)
+                #     #win_user_list = []
+                #     for user in winner_data[0]:
+                #         print ('this', user)
+                #         for name in user:
+                #         #score_list.append(User.objects.get(pk=name.user.pk))
+                #             win_user_list.append(User.objects.get(pk=name.user.pk))
+                #             winner_data = (win_user_list, num_of_winners)
+                #             score_list.append(User.objects.get(pk=name.user.pk))
+                #         winner_list.append(winner_data)
+
+                # else:
+                #      print ('something wrong with winner lookup', 'num of winners: ', len(winner))
 
             display_dict[tournament] = score_list
 
-        #for user in TotalScore.objects.values('user').distinct().order_by('user_id'):
-        #    winner_dict[(User.objects.get(pk=user.get('user')))]=0
+        
 
-
-        for winner in winner_list:
-            for data in winner[0]:
-                prize = winner_dict.get(data)
-                prize = prize + (30/winner[1])
-                winner_dict[data] = prize
+        #print (winner_list)
+        # for winner in winner_list:
+        #     for data in winner[0]:
+        #         prize = winner_dict.get(data)
+        #         if tournament.major:
+        #             prize = prize + (50/winner[1])
+        #         else:
+        #             prize = prize + (30/winner[1])
+        #         winner_dict[data] = prize
 
         total_score_list = []
         total_second_half_score_list = []

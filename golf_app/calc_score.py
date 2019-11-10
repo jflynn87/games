@@ -107,17 +107,21 @@ def calc_score(t_args, request=None):
                         group = ScoreDetails.objects.get(pick__playerName__tournament=tournament, user=user, score=1)
                         group_number = (group.pick.playerName.group.number)
                         winner_bonus = base_bonus + (2 * group_number)
-                        if tournament.major:
-                             winner_bonus += 100
 
                 bd, created = BonusDetails.objects.get_or_create(user=user, tournament=tournament)
                 bd.winner_bonus = winner_bonus
+
+                if ranks.get('finished') and tournament.major and tournament.winning_picks(User.objects.get(id=score.get('user'))):
+                    print (user, 'major winner')
+                    bd.major_bonus = 100
                 if created:
                     bd.cut_bonus = 0
+                    bd.major_bonus = 0
+
                 bd.save()
 
                 ts, created = TotalScore.objects.get_or_create(tournament=tournament, user=user)
-                ts.score = score.get('score__sum') - (bd.winner_bonus + bd.cut_bonus)
+                ts.score = score.get('score__sum') - (bd.winner_bonus + bd.cut_bonus + bd.major_bonus)
                 ts.cut_count = score.get('cuts')
                 ts.save()
         display_scores = TotalScore.objects.filter(tournament=tournament).order_by('score')

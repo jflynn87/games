@@ -21,7 +21,7 @@ class PicksAdmin(admin.ModelAdmin):
 
 
 class BonusDetailsAdmin(admin.ModelAdmin):
-    list_display = ['tournament', 'user', 'winner_bonus', 'cut_bonus']
+    list_display = ['tournament', 'user', 'winner_bonus', 'cut_bonus', 'major_bonus']
     list_filter = ['tournament', 'user']
 
 class ScoreDetailsAdmin(admin.ModelAdmin):
