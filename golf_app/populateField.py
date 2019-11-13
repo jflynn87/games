@@ -26,16 +26,16 @@ def get_pga_worldrank():
 
     #from bs4 import BeautifulSoup
     #import urllib.request
-
+    print ('start pga.com worldrank lookup')
     html = urllib.request.urlopen("https://www.pgatour.com/stats/stat.186.html")
     #html = request.get("https://www.pgatour.com/stats/stat.186.html")
     soup = BeautifulSoup(html, 'html.parser')
 
 
-    rankslist = (soup.find("div", {'class': 'details section'}))
+    #rankslist = (soup.find("div", {'class': 'details section'}))
+    rankslist = (soup.find("table", {'id': 'statsTable'}))
 
     ranks = {}
-
     for row in rankslist.find_all('tr')[1:]:
         try:
             player = (row.find('td', {'class': 'player-name'}).text).strip('\n')
@@ -44,6 +44,7 @@ def get_pga_worldrank():
         except Exception as e:
             print('exception 2', e)
 
+    print ('end pga.com worldrank lookup')
     return ranks
 
 
@@ -54,18 +55,18 @@ def get_worldrank():
     #from bs4 import BeautifulSoup
     #import urllib.request
 
+    print ('start owgr.com lookp')
+
     html = urllib.request.urlopen("http://www.owgr.com/ranking?pageNo=1&pageSize=All&country=All")
     soup = BeautifulSoup(html, 'html.parser')
 
-
     rankslist = (soup.find("div", {'class': 'table_container'}))
-
     ranks = {}
-
 
     for row in rankslist.find_all('tr')[1:]:
         try:
             rank_data = row.find_all('td')
+            
             rank_list = []
             i = 0
             for data in rank_data:
@@ -81,6 +82,7 @@ def get_worldrank():
         except Exception as e:
             print('exeption 1',row,e)
 
+    print ('end owgr.com lookup')
     return ranks
 
 

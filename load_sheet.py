@@ -22,7 +22,7 @@ def readSheet(file,numPlayers):
         #test this for a single digit week....This gets the week from the start of the shhet
         week = []
 
-        for data in soup.findAll('t')[0:1]:
+        for data in soup.findAll('t')[1:2]:
             week.append(data.text)
         week_str = ''.join(week)
         print ('week: ' + week_str)

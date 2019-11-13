@@ -43,7 +43,7 @@ class Tournament(models.Model):
             return False
         for pick in Picks.objects.filter(playerName__tournament=self):
             sd = ScoreDetails.objects.get(pick=pick)
-            if sd.thru not in ["not started", None]:
+            if sd.thru not in ["not started", None, " ", ""]:
                 return True 
         return False
         

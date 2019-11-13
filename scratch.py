@@ -11,6 +11,7 @@ import sqlite3
 from django.db.models import Min, Q, Count, Sum, Max
 from django.db.models.functions import ExtractWeek, ExtractYear
 import time
+from golf_app import populateField
 #from requests import get
 #from random import randint
 import sys
@@ -101,6 +102,4 @@ def recalc(league):
 #weeks()
 #count()
 #recalc('Football Fools')
-t = Tournament.objects.get(current=True)
-print (t.winner())
-print (t.winner().values('user'))
+populateField.create_groups(457)
