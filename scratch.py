@@ -105,22 +105,6 @@ def recalc(league):
 #weeks()
 #count()
 #recalc('Football Fools')
-json_url = 'http://www.nfl.com/liveupdate/scores/scores.json'
-
-try:
-    with urllib.request.urlopen(json_url) as field_json_url:
-           data = json.loads(field_json_url.read().decode())
-
-           #print (data)
-except Exception as e:
-         #use for testing
-         print ('score file using local', e)
-  
-#print (data)
-for game_id, details in data.items():
-    #print (details)
-    if details['qtr'] not in [' ', None]:
-       print (game_id, details)
                #     home_score = data[score.eid]['home']['score']['T']
                 #    home_team = data[score.eid]['home']["abbr"]
                  #   away_team = data[score.eid]['away']["abbr"]
