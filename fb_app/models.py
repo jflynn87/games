@@ -51,8 +51,19 @@ class Week(models.Model):
             print ('true')
             return True
         else:
-            print ('false')
-            return False
+            json_url = 'http://www.nfl.com/liveupdate/scores/scores.json'
+            try:
+                with urllib.request.urlopen(json_url) as field_json_url:
+                    data = json.loads(field_json_url.read().decode())
+                for game_id, details in data.items():
+                    if details['qtr'] not in [' ', None]:
+                        return True
+
+            except Exception as e:
+                print ('cant open nfl json in started check', e)
+                return False
+
+        
 
     def get_spreads(self):
 

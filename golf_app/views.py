@@ -70,9 +70,9 @@ class FieldListView(LoginRequiredMixin,ListView):
 
         random_picks = []
         picks_list = []
-
-        if datetime.date.today() >= tournament.start_date:
-            print (tournament.start_date)
+        print ('started', tournament.started())
+        if not tournament.started() and tournament.late_picks is False:
+            print ('picks too late', user, datetime.datetime.now())
             print (timezone.now())
             return HttpResponse ("Sorry it is too late to submit picks.")
 
