@@ -3,8 +3,8 @@ os.environ.setdefault("DJANGO_SETTINGS_MODULE","gamesProj.settings")
 
 import django
 django.setup()
-from golf_app.models import Tournament, TotalScore, ScoreDetails, Field, Picks, PickMethod
-#from fb_app.models import Season, Week, Games, Teams, Picks, League, Player, calc_scores, MikeScore, WeekScore
+#from golf_app.models import Tournament, TotalScore, ScoreDetails, Field, Picks, PickMethod
+from fb_app.models import Season, Week, Games, Teams, Picks, League, Player, calc_scores, MikeScore, WeekScore
 from django.contrib.auth.models import User
 from datetime import datetime, timedelta
 import sqlite3
@@ -88,6 +88,7 @@ def recalc(league):
         else:
             w = Week.objects.get(season_model__current=True, week=1)
             while w.week < c_week.week:
+                print (w, player)
                 m_score = MikeScore.objects.get(week=w, player=player)
                 #j_score = WeekScore.objects.get(week=w, player=player)
                 j_score = WeekScore.objects.filter(Q(player=player) & (Q(week__season_model__current=True) & Q(week__week__lte=w.week))).aggregate(Sum('score'))
@@ -104,7 +105,20 @@ def recalc(league):
 #picks()
 #weeks()
 #count()
-#recalc('Football Fools')
+for week in Week.objects.filter(season_model__current=True):
+    mscore = MikeScore.objects.filter(week=week).values('player').order_by('player').annotate(count=Count('player'))
+    for item in mscore:
+        if item.get('count') > 1:
+            for dup in MikeScore.objects.filter(player__id=item.get('player'), week=week):
+                i = 1
+                print ('1', dup, item)
+                while i < item.get('count'):
+                  print ('2', dup)
+                  dup.delete()
+                  i += 1
+
+
+recalc('Football Fools')
                #     home_score = data[score.eid]['home']['score']['T']
                 #    home_team = data[score.eid]['home']["abbr"]
                  #   away_team = data[score.eid]['away']["abbr"]

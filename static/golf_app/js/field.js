@@ -1,4 +1,5 @@
 $(document).ready(function() {
+  $('#main').hide()
 
   $.ajax({
     type: "GET",
@@ -10,13 +11,15 @@ $(document).ready(function() {
       for (i = 0; i < json.length; ++i) {
           $('#' + json[i]).attr('checked', 'checked');
         }
+        $('#pulse').hide()
+        $('#main').show()
+
     },
     failure: function(json) {
       console.log('fail');
       console.log(json);
     }
   })
-
 })
 
 $(document).ready(function() {

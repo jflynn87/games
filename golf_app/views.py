@@ -189,6 +189,7 @@ class ScoreListView(DetailView):
     model=TotalScore
 
     def dispatch(self, request, *args, **kwargs):
+        print ('in SLV dispatch')
         if kwargs.get('pk') == None:
             tournament = Tournament.objects.get(current=True)
             self.kwargs['pk'] = str(tournament.pk)
@@ -469,3 +470,56 @@ class AboutView(TemplateView):
 
 class AllTime(TemplateView):
     template_name='golf_app/all_time.html'
+
+
+def get_scores(request):
+    if request.is_ajax():
+        print (request)
+        t = Tournament.objects.get(current=True)
+        t_key = {}
+        t_key['pk'] = t.pk
+        scores = calc_score.calc_score(t_key, request)
+        print ('ajax scores len', len(scores))
+        print('ajax scores 0', scores[0])
+        print('ajax scores 1', scores[1])
+        print('ajax scores 2', scores[2])
+        print('ajax scores 3', scores[3])
+        print('ajax scores 4', scores[4])
+        print('ajax scores 5', scores[5])
+        data_list = []
+        scores_list = []
+        leader_list = []
+        
+        for score in scores[0]:
+            scores_list.append((score.user.username, score.score, score.cut_count))
+        data_list.append(scores_list)
+        for leader, score in scores[2].items():
+            leader_list.append((leader, score))           
+        data_list.append(leader_list)
+        data_list.append(list(scores[3].items()))
+        # for score in ScoreDetails.objects.filter(pick__playerName__tournament=t)\
+        #       .order_by('user__username', 'pick__playerName__group'):
+        #     score_list.append((score.user.username, score.pick.playerName.playerName, score.score))
+        d = data_list
+        data = json.dumps(d)
+        #leader_json = json.dumps(leader_list)
+        print ('data', data)
+        return HttpResponse(data, content_type="application/json")
+    else:
+        print ('not ajax')
+        raise Http404
+
+def get_leader(request):
+    if request.is_ajax():
+        print (request)
+        t = Tournament.objects.get(current=True)
+        #  get leader from pga.com
+        d = 'tournament leader'
+        data = json.dumps(d)
+        #leader_json = json.dumps(leader_list)
+        print ('data', data)
+        return HttpResponse(data, content_type="application/json")
+    else:
+        print ('not ajax')
+        raise Http404
+

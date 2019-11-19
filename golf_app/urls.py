@@ -15,8 +15,11 @@ urlpatterns= [
     url(r'^setup/$',views.setup,name='setup'),
     url(r'^about/$',views.AboutView.as_view(),name='about'),
     url(r'^ajax/get_picks/$', views.get_picks, name='get_picks'),
+    url(r'^ajax/get_scores/$', views.get_scores, name='get_scores'),
+    url(r'^ajax/get_leader/$', views.get_leader, name='get_leader'),
     url(r'^all_time/$', views.AllTime.as_view(), name='all_time'),
 
+    
     #url(r'^make_picks/$',views.CreatePicksView.as_view(),name='make_picks'),  # for form
 
 

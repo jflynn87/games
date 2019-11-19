@@ -56,7 +56,11 @@ class Week(models.Model):
                 with urllib.request.urlopen(json_url) as field_json_url:
                     data = json.loads(field_json_url.read().decode())
                 for game_id, details in data.items():
-                    if details['qtr'] not in [' ', None]:
+                    print (self.week-1)
+                    if Games.objects.filter(week__week=self.week-1, eid=game_id).exists():
+                        print ('last weeks scores on nfl.com')
+                        return False
+                    elif details['qtr'] not in [' ', None]:
                         return True
 
             except Exception as e:

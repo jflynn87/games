@@ -33,18 +33,26 @@ class Tournament(models.Model):
         return self.name
 
     def started(self):
+
+        for pick in Picks.objects.filter(playerName__tournament=self):
+            sd = ScoreDetails.objects.get(pick=pick)
+            if sd.thru not in ["not started", None, " ", ""] or\
+               sd.score != 0:
+                print ('tournament started based on picks lookup')
+                return True 
+
         from golf_app import calc_score
         args = {}
         args['pk']=self.pk
         try:
-            calc_score.calc_score(args)
+            scores = calc_score.calc_score(args)
+            if scores[5].get('round') > 1:
+                print ('******* round above 1')
+                return True
         except Exception as e:
             print ('started logic exception', e)
             return False
-        for pick in Picks.objects.filter(playerName__tournament=self):
-            sd = ScoreDetails.objects.get(pick=pick)
-            if sd.thru not in ["not started", None, " ", ""]:
-                return True 
+        print ('here')
         return False
         
     def winning_picks(self, user):

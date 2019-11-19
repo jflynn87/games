@@ -9,9 +9,17 @@
 
 <script type="text/javascript" src="{%static 'golf_app/js/field.js'%}"></script>
 
+<link rel="stylesheet" href={%static "golf_app/css/load.css"%}></link>
+<div class='load'>
+<label class="pulse" id='pulse'>
+    <progress class="pulse-progress"></progress>
+    しばらくお待ちください。
+</label>
+
+
 {% regroup field_list by group as ordered_field_list %}
 
-    <div class="jumbotron">
+    <div class="jumbotron" id='main'>
         <h1>Hi, {{user.get_username}}!</h1>
         <h2>Welcome to the {{tournament.name}}  </h2>
 
