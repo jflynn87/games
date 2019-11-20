@@ -272,10 +272,12 @@ def create_groups(tournament_number):
     html = urllib.request.urlopen("https://www.pgatour.com/players.html")
     soup = BeautifulSoup(html, 'html.parser')
 
-    players =  (soup.find("div", {'class': 'directory-select'}).find_all('option'))
+
+    players =  (soup.find("div", {'class': 'directory-item'}).find_all('option'))
     golfer_dict = {}
 
     for p in players:
+        print (p)
         link = ''
         p_text = str(p)[47:]
         for char in p_text:
@@ -285,6 +287,7 @@ def create_groups(tournament_number):
                 link = link + char
             golfer_dict[link[:5]]=link
 
+    print ("before for")
     for k, v in sorted(group_dict.items(), key=lambda x: x[1][0]):
         print (k, v)
         if player_cnt < groups.playerCnt:
