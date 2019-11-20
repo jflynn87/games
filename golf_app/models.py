@@ -36,8 +36,8 @@ class Tournament(models.Model):
 
         for pick in Picks.objects.filter(playerName__tournament=self):
             sd = ScoreDetails.objects.get(pick=pick)
-            if sd.thru not in ["not started", None, " ", ""] or\
-               sd.score != 0:
+            print (sd, sd.score, type(sd.score))
+            if sd.thru not in ["not started", None, " ", ""] or sd.score != 0:
                 print ('tournament started based on picks lookup')
                 return True 
 
