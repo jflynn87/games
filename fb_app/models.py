@@ -62,6 +62,7 @@ class Week(models.Model):
                         return False
                     elif details['qtr'] not in [' ', None]:
                         return True
+                return False
 
             except Exception as e:
                 print ('cant open nfl json in started check', e)

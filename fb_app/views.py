@@ -25,6 +25,80 @@ from collections import OrderedDict
 
 # Create your views here.
 
+def ajax_get_spreads(request):
+    import urllib3.request
+    from bs4 import BeautifulSoup
+
+    if request.is_ajax():
+        html = urllib.request.urlopen("https://nypost.com/odds/")
+        soup = BeautifulSoup(html, 'html.parser')
+
+        nfl_sect = (soup.find("div", {'class':'odds__table-outer--1'}))
+    
+        games_dict = []
+        
+        for row in nfl_sect.find_all('tr')[1:]:
+        
+            try:
+                col = row.find_all('td')
+                teams = col[0].text.split()
+                line = col[5].text.split()
+
+                if line[0][0] == '-':
+                    fav = teams[0]
+                    dog = teams[1]
+                    spread = line[0]
+                    #print ('o/a', line[1])
+                else:
+                    fav = teams[1]
+                    dog = teams[0]
+                    spread = line [1]
+                    #print ('o/a', line[0])
+
+                fav_obj = Teams.objects.get(long_name__iexact=fav)
+                dog_obj = Teams.objects.get(long_name__iexact=dog)
+                week = Week.objects.get(current=True)
+                print (week)
+                if Games.objects.filter(Q(week=week) & Q(home=fav_obj) & Q(away=dog_obj)).exists():
+                    game = Games.objects.get(Q(week=week) & Q(home=fav_obj) & Q(away=dog_obj))
+                    game.fav=fav_obj
+                    game.dog=dog_obj
+                    game.spread=spread
+                    game.save()
+                    #eid = game.eid
+                    #game.update(fav=fav_obj, dog=dog_obj, spread=spread)
+                    #print (game, eid)
+                    #games_dict[game.eid] = (str(game.fav), spread)
+                    games_dict.append((game.eid, game.fav.nfl_abbr, str(game.fav.get_record()), game.dog.nfl_abbr.lower(), str(game.dog.get_record()), spread))
+
+                elif Games.objects.filter(Q(week=week) & Q(home=dog_obj) & Q(away=fav_obj)).exists():
+                    game = Games.objects.get(Q(week=week) & Q(home=dog_obj) & Q(away=fav_obj))
+                    game.fav=fav_obj
+                    game.dog=dog_obj
+                    game.spread=spread
+                    game.save()
+
+                    #eid = game.eid
+                    #game.update(fav=fav_obj, dog=dog_obj, spread=spread)
+                    #print (game, eid)
+                    #games_dict[game.eid] = (str(game_fav), spread)
+                    games_dict.append((game.eid, game.fav.nfl_abbr.lower(), str(fav_obj.get_record()), game.dog.nfl_abbr, str(dog_obj.get_record()), spread))
+                else:
+                    print ('game not found')
+                
+                
+            except Exception as e:
+                print ('spread look up error', e, game)
+        print (games_dict)
+        data = json.dumps(games_dict)
+        return HttpResponse(data, content_type="application/json")
+    else:
+        print ('not ajax')
+        raise Http404
+
+
+
+
 def get_spreads():
     import urllib3.request
     from bs4 import BeautifulSoup
@@ -126,7 +200,8 @@ class GameListView(LoginRequiredMixin,ListView):
         NoPickFormSet = modelformset_factory(Picks, form=CreatePicksForm, extra=(week.game_cnt))
 
         try:
-            get_spreads()
+            print ('skipping preads')
+            #get_spreads()
         except Exception:
             print ('no spreads available')
         games=Games.objects.filter(week=week).order_by("eid")

@@ -30,7 +30,14 @@
 
 
 <h3 style="background-color:lightblue">Week:  {{week.week}}  {%if week.started and not late_picks%} Week started - no changes {%endif%}</h3>
+<p class='status' id='status'>updating spreads.....</p>
+<div class="updated-status">
+  <p>Lowest points win, losing picks get that number of points</p>
+  <p>Pick straight up winners, spreads are for reference</p>
+  <p>Ties are a loss</p>
+  <p>Home team in CAPS</p>
 
+</div>
 {%if not week.started or week.late_picks%}
 <div id='favs'>
   <form method="POST" name='favs'>
@@ -48,7 +55,7 @@
 
 <div class="games">
 
-   <table class='table table-sm game_tbl'>
+   <table class='table table-md game_tbl'>
      <thead>
       <th>Game Time</th>
       <th>Fav</th>
@@ -57,14 +64,14 @@
     </thead>
     <tbody id="game_tbl">
       {%for game in games_list%}
-      <tr id='game{{forloop.counter}}'>
+      <tr id='game{{forloop.counter}}' name="{{game.eid}}">
         <td>{{game.day}} {{game.time}}</td>
         {%if game.fav == game.home%}
-        <td id="fav{{forloop.counter}}" >{%if game.fav%} {{game.fav}} <span class="record"> {{game.fav.get_record}} </span> {%else%} {{game.home}} <span class="record"> {{game.home.get_record}} </span>{%endif%}</td>
+        <td id="fav{{forloop.counter}}">{%if game.fav%} {{game.fav}} <span class="record"> {{game.fav.get_record}} </span> {%else%} {{game.home}} <span class="record"> {{game.home.get_record}} </span>{%endif%}</td>
         {%else%}
         <td id="fav{{forloop.counter}}" >{%if game.fav%} {{game.fav | lower}} <span class="record"> {{game.fav.get_record}} </span> {%else%} {{game.home}} <span class="record"> {{game.home.get_record}} </span> {%endif%}</td>
         {%endif%}
-        <td class="spread"> {{game.spread}} </td>
+        <td class="spread" id="spread{{forloop.counter}}"> {{game.spread}} </td>
         {%if game.dog == game.home%}
         <td id="dog{{forloop.counter}}" >{%if game.dog%}{{game.dog}} <span class="record"> {{game.dog.get_record}} </span> {%else%} {{game.away}} <span class="record"> {{game.away.get_record}} </span> {%endif%}</td>
         {%else%}
@@ -75,20 +82,21 @@
       {%endfor%}
     </tbody>
    </table>
-   
-   <div class="footnote">
+   <br>
+   <br>
+   <!-- <div class="footnote">
      <p>Lowest points win, losing picks get that number of points</p>
      <p>Pick straight up winners, spreads are for reference</p>
      <p>Ties are a loss</p>
      <p>Home team in CAPS</p>
 
-   </div>
+   </div> -->
 </div>
 </div>
 
 <div class="column">
 
-  <div class="table table-sm">
+  <div class="table table-md">
 
     <table>
     <thead>

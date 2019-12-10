@@ -21,6 +21,7 @@ urlpatterns = [
     url(r'^about/$', views.AboutView.as_view(),name='about'),
     url(r'^all_time/$', views.AllTime.as_view(),name='all_time'),
     url(r'^ajax_get_games/$', views.ajax_get_games,name='ajax_get_games'),
+    url(r'^ajax_get_spreads/$', views.ajax_get_spreads,name='ajax_get_spreads'),
 
 
 

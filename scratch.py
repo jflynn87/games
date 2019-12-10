@@ -3,8 +3,8 @@ os.environ.setdefault("DJANGO_SETTINGS_MODULE","gamesProj.settings")
 
 import django
 django.setup()
-#from golf_app.models import Tournament, TotalScore, ScoreDetails, Field, Picks, PickMethod
-from fb_app.models import Season, Week, Games, Teams, Picks, League, Player, calc_scores, MikeScore, WeekScore
+from golf_app.models import Tournament, TotalScore, ScoreDetails, Field, Picks, PickMethod
+# #from fb_app.models import Season, Week, Games, Teams, Picks, League, Player, calc_scores, MikeScore, WeekScore
 from django.contrib.auth.models import User
 from datetime import datetime, timedelta
 import sqlite3
@@ -78,6 +78,7 @@ def recalc(league):
     bad_list = []
     
     for player in Player.objects.filter(league=l, active=True):
+        print (player)
         user=User.objects.get(username=player.name)
         l_week = Week.objects.get(week=c_week.week-1, season_model__current=True)
         ms = MikeScore.objects.get(player__name=user, week=l_week)
@@ -105,23 +106,39 @@ def recalc(league):
 #picks()
 #weeks()
 #count()
-for week in Week.objects.filter(season_model__current=True):
-    mscore = MikeScore.objects.filter(week=week).values('player').order_by('player').annotate(count=Count('player'))
-    for item in mscore:
-        if item.get('count') > 1:
-            for dup in MikeScore.objects.filter(player__id=item.get('player'), week=week):
-                i = 1
-                print ('1', dup, item)
-                while i < item.get('count'):
-                  print ('2', dup)
-                  dup.delete()
-                  i += 1
 
+# for week in Week.objects.filter(season_model__current=True):
+#     mscore = MikeScore.objects.filter(week=week).values('player').order_by('player').annotate(count=Count('player'))
+#     for item in mscore:
+#         if item.get('count') > 1:
+#             for dup in MikeScore.objects.filter(player__id=item.get('player'), week=week):
+#                 i = 1
+#                 print ('1', dup, item)
+#                 while i < item.get('count'):
+#                   print ('2', dup)
+#                   dup.delete()
+#                   i += 1
 
-recalc('Football Fools')
-               #     home_score = data[score.eid]['home']['score']['T']
-                #    home_team = data[score.eid]['home']["abbr"]
-                 #   away_team = data[score.eid]['away']["abbr"]
-                  #  away_score = data[score.eid]['away']['score']['T']
-                   # qtr = data[score.eid]["qtr"]
+#recalc('Football Fools')
+#week = Tournament.objects.get(current=True)
+#print ('week', week, week.started())
+#from golf_app import pga_score
+#print ('==  no cut ==')
+#t = pga_score.PGAScore('489')
+#print ('hc', t.has_cut())
+#print ('pmc', t.players_making_cut())
+#print ('cs',t.cut_status())
+#print ('cc', t.cut_count())
+#print ('round', t.round(), type(t.round()))
+#print ('player', t.get_golfer_by_id('26329'))
+#print (t.get_golfer_dict())
+#w = Week.objects.get(week=13, season_model__current=True)
+#for game in Games.objects.filter(week=w):
+#    game.spread = None
+#    game.save()
 
+from django.db.models import Max
+print (Field.objects.filter(tournament__pga_tournament_num=493).aggregate(Max('pk')))
+print (Field.objects.filter(tournament__current=True).values('pk', 'playerName'))
+
+#id__in=['7991', '7996', '7997', '8000', '8003', '8006']))

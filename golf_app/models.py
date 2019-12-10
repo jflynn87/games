@@ -2,6 +2,8 @@ from django.db import models
 from django.contrib.auth.models import User
 from django.conf import settings
 from django.db.models import Min, Q, Count, Sum, Max
+from datetime import datetime
+from golf_app import pga_score
 
 
 
@@ -33,26 +35,24 @@ class Tournament(models.Model):
         return self.name
 
     def started(self):
+        print ('starting started check', datetime.now())
+        if ScoreDetails.objects.filter(pick__playerName__tournament=self).exclude(Q(score__in=[0, None]) and Q(thru__in=["not started", None, " ", ""]) and Q(today_score="WD")).exists():
+            print ('tournament started based on picks lookup')
+            print ('finishing started check', datetime.now())
+            return True
 
-        for pick in Picks.objects.filter(playerName__tournament=self):
-            sd = ScoreDetails.objects.get(pick=pick)
-            print (sd, sd.score, type(sd.score))
-            if sd.thru not in ["not started", None, " ", ""] or sd.score != 0:
-                print ('tournament started based on picks lookup')
-                return True 
-
-        from golf_app import calc_score
-        args = {}
-        args['pk']=self.pk
         try:
-            scores = calc_score.calc_score(args)
-            if scores[5].get('round') > 1:
+            scores = pga_score.PGAScore(self.pga_tournament_num)
+            if scores.round() > 1:
                 print ('******* round above 1')
+                print ('finishing started check', datetime.now())
                 return True
         except Exception as e:
             print ('started logic exception', e)
+            print ('finishing started check', datetime.now())
             return False
         print ('here')
+        print ('finishing started check', datetime.now())
         return False
         
     def winning_picks(self, user):

@@ -49,3 +49,19 @@ body {
   font-size: .25cm;
 
 }
+
+.status {
+  color: red;
+  animation: blinker 2s linear infinite;
+}
+
+@keyframes blinker {
+  50% {
+    opacity: 0;
+  }
+}
+
+.updated-status {
+  color: gray;
+  font-size: 75%;
+}

@@ -52,7 +52,7 @@ function get_game_id(team_name) {
          var game_id = get_game_id(team_name);
          game = document.getElementById(game_id)
          game.style.textDecorationLine = 'line-through';
-         game.style.color ='#d9d9d9';
+         /*game.style.color ='#d9d9d9';*/
 
       }
 }
@@ -95,3 +95,53 @@ $('#week4').on('change', function () {
   })
 
 })
+
+$(document).ready(function () {
+  console.log('new ready')
+  $.ajax({
+    type: "GET",
+    url: "/fb_app/ajax_get_spreads/",
+    dataType: 'json',
+    //context: document.body
+    success: function (json) {
+      console.log(json)
+      console.log(json.length )
+      for (i = 0; i < json.length; ++i) {
+
+        console.log(json[i][0])
+        row = $('tr[name=' + json[i][0] + ']')
+        /*console.log('row', row.attr('name'), row.children()[2].innerHTML)*/
+
+        $('td', row).each(function () {
+          if ($(this).prop('id').startsWith('spread')) {
+            $(this).text(json[i][5])
+          }
+          else if ($(this).prop('id').startsWith('fav')) {
+            $(this).text(json[i][1])
+            $(this).append("<span class='record'>" + json[i][2] + "</span>")
+            
+          }
+          else if ($(this).prop('id').startsWith('dog')) {
+            $(this).text(json[i][3])
+            $(this).append("<span class='record'>" + json[i][4] + "</span>")
+          }
+        })
+
+        
+
+      }
+      var months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+      now = new Date()
+      console.log(now)
+      $('#status').text('spreads updated: ' + now).attr('class', 'updated-status')
+
+    },
+    failure: function(json) {
+      console.log('fail');
+      console.log(json);
+    }
+  })
+
+}
+
+)
