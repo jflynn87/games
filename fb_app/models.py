@@ -285,8 +285,12 @@ def calc_scores(self, league, week, loser_list=None, proj_loser_list=None):
                     home_team = data[score.eid]['home']["abbr"]
                     away_team = data[score.eid]['away']["abbr"]
                     away_score = data[score.eid]['away']['score']['T']
-                    qtr = data[score.eid]["qtr"]
-
+                    print ('score data', score.eid, score.home, data[score.eid]['qtr'])
+                    if data[score.eid]['clock'] != None and data[score.eid]['qtr'] != "Final":
+                        qtr = data[score.eid]["qtr"] + ' : ' + data[score.eid]["clock"]
+                    else:
+                        print ('else', score.home)
+                        qtr = data[score.eid]["qtr"]
                     if home_score == away_score:
                         tie = True
                         winner = None

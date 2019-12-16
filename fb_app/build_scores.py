@@ -72,7 +72,7 @@ def build_scores_context(user, league, winner_list=None):
             home_team = data[game.eid]['home']["abbr"]
             away_team = data[game.eid]['away']["abbr"]
             away_score = data[game.eid]['away']['score']['T']
-            qtr = data[game.eid]["qtr"]
+            qtr = data[game.eid]["qtr"] + ' : ' + data[game.eid]["clock"]
 
             if home_score == away_score:
                 tie = True

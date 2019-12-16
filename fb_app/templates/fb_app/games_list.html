@@ -29,7 +29,7 @@
 {%endif%}
 
 
-<h3 style="background-color:lightblue">Week:  {{week.week}}  {%if week.started and not late_picks%} Week started - no changes {%endif%}</h3>
+<h3 style="background-color:lightblue">Week:  {{week.week}}  {%if week.started and not week.late_picks%} Week started - no changes {%endif%}</h3>
 <p class='status' id='status'>updating spreads.....</p>
 <div class="updated-status">
   <p>Lowest points win, losing picks get that number of points</p>
@@ -49,13 +49,13 @@
 </form>
 </div>
 {%endif%}
-<div class="row">
+<!-- <div class="row">
 
-<div class="column">
+<div class="column"> -->
 
 <div class="games">
 
-   <table class='table table-md game_tbl'>
+   <table class='table table-sm game_tbl'>
      <thead>
       <th>Game Time</th>
       <th>Fav</th>
@@ -82,8 +82,6 @@
       {%endfor%}
     </tbody>
    </table>
-   <br>
-   <br>
    <!-- <div class="footnote">
      <p>Lowest points win, losing picks get that number of points</p>
      <p>Pick straight up winners, spreads are for reference</p>
@@ -92,11 +90,12 @@
 
    </div> -->
 </div>
-</div>
+<!-- </div>
+</div> -->
+<br>
 
-<div class="column">
-
-  <div class="table table-md">
+<div id= 'picksect' class="row">
+  <div class= "column table table-sm"> 
 
     <table>
     <thead>
@@ -124,8 +123,9 @@
   {%endif%}
 </form>
   </div>
+  
 </div>
-<div>
+
 
   <table>
       <tbody id='old_picks'>
@@ -147,7 +147,5 @@
     {%endfor%}
   </tbody>
 </table>
-
-</div>
 
 {%endblock%}

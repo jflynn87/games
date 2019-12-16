@@ -51,7 +51,10 @@ function get_game_id(team_name) {
          var team_name = get_team_name(pick);
          var game_id = get_game_id(team_name);
          game = document.getElementById(game_id)
+         console.log(pick_list, pick)
          game.style.textDecorationLine = 'line-through';
+         game.style.textDecorationStyle = 'dotted'
+         game.style.background.color = 'blue'
          /*game.style.color ='#d9d9d9';*/
 
       }
@@ -142,6 +145,9 @@ $(document).ready(function () {
     }
   })
 
-}
+})
 
-)
+$(window).resize(function() {
+  console.log($(window).width())
+  $('#picksect').attr('class', 'row')
+})

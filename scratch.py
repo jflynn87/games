@@ -137,8 +137,9 @@ def recalc(league):
 #    game.spread = None
 #    game.save()
 
-from django.db.models import Max
-print (Field.objects.filter(tournament__pga_tournament_num=493).aggregate(Max('pk')))
-print (Field.objects.filter(tournament__current=True).values('pk', 'playerName'))
+json_url = 'http://www.nfl.com/liveupdate/scores/scores.json'
 
-#id__in=['7991', '7996', '7997', '8000', '8003', '8006']))
+with urllib.request.urlopen(json_url) as field_json_url:
+     data = json.loads(field_json_url.read().decode())
+
+print (data['2019121200']["clock"])
