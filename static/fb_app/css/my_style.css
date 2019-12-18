@@ -3,6 +3,7 @@ body {
     font-family: Arial;
     color: black;
     height: 100%;
+    padding-left: 1em;
 }
 
 
@@ -64,9 +65,4 @@ body {
 .updated-status {
   color: gray;
   font-size: 75%;
-}
-
-.thurs {
-  color:lightgrey;
-  z-index: -1;
 }

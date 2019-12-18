@@ -49,11 +49,13 @@
 </form>
 </div>
 {%endif%}
-<!-- <div class="row">
+<div class="row">
 
-<div class="column"> -->
+<div class="space">
+  <br>
+</div>
 
-<div class="games">
+<div class="games column">
 
    <table class='table table-sm game_tbl'>
      <thead>
@@ -85,10 +87,9 @@
 </div>
 <br>
 
-<div id= 'picksect' class="row">
-  <div class= "column table table-sm"> 
-
-    <table>
+<div id= 'picksect' class="column">
+  <!-- <div class= "column table table-sm">  -->
+    <table class='table table-sm'>
     <thead>
         <th>Pick#</th>
         <th>Pick List</th>
@@ -117,7 +118,7 @@
   
 </div>
 
-
+<div>
   <table>
       <tbody id='old_picks'>
         <tr>
@@ -138,5 +139,5 @@
     {%endfor%}
   </tbody>
 </table>
-
+</div>
 {%endblock%}
