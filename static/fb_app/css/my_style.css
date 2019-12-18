@@ -17,12 +17,12 @@ body {
 }
 
 .column {
-  flex: 40%;
-  padding: 20px;
-  height: 700px;
+/*  flex: 40%; */
+  padding-left: 2em;
+  /*height: 700px;*/
 
 }
-
+*/
 .game_tbl {
   height: 60%;
 }
