@@ -466,6 +466,7 @@ class ScoresView(TemplateView):
             'ranks': ranks,
             'totals': total_score_list,
             'season_ranks': season_ranks,
+            'league': league
             })
 
             print (datetime.datetime.now())
@@ -504,7 +505,7 @@ class ScoresView(TemplateView):
 
 
     def get_base_data(self):
-        '''takes in self object and calculates the user, player, league and week,
+        '''takes in view object and calculates the user, player, league and week,
          returns a tuple of objects'''
 
         print ('base', self.kwargs)
@@ -716,3 +717,80 @@ def ajax_get_games(request, week):
     else:
         print ('not ajax')
         raise Http404
+
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from fb_app import scores
+class UpdateNFLScores(APIView):
+      pass    
+#     def get(self, num):
+#         week = Week.objects.get(week=self.request.GET.get('week'), \
+#              season_model=Season.objects.get(season=self.request.GET.get('season')))
+#         player = Player.objects.get(name=User.objects.get(pk=self.request.user.pk))
+#         week_scores = WeekScore
+#         nfl_scores = scores.Scores(week, player.league).get_nfl_scores()
+#         print ('updte scores', scores)
+#         data = json.dumps(nfl_scores)
+#         print (data)
+#         return Response(data, 200)
+
+
+class UpdateScores(APIView):
+    
+    def get_week(self):
+        week = Week.objects.get(week=self.request.GET.get('week'), \
+            season_model=Season.objects.get(season=self.request.GET.get('season')))
+        return week
+        
+    def get_player(self):
+        player = Player.objects.get(name=User.objects.get(pk=self.request.user.pk))
+        return player
+
+    def get(self, num):
+        week = self.get_week()
+
+        if week.started():
+            player = self.get_player()
+            d = {}
+            s = scores.Scores(week, player.league)
+            for game, g_score in s.get_nfl_scores().items():
+                d[game]= g_score
+            for player in Player.objects.filter(league=player.league):
+                u = {}
+                u.update ({'score': s.get_week_scores()[player.name.username],
+                        'week_rank': str(s.get_week_rank()[player.name.username]),
+                        'week_proj': s.get_week_proj()[player.name.username],
+                        'week_proj_rank': str(s.get_week_proj_rank()[player.name.username]),
+                        'season_total': s.get_season_total()[player.name.username],
+                        'season_rank': str(s.get_season_rank()[player.name.username]),
+                    })
+                d[player.name.username]=u
+            d['losers'] = s.get_losers()
+        
+            print (d)
+            
+            data = json.dumps(d)
+            print (data)
+        else:
+            data = json.dumps('week not started')
+        
+        return Response(data, 200)
+        
+
+class UpdateProj(APIView):
+    pass
+
+class UpdateRank(APIView):
+    pass
+
+class UpdateProjRank(APIView):
+    pass
+
+class UpdateSeasonTotal(APIView):
+    pass
+
+class UpdateSeasonRank(APIView):
+    pass
+
+
+

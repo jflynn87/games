@@ -3,8 +3,8 @@ os.environ.setdefault("DJANGO_SETTINGS_MODULE","gamesProj.settings")
 
 import django
 django.setup()
-from golf_app.models import Tournament, TotalScore, ScoreDetails, Field, Picks, PickMethod
-# #from fb_app.models import Season, Week, Games, Teams, Picks, League, Player, calc_scores, MikeScore, WeekScore
+#from golf_app.models import Tournament, TotalScore, ScoreDetails, Field, Picks, PickMethod
+from fb_app.models import Season, Week, Games, Teams, Picks, League, Player, calc_scores, MikeScore, WeekScore
 from django.contrib.auth.models import User
 from datetime import datetime, timedelta
 import sqlite3
@@ -15,6 +15,7 @@ from golf_app import populateField
 import urllib
 from urllib import request
 import json
+from fb_app.views import UpdateScores
 #from requests import get
 #from random import randint
 import sys
@@ -137,9 +138,16 @@ def recalc(league):
 #    game.spread = None
 #    game.save()
 
-json_url = 'http://www.nfl.com/liveupdate/scores/scores.json'
+# json_url = 'http://www.nfl.com/liveupdate/scores/scores.json'
 
-with urllib.request.urlopen(json_url) as field_json_url:
-     data = json.loads(field_json_url.read().decode())
+# with urllib.request.urlopen(json_url) as field_json_url:
+#      data = json.loads(field_json_url.read().decode())
 
-print (data['2019121200']["clock"])
+# print (data['2019121200']["clock"])
+week = Week.objects.get(week=17, season_model__current=True)
+week.current = False
+week.save()
+
+print (Week.objects.filter(current=True))
+
+

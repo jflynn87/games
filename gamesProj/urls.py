@@ -31,6 +31,7 @@ urlpatterns = [
     url(r'^run_app/', include('run_app.urls',namespace='run_app')),
     url(r'^port_app/', include('port_app.urls',namespace='port_app')),
     url(r'^', include('django.contrib.auth.urls')),
+    #url(r'^api-auth/', include('rest_framework.urls')),
 
 
 ]

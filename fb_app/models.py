@@ -34,13 +34,13 @@ class Week(models.Model):
     def save(self, *args, **kwargs):
         print ('model self', self)
         print ('model kwargs', kwargs)
-        if self.pk != None:
+        last_week = Week.objects.get(current=True)
+        if self.pk != None and last_week.started():
             for league in League.objects.all():
                 scores = WeekScore()
-                calc_scores(scores, league, self)
+                calc_scores(scores, league, last_week)
 
             if self.current==True:
-                last_week = Week.objects.get(current=True)
                 last_week.current = False
                 last_week.save()
         super(Week, self).save()
@@ -289,7 +289,7 @@ def calc_scores(self, league, week, loser_list=None, proj_loser_list=None):
                     if data[score.eid]['clock'] != None and data[score.eid]['qtr'] != "Final":
                         qtr = data[score.eid]["qtr"] + ' : ' + data[score.eid]["clock"]
                     else:
-                        print ('else', score.home)
+                        print ('else', score.home, score.away,score.qtr)
                         qtr = data[score.eid]["qtr"]
                     if home_score == away_score:
                         tie = True
@@ -309,14 +309,20 @@ def calc_scores(self, league, week, loser_list=None, proj_loser_list=None):
                     setattr(score, 'winner', winner)
                     setattr(score, 'loser', loser)
                     setattr(score, 'qtr',qtr)
-                    if qtr == "Final":
-                        setattr(score, 'final', True)
-                        setattr(score, 'tie', tie)
-                    elif qtr == "final overtime":
+                    #print ('qtr', qtr[0:5])
+                    if qtr[0:5]  in ["final", "Final"]:
                         setattr(score, 'final', True)
                         setattr(score, 'tie', tie)
                     else:
                         setattr(score, 'tie', False)
+                    # if qtr == "Final":
+                    #     setattr(score, 'final', True)
+                    #     setattr(score, 'tie', tie)
+                    # elif qtr == "final overtime":
+                    #     setattr(score, 'final', True)
+                    #     setattr(score, 'tie', tie)
+                    # else:
+                    #     setattr(score, 'tie', False)
 
                     score.save()
 
@@ -373,11 +379,12 @@ def calc_scores(self, league, week, loser_list=None, proj_loser_list=None):
 
         setattr (score_obj, "score", score)
         setattr (score_obj, "projected_score", projected_score)
+        
         score_obj.save()
 
         scores_list.append(score)
         projected_scores_list.append(score + projected_score)
-
+        
         #calculate season totals
         total_score = 0
 
@@ -391,7 +398,7 @@ def calc_scores(self, league, week, loser_list=None, proj_loser_list=None):
     ranks = ss.rankdata(scores_list, method='min')
     projected_ranks = ss.rankdata(projected_scores_list, method='min')
     season_ranks = ss.rankdata(total_score_list, method='min')
-    print ('sending context', scores_list)
+    print ('sending context', 'scores:', scores_list, 'proj:', projected_scores_list)
     print (datetime.datetime.now())
 
     return (scores_list, ranks, projected_scores_list, projected_ranks, total_score_list, season_ranks)

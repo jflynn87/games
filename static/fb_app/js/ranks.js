@@ -1,4 +1,8 @@
 $( document ).ready(function() {
+
+  color()
+})
+function color() {
     $('td.ranks').each(function( index ) {
           if($( this ).text()== '1'){
              $(this).css("background-color","#ff3333");
@@ -12,4 +16,6 @@ $( document ).ready(function() {
 
           }
     });
-});
+  }
+ 
+ /* export function exp_color() {color}*/

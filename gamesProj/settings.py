@@ -52,6 +52,7 @@ INSTALLED_APPS = [
     'django_select2',
     'bootstrapform',
     'django.contrib.humanize',
+    'rest_framework',
     'fb_app',
     'golf_app',
     'run_app',
