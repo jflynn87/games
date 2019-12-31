@@ -15,7 +15,7 @@ from golf_app import populateField
 import urllib
 from urllib import request
 import json
-from fb_app.views import UpdateScores
+from fb_app.scores import Scores
 #from requests import get
 #from random import randint
 import sys
@@ -144,10 +144,14 @@ def recalc(league):
 #      data = json.loads(field_json_url.read().decode())
 
 # print (data['2019121200']["clock"])
-week = Week.objects.get(week=17, season_model__current=True)
-week.current = False
-week.save()
 
-print (Week.objects.filter(current=True))
+import scipy.stats as ss
+season = Season.objects.filter(current=True)
+league = League.objects.get(league="Football Fools")
 
+for week in Week.objects.filter(season_model__current=True):
+    s=Scores(week, league, False)
+    norm_rank = s.get_week_rank().get('NORM')
+    count = sum(value == norm_rank for value in s.get_week_rank().values())
+    print('week ' + str(week.week) + ': ' + str(s.get_week_rank().get('NORM')), + count)
 

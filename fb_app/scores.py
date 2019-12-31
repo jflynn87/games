@@ -5,11 +5,12 @@ from django.db.models import Sum
 class Scores(object):
     '''takes a week and league object and calculates the scores and updates the NFL scores'''
 
-    def __init__(self, week, league):
+    def __init__(self, week, league, calc=True):
         self.week = week
         self.league = league
         self.week_score = WeekScore
-        self.scores = calc_scores(self.week_score, self.league, self.week)
+        if calc:
+            self.scores = calc_scores(self.week_score, self.league, self.week)
 
     def get_nfl_scores(self):
         nfl_dict = {}

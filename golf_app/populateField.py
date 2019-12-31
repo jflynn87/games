@@ -90,7 +90,7 @@ def get_field(tournament_number):
     '''takes a tournament number, goes to web to get field and returns a list with player names'''
 
     season = Season.objects.get(current=True)
-
+    print ('getting field')
     json_url = 'https://statdata.pgatour.com/r/' + str(tournament_number) +'/field.json'
     print (json_url)
     with urllib.request.urlopen(json_url) as field_json_url:
@@ -194,7 +194,7 @@ def configure_groups(field_list):
 def create_groups(tournament_number):
 
     '''takes in a tournament number for pgatour.com to get json files for the field and score.  initializes all tables for the tournament'''
-
+    print ('increate groups')
     season = Season.objects.get(current=True)
 
     if Tournament.objects.filter(season=season).count() > 0:
@@ -204,13 +204,17 @@ def create_groups(tournament_number):
             last_tournament.save()
             key = {}
             key['pk']=last_tournament.pk
-            calc_score.calc_score(key)
+            try:
+                calc_score.calc_score(key)
+            except:
+                print ('erroe calc scores for last tournament', last_tournament)
 
         except ObjectDoesNotExist:
             print ('no current tournament')
     else:
         print ('setting up first tournament of season')
 
+    print ('going to get_field')
     field = get_field(tournament_number)
     OWGR_rankings =  get_worldrank()
     PGA_rankings = get_pga_worldrank()

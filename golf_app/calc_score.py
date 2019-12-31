@@ -219,7 +219,7 @@ def getRanks(tournament):
             import json
             #print (tournament.get('pk'))
             json_url = Tournament.objects.get(pk=tournament.get('pk')).score_json_url
-            #print (json_url)
+            print ('calc scores', json_url)
 
             with urllib.request.urlopen(json_url) as field_json_url:
                     data = json.loads(field_json_url.read().decode())
