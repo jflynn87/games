@@ -207,7 +207,7 @@ def create_groups(tournament_number):
             try:
                 calc_score.calc_score(key)
             except:
-                print ('erroe calc scores for last tournament', last_tournament)
+                print ('error calc scores for last tournament', last_tournament)
 
         except ObjectDoesNotExist:
             print ('no current tournament')

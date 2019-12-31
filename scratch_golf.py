@@ -65,4 +65,8 @@ def get_worldrank():
 
     return ranks
 
-get_worldrank()
+t= Tournament.objects.get(current=True)
+print (t, t.started())
+sd = ScoreDetails.objects.filter(pick__playerName__tournament=t).exclude(Q(score__in=[0, None]) and Q(thru__in=["not started", None, " ", ""])) or Q(today_score="WD")
+for score in sd: #ScoreDetails.objects.filter(pick__playerName__tournament=t):
+    print (score.pick.playerName, score.score, score.thru, score.today_score)

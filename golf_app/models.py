@@ -36,10 +36,12 @@ class Tournament(models.Model):
 
     def started(self):
         print ('starting started check', datetime.now())
-        if ScoreDetails.objects.filter(pick__playerName__tournament=self).exclude(Q(score__in=[0, None]) and Q(thru__in=["not started", None, " ", ""]) and Q(today_score="WD")).exists():
-            print ('tournament started based on picks lookup')
-            print ('finishing started check', datetime.now())
-            return True
+        #if ScoreDetails.objects.filter(pick__playerName__tournament=self).exclude(Q(score__in=[0, None]) or Q(thru__in=["not started", None, " ", ""])) or Q(today_score__in=["WD", None]).exists():
+        if ScoreDetails.objects.filter(pick__playerName__tournament=self).exclude(Q(score=None) or Q(thru=None) or Q(today_score='WD')).exists():
+            if ScoreDetails.objects.filter(pick__playerName__tournament=self).exclude(Q(score=0) or Q(thru__in=["not started", " ", ""]) or Q(today_score="WD")).exists():
+               print (self, 'tournament started based on picks lookup')
+               print ('finishing started check', datetime.now())
+               return True
 
         try:
             scores = pga_score.PGAScore(self.pga_tournament_num)
