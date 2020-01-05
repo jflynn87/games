@@ -149,9 +149,50 @@ import scipy.stats as ss
 season = Season.objects.filter(current=True)
 league = League.objects.get(league="Football Fools")
 
-for week in Week.objects.filter(season_model__current=True):
-    s=Scores(week, league, False)
-    norm_rank = s.get_week_rank().get('NORM')
-    count = sum(value == norm_rank for value in s.get_week_rank().values())
-    print('week ' + str(week.week) + ': ' + str(s.get_week_rank().get('NORM')), + count)
+# for week in Week.objects.filter(season_model__current=True):
+#     s=Scores(week, league, False)
+#     norm_rank = s.get_week_rank().get('TLUKE')
+#     count = sum(value == norm_rank for value in s.get_week_rank().values())
+#     print('week ' + str(week.week) + ': ' + str(s.get_week_rank().get('TLUKE')), + count)
 
+d={}
+total_picks = 0
+
+for player in Player.objects.filter(league__league="golfers"):
+    print (player)        
+
+    for team in Teams.objects.all():
+        d[team] = {}
+        d[team].update({'picks': 0, 
+                    'wins': 0,
+                    'loss': 0,
+                    'miss': 0,
+                    'points': 0})
+
+    for team in Teams.objects.all():
+        picks = 0
+        loss = 0
+        win = 0
+        wrong = 0
+        game_cnt = 0
+        #week = Week.objects.get(season_model__current=True, week=17)
+        for pick in Picks.objects.filter(player=player, week__season_model__current=True, team=team):
+            total_picks +=1 
+            d[pick.team]['picks'] = d[pick.team]['picks'] + 1
+            if pick.is_loser():
+                d[pick.team]['loss'] = d[pick.team]['loss'] + 1
+                d[pick.team]['points'] = d[pick.team]['points'] + pick.pick_num
+
+            else:
+                d[pick.team]['wins'] = d[pick.team]['wins'] + 1
+            game = Games.objects.get((Q(home=pick.team) | Q(away=pick.team)), week=pick.week) #week__season_model__current=True):
+            game_cnt += 1
+            if not game.tie and pick.team != game.winner:
+                
+                d[game.winner]['miss'] = d[game.winner]['miss']+1
+                
+        
+    #print ({k: v for k, v in sorted(d.items(), key=lambda item:item['loss'])})
+    print (d)
+    print (total_picks)
+    print (game_cnt)

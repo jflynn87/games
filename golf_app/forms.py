@@ -4,11 +4,16 @@ from django.contrib.auth.models import User
 from golf_app.models import  Field, Picks, Group
 from django.db.models import Max
 from django.forms.models import modelformset_factory
-from django_select2 import *
-from django_select2.forms import ModelSelect2Widget
+#from django_select2 import *
+#from django_select2.forms import ModelSelect2Widget
 from django.forms.formsets import BaseFormSet
+from golf_app import manual_score
 
+class CreateManualScoresForm(forms.ModelForm):
 
+    class Meta:
+        model = Picks
+        fields = ('playerName', 'score',)
 
 
 #class CreatePicksForm(forms.ModelForm):

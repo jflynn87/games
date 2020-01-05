@@ -1,0 +1,48 @@
+{% extends "golf_app/golf_app_base.html" %}
+{% block body_block %}
+
+<table class="table">
+    <thead>
+
+        <th>Player</th>
+        <th>Score</th>
+    </thead>
+    <tbody>
+        {%for score in total_scores%}
+        <tr>
+
+            <td>{{score.user.username}}</td>
+            <td>{{score.score}}</td>
+        </tr>
+        {%endfor%}
+    </tbody>
+</table>
+
+<h3 class="p-3 mb-2 bg-secondary text-white">Score  Details</h3>
+
+<table class='table'>
+    <thead>
+        <th>player</th>
+        <th>Group</th>
+        <th>Golfer</th>
+        <th>Rank</th>
+    </thead>
+    <tbody>
+        <tr>{{object_list.user.username}}</tr>
+        {%for pick in object_list%}
+        <tr>
+        <td>{{pick.user.username}}</td>
+        <td>{{pick.playerName.group.number}}</td>
+        <td>{{pick.playerName}}</td>
+        <td>{{pick.score}}</td>
+        {%endfor%}
+    </tr>
+</tbody>
+</table>
+
+
+    
+    {{form}}
+</form>
+
+{% endblock%}

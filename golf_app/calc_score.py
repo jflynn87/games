@@ -19,6 +19,10 @@ def calc_score(t_args, request=None):
         picked_winner = False
         ranks_start_time = datetime.datetime.now()
         ranks_tuple = getRanks(t_args)
+        if ranks_tuple[0] == "score lookup fail":
+            # pga lookup failed, so return
+            return None, None, None, None, {'pga score file error': ranks_tuple[1]}, None
+
         ranks_end_time = datetime.datetime.now()
         print ('build ranks dict', ranks_end_time - ranks_start_time)
 
@@ -221,8 +225,15 @@ def getRanks(tournament):
             json_url = Tournament.objects.get(pk=tournament.get('pk')).score_json_url
             print ('calc scores', json_url)
 
-            with urllib.request.urlopen(json_url) as field_json_url:
+            try:
+                with urllib.request.urlopen(json_url) as field_json_url:
                     data = json.loads(field_json_url.read().decode())
+            except Exception as e:
+                print ('score json lookup error', e)
+                if Tournament.objects.get(pk=tournament.get('pk')).started():
+                    print ('started add score here')
+                else:
+                    return "score lookup fail", e
 
             ranks = {}
 

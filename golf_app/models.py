@@ -27,8 +27,10 @@ class Tournament(models.Model):
     pga_tournament_num = models.CharField(max_length=10, null=True)
     major = models.BooleanField(default=False)
     late_picks = models.BooleanField(default=False)
+    set_started = models.BooleanField(default=False)
+    set_notstarted = models.BooleanField(default=False)
 
-    #def get_queryset(self):
+    #def get_queryset(self):t
     #    return self.objects.filter().first()
 
     def __str__(self):
@@ -36,12 +38,21 @@ class Tournament(models.Model):
 
     def started(self):
         print ('starting started check', datetime.now())
+        if self.set_started:
+            print ('overrode to started')
+            return True
+        if self.set_notstarted:
+            print ('overrode to not started')
+            return False
         #if ScoreDetails.objects.filter(pick__playerName__tournament=self).exclude(Q(score__in=[0, None]) or Q(thru__in=["not started", None, " ", ""])) or Q(today_score__in=["WD", None]).exists():
-        if ScoreDetails.objects.filter(pick__playerName__tournament=self).exclude(Q(score=None) or Q(thru=None) or Q(today_score='WD')).exists():
-            if ScoreDetails.objects.filter(pick__playerName__tournament=self).exclude(Q(score=0) or Q(thru__in=["not started", " ", ""]) or Q(today_score="WD")).exists():
-               print (self, 'tournament started based on picks lookup')
-               print ('finishing started check', datetime.now())
-               return True
+        if ScoreDetails.objects.filter(pick__playerName__tournament=self).\
+            exclude(Q(score=None) or Q(score=0) or \
+                    Q(thru=None) or Q(thru__in=["not started", " ", ""]) or \
+                    Q(today_score='WD')).exists():
+            #if ScoreDetails.objects.filter(pick__playerName__tournament=self).exclude(Q(score=0) or Q(thru__in=["not started", " ", ""]) or Q(today_score="WD")).exists():
+            print (self, 'tournament started based on picks lookup')
+            print ('finishing started check', datetime.now())
+            return True
 
         try:
             scores = pga_score.PGAScore(self.pga_tournament_num)

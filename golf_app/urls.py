@@ -18,6 +18,7 @@ urlpatterns= [
     url(r'^ajax/get_scores/$', views.get_scores, name='get_scores'),
     url(r'^ajax/get_leader/$', views.get_leader, name='get_leader'),
     url(r'^all_time/$', views.AllTime.as_view(), name='all_time'),
+    url(r'^manual_scores/$', views.ManualScoresView.as_view(), name='manual_scores'),
 
     
     #url(r'^make_picks/$',views.CreatePicksView.as_view(),name='make_picks'),  # for form

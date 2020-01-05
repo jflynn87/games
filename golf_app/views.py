@@ -1,7 +1,7 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.views.generic import View, TemplateView, ListView, DetailView, CreateView, UpdateView, FormView
 from golf_app.models import Field, Tournament, Picks, Group, TotalScore, ScoreDetails, mpScores, BonusDetails, PickMethod
-#from golf_app.forms import  CreatePicksForm, PickFormSet, NoPickFormSet
+from golf_app.forms import  CreateManualScoresForm
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponseRedirect, HttpResponse, Http404
 from django.contrib.auth import authenticate, login, logout
@@ -37,19 +37,22 @@ class FieldListView(LoginRequiredMixin,ListView):
         try:
             score_file = calc_score.getRanks({'pk': tournament.pk})
             wd_list = []
-            print (score_file[0])
-            for golfer in Field.objects.filter(tournament=tournament):
-                if golfer.playerName not in score_file[0]:
-                    print ('debug')
-                    wd_list.append(golfer.playerName)
-                    #print ('wd list', wd_list)
-            if len(wd_list) > 0:
-                error_message = 'The following golfers have withdrawn:' + str(wd_list)
-                for wd in wd_list:
-                    Field.objects.filter(tournament=tournament, playerName=wd).update(withdrawn=True)
-
+            print ('score file', score_file[0])
+            if score_file[0] == "score lookup fail":
+                wd_list = []
+                error_message = ''
             else:
-                error_message = None
+                for golfer in Field.objects.filter(tournament=tournament):
+                    if golfer.playerName not in score_file[0]:
+                        print ('debug')
+                        wd_list.append(golfer.playerName)
+                        #print ('wd list', wd_list)
+                if len(wd_list) > 0:
+                    error_message = 'The following golfers have withdrawn:' + str(wd_list)
+                    for wd in wd_list:
+                        Field.objects.filter(tournament=tournament, playerName=wd).update(withdrawn=True)
+                else:
+                    error_message = None
         except Exception as e:
             print ('score file lookup issue', e)
             error_message = None
@@ -231,7 +234,10 @@ class ScoreListView(DetailView):
                     scores = calc_score.calc_score(self.kwargs, request)
                     calc_finish = datetime.datetime.now()
                     print ('calc time', calc_finish - start_time)
-                    summary_data = optimal_picks.optimal_picks(tournament, scores[5])
+                    if scores[5] != None:
+                        summary_data = optimal_picks.optimal_picks(tournament, scores[5])
+                    else:
+                        summary_data = None, None, None, None
                     print ('summary time', datetime.datetime.now() - calc_finish)
                     end_time= datetime.datetime.now()
                     print ('exec time: ', end_time-start_time, self.request.user)
@@ -523,3 +529,24 @@ def get_leader(request):
         print ('not ajax')
         raise Http404
 
+from golf_app import manual_score
+class ManualScoresView(LoginRequiredMixin,ListView):
+    login_url = 'login'
+    template_name = 'golf_app/manual_scores.html'
+    #form=CreateManualScoresForm
+    #golfers = manual_score.Score('016').get_picked_golfers()
+    #queryset = Picks.objects.filter(pk__in=golfers) 
+    queryset = Picks.objects.filter(playerName__tournament__current=True).order_by('user', 'playerName__group__number')
+    
+    def get_context_data(self,**kwargs):
+        context = super(ManualScoresView, self).get_context_data(**kwargs)
+        tournament = Tournament.objects.get(current=True)
+        picks = manual_score.Score(tournament.pga_tournament_num)
+        print (picks)
+        picks.update_scores('round.csv')
+        print (picks)
+        picks.total_scores()
+         
+
+        context.update({'total_scores': TotalScore.objects.filter(tournament=tournament).order_by('score')})
+        return context
