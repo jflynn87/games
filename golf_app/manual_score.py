@@ -1,6 +1,6 @@
 import urllib.request
 import json
-from golf_app.models import Picks, Tournament, TotalScore
+from golf_app.models import Picks, Tournament, TotalScore, BonusDetails, ScoreDetails
 import csv
 from golf_app import calc_score
 
@@ -35,7 +35,20 @@ class Score(object):
                 if line_count > 0 and Picks.objects.filter(playerName__tournament=self.tournament, playerName__playerName=row[3]).exists():
                     for pick in Picks.objects.filter(playerName__tournament=self.tournament, playerName__playerName=row[3]):
                         pick.score = calc_score.formatRank(row[0])
+    
                         pick.save()
+                        
+                        sd, sd_created = ScoreDetails.objects.get_or_create(user=pick.user, pick=pick)
+                        sd.score=pick.score
+                        sd.save()
+                        if pick.is_winner():
+                            print ('winner', pick.playerName)
+                            bd, created = BonusDetails.objects.get_or_create(user=pick.user, tournament=pick.playerName.tournament)
+                            bd.winner_bonus = 50 + (pick.playerName.group.number*2)
+                            bd.save()
+
+                            
+
                     #print (row[3], row[0])
                 line_count += 1
 
@@ -47,4 +60,24 @@ class Score(object):
                 ts.score = pick.score
             else:
                 ts.score = ts.score + pick.score
+            if pick.is_winner():
+                print ('winner', pick)
+                bd = BonusDetails.objects.get(tournament=self.tournament, user=pick.user)
+                bd.winner_bonus = 50 + (2*pick.playerName.group.number)
+                bd.save()
+                ts.score -= bd.winner_bonus
+                ts.save()
+
+            
+
             ts.save()
+
+    def winner_bonus(self):
+        for pick in Picks.objects.filter(playerName__tournament=self.tournament):
+            if pick.is_winner():
+                bd, created = BonusDetails.objects.get_or_create(user=pick.user, tournament=pick.playerName.tournament)
+                bd.winner_bonus = 50 + (pick.playerName.group.number*2)
+                bd.save()
+
+            
+    

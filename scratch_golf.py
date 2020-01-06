@@ -3,7 +3,7 @@ os.environ.setdefault("DJANGO_SETTINGS_MODULE","gamesProj.settings")
 
 import django
 django.setup()
-from golf_app.models import Tournament, TotalScore, ScoreDetails, Field, Picks, PickMethod
+from golf_app.models import Tournament, TotalScore, ScoreDetails, Field, Picks, PickMethod, BonusDetails
 from django.contrib.auth.models import User
 from datetime import datetime, timedelta
 import sqlite3
@@ -102,6 +102,9 @@ from scrapy.crawler import CrawlerProcess
 from golf_app import manual_score
 s = manual_score.Score('016')
 print (s.get_picked_golfers())
-print (s.update_scores('round3a.txt'))
+print (s.update_scores('round.csv'))
 s.total_scores()
 print (TotalScore.objects.filter(tournament__current=True).order_by('score'))
+#s.winner_bonus()
+print (ScoreDetails.objects.filter(pick__playerName__tournament__current=True).values('user', 'pick', 'score'))
+print (BonusDetails.objects.filter(tournament__current=True).values('user', 'winner_bonus'))

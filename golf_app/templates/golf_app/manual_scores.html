@@ -22,18 +22,21 @@
 
 <table class='table'>
     <thead>
-        <th>player</th>
+        <th>Player</th>
         <th>Group</th>
         <th>Golfer</th>
         <th>Rank</th>
     </thead>
     <tbody>
-        <tr>{{object_list.user.username}}</tr>
         {%for pick in object_list%}
         <tr>
         <td>{{pick.user.username}}</td>
         <td>{{pick.playerName.group.number}}</td>
+        {%if pick.is_winner%}
+        <td style='color: red'>{{pick.playerName}}</td>
+        {%else%}
         <td>{{pick.playerName}}</td>
+        {%endif%}
         <td>{{pick.score}}</td>
         {%endfor%}
     </tr>
