@@ -70,27 +70,29 @@ import scrapy
 from scrapy.crawler import CrawlerProcess
 
 
-# class scrapeScores(scrapy.Spider):
-#     name = "scores"
-#     start_urls = ["https://www.pgatour.com/leaderboard.html",]
+class scrapeScores(scrapy.Spider):
+    name = "scores"
+    start_urls = ["https://www.pgatour.com/leaderboard.html",]
 
-#     def parse(self, response):
+    def parse(self, response):
         
-#         f = open("testspider.txt", "w")
-#         f.write(response.body)
-#         f.close()
-        
-#         yield response.body
-        
-#         print (response.body.table('leaderboard large'))
+        print (response)        
+        f = open("testspider.txt", "w") 
+        f.write(response)
+        f.close()
 
-# process = CrawlerProcess(settings={
-#         'FEED_FORMAT': 'json',
-#         'FEED_URI': 'items.json'
-#         })
+        yield response.body
+        
+        #print (response.body.table('leaderboard large'))
+ 
 
-# process.crawl(scrapeScores)
-# process.start()
+process = CrawlerProcess(settings={
+         'FEED_FORMAT': 'json',
+         'FEED_URI': 'items.json'
+         })
+
+process.crawl(scrapeScores)
+process.start()
 
 
 #t= Tournament.objects.get(current=True)
@@ -99,12 +101,12 @@ from scrapy.crawler import CrawlerProcess
 #for score in sd: #ScoreDetails.objects.filter(pick__playerName__tournament=t):
 #    print (score.pick.playerName, score.score, score.thru, score.today_score)
 
-from golf_app import manual_score
-s = manual_score.Score('016')
-print (s.get_picked_golfers())
-print (s.update_scores('round.csv'))
-s.total_scores()
-print (TotalScore.objects.filter(tournament__current=True).order_by('score'))
-#s.winner_bonus()
-print (ScoreDetails.objects.filter(pick__playerName__tournament__current=True).values('user', 'pick', 'score'))
-print (BonusDetails.objects.filter(tournament__current=True).values('user', 'winner_bonus'))
+#from golf_app import manual_score
+# s = manual_score.Score('016')
+# print (s.get_picked_golfers())
+# print (s.update_scores('round.csv'))
+# s.total_scores()
+# print (TotalScore.objects.filter(tournament__current=True).order_by('score'))
+# #s.winner_bonus()
+# print (ScoreDetails.objects.filter(pick__playerName__tournament__current=True).values('user', 'pick', 'score'))
+# print (BonusDetails.objects.filter(tournament__current=True).values('user', 'winner_bonus'))
