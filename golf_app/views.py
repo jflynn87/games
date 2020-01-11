@@ -542,11 +542,8 @@ class ManualScoresView(LoginRequiredMixin,ListView):
         context = super(ManualScoresView, self).get_context_data(**kwargs)
         tournament = Tournament.objects.get(current=True)
         picks = manual_score.Score(tournament.pga_tournament_num)
-        print (picks)
-        picks.update_scores('round.csv')
-        print (picks)
+        picks.update_scores()
         picks.total_scores()
-         
 
         context.update({'total_scores': TotalScore.objects.filter(tournament=tournament).order_by('score')})
         return context

@@ -14,12 +14,12 @@ from requests import get
 from random import randint
 import sys
 # pip install PyQt5 and PyQtWebEngine
-from PyQt5.QtWidgets import QApplication, QWidget
-from PyQt5.QtCore import QUrl
+#from PyQt5.QtWidgets import QApplication, QWidget
+#from PyQt5.QtCore import QUrl
 #from PyQt5.QtWebEngineWidgets import QWebPage
 #from PyQt5.QtWebEngine import QtWebEngine as QWebPage
 
-from PyQt5.QtWebEngineWidgets import QWebEngineView
+#from PyQt5.QtWebEngineWidgets import QWebEngineView
 from bs4 import BeautifulSoup
 from urllib.request import Request, urlopen
 from selenium import webdriver
@@ -66,43 +66,25 @@ def get_worldrank():
     return ranks
 
 
-import scrapy
-from scrapy.crawler import CrawlerProcess
-
-
-class scrapeScores(scrapy.Spider):
-    name = "scores"
-    start_urls = ["https://www.pgatour.com/leaderboard.html",]
-
-    def parse(self, response):
-        
-        print (response)        
-        f = open("testspider.txt", "w") 
-        f.write(response)
-        f.close()
-
-        yield response.body
-        
-        #print (response.body.table('leaderboard large'))
- 
-
-process = CrawlerProcess(settings={
-         'FEED_FORMAT': 'json',
-         'FEED_URI': 'items.json'
-         })
-
-process.crawl(scrapeScores)
-process.start()
-
-
 #t= Tournament.objects.get(current=True)
 #print (t, t.started())
 #sd = ScoreDetails.objects.filter(pick__playerName__tournament=t).exclude(Q(score__in=[0, None]) and Q(thru__in=["not started", None, " ", ""])) or Q(today_score="WD")
 #for score in sd: #ScoreDetails.objects.filter(pick__playerName__tournament=t):
 #    print (score.pick.playerName, score.score, score.thru, score.today_score)
 
-#from golf_app import manual_score
-# s = manual_score.Score('016')
+from golf_app import manual_score
+s = manual_score.Score('006')
+#print (len([x for x in s.get_score_file().values() if x['total'] not in ['CUT', 'WD']]))
+for golfer, data in s.get_score_file().items():
+    if golfer[0:5] == "Sebas":
+        print(golfer)
+
+#print (s.update_scores())
+
+
+#d = s.get_score_file('round.csv').values()
+#print (d.get('Justin Thomas'))
+#print (d)
 # print (s.get_picked_golfers())
 # print (s.update_scores('round.csv'))
 # s.total_scores()
@@ -110,3 +92,29 @@ process.start()
 # #s.winner_bonus()
 # print (ScoreDetails.objects.filter(pick__playerName__tournament__current=True).values('user', 'pick', 'score'))
 # print (BonusDetails.objects.filter(tournament__current=True).values('user', 'winner_bonus'))
+
+
+
+
+# from pyvirtualdisplay import Display
+# from selenium import webdriver
+# from easyprocess import EasyProcess
+
+# def d():
+#     with Display():
+#     # we can now start Firefox and it will run inside the virtual display
+#         print ('11')
+        
+#         browser = webdriver.Firefox()
+
+#         print ('22')
+#         # put the rest of our selenium code in a try/finally
+#         # to make sure we always clean up at the end
+#         try:
+#             browser.get('http://www.google.com')
+#             print(browser.title) #this should print "Google"
+
+#         finally:
+#             browser.quit()
+
+# d()
