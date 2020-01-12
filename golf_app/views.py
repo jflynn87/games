@@ -200,6 +200,52 @@ class ScoreListView(DetailView):
 
     def get(self, request, **kwargs):
 
+        try:
+            json_url = Tournament.objects.get(pk=tournament.pk).score_json_url
+            with urllib.request.urlopen(json_url) as field_json_url:
+                 data = json.loads(field_json_url.read().decode())
+        except Exception as e:
+            print ('cant open nfl score file', e)
+            template_name = 'golf_app/manual_scores.html'
+            queryset = Picks.objects.filter(playerName__tournament__current=True).order_by('user', 'playerName__group__number')
+#            def get_context_data(self,**kwargs):
+            print ('start context_data', datetime.datetime.now())
+            #context = super(ManualScoresView, self).get_context_data(**kwargs)
+            tournament = Tournament.objects.get(current=True)
+            picks = manual_score.Score(tournament.pga_tournament_num)
+            picks.update_scores()
+            picks.total_scores()
+            no_thru_display = None
+            summary_data = (None, None, None, None)
+            det_picks = {}
+            #for user in ScoreDetails.objects.filter(pick__playerName__tournament=tournament).values('pick__user'):
+            #    det_picks
+            
+            sd = ScoreDetails.objects.filter(pick__playerName__tournament=tournament).order_by('pick__user', 'pick__playerName__group')
+
+            for user in sd.values('user').distinct():
+                det_picks[User.objects.get(pk=user.get('user'))]=[]
+
+            for pick in sd:
+                det_picks[pick.user].append(pick)
+
+            scores = (None, None, None, None, None, None)
+            return render(request, 'golf_app/scores.html', {'scores':TotalScore.objects.filter(tournament=tournament).order_by('score'),
+                                            'detail_list':det_picks,
+                                            'leader_list':picks.get_leader(),
+                                            'cut_data':scores[3],
+                                            'lookup_errors': scores[4],
+                                            'tournament': tournament,
+                                            'thru_list': no_thru_display,
+                                            'optimal_picks': summary_data[0],
+                                            'best_score': summary_data[1],
+                                            'cuts': {'1': 'data', '2': 'data'}
+                                            })
+
+
+            
+        #logic for pga score file starts here
+       
         no_thru_display = ['cut', 'mdf', 'not started']
 
         #assume everyone picked for the first tounament, use that to get the count of players
@@ -539,6 +585,7 @@ class ManualScoresView(LoginRequiredMixin,ListView):
     queryset = Picks.objects.filter(playerName__tournament__current=True).order_by('user', 'playerName__group__number')
     
     def get_context_data(self,**kwargs):
+        print ('start context_data', datetime.datetime.now())
         context = super(ManualScoresView, self).get_context_data(**kwargs)
         tournament = Tournament.objects.get(current=True)
         picks = manual_score.Score(tournament.pga_tournament_num)
@@ -546,4 +593,5 @@ class ManualScoresView(LoginRequiredMixin,ListView):
         picks.total_scores()
 
         context.update({'total_scores': TotalScore.objects.filter(tournament=tournament).order_by('score')})
+        print ('end context_data', datetime.datetime.now())
         return context

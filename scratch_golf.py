@@ -75,10 +75,7 @@ def get_worldrank():
 from golf_app import manual_score
 s = manual_score.Score('006')
 #print (len([x for x in s.get_score_file().values() if x['total'] not in ['CUT', 'WD']]))
-for golfer, data in s.get_score_file().items():
-    if golfer[0:5] == "Sebas":
-        print(golfer)
-
+print (s.score_dict)
 #print (s.update_scores())
 
 

@@ -89,7 +89,7 @@
           <td>{{pick.pick.playerName}} {%if pick.pick.playerName.partner%} & {{pick.pick.playerName.partner.0}} {%endif%}</td>
           <td>{{pick.score}}</td>
           <td>{{pick.toPar}}</td>
-          {%if pick.today_score in thru_list %}
+          {%if pick.today_score in thru_list or pick.thru == None%}
             <td>{{pick.today_score}}</td>
           {%else%}
             <td>{{pick.today_score}} thru {{pick.thru}} holes</td>
@@ -101,9 +101,9 @@
           <td>{{pick.pick.playerName}} {%if pick.pick.playerName.partner%} & {{pick.pick.playerName.partner|partner}} {%endif%}</td>
           <td>{{pick.score}}</td>
           <td>{{pick.toPar}}</td>
-          {%if pick.today_score in thru_list %}
+          {%if pick.today_score in thru_list or pick.thru == None%}
             <td>{{pick.today_score}}</td>
-            <td>{{pick.sod_position}}</td>
+            <!-- <td>{{pick.sod_position}}</td> -->
           {%else%}
             <td>{{pick.today_score}} thru {{pick.thru}} holes</td>
             <td>{{pick.sod_position}}</td>
