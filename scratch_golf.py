@@ -72,46 +72,57 @@ def get_worldrank():
 #for score in sd: #ScoreDetails.objects.filter(pick__playerName__tournament=t):
 #    print (score.pick.playerName, score.score, score.thru, score.today_score)
 
-from golf_app import manual_score
-s = manual_score.Score('006')
+#from golf_app import manual_score
+#s = manual_score.Score('006')
 #print (len([x for x in s.get_score_file().values() if x['total'] not in ['CUT', 'WD']]))
-print (s.score_dict)
+#print (s.score_dict)
 #print (s.update_scores())
 
 
-#d = s.get_score_file('round.csv').values()
-#print (d.get('Justin Thomas'))
-#print (d)
-# print (s.get_picked_golfers())
-# print (s.update_scores('round.csv'))
-# s.total_scores()
-# print (TotalScore.objects.filter(tournament__current=True).order_by('score'))
-# #s.winner_bonus()
-# print (ScoreDetails.objects.filter(pick__playerName__tournament__current=True).values('user', 'pick', 'score'))
-# print (BonusDetails.objects.filter(tournament__current=True).values('user', 'winner_bonus'))
+from selenium import webdriver
+from selenium.webdriver.firefox.options import Options
+from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
+
+binary = r'C:\Program Files\Mozilla Firefox\firefox.exe'
+options = Options()
+print (vars(webdriver.Firefox))
+options._arguments = headless=True
+options.binary = binary
+cap = DesiredCapabilities().FIREFOX 
+driver = webdriver.Firefox(firefox_options=options, capabilities=cap, executable_path="C:\\Utility\\BrowserDrivers\\geckodriver.exe", log='ff_log.txt')
+#driver = webdriver.Firefox(firefox_options=options, capabilities=cap)
+
+time.sleep(30)
+url = "https://www.pgatour.com/leaderboard.html"
+
+driver.get(url)
+
+print (driver.find_elements_by_class_name("leaderboard"))
+
+driver.quit()
 
 
+#from pyvirtualdisplay import Display
+
+#import chromedriver_install as cdi
+
+#from easyprocess import EasyProcess
 
 
-# from pyvirtualdisplay import Display
-# from selenium import webdriver
-# from easyprocess import EasyProcess
-
-# def d():
-#     with Display():
-#     # we can now start Firefox and it will run inside the virtual display
-#         print ('11')
+# with Display():
+#      # we can now start Firefox and it will run inside the virtual display
+#      print ('11')
         
-#         browser = webdriver.Firefox()
+#      browser = webdriver.Firefox()
 
-#         print ('22')
-#         # put the rest of our selenium code in a try/finally
-#         # to make sure we always clean up at the end
-#         try:
-#             browser.get('http://www.google.com')
-#             print(browser.title) #this should print "Google"
+#      print ('22')
+# #         # put the rest of our selenium code in a try/finally
+# #         # to make sure we always clean up at the end
+#      try:
+#         browser.get('http://www.google.com')
+#         print(browser.title) #this should print "Google"
 
-#         finally:
-#             browser.quit()
+#      finally:
+#         browser.quit()
 
-# d()
+# # d()

@@ -1,6 +1,6 @@
 import urllib.request
 import json
-from golf_app.models import Picks, Tournament, TotalScore, BonusDetails, ScoreDetails
+from golf_app.models import Picks, Tournament, TotalScore, BonusDetails, ScoreDetails, PickMethod
 import csv
 from golf_app import calc_score
 from datetime import datetime
@@ -71,7 +71,7 @@ class Score(object):
             
             sd.save()
 
-            if pick.is_winner():
+            if pick.is_winner() and not PickMethod.objects.filter(method=3).exists():
                 print ('winner', pick.playerName)
                 bd, created = BonusDetails.objects.get_or_create(user=pick.user, tournament=pick.playerName.tournament)
                 bd.winner_bonus = 50 + (pick.playerName.group.number*2)
@@ -94,13 +94,13 @@ class Score(object):
                 ts.cut_count +=1            
             
             
-            if pick.is_winner():
-                print ('winner', pick)
-                bd = BonusDetails.objects.get(tournament=self.tournament, user=pick.user)
-                bd.winner_bonus = 50 + (2*pick.playerName.group.number)
-                bd.save()
-                ts.score -= bd.winner_bonus
-                ts.save()
+            # if pick.is_winner():
+            #     print ('winner', pick)
+            #     bd = BonusDetails.objects.get(tournament=self.tournament, user=pick.user)
+            #     bd.winner_bonus = 50 + (2*pick.playerName.group.number)
+            #     bd.save()
+            #     ts.score -= bd.winner_bonus
+            #     ts.save()
 
             ts.save()
         print ('end total_scores', datetime.now())
