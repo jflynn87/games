@@ -347,7 +347,9 @@ def format_score(score):
 def formatRank(rank):
     '''takes in a sting and returns a string formatted for the right display or calc'''
 
-    if rank == '':
+    if type(rank) is int:
+        return rank
+    elif rank in  ['', '--', None]:
        return 0
     elif rank[0] != 'T':
        return rank

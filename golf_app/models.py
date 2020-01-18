@@ -29,6 +29,7 @@ class Tournament(models.Model):
     late_picks = models.BooleanField(default=False)
     set_started = models.BooleanField(default=False)
     set_notstarted = models.BooleanField(default=False)
+    manual_score_file = models.BooleanField(default=False)
 
     #def get_queryset(self):t
     #    return self.objects.filter().first()
@@ -86,7 +87,6 @@ class Tournament(models.Model):
         return TotalScore.objects.filter(tournament=self, score=winning_score.get('score__min'))
 
 
-
 class Group(models.Model):
     tournament= models.ForeignKey(Tournament, on_delete=models.CASCADE)
     number = models.PositiveIntegerField()
@@ -132,6 +132,22 @@ class Field(models.Model):
 
     def withdrawal(self):
         pass
+
+
+class PGAWebScores(models.Model):
+    tournament= models.ForeignKey(Tournament, on_delete=models.CASCADE)
+    golfer=models.ForeignKey(Field, on_delete=models.CASCADE)
+    total = models.CharField(max_length=30, null=True)
+    status = models.CharField(max_length=30, null=True)
+    score = models.CharField(max_length=30, null=True)
+    r1 = models.CharField(max_length=30, null=True)
+    r2 = models.CharField(max_length=30, null=True)
+    r3 = models.CharField(max_length=30, null=True)
+    r4 = models.CharField(max_length=30, null=True)
+
+
+    def __str__(self):
+        return str(self.tournament) + str(self.golfer)
 
 
 

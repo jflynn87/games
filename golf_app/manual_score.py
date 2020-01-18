@@ -5,17 +5,17 @@ import csv
 from golf_app import calc_score
 from datetime import datetime
 
+
 class Score(object):
     
-    def __init__(self, tournament_num, season='current'):
+    def __init__(self, score_dict, tournament):
     
-        self.tournament_num = tournament_num
-        self.tournament = Tournament.objects.get(pga_tournament_num=tournament_num, season__current=True)
-        self.score_dict = self.get_score_file()
-        #self.json_url = 'https://statdata.pgatour.com/r/' + self.tournament_num + '/2020/leaderboard-v2mini.json'
-        
-        #with urllib.request.urlopen(self.json_url) as field_json_url:
-        #        self.json = json.loads(field_json_url.read().decode())
+        self.tournament = tournament
+        #self.tournament = Tournament.objects.get(pga_tournament_num=tournament_num, season__current=True)
+        self.score_dict = score_dict
+
+
+
 
     def get_picked_golfers(self):
         pick_list = []
@@ -32,15 +32,37 @@ class Score(object):
     def get_score_file(self, file='round.csv'):
         #print ('start get_score_file', datetime.now())
         score_dict = {}
-        with open(file, encoding="utf8") as csv_file:
-            csv_reader = csv.reader(csv_file, delimiter=',')
+        try:
+            driver = Chrome()
+            url = "https://www.pgatour.com/leaderboard.html"
+            driver.get(url)
+            table = driver.find_elements_by_class_name("leaderboard-table")
     
-            for row in csv_reader:
-                try:
-                    if row[3] != '':
-                        score_dict[row[3]] = {'total': row[0], 'status': row[5], 'score': row[4], 'r1': row[7], 'r2': row[8], 'r3': row[9], 'r4': row[10]}
-                except Exception:
-                    pass
+            for t in table:
+                for tr in t.find_elements_by_tag_name('tr'):
+                    #for td in tr.find_elements_by_tag_name('td'):
+                        print (len(tr), tr)
+        except Exception as e:
+            print ('scrape failed', e)
+            with open(file, encoding="utf8") as csv_file:
+                csv_reader = csv.reader(csv_file, delimiter=',')
+                #for r in csv_reader:
+                #    print (r)
+                for row in csv_reader:
+                    try:
+                        print (row)
+                        if row[3] != '':
+                            score_dict[row[3]] = {'total': row[0], 'status': row[5], 'score': row[4], 'r1': row[7], 'r2': row[8], 'r3': row[9], 'r4': row[10]}
+                    
+                        else:
+                            print ('round.csv file read failed', row, e)
+                    except Exception as e:
+                        pass
+
+        finally:
+            driver.quit()
+
+
         #print ('end get_score_file', datetime.now())
 
         return score_dict
@@ -48,10 +70,14 @@ class Score(object):
 
     def update_scores(self):
         print ('start update_scores', datetime.now())
+        print (self.score_dict)
         for pick in Picks.objects.filter(playerName__tournament=self.tournament):
+            #print (pick.playerName.playerName, self.score_dict.get(pick.playerName.playerName))
             if self.score_dict.get(pick.playerName.playerName).get('total') in ["CUT", "WD"]:
                 pick.score = self.get_cut_num()
             else:
+                print (self.get_round())
+                print (pick.playerName.playerName, self.get_cut_num(), calc_score.formatRank(self.score_dict.get(pick.playerName.playerName).get('total')))
                 if int(calc_score.formatRank(self.score_dict.get(pick.playerName.playerName).get('total'))) > self.get_cut_num():
                     pick.score=self.get_cut_num()
                 else:
@@ -88,7 +114,8 @@ class Score(object):
                 ts.score = pick.score
                 ts.cut_count = 0
             else:
-                ts.score = ts.score + pick.score
+                print (pick, ts.score, pick.score)
+                ts.score = calc_score.formatRank(ts.score) + calc_score.formatRank(pick.score)
 
             if self.score_dict.get(pick.playerName.playerName).get('total') in ["CUT", "WD"]:
                 ts.cut_count +=1            
@@ -115,7 +142,7 @@ class Score(object):
             
     def get_round(self):
         round = 0
-        for stats in self.get_score_file().values():
+        for stats in self.score_dict.values():
             if stats.get('status')[0] != "F" and stats.get('total') not in ('CUT', 'WD'):
                if stats.get('r2') == '--':
                   return 2
@@ -139,10 +166,10 @@ class Score(object):
                
 
     def get_cut_num(self):
-        if self.get_round() in [1, 2]:
+        if self.get_round() in [1, 2, 3]:
             return 66
         else:
-            return len([x for x in self.get_score_file().values() if x['total'] not in ['CUT', 'WD']]) + 1
+            return len([x for x in self.score_dict.values() if x['total'] not in ['CUT', 'WD']]) + 1
 
     def get_leader(self):
         leader_dict = {}        

@@ -1,6 +1,7 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.views.generic import View, TemplateView, ListView, DetailView, CreateView, UpdateView, FormView
-from golf_app.models import Field, Tournament, Picks, Group, TotalScore, ScoreDetails, mpScores, BonusDetails, PickMethod
+from golf_app.models import Field, Tournament, Picks, Group, TotalScore, ScoreDetails, \
+           mpScores, BonusDetails, PickMethod, PGAWebScores
 from golf_app.forms import  CreateManualScoresForm
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponseRedirect, HttpResponse, Http404
@@ -20,7 +21,8 @@ import json
 import random
 from django.db import transaction
 import urllib.request
-
+from selenium.webdriver import Chrome
+import csv
 
 
 class FieldListView(LoginRequiredMixin,ListView):
@@ -200,52 +202,99 @@ class ScoreListView(DetailView):
 
     def get(self, request, **kwargs):
 
-        try:
-            json_url = Tournament.objects.get(pk=tournament.pk).score_json_url
-            with urllib.request.urlopen(json_url) as field_json_url:
-                 data = json.loads(field_json_url.read().decode())
-        except Exception as e:
-            print ('cant open nfl score file', e)
-            template_name = 'golf_app/manual_scores.html'
-            queryset = Picks.objects.filter(playerName__tournament__current=True).order_by('user', 'playerName__group__number')
-#            def get_context_data(self,**kwargs):
-            print ('start context_data', datetime.datetime.now())
-            #context = super(ManualScoresView, self).get_context_data(**kwargs)
-            tournament = Tournament.objects.get(current=True)
-            picks = manual_score.Score(tournament.pga_tournament_num)
-            picks.update_scores()
-            picks.total_scores()
-            no_thru_display = None
-            summary_data = (None, None, None, None)
-            det_picks = {}
-            #for user in ScoreDetails.objects.filter(pick__playerName__tournament=tournament).values('pick__user'):
-            #    det_picks
+        tournament = Tournament.objects.get(pk=self.kwargs.get('pk'))
+        
+        if not tournament.started():
+            user_dict = {}
+            for user in Picks.objects.filter(playerName__tournament=tournament).values('user__username').annotate(Count('playerName')):
+                user_dict[user.get('user__username')]=user.get('playerName__count')
+            if tournament.pga_tournament_num == '470': #special logic for match player
+                scores = (None, None, None, None,None)
+            else:  scores=calc_score.calc_score(self.kwargs, request)
+            print ('lookup_errors', scores[4])
+            return render(request, 'golf_app/pre_start.html', {'user_dict': user_dict,
+                                                            'tournament': tournament,
+                                                            'lookup_errors': scores[4],
+                                                            })
+
+
+
+        if tournament.manual_score_file:
+            score_dict = {}
+            file = str(tournament.name) + ' score.csv'
+            with open(file, encoding="utf8") as csv_file:
+                csv_reader = csv.reader(csv_file, delimiter=',')
+                #for r in csv_reader:
+                #    print (r)
+                for row in csv_reader:
+                    try:
+                        print (row)
+                        if row[3] != '':
+                            score_dict[row[3].split('(')[0].split(',')[0][:-1]] = {'total': row[0], 'status': row[5], 'score': row[4], 'r1': row[7], 'r2': row[8], 'r3': row[9], 'r4': row[10]}
+                    
+                        else:
+                            print ('round.csv file == psace', row)
+                    except Exception as e:
+                        print ('round.csv file read failed', row, e)
+
+
+                data = self.manual_score(request, score_dict, tournament)
+                        
+                picks = data[0]
+                no_thru_display = data[1]
+                summary_data = data[2]
+                det_picks = data[3]
+                scores = data[4]
+
+
+                ### move this back to the main get, not retuning
+                return render(request, 'golf_app/scores.html', {'scores':TotalScore.objects.filter(tournament=tournament).order_by('score'),
+                                        'detail_list':det_picks,
+                                        'leader_list':picks.get_leader(),
+                                        'cut_data':scores[3],
+                                        'lookup_errors': scores[4],
+                                        'tournament': tournament,
+                                        'thru_list': no_thru_display,
+                                        'optimal_picks': summary_data[0],
+                                        'best_score': summary_data[1],
+                                        'cuts': {'1': 'data', '2': 'data'}
+                                        })
+
+
+
+        else:
+            try:
+                json_url = tournament.score_json_url
+                with urllib.request.urlopen(json_url) as field_json_url:
+                    data = json.loads(field_json_url.read().decode())
+            except Exception as e:
+                print ('cant open pga score file', e)
+                #run batch to update pgawebscore table
+                score_dict = {}
+                for s in PGAWebScores.objects.filter(tournament=tournament):
+                    score_dict[s.golfer.playerName] = \
+                    {'total': s.total, 'status': s.status, 'score': s.score, 'r1': s.r1, 'r2': s.r2, 'r3': s.r3, 'r4': s.r4}
+
+               
+            #     score_dict = {}
+            #     driver = Chrome()
+            #     url = "https://www.pgatour.com/leaderboard.html"
+            #     driver.get(url)
+            #     table = driver.find_elements_by_class_name("leaderboard-table")
             
-            sd = ScoreDetails.objects.filter(pick__playerName__tournament=tournament).order_by('pick__user', 'pick__playerName__group')
+            #     for t in table:
+            #         for tr in t.find_elements_by_tag_name('tr'):
+            #             #score_dict
+            #             for td in tr.find_elements_by_tag_name('td'):
+            #                 score_dict[td]
+            # finally:
+            #     driver.quit()
 
-            for user in sd.values('user').distinct():
-                det_picks[User.objects.get(pk=user.get('user'))]=[]
-
-            for pick in sd:
-                det_picks[pick.user].append(pick)
-
-            scores = (None, None, None, None, None, None)
-            return render(request, 'golf_app/scores.html', {'scores':TotalScore.objects.filter(tournament=tournament).order_by('score'),
-                                            'detail_list':det_picks,
-                                            'leader_list':picks.get_leader(),
-                                            'cut_data':scores[3],
-                                            'lookup_errors': scores[4],
-                                            'tournament': tournament,
-                                            'thru_list': no_thru_display,
-                                            'optimal_picks': summary_data[0],
-                                            'best_score': summary_data[1],
-                                            'cuts': {'1': 'data', '2': 'data'}
-                                            })
-
+            self.manual_score(request, score_dict, tournament)
 
             
-        #logic for pga score file starts here
-       
+        #logic for pga score file starts here.  merge in the manual stuff at somepoint
+    
         no_thru_display = ['cut', 'mdf', 'not started']
 
         #assume everyone picked for the first tounament, use that to get the count of players
@@ -253,82 +302,99 @@ class ScoreListView(DetailView):
         c=  len(Picks.objects.filter(playerName__tournament=t).values('user').annotate(unum=Count('user')))
         
 
-        tournament = Tournament.objects.get(pk=self.kwargs.get('pk'))
+        #tournament = Tournament.objects.get(pk=self.kwargs.get('pk'))
         start_time = datetime.datetime.now()
         
         #if datetime.date.today() >= tournament.start_date:
-        if tournament.started():
-                if tournament.pga_tournament_num != '470': #special logic for match play
-                    expected_picks = Group.objects.filter(tournament=tournament).aggregate(Max('number'))
-                    print ('expected', expected_picks, expected_picks['number__max'] * c)
-                    print ('actual', Picks.objects.filter(playerName__tournament=tournament).count() - expected_picks['number__max'] * c)
-                    if Picks.objects.filter(playerName__tournament=tournament).count() \
-                       == (expected_picks.get('number__max') * c):
-                        print ('equal')
-                    elif (expected_picks.get('number__max') - Picks.objects.filter(playerName__tournament=tournament).count()) \
-                       % expected_picks.get('number__max') == 0:
-                        print ('missing full picks')
-                        #using first tournament, should update to use league
-                        for user in TotalScore.objects.filter(tournament=t).values('user__username'):
-                            if not Picks.objects.filter(playerName__tournament=tournament, \
-                             user=User.objects.get(username=user.get('user__username'))).exists():
-                                print (user.get('user__username'), 'no picks so submit random')
-                                create_picks(tournament, User.objects.get(username=user.get('user__username')))
-                    else:
-                        print ('missing individual picks')
-                    
-                    scores = calc_score.calc_score(self.kwargs, request)
-                    calc_finish = datetime.datetime.now()
-                    print ('calc time', calc_finish - start_time)
-                    if scores[5] != None:
-                        summary_data = optimal_picks.optimal_picks(tournament, scores[5])
-                    else:
-                        summary_data = None, None, None, None
-                    print ('summary time', datetime.datetime.now() - calc_finish)
-                    end_time= datetime.datetime.now()
-                    print ('exec time: ', end_time-start_time, self.request.user)
+        #if tournament.started():
+        if tournament.pga_tournament_num != '470': #special logic for match play
+            expected_picks = Group.objects.filter(tournament=tournament).aggregate(Max('number'))
+            print ('expected', expected_picks, expected_picks['number__max'] * c)
+            print ('actual', Picks.objects.filter(playerName__tournament=tournament).count() - expected_picks['number__max'] * c)
+            if Picks.objects.filter(playerName__tournament=tournament).count() \
+            == (expected_picks.get('number__max') * c):
+                print ('equal')
+            elif (expected_picks.get('number__max') - Picks.objects.filter(playerName__tournament=tournament).count()) \
+            % expected_picks.get('number__max') == 0:
+                print ('missing full picks')
+                #using first tournament, should update to use league
+                for user in TotalScore.objects.filter(tournament=t).values('user__username'):
+                    if not Picks.objects.filter(playerName__tournament=tournament, \
+                    user=User.objects.get(username=user.get('user__username'))).exists():
+                        print (user.get('user__username'), 'no picks so submit random')
+                        create_picks(tournament, User.objects.get(username=user.get('user__username')))
+            else:
+                print ('missing individual picks')
+            
+            scores = calc_score.calc_score(self.kwargs, request)
+            calc_finish = datetime.datetime.now()
+            print ('calc time', calc_finish - start_time)
+            if scores[5] != None:
+                summary_data = optimal_picks.optimal_picks(tournament, scores[5])
+            else:
+                summary_data = None, None, None, None
+            print ('summary time', datetime.datetime.now() - calc_finish)
+            end_time= datetime.datetime.now()
+            print ('exec time: ', end_time-start_time, self.request.user)
 
-                    return render(request, 'golf_app/scores.html', {'scores':scores[0],
-                                                                'detail_list':scores[1],
-                                                                'leader_list':scores[2],
-                                                                'cut_data':scores[3],
-                                                                'lookup_errors': scores[4],
-                                                                'tournament': tournament,
-                                                                'thru_list': no_thru_display,
-                                                                'optimal_picks': summary_data[0],
-                                                                'best_score': summary_data[1],
-                                                                'cuts': summary_data[2]
-                                                                })
-                else:
-                # special logic for match play
-                    from golf_app import mp_calc_scores
-                    if not tournament.complete:
-                        mp_calc_scores.mp_calc_scores(tournament, request)
-                    picks = Picks.objects.filter(playerName__tournament=tournament)
-                    scores = mpScores.objects.filter(player__tournament=tournament)
-                    score_details = ScoreDetails.objects.filter(pick__playerName__tournament=tournament).order_by('user')
-                    return render(request, 'golf_app/mp_picks.html', {
-                                                            'picks': picks,
-                                                            'scores': scores,
-                                                            'tournament': tournament,
-                                                            'score_details': score_details,
-                                                            'total_score': TotalScore.objects.filter(tournament=tournament).order_by('score')
-                    })
-
+            return render(request, 'golf_app/scores.html', {'scores':scores[0],
+                                                        'detail_list':scores[1],
+                                                        'leader_list':scores[2],
+                                                        'cut_data':scores[3],
+                                                        'lookup_errors': scores[4],
+                                                        'tournament': tournament,
+                                                        'thru_list': no_thru_display,
+                                                        'optimal_picks': summary_data[0],
+                                                        'best_score': summary_data[1],
+                                                        'cuts': summary_data[2]
+                                                        })
         else:
-                tournament = Tournament.objects.get(current=True)
-                user_dict = {}
-                for user in Picks.objects.filter(playerName__tournament=tournament).values('user__username').annotate(Count('playerName')):
-                    user_dict[user.get('user__username')]=user.get('playerName__count')
-                if tournament.pga_tournament_num == '470': #special logic for match player
-                    scores = (None, None, None, None,None)
-                else:  scores=calc_score.calc_score(self.kwargs, request)
-                print ('lookup_errors', scores[4])
-                return render(request, 'golf_app/pre_start.html', {'user_dict': user_dict,
-                                                                'tournament': tournament,
-                                                                'lookup_errors': scores[4],
-                                                                'thru_list': no_thru_display
-                                                                })
+        # special logic for match play
+            from golf_app import mp_calc_scores
+            if not tournament.complete:
+                mp_calc_scores.mp_calc_scores(tournament, request)
+            picks = Picks.objects.filter(playerName__tournament=tournament)
+            scores = mpScores.objects.filter(player__tournament=tournament)
+            score_details = ScoreDetails.objects.filter(pick__playerName__tournament=tournament).order_by('user')
+            return render(request, 'golf_app/mp_picks.html', {
+                                                    'picks': picks,
+                                                    'scores': scores,
+                                                    'tournament': tournament,
+                                                    'score_details': score_details,
+                                                    'total_score': TotalScore.objects.filter(tournament=tournament).order_by('score')
+            })
+
+
+
+    def manual_score(self, request, score_dict, tournament):
+        #template_name = 'golf_app/manual_scores.html'
+        queryset = Picks.objects.filter(playerName__tournament__current=True).order_by('user', 'playerName__group__number')
+#            def get_context_data(self,**kwargs):
+        print ('man scorfe start context_data', datetime.datetime.now())
+        #context = super(ManualScoresView, self).get_context_data(**kwargs)
+        #tournament = Tournament.objects.get(current=True)
+        picks = manual_score.Score(score_dict, tournament)
+        picks.update_scores()
+        picks.total_scores()
+        no_thru_display = None
+        summary_data = (None, None, None, None)
+        det_picks = {}
+        #for user in ScoreDetails.objects.filter(pick__playerName__tournament=tournament).values('pick__user'):
+        #    det_picks
+        
+        sd = ScoreDetails.objects.filter(pick__playerName__tournament=tournament).order_by('pick__user', 'pick__playerName__group')
+
+        for user in sd.values('user').distinct():
+            det_picks[User.objects.get(pk=user.get('user'))]=[]
+
+        for pick in sd:
+            det_picks[pick.user].append(pick)
+
+        scores = (None, None, None, None, None, None)
+
+        return (picks, no_thru_display, summary_data, det_picks, scores)
+
+
 
 @transaction.atomic
 def create_picks(tournament, user):

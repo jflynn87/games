@@ -3,7 +3,7 @@ from django.contrib import admin
 # Register your models here.
 
 from golf_app.models import Season, Tournament, Field, Picks, Group, TotalScore, \
-                ScoreDetails, Name, BonusDetails, mpScores, PickMethod
+                ScoreDetails, Name, BonusDetails, mpScores, PickMethod, PGAWebScores
 
 class GroupAdmin(admin.ModelAdmin):
     list_display = ('tournament', 'number', 'playerCnt')
@@ -46,3 +46,4 @@ admin.site.register(BonusDetails, BonusDetailsAdmin)
 admin.site.register(Season)
 admin.site.register(mpScores)
 admin.site.register(PickMethod, PickMethodAdmin)
+admin.site.register(PGAWebScores)
