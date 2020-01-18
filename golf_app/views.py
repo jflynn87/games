@@ -374,6 +374,7 @@ class ScoreListView(DetailView):
         #context = super(ManualScoresView, self).get_context_data(**kwargs)
         #tournament = Tournament.objects.get(current=True)
         picks = manual_score.Score(score_dict, tournament)
+        picks.confirm_all_pics()
         picks.update_scores()
         picks.total_scores()
         no_thru_display = None

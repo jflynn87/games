@@ -1,9 +1,14 @@
 import urllib.request
 import json
-from golf_app.models import Picks, Tournament, TotalScore, BonusDetails, ScoreDetails, PickMethod
+from golf_app.models import Picks, Tournament, TotalScore, BonusDetails, ScoreDetails, PickMethod, \
+    Group, Field
+from django.contrib.auth.models import User
 import csv
 from golf_app import calc_score
 from datetime import datetime
+from django.db.models import Count, Max
+from django.db import transaction
+import random
 
 
 class Score(object):
@@ -13,6 +18,53 @@ class Score(object):
         self.tournament = tournament
         #self.tournament = Tournament.objects.get(pga_tournament_num=tournament_num, season__current=True)
         self.score_dict = score_dict
+
+
+    def confirm_all_pics(self):
+        print ('checking picks')
+
+        if self.tournament.started():
+            t = Tournament.objects.filter(season__current=True).earliest('pk')
+            c=  len(Picks.objects.filter(playerName__tournament=t).values('user').annotate(unum=Count('user')))
+            expected_picks = Group.objects.filter(tournament=self.tournament).aggregate(Max('number'))
+            print ('expected', expected_picks, expected_picks['number__max'] * c)
+            print ('actual', Picks.objects.filter(playerName__tournament=self.tournament).count() - expected_picks['number__max'] * c)
+            if Picks.objects.filter(playerName__tournament=self.tournament).count() \
+            == (expected_picks.get('number__max') * c):
+                print ('equal')
+            elif (expected_picks.get('number__max') - Picks.objects.filter(playerName__tournament=self.tournament).count()) \
+            % expected_picks.get('number__max') == 0:
+                print ('missing full picks')
+                #using first tournament, should update to use league
+                for user in TotalScore.objects.filter(tournament=t).values('user__username'):
+                    if not Picks.objects.filter(playerName__tournament=self.tournament, \
+                    user=User.objects.get(username=user.get('user__username'))).exists():
+                        print (user.get('user__username'), 'no picks so submit random')
+                        self.create_picks(self.tournament, User.objects.get(username=user.get('user__username')))
+            else:
+                print ('missing individual picks')
+            
+            return
+
+            
+    @transaction.atomic
+    def create_picks(self, tournament, user):
+        '''takes tournament and user objects and generates random picks.  check for duplication with general pick submit class'''
+
+        for group in Group.objects.filter(tournament=tournament):
+            pick = Picks()
+            random_picks = random.choice(Field.objects.filter(tournament=tournament, group=group, withdrawn=False))
+            pick.playerName = Field.objects.get(playerName=random_picks.playerName, tournament=tournament)
+            pick.user = user
+            pick.save()
+
+        pm = PickMethod()
+        pm.user = user
+        pm.tournament = tournament
+        pm.method = '3'
+        pm.save()
+
+        return
 
 
 
@@ -70,14 +122,14 @@ class Score(object):
 
     def update_scores(self):
         print ('start update_scores', datetime.now())
-        print (self.score_dict)
+        #print (self.score_dict)
         for pick in Picks.objects.filter(playerName__tournament=self.tournament):
             #print (pick.playerName.playerName, self.score_dict.get(pick.playerName.playerName))
             if self.score_dict.get(pick.playerName.playerName).get('total') in ["CUT", "WD"]:
                 pick.score = self.get_cut_num()
             else:
-                print (self.get_round())
-                print (pick.playerName.playerName, self.get_cut_num(), calc_score.formatRank(self.score_dict.get(pick.playerName.playerName).get('total')))
+                #print (self.get_round())
+                #print (pick.playerName.playerName, self.get_cut_num(), calc_score.formatRank(self.score_dict.get(pick.playerName.playerName).get('total')))
                 if int(calc_score.formatRank(self.score_dict.get(pick.playerName.playerName).get('total'))) > self.get_cut_num():
                     pick.score=self.get_cut_num()
                 else:
@@ -114,7 +166,7 @@ class Score(object):
                 ts.score = pick.score
                 ts.cut_count = 0
             else:
-                print (pick, ts.score, pick.score)
+              #  print (pick, ts.score, pick.score)
                 ts.score = calc_score.formatRank(ts.score) + calc_score.formatRank(pick.score)
 
             if self.score_dict.get(pick.playerName.playerName).get('total') in ["CUT", "WD"]:
