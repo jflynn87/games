@@ -19,7 +19,7 @@ class Score(object):
         #self.tournament = Tournament.objects.get(pga_tournament_num=tournament_num, season__current=True)
         self.score_dict = score_dict
 
-
+    ## don't use this, use the models.py function
     def confirm_all_pics(self):
         print ('checking picks')
 
@@ -46,7 +46,7 @@ class Score(object):
             
             return
 
-            
+    ## don't use this, use the models.py function
     @transaction.atomic
     def create_picks(self, tournament, user):
         '''takes tournament and user objects and generates random picks.  check for duplication with general pick submit class'''
@@ -122,9 +122,9 @@ class Score(object):
 
     def update_scores(self):
         print ('start update_scores', datetime.now())
-        #print (self.score_dict)
+        print (self.score_dict)
         for pick in Picks.objects.filter(playerName__tournament=self.tournament):
-            #print (pick.playerName.playerName, self.score_dict.get(pick.playerName.playerName))
+            print (pick.playerName.playerName, self.score_dict.get(pick.playerName.playerName))
             if self.score_dict.get(pick.playerName.playerName).get('total') in ["CUT", "WD"]:
                 pick.score = self.get_cut_num()
             else:

@@ -79,51 +79,6 @@ def get_worldrank():
 #print (s.update_scores())
 
 
-from selenium.webdriver import Chrome
-#from selenium.webdriver.firefox.options import Options
-#from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
-
-#binary = r'C:\Program Files\Mozilla Firefox\firefox.exe'
-#options = Options()
-#print (vars(webdriver.Firefox))
-#options._arguments = headless=True
-#options.binary = binary
-#cap = DesiredCapabilities().FIREFOX 
-driver = Chrome()
-#driver = webdriver.Firefox(firefox_options=options, capabilities=cap)
-
-
-url = "https://www.pgatour.com/leaderboard.html"
-
-driver.get(url)
-score_dict = {}
-#print (driver)
-try:
-    table = driver.find_elements_by_class_name("leaderboard-table")
-    #table = driver.find_element_by_xpath('//*[@id="stroke-play-container"]/div/div[1]/div[5]/table[2]')
-    for t in table[1:]:
-        for tr in t.find_elements_by_tag_name('tr'):
-            #print ("a", len(tr.find_elements_by_tag_name('td')), "b", tr.text)
-            if len(tr.find_elements_by_tag_name('td')) != 4:
-                row = tr.find_elements_by_tag_name('td')
-                print (len(row))
-                print (row[3].text, row[1].text)
-                score_dict[row[3].text] =  {'total': row[1].text, 'status': row[5].text, 'score': row[4].text, 'r1': row[7].text, 'r2': row[8].text, 'r3': row[9].text, 'r4': row[10].text}
-                
-                #for i, td in enumerate(tr.find_elements_by_tag_name('td')):
-                #    if i == 3:
-    print (score_dict)       
-                    
-except Exception as e:
-    print (e)
-finally:
-    driver.quit()
-
-
-#from pyvirtualdisplay import Display
-
-#import chromedriver_install as cdi
-
 #from easyprocess import EasyProcess
 
 
@@ -144,3 +99,9 @@ finally:
 #         browser.quit()
 
 # # d()
+
+t = Tournament.objects.get(current=True)
+print (t.picks_complete())
+if t.started() and not t.picks_complete():
+    t.missing_picks()
+

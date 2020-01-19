@@ -228,14 +228,20 @@ class ScoreListView(DetailView):
                 #    print (r)
                 for row in csv_reader:
                     try:
-                        print (row)
-                        if row[3] != '':
-                            score_dict[row[3].split('(')[0].split(',')[0][:-1]] = {'total': row[0], 'status': row[5], 'score': row[4], 'r1': row[7], 'r2': row[8], 'r3': row[9], 'r4': row[10]}
-                    
+                        name = row[3].split('(')[0].split(',')[0]
+                        #print (name, len(name), name[len(name)-1])
+                        if name != '':
+                            if name[-1] == ' ':
+                                score_dict[name[:-1]] = {'total': row[0], 'status': row[5], 'score': row[4], 'r1': row[7], 'r2': row[8], 'r3': row[9], 'r4': row[10]}
+                            else:
+                                score_dict[name] = {'total': row[0], 'status': row[5], 'score': row[4], 'r1': row[7], 'r2': row[8], 'r3': row[9], 'r4': row[10]}
                         else:
                             print ('round.csv file == psace', row)
                     except Exception as e:
                         print ('round.csv file read failed', row, e)
+
+                if not tournament.picks_complete():
+                    tournament.missing_picks()
 
 
                 data = self.manual_score(request, score_dict, tournament)
@@ -374,7 +380,7 @@ class ScoreListView(DetailView):
         #context = super(ManualScoresView, self).get_context_data(**kwargs)
         #tournament = Tournament.objects.get(current=True)
         picks = manual_score.Score(score_dict, tournament)
-        picks.confirm_all_pics()
+        #picks.confirm_all_pics()
         picks.update_scores()
         picks.total_scores()
         no_thru_display = None

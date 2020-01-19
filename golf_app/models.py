@@ -4,6 +4,8 @@ from django.conf import settings
 from django.db.models import Min, Q, Count, Sum, Max
 from datetime import datetime
 from golf_app import pga_score
+from django.db import transaction
+import random
 
 
 
@@ -65,7 +67,6 @@ class Tournament(models.Model):
             print ('started logic exception', e)
             print ('finishing started check', datetime.now())
             return False
-        print ('here')
         print ('finishing started check', datetime.now())
         return False
         
@@ -85,6 +86,58 @@ class Tournament(models.Model):
     def winner(self):
         winning_score = TotalScore.objects.filter(tournament=self).aggregate(Min('score'))
         return TotalScore.objects.filter(tournament=self, score=winning_score.get('score__min'))
+
+    def picks_complete(self):
+        if self.started():
+            t = Tournament.objects.filter(season__current=True).earliest('pk')
+            c=  len(Picks.objects.filter(playerName__tournament=t).values('user').annotate(unum=Count('user')))
+            expected_picks = Group.objects.filter(tournament=self).aggregate(Max('number'))
+            print ('expected', expected_picks, expected_picks['number__max'] * c)
+            print ('actual', Picks.objects.filter(playerName__tournament=self).count() - expected_picks['number__max'] * c)
+            if Picks.objects.filter(playerName__tournament=self).count() \
+            == (expected_picks.get('number__max') * c):
+                return True
+            # elif (expected_picks.get('number__max') - Picks.objects.filter(playerName__tournament=self.tournament).count()) \
+            # % expected_picks.get('number__max') == 0:
+            #     print ('missing full picks')
+            #     #using first tournament, should update to use league
+            #     for user in TotalScore.objects.filter(tournament=t).values('user__username'):
+            #         if not Picks.objects.filter(playerName__tournament=self.tournament, \
+            #         user=User.objects.get(username=user.get('user__username'))).exists():
+            #             print (user.get('user__username'), 'no picks so submit random')
+            #             self.create_picks(self.tournament, User.objects.get(username=user.get('user__username')))
+            else:
+                return False
+
+    def missing_picks(self):
+        t = Tournament.objects.filter(season__current=True).earliest('pk')
+        for user in TotalScore.objects.filter(tournament=t).values('user__username'):
+            if not Picks.objects.filter(playerName__tournament=self, \
+                user=User.objects.get(username=user.get('user__username'))).exists():
+                print (user.get('user__username'), 'no picks so submit random')
+                self.create_picks(User.objects.get(username=user.get('user__username')))
+    
+    
+    @transaction.atomic
+    def create_picks(self, user):
+        for group in Group.objects.filter(tournament=self):
+            pick = Picks()
+            if self.manual_score_file:
+                random_picks = random.choice(Field.objects.filter(tournament=self, group=group))
+            else:      
+                random_picks = random.choice(Field.objects.filter(tournament=self, group=group, withdrawn=False))
+            pick.playerName = Field.objects.get(playerName=random_picks.playerName, tournament=self)
+            pick.user = user
+            pick.save()
+
+        pm = PickMethod()
+        pm.user = user
+        pm.tournament = self
+        pm.method = '3'
+        pm.save()
+
+        return
+       
 
 
 class Group(models.Model):
