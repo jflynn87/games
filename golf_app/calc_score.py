@@ -276,7 +276,7 @@ def getRanks(tournament):
                 last_name = row['player_bio']['last_name'].replace(', Jr.', '')
                 first_name = row['player_bio']['first_name']
                 player = (first_name + ' ' + last_name)
-                if (row["current_position"] is '' and round in (2,3,4)) and row['status'] != 'mdf' or row["status"] == "wd":
+                if (row["current_position"] == '' and round in (2,3,4)) and row['status'] != 'mdf' or row["status"] == "wd":
                     rank = 'cut'
                     if row['status'] == 'wd':
                         score = "WD"

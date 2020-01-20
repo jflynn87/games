@@ -29,6 +29,7 @@
 
 
 <h2>{{tournament.name}}</h2>
+<p>scores updated as of:  {{tournament.score_update_time}}</p>
 {%if user.is_superuser%}
 <p><a href="{{tournament.field_json_url}}">Field JSON</a></p>
 <p><a href="{{tournament.score_json_url}}">Score JSON</a></p>

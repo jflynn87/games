@@ -32,6 +32,8 @@ class Tournament(models.Model):
     set_started = models.BooleanField(default=False)
     set_notstarted = models.BooleanField(default=False)
     manual_score_file = models.BooleanField(default=False)
+    score_update_time = models.DateTimeField(null=True)
+    cut_score = models.CharField(max_length=100, null=True)
 
     #def get_queryset(self):t
     #    return self.objects.filter().first()

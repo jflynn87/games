@@ -12,6 +12,7 @@ from requests import get
 from selenium import webdriver
 import urllib
 from selenium.webdriver import Chrome
+from django.core.exceptions import ObjectDoesNotExist
 
 class updateWeeklyScore(object):
 
@@ -21,20 +22,26 @@ class updateWeeklyScore(object):
 
 
     def update(self):
+        #print (self.score_dict)
         for g, data in self.score_dict.items():
-            print (g.split('(')[0].split(',')[0], data)
-            score = PGAWebScores()
-            score.tournament=self.tournament
-            score.golfer=Field.objects.get(tournament=self.tournament, \
-                                    playerName=g.split('(')[0].split(',')[0])
-            score.total = data.get('total')
-            score.status = data.get('status')
-            score.score = data.get('score')
-            score.r1 = data.get('r1')
-            score.r2 = data.get('r2')
-            score.r3 = data.get('r3')
-            score.r4 = data.get('r4')
-            score.save()
+            try:
+                #print (g.split('(')[0].split(',')[0], data)
+                score = PGAWebScores()
+                score.tournament=self.tournament
+                score.golfer=Field.objects.get(tournament=self.tournament, \
+                                        playerName=g.split('(')[0].split(',')[0])
+                score.total = data.get('total')
+                score.status = data.get('status')
+                score.score = data.get('score')
+                score.r1 = data.get('r1')
+                score.r2 = data.get('r2')
+                score.r3 = data.get('r3')
+                score.r4 = data.get('r4')
+                score.save()
+            except ObjectDoesNotExist:
+                pass
+            except Exception as e:
+                print ('score update fail', e)
 
 
 

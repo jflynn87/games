@@ -30,16 +30,16 @@ class Migration(migrations.Migration):
             name='manual_score_file',
             field=models.BooleanField(default=False),
         ),
-#        migrations.AddField(
-#            model_name='tournament',
-#            name='set_notstarted',
-#            field=models.BooleanField(default=False),
-#        ),
-#        migrations.AddField(
-#            model_name='tournament',
-#            name='set_started',
-#            field=models.BooleanField(default=False),
-#        ),
+       migrations.AddField(
+           model_name='tournament',
+           name='set_notstarted',
+           field=models.BooleanField(default=False),
+       ),
+       migrations.AddField(
+           model_name='tournament',
+           name='set_started',
+           field=models.BooleanField(default=False),
+       ),
         migrations.AddField(
             model_name='pgawebscores',
             name='tournament',

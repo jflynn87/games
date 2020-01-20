@@ -69,16 +69,17 @@ class Score(object):
 
 
 
-    def get_picked_golfers(self):
-        pick_list = []
-        for pick in Picks.objects.filter(playerName__tournament=self.tournament):
-            #if any(isinstance(pick_list, type(list)) for pick in pick_list):
-            if pick.pk in pick_list:
-                print ('in')
-            else:
-                pick_list.append(pick.pk)
-        print (len(pick_list))
-        return pick_list
+    def get_picks_by_user(self):
+        det_picks = {}
+        sd = ScoreDetails.objects.filter(pick__playerName__tournament=self.tournament).order_by('pick__user', 'pick__playerName__group')
+
+        for user in sd.values('user').distinct():
+            det_picks[User.objects.get(pk=user.get('user'))]=[]
+
+        for pick in sd:
+            det_picks[pick.user].append(pick)
+
+        return det_picks
 
 
     def get_score_file(self, file='round.csv'):
@@ -102,7 +103,7 @@ class Score(object):
                 #    print (r)
                 for row in csv_reader:
                     try:
-                        print (row)
+                        #print (row)
                         if row[3] != '':
                             score_dict[row[3]] = {'total': row[0], 'status': row[5], 'score': row[4], 'r1': row[7], 'r2': row[8], 'r3': row[9], 'r4': row[10]}
                     
@@ -122,9 +123,9 @@ class Score(object):
 
     def update_scores(self):
         print ('start update_scores', datetime.now())
-        print (self.score_dict)
+        #print (self.score_dict)
         for pick in Picks.objects.filter(playerName__tournament=self.tournament):
-            print (pick.playerName.playerName, self.score_dict.get(pick.playerName.playerName))
+            #print (pick.playerName.playerName, self.score_dict.get(pick.playerName.playerName))
             if self.score_dict.get(pick.playerName.playerName).get('total') in ["CUT", "WD"]:
                 pick.score = self.get_cut_num()
             else:
@@ -172,14 +173,14 @@ class Score(object):
             if self.score_dict.get(pick.playerName.playerName).get('total') in ["CUT", "WD"]:
                 ts.cut_count +=1            
             
-            
-            # if pick.is_winner():
-            #     print ('winner', pick)
-            #     bd = BonusDetails.objects.get(tournament=self.tournament, user=pick.user)
-            #     bd.winner_bonus = 50 + (2*pick.playerName.group.number)
-            #     bd.save()
-            #     ts.score -= bd.winner_bonus
-            #     ts.save()
+            print (pick, pick.is_winner())
+            if pick.is_winner():
+                print ('winner', pick)
+                bd = BonusDetails.objects.get(tournament=self.tournament, user=pick.user)
+                bd.winner_bonus = 50 + (2*pick.playerName.group.number)
+                bd.save()
+                ts.score -= bd.winner_bonus
+                ts.save()
 
             ts.save()
         print ('end total_scores', datetime.now())

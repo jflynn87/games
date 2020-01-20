@@ -25,3 +25,19 @@
 [0115/210114.671:ERROR:process_reader_win.cc(151)] SuspendThread: Access is denied. (0x5)
 [0115/210114.671:ERROR:process_reader_win.cc(123)] NtOpenThread: {Access Denied} A process has requested access to an object, but has not been granted those access rights. (0xc0000022)
 [0115/210114.671:ERROR:exception_snapshot_win.cc(98)] thread ID 13728 not found in process
+[0119/130350.632:ERROR:process_reader_win.cc(123)] NtOpenThread: {Access Denied} A process has requested access to an object, but has not been granted those access rights. (0xc0000022)
+[0119/130350.635:ERROR:exception_snapshot_win.cc(98)] thread ID 6464 not found in process
+[0119/182916.674:ERROR:process_reader_win.cc(151)] SuspendThread: Access is denied. (0x5)
+[0119/182916.694:ERROR:process_reader_win.cc(151)] SuspendThread: Access is denied. (0x5)
+[0119/182916.694:ERROR:process_reader_win.cc(151)] SuspendThread: Access is denied. (0x5)
+[0119/182916.695:ERROR:process_reader_win.cc(151)] SuspendThread: Access is denied. (0x5)
+[0119/182916.695:ERROR:process_reader_win.cc(151)] SuspendThread: Access is denied. (0x5)
+[0119/182916.695:ERROR:process_reader_win.cc(123)] NtOpenThread: {Access Denied} A process has requested access to an object, but has not been granted those access rights. (0xc0000022)
+[0119/182916.717:ERROR:exception_snapshot_win.cc(98)] thread ID 13608 not found in process
+[0119/184155.082:ERROR:process_reader_win.cc(151)] SuspendThread: Access is denied. (0x5)
+[0119/184155.100:ERROR:process_reader_win.cc(151)] SuspendThread: Access is denied. (0x5)
+[0119/184155.100:ERROR:process_reader_win.cc(151)] SuspendThread: Access is denied. (0x5)
+[0119/184155.100:ERROR:process_reader_win.cc(151)] SuspendThread: Access is denied. (0x5)
+[0119/184155.100:ERROR:process_reader_win.cc(151)] SuspendThread: Access is denied. (0x5)
+[0119/184155.100:ERROR:process_reader_win.cc(123)] NtOpenThread: {Access Denied} A process has requested access to an object, but has not been granted those access rights. (0xc0000022)
+[0119/184155.101:ERROR:exception_snapshot_win.cc(98)] thread ID 13588 not found in process
