@@ -11,7 +11,7 @@ from django.views.generic.base import TemplateResponseMixin
 from django.urls import reverse, reverse_lazy
 from django.contrib.auth.models import User
 import datetime
-from golf_app import populateField, calc_score, optimal_picks
+from golf_app import populateField, calc_score, optimal_picks, manual_score
 from django.utils import timezone
 from django.core.exceptions import ObjectDoesNotExist
 from django.db.models import Min, Q, Count, Sum, Max
@@ -211,11 +211,12 @@ class ScoreListView(DetailView):
                user_dict[user.get('user__username')]=user.get('playerName__count')
                if tournament.pga_tournament_num == '470': #special logic for match player
                   scores = (None, None, None, None,None)
-               else:  scores=calc_score.calc_score(self.kwargs, request)
-           
+               #else:  scores=calc_score.calc_score(self.kwargs, request)
+           self.template_name = 'golf_app/pre_start.html'
+
            context.update({'user_dict': user_dict,
                            'tournament': tournament,
-                           'lookup_errors': scores[4],
+                          # 'lookup_errors': scores[4],
                                                     })
 
            return context
@@ -247,8 +248,8 @@ class ScoreListView(DetailView):
                 picks.update_scores()
                 picks.total_scores()
 
-                if tournament.complete:
-                    picks.winner_bonus()
+                #if tournament.complete:
+                 #   picks.winner_bonus()
 
                 context.update({'scores':TotalScore.objects.filter(tournament=tournament).order_by('score'),
                                 'detail_list':picks.get_picks_by_user(),
@@ -826,23 +827,10 @@ def get_leader(request):
         print ('not ajax')
         raise Http404
 
-from golf_app import manual_score
+#from golf_app import manual_score
 class ManualScoresView(LoginRequiredMixin,ListView):
     login_url = 'login'
-    template_name = 'golf_app/manual_scores.html'
+    template_name = 'golf_app/scores.html'
     #form=CreateManualScoresForm
     #golfers = manual_score.Score('016').get_picked_golfers()
-    #queryset = Picks.objects.filter(pk__in=golfers) 
-    queryset = Picks.objects.filter(playerName__tournament__current=True).order_by('user', 'playerName__group__number')
-    
-    def get_context_data(self,**kwargs):
-        print ('start context_data', datetime.datetime.now())
-        context = super(ManualScoresView, self).get_context_data(**kwargs)
-        tournament = Tournament.objects.get(current=True)
-        picks = manual_score.Score(tournament.pga_tournament_num)
-        picks.update_scores()
-        picks.total_scores()
-
-        context.update({'total_scores': TotalScore.objects.filter(tournament=tournament).order_by('score')})
-        print ('end context_data', datetime.datetime.now())
-        return context
+    queryset = Picks.objects.filter(playerName__tournament__current=True) 
