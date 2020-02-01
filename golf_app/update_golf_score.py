@@ -13,6 +13,7 @@ from selenium import webdriver
 import urllib
 from selenium.webdriver import Chrome
 from django.core.exceptions import ObjectDoesNotExist
+from django.db import transaction
 
 class updateWeeklyScore(object):
 
@@ -20,19 +21,23 @@ class updateWeeklyScore(object):
         self.score_dict = score_dict
         self.tournament = tournament
 
-
+    @transaction.atomic
     def update(self):
         #print (self.score_dict)
+        PGAWebScores.objects.filter(tournament=self.tournament).delete()
         for g, data in self.score_dict.items():
             try:
                 #print (g.split('(')[0].split(',')[0], data)
+                print (g, data)
                 score = PGAWebScores()
                 score.tournament=self.tournament
                 score.golfer=Field.objects.get(tournament=self.tournament, \
                                         playerName=g.split('(')[0].split(',')[0])
-                score.total = data.get('total')
-                score.status = data.get('status')
-                score.score = data.get('score')
+                score.rank = data.get('rank')
+                score.change = data.get('change')
+                score.thru = data.get('thru')
+                score.round_score = data.get('round_score')
+                score.total_score = data.get('total_score')
                 score.r1 = data.get('r1')
                 score.r2 = data.get('r2')
                 score.r3 = data.get('r3')

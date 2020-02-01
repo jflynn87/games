@@ -8,17 +8,11 @@
 <!-- <meta http-equiv="refresh" content="120" > -->
 <!-- <script type="text/javascript" src="{%static 'golf_app/js/pace.js'%}"></script> -->
 <script type="text/javascript" src="{%static 'golf_app/js/scores.js'%}"></script>
+<script type="text/javascript" src="{%static 'golf_app/js/load.js'%}"></script>
 <link rel="stylesheet" href={%static "golf_app/css/scores.css" %}>
 
-<!--  
-<div class='load'>
-<label class="pulse" id='pulse'>
-    <progress class="pulse-progress">test</progress>
-    しばらくお待ちください。
-</label>
-</div> -->
 
-
+<p hidden id='tournament_key'>{{tournament.pk}}</p>
 
 {%if lookup_errors%}
   <h4>The following picks have withdrawn or have name lookup issues:</h4>
@@ -29,20 +23,27 @@
 
 
 <h2>{{tournament.name}}</h2>
-<p>scores updated as of:  {{tournament.score_update_time}}</p>
+<p id='time'>scores as of:  {{tournament.score_update_time}}</p id> <p id="status" class='status'> ...updating scores...</p>
 {%if user.is_superuser%}
 <p><a href="{{tournament.field_json_url}}">Field JSON</a></p>
 <p><a href="{{tournament.score_json_url}}">Score JSON</a></p>
 {%endif%}
 
+<div class='overlay' id="overlay">
+  <label class="cv-spinner" id='spinner'>
+       <progress class="spinner">test</progress>
+       しばらくお待ちください。
+  </label>
+</div>
 
 <table class="table table-bordered">
-  <thead class='thead-dark'>
+  <thead class='thead-dark blue'>
     <th>Player</th>
     <th>Score</th>
     <th># of Cut Picks</th>
   </thead>
-<tbody>
+
+<tbody id='totals'>
 {%for player in scores%}
   <tr>
     <td>{{player.user}} {%if player.auto_pick%} - missed pick deadline (no bonuses) {%endif%}</td>
@@ -58,9 +59,11 @@
 <p><a href='https://www.pgatour.com/leaderboard.html' target="_blank">Click for Full Leaderboard</a></p>
 {%for player, score in leader_list.items%}
 
-   <p  style="font-size:100%"> Leader:  {{player}}  : {{score}}</p>
+   <p id="leader" style="font-size:100%"> Leader:  {{player}}  : {{score}}</p>
 
 {%endfor%}
+
+<p id='cut_line'></p>
 
 {%for status, score in cut_data.items%}
   {%if status == 'No cut this week'%}
@@ -71,7 +74,25 @@
 {%endfor%}
 <p></p>
 <h3 class="p-3 mb-2 bg-secondary text-white">Score  Details</h3>
-<ul class="list-unstyled">
+<!-- 
+<div class='load'>
+  <label class="pulse" id='pulse'>
+      <progress class="pulse-progress">test</progress>
+      しばらくお待ちください。
+  </label>
+  </div> -->
+  
+  <div class='overlay' id="overlay">
+    <label class="cv-spinner" id='spinner'>
+         <progress class="spinner">test</progress>
+         しばらくお待ちください。
+    </label>
+ </div>
+
+<div id='det-list'>
+ 
+
+  <ul class="list-unstyled">
 
   {%for user, golfers in detail_list.items%}
   <li class="display-4">{{user}}</li>
@@ -136,6 +157,7 @@
   </table>
   {%endfor%}
 </ul>
+</div>
 <h3 class="p-3 mb-2 bg-secondary text-white">Random Data</h3>
 <h5>Who you should have picked:</h5>
 

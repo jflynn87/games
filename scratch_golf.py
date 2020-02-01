@@ -72,8 +72,15 @@ def get_worldrank():
 #for score in sd: #ScoreDetails.objects.filter(pick__playerName__tournament=t):
 #    print (score.pick.playerName, score.score, score.thru, score.today_score)
 
-#from golf_app import manual_score
-#s = manual_score.Score('006')
+from golf_app import manual_score, scrape_scores
+
+t = Tournament.objects.get(current=True)
+pga_web = scrape_scores.ScrapeScores(t)
+score_dict = pga_web.scrape()
+
+s = manual_score.Score(score_dict, t, 'json')
+print (s.get_leader())
+
 #print (len([x for x in s.get_score_file().values() if x['total'] not in ['CUT', 'WD']]))
 #print (s.score_dict)
 #print (s.update_scores())
@@ -100,8 +107,6 @@ def get_worldrank():
 
 # # d()
 
-t = Tournament.objects.get(current=True)
-print (t.picks_complete())
-if t.started() and not t.picks_complete():
-    t.missing_picks()
+
+
 

@@ -13,11 +13,42 @@ import random
 
 class Score(object):
     
-    def __init__(self, score_dict, tournament):
+    def __init__(self, score_dict, tournament, format=None):
     
         self.tournament = tournament
         #self.tournament = Tournament.objects.get(pga_tournament_num=tournament_num, season__current=True)
-        self.score_dict = score_dict
+        if score_dict != None:  
+            self.score_dict = score_dict
+        else:
+           if tournament.manual_score_file:
+                score_dict = {}
+                file = str(tournament.name) + ' score.csv'
+                with open(file, encoding="utf8") as csv_file:
+                        csv_reader = csv.reader(csv_file, delimiter=',')
+                        for row in csv_reader:
+                            try:
+                                name = row[3].split('(')[0].split(',')[0]
+                                #print (name, len(name), name[len(name)-1])
+                                if name != '':
+                                  if name[-1] == ' ':
+                                    score_dict[name[:-1]] = {'total': row[0], 'status': row[5], 'score': row[4], 'r1': row[7], 'r2': row[8], 'r3': row[9], 'r4': row[10]}
+                                  else:
+                                    score_dict[name] = {'total': row[0], 'status': row[5], 'score': row[4], 'r1': row[7], 'r2': row[8], 'r3': row[9], 'r4': row[10]}
+                                else:
+                                    print ('round.csv file == psace', row)
+                            except Exception as e:
+                                print ('round.csv file read failed', row, e)
+
+                        picks = manual_score.Score(score_dict, tournament)
+                        picks.update_scores()
+                        picks.total_scores()
+        #format to determine whether to return json or native django objects
+        if format == None:
+            self.format = 'object'
+        else:
+            self.format = format
+
+
 
     ## don't use this, use the models.py function
     def confirm_all_pics(self):
@@ -74,12 +105,31 @@ class Score(object):
         sd = ScoreDetails.objects.filter(pick__playerName__tournament=self.tournament).order_by('pick__user', 'pick__playerName__group')
 
         for user in sd.values('user').distinct():
-            det_picks[User.objects.get(pk=user.get('user'))]=[]
+            if self.format == "json":
+                user = User.objects.get(pk=user.get('user'))
+                det_picks[user.username]={}
+            else:
+                det_picks[User.objects.get(pk=user.get('user'))]=[]
 
         for pick in sd:
-            det_picks[pick.user].append(pick)
+            if self.format == 'json':
+               #det_picks[pick.user.username]= {'group': pick.pick.playerName.group.number} 
+               det_picks[pick.user.username][pick.pick.playerName.group.number]=\
+                   {
+                   'pick': pick.pick.playerName.playerName,
+                   'score': pick.score,
+                   'toPar': pick.toPar,
+                   'today_score': pick.today_score,
+                   'thru': pick.thru,
+                   'sod_position': pick.sod_position
+                    }
+            else:
+                det_picks[pick.user].append(pick)
 
-        return det_picks
+        if self.format == 'json':
+            return json.dumps(det_picks)
+        else:
+            return det_picks
 
 
     def get_score_file(self, file='round.csv'):
@@ -105,7 +155,7 @@ class Score(object):
                     try:
                         #print (row)
                         if row[3] != '':
-                            score_dict[row[3]] = {'total': row[0], 'status': row[5], 'score': row[4], 'r1': row[7], 'r2': row[8], 'r3': row[9], 'r4': row[10]}
+                            score_dict[row[3]] = {'rank': row[0], 'thru': row[5], 'total_score': row[4], 'r1': row[7], 'r2': row[8], 'r3': row[9], 'r4': row[10]}
                     
                         else:
                             print ('round.csv file read failed', row, e)
@@ -126,29 +176,34 @@ class Score(object):
         #print (self.score_dict)
         for pick in Picks.objects.filter(playerName__tournament=self.tournament):
             #print (pick.playerName.playerName, self.score_dict.get(pick.playerName.playerName))
-            if self.score_dict.get(pick.playerName.playerName).get('total') in ["CUT", "WD"]:
+            if self.score_dict.get(pick.playerName.playerName).get('rank') in ["CUT", "WD"]:
                 pick.score = self.get_cut_num()
             else:
                 #print (self.get_round())
                 #print (pick.playerName.playerName, self.get_cut_num(), calc_score.formatRank(self.score_dict.get(pick.playerName.playerName).get('total')))
-                if int(calc_score.formatRank(self.score_dict.get(pick.playerName.playerName).get('total'))) > self.get_cut_num():
+                if int(calc_score.formatRank(self.score_dict.get(pick.playerName.playerName).get('rank'))) > self.get_cut_num():
                     pick.score=self.get_cut_num()
                 else:
-                    pick.score = calc_score.formatRank(self.score_dict.get(pick.playerName.playerName).get('total'))
+                    pick.score = calc_score.formatRank(self.score_dict.get(pick.playerName.playerName).get('rank'))
                 
             pick.save()
-                        
+                       
             sd, sd_created = ScoreDetails.objects.get_or_create(user=pick.user, pick=pick)
             sd.score=pick.score
             if self.score_dict.get(pick.playerName.playerName).get('total') in ["CUT", "WD"]:
-                sd.today_score  = self.score_dict.get(pick.playerName.playerName).get('total')
+                sd.today_score  = self.score_dict.get(pick.playerName.playerName).get('today_score')
             else:
                 sd.today_score = self.score_dict.get(pick.playerName.playerName).get('r' + str(self.get_round()-1))
-            sd.toPar = self.score_dict.get(pick.playerName.playerName).get('score')
-            
-
+            sd.toPar = self.score_dict.get(pick.playerName.playerName).get('total_score')
+            sd.today_score = self.score_dict.get(pick.playerName.playerName).get('round_score')
+            sd.thru  = self.score_dict.get(pick.playerName.playerName).get('thru')
+            sd.sod_position = self.score_dict.get(pick.playerName.playerName).get('change')
             
             sd.save()
+
+            self.tournament.score_update_time = datetime.now()
+            self.tournament.save()
+
 
             if pick.is_winner() and not PickMethod.objects.filter(method=3).exists():
                 print ('winner', pick.playerName)
@@ -157,9 +212,12 @@ class Score(object):
                 bd.save()
 
         print ('end update_scores', datetime.now())
-
+    
+    @transaction.atomic
     def total_scores(self):
         print ('start total_scores', datetime.now())
+        ts_dict = {}
+        #ts_dict['totals'] = {}
         TotalScore.objects.filter(tournament=self.tournament).delete()
         for pick in Picks.objects.filter(playerName__tournament=self.tournament):
             ts, created = TotalScore.objects.get_or_create(user=pick.user, tournament=pick.playerName.tournament)
@@ -170,10 +228,10 @@ class Score(object):
               #  print (pick, ts.score, pick.score)
                 ts.score = calc_score.formatRank(ts.score) + calc_score.formatRank(pick.score)
 
-            if self.score_dict.get(pick.playerName.playerName).get('total') in ["CUT", "WD"]:
+            if self.score_dict.get(pick.playerName.playerName).get('rank') in ["CUT", "WD"]:
                 ts.cut_count +=1            
             
-            print (pick, pick.is_winner())
+            #print (pick, pick.is_winner())
             if pick.is_winner():
                 print ('winner', pick)
                 bd = BonusDetails.objects.get(tournament=self.tournament, user=pick.user)
@@ -183,7 +241,20 @@ class Score(object):
                 ts.save()
 
             ts.save()
+            
+            if PickMethod.objects.filter(tournament=self.tournament, user=ts.user, method='3').exists():
+                message = "- missed pick deadline (no bonuses)"
+            else:
+                message = ''
+
+
+            ts_dict[ts.user.username + message] = {'total_score': ts.score, 'cuts': ts.cut_count}
+
         print ('end total_scores', datetime.now())
+        sorted_ts_dict = sorted(ts_dict.items(), key=lambda v: v[1].get('total_score'))
+        
+        return json.dumps(dict(sorted_ts_dict))
+
 
     def winner_bonus(self):
         for pick in Picks.objects.filter(playerName__tournament=self.tournament):
@@ -196,7 +267,7 @@ class Score(object):
     def get_round(self):
         round = 0
         for stats in self.score_dict.values():
-            if stats.get('status')[0] != "F" and stats.get('total') not in ('CUT', 'WD'):
+            if stats.get('thru')[0] != "F" and stats.get('rank') not in ('CUT', 'WD'):
                if stats.get('r2') == '--':
                   return 2
                elif stats.get('r3') != '--':
@@ -219,16 +290,16 @@ class Score(object):
                
 
     def get_cut_num(self):
-        if self.get_round() in [1, 2, 3]:
+        if self.get_round() in [1, 2]:
             return 66
         else:
-            return len([x for x in self.score_dict.values() if x['total'] not in ['CUT', 'WD']]) + 1
+            return len([x for x in self.score_dict.values() if x['rank'] not in ['CUT', 'WD']]) + 1
 
     def get_leader(self):
         leader_dict = {}        
         for golfer, stats in self.score_dict.items():
-           if stats['total'] in [1, 'T1']:
-               leader_dict[golfer]=stats['score']
+           if stats['rank'] in ['1', 'T1']:
+               leader_dict[golfer]=stats['total_score']
            else:
                pass
         return leader_dict

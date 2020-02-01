@@ -18,6 +18,9 @@ import datetime
 import scipy.stats as ss
 from django.forms import formset_factory, modelformset_factory
 from collections import OrderedDict
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from fb_app import scores
 #from fb_app import calc_score
 
 
@@ -718,9 +721,6 @@ def ajax_get_games(request, week):
         print ('not ajax')
         raise Http404
 
-from rest_framework.views import APIView
-from rest_framework.response import Response
-from fb_app import scores
 class UpdateNFLScores(APIView):
       pass    
 #     def get(self, num):

@@ -192,14 +192,15 @@ class Field(models.Model):
 class PGAWebScores(models.Model):
     tournament= models.ForeignKey(Tournament, on_delete=models.CASCADE)
     golfer=models.ForeignKey(Field, on_delete=models.CASCADE)
-    total = models.CharField(max_length=30, null=True)
-    status = models.CharField(max_length=30, null=True)
-    score = models.CharField(max_length=30, null=True)
+    rank = models.CharField(max_length=30, null=True)
+    thru = models.CharField(max_length=30, null=True)
+    round_score = models.CharField(max_length=30, null=True)
+    total_score = models.CharField(max_length=30, null=True)
     r1 = models.CharField(max_length=30, null=True)
     r2 = models.CharField(max_length=30, null=True)
     r3 = models.CharField(max_length=30, null=True)
     r4 = models.CharField(max_length=30, null=True)
-
+    change = models.CharField(max_length=100, null=True)
 
     def __str__(self):
         return str(self.tournament) + str(self.golfer)
@@ -252,7 +253,7 @@ class ScoreDetails(models.Model):
     toPar = models.CharField(max_length=50, null=True)
     today_score = models.CharField(max_length = 50, null=True)
     thru = models.CharField(max_length=100, null=True)
-    sod_position = models.CharField(max_length=30, null=True)
+    sod_position = models.CharField(max_length=100, null=True)
 
     def __str__(self):
         return str(self.user) + str(self.pick) + str(self.score)
