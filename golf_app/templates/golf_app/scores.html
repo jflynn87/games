@@ -23,7 +23,7 @@
 
 
 <h2>{{tournament.name}}</h2>
-<p id='time'>scores as of:  {{tournament.score_update_time}}</p id> <p id="status" class='status'> ...updating scores...</p>
+<p id='time'>scores as of:  {{tournament.score_update_time}} PST</p id> <p id="status" class='status'> ...updating scores...</p>
 {%if user.is_superuser%}
 <p><a href="{{tournament.field_json_url}}">Field JSON</a></p>
 <p><a href="{{tournament.score_json_url}}">Score JSON</a></p>

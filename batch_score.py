@@ -17,12 +17,18 @@ from golf_app import scrape_scores
 from golf_app import manual_score
 
 t = Tournament.objects.get(current=True)
+if datetime.now() < t.score_update_time + timedelta(minutes=15):
+    print (datetime.now())
+    print (t.score_update_time)
+    print (t.score_update_time + timedelta(minutes=15))
+    exit()
 if t.complete:
     print (t, 'complete')
     exit()
 
 print (t, 'active, loading scores')
 print ('score batch starting', datetime.now())
+
 web = scrape_scores.ScrapeScores(t)
 score_dict = web.scrape()
 scores = manual_score.Score(score_dict, t)
