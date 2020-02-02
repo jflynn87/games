@@ -513,6 +513,29 @@ class GetScores(APIView):
                           'cut_line': t.cut_score
          }), 200)
 
+class GetDBScores(APIView):
+    
+    def get(self, num):
+        
+        print ('GetScores API VIEW', self.request.GET.get('tournament'))
+        t = Tournament.objects.get(pk=self.request.GET.get('tournament'))
+
+        #pga_web = scrape_scores.ScrapeScores(t)
+        score_dict = get_score_dict(t)
+        
+        scores = manual_score.Score(score_dict, t, 'json')
+        #scores.update_scores()
+        ts = scores.total_scores()
+        d = scores.get_picks_by_user() 
+        leaders = scores.get_leader()
+        print (leaders)
+        return Response(({'picks': d,
+                          'totals': ts,
+                          'leaders': leaders,
+                          'cut_line': t.cut_score
+         }), 200)
+
+
 
 class NewScoresView(LoginRequiredMixin,ListView):
     login_url = 'login'
@@ -545,70 +568,13 @@ class NewScoresView(LoginRequiredMixin,ListView):
         if not tournament.picks_complete():
                tournament.missing_picks()
 
-    #     if tournament.manual_score_file:
-    #        score_dict = {}
-    #        file = str(tournament.name) + ' score.csv'
-    #        with open(file, encoding="utf8") as csv_file:
-    #             csv_reader = csv.reader(csv_file, delimiter=',')
-    #             for row in csv_reader:
-    #                 try:
-    #                     name = row[3].split('(')[0].split(',')[0]
-    #                     #print (name, len(name), name[len(name)-1])
-    #                     if name != '':
-    #                        if name[-1] == ' ':
-    #                           score_dict[name[:-1]] = {'total': row[0], 'status': row[5], 'score': row[4], 'r1': row[7], 'r2': row[8], 'r3': row[9], 'r4': row[10]}
-    #                        else:
-    #                           score_dict[name] = {'total': row[0], 'status': row[5], 'score': row[4], 'r1': row[7], 'r2': row[8], 'r3': row[9], 'r4': row[10]}
-    #                     else:
-    #                         print ('round.csv file == psace', row)
-    #                 except Exception as e:
-    #                     print ('round.csv file read failed', row, e)
-
-    #             picks = manual_score.Score(score_dict, tournament)
-    #             picks.update_scores()
-    #             picks.total_scores()
-
-    #             #if tournament.complete:
-    #              #   picks.winner_bonus()
-
-    #             context.update({'scores':TotalScore.objects.filter(tournament=tournament).order_by('score'),
-    #                             'detail_list':picks.get_picks_by_user(),
-    #                             'leader_list':picks.get_leader(),
-    #                             'cut_data':None,
-    #                             'lookup_errors': None,
-    #                             'tournament': tournament,
-    #                             'thru_list': [],
-    # #                                     'optimal_picks': summary_data[0],
-    # #                                     'best_score': summary_data[1],
-    # #                                     'cuts': {'1': 'data', '2': 'data'}
-    #                                      })
-
-    #             return context
-
-    #     else:
         try:
             json_url = tournament.score_json_url
             with urllib.request.urlopen(json_url) as field_json_url:
                     data = json.loads(field_json_url.read().decode())
+            print ('pga json availablE!')
         except Exception as e:
             print ('cant open pga score file', e)
-            #run batch to update pgawebscore table
-            score_dict = {}
-            #for s in PGAWebScores.objects.filter(tournament=tournament):
-            #    score_dict[s.golfer.playerName] = \
-            #    {'total': s.total, 'status': s.status, 'score': s.score, 'r1': s.r1, 'r2': s.r2, 'r3': s.r3, 'r4': s.r4}
-
-            # picks = manual_score.Score(score_dict, tournament)
-            # picks.update_scores()
-            # picks.total_scores()
-
-
-            #data = self.manual_score(request, score_dict, tournament)
-#             picks = data[0]
-#             no_thru_display = data[1]
-#             summary_data = data[2]
-#             det_picks = data[3]
-#             scores = data[4]
 
             context.update({'scores':TotalScore.objects.filter(tournament=tournament).order_by('score'),
                             'detail_list':None,
@@ -633,9 +599,8 @@ class ManualScoresView(LoginRequiredMixin,ListView):
 def get_score_dict(tournament):
     '''takes a tournament obj and returns a dict of the picks with scores'''
     score_dict = {}
-    for s in PGAWebScores.objects.filter(tournament=tournament):
-        score_dict[s.golfer.playerName] = \
-        {'rank': s.rank, 'change': s.change, 'thru': s.thru, 'total_score': s.total_score, 'round_score': s.round_score, \
-             'r1': s.r1, 'r2': s.r2, 'r3': s.r3, 'r4': s.r4}
-
+    for s in ScoreDetails.objects.filter(pick__playerName__tournament=tournament):
+        score_dict[s.pick.playerName.playerName] = \
+        {'rank': s.score, 'change': None, 'thru': s.thru, 'total_score': None, 'round_score': s.today_score}
+    print ('get_score_dict', score_dict)
     return score_dict

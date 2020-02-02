@@ -19,6 +19,7 @@ urlpatterns= [
     #url(r'^ajax/get_leader/$', views.get_leader, name='get_leader'),
     url(r'^all_time/$', views.AllTime.as_view(), name='all_time'),
     url(r'^get_scores/$', views.GetScores.as_view(), name='get_scores'),
+    url(r'^get_db_scores/$', views.GetDBScores.as_view(), name='get_db_scores'),
     url(r'^new_scores/$', views.NewScoresView.as_view(), name='new_scores'),
 
     
