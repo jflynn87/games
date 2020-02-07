@@ -1,5 +1,5 @@
-import os
-os.environ.setdefault("DJANGO_SETTINGS_MODULE","gamesProj.settings")
+#import os
+#os.environ.setdefault("DJANGO_SETTINGS_MODULE","gamesProj.settings")
 
 from golf_app.models import Tournament, TotalScore, ScoreDetails, Field, Picks, PickMethod, BonusDetails
 from django.contrib.auth.models import User

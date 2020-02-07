@@ -1,5 +1,5 @@
-import os
-os.environ.setdefault("DJANGO_SETTINGS_MODULE","golfProj.settings")
+#import os
+#os.environ.setdefault("DJANGO_SETTINGS_MODULE","golfProj.settings")
 
 from golf_app.models import (Picks, Field, Group, Tournament, TotalScore,
     ScoreDetails, Name, Season, User, BonusDetails)
