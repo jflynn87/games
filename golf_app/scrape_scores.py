@@ -1,8 +1,6 @@
 import os
 os.environ.setdefault("DJANGO_SETTINGS_MODULE","gamesProj.settings")
 
-import django
-django.setup()
 from golf_app.models import Tournament, TotalScore, ScoreDetails, Field, Picks, PickMethod, BonusDetails
 from django.contrib.auth.models import User
 from datetime import datetime, timedelta
@@ -57,7 +55,7 @@ class ScrapeScores(object):
                             row = tr.find_elements_by_tag_name('td')
                             for e in row[2].find_elements_by_class_name('position-movement'): c = e.get_attribute('innerHTML')
                             
-                            score_dict[row[3].text] =  {'rank': row[1].text, 'change': c, \
+                            score_dict[row[3].text.split('(')[0][:-1]] =  {'rank': row[1].text, 'change': c, \
                                  'thru': row[5].text, 'round_score': row[6].text, 'total_score': row[4].text, 'r1': row[7].text, 'r2': row[8].text, 'r3': row[9].text, 'r4': row[10].text}
                 print (score_dict)
                 return (score_dict)                

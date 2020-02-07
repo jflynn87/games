@@ -70,7 +70,9 @@ $.each(picks_data, function(player, stats) {
      '</thead>')
      $.each(stats, function(group, score) {
        
-      if (score['sod_position'].includes('down')) {
+      if (score['sod_position'] == null) {
+        move=''} 
+      else if (score['sod_position'].includes('down')) {
         move = '<svg class="bi bi-box-arrow-down text-danger" width="24" height="24" viewBox="0 0 20 20" fill="currentColor" xmlns="http://www.w3.org/2000/svg"> \
               <path fill-rule="evenodd" d="M6.646 13.646a.5.5 0 01.708 0L10 16.293l2.646-2.647a.5.5 0 01.708.708l-3 3a.5.5 0 01-.708 0l-3-3a.5.5 0 010-.708z" clip-rule="evenodd"></path> \
               <path fill-rule="evenodd" d="M10 6.5a.5.5 0 01.5.5v9a.5.5 0 01-1 0V7a.5.5 0 01.5-.5z" clip-rule="evenodd"></path> \

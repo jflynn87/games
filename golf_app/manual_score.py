@@ -177,32 +177,51 @@ class Score(object):
         #print (self.score_dict)
         for pick in Picks.objects.filter(playerName__tournament=self.tournament):
             print (pick.playerName.playerName, self.score_dict.get(pick.playerName.playerName))
-            if self.score_dict.get(pick.playerName.playerName).get('rank') in ["CUT", "WD"]:
-                pick.score = self.get_cut_num()
-            else:
-                if int(calc_score.formatRank(self.score_dict.get(pick.playerName.playerName).get('rank'))) > self.get_cut_num():
-                    pick.score=self.get_cut_num()
+            try:
+                if self.score_dict.get(pick.playerName.playerName).get('rank') == "CUT" or \
+                    self.score_dict.get(pick.playerName.playerName).get('rank') == "WD" and \
+                    self.get_round() < 3:
+                    pick.score = self.get_cut_num()
+                elif self.score_dict.get(pick.playerName.playerName).get('rank') == "WD" and \
+                    self.get_round > 2:
+                    pick.score = self.get_cut_num -1
                 else:
-                    pick.score = calc_score.formatRank(self.score_dict.get(pick.playerName.playerName).get('rank'))
-
+                    if int(calc_score.formatRank(self.score_dict.get(pick.playerName.playerName).get('rank'))) > self.get_cut_num():
+                        print ('over cut num')
+                        pick.score=self.get_cut_num()
+                    else:
+                        pick.score = calc_score.formatRank(self.score_dict.get(pick.playerName.playerName).get('rank'))
                 
-            pick.save()
-                       
-            sd, sd_created = ScoreDetails.objects.get_or_create(user=pick.user, pick=pick)
-            sd.score=pick.score
-            #print (self.score_dict.get(pick.playerName.playerName).get('rank'))
-            if self.score_dict.get(pick.playerName.playerName).get('rank') in ["CUT", "WD"]:
-                #sd.today_score  = self.score_dict.get(pick.playerName.playerName).get('today_score')
-                sd.today_score  = "CUT"
-                sd.thru  = "CUT"
-            else:
-                #sd.today_score = self.score_dict.get(pick.playerName.playerName).get('r' + str(self.get_round()-1))
-                sd.today_score = self.score_dict.get(pick.playerName.playerName).get('round_score')
-                sd.thru  = self.score_dict.get(pick.playerName.playerName).get('thru')
-            sd.toPar = self.score_dict.get(pick.playerName.playerName).get('total_score')
-            sd.sod_position = self.score_dict.get(pick.playerName.playerName).get('change')
-            
-            sd.save()
+                pick.save()
+                        
+                sd, sd_created = ScoreDetails.objects.get_or_create(user=pick.user, pick=pick)
+                sd.score=pick.score
+                #print (self.score_dict.get(pick.playerName.playerName).get('rank'))
+                if self.score_dict.get(pick.playerName.playerName).get('rank') == "CUT" or \
+                    self.score_dict.get(pick.playerName.playerName).get('rank') == "WD" and round < 3:
+                    #sd.today_score  = self.score_dict.get(pick.playerName.playerName).get('today_score')
+                    sd.today_score  = "CUT"
+                    sd.thru  = "CUT"
+                elif self.score_dict.get(pick.playerName.playerName).get('rank') == "WD":
+                    sd.today_score = "WD"
+                    sd.thru = "WD"
+                else:
+                    #sd.today_score = self.score_dict.get(pick.playerName.playerName).get('r' + str(self.get_round()-1))
+                    sd.today_score = self.score_dict.get(pick.playerName.playerName).get('round_score')
+                    sd.thru  = self.score_dict.get(pick.playerName.playerName).get('thru')
+                sd.toPar = self.score_dict.get(pick.playerName.playerName).get('total_score')
+                sd.sod_position = self.score_dict.get(pick.playerName.playerName).get('change')
+                
+                sd.save()
+            except Exception as e:
+                print ('withdraw?', pick, e)
+                pick.score  = self.get_cut_num()
+                pick.save()
+                sd, sd_created = ScoreDetails.objects.get_or_create(user=pick.user, pick=pick)
+                sd.score=pick.score
+                sd.today_score = "WD"
+                sd.thru = "WD"
+                sd.save()
 
             self.tournament.score_update_time = datetime.now()
             self.tournament.save()
@@ -232,8 +251,8 @@ class Score(object):
               #  print (pick, ts.score, pick.score)
                 ts.score = calc_score.formatRank(ts.score) + calc_score.formatRank(pick.score)
 
-            if self.score_dict.get(pick.pick.playerName.playerName).get('rank') in ["CUT", "WD"] or \
-                pick.thru == "CUT":
+            #if self.score_dict.get(pick.pick.playerName.playerName).get('rank') in ["CUT", "WD"] or \
+            if pick.thru in ["CUT", "WD"]:
                 ts.cut_count +=1            
             
             #print (pick, pick.is_winner())
@@ -298,7 +317,7 @@ class Score(object):
         if self.get_round() in [1, 2]:
             return 66
         else:
-            return len([x for x in self.score_dict.values() if x['rank'] not in ['CUT', 'WD']]) + 1
+            return len([x for x in self.score_dict.values() if x['rank'] not in ['CUT',]]) + 1
 
     def get_leader(self):
         leader_dict = {}        
