@@ -75,11 +75,23 @@ def get_worldrank():
 from golf_app import manual_score, scrape_scores
 
 t = Tournament.objects.get(current=True)
+#t = Tournament.objects.get(pk=95)
 pga_web = scrape_scores.ScrapeScores(t)
 score_dict = pga_web.scrape()
 
+
+# read file
+#with open('score_dict.json', 'r') as myfile:
+#    data=myfile.read()
+
+# parse file
+#score_dict = json.loads(data)
+#print (score_dict)
 s = manual_score.Score(score_dict, t, 'json')
-print (s.get_leader())
+
+print (s.get_cut_num())
+print ('finished', s.get_round())
+print ('finished', s.tournament_complete())
 
 #print (len([x for x in s.get_score_file().values() if x['total'] not in ['CUT', 'WD']]))
 #print (s.score_dict)

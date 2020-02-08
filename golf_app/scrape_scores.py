@@ -10,6 +10,7 @@ from requests import get
 from selenium import webdriver
 import urllib
 from selenium.webdriver import Chrome, ChromeOptions
+import json
 
 
 
@@ -25,7 +26,12 @@ class ScrapeScores(object):
         options.add_argument("--disable-gpu")
         driver = Chrome(options=options)
        
-        url = "https://www.pgatour.com/leaderboard.html"
+        if self.tournament.current:
+            url = "https://www.pgatour.com/leaderboard.html"
+        else:
+            t_name = self.tournament.name.replace(' ', '-').lower()
+            url = "https://www.pgatour.com/competition/2020/" + t_name + "/leaderboard.html"
+            print (url)
         
         driver.get(url)
         score_dict = {}
@@ -54,10 +60,16 @@ class ScrapeScores(object):
                         if len(tr.find_elements_by_tag_name('td')) > 5:
                             row = tr.find_elements_by_tag_name('td')
                             for e in row[2].find_elements_by_class_name('position-movement'): c = e.get_attribute('innerHTML')
-                            
-                            score_dict[row[3].text.split('(')[0][:-1]] =  {'rank': row[1].text, 'change': c, \
+                            n = row[3].text.split('(')[0]
+                            if n[-1] == ' ':
+                                n = n[:-1]
+                            score_dict[n] =  {'rank': row[1].text, 'change': c, \
                                  'thru': row[5].text, 'round_score': row[6].text, 'total_score': row[4].text, 'r1': row[7].text, 'r2': row[8].text, 'r3': row[9].text, 'r4': row[10].text}
-                print (score_dict)
+                #print ('scrape scores dict', score_dict)
+                f = open("score_dict.json", "w")
+                f.write(json.dumps(score_dict))
+                f.close()
+
                 return (score_dict)                
         
         except Exception as e:

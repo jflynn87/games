@@ -21,6 +21,7 @@ urlpatterns= [
     url(r'^get_scores/$', views.GetScores.as_view(), name='get_scores'),
     url(r'^get_db_scores/$', views.GetDBScores.as_view(), name='get_db_scores'),
     url(r'^new_scores/$', views.NewScoresView.as_view(), name='new_scores'),
+    url(r'^new_scores/(?P<pk>\d+)/$',views.NewScoresView.as_view(),name='new_scores'),
 
     
     #url(r'^make_picks/$',views.CreatePicksView.as_view(),name='make_picks'),  # for form

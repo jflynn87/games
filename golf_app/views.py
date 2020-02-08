@@ -546,7 +546,11 @@ class NewScoresView(LoginRequiredMixin,ListView):
 
     def get_context_data(self, **kwargs):
         context = super(NewScoresView, self).get_context_data(**kwargs)
-        tournament = Tournament.objects.get(current=True)
+        if self.kwargs.get('pk') != None:
+            print (self.kwargs)
+            tournament = Tournament.objects.get(pk=self.kwargs.get('pk'))
+        else:
+            tournament = Tournament.objects.get(current=True)
         
         if not tournament.started():
            user_dict = {}
@@ -602,5 +606,5 @@ def get_score_dict(tournament):
     for s in ScoreDetails.objects.filter(pick__playerName__tournament=tournament):
         score_dict[s.pick.playerName.playerName] = \
         {'rank': s.score, 'change': None, 'thru': s.thru, 'total_score': None, 'round_score': s.today_score}
-    print ('get_score_dict', score_dict)
+    #print ('get_score_dict', score_dict)
     return score_dict

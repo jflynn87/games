@@ -99,8 +99,6 @@ class Score(object):
         return
 
 
-
-
     def get_picks_by_user(self):
         det_picks = {}
         sd = ScoreDetails.objects.filter(pick__playerName__tournament=self.tournament).order_by('pick__user', 'pick__playerName__group')
@@ -113,8 +111,16 @@ class Score(object):
                 det_picks[User.objects.get(pk=user.get('user'))]=[]
 
         for pick in sd:
+            #print (pick)
+            #pick.refresh_from_db()
+            #print (pick)
             if self.format == 'json':
                #det_picks[pick.user.username]= {'group': pick.pick.playerName.group.number} 
+               if pick.pick.is_winner():
+                   winner = 'red'
+               else:
+                   winner = 'black'
+
                det_picks[pick.user.username][pick.pick.playerName.group.number]=\
                    {
                    'pick': pick.pick.playerName.playerName,
@@ -122,7 +128,8 @@ class Score(object):
                    'toPar': pick.toPar,
                    'today_score': pick.today_score,
                    'thru': pick.thru,
-                   'sod_position': pick.sod_position
+                   'sod_position': pick.sod_position,
+                   'winner': winner
                     }
             else:
                 det_picks[pick.user].append(pick)
@@ -167,27 +174,25 @@ class Score(object):
             driver.quit()
 
 
-        #print ('end get_score_file', datetime.now())
-
         return score_dict
         
-
+    @transaction.atomic
     def update_scores(self):
         print ('start update_scores', datetime.now())
         #print (self.score_dict)
+        print ('update scores dict end')
         for pick in Picks.objects.filter(playerName__tournament=self.tournament):
             print (pick.playerName.playerName, self.score_dict.get(pick.playerName.playerName))
             try:
                 if self.score_dict.get(pick.playerName.playerName).get('rank') == "CUT" or \
-                    self.score_dict.get(pick.playerName.playerName).get('rank') == "WD" and \
-                    self.get_round() < 3:
+                    (self.score_dict.get(pick.playerName.playerName).get('rank') == "WD" and \
+                    self.get_round() < 3):
                     pick.score = self.get_cut_num()
                 elif self.score_dict.get(pick.playerName.playerName).get('rank') == "WD" and \
-                    self.get_round > 2:
-                    pick.score = self.get_cut_num -1
+                    self.get_round() > 2:
+                    pick.score = self.get_cut_num() -1
                 else:
                     if int(calc_score.formatRank(self.score_dict.get(pick.playerName.playerName).get('rank'))) > self.get_cut_num():
-                        print ('over cut num')
                         pick.score=self.get_cut_num()
                     else:
                         pick.score = calc_score.formatRank(self.score_dict.get(pick.playerName.playerName).get('rank'))
@@ -198,7 +203,7 @@ class Score(object):
                 sd.score=pick.score
                 #print (self.score_dict.get(pick.playerName.playerName).get('rank'))
                 if self.score_dict.get(pick.playerName.playerName).get('rank') == "CUT" or \
-                    self.score_dict.get(pick.playerName.playerName).get('rank') == "WD" and round < 3:
+                    self.score_dict.get(pick.playerName.playerName).get('rank') == "WD" and self.get_round() < 3:
                     #sd.today_score  = self.score_dict.get(pick.playerName.playerName).get('today_score')
                     sd.today_score  = "CUT"
                     sd.thru  = "CUT"
@@ -224,6 +229,8 @@ class Score(object):
                 sd.save()
 
             self.tournament.score_update_time = datetime.now()
+            if not self.tournament.complete:
+                self.tournament.complete = self.tournament_complete()
             self.tournament.save()
 
 
@@ -234,7 +241,9 @@ class Score(object):
                 bd.save()
 
         print ('end update_scores', datetime.now())
-    
+        return
+
+
     @transaction.atomic
     def total_scores(self):
         print ('start total_scores', datetime.now())
@@ -307,27 +316,40 @@ class Score(object):
                     elif stats.get('r3') == '--':
                         round = 3
                     elif stats.get('r4') == '--':
-                        return 4
+                        round = 4
                     else:
                         round = 4
         return round
                
 
     def get_cut_num(self):
-        if self.get_round() in [1, 2]:
+    
+        for v in self.score_dict.values():
+            if v['rank'] == "CUT":
+                return len([x for x in self.score_dict.values() if x['rank'] not in ['CUT',]]) + 1
+        if self.get_round() != 4 and len(self.score_dict.values()) >65:
             return 66
-        else:
-            return len([x for x in self.score_dict.values() if x['rank'] not in ['CUT',]]) + 1
+        #else:
+        #    return len([x for x in self.score_dict.values() if x['rank'] not in ['CUT',]]) + 1
+
 
     def get_leader(self):
         leader_dict = {}        
         for golfer, stats in self.score_dict.items():
-           print ('ld', golfer, stats)
+           #print ('ld', golfer, stats)
            if stats['rank'] in ['1', 'T1']:
                leader_dict[golfer]=stats['total_score']
            else:
                pass
      
         return leader_dict
+
+    def tournament_complete(self):
+        for v in self.score_dict.values():
+            if v['rank'] not in ["CUT", "WD"] and \
+                v['r4'] == "--":
+                return False
+        if self.get_round() == 4:
+            return True
 
     

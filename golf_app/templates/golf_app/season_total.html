@@ -38,7 +38,7 @@
   {%if t == 'totals'%}
   <td>Totals:</td>
   {%else%}
-  <td> <a href="{%url 'golf_app:scores' pk=t.pk %}">{{t.name}}</td>
+  <td> <a href="{%url 'golf_app:new_scores' pk=t.pk %}">{{t.name}}</td>
   {%endif%}
   {%for s in score%}
     {%if t != "totals"%}

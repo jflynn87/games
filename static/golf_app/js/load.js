@@ -23,18 +23,18 @@ $(document).ready(function() {
           url: "/golf_app/get_scores/",
           data: {'tournament' : $('#tournament_key').text()},
           dataType: 'json',
-          success: function (json) {
+          success: function (json_update) {
             console.log('load connected');
-            build_score_tbl(json)
+            build_score_tbl(json_update)
             console.log('updated load duration: ', start, new Date()) 
             $('#status').append(new Date())
             $('#status').attr('class', 'updated-status').text('score updated' + new Date())
             $('#time').hide()
         
                                                 },
-          failure: function(json) {
+          failure: function(json_update) {
             console.log('fail');
-            console.log(json);
+            console.log(json_update);
           }
         })
 
@@ -50,14 +50,15 @@ $(document).ready(function() {
   
 })
 
-function build_score_tbl(json) {
+function build_score_tbl(data) {
 
+$('#det-list').empty()
 $('#det-list').append('<table class="table">' + '</table>')
-var picks_data = $.parseJSON((json['picks']))
-var total_data = $.parseJSON((json['totals']))
-/*console.log(stats)*/
+var picks_data = $.parseJSON((data['picks']))
+var total_data = $.parseJSON((data['totals']))
 
 $.each(picks_data, function(player, stats) {
+    console.log(player, stats)
      $('#det-list table').append('<thead style="background-color:lightblue">' + '<tr>' + '<th>' + player + '</th>' + 
      '<th>' + '</th>' + '<th>' + '</th>' +  '<th>' + '</th>' + '<th>' + '</th>' + '<th>' + '</th>' + 
      '</thead>' +
@@ -85,17 +86,16 @@ $.each(picks_data, function(player, stats) {
         <path fill-rule="evenodd" d="M4.5 16A1.5 1.5 0 006 17.5h8a1.5 1.5 0 001.5-1.5V9A1.5 1.5 0 0014 7.5h-1.5a.5.5 0 000 1H14a.5.5 0 01.5.5v7a.5.5 0 01-.5.5H6a.5.5 0 01-.5-.5V9a.5.5 0 01.5-.5h1.5a.5.5 0 000-1H6A1.5 1.5 0 004.5 9v7z" clip-rule="evenodd"></path> </svg>'
          } 
         else {move = ""}
-
-      $('#det-list table').append('<tr>' +
+  
+      $('#det-list table').append('<tr style=color:' + score['winner'] + '>' +
       '<td>' + score['pick'] + '</td>' +
       '<td>' + score['score'] + '</td>' +
       '<td>' + score['thru'] + '</td>' +
       '<td>' + score['toPar'] + '</td>' +
       '<td>' + score['today_score'] + '</td>' + 
       '<td>' + move +  score['sod_position'] + '</td>'  
-      + '</tr>'
-
-)})})
+      + '</tr>')
+      })})
 
 $('#totals').empty()
 
@@ -103,9 +103,9 @@ $.each(total_data, function(p, total) {
   $('#totals').append('<tr>' + '<td>'+ p + '</td>' + '<td>' + total['total_score'] + '</td>'  + '<td>' + total['cuts']  + '</td>'  + '</tr>')
 })
 
-leader = json['leaders']
+leader = data['leaders']
 
-$('#cut_line').text(json['cut_line'])
+$('#cut_line').text(data['cut_line'])
 $.each(leader, function(golfer, score) {$('#leader').text("Leader: " + golfer + ": " + score)})        
 
 
