@@ -179,7 +179,8 @@ class Score(object):
     @transaction.atomic
     def update_scores(self):
         print ('start update_scores', datetime.now())
-        #print (self.score_dict)
+        print (self.score_dict)
+        print ('round', self.get_round())
         print ('update scores dict end')
         for pick in Picks.objects.filter(playerName__tournament=self.tournament):
             print (pick.playerName.playerName, self.score_dict.get(pick.playerName.playerName))
@@ -192,6 +193,7 @@ class Score(object):
                     self.get_round() > 2:
                     pick.score = self.get_cut_num() -1
                 else:
+                    print ('in else')
                     if int(calc_score.formatRank(self.score_dict.get(pick.playerName.playerName).get('rank'))) > self.get_cut_num():
                         pick.score=self.get_cut_num()
                     else:
@@ -303,7 +305,7 @@ class Score(object):
             if stats.get('thru')[0] != "F" and stats.get('rank') not in ('CUT', 'WD'):
                if stats.get('r2') == '--':
                   return 2
-               elif stats.get('r3') != '--':
+               elif stats.get('r3') == '--':
                       return 3
                elif  stats.get('r4') == '--':
                       return 4
@@ -324,13 +326,15 @@ class Score(object):
 
     def get_cut_num(self):
     
+        if not self.tournament.has_cut:
+            return len(self.score_dict.values())
         for v in self.score_dict.values():
             if v['rank'] == "CUT":
-                return len([x for x in self.score_dict.values() if x['rank'] not in ['CUT',]]) + 1
+                return len([x for x in self.score_dict.values() if x['rank'] not in ['CUT', 'WD']]) + 1
         if self.get_round() != 4 and len(self.score_dict.values()) >65:
             return 66
-        #else:
-        #    return len([x for x in self.score_dict.values() if x['rank'] not in ['CUT',]]) + 1
+        else:
+            return len([x for x in self.score_dict.values() if x['rank'] not in ['CUT','WD']]) + 1
 
 
     def get_leader(self):

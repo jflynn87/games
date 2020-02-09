@@ -498,10 +498,16 @@ class GetScores(APIView):
         print ('GetScores API VIEW', self.request.GET.get('tournament'))
         t = Tournament.objects.get(pk=self.request.GET.get('tournament'))
 
-        pga_web = scrape_scores.ScrapeScores(t)
-        score_dict = pga_web.scrape()
+        if t.current:
+            print ('scraping')
+            pga_web = scrape_scores.ScrapeScores(t)
+            score_dict = pga_web.scrape()
+        else:
+            print ('not scraping')
+            score_dict = get_score_dict(t)
         
         scores = manual_score.Score(score_dict, t, 'json')
+        # change so this isn't executed when complete, add function to get total scores without updating
         scores.update_scores()
         ts = scores.total_scores()
         d = scores.get_picks_by_user() 
