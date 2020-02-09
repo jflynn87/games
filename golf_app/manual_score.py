@@ -249,8 +249,20 @@ class Score(object):
     @transaction.atomic
     def total_scores(self):
         print ('start total_scores', datetime.now())
+       
         ts_dict = {}
-        #ts_dict['totals'] = {}
+
+        if not self.tournament.current:
+            for ts in TotalScore.objects.filter(tournament=self.tournament):
+                if PickMethod.objects.filter(tournament=self.tournament, user=ts.user, method='3').exists():
+                    message = "- missed pick deadline (no bonuses)"
+                else:
+                    message = ''
+                ts_dict[ts.user.username + message] = {'total_score': ts.score, 'cuts': ts.cut_count}
+            sorted_ts_dict = sorted(ts_dict.items(), key=lambda v: v[1].get('total_score'))
+            return json.dumps(dict(sorted_ts_dict))
+       
+        
         TotalScore.objects.filter(tournament=self.tournament).delete()
         #for pick in Picks.objects.filter(playerName__tournament=self.tournament):
         for pick in ScoreDetails.objects.filter(pick__playerName__tournament=self.tournament):
@@ -327,14 +339,19 @@ class Score(object):
     def get_cut_num(self):
     
         if not self.tournament.has_cut:
-            return len(self.score_dict.values())
+            return len([x for x in self.score_dict.values() if x['rank'] not in ['WD']]) + 1
+        round = self.get_cut_round()
+        #after cut WD's
+        
+        if self.tournament.current:wd = len([x for x in self.score_dict.values() if x['rank'] == 'WD' and x['r'+str(round+1)] != '--']) 
+
         for v in self.score_dict.values():
             if v['rank'] == "CUT":
-                return len([x for x in self.score_dict.values() if x['rank'] not in ['CUT', 'WD']]) + 1
+                return len([x for x in self.score_dict.values() if x['rank'] not in ['CUT', 'WD']]) + wd + 1
         if self.get_round() != 4 and len(self.score_dict.values()) >65:
             return 66
         else:
-            return len([x for x in self.score_dict.values() if x['rank'] not in ['CUT','WD']]) + 1
+            return len([x for x in self.score_dict.values() if x['rank'] not in ['CUT','WD']]) + wd + 1
 
 
     def get_leader(self):
@@ -355,5 +372,27 @@ class Score(object):
                 return False
         if self.get_round() == 4:
             return True
+
+    def get_wd_score(self, data):
+        round = self.get_cut_round()
+        if round == None:
+            return self.get_cut_num()
+        for k, v in data:
+            if v.get('r' + str(round + 1)) =='--':
+                return self.get_cut_num()
+            elif v.get('r' + str(round)) != '--':
+                return self.get_cut_num() -1
+            else:
+                print ("get WS score shouldn't be here")
+                return self.get_cut_num()
+
+    def get_cut_round(self):
+        for data in self.score_dict.values():
+            if data.get('rank') == "CUT":
+                if data['r3'] == '--':
+                    return 2
+                elif data['r4'] == "--":
+                    return 3
+        return None
 
     

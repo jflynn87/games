@@ -92,6 +92,10 @@ s = manual_score.Score(score_dict, t, 'json')
 print (s.get_cut_num())
 print ('finished', s.get_round())
 print ('finished', s.tournament_complete())
+print ('cut round', s.get_cut_round())
+
+#print ('wd score', s.get_wd_score())
+
 
 #print (len([x for x in s.get_score_file().values() if x['total'] not in ['CUT', 'WD']]))
 #print (s.score_dict)

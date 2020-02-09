@@ -100,15 +100,6 @@ class Tournament(models.Model):
             if Picks.objects.filter(playerName__tournament=self).count() \
             == (expected_picks.get('number__max') * c):
                 return True
-            # elif (expected_picks.get('number__max') - Picks.objects.filter(playerName__tournament=self.tournament).count()) \
-            # % expected_picks.get('number__max') == 0:
-            #     print ('missing full picks')
-            #     #using first tournament, should update to use league
-            #     for user in TotalScore.objects.filter(tournament=t).values('user__username'):
-            #         if not Picks.objects.filter(playerName__tournament=self.tournament, \
-            #         user=User.objects.get(username=user.get('user__username'))).exists():
-            #             print (user.get('user__username'), 'no picks so submit random')
-            #             self.create_picks(self.tournament, User.objects.get(username=user.get('user__username')))
             else:
                 return False
 
@@ -119,7 +110,10 @@ class Tournament(models.Model):
                 user=User.objects.get(username=user.get('user__username'))).exists():
                 print (user.get('user__username'), 'no picks so submit random')
                 self.create_picks(User.objects.get(username=user.get('user__username')))
-    
+    def get_cut_round(self):
+        pass
+        #need to store round scores on the SD object to build here
+
     
     @transaction.atomic
     def create_picks(self, user):
