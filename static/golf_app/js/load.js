@@ -104,7 +104,7 @@ $.each(total_data, function(p, total) {
 })
 
 leader = data['leaders']
-
+console.log('leader', leader)
 $('#cut_line').text(data['cut_line'])
 $.each(leader, function(golfer, score) {$('#leader').text("Leader: " + golfer + ": " + score)})        
 

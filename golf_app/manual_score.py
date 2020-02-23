@@ -357,8 +357,8 @@ class Score(object):
     def get_leader(self):
         leader_dict = {}        
         for golfer, stats in self.score_dict.items():
-           #print ('ld', golfer, stats)
-           if stats['rank'] in ['1', 'T1']:
+           print ('ld', golfer, stats)
+           if stats['rank'] in ['1', 'T1', 1]:
                leader_dict[golfer]=stats['total_score']
            else:
                pass

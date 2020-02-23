@@ -536,7 +536,7 @@ class GetDBScores(APIView):
         ts = scores.total_scores()
         d = scores.get_picks_by_user() 
         leaders = scores.get_leader()
-        print (leaders)
+        print ('db leaders', leaders)
         return Response(({'picks': d,
                           'totals': ts,
                           'leaders': leaders,
@@ -613,6 +613,6 @@ def get_score_dict(tournament):
     score_dict = {}
     for s in ScoreDetails.objects.filter(pick__playerName__tournament=tournament):
         score_dict[s.pick.playerName.playerName] = \
-        {'rank': s.score, 'change': None, 'thru': s.thru, 'total_score': None, 'round_score': s.today_score}
+        {'rank': s.score, 'change': None, 'thru': s.thru, 'total_score': s.toPar, 'round_score': s.today_score}
     #print ('get_score_dict', score_dict)
     return score_dict
