@@ -134,6 +134,8 @@ class Score(object):
             else:
                 det_picks[pick.user].append(pick)
 
+
+
         if self.format == 'json':
             return json.dumps(det_picks)
         else:
@@ -183,7 +185,7 @@ class Score(object):
         print ('round', self.get_round())
         print ('update scores dict end')
         for pick in Picks.objects.filter(playerName__tournament=self.tournament):
-            print (pick.playerName.playerName, self.score_dict.get(pick.playerName.playerName))
+            #print (pick.playerName.playerName, self.score_dict.get(pick.playerName.playerName))
             try:
                 if self.score_dict.get(pick.playerName.playerName).get('rank') == "CUT" or \
                     (self.score_dict.get(pick.playerName.playerName).get('rank') == "WD" and \
@@ -193,7 +195,7 @@ class Score(object):
                     self.get_round() > 2:
                     pick.score = self.get_cut_num() -1
                 else:
-                    print ('in else')
+                    #print ('in else')
                     if int(calc_score.formatRank(self.score_dict.get(pick.playerName.playerName).get('rank'))) > self.get_cut_num():
                         pick.score=self.get_cut_num()
                     else:
@@ -236,11 +238,13 @@ class Score(object):
             self.tournament.save()
 
 
-            if pick.is_winner() and not PickMethod.objects.filter(method=3).exists():
+            if pick.is_winner() and not PickMethod.objects.filter(user=pick.user, method=3, tournament=pick.playerName.tournament).exists():
                 print ('winner', pick.playerName)
                 bd, created = BonusDetails.objects.get_or_create(user=pick.user, tournament=pick.playerName.tournament)
                 bd.winner_bonus = 50 + (pick.playerName.group.number*2)
                 bd.save()
+        
+
 
         print ('end update_scores', datetime.now())
         return
@@ -273,19 +277,8 @@ class Score(object):
             else:
               #  print (pick, ts.score, pick.score)
                 ts.score = calc_score.formatRank(ts.score) + calc_score.formatRank(pick.score)
-
-            #if self.score_dict.get(pick.pick.playerName.playerName).get('rank') in ["CUT", "WD"] or \
             if pick.thru in ["CUT", "WD"]:
                 ts.cut_count +=1            
-            
-            #print (pick, pick.is_winner())
-            if pick.pick.is_winner():
-                print ('winner', pick)
-                bd = BonusDetails.objects.get(tournament=self.tournament, user=pick.user)
-                bd.winner_bonus = 50 + (2*pick.pick.playerName.group.number)
-                bd.save()
-                ts.score -= bd.winner_bonus
-                ts.save()
 
             ts.save()
             
@@ -294,12 +287,32 @@ class Score(object):
             else:
                 message = ''
 
+            ts_dict[ts.user.username] = {'total_score': ts.score, 'cuts': ts.cut_count, 'msg': message}
 
-            ts_dict[ts.user.username + message] = {'total_score': ts.score, 'cuts': ts.cut_count}
-
-        print ('end total_scores', datetime.now())
-        sorted_ts_dict = sorted(ts_dict.items(), key=lambda v: v[1].get('total_score'))
+        print (ts_dict)
+        if self.tournament.major and self.tournament.complete:
+            for total in TotalScore.objects.filter(tournament=self.tournament):
+                if self.tournament.winning_picks(user=total.user) and not \
+                    PickMethod.objects.filter(tournament=self.tournament, user=total.user, method=3).exists():
+                    bd, created = BonusDetails.objects.get_or_create(user=total.user, tournament=total.tournament)
+                    bd.major_bonus = 100/self.tournament.num_of_winners()
+                    bd.save()
         
+        #for total in TotalScore.objects.filter(tournament=self.tournament):
+                try:
+                    bd = BonusDetails.objects.get(tournament=total.tournament, user=total.user)
+                    total.score -= bd.winner_bonus
+                    total.score -= bd.major_bonus
+                    total.score -= bd.cut_bonus
+                    total.save()
+                    ts_dict[total.user.username].update({'total_score': total.score, 'winner_bonus': bd.winner_bonus, 'major_bonus': bd.major_bonus, 'cut_bonus': bd.cut_bonus})
+
+                except Exception as e:
+                    print (total.user, 'bonus detail issue ', e)
+
+        
+        sorted_ts_dict = sorted(ts_dict.items(), key=lambda v: v[1].get('total_score'))
+        print ('end total_scores', datetime.now())
         return json.dumps(dict(sorted_ts_dict))
 
 
@@ -357,7 +370,7 @@ class Score(object):
     def get_leader(self):
         leader_dict = {}        
         for golfer, stats in self.score_dict.items():
-           print ('ld', golfer, stats)
+           #print ('ld', golfer, stats)
            if stats['rank'] in ['1', 'T1', 1]:
                leader_dict[golfer]=stats['total_score']
            else:
@@ -395,4 +408,3 @@ class Score(object):
                     return 3
         return None
 
-    

@@ -112,8 +112,9 @@ WSGI_APPLICATION = 'gamesProj.wsgi.application'
 # Install PyMySQL as mysqlclient/MySQLdb to use Django's mysqlclient adapter
 # See https://docs.djangoproject.com/en/2.1/ref/databases/#mysql-db-api-drivers
 # for more information
-import pymysql  # noqa: 402
-pymysql.install_as_MySQLdb()
+#import pymysql  # noqa: 402
+#pymysql.install_as_MySQLdb()
+import MySQLdb
 #
 # # [START db_setup]
 #
@@ -169,7 +170,8 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = 'en-us'
 
-TIME_ZONE = 'America/Los_Angeles'
+#TIME_ZONE = 'America/Los_Angeles'
+TIME_ZONE = 'UTC'
 
 USE_I18N = True
 

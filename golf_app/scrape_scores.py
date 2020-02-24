@@ -60,7 +60,7 @@ class ScrapeScores(object):
                         if len(tr.find_elements_by_tag_name('td')) > 5:
                             row = tr.find_elements_by_tag_name('td')
                             for e in row[2].find_elements_by_class_name('position-movement'): c = e.get_attribute('innerHTML')
-                            n = row[3].text.split('(')[0]
+                            n = row[3].text.split('(')[0].split(',')[0]
                             if n[-1] == ' ':
                                 n = n[:-1]
                             score_dict[n] =  {'rank': row[1].text, 'change': c, \

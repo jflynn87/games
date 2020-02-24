@@ -25,104 +25,10 @@ from urllib.request import Request, urlopen
 from selenium import webdriver
 import urllib
 import json
-
-
-def get_worldrank():
-    '''Goes to OWGR web site takes no input, goes to web to get world golf rankings and returns a dictionary with player name as a string and key, ranking as a string in values'''
-
-    #from bs4 import BeautifulSoup
-    #import urllib.request
-
-    html = urllib.request.urlopen("http://www.owgr.com/ranking?pageNo=1&pageSize=All&country=All")
-    soup = BeautifulSoup(html, 'html.parser')
-
-
-    rankslist = (soup.find("div", {'class': 'table_container'}))
-
-    ranks = {}
-
-    c = 0
-    for row in rankslist.find_all('tr')[1:]:
-        rank_data = row.find_all('td')
-        i = 0
-        rank_list = []
-        for data in rank_data:
-            rank_list.append(data.text)
-            i += 1
-            if i == 3:
-                print (rank_list)
-                break
-        c += 1
-        if c == 3:
-
-            break
-        try:
-            player = (row.find('td', {'class': 'name'}).text).replace('(Am)','').replace(' Jr','').replace('(am)','')
-            rank = row.find('td').text
-            ranks[player.capitalize()] = int(rank)
-        except Exception as e:
-            print(e)
-
-    return ranks
-
-
-#t= Tournament.objects.get(current=True)
-#print (t, t.started())
-#sd = ScoreDetails.objects.filter(pick__playerName__tournament=t).exclude(Q(score__in=[0, None]) and Q(thru__in=["not started", None, " ", ""])) or Q(today_score="WD")
-#for score in sd: #ScoreDetails.objects.filter(pick__playerName__tournament=t):
-#    print (score.pick.playerName, score.score, score.thru, score.today_score)
-
-from golf_app import manual_score, scrape_scores
+from golf_app import views, manual_score
 
 t = Tournament.objects.get(current=True)
-#t = Tournament.objects.get(pk=95)
-pga_web = scrape_scores.ScrapeScores(t)
-score_dict = pga_web.scrape()
+d = views.get_score_dict(t)
 
-
-# read file
-#with open('score_dict.json', 'r') as myfile:
-#    data=myfile.read()
-
-# parse file
-#score_dict = json.loads(data)
-#print (score_dict)
-s = manual_score.Score(score_dict, t, 'json')
-
-print (s.get_cut_num())
-print ('finished', s.get_round())
-print ('finished', s.tournament_complete())
-print ('cut round', s.get_cut_round())
-
-#print ('wd score', s.get_wd_score())
-
-
-#print (len([x for x in s.get_score_file().values() if x['total'] not in ['CUT', 'WD']]))
-#print (s.score_dict)
-#print (s.update_scores())
-
-
-#from easyprocess import EasyProcess
-
-
-# with Display():
-#      # we can now start Firefox and it will run inside the virtual display
-#      print ('11')
-        
-#      browser = webdriver.Firefox()
-
-#      print ('22')
-# #         # put the rest of our selenium code in a try/finally
-# #         # to make sure we always clean up at the end
-#      try:
-#         browser.get('http://www.google.com')
-#         print(browser.title) #this should print "Google"
-
-#      finally:
-#         browser.quit()
-
-# # d()
-
-
-
-
+ts = manual_score.Score(d, t, 'json').total_scores()
+print (ts)

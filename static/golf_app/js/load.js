@@ -3,9 +3,11 @@ $(document).ready(function() {
     /*$('#picks-tbl').hide() */
     /*$('#det-list').attr('class', 'pulse')*/
     $('#det-list').attr('class', 'spinner')
-    start = new Date()
-    console.log($('#time').text())
+    start = new Date() 
+    console.log('month', start.toString("MMM dd"))
     $('#status').append(start)
+    /*var fromatted = d.toLocaleFormat("%d.%m.%Y %H:%M (%a)");*/
+
 
     $.ajax({
       type: "GET",
@@ -28,7 +30,7 @@ $(document).ready(function() {
             build_score_tbl(json_update)
             console.log('updated load duration: ', start, new Date()) 
             $('#status').append(new Date())
-            $('#status').attr('class', 'updated-status').text('score updated' + new Date())
+            $('#status').attr('class', 'updated-status').text('score updated: ' + new Date())
             $('#time').hide()
         
                                                 },
@@ -100,7 +102,12 @@ $.each(picks_data, function(player, stats) {
 $('#totals').empty()
 
 $.each(total_data, function(p, total) {
-  $('#totals').append('<tr>' + '<td>'+ p + '</td>' + '<td>' + total['total_score'] + '</td>'  + '<td>' + total['cuts']  + '</td>'  + '</tr>')
+  if (total['winner_bonus'] >0 || total['major_bonus'] > 0 || total['cut_bonus'] > 0) {
+    var bonus_dtl = total['winner_bonus']  + total['major_bonus'] + total['cut_bonus'] 
+    $('#totals').append('<tr>' + '<td>'+ p + '<span class="bonus">' + total['msg'] + ' - Bonus Points: ' + bonus_dtl.toString() + '</span>' + '</td>' + '<td>' + total['total_score'] + '</td>'  + '<td>' + total['cuts']  + '</td>'  + '</tr>')
+  }
+  else {
+  $('#totals').append('<tr>' + '<td>'+ p + total['msg'] + '</td>' + '<td>' + total['total_score'] + '</td>'  + '<td>' + total['cuts']  + '</td>'  + '</tr>')}
 })
 
 leader = data['leaders']
