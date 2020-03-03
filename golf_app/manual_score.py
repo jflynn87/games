@@ -262,7 +262,15 @@ class Score(object):
                     message = "- missed pick deadline (no bonuses)"
                 else:
                     message = ''
-                ts_dict[ts.user.username + message] = {'total_score': ts.score, 'cuts': ts.cut_count}
+                try:
+                    bd = BonusDetails.objects.get(user=ts.user, tournament=ts.tournament)    
+                except Exception:
+                    bd.winner_bonus = 0
+                    bd.major_bonus = 0
+                    bd.cut_bonus = 0
+                ts_dict[ts.user.username] = {'total_score': ts.score, 'cuts': ts.cut_count, \
+                    'msg': message, 'winner_bonus': bd.winner_bonus, 'major_bonus': bd.major_bonus, \
+                    'cut_bonus': bd.cut_bonus} 
             sorted_ts_dict = sorted(ts_dict.items(), key=lambda v: v[1].get('total_score'))
             return json.dumps(dict(sorted_ts_dict))
        
@@ -355,8 +363,8 @@ class Score(object):
             return len([x for x in self.score_dict.values() if x['rank'] not in ['WD']]) + 1
         round = self.get_cut_round()
         #after cut WD's
-        
-        if self.tournament.current:wd = len([x for x in self.score_dict.values() if x['rank'] == 'WD' and x['r'+str(round+1)] != '--']) 
+
+        if self.tournament.current:  wd = len([x for x in self.score_dict.values() if x['rank'] == 'WD' and x['r'+str(round+1)] != '--']) 
 
         for v in self.score_dict.values():
             if v['rank'] == "CUT":
@@ -406,5 +414,46 @@ class Score(object):
                     return 2
                 elif data['r4'] == "--":
                     return 3
-        return None
+        return 5
+
+    def optimal_picks(self):
+        cuts_dict = {}
+        scores = {}
+        score_list = {}
+        min_score = {}
+        
+        for group in Group.objects.filter(tournament=self.tournament):
+           group_cuts = 0
+
+           for player in Field.objects.filter(tournament=self.tournament, group=group):
+               if str(player) in self.score_dict.keys():  #needed to deal wiht WD's before start of tourn.
+                    if self.score_dict[player.playerName]['rank'] not in  ["CUT", "MDF", "WD"] and self.score_dict[player.playerName]['rank'] != '':
+                        score_list[str(player)] = int(calc_score.formatRank(str(self.score_dict[player.playerName]['rank'])))
+                    else:
+                        if self.score_dict[player.playerName]['rank'] == "CUT":
+                            group_cuts += 1
+               else:
+                    continue
+
+           cuts_dict[group] = group_cuts, group.playerCnt
+           scores[group]= score_list
+           score_list = {}
+           total_score = 0
+ 
+        if len(scores) != 0:
+          for group, golfers in scores.items():
+              print (type(group), golfers)
+              try:
+                  leader = (min(golfers, key=golfers.get))
+                  total_score += golfers.get(leader)
+                  min_score[group.number] = \
+                      {'golfer': leader, 'rank': golfers.get(leader), 'cuts': cuts_dict.get(group)[0], 'total_golfers': cuts_dict.get(group)[1]}
+              except Exception as e:
+                  print ('optimal scores exception', e)
+                  min_score[group] = "None", None
+
+        return json.dumps(min_score)
+        #return min_score, total_score, cuts_dict
+        
+
 

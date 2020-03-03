@@ -53,7 +53,7 @@ class Tournament(models.Model):
         #if ScoreDetails.objects.filter(pick__playerName__tournament=self).exclude(Q(score__in=[0, None]) or Q(thru__in=["not started", None, " ", ""])) or Q(today_score__in=["WD", None]).exists():
         if ScoreDetails.objects.filter(pick__playerName__tournament=self).\
             exclude(Q(score=None) or Q(score=0) or \
-                    Q(thru=None) or Q(thru__in=["not started", " ", ""]) or \
+                    Q(thru=None) or Q(thru__in=["not started", " ", "", '--']) or \
                     Q(today_score='WD')).exists():
             #if ScoreDetails.objects.filter(pick__playerName__tournament=self).exclude(Q(score=0) or Q(thru__in=["not started", " ", ""]) or Q(today_score="WD")).exists():
             print (self, 'tournament started based on picks lookup')

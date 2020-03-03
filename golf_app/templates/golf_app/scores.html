@@ -165,7 +165,7 @@
 <h3 class="p-3 mb-2 bg-secondary text-white">Random Data</h3>
 <h5>Who you should have picked:</h5>
 
-<table class="table">
+<table class="table" id='optimal'>
   <thead>
     <th>Group</th>
     <th>Golfer</th>
@@ -181,15 +181,15 @@
     </tr>
     {%endfor%}
     <tr>
-      <td>Total</td>
+      <!-- <td>Total</td>
       <td></td>
-      <td>{{best_score}}</td>
+      <td>{{best_score}}</td> -->
     </tr>
   </tbody>
 </table>
 <br>
 <h5>Cuts Per Group:</h5>
-<table class="table">
+<table class="table" id='cuts'>
   <thead>
     <th>Group</th>
     <th>Cuts</th>

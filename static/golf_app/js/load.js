@@ -28,6 +28,7 @@ $(document).ready(function() {
           success: function (json_update) {
             console.log('load connected');
             build_score_tbl(json_update)
+            build_random_data(json_update)
             console.log('updated load duration: ', start, new Date()) 
             $('#status').append(new Date())
             $('#status').attr('class', 'updated-status').text('score updated: ' + new Date())
@@ -125,5 +126,21 @@ $.each(leader, function(golfer, score) {$('#leader').text("Leader: " + golfer + 
     $('#status').attr('class', 'updated-status').text('score updated' + finish)
     $('#time').hide()
 */
+
 }
-  
+
+function build_random_data(data) {
+  optimal = $.parseJSON(data['optimal'])
+  var total_score = 0
+  $.each(optimal, function(group, data) {
+  $('#optimal').append('<tr>' + '<td>' + 'Group ' + group + '</td>' + 
+                        '<td>' + data['golfer'] + '</td>' +
+                        '<td>' + data['rank'] + '</td>' + '</tr>')
+  total_score = total_score + data['rank']
+  $('#cuts').append('<tr>' + '<td>' + 'Group ' + group + '</td>' + 
+  '<td>' + data['cuts'] + '</td>' +
+  '<td>' + data['total_golfers'] + '</td>' + '</tr>')
+  })
+  $('#optimal').append('<tr>' + '<td>'+ '</td>' + '<td>' +
+   'Total: ' + '</td>' + '<td>' + total_score + '</td>' + '</tr>')
+}

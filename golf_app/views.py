@@ -514,11 +514,13 @@ class GetScores(APIView):
         ts = scores.total_scores()
         d = scores.get_picks_by_user() 
         leaders = scores.get_leader()
+        optimal = scores.optimal_picks()
         print (d, ts)
         return Response(({'picks': d,
                           'totals': ts,
                           'leaders': leaders,
-                          'cut_line': t.cut_score
+                          'cut_line': t.cut_score,
+                          'optimal': optimal
          }), 200)
 
 class GetDBScores(APIView):
