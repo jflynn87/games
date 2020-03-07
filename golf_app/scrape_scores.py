@@ -28,6 +28,7 @@ class ScrapeScores(object):
        
         if self.tournament.current:
             url = "https://www.pgatour.com/leaderboard.html"
+            #url = "https://www.pgatour.com/competition/2020/the-honda-classic/leaderboard.html"
         else:
             t_name = self.tournament.name.replace(' ', '-').lower()
             url = "https://www.pgatour.com/competition/2020/" + t_name + "/leaderboard.html"
@@ -54,6 +55,7 @@ class ScrapeScores(object):
 
             
                 table = driver.find_elements_by_class_name("leaderboard-table")
+                
                 for t in table[1:]:
                     for tr in t.find_elements_by_tag_name('tr'):
                         #print(tr.text, 'len: ', len(tr.text))

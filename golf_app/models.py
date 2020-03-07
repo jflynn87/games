@@ -1,4 +1,4 @@
-from django.db import models
+from django.db import models 
 from django.contrib.auth.models import User
 from django.conf import settings
 from django.db.models import Min, Q, Count, Sum, Max
@@ -6,6 +6,7 @@ from datetime import datetime
 from golf_app import pga_score
 from django.db import transaction
 import random
+
 
 
 
@@ -35,6 +36,7 @@ class Tournament(models.Model):
     score_update_time = models.DateTimeField(null=True, blank=True)
     cut_score = models.CharField(max_length=100, null=True, blank=True)
     has_cut = models.BooleanField(default=True)
+    leaders = models.CharField(null=True, max_length=500, blank=True)
 
     #def get_queryset(self):t
     #    return self.objects.filter().first()
@@ -52,8 +54,8 @@ class Tournament(models.Model):
             return False
         #if ScoreDetails.objects.filter(pick__playerName__tournament=self).exclude(Q(score__in=[0, None]) or Q(thru__in=["not started", None, " ", ""])) or Q(today_score__in=["WD", None]).exists():
         if ScoreDetails.objects.filter(pick__playerName__tournament=self).\
-            exclude(Q(score=None) or Q(score=0) or \
-                    Q(thru=None) or Q(thru__in=["not started", " ", "", '--']) or \
+            exclude(Q(score=None) | Q(score=0) | \
+                    Q(thru=None) | Q(thru__in=["not started", " ", "", '--']) | \
                     Q(today_score='WD')).exists():
             #if ScoreDetails.objects.filter(pick__playerName__tournament=self).exclude(Q(score=0) or Q(thru__in=["not started", " ", ""]) or Q(today_score="WD")).exists():
             print (self, 'tournament started based on picks lookup')

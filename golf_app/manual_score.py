@@ -376,15 +376,28 @@ class Score(object):
 
 
     def get_leader(self):
-        leader_dict = {}        
+        leader_dict = {}
+        leader_list = []        
         for golfer, stats in self.score_dict.items():
            #print ('ld', golfer, stats)
            if stats['rank'] in ['1', 'T1', 1]:
-               leader_dict[golfer]=stats['total_score']
+               leader_list.append(golfer)
+
+               leader_dict= {'leaders': leader_list, 'score': stats['total_score']}
            else:
                pass
-     
-        return leader_dict
+
+        if len(leader_dict.keys()) > 0:
+            print ('leaders exist', leader_dict)
+            self.tournament.leaders = json.dumps(leader_dict)
+            self.tournament.save()
+            #leader_dict['leaders'] = (leader_dict)
+            return json.dumps(leader_dict)
+        else:
+            print ('no leader, going to db', self.tournament.leaders)
+            if self.tournament.leaders != None:
+                return self.tournament.leaders
+            else: return json.dumps('')
 
     def tournament_complete(self):
         for v in self.score_dict.values():

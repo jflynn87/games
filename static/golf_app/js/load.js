@@ -4,7 +4,9 @@ $(document).ready(function() {
     /*$('#det-list').attr('class', 'pulse')*/
     $('#det-list').attr('class', 'spinner')
     start = new Date() 
-    console.log('month', start.toString("MMM dd"))
+    console.log('month', start.toString("MMM dd"), start.getTimezoneOffset())
+    console.log(new Date(start - start.getTimezoneOffset()))
+  
     $('#status').append(start)
     /*var fromatted = d.toLocaleFormat("%d.%m.%Y %H:%M (%a)");*/
 
@@ -99,6 +101,7 @@ $.each(picks_data, function(player, stats) {
       '<td>' + move +  score['sod_position'] + '</td>'  
       + '</tr>')
       })})
+      $('#det-list').attr('class', 'none')
 
 $('#totals').empty()
 
@@ -111,15 +114,19 @@ $.each(total_data, function(p, total) {
   $('#totals').append('<tr>' + '<td>'+ p + total['msg'] + '</td>' + '<td>' + total['total_score'] + '</td>'  + '<td>' + total['cuts']  + '</td>'  + '</tr>')}
 })
 
-leader = data['leaders']
-console.log('leader', leader)
+
+
+var leaders = $.parseJSON((data['leaders']))
+console.log(leaders)
+
+
 $('#cut_line').text(data['cut_line'])
-$.each(leader, function(golfer, score) {$('#leader').text("Leader: " + golfer + ": " + score)})        
+$('#leader').text("Leaders: " + leaders['leaders'] + " ;   score: " + leaders['score'])        
 
 
 /*$('#totals').append()*/
     /*$('#pulse').hide()*/
-    $('#det-list').attr('class', 'none')
+    
     $('#picks-tbl').show()
 /*    finish = new Date()
     $('#status').append(finish)

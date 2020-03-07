@@ -19,8 +19,8 @@ from golf_app import withdraw
 from django.core.mail import send_mail
 
 
-#t = Tournament.objects.get(current=True)
-t = Tournament.objects.get(pk=95)
+t = Tournament.objects.get(current=True)
+#t = Tournament.objects.get(pk=95)
 #if t.started():
 #    print ('tournament started')
 #    exit()
@@ -41,7 +41,7 @@ if len(score['wd_list']) > 0:
 
     for golfer, user in wd_picks.items():
         mail_field = mail_field + "\r" 
-        golfer + user
+        golfer, user
 else:
     mail_field = "no wd's"
 
