@@ -25,7 +25,7 @@
 
 <h2>{{tournament.name}}</h2>
 
-<p id="time">scores as of: {{tournament.score_update_time}} </p> 
+<p id="time">scores as of: <span id="local"> {{tournament.score_update_time}}</span> </p> 
 <p id="status" class='status'> ...updating scores...</p>
 
 {%if user.is_superuser%}

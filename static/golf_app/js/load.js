@@ -5,7 +5,7 @@ $(document).ready(function() {
     $('#det-list').attr('class', 'spinner')
     start = new Date() 
     console.log('month', start.toString("MMM dd"), start.getTimezoneOffset())
-    console.log(new Date(start - start.getTimezoneOffset()))
+    $('#local').text(new Date(start - start.getTimezoneOffset()))
   
     $('#status').append(start)
     /*var fromatted = d.toLocaleFormat("%d.%m.%Y %H:%M (%a)");*/
