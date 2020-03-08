@@ -440,7 +440,7 @@ class Score(object):
 
            for player in Field.objects.filter(tournament=self.tournament, group=group):
                if str(player) in self.score_dict.keys():  #needed to deal wiht WD's before start of tourn.
-                    if self.score_dict[player.playerName]['rank'] not in  ["CUT", "MDF", "WD"] and self.score_dict[player.playerName]['rank'] != '':
+                    if self.score_dict[player.playerName]['rank'] not in  ["CUT", "MDF", "WD", "DQ"] and self.score_dict[player.playerName]['rank'] != '':
                         score_list[str(player)] = int(calc_score.formatRank(str(self.score_dict[player.playerName]['rank'])))
                     else:
                         if self.score_dict[player.playerName]['rank'] == "CUT":

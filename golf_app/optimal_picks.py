@@ -29,7 +29,7 @@ def optimal_picks(tournament, ranks):
            for player in Field.objects.filter(tournament=tournament, group=group):
                if str(player) in ranks.keys():  #needed to deal wiht WD's before start of tourn.
                   #if ranks[player.playerName][0] != "cut":
-                    if ranks[player.playerName][0] not in  ["cut", "mdf", "wd"] and ranks[player.playerName][0] != '':
+                    if ranks[player.playerName][0] not in  ["cut", "mdf", "wd", "DQ"] and ranks[player.playerName][0] != '':
                         #print (player.playerName, ranks[player.playerName][0], type(ranks[player.playerName][0]))
                         score_list[str(player)] = int(formatRank(str(ranks[player.playerName][0])))
                     else:
