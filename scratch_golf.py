@@ -25,13 +25,14 @@ from urllib.request import Request, urlopen
 from selenium import webdriver
 import urllib
 import json
-from golf_app import views, manual_score, scrape_scores
+from golf_app import views, manual_score, scrape_scores, populateField
 
-t = Tournament.objects.get(current=True)
-print (t.started())
+#t = Tournament.objects.get(current=True)
+#print (t.started())
 
 #d = views.get_score_dict(t)
-d = scrape_scores.ScrapeScores(t).scrape()
+#d = scrape_scores.ScrapeScores(t).scrape()
 #optimal = manual_score.Score(d, t, 'json').optimal_picks()
 #print (optimal)
 
+field = populateField.create_groups('009')

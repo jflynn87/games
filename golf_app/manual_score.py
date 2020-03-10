@@ -335,7 +335,7 @@ class Score(object):
     def get_round(self):
         round = 0
         for stats in self.score_dict.values():
-            if stats.get('thru')[0] != "F" and stats.get('rank') not in ('CUT', 'WD'):
+            if stats.get('thru')[0] != "F" and stats.get('rank') not in ('CUT', 'WD', 'DQ'):
                if stats.get('r2') == '--':
                   return 2
                elif stats.get('r3') == '--':
@@ -363,8 +363,9 @@ class Score(object):
             return len([x for x in self.score_dict.values() if x['rank'] not in ['WD']]) + 1
         round = self.get_cut_round()
         #after cut WD's
-
-        if self.tournament.current:  wd = len([x for x in self.score_dict.values() if x['rank'] == 'WD' and x['r'+str(round+1)] != '--']) 
+        #commented for rerun, but do i need the if here?  should not get here normally for old tournament?
+        #if self.tournament.current:  wd = len([x for x in self.score_dict.values() if x['rank'] == 'WD' and x['r'+str(round+1)] != '--']) 
+        wd = len([x for x in self.score_dict.values() if x['rank'] == 'WD' and x['r'+str(round+1)] != '--']) 
 
         for v in self.score_dict.values():
             if v['rank'] == "CUT":
@@ -401,7 +402,7 @@ class Score(object):
 
     def tournament_complete(self):
         for v in self.score_dict.values():
-            if v['rank'] not in ["CUT", "WD"] and \
+            if v['rank'] not in ["CUT", "WD", "DQ"] and \
                 v['r4'] == "--":
                 return False
         if self.get_round() == 4:

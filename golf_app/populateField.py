@@ -11,6 +11,8 @@ import urllib
 from bs4 import BeautifulSoup
 import json
 import datetime
+#import string
+import unidecode 
 
 def clean_db():
     print ('in clean db')
@@ -35,14 +37,18 @@ def get_pga_worldrank():
 
     ranks = {}
     for row in rankslist.find_all('tr')[1:]:
+        #print (row)
         try:
             player = (row.find('td', {'class': 'player-name'}).text).strip('\n')
             rank = row.find('td').text.strip('\n').strip(' ')
-            ranks[player.capitalize()] = int(rank)
+            last_week=  row.find('td', {'class': 'hidden-print hidden-small hidden-medium'}).text.strip('\n')
+            ranks[player.capitalize()] = [int(rank), int(last_week), 0]
         except Exception as e:
             print('exception 2', e)
 
     print ('end pga.com worldrank lookup')
+    #print ('pga ranks', ranks)
+    print ('pga ranks', ranks.get('Adam scott'))
     return ranks
 
 
@@ -81,6 +87,8 @@ def get_worldrank():
             print('exeption 1',row,e)
 
     print ('end owgr.com lookup')
+    
+    print (ranks.get('Adam scott'))
     return ranks
 
 
@@ -237,14 +245,15 @@ def create_groups(tournament_number):
 
         # fix this to get 0 index of ranking list
         try:
-            rank = OWGR_rankings[player.capitalize()][0]
+            #rank = OWGR_rankings[player.capitalize()][0]
+            rank = OWGR_rankings[player.capitalize()]
         except Exception:
             try:
                 print ('not in owgr', player)
                 rank = PGA_rankings[player.capitalize()]
             except Exception:
                 print ('no rank found',player)
-                rank = 9999
+                rank = [9999, 9999, 9999]
 
         #
         # print ('rank', rank)
@@ -277,11 +286,13 @@ def create_groups(tournament_number):
     soup = BeautifulSoup(html, 'html.parser')
 
 
-    players =  (soup.find("div", {'class': 'directory-item'}).find_all('option'))
+    #players =  (soup.find("div", {'class': 'directory-item'}).find_all('option'))
+    players =  soup.find("div", {'class': 'overview'})
     golfer_dict = {}
-
-    for p in players:
-        print (p)
+    #print (players)
+    #print (players.find_all('a', {'class': 'directory-item'}))
+    for p in players.find_all('span', {'class': 'player-flag'}):
+        #print ('players', p)
         link = ''
         p_text = str(p)[47:]
         for char in p_text:
@@ -291,24 +302,27 @@ def create_groups(tournament_number):
                 link = link + char
             golfer_dict[link[:5]]=link
 
-    print ("before for")
     for k, v in sorted(group_dict.items(), key=lambda x: x[1][0]):
-        print (k, v)
+        #print (k, v)
+        map_link = get_flag(k, v)
         if player_cnt < groups.playerCnt:
-          print (k,v[0], str(groups.number), str(groups.playerCnt))
+          #print (k,v[0], str(groups.number), str(groups.playerCnt))
+          #player_link = 'https://www.pgatour.com/players/player.' + str(v[1][1]) + '.' + k.split(' ')[0].lowercase() + '-' + k.split(' ')[1].lowercase() + '.html')
           Field.objects.get_or_create(tournament=tournament, playerName=k, \
              #currentWGR=v[0][0], sow_WGR=v[0][1], soy_WGR=v[0][2], group=groups, alternate=v[1][0], \
-             currentWGR=v[0], group=groups, alternate=v[1][0], \
+             currentWGR=v[0][0], sow_WGR=v[0][1], soy_WGR=v[0][2], \
+             group=groups, alternate=v[1][0], \
              playerID=v[1][1], pic_link= get_pick_link(v[1][1]), \
-             map_link= get_pick_pic(v[1][1], golfer_dict))[0]
+             map_link= map_link)
           player_cnt +=1
         elif player_cnt == groups.playerCnt:
-          print (k,v[0], str(groups.number), str(groups.playerCnt))
+          #print (k,v[0], str(groups.number), str(groups.playerCnt))
           Field.objects.get_or_create(tournament=tournament, playerName=k, \
              #currentWGR=v[0][0], sow_WGR=v[0][1], soy_WGR=v[0][2], group=groups, alternate=v[1][0], \
-             currentWGR=v[0], group=groups, alternate=v[1][0], \
+             currentWGR=v[0][0], sow_WGR=v[0][1], soy_WGR=v[0][2], \
+             group=groups, alternate=v[1][0], \
              playerID=v[1][1], pic_link= get_pick_link(v[1][1]), \
-             map_link= get_pick_pic(v[1][1], golfer_dict))[0]
+             map_link= map_link)
           group_num +=1
           player_cnt = 1
           if Field.objects.filter(tournament=tournament).count() < len(field):
@@ -328,21 +342,29 @@ def create_groups(tournament_number):
 def get_pick_link(playerID):
     return "https://pga-tour-res.cloudinary.com/image/upload/c_fill,d_headshots_default.png,f_auto,g_face:center,h_85,q_auto,r_max,w_85/headshots_" + playerID + ".png"
 
-def get_pick_pic(playerID, golfer_dict):
-
-    link_text = golfer_dict.get(playerID)
-
-    if link_text != None:
-
-        link = "https://www.pgatour.com/players/player." + link_text
+def get_flag(golfer, golfer_data):
+    #print ('get flag', golfer.split(' ')[0].lower(), golfer_data)
+    try:
+        #print (golfer, golfer[1], golfer[3])
+        if golfer[1]=='.' and golfer[3] =='.':
+            name = str(golfer_data[1][1]) + '.' + golfer[0].lower() + '-' + golfer[2].lower() + '--' + golfer.split(' ')[1].strip(', Jr.').lower()
+        else:
+            name = str(golfer_data[1][1]) + '.' + golfer.split(' ')[0].lower() + '-' + golfer.split(' ')[1].strip(', Jr.').lower()
+        link = 'https://www.pgatour.com/players/player.' + unidecode.unidecode(name) + '.html'
+            
+        
         player_html = urllib.request.urlopen(link)
         player_soup = BeautifulSoup(player_html, 'html.parser')
-        country = (player_soup.find('img', {'class': 's-flag'}))
-        flag = country.get('src')
-        print (playerID, flag)
+        country = (player_soup.find('div', {'class': 'country'}))
+
+        flag = country.find('img').get('src')
+        #print (golfer, flag)
         return  "https://www.pgatour.com" + flag
-    else:
+    except Exception as e:
+        print ("flag lookup issue", golfer, name, e)
         return None
+        #else:
+    #    return None
 
 
 

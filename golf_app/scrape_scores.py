@@ -17,8 +17,17 @@ import json
 
 class ScrapeScores(object):
 
-    def __init__(self, tournament):
+    def __init__(self, tournament, url=None):
         self.tournament = tournament
+        if url != None:
+            self.url = url
+        elif self.tournament.current:
+            self.url = "https://www.pgatour.com/leaderboard.html"
+        else:
+            t_name = self.tournament.name.replace(' ', '-').lower()
+            self.url = "https://www.pgatour.com/competition/2020/" + t_name + "/leaderboard.html"
+        print (self.url)
+
 
     def scrape(self):
         options = ChromeOptions()
@@ -26,15 +35,18 @@ class ScrapeScores(object):
         options.add_argument("--disable-gpu")
         driver = Chrome(options=options)
        
-        if self.tournament.current:
-            url = "https://www.pgatour.com/leaderboard.html"
-            #url = "https://www.pgatour.com/competition/2020/the-honda-classic/leaderboard.html"
-        else:
-            t_name = self.tournament.name.replace(' ', '-').lower()
-            url = "https://www.pgatour.com/competition/2020/" + t_name + "/leaderboard.html"
-            print (url)
+        #if url != None:
+        #    url = url
         
-        driver.get(url)
+        # if self.tournament.current:
+        #     url = "https://www.pgatour.com/leaderboard.html"
+        #     #url = "https://www.pgatour.com/competition/2020/the-honda-classic/leaderboard.html"
+        # else:
+        #     t_name = self.tournament.name.replace(' ', '-').lower()
+        #     url = "https://www.pgatour.com/competition/2020/" + t_name + "/leaderboard.html"
+        #     print (url)
+        
+        driver.get(self.url)
         score_dict = {}
         #t = Tournament.objects.get(current=True)
         t = self.tournament

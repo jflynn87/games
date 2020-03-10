@@ -4,10 +4,10 @@ $(document).ready(function() {
     /*$('#det-list').attr('class', 'pulse')*/
     $('#det-list').attr('class', 'spinner')
     start = new Date() 
-    console.log('month', start.toString("MMM dd"), start.getTimezoneOffset())
-    $('#local').text(new Date(start - start.getTimezoneOffset()))
+    console.log(start.toLocaleString())
+    $('#local').text.toLocaleString()
   
-    $('#status').append(start)
+    $('#status').append(start.toLocaleString())
     /*var fromatted = d.toLocaleFormat("%d.%m.%Y %H:%M (%a)");*/
 
 
@@ -32,8 +32,9 @@ $(document).ready(function() {
             build_score_tbl(json_update)
             build_random_data(json_update)
             console.log('updated load duration: ', start, new Date()) 
-            $('#status').append(new Date())
-            $('#status').attr('class', 'updated-status').text('score updated: ' + new Date())
+            var finish = new Date().toLocaleString()
+            $('#status').append(finish)
+            $('#status').attr('class', 'updated-status').text('score updated: ' + finish)
             $('#time').hide()
         
                                                 },
