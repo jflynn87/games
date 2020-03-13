@@ -2,7 +2,7 @@
 #os.environ.setdefault("DJANGO_SETTINGS_MODULE","golfProj.settings")
 
 from golf_app.models import (Picks, Field, Group, Tournament, TotalScore,
-    ScoreDetails, Name, Season, User, BonusDetails)
+    ScoreDetails, Name, Season, User, BonusDetails, Golfer)
 import urllib3
 from django.core.exceptions import ObjectDoesNotExist
 from golf_app import calc_score
@@ -343,10 +343,15 @@ def get_pick_link(playerID):
     return "https://pga-tour-res.cloudinary.com/image/upload/c_fill,d_headshots_default.png,f_auto,g_face:center,h_85,q_auto,r_max,w_85/headshots_" + playerID + ".png"
 
 def get_flag(golfer, golfer_data):
-    #print ('get flag', golfer.split(' ')[0].lower(), golfer_data)
+    print ('get flag', golfer.lower(), golfer_data)
     try:
         #print (golfer, golfer[1], golfer[3])
-        if golfer[1]=='.' and golfer[3] =='.':
+        if Golfer.objects.filter(golfer_pga_num=golfer_data[1][1]).exists():
+            golfer = Golfer.objects.get(golfer_pga_num=golfer_data[1][1])
+            print ('flag from db')
+            return golfer.flag_link
+
+        elif golfer[1]=='.' and golfer[3] =='.':
             name = str(golfer_data[1][1]) + '.' + golfer[0].lower() + '-' + golfer[2].lower() + '--' + golfer.split(' ')[1].strip(', Jr.').lower()
         else:
             name = str(golfer_data[1][1]) + '.' + golfer.split(' ')[0].lower() + '-' + golfer.split(' ')[1].strip(', Jr.').lower()
@@ -358,6 +363,11 @@ def get_flag(golfer, golfer_data):
         country = (player_soup.find('div', {'class': 'country'}))
 
         flag = country.find('img').get('src')
+        golfer_obj = Golfer()
+        golfer_obj.golfer_pga_num = golfer_data[1][1]
+        golfer_obj.golfer_name = golfer
+        golfer_obj.flag_link = "https://www.pgatour.com" + flag
+        golfer_obj.save()
         #print (golfer, flag)
         return  "https://www.pgatour.com" + flag
     except Exception as e:

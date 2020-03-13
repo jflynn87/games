@@ -186,6 +186,15 @@ class Field(models.Model):
         pass
 
 
+class Golfer(models.Model):
+    golfer_pga_num = models.CharField(max_length=100)
+    golfer_name = models.CharField(max_length=100)
+    pic_link  = models.URLField(max_length=500, null=True, blank=True)
+    flag_link = models.URLField(max_length=500, null=True, blank=True)
+
+    def __str__(self):
+        return str(self.golfer_name) + ' : ' + str(self.golfer_pga_num)
+
 class PGAWebScores(models.Model):
     tournament= models.ForeignKey(Tournament, on_delete=models.CASCADE)
     golfer=models.ForeignKey(Field, on_delete=models.CASCADE)

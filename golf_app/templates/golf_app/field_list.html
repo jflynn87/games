@@ -19,7 +19,7 @@
 
 {% regroup field_list by group as ordered_field_list %}
 
-    <div class="jumbotron" id='main'>
+    <div id='main'>
         <h1>Hi, {{user.get_username}}!</h1>
         <h2>Welcome to the {{tournament.name}}  </h2>
 
@@ -46,7 +46,9 @@
           <th></th>
           <th>Group:  {{group.grouper.number}}</th>
           <th>Name</th>
-          <th>World Golf Ranking</th>
+          <th>Currrent WGR</th>
+          <th>Prior Wk WRG</th>
+          <th>Start of year WGR</th>
           <th>Select</th>
 
         {% for player in group.list%}
@@ -70,6 +72,8 @@
                    <td>{{player.playerName}} <img src="{{player.map_link}}" alt="">{%if player.partner%} &  {{player.partner}} {%endif%}</td>
                 {%endif%}
               <td>{{player.currentWGR}}</td>
+              <td>{{player.sow_WGR}}</td>
+              <td>{{player.soy_WGR}}</td>
 
               {%if not player.withdrawn%}
               <form method="post">

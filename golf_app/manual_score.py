@@ -361,7 +361,8 @@ class Score(object):
     
         if not self.tournament.has_cut:
             return len([x for x in self.score_dict.values() if x['rank'] not in ['WD']]) + 1
-        round = self.get_cut_round()
+        #round = self.get_cut_round()
+        round = self.get_round()
         #after cut WD's
         #commented for rerun, but do i need the if here?  should not get here normally for old tournament?
         #if self.tournament.current:  wd = len([x for x in self.score_dict.values() if x['rank'] == 'WD' and x['r'+str(round+1)] != '--']) 
@@ -428,7 +429,7 @@ class Score(object):
                     return 2
                 elif data['r4'] == "--":
                     return 3
-        return 5
+        return 1
 
     def optimal_picks(self):
         cuts_dict = {}
