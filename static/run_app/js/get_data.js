@@ -17,7 +17,5 @@ function get_run_data() {
           $('#status').text('Update Fail')
           console.log('failed done', new Date())
         }
-        
-      } )
-     
+      })
     }
