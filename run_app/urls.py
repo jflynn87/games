@@ -17,5 +17,6 @@ urlpatterns = [
     url(r'^delete_run/(?P<pk>\d+)/$',views.RunDeleteView.as_view(),name='delete_run'),
     url(r'^dashboard/$',views.DashboardView.as_view(),name='dashboard'),
     url(r'^plan/(?P<pk>\d+)/$',views.ScheduleView.as_view(),name='plan'),
+    url(r'^get_run_data/$',views.getRunKeeperData.as_view(),name='get_run_data'),
 
     ]

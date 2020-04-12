@@ -15,6 +15,12 @@ from dateutil.relativedelta import relativedelta
 from django.db.models.functions import ExtractWeek, ExtractYear
 from django.core.exceptions import ObjectDoesNotExist
 from django.db.models import Q
+from run_app import scrape_runs
+from rest_framework.views import APIView
+from rest_framework.response import Response
+import json
+
+
 
 
 # Create your views here.
@@ -241,3 +247,37 @@ class ScheduleView(DetailView):
 
             #print (context)
             return context
+
+class getRunKeeperData(APIView):
+
+    def get(self, num):
+        
+        run_data = scrape_runs.ScrapeRuns().scrape()
+
+        for date, data in run_data.items():
+            print ('starting 4 loop', date, data)
+            t = data[2]
+            if t.count(':') == 1:
+               print (date, 'less than an hour')
+               time = datetime.timedelta(minutes=int(t.split(':')[0]), seconds=int(t.split(':')[1]))
+            elif t.count(':') == 2:
+               print (date, 'more than an hour')
+               time = datetime.timedelta(hours=int(t[0]), minutes=int(t[2:4]), seconds=int(t[5:7]))
+            else:
+               print ('time format issue with run: ', date, data)
+               time = datetime.timedelta(0)
+
+
+            Run.objects.get_or_create(date=datetime.datetime.strptime(date.split('-')[0][:-2], '%b %d, %Y'), 
+              dist = data[1], 
+              time = time,
+              cals = data[3],
+              shoes = Shoes.objects.get(main_shoe=True),
+              location = 1
+            )
+
+        print (run_data)
+        return Response(json.dumps({'runs': run_data,
+                          
+         }), 200)
+

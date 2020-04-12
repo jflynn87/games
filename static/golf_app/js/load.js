@@ -28,9 +28,12 @@ $(document).ready(function() {
           data: {'tournament' : $('#tournament_key').text()},
           dataType: 'json',
           success: function (json_update) {
-            console.log('load connected');
+            console.log('second load connected', typeof(json_update), $.isEmptyObject(json_update))
+            if (!$.isEmptyObject(json_update)) {
+            
             build_score_tbl(json_update)
-            build_random_data(json_update)
+            build_random_data(json_update) }
+
             console.log('updated load duration: ', start, new Date()) 
             var finish = new Date().toLocaleString()
             $('#status').append(finish)

@@ -34,6 +34,10 @@ print ('score batch starting', datetime.now())
 
 web = scrape_scores.ScrapeScores(t)
 
+if len(web) == 0:
+    print (t, 'leaderboard empty')
+    exit()
+
 
 ## end comment for rerun
 

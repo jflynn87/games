@@ -508,7 +508,14 @@ class GetScores(APIView):
         
         scores = manual_score.Score(score_dict, t, 'json')
         # change so this isn't executed when complete, add function to get total scores without updating
-        if t.current:
+        #print (len(score_dict))
+        if len(score_dict) == 0:
+            print ('score_dict empty')
+            return Response(({}), 200)
+
+
+        
+        if t.current and len(score_dict) != 0:
            scores.update_scores()
         
         ts = scores.total_scores()
