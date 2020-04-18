@@ -18,49 +18,49 @@ from golf_app import manual_score
 
 
 ## comment out to rerun
-t = Tournament.objects.get(current=True)
-if t.complete:
-    print (t, 'complete')
-    exit()
+#t = Tournament.objects.get(current=True)
+#if t.complete:
+#    print (t, 'complete')
+#    exit()
 
-if datetime.now() < t.score_update_time + timedelta(minutes=15):
-    print (datetime.now())
-    print (t.score_update_time)
-    print (t.score_update_time + timedelta(minutes=15))
-    exit()
+#if datetime.now() < t.score_update_time + timedelta(minutes=15):
+#    print (datetime.now())
+#    print (t.score_update_time)
+#    print (t.score_update_time + timedelta(minutes=15))
+#    exit()
 
-print (t, 'active, loading scores')
-print ('score batch starting', datetime.now())
+#print (t, 'active, loading scores')
+#print ('score batch starting', datetime.now())
 
-web = scrape_scores.ScrapeScores(t)
+#web = scrape_scores.ScrapeScores(t)
 
-if len(web) == 0:
-    print (t, 'leaderboard empty')
-    exit()
+#if len(web) == 0:
+#    print (t, 'leaderboard empty')
+#    exit()
 
 
 ## end comment for rerun
 
 
 #### comment out for regular run.
-#t = Tournament.objects.get(pga_tournament_num='010', season__current=True)
+t = Tournament.objects.get(pga_tournament_num='003', season__current=True)
 
-#for bd in BonusDetails.objects.filter(tournament=t):
-#    bd.winner_bonus = 0
-#    bd.cut_bonus = 0
-#    bd.major_bonus = 0
-#    bd.save()
+for bd in BonusDetails.objects.filter(tournament=t):
+    bd.winner_bonus = 0
+    bd.cut_bonus = 0
+    bd.major_bonus = 0
+    bd.save()
 
-#t.winner = ' '
-#t.current = True
-#t.save()
+t.winner = ' '
+t.current = True
+t.save()
 
-#url = "https://www.pgatour.com/competition/2020/the-honda-classic/leaderboard.html"
+url = "https://www.pgatour.com/competition/2020/waste-management-phoenix-open/leaderboard.html"
 
-#print (t, 'active, loading scores')
-#print ('score batch starting', datetime.now())
+print (t, 'active, loading scores')
+print ('score batch starting', datetime.now())
 
-#web = scrape_scores.ScrapeScores(t, url)
+web = scrape_scores.ScrapeScores(t, url)
 
 ### end re-run uncomment
 

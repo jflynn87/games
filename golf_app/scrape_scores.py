@@ -30,6 +30,7 @@ class ScrapeScores(object):
 
 
     def scrape(self):
+        score_dict = {}
         options = ChromeOptions()
         options.add_argument("--headless")
         options.add_argument("--disable-gpu")
@@ -47,7 +48,7 @@ class ScrapeScores(object):
         #     print (url)
         
         driver.get(self.url)
-        score_dict = {}
+        #score_dict = {}
         #t = Tournament.objects.get(current=True)
         t = self.tournament
         t_ok = False
@@ -83,11 +84,15 @@ class ScrapeScores(object):
                 f = open("score_dict.json", "w")
                 f.write(json.dumps(score_dict))
                 f.close()
-
+                
                 return (score_dict)                
+            else:
+                print ('scrape scores t mismatch', t)
+                return {}
         
         except Exception as e:
             print (e)
+            return {}
 
         finally:
             driver.quit()

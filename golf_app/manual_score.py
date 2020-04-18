@@ -46,9 +46,8 @@ class Score(object):
                     picks = manual_score.Score(score_dict, tournament)
                     picks.update_scores()
                     picks.total_scores()
-#        else:
-#            self.score_dict = self.get_picks_by_user()
 
+        self.not_playing_list = ['CUT', 'WD', 'DQ']
 
 
     ## don't use this, use the models.py function
@@ -79,24 +78,24 @@ class Score(object):
             return
 
     ## don't use this, use the models.py function
-    @transaction.atomic
-    def create_picks(self, tournament, user):
-        '''takes tournament and user objects and generates random picks.  check for duplication with general pick submit class'''
+    # @transaction.atomic
+    # def create_picks(self, tournament, user):
+    #     '''takes tournament and user objects and generates random picks.  check for duplication with general pick submit class'''
 
-        for group in Group.objects.filter(tournament=tournament):
-            pick = Picks()
-            random_picks = random.choice(Field.objects.filter(tournament=tournament, group=group, withdrawn=False))
-            pick.playerName = Field.objects.get(playerName=random_picks.playerName, tournament=tournament)
-            pick.user = user
-            pick.save()
+    #     for group in Group.objects.filter(tournament=tournament):
+    #         pick = Picks()
+    #         random_picks = random.choice(Field.objects.filter(tournament=tournament, group=group, withdrawn=False))
+    #         pick.playerName = Field.objects.get(playerName=random_picks.playerName, tournament=tournament)
+    #         pick.user = user
+    #         pick.save()
 
-        pm = PickMethod()
-        pm.user = user
-        pm.tournament = tournament
-        pm.method = '3'
-        pm.save()
+    #     pm = PickMethod()
+    #     pm.user = user
+    #     pm.tournament = tournament
+    #     pm.method = '3'
+    #     pm.save()
 
-        return
+    #     return
 
 
     def get_picks_by_user(self):
@@ -187,13 +186,14 @@ class Score(object):
         for pick in Picks.objects.filter(playerName__tournament=self.tournament):
             #print (pick.playerName.playerName, self.score_dict.get(pick.playerName.playerName))
             try:
-                if self.score_dict.get(pick.playerName.playerName).get('rank') == "CUT" or \
-                    (self.score_dict.get(pick.playerName.playerName).get('rank') == "WD" and \
-                    self.get_round() < 3):
+                if self.score_dict.get(pick.playerName.playerName).get('rank') == "CUT":
+                    # or (self.score_dict.get(pick.playerName.playerName).get('rank') == "WD" and \
+                    #self.get_round() < 3):
                     pick.score = self.get_cut_num()
-                elif self.score_dict.get(pick.playerName.playerName).get('rank') == "WD" and \
-                    self.get_round() > 2:
-                    pick.score = self.get_cut_num() -1
+                elif self.score_dict.get(pick.playerName.playerName).get('rank') == "WD":
+                # and \ self.get_round() > 2:
+                    #pick.score = self.get_cut_num() -1
+                    pick.score = self.get_wd_score(pick)
                 else:
                     #print ('in else')
                     if int(calc_score.formatRank(self.score_dict.get(pick.playerName.playerName).get('rank'))) > self.get_cut_num():
@@ -361,13 +361,15 @@ class Score(object):
     
         if not self.tournament.has_cut:
             return len([x for x in self.score_dict.values() if x['rank'] not in ['WD']]) + 1
-        #round = self.get_cut_round()
-        round = self.get_round()
+        round = self.get_cut_round()
+        #round = self.get_round()
         #after cut WD's
         #commented for rerun, but do i need the if here?  should not get here normally for old tournament?
         #if self.tournament.current:  wd = len([x for x in self.score_dict.values() if x['rank'] == 'WD' and x['r'+str(round+1)] != '--']) 
+        
+        ##Not working if WD is before cut
         wd = len([x for x in self.score_dict.values() if x['rank'] == 'WD' and x['r'+str(round+1)] != '--']) 
-
+        
         for v in self.score_dict.values():
             if v['rank'] == "CUT":
                 return len([x for x in self.score_dict.values() if x['rank'] not in ['CUT', 'WD']]) + wd + 1
@@ -409,28 +411,34 @@ class Score(object):
         if self.get_round() == 4:
             return True
 
-    def get_wd_score(self, data):
-        round = self.get_cut_round()
-        if round == None:
-            return self.get_cut_num()
-        for k, v in data:
-            if v.get('r' + str(round + 1)) =='--':
+    def get_wd_score(self, pick):
+        score = self.score_dict.get(pick.playerName.playerName)
+        print ('wd lookup', score)
+
+        if not self.tournament.has_cut:
+            return len([x for x in self.score_dict.values() if x['rank'] not in self.not_playing_list]) + 1
+        
+        if score.get('r1') =='--' or score.get('r2') == '--' or score.get('r3') == '--':
+                print ('didnt get to r3')
                 return self.get_cut_num()
-            elif v.get('r' + str(round)) != '--':
-                return self.get_cut_num() -1
-            else:
-                print ("get WS score shouldn't be here")
-                return self.get_cut_num()
+        elif score.get('r3') != '--' and self.get_cut_round() < 3:
+                return len([x for x in self.score_dict.values() if x['rank'] not in self.not_playing_list]) + 1
+        elif score.get('r4') == '--' and self.get_cut_round() < 4:
+            return self.get_cut_round()
+        else:
+            return len([x for x in self.score_dict.values() if x['rank'] not in self.not_playing_list]) + 1
+
 
     def get_cut_round(self):
         for data in self.score_dict.values():
             if data.get('rank') == "CUT":
                 if data['r3'] == '--':
                     return 2
-                elif data['r4'] == "--":
+                elif data['r4'] == "--": 
                     return 3
-        return 1
+        return 2
 
+    
     def optimal_picks(self):
         cuts_dict = {}
         scores = {}
