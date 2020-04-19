@@ -38,7 +38,7 @@ class ScrapeRuns(object):
 
     def scrape(self):
         options = ChromeOptions()
-        #options.add_argument("--headless")
+        options.add_argument("--headless")
         options.add_argument("--disable-gpu")
         options.add_argument('--ignore-certificate-errors')
         options.add_argument("--window-size=1920,1080")
@@ -47,15 +47,13 @@ class ScrapeRuns(object):
 
         run_dict = {}
 
-        print (os.environ.get('email_address'))
-
-
         try:
+            print ('scraping runkeeper')
             main_page = driver.current_window_handle
             login = driver.find_element_by_xpath('/html/body/cset/div[1]/div/ul/li[7]/a')
             
             login.click()
-            
+            print ('scrape logging in')
             for handle in driver.window_handles:
                 print (handle)
                 if handle != 'main page': 
@@ -79,7 +77,7 @@ class ScrapeRuns(object):
             time.sleep(5)
             sub_button = driver.find_element_by_id('com\.fitnesskeeper\.runkeeper\.pro\:id\/login-oneasics-login') 
             driver.execute_script("arguments[0].click()",sub_button)
-
+            print ('scrape loggedg in')
             time.sleep(2)
             driver.switch_to.window(main_page)
             driver.maximize_window()
@@ -89,7 +87,7 @@ class ScrapeRuns(object):
             first.click()
             a_list = driver.find_element_by_id('ui-accordion-activityHistoryMenu-panel-0')
             lines = a_list.find_elements_by_tag_name('li')
-            
+            print ('before looping lines')
 
             for i, a in enumerate(lines):
                 #time.sleep(5)

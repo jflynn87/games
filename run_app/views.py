@@ -255,16 +255,16 @@ class getRunKeeperData(APIView):
         run_data = scrape_runs.ScrapeRuns().scrape()
 
         for date, data in run_data.items():
-            print ('starting 4 loop', date, data)
+            #print ('starting 4 loop', date, data)
             t = data[2]
             if t.count(':') == 1:
-               print (date, 'less than an hour')
+               #print (date, 'less than an hour')
                time = datetime.timedelta(minutes=int(t.split(':')[0]), seconds=int(t.split(':')[1]))
             elif t.count(':') == 2:
-               print (date, 'more than an hour')
+               #print (date, 'more than an hour')
                time = datetime.timedelta(hours=int(t[0]), minutes=int(t[2:4]), seconds=int(t[5:7]))
             else:
-               print ('time format issue with run: ', date, data)
+               #print ('time format issue with run: ', date, data)
                time = datetime.timedelta(0)
 
 
