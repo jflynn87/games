@@ -62,7 +62,7 @@ class ScrapeRuns(object):
             driver.switch_to_window(login_page)
             time.sleep(5)
             
-            try:
+            try: 
                 email_id = driver.find_element_by_xpath('//*[@id="com.fitnesskeeper.runkeeper.pro:id/login-a_email"]')
             except Exception:
                 email_id = driver.find_element_by_name('a_email')                                        
@@ -75,7 +75,12 @@ class ScrapeRuns(object):
             password = email_id = driver.find_element_by_name('a_password')
             password.send_keys(os.environ.get('runkeeper_pwd'))
             time.sleep(5)
-            sub_button = driver.find_element_by_id('com\.fitnesskeeper\.runkeeper\.pro\:id\/login-oneasics-login') 
+
+            try:
+                sub_button = driver.find_element_by_id('com\.fitnesskeeper\.runkeeper\.pro\:id\/login-oneasics-login') 
+            except Exception:
+                sub_button = driver.find_element_by_xpath('//*[@id="com.fitnesskeeper.runkeeper.pro:id/login-oneasics-login"]')
+            
             driver.execute_script("arguments[0].click()",sub_button)
             print ('scrape loggedg in')
             time.sleep(2)
