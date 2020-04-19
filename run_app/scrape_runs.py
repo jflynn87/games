@@ -87,10 +87,18 @@ class ScrapeRuns(object):
             driver.switch_to.window(main_page)
             driver.maximize_window()
         
-            first = driver.find_element_by_class_name('feedArrow')
+            try:
+                first = driver.find_element_by_class_name('feedArrow')
+            except Exception:
+                first = driver.find_element_by_xpath('//*[@id="pageWrapper"]/div[2]/div[1]/div/div[3]/div/div[2]/div[3]/div[1]/div[1]/div[2]')
                                                     
             first.click()
-            a_list = driver.find_element_by_id('ui-accordion-activityHistoryMenu-panel-0')
+            
+            try:
+                a_list = driver.find_element_by_id('ui-accordion-activityHistoryMenu-panel-0')
+            except Exception:
+                a_list = driver.find_element_by_xpath('//*[@id="activityHistoryMenu"]')
+    
             lines = a_list.find_elements_by_tag_name('li')
             print ('before looping lines')
 
