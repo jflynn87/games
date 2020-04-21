@@ -20,10 +20,10 @@ import urllib3.request
 from bs4 import BeautifulSoup
 from run_app import scrape_runs
 
-web = scrape_runs.ScrapeRuns('garmin', None, None)
+web = scrape_runs.ScrapeRuns()
 
 
-print (web.scrape_garmin())
+print (web.scrape())
 
 #runs = Run.objects.filter(date__gte=datetime.strptime('2018-12-31', '%Y-%m-%d')).values('date').annotate(Count('date'))
 #for r in runs:

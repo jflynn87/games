@@ -10,6 +10,10 @@ import urllib
 from selenium.webdriver import Chrome, ChromeOptions
 import json
 import time
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as ec
+
 
 
 
@@ -42,6 +46,7 @@ class ScrapeRuns(object):
         options.add_argument("--disable-gpu")
         options.add_argument('--ignore-certificate-errors')
         options.add_argument("--window-size=1920,1080")
+        
         driver = Chrome(options=options)
         driver.get(self.url)
 
@@ -85,12 +90,25 @@ class ScrapeRuns(object):
             print ('scrape loggedg in')
             time.sleep(2)
             driver.switch_to.window(main_page)
-            driver.maximize_window()
+            #driver.maximize_window()
         
             try:
-                first = driver.find_element_by_class_name('feedArrow')
-            except Exception:
-                first = driver.find_element_by_xpath('//*[@id="pageWrapper"]/div[2]/div[1]/div/div[3]/div/div[2]/div[3]/div[1]/div[1]/div[2]')
+                wait = WebDriverWait(driver, 10)
+                first = wait.until(ec.visibility_of_element_located((By.XPATH, '//*[@id="pageWrapper"]/div[2]/div[1]/div/div[3]/div/div[2]/div[3]/div[1]/div[1]/div[1]/div[2]/ul')))
+            except Exception as e5:
+                print (e5)
+
+            #try:
+            #    first = driver.find_element_by_xpath('//*[@id="pageWrapper"]/div[2]/div[1]/div/div[3]/div/div[2]/div[3]/div[1]/div[1]/div[1]/div[2]/ul')
+
+            #except Exception as e:
+            #    print (e)
+            #    try:
+            #        first = driver.find_element_by_xpath('/html/body/div[3]/div[2]/div[1]/div/div[3]/div/div[2]/div[3]/div[1]/div[1]/div[2]')
+            #    except Exception as e1:
+            #        print (e1)
+            #        first = driver.find_element_by_class_name('feedArrow.clickable')
+                                                        
                                                     
             first.click()
             
