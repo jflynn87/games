@@ -92,22 +92,22 @@ class ScrapeRuns(object):
             driver.switch_to.window(main_page)
             #driver.maximize_window()
         
-            try:
-                wait = WebDriverWait(driver, 10)
-                first = wait.until(ec.visibility_of_element_located((By.XPATH, '//*[@id="pageWrapper"]/div[2]/div[1]/div/div[3]/div/div[2]/div[3]/div[1]/div[1]/div[1]/div[2]/ul')))
-            except Exception as e5:
-                print (e5)
-
             #try:
-            #    first = driver.find_element_by_xpath('//*[@id="pageWrapper"]/div[2]/div[1]/div/div[3]/div/div[2]/div[3]/div[1]/div[1]/div[1]/div[2]/ul')
+            #    wait = WebDriverWait(driver, 10)
+            #    first = wait.until(ec.visibility_of_element_located((By.XPATH, '//*[@id="pageWrapper"]/div[2]/div[1]/div/div[3]/div/div[2]/div[3]/div[1]/div[1]/div[1]/div[2]/ul')))
+            #except Exception as e5:
+            #    print (e5)
+            time.sleep(30)
+            try:
+                first = driver.find_element_by_xpath('//*[@id="pageWrapper"]/div[2]/div[1]/div/div[3]/div/div[2]/div[3]/div[1]/div[1]/div[1]/div[2]/ul')
 
-            #except Exception as e:
-            #    print (e)
-            #    try:
-            #        first = driver.find_element_by_xpath('/html/body/div[3]/div[2]/div[1]/div/div[3]/div/div[2]/div[3]/div[1]/div[1]/div[2]')
-            #    except Exception as e1:
-            #        print (e1)
-            #        first = driver.find_element_by_class_name('feedArrow.clickable')
+            except Exception as e:
+                print (e)
+                try:
+                    first = driver.find_element_by_xpath('/html/body/div[3]/div[2]/div[1]/div/div[3]/div/div[2]/div[3]/div[1]/div[1]/div[2]')
+                except Exception as e1:
+                    print (e1)
+                    first = driver.find_element_by_class_name('feedArrow.clickable')
                                                         
                                                     
             first.click()

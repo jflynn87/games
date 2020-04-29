@@ -15,7 +15,7 @@ from dateutil.relativedelta import relativedelta
 from django.db.models.functions import ExtractWeek, ExtractYear
 from django.core.exceptions import ObjectDoesNotExist
 from django.db.models import Q
-from run_app import scrape_runs
+from run_app import scrape_runs, strava 
 from rest_framework.views import APIView
 from rest_framework.response import Response
 import json
@@ -252,32 +252,31 @@ class getRunKeeperData(APIView):
 
     def get(self, num):
         
-        run_data = scrape_runs.ScrapeRuns().scrape()
+        run_data = strava.StravaData()
+        run_dict = run_data.get_runs()
 
-        for date, data in run_data.items():
+        print (run_dict)
+
+        for day, data in run_dict.items():
             #print ('starting 4 loop', date, data)
-            t = data[2]
-            if t.count(':') == 1:
-               #print (date, 'less than an hour')
-               time = datetime.timedelta(minutes=int(t.split(':')[0]), seconds=int(t.split(':')[1]))
-            elif t.count(':') == 2:
-               #print (date, 'more than an hour')
-               time = datetime.timedelta(hours=int(t[0]), minutes=int(t[2:4]), seconds=int(t[5:7]))
-            else:
-               #print ('time format issue with run: ', date, data)
-               time = datetime.timedelta(0)
+            date = day.split('T')[0]
+            dist = round(data[1]/1000,2)
+            time = timedelta(seconds=data[2])
+            cals = data[3]
+            shoes = Shoes.objects.get(main_shoe=True)
+            location = 1
+            print (date)
 
-
-            Run.objects.get_or_create(date=datetime.datetime.strptime(date.split('-')[0][:-2], '%b %d, %Y'), 
-              dist = data[1], 
+            Run.objects.get_or_create(date=datetime.datetime.strptime(date, '%Y-%m-%d'), 
+              dist = dist, 
               time = time,
-              cals = data[3],
+              cals = cals,
               shoes = Shoes.objects.get(main_shoe=True),
               location = 1
             )
 
-        print (run_data)
-        return Response(json.dumps({'runs': run_data,
+        
+        return Response(json.dumps({'runs': run_dict,
                           
          }), 200)
 

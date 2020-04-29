@@ -1,3 +1,8 @@
+$( document ).ready(function() {
+  
+  get_run_data()
+
+
 function get_run_data() {
     console.log('get data', new Date())
     $('#status').text('Updating .....')
@@ -19,3 +24,4 @@ function get_run_data() {
         }
       })
     }
+  })

@@ -5,28 +5,95 @@ import django
 django.setup()
 from run_app.models import Schedule, Plan, Run
 from datetime import timedelta, datetime
-import sqlite3
-from django.db.models import Min, Q, Count, Sum, Max
-from django.db.models.functions import ExtractWeek, ExtractYear
+import time
+from django.db.models import Max
+
+#from django.db.models import Min, Q, Count, Sum, Max
+#from django.db.models.functions import ExtractWeek, ExtractYear
 
 
-import urllib3.request
-import urllib
+
+#import urllib
 import urllib3
-from bs4 import BeautifulSoup
-import json
+#from bs4 import BeautifulSoup
+#import json
 
-import urllib3.request
-from bs4 import BeautifulSoup
-from run_app import scrape_runs
+#import urllib3.request
+#from bs4 import BeautifulSoup
+#from run_app import scrape_runs
 
-web = scrape_runs.ScrapeRuns()
+import requests
+from pprint import pprint
+from run_app import strava
+import time
 
 
-print (web.scrape())
 
-#runs = Run.objects.filter(date__gte=datetime.strptime('2018-12-31', '%Y-%m-%d')).values('date').annotate(Count('date'))
-#for r in runs:
-#    if r.get('date__count') > 1:
-#        print (r)
+start = datetime.now()
+print ('starting.... ', datetime.now())
+runs = strava.StravaData()
+run_dict =  runs.get_runs()
+
+for a, d in run_dict.items():
+    print ("DATE: ", a.split('T')[0],  
+    "DIST: ", round(d[1]/1000, 2), 
+    "TIME: ",  timedelta(seconds=d[2]), 
+    "CALS: " , d[3])
+
+print ('finsihed.... ', datetime.now() - start)
+
+
+
+
+# auth_url = "https://www.strava.com/oauth/token"
+
+# payload = {
+#     'client_id': "46693",
+#     'client_secret': '5a55efcff63411fa6cac5bf4e2fc2d43114eb7bc',
+#     'refresh_token': '4e0be9e1f0e57ce37ea03760e99110ebcea609b0',
+#     'grant_type': 'refresh_token',
+#     'f': 'json'
+#             }
+
+# print ("Requesting Token... n")
+# res = requests.post(auth_url, data=payload, verify=False)
+# access_token = res.json()['access_token']
+# print (access_token)
+
+# #start = datetime.strftime('2020-04-24', '%Y-%m-%d')
+# last_run = Run.objects.latest('date')
+
+# end = time.time()
+# #start = time.mktime(last_run.date.timetuple())*1000
+# start = int(time.mktime(last_run.date.timetuple()))
+# now = int(time.time())
+# #print (start)
+# #print (now)
+
+# activities_url = "https://www.strava.com/api/v3/athlete/activities"
+# header = {'Authorization': 'Bearer ' + access_token}
+# param = {'per_page': 100, 'page': 1, 'after': start, 'before': now}
+
+# dataset = requests.get(activities_url, headers=header, params=param).json()
+
+# #print (dataset)
+
+# for activity in dataset:
+#     id = activity['id']
+#     #print (id)
+
+#     activity_url = 'https://www.strava.com/api/v3/activities/' + str(id)
+#     a_header = {'Authorization': 'Bearer ' + access_token, 'client_id': "46693",
+#     'client_secret': '5a55efcff63411fa6cac5bf4e2fc2d43114eb7bc'}
+#     #a_param = {id}
+#     act = requests.get(activity_url, headers=header)    
+#     #act = requests.get(activity_url + '/' + str(id) + '?' + access_token)
+#     print ('----------------------------------------------------------------')
+#     print (act.json()['id'])
+#     print (act.json()['type'])
+#     print (act.json()['start_date_local'])
+#     print (act.json()['distance'])
+#     print (act.json()['calories'])
+    
+    
 
