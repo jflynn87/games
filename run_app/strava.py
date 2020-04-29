@@ -1,8 +1,8 @@
 import os
-os.environ.setdefault("DJANGO_SETTINGS_MODULE","gamesProj.settings")
+#os.environ.setdefault("DJANGO_SETTINGS_MODULE","gamesProj.settings")
 
-import django
-django.setup()
+#import django
+#django.setup()
 from run_app.models import Schedule, Plan, Run
 from datetime import timedelta, datetime
 import time
@@ -29,7 +29,7 @@ class StravaData(object):
                     }
 
         #print ("Requesting Token... n")
-        res = requests.post(self.auth_url, data=payload, verify=False)
+        res = requests.post(self.auth_url, data=payload, verify=True)
         self.access_token = res.json()['access_token']
         
         print (self.access_token)
