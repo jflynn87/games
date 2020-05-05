@@ -48,6 +48,7 @@ class DashboardView(ListView):
         week_data = (Run.objects.filter(date__gte=week_start).annotate(year=ExtractYear('date')).annotate(week=ExtractWeek('date')).values('year', 'week')
         .annotate(total_dist=Sum('dist'), time=Sum('time'), cals=Sum('cals'), num=Count('date'), max_dist=(Max('dist'))).order_by('-year', '-week'))
 
+ 
         for year in year_data:
             pace = datetime.timedelta(minutes=year.get('time').total_seconds() / year.get('dist'))
             year['pace']=str(pace)[:4]
@@ -62,7 +63,7 @@ class DashboardView(ListView):
 
             # format date for display and add to dict for context
             d = str(week.get('year')) + str("-W") + str(week.get('week'))
-            w = datetime.datetime.strptime(d + '-1', '%Y-W%W-%w')
+            w = datetime.datetime.strptime(d + '-1', '%G-W%V-%u')
             week['date']=w.strftime("%b %d, %Y")
 
             # % change calcs
@@ -93,7 +94,7 @@ class DashboardView(ListView):
                 week['long_change'] = (((week.get('max_dist') - long_run)/long_run) * 100)
             else:
                 week['long_change'] = 100
-
+            
 
         context.update({
         'years': year_data,
@@ -174,7 +175,7 @@ class RunUpdateView(UpdateView):
 
 class RunDeleteView(DeleteView):
     model= Run
-    success_url = reverse_lazy("run_app:shoe_list")
+    success_url = reverse_lazy("run_app:dashboard")
 
 class ScheduleView(DetailView):
     model=Plan
@@ -259,22 +260,25 @@ class getRunKeeperData(APIView):
 
         for day, data in run_dict.items():
             #print ('starting 4 loop', date, data)
-            date = day.split('T')[0]
-            dist = round(data[1]/1000,2)
-            time = timedelta(seconds=data[2])
-            cals = data[3]
-            shoes = Shoes.objects.get(main_shoe=True)
-            location = 1
-            print (date)
+            if data[0] == "Run":
+                date = day.split('T')[0]
+                dist = round(data[1]/1000,2)
+                time = timedelta(seconds=data[2])
+                cals = data[3]
+                shoes = Shoes.objects.get(main_shoe=True)
+                location = 1
+                print (date)
 
-            Run.objects.get_or_create(date=datetime.datetime.strptime(date, '%Y-%m-%d'), 
-              dist = dist, 
-              time = time,
-              cals = cals,
-              shoes = Shoes.objects.get(main_shoe=True),
-              location = 1
-            )
 
+                Run.objects.get_or_create(date=datetime.datetime.strptime(date, '%Y-%m-%d'), 
+                dist = dist, 
+                time = time,
+                cals = cals,
+                shoes = Shoes.objects.get(main_shoe=True),
+                location = 1
+                )
+            else:
+                print ('not a run: ', data[0])
         
         return Response(json.dumps({'runs': run_dict,
                           

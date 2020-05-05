@@ -1,0 +1,28 @@
+{%extends "run_app/base.html"%}
+
+{%load bootstrap%}
+
+{%block title_block%}
+<title>Confirm Delete</title>
+{%endblock%}
+
+
+{%block body_block%}
+
+<h1>Confirm Delete</h1>
+
+<h5>Run: {{run.date}}</h5>
+<h5>Dist: {{run.dist}}</h5>
+<h5>Cals: {{run.cals}}</h5>
+
+<a href="{% url 'run_app:run_list' %}"> <button class="btn btn-primary">Cancel</button></a>
+<br>
+<br>
+<form method="post">
+    {%csrf_token%}
+    <input type="submit" class='btn btn-danger' value='Delete Run' >
+
+</form>
+
+
+{%endblock%}

@@ -43,7 +43,7 @@ from golf_app import manual_score
 
 
 #### comment out for regular run.
-t = Tournament.objects.get(pga_tournament_num='003', season__current=True)
+t = Tournament.objects.get(pga_tournament_num='009', season__current=True)
 
 for bd in BonusDetails.objects.filter(tournament=t):
     bd.winner_bonus = 0
@@ -53,9 +53,10 @@ for bd in BonusDetails.objects.filter(tournament=t):
 
 t.winner = ' '
 t.current = True
+t.leaders = ''
 t.save()
 
-url = "https://www.pgatour.com/competition/2020/waste-management-phoenix-open/leaderboard.html"
+url = "https://www.pgatour.com/competition/2020/arnold-palmer-invitational-presented-by-mastercard/leaderboard.html"
 
 print (t, 'active, loading scores')
 print ('score batch starting', datetime.now())
@@ -66,8 +67,9 @@ web = scrape_scores.ScrapeScores(t, url)
 
 score_dict = web.scrape()
 scores = manual_score.Score(score_dict, t)
-scores.update_scores()
+scores.update_scores() 
 scores.total_scores()
+scores.get_leader()
 #print(score_dict)
 #update_golf_score.updateWeeklyScore(score_dict, t).update()
 #t.score_update_time = datetime.now()
