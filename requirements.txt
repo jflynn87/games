@@ -18,7 +18,7 @@ django-mathfilters==0.4.0
 django-select2==6.3.1
 djangorestframework==3.11.0
 EasyProcess==0.2.9
-httplib2==0.16.0
+httplib2==0.18.0
 hyperlink==19.0.0
 idna==2.8
 incremental==17.5.0
