@@ -15,55 +15,57 @@ from django.contrib.auth.models import User
 from datetime import datetime, timedelta, timezone
 from golf_app import scrape_scores
 from golf_app import manual_score
+import sys
+import json
 
 
-## comment out to rerun
-#t = Tournament.objects.get(current=True)
-#if t.complete:
-#    print (t, 'complete')
-#    exit()
+if len(sys.argv) > 1 and sys.argv[1] == 'rerun': 
+    print ('rerunning')
+    with open('golf_score_rerun.json') as f:
+        data = json.load(f)
+    print ('rerun', data)
+    
+    t = Tournament.objects.get(pga_tournament_num=data['tnum'], season__current=True)
 
-#if datetime.now() < t.score_update_time + timedelta(minutes=15):
-#    print (datetime.now())
-#    print (t.score_update_time)
-#    print (t.score_update_time + timedelta(minutes=15))
-#    exit()
+    for bd in BonusDetails.objects.filter(tournament=t):
+        bd.winner_bonus = 0
+        bd.cut_bonus = 0
+        bd.major_bonus = 0
+        bd.save()
 
-#print (t, 'active, loading scores')
-#print ('score batch starting', datetime.now())
+    t.winner = ' '
+    t.current = True
+    t.leaders = ''
+    t.save()
+    url = data['url']
+    #url = "https://www.pgatour.com/competition/2020/arnold-palmer-invitational-presented-by-mastercard/leaderboard.html"
 
-#web = scrape_scores.ScrapeScores(t)
+    print (t, 'active, loading scores')
+    print ('score batch starting', datetime.now())
 
-#if len(web) == 0:
-#    print (t, 'leaderboard empty')
-#    exit()
+    web = scrape_scores.ScrapeScores(t, url)
+else:
+    print ('regular run')
+    t = Tournament.objects.get(current=True)
+    if t.complete:
+        print (t, 'complete')
+        exit()
 
+    if datetime.now() < t.score_update_time + timedelta(minutes=15):
+        print (datetime.now())
+        print (t.score_update_time)
+        print (t.score_update_time + timedelta(minutes=15))
+        exit()
 
-## end comment for rerun
+    print (t, 'active, loading scores')
+    print ('score batch starting', datetime.now())
 
+    web = scrape_scores.ScrapeScores(t)
 
-#### comment out for regular run.
-t = Tournament.objects.get(pga_tournament_num='009', season__current=True)
+    if len(web) == 0:
+        print (t, 'leaderboard empty')
+        exit()
 
-for bd in BonusDetails.objects.filter(tournament=t):
-    bd.winner_bonus = 0
-    bd.cut_bonus = 0
-    bd.major_bonus = 0
-    bd.save()
-
-t.winner = ' '
-t.current = True
-t.leaders = ''
-t.save()
-
-url = "https://www.pgatour.com/competition/2020/arnold-palmer-invitational-presented-by-mastercard/leaderboard.html"
-
-print (t, 'active, loading scores')
-print ('score batch starting', datetime.now())
-
-web = scrape_scores.ScrapeScores(t, url)
-
-### end re-run uncomment
 
 score_dict = web.scrape()
 scores = manual_score.Score(score_dict, t)

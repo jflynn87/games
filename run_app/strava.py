@@ -10,6 +10,7 @@ from django.db.models import Max
 import urllib3
 import requests
 from pprint import pprint
+import json
 
 
 class StravaData(object):
@@ -38,7 +39,8 @@ class StravaData(object):
     def get_runs(self):
         
         try:
-            run_dict = {}
+            run_list = []
+            
             last_run = Run.objects.latest('date')
 
             end = time.time()
@@ -54,19 +56,22 @@ class StravaData(object):
 
 
             for activity in dataset:
+                #print ('activity loop')
                 activity_url = 'https://www.strava.com/api/v3/activities/' + str(activity['id'])
                 a_header = {'Authorization': 'Bearer ' + self.access_token, 'client_id': "46693",
                 'client_secret': '5a55efcff63411fa6cac5bf4e2fc2d43114eb7bc'}
                 
                 act = requests.get(activity_url, headers=header)    
                 
-                run_dict[act.json()['start_date_local']] =  \
-                    act.json()['type'], \
-                    act.json()['distance'], \
-                    act.json()['moving_time'], \
-                    act.json()['calories']
-
-            return run_dict
+                run_list.append({
+                 'date': act.json()['start_date_local'],
+                 'activity': act.json()['type'], 
+                 'distance': act.json()['distance'], 
+                 'time': act.json()['moving_time'], 
+                 'calories': act.json()['calories'] })
+            print ('strava', run_list)
+            return json.dumps(run_list)
+            
         except Exception as e:
             print ('strava api exception', e)
             return {}

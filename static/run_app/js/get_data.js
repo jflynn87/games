@@ -1,4 +1,4 @@
-$( document ).ready(function() {
+/*$( document ).ready(function() {
   
   get_run_data()
 
@@ -9,7 +9,6 @@ function get_run_data() {
     $.ajax({
         type: "GET",
         url: "/run_app/get_run_data/",
-        /* data: {'tournament' : $('#tournament_key').text()}, */
         dataType: 'json',
         success: function (data) {
                 console.log(data)
@@ -25,3 +24,4 @@ function get_run_data() {
       })
     }
   })
+  */

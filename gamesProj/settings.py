@@ -36,7 +36,7 @@ else:
    DEBUG = False
 
 
-ALLOWED_HOSTS = ['jflynn87.pythonanywhere.com', '127.0.0.1']
+ALLOWED_HOSTS = ['jflynn87.pythonanywhere.com', '127.0.0.1', 'localhost']
 
 
 # Application definition
@@ -53,26 +53,32 @@ INSTALLED_APPS = [
     'bootstrapform',
     'django.contrib.humanize',
     'rest_framework',
+    'corsheaders',
     'fb_app',
     'golf_app',
     'run_app',
     'port_app',
-
-]
+    ]
 
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'corsheaders.middleware.CorsMiddleware',  
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    
+    
 
 ]
 
 ROOT_URLCONF = 'gamesProj.urls'
+CORS_ORIGIN_WHITELIST = ('localhost:3000', )
+#CORS_ALLOW_METHODS = ["GET", ]
+#CSRF_TRUSTED_ORIGINS ['localhost:3000', ]
 
 TEMPLATES = [
     {
