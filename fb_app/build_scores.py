@@ -1,8 +1,8 @@
 import os
-os.environ.setdefault("DJANGO_SETTINGS_MODULE","fb_proj.settings")
+#os.environ.setdefault("DJANGO_SETTINGS_MODULE","fb_proj.settings")
 
-import django
-django.setup()
+#import django
+#django.setup()
 from fb_app.models import Games, Picks, Week, Player, WeekScore
 import datetime
 import urllib3

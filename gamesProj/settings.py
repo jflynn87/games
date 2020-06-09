@@ -76,7 +76,7 @@ MIDDLEWARE = [
 ]
 
 ROOT_URLCONF = 'gamesProj.urls'
-CORS_ORIGIN_WHITELIST = ('localhost:3000', )
+CORS_ORIGIN_WHITELIST = ('http://localhost:3000', )
 #CORS_ALLOW_METHODS = ["GET", ]
 #CSRF_TRUSTED_ORIGINS ['localhost:3000', ]
 

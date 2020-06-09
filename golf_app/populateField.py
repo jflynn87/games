@@ -345,7 +345,7 @@ def get_pick_link(playerID):
 def get_flag(golfer, golfer_data):
     print ('get flag', golfer.lower(), golfer_data)
     try:
-        #print (golfer, golfer[1], golfer[3])
+        print (golfer, golfer_data)
         if Golfer.objects.filter(golfer_pga_num=golfer_data[1][1]).exists():
             golfer = Golfer.objects.get(golfer_pga_num=golfer_data[1][1])
             print ('flag from db')

@@ -26,13 +26,14 @@ from selenium import webdriver
 import urllib
 import json
 from golf_app import views, manual_score, scrape_scores, populateField
+   
+   
+html = urllib.request.urlopen("https://www.pgatour.com/tournaments/schedule.html")
+soup = BeautifulSoup(html, 'html.parser')
 
-t = Tournament.objects.get(current=True)
-#print (t.started())
+sched = (soup.find("table", {'class':'table-styled js-table'}))
 
-#d = views.get_score_dict(t)
-d = scrape_scores.ScrapeScores(t).scrape()
-#optimal = manual_score.Score(d, t, 'json').optimal_picks()
-#print (optimal)
-print (len(d))
-#field = populateField.create_groups('009')
+
+for row in sched.find('tbody'):
+    print (row.find('td', {'class': 'num-date'}))
+

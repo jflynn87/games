@@ -701,7 +701,7 @@ def user_login(request):
         else:
             print ("someone tried to log in and failed")
             #print ("Username: {} and".format(username))
-            print ("Username:" (username))
+            print ("Username:", username)
             return HttpResponse("invalid login details supplied")
     else:
         return render(request, 'fb_app/login.html', {})

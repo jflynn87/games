@@ -1,8 +1,8 @@
-import os
-os.environ.setdefault("DJANGO_SETTINGS_MODULE","gamesProj.settings")
+#import os
+#os.environ.setdefault("DJANGO_SETTINGS_MODULE","gamesProj.settings")
 
-import django
-django.setup()
+#import django
+#django.setup()
 from golf_app.models import Tournament, TotalScore, ScoreDetails, Field, Picks, PickMethod, BonusDetails, PGAWebScores
 from django.contrib.auth.models import User
 from datetime import datetime, timedelta
