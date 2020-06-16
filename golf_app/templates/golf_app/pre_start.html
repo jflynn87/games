@@ -1,6 +1,10 @@
 {%extends 'golf_app/golf_app_base.html'%}
 {%load golf_extras%}
 {%block body_block%}
+{%load static%}
+
+<div id='status'></div>
+
 
 <h2>{{tournament.name}} Picks Status</h2>
 <h4>Come back on {{tournament.start_date}} PST to see scores</h4>
@@ -28,5 +32,7 @@
     {%endfor%}
     </tbody>
   </table>
+
+
 
 {%endblock%}

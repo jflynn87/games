@@ -251,43 +251,45 @@ class ScheduleView(DetailView):
 
 class getRunKeeperData(APIView):
 
-    def __init__(self):
-        print ('init')
+    #def __init__(self):
+    #    print ('init')
 
     def get(self, num):
-        print ('get')
-        #try:
-        run_data = strava.StravaData()
-        run_dict = run_data.get_runs()
-
-        print ('-----')
-        print (run_dict, len(run_dict))
-        #activities = run_dict['activities']
-        for data in json.loads(run_dict):
-            print ('starting 4 loop', data)
-            if data['activity'] == "Run":
-                date = data['date'].split('T')[0]
-                dist = round(data['distance']/1000,2)
-                time = timedelta(seconds=data['time'])
-                cals = data['calories']
-                shoes = Shoes.objects.get(main_shoe=True)
-                location = 1
-
-                # Run.objects.get_or_create(date=datetime.datetime.strptime(date, '%Y-%m-%d'), 
-                # dist = dist, 
-                # time = time,
-                # cals = cals,
-                # shoes = Shoes.objects.get(main_shoe=True),
-                # location = 1
-                # )
-            else:
-                print ('not a run: ', activities)
         
-            return Response(run_dict, 200)
+        try:
+            print ('get')
+            #try:
+            run_data = strava.StravaData()
+            run_dict = run_data.get_runs()
 
-            #return JsonResponse(json.dumps(run_dict), 200)
-            #return JsonResponse(run_dict )
-        #except Exception as e:
-        #    print ('api error', e)
-        #    return Response(json.dumps(run_dict), 400)
+            print ('-----')
+            print (run_dict, len(run_dict))
+            #activities = run_dict['activities']
+            for data in json.loads(run_dict):
+                print ('starting 4 loop', data)
+                if data['activity'] == "Run":
+                    date = data['date'].split('T')[0]
+                    dist = round(data['distance']/1000,2)
+                    time = timedelta(seconds=data['time'])
+                    cals = data['calories']
+                    shoes = Shoes.objects.get(main_shoe=True)
+                    location = 1
+
+                    # Run.objects.get_or_create(date=datetime.datetime.strptime(date, '%Y-%m-%d'), 
+                    # dist = dist, 
+                    # time = time,
+                    # cals = cals,
+                    # shoes = Shoes.objects.get(main_shoe=True),
+                    # location = 1
+                    # )
+                else:
+                    print ('not a run: ', activities)
+            
+                return Response(run_dict, 200)
+
+                #return JsonResponse(json.dumps(run_dict), 200)
+                #return JsonResponse(run_dict )
+        except Exception as e:
+            print ('api error', e)
+            return Response(json.dumps({}), 400)
 

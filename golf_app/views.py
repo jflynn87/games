@@ -26,6 +26,7 @@ from selenium.webdriver import Chrome
 import csv
 from rest_framework.views import APIView
 from rest_framework.response import Response
+#from rest_framework.permissions import IsAuthenticated, AllowAny
 
 
 
@@ -625,3 +626,44 @@ def get_score_dict(tournament):
         {'rank': s.score, 'change': None, 'thru': s.thru, 'total_score': s.toPar, 'round_score': s.today_score}
     #print ('get_score_dict', score_dict)
     return score_dict
+
+
+class CheckStarted(APIView):
+
+    def post(self, request):
+
+        key = request.data['key']
+
+        print ('post', key)
+
+        try:
+            t = Tournament.objects.get(pk=key)
+            if not t.started():
+                pga_web = scrape_scores.ScrapeScores(t)
+                score_dict = pga_web.scrape()
+                t_started = json.dumps({'status': t.started})
+            return Response(t_started, 200)
+        except Exception as e:
+            return Response(e, 500)
+
+        
+
+
+
+
+
+    def get(self, t_pk):
+        print ('1', t_pk.GET)
+        
+
+        
+        try:
+            t = Tournament.objects.get(pk=self.request.GET.get('t_pk'))
+            if not t.started():
+                pga_web = scrape_scores.ScrapeScores(t)
+                score_dict = pga_web.scrape()
+            return Response(t.started, 200)
+        except Exception as e:
+            return Response(e, 500)
+
+            

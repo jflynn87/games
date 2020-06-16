@@ -298,9 +298,10 @@ class Score(object):
             ts_dict[ts.user.username] = {'total_score': ts.score, 'cuts': ts.cut_count, 'msg': message}
 
         print (ts_dict)
-        if self.tournament.major and self.tournament.complete:
+        #if self.tournament.major and self.tournament.complete:
+        if self.tournament.complete:
             for total in TotalScore.objects.filter(tournament=self.tournament):
-                if self.tournament.winning_picks(user=total.user) and not \
+                if self.tournament.major and self.tournament.winning_picks(user=total.user) and not \
                     PickMethod.objects.filter(tournament=self.tournament, user=total.user, method=3).exists():
                     bd, created = BonusDetails.objects.get_or_create(user=total.user, tournament=total.tournament)
                     bd.major_bonus = 100/self.tournament.num_of_winners()
