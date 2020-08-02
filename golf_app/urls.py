@@ -23,6 +23,7 @@ urlpatterns= [
     url(r'^new_scores/$', views.NewScoresView.as_view(), name='new_scores'),
     url(r'^new_scores/(?P<pk>\d+)/$',views.NewScoresView.as_view(),name='new_scores'),
     url(r'^started/$', views.CheckStarted.as_view(), name='started'),
+    url(r'^prior_result/$', views.PriorResult.as_view(), name='prior_result'),
 
     
     #url(r'^make_picks/$',views.CreatePicksView.as_view(),name='make_picks'),  # for form

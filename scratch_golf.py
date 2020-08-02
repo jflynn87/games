@@ -3,7 +3,7 @@ os.environ.setdefault("DJANGO_SETTINGS_MODULE","gamesProj.settings")
 
 import django
 django.setup()
-from golf_app.models import Tournament, TotalScore, ScoreDetails, Field, Picks, PickMethod, BonusDetails
+from golf_app.models import Tournament, TotalScore, ScoreDetails, Field, Picks, PickMethod, BonusDetails, Season, Golfer
 from django.contrib.auth.models import User
 from datetime import datetime, timedelta
 import sqlite3
@@ -25,15 +25,10 @@ from urllib.request import Request, urlopen
 from selenium import webdriver
 import urllib
 import json
-from golf_app import views, manual_score, scrape_scores, populateField
+from golf_app import views, manual_score, scrape_scores, populateField, withdraw
    
-   
-html = urllib.request.urlopen("https://www.pgatour.com/tournaments/schedule.html")
-soup = BeautifulSoup(html, 'html.parser')
 
-sched = (soup.find("table", {'class':'table-styled js-table'}))
+t = Tournament.objects.get(current=True)
 
-
-for row in sched.find('tbody'):
-    print (row.find('td', {'class': 'num-date'}))
-
+for g in Field.objects.filter(tournament=t):
+    print (g.prior_year_finish())

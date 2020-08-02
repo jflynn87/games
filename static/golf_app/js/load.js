@@ -1,3 +1,4 @@
+
 $(document).ready(function() {
     console.log('first step');
     /*$('#picks-tbl').hide() */
@@ -46,7 +47,6 @@ $(document).ready(function() {
             console.log(json_update);
           }
         })
-
 
       },
       failure: function(json) {

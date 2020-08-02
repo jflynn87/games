@@ -77,9 +77,20 @@ MIDDLEWARE = [
 ]
 
 ROOT_URLCONF = 'gamesProj.urls'
-CORS_ORIGIN_WHITELIST = ('http://localhost:3000', )
-#CORS_ALLOW_METHODS = ["GET", ]
-#CSRF_TRUSTED_ORIGINS ['localhost:3000', ]
+
+CORS_URLS_REGEX = r'^/api.*'
+CORS_ORIGIN_ALLOW_ALL = True
+CORS_ORIGIN_WHITELIST = (
+    
+    'http://localhost:3030',
+#    'your-bucket-here.s3-us-west-2.amazonaws.com',
+)
+
+REST_FRAMEWORK = {
+    'DEFAULT_PERMISSION_CLASSES': (
+        'rest_framework.permissions.IsAuthenticatedOrReadOnly',
+    )
+}
 
 TEMPLATES = [
     {
@@ -192,9 +203,19 @@ USE_L10N = True
 
 STATIC_URL = '/static/'
 
+STATIC_ROOT = os.path.join(os.path.dirname(BASE_DIR), 'static-cdn-local')
 STATICFILES_DIRS = [
     STATIC_DIR,
+    
 ]
+#STATICFILES_DIRS = [
+#    os.path.join(BASE_DIR, 'static'), 
+#]
+
+#STATIC_ROOT = os.path.join(os.path.dirname(BASE_DIR), 'static-cdn-local')
+
+
+
 
 EMAIL_USE_TLS = True
 EMAIL_HOST = 'smtp.gmail.com'

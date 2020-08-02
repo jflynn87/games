@@ -255,21 +255,13 @@ def create_groups(tournament_number):
                 print ('no rank found',player)
                 rank = [9999, 9999, 9999]
 
-        #
-        # print ('rank', rank)
-        #
-        # if rank == None:  #failed to find owgr site
-        #     print ('not in owgr', player)
-        #     rank = PGA_rankings.get(player.capitalize())
-        #     if rank == None:
-        #         print ('no rank found',player)
-        #         rank = 9999
-
         if name_switch:
+            print ('name switch', player, name)
             player = name.PGA_name
             name_switch = False
 
         group_dict[player] = [rank, field.get(player)]
+
 
     player_cnt = 1
     group_num = 1
@@ -313,7 +305,7 @@ def create_groups(tournament_number):
              currentWGR=v[0][0], sow_WGR=v[0][1], soy_WGR=v[0][2], \
              group=groups, alternate=v[1][0], \
              playerID=v[1][1], pic_link= get_pick_link(v[1][1]), \
-             map_link= map_link)
+             map_link= map_link, golfer=Golfer.objects.get(golfer_pga_num=v[1][1]))
           player_cnt +=1
         elif player_cnt == groups.playerCnt:
           #print (k,v[0], str(groups.number), str(groups.playerCnt))
@@ -322,7 +314,7 @@ def create_groups(tournament_number):
              currentWGR=v[0][0], sow_WGR=v[0][1], soy_WGR=v[0][2], \
              group=groups, alternate=v[1][0], \
              playerID=v[1][1], pic_link= get_pick_link(v[1][1]), \
-             map_link= map_link)
+             map_link= map_link, golfer=Golfer.objects.get(golfer_pga_num=v[1][1]))
           group_num +=1
           player_cnt = 1
           if Field.objects.filter(tournament=tournament).count() < len(field):
@@ -371,7 +363,8 @@ def get_flag(golfer, golfer_data):
         #print (golfer, flag)
         return  "https://www.pgatour.com" + flag
     except Exception as e:
-        print ("flag lookup issue", golfer, name, e)
+        #print ("flag lookup issue", golfer, name, e)
+        print ("flag lookup issue", golfer, e)
         return None
         #else:
     #    return None

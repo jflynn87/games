@@ -30,7 +30,7 @@ class DashboardView(ListView):
     #model = Run
     #select_related = ('shoes',)
     template_name = 'run_app/dashboard.html'
-    component = 'test-app/src/index.js'
+    
 
     def get_context_data(self, **kwargs):
         context = super(DashboardView, self).get_context_data(**kwargs)
@@ -94,13 +94,12 @@ class DashboardView(ListView):
             else:
                 week['long_change'] = 100
             
-        print (self.component)
+        
         context.update({
         'years': year_data,
         'weeks': week_data,
         'shoes': shoe_data,
         'totals': total_data,
-        'component': self.component
         #'schedules': Plan.objects.filter(end_date__gt=datetime.datetime.now())
         })
         return context
@@ -275,21 +274,21 @@ class getRunKeeperData(APIView):
                     shoes = Shoes.objects.get(main_shoe=True)
                     location = 1
 
-                    # Run.objects.get_or_create(date=datetime.datetime.strptime(date, '%Y-%m-%d'), 
-                    # dist = dist, 
-                    # time = time,
-                    # cals = cals,
-                    # shoes = Shoes.objects.get(main_shoe=True),
-                    # location = 1
-                    # )
+                    Run.objects.get_or_create(date=datetime.datetime.strptime(date, '%Y-%m-%d'), 
+                    dist = dist, 
+                    time = time,
+                    cals = cals,
+                    shoes = Shoes.objects.get(main_shoe=True),
+                    location = 1
+                     )
                 else:
-                    print ('not a run: ', activities)
+                    print ('not a run: ', data)
             
-                return Response(run_dict, 200)
+            return Response(run_dict, 200)
 
                 #return JsonResponse(json.dumps(run_dict), 200)
                 #return JsonResponse(run_dict )
         except Exception as e:
             print ('api error', e)
-            return Response(json.dumps({}), 400)
+            return Response(json.dumps({'error': str(e)}), 401)
 

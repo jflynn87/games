@@ -632,25 +632,27 @@ class CheckStarted(APIView):
 
     def post(self, request):
 
-        key = request.data['key']
-
-        print ('post', key)
-
         try:
+            t_status  = {}
+            key = request.data['key']
+            print ('post', key)
+
             t = Tournament.objects.get(pk=key)
             if not t.started():
                 pga_web = scrape_scores.ScrapeScores(t)
                 score_dict = pga_web.scrape()
-                t_started = json.dumps({'status': t.started})
-            return Response(t_started, 200)
+                tourn = Tournament.objects.get(pk=key)
+                score = manual_score.Score(score_dict, t)
+                round = score.get_round()
+                print('round before if', round)
+                if round != None and round > 0:
+                    score.update_scores()
+                t_status['status'] = tourn.started()
+                print ('responding', t_status)
+            return Response(json.dumps(t_status), 200)
         except Exception as e:
-            return Response(e, 500)
-
-        
-
-
-
-
+            print ('error', e)
+            return Response(json.dumps({'status': str(e)}), 500)
 
     def get(self, t_pk):
         print ('1', t_pk.GET)
@@ -662,8 +664,26 @@ class CheckStarted(APIView):
             if not t.started():
                 pga_web = scrape_scores.ScrapeScores(t)
                 score_dict = pga_web.scrape()
+            print (t.started())
             return Response(t.started, 200)
         except Exception as e:
             return Response(e, 500)
 
             
+class PriorResult(APIView):
+    def get(self, num):
+        print ('start prior result')
+        try:
+            results_list = []
+            current_t = Tournament.objects.get(current=True)
+            season = int(current_t.season.season)
+            t = Tournament.objects.get(name=current_t.name, season__season=(season-1))
+            print (t)
+            for score in ScoreDetails.objects.filter(pick__playerName__tournament=t).order_by('score').values('pick__playerName__playerName', 'score').distinct():
+                print (score)
+                results_list.append({'golfer': score.get('pick__playerName__playerName'), 'score': score.get('score')})
+
+            return Response(json.dumps(results_list), 200)
+        except Exception as e:
+            print ('exception', e)
+            return Response(e, 500)

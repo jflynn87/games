@@ -1,4 +1,5 @@
 {%extends 'golf_app/golf_app_base.html'%}
+
 {%load golf_extras%}
 {%block body_block%}
 {%load static%}
@@ -7,7 +8,7 @@
 
 
 <h2>{{tournament.name}} Picks Status</h2>
-<h4>Come back on {{tournament.start_date}} PST to see scores</h4>
+<h4>Come back on {{tournament.start_date}} to see scores</h4>
 <br>
 {%if lookup_errors%}
 {%for user, pick in lookup_errors.items%}
@@ -32,6 +33,13 @@
     {%endfor%}
     </tbody>
   </table>
+
+  
+
+<script type="text/babel" src="{%static 'test-app/src/started.js'%}"></script>
+<p hidden id="tournament_key">{{tournament.pk}}</p>
+
+
 
 
 

@@ -35,21 +35,8 @@ class ScrapeScores(object):
         options.add_argument("--headless")
         options.add_argument("--disable-gpu")
         driver = Chrome(options=options)
-       
-        #if url != None:
-        #    url = url
-        
-        # if self.tournament.current:
-        #     url = "https://www.pgatour.com/leaderboard.html"
-        #     #url = "https://www.pgatour.com/competition/2020/the-honda-classic/leaderboard.html"
-        # else:
-        #     t_name = self.tournament.name.replace(' ', '-').lower()
-        #     url = "https://www.pgatour.com/competition/2020/" + t_name + "/leaderboard.html"
-        #     print (url)
-        
+      
         driver.get(self.url)
-        #score_dict = {}
-        #t = Tournament.objects.get(current=True)
         t = self.tournament
         t_ok = False
         try:
@@ -66,9 +53,17 @@ class ScrapeScores(object):
                     t.cut_score = c.text
                     t.save()
 
-            
+                #find playoff data
+                playoff = driver.find_elements_by_class_name("playoff-module")
+                print ('-------playoff--------')
+                for p in playoff:
+                    print (p.text)
+
+
+
                 table = driver.find_elements_by_class_name("leaderboard-table")
                 
+                print (table)
                 for t in table[1:]:
                     for tr in t.find_elements_by_tag_name('tr'):
                         #print(tr.text, 'len: ', len(tr.text))

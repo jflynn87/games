@@ -6,6 +6,7 @@ from datetime import datetime
 from golf_app import pga_score
 from django.db import transaction
 import random
+import unidecode
 
 
 
@@ -148,6 +149,34 @@ class Group(models.Model):
         return str(self.number) + '-' + str(self.tournament)
 
 
+class Golfer(models.Model):
+    golfer_pga_num = models.CharField(max_length=100)
+    golfer_name = models.CharField(max_length=100)
+    pic_link  = models.URLField(max_length=500, null=True, blank=True)
+    flag_link = models.URLField(max_length=500, null=True, blank=True)
+
+    def __str__(self):
+        return str(self.golfer_name) + ' : ' + str(self.golfer_pga_num)
+
+    def pga_web_name_format(self):
+        if  self.golfer_name[1]=='.' and self.golfer_name[3] =='.':
+            return self.golfer_name[0].lower() + '-' + self.golfer_name[2].lower() + '--' + self.golfer_name.split(' ')[1].strip(', Jr.').lower()
+        else:
+            return self.golfer_name.split(' ')[0] + '-' + self.golfer_name.split(' ')[1]
+
+
+
+    def golfer_link(self):
+      
+        if  self.golfer_name[1]=='.' and self.golfer_name[3] =='.':
+            name = str(self.golfer_pga_num) + '.' + self.pga_web_name_format()
+        else:
+            name = str(self.golfer_pga_num) + '.' + self.pga_web_name_format()
+#        else:
+ #           name = str(golfer_data[1][1]) + '.' + golfer.split(' ')[0].lower() + '-' + golfer.split(' ')[1].strip(', Jr.').lower()
+        return 'https://www.pgatour.com/players/player.' + unidecode.unidecode(name) + '.html'
+
+
 class Field(models.Model):
     playerName = models.CharField(max_length = 256, null=True)
     currentWGR = models.IntegerField(unique=False, null=True)
@@ -162,6 +191,7 @@ class Field(models.Model):
     playerID = models.CharField(max_length=100, null=True)
     map_link = models.URLField(null=True)
     pic_link = models.URLField(null=True)
+    golfer = models.ForeignKey(Golfer, on_delete=models.CASCADE, null=True)
 
     class Meta:
         ordering = ['group', 'currentWGR']
@@ -185,15 +215,20 @@ class Field(models.Model):
     def withdrawal(self):
         pass
 
+    def prior_year_finish(self):
+        last_season = str(int(self.tournament.season.season)-1)
+        t = Tournament.objects.get(name=self.tournament.name, season__season=last_season)
+        s = ScoreDetails.objects.filter(pick__playerName__tournament=t, pick__playerName__playerName=self).first()
+   
+        if s == None:
+            return 'n/a'
+        elif s.today_score == "cut":
+            return s.today_score
+        else:
+            return s.score
 
-class Golfer(models.Model):
-    golfer_pga_num = models.CharField(max_length=100)
-    golfer_name = models.CharField(max_length=100)
-    pic_link  = models.URLField(max_length=500, null=True, blank=True)
-    flag_link = models.URLField(max_length=500, null=True, blank=True)
 
-    def __str__(self):
-        return str(self.golfer_name) + ' : ' + str(self.golfer_pga_num)
+
 
 class PGAWebScores(models.Model):
     tournament= models.ForeignKey(Tournament, on_delete=models.CASCADE)
@@ -219,7 +254,7 @@ class Name(models.Model):
     PGA_name = models.CharField(max_length=256)
 
     def __str__(self):
-        return self.OWGR_name
+        return 'owgr name: ' + self.OWGR_name + 'PGA name: ' + self.PGA_name
 
 
 class Picks(models.Model):

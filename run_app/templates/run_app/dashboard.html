@@ -4,17 +4,13 @@
 {%block body_block%}
 
 <script src='{% static "run_app/js/dashboard.js"%}' type="text/javascript" ></script>
-
-<script src='{%static "run_app/js/get_data.js"%}' type="text/javascript" ></script>
-
-
-<script crossorigin src="https://unpkg.com/react@16/umd/react.development.js"></script>
-<script crossorigin src="https://unpkg.com/react-dom@16/umd/react-dom.development.js"></script>
-<script src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
-<!-- Load our React component. -->
+<script src='{% static "js/react-django.ui.js"%}'></script>
 
 
 
+<div id='runs'>
+     
+</div>
 <div class="row">
   <div class="col">
 
@@ -70,14 +66,13 @@
       </tbody>
     </table>
     <a href="{% url 'run_app:add_run' %}"> <button class="btn btn-primary">Add Run</button></a>
+    <a href="{% url 'run_app:get_run_data' %}"> <button class="btn btn-primary">Get Runs</button></a>
     <h4></h4>
     {%for schedule in plan_list%}
     <a href="/run_app/plan/{{schedule.id}}"> <button class="btn btn-primary">Schedule: {{schedule}}</button></a>
     {%endfor%}
-    <button onclick="get_run_data()" class="btn btn-primary">Get Runkeeper Data</button>
-    <div id='run-data'>
-    </div>
-    <script type='text/babel' src="{%static 'test-app/src/getRuns.js'%}"></script> 
+    
+    
   </div>
        
 </div>
@@ -93,14 +88,6 @@
   <th>Pace</th>
   <th>Total % chg</th>
   <th>Long % chg</th>
-    <head>
-      <meta charset="utf-8">
-      <title></title>
-    </head>
-    <body>
-
-    </body>
-  </html>
   </thead>
   <tbody>
     {%for week in weeks%}
@@ -116,6 +103,7 @@
       <td class="change">{{week.long_change|floatformat:"0"}}</td>
     </tr>
     {%endfor%}
+    
   </tbody>
 </table>
 

@@ -29,3 +29,4 @@ for (var j = 0; j < items.length; ++j) {
   $('#' + items[j].innerHTML).attr('checked', 'checked');
 }
 })
+

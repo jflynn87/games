@@ -20,6 +20,12 @@ from django.core.mail import send_mail
 
 
 t = Tournament.objects.get(current=True)
+
+if t.started():
+    print (t.name, ': started, exiting')
+    exit()
+
+
 #t = Tournament.objects.get(pk=95)
 #if t.started():
 #    print ('tournament started')

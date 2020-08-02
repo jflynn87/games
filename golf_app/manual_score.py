@@ -335,27 +335,53 @@ class Score(object):
             
     def get_round(self):
         round = 0
+        if self.tournament.complete:
+            return 4
+        
         for stats in self.score_dict.values():
-            if stats.get('thru')[0] != "F" and stats.get('rank') not in ('CUT', 'WD', 'DQ'):
-               if stats.get('r2') == '--':
-                  return 2
-               elif stats.get('r3') == '--':
-                      return 3
-               elif  stats.get('r4') == '--':
-                      return 4
+            print ('length: ', len(stats.get('thru')))
+            if len(stats.get('thru')) > 3:
+                #print ('len', stats)
+                continue
+            if stats.get('thru')[0] != "F" and stats.get('rank') not in self.not_playing_list:
+                if stats.get('r1')  == '--':
+                    return 1
+                if stats.get('r2') == '--':
+                   return 2
+                elif stats.get('r3') == '--':
+                       return 3
+                elif  stats.get('r4') == '--':
+                       print ('get round - round 4')
+                       return 4
+            elif stats.get('thru')[0] == 'F' and stats.get('rank') not in self.not_playing_list:
+                if stats.get('r2') == '--':
+                    return 2
+                elif stats.get('r3') == '--':
+                    return 3
+                elif stats.get('r4') == '--':
+                    return 4
+                else:
+                    return 4
             else:
-                if round == 0:
-                    if stats.get('r1') == '--':
-                        round = 1
-                    elif stats.get('r2') == '--':
-                        round = 2
-                    elif stats.get('r3') == '--':
-                        round = 3
-                    elif stats.get('r4') == '--':
-                        round = 4
-                    else:
-                        round = 4
+                return 0
+        print ('exit get_round', round)
         return round
+
+               
+                   
+            # else:
+            #     if round == 0:
+            #         if stats.get('r1') == '--':
+            #             round = 1
+            #         elif stats.get('r2') == '--':
+            #             round = 2
+            #         elif stats.get('r3') == '--':
+            #             round = 3
+            #         elif stats.get('r4') == '--':
+            #             round = 4
+            #         else:
+            #             round = 0
+ #       return round
                
 
     def get_cut_num(self):
@@ -406,10 +432,10 @@ class Score(object):
 
     def tournament_complete(self):
         for v in self.score_dict.values():
-            if v['rank'] not in ["CUT", "WD", "DQ"] and \
-                v['r4'] == "--":
+            if (v['rank'] not in ["CUT", "WD", "DQ"] and \
+                v['r4'] == "--") or v['rank']  == "T1":
                 return False
-        if self.get_round() == 4:
+        if self.get_round() == 4: 
             return True
 
     def get_wd_score(self, pick):

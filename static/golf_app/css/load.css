@@ -1,4 +1,3 @@
-/* reset */
 progress {
     -webkit-appearance: none;
        -moz-appearance: none;
@@ -59,7 +58,7 @@ progress {
     display: flex;
     flex-wrap: wrap;
     width: 100%;
-    /*height: 100%;*/
+    
   }
   
   label {
@@ -76,4 +75,9 @@ progress {
 
 .load {
     height: 100em
+}
+
+.tip {
+  text-underline-position: below;
+  color: aqua;
 }
