@@ -4,6 +4,8 @@ db.sqlite3
 
 #all below from react addition
 
+chromedriver.exe
+
 node_modules/
 
 # misc

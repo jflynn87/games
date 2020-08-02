@@ -3,8 +3,8 @@
 {%load golf_extras%}
 {% block body_block %}
 
-<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
-<script src="https://code.jquery.com/jquery-3.3.1.min.js" integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=" crossorigin="anonymous"></script>
+<!-- <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+<script src="https://code.jquery.com/jquery-3.3.1.min.js" integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=" crossorigin="anonymous"></script> -->
 
 
 <script type="text/javascript" src="{%static 'golf_app/js/field.js'%}"></script>
@@ -23,18 +23,18 @@
 {% regroup field_list by group as ordered_field_list %}
 
     <div id='main'>
-        <h1>Hi, {{user.get_username}}!</h1>
-        <h2>Welcome to the {{tournament.name}}  </h2>
+        
+        <h4>{{tournament.name}}</h4>
 
         {%if not tournament.started or tournament.late_picks%}
-        <h2>Please make 1 pick for each group below</h2>
+        <p>Please make 1 pick for each group below</p>
         <form name="random" method="post">
           {%csrf_token%}
           <input type="text" name="random" value="random" hidden>
-          <h5>or click for random picks  <input type="submit" class="btn btn-primary" value="Random"> </h5>
+          <p>or click for random picks  <input type="submit" class="btn btn-primary" value="Random"> </p>
         </form>
         {%else%}
-        <h2>Tournament Started - too late to make picks</h2>
+        <p>Tournament Started - too late to make picks</p>
 
         {%endif%}
 

@@ -3,20 +3,26 @@
 {%load bootstrap%}
 
 {%block body_block%}
+
+
 {% if not form.instance.pk %}
-Create Run
+<h4>Create Run</h4>
+<br>
 {% else %}
-Update Run
+<h4>Update Run</h4>
+
+<br>
+<br>
+<p></p>
+<a href="{% url 'run_app:delete_run' pk=form.instance.pk %}"> <button class="btn btn-danger">Delete Run</button></a>
 {% endif %}
-<br>
-<br>
+
 <form method="POST">
   {% csrf_token %}
   {{ form|bootstrap }}
   <input type="submit" class='btn btn-primary' value="Submit">
 
 </form>
-<p></p>
-<a href="{% url 'run_app:delete_run' pk=form.instance.pk %}"> <button class="btn btn-danger">Delete Run</button></a>
+
 
 {%endblock%}

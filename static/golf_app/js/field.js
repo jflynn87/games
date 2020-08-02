@@ -29,4 +29,8 @@ for (var j = 0; j < items.length; ++j) {
   $('#' + items[j].innerHTML).attr('checked', 'checked');
 }
 })
-
+ 
+$(function () {
+  $('[data-toggle="tooltip"]').tooltip({trigger:"hover",
+                                        delay:{"show":400,"hide":800}})})
+ 
