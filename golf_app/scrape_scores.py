@@ -22,7 +22,8 @@ class ScrapeScores(object):
         if url != None:
             self.url = url
         elif self.tournament.current:
-            self.url = "https://www.pgatour.com/leaderboard.html"
+            #self.url = "https://www.pgatour.com/leaderboard.html"
+            self.url = "https://www.pgatour.com/competition/2020/wgc-fedex-st-jude-invitational/leaderboard.html"
         else:
             t_name = self.tournament.name.replace(' ', '-').lower()
             self.url = "https://www.pgatour.com/competition/2020/" + t_name + "/leaderboard.html"

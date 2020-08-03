@@ -73,10 +73,6 @@ $.each(picks_data, function(player, stats) {
      '</thead>' +
      '<thead>' + '<th>' + 'Golfer' + '</th>' +
      '<th>' + 'Current Position' + '</th>' +
-     '<th>' + 'Thru' + '</th>' +
-     '<th>' + 'Score to par' + '</th>' +
-     '<th>' + 'Current Round' + '</th>' +
-     '<th>' + 'Today Change' + '</th>' +
      '</thead>')
      $.each(stats, function(group, score) {
        
@@ -97,12 +93,12 @@ $.each(picks_data, function(player, stats) {
         else {move = ""}
   
       $('#det-list table').append('<tr style=color:' + score['winner'] + '>' +
-      '<td>' + score['pick'] + '</td>' +
+      '<td>' +
+       '<p "style:font-weight=bold">' + score['pick'].bold() + '</p>' +
+       '<p>' + 'today:' + score['today_score'] + ', thru ' + score['thru'] + '</p>' +
+       '<p>' + 'overall: ' + score['toPar'] + ' ' + move + score['sod_position'] + '</p>' +
+       '</td>' +
       '<td>' + score['score'] + '</td>' +
-      '<td>' + score['thru'] + '</td>' +
-      '<td>' + score['toPar'] + '</td>' +
-      '<td>' + score['today_score'] + '</td>' + 
-      '<td>' + move +  score['sod_position'] + '</td>'  
       + '</tr>')
       })})
       $('#det-list').attr('class', 'none')

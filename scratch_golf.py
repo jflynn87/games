@@ -3,7 +3,7 @@ os.environ.setdefault("DJANGO_SETTINGS_MODULE","gamesProj.settings")
 
 import django
 django.setup()
-from golf_app.models import Tournament, TotalScore, ScoreDetails, Field, Picks, PickMethod, BonusDetails, Season, Golfer
+from golf_app.models import Tournament, TotalScore, ScoreDetails, Field, Picks, PickMethod, BonusDetails, Season, Golfer, Group
 from django.contrib.auth.models import User
 from datetime import datetime, timedelta
 import sqlite3
@@ -29,6 +29,7 @@ from golf_app import views, manual_score, scrape_scores, populateField, withdraw
    
 
 t = Tournament.objects.get(current=True)
-
-for g in Field.objects.filter(tournament=t):
-    print (g.prior_year_finish())
+winning_score = TotalScore.objects.filter(tournament=t).aggregate(Min('score'))
+print (winning_score)
+winner = TotalScore.objects.filter(tournament=t, score=winning_score.get('score__min'))
+print ('major', winner)

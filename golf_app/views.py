@@ -193,109 +193,109 @@ class PicksListView(LoginRequiredMixin,ListView):
         })
         return context
 
+## commented 8/2/2020 - delete later
+# class ScoreListView(DetailView):
+#     template_name = 'golf_app/scores.html'
+#     model=TotalScore
 
-class ScoreListView(DetailView):
-    template_name = 'golf_app/scores.html'
-    model=TotalScore
-
-    def dispatch(self, request, *args, **kwargs):
-        print ('in SLV dispatch')
-        if kwargs.get('pk') == None:
-            tournament = Tournament.objects.get(current=True)
-            self.kwargs['pk'] = str(tournament.pk)
-        return super(ScoreListView, self).dispatch(request, *args, **kwargs)
+#     def dispatch(self, request, *args, **kwargs):
+#         print ('in SLV dispatch')
+#         if kwargs.get('pk') == None:
+#             tournament = Tournament.objects.get(current=True)
+#             self.kwargs['pk'] = str(tournament.pk)
+#         return super(ScoreListView, self).dispatch(request, *args, **kwargs)
     
     
-    def get_context_data(self, **kwargs):
-        context = super(ScoreListView, self).get_context_data(**kwargs)
-        tournament = Tournament.objects.get(pk=self.kwargs.get('pk'))
+#     def get_context_data(self, **kwargs):
+#         context = super(ScoreListView, self).get_context_data(**kwargs)
+#         tournament = Tournament.objects.get(pk=self.kwargs.get('pk'))
         
-        if not tournament.started():
-           user_dict = {}
-           for user in Picks.objects.filter(playerName__tournament=tournament).values('user__username').annotate(Count('playerName')):
-               user_dict[user.get('user__username')]=user.get('playerName__count')
-               if tournament.pga_tournament_num == '470': #special logic for match player
-                  scores = (None, None, None, None,None)
-               #else:  scores=calc_score.calc_score(self.kwargs, request)
-           self.template_name = 'golf_app/pre_start.html'
+#         if not tournament.started():
+#            user_dict = {}
+#            for user in Picks.objects.filter(playerName__tournament=tournament).values('user__username').annotate(Count('playerName')):
+#                user_dict[user.get('user__username')]=user.get('playerName__count')
+#                if tournament.pga_tournament_num == '470': #special logic for match player
+#                   scores = (None, None, None, None,None)
+#                #else:  scores=calc_score.calc_score(self.kwargs, request)
+#            self.template_name = 'golf_app/pre_start.html'
 
-           context.update({'user_dict': user_dict,
-                           'tournament': tournament,
-                          # 'lookup_errors': scores[4],
-                                                    })
+#            context.update({'user_dict': user_dict,
+#                            'tournament': tournament,
+#                           # 'lookup_errors': scores[4],
+#                                                     })
 
-           return context
-        ## from here all logic should only happen if tournament has started
+#            return context
+#         ## from here all logic should only happen if tournament has started
 
-        if not tournament.picks_complete():
-               tournament.missing_picks()
+#         if not tournament.picks_complete():
+#                tournament.missing_picks()
 
-        if tournament.manual_score_file:
-           score_dict = {}
-           file = str(tournament.name) + ' score.csv'
-           with open(file, encoding="utf8") as csv_file:
-                csv_reader = csv.reader(csv_file, delimiter=',')
-                for row in csv_reader:
-                    try:
-                        name = row[3].split('(')[0].split(',')[0]
-                        #print (name, len(name), name[len(name)-1])
-                        if name != '':
-                           if name[-1] == ' ':
-                              score_dict[name[:-1]] = {'total': row[0], 'status': row[5], 'score': row[4], 'r1': row[7], 'r2': row[8], 'r3': row[9], 'r4': row[10]}
-                           else:
-                              score_dict[name] = {'total': row[0], 'status': row[5], 'score': row[4], 'r1': row[7], 'r2': row[8], 'r3': row[9], 'r4': row[10]}
-                        else:
-                            print ('round.csv file == psace', row)
-                    except Exception as e:
-                        print ('round.csv file read failed', row, e)
+#         if tournament.manual_score_file:
+#            score_dict = {}
+#            file = str(tournament.name) + ' score.csv'
+#            with open(file, encoding="utf8") as csv_file:
+#                 csv_reader = csv.reader(csv_file, delimiter=',')
+#                 for row in csv_reader:
+#                     try:
+#                         name = row[3].split('(')[0].split(',')[0]
+#                         #print (name, len(name), name[len(name)-1])
+#                         if name != '':
+#                            if name[-1] == ' ':
+#                               score_dict[name[:-1]] = {'total': row[0], 'status': row[5], 'score': row[4], 'r1': row[7], 'r2': row[8], 'r3': row[9], 'r4': row[10]}
+#                            else:
+#                               score_dict[name] = {'total': row[0], 'status': row[5], 'score': row[4], 'r1': row[7], 'r2': row[8], 'r3': row[9], 'r4': row[10]}
+#                         else:
+#                             print ('round.csv file == psace', row)
+#                     except Exception as e:
+#                         print ('round.csv file read failed', row, e)
 
-                picks = manual_score.Score(score_dict, tournament)
-                picks.update_scores()
-                picks.total_scores()
-                context.update({'scores':TotalScore.objects.filter(tournament=tournament).order_by('score'),
-                                'detail_list':picks.get_picks_by_user(),
-                                'leader_list':picks.get_leader(),
-                                'cut_data':None,
-                                'lookup_errors': None,
-                                'tournament': tournament,
-                                'thru_list': [],
-    #                                     'optimal_picks': summary_data[0],
-    #                                     'best_score': summary_data[1],
-    #                                     'cuts': {'1': 'data', '2': 'data'}
-                                         })
+#                 picks = manual_score.Score(score_dict, tournament)
+#                 picks.update_scores()
+#                 picks.total_scores()
+#                 context.update({'scores':TotalScore.objects.filter(tournament=tournament).order_by('score'),
+#                                 'detail_list':picks.get_picks_by_user(),
+#                                 'leader_list':picks.get_leader(),
+#                                 'cut_data':None,
+#                                 'lookup_errors': None,
+#                                 'tournament': tournament,
+#                                 'thru_list': [],
+#     #                                     'optimal_picks': summary_data[0],
+#     #                                     'best_score': summary_data[1],
+#     #                                     'cuts': {'1': 'data', '2': 'data'}
+#                                          })
 
-                return context
+#                 return context
 
-        else:
-            try:
-                json_url = tournament.score_json_url
-                with urllib.request.urlopen(json_url) as field_json_url:
-                     data = json.loads(field_json_url.read().decode())
-                print ('found pga JSON!')
-            except Exception as e:
-                print ('cant open pga score file', e)
-                #run batch to update pgawebscore table
-                score_dict = {}
-                #for s in PGAWebScores.objects.filter(tournament=tournament):
-                #    score_dict[s.golfer.playerName] = \
-                #    {'total': s.total, 'status': s.status, 'score': s.score, 'r1': s.r1, 'r2': s.r2, 'r3': s.r3, 'r4': s.r4}
+#         else:
+#             try:
+#                 json_url = tournament.score_json_url
+#                 with urllib.request.urlopen(json_url) as field_json_url:
+#                      data = json.loads(field_json_url.read().decode())
+#                 print ('found pga JSON!')
+#             except Exception as e:
+#                 print ('cant open pga score file', e)
+#                 #run batch to update pgawebscore table
+#                 score_dict = {}
+#                 #for s in PGAWebScores.objects.filter(tournament=tournament):
+#                 #    score_dict[s.golfer.playerName] = \
+#                 #    {'total': s.total, 'status': s.status, 'score': s.score, 'r1': s.r1, 'r2': s.r2, 'r3': s.r3, 'r4': s.r4}
 
-                picks = manual_score.Score(score_dict, tournament)
-                picks.update_scores()
-                picks.total_scores()
-                context.update({'scores':TotalScore.objects.filter(tournament=tournament).order_by('score'),
-                                'detail_list':picks.get_picks_by_user(),
-                                'leader_list':picks.get_leader(),
-                                'cut_data':None,
-                                'lookup_errors': None,
-                                'tournament': tournament,
-                                'thru_list': [],
-    #                                     'optimal_picks': summary_data[0],
-    #                                     'best_score': summary_data[1],
-    #                                     'cuts': {'1': 'data', '2': 'data'}
-                                         })
+#                 picks = manual_score.Score(score_dict, tournament)
+#                 picks.update_scores()
+#                 picks.total_scores()
+#                 context.update({'scores':TotalScore.objects.filter(tournament=tournament).order_by('score'),
+#                                 'detail_list':picks.get_picks_by_user(),
+#                                 'leader_list':picks.get_leader(),
+#                                 'cut_data':None,
+#                                 'lookup_errors': None,
+#                                 'tournament': tournament,
+#                                 'thru_list': [],
+#     #                                     'optimal_picks': summary_data[0],
+#     #                                     'best_score': summary_data[1],
+#     #                                     'cuts': {'1': 'data', '2': 'data'}
+#                                          })
 
-                return context        
+#                 return context        
 
 
 @transaction.atomic
@@ -670,19 +670,29 @@ class CheckStarted(APIView):
             return Response(e, 500)
 
             
-class PriorResult(APIView):
-    def get(self, num):
-        print ('start prior result')
-        try:
-            results_list = []
-            current_t = Tournament.objects.get(current=True)
-            season = int(current_t.season.season)
-            t = Tournament.objects.get(name=current_t.name, season__season=(season-1))
-            print (t)
-            for score in ScoreDetails.objects.filter(pick__playerName__tournament=t).order_by('score').values('pick__playerName__playerName', 'score').distinct():
-                print (score)
-                results_list.append({'golfer': score.get('pick__playerName__playerName'), 'score': score.get('score')})
+# class PriorResult(APIView):
+#     def get(self, num):
+#         print ('start prior result')
+#         try:
+#             results_list = []
+#             current_t = Tournament.objects.get(current=True)
+#             season = int(current_t.season.season)
+#             t = Tournament.objects.get(name=current_t.name, season__season=(season-1))
+#             print (t)
+#             for score in ScoreDetails.objects.filter(pick__playerName__tournament=t).order_by('score').values('pick__playerName__playerName', 'score').distinct():
+#                 print (score)
+#                 results_list.append({'golfer': score.get('pick__playerName__playerName'), 'score': score.get('score')})
 
+#             return Response(json.dumps(results_list), 200)
+#         except Exception as e:
+#             print ('exception', e)
+#             return Response(e, 500)
+
+class Scores(APIView):
+    def get(self, num):
+        print ('scores for 2021')
+        try:
+            
             return Response(json.dumps(results_list), 200)
         except Exception as e:
             print ('exception', e)

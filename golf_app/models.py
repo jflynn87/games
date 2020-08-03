@@ -148,6 +148,10 @@ class Group(models.Model):
     def __str__(self):
         return str(self.number) + '-' + str(self.tournament)
 
+    def min_score(self):
+        min_score = ScoreDetails.objects.filter(pick__playerName__group=self).aggregate(Min('score'))
+        return int(min_score.get('score__min'))
+
 
 class Golfer(models.Model):
     golfer_pga_num = models.CharField(max_length=100)
@@ -167,13 +171,10 @@ class Golfer(models.Model):
 
 
     def golfer_link(self):
-      
         if  self.golfer_name[1]=='.' and self.golfer_name[3] =='.':
             name = str(self.golfer_pga_num) + '.' + self.pga_web_name_format()
         else:
             name = str(self.golfer_pga_num) + '.' + self.pga_web_name_format()
-#        else:
- #           name = str(golfer_data[1][1]) + '.' + golfer.split(' ')[0].lower() + '-' + golfer.split(' ')[1].strip(', Jr.').lower()
         return 'https://www.pgatour.com/players/player.' + unidecode.unidecode(name) + '.html'
 
 
@@ -202,18 +203,12 @@ class Field(models.Model):
     def get_absolute_url(self):
         return reverse("golf_app:show_picks",kwargs={'pk':self.pk})
 
-    def get_group(self, args):
-        group = self.objects.filter(group=args)
-        return group
-
-    #def current_field(self):
-    #    return self.objects.filter(tournament__current=True)
+#    def get_group(self, args):
+#        group = self.objects.filter(group=args)
+#        return group
 
     def formatted_name(self):
         return self.playerName.replace(' Jr.','').replace('(am)','')
-
-    def withdrawal(self):
-        pass
 
     def prior_year_finish(self):
         last_season = str(int(self.tournament.season.season)-1)
@@ -227,7 +222,8 @@ class Field(models.Model):
         else:
             return s.score
 
-
+    def handicap(self):
+        return round(currentWGR*.01)
 
 
 class PGAWebScores(models.Model):
@@ -301,6 +297,14 @@ class ScoreDetails(models.Model):
 
     class Meta():
         unique_together = ('user', 'pick')
+
+    def  low_in_group(self):
+        if self.score == self.pick.playerName.group.min_score():
+            return True
+        else:
+            return False
+
+
 
 
 class BonusDetails(models.Model):
