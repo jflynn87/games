@@ -28,8 +28,25 @@ import json
 from golf_app import views, manual_score, scrape_scores, populateField, withdraw
    
 
-t = Tournament.objects.get(current=True)
-winning_score = TotalScore.objects.filter(tournament=t).aggregate(Min('score'))
-print (winning_score)
-winner = TotalScore.objects.filter(tournament=t, score=winning_score.get('score__min'))
-print ('major', winner)
+pk_list = []
+for t in Tournament.objects.filter(season__current=True):
+    pk_list.append(t.pk)
+
+
+#scrape = scrape_scores.ScrapeScores(t)
+#scrape.scrape()
+
+x = 0
+
+for key in pk_list:
+    try:
+        t = Tournament.objects.get(pk=key)
+        name = t.name.replace(' ', '-').lower()
+        print ('name', name)
+        scrape = scrape_scores.ScrapeScores(t, 'https://www.pgatour.com/competition/2020/' + name + '/leaderboard.html')
+        scrape.scrape()
+    except Exception as e:
+        print ('exceptoin', e)
+
+#for golfer in Field.objects.filter(tournament=t):
+#    print (golfer, 'owgr: ', golfer.currentWGR, ',  ', golfer.handicap())

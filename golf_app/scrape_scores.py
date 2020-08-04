@@ -22,8 +22,8 @@ class ScrapeScores(object):
         if url != None:
             self.url = url
         elif self.tournament.current:
-            #self.url = "https://www.pgatour.com/leaderboard.html"
-            self.url = "https://www.pgatour.com/competition/2020/wgc-fedex-st-jude-invitational/leaderboard.html"
+            self.url = "https://www.pgatour.com/leaderboard.html"
+            #self.url = "https://www.pgatour.com/competition/2020/sentry-tournament-of-champions/leaderboard.html"
         else:
             t_name = self.tournament.name.replace(' ', '-').lower()
             self.url = "https://www.pgatour.com/competition/2020/" + t_name + "/leaderboard.html"
@@ -56,11 +56,14 @@ class ScrapeScores(object):
 
                 #find playoff data
                 playoff = driver.find_elements_by_class_name("playoff-module")
-                print ('-------playoff--------')
+                print (t.name, '-------playoff--------')
+                print ('length', len(playoff))
                 for p in playoff:
                     print (p.text)
+                print (t.name, '-------end playoff------')
 
-
+                if len(playoff) > 0:
+                    t.playoff = True
 
                 table = driver.find_elements_by_class_name("leaderboard-table")
                 
@@ -83,7 +86,7 @@ class ScrapeScores(object):
                 
                 return (score_dict)                
             else:
-                print ('scrape scores t mismatch', t)
+                print ('scrape scores t mismatch', t, name)
                 return {}
         
         except Exception as e:

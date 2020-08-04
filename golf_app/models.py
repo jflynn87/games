@@ -38,6 +38,7 @@ class Tournament(models.Model):
     cut_score = models.CharField(max_length=100, null=True, blank=True)
     has_cut = models.BooleanField(default=True)
     leaders = models.CharField(null=True, max_length=500, blank=True)
+    playoff = models.BooleanField(default=False)
 
     #def get_queryset(self):t
     #    return self.objects.filter().first()
@@ -53,12 +54,10 @@ class Tournament(models.Model):
         if self.set_notstarted:
             print ('overrode to not started')
             return False
-        #if ScoreDetails.objects.filter(pick__playerName__tournament=self).exclude(Q(score__in=[0, None]) or Q(thru__in=["not started", None, " ", ""])) or Q(today_score__in=["WD", None]).exists():
         if ScoreDetails.objects.filter(pick__playerName__tournament=self).\
             exclude(Q(score=None) | Q(score=0) | \
                     Q(thru=None) | Q(thru__in=["not started", " ", "", '--']) | \
                     Q(today_score='WD')).exists():
-            #if ScoreDetails.objects.filter(pick__playerName__tournament=self).exclude(Q(score=0) or Q(thru__in=["not started", " ", ""]) or Q(today_score="WD")).exists():
             print (self, 'tournament started based on picks lookup')
             print ('finishing started check', datetime.now())
             return True
@@ -223,7 +222,16 @@ class Field(models.Model):
             return s.score
 
     def handicap(self):
-        return round(currentWGR*.01)
+       # print((Field.objects.filter(tournament=self.tournament).count() * .14))
+        if round(self.currentWGR*.01) < (Field.objects.filter(tournament=self.tournament).count() * .14):
+            return round(self.currentWGR*.01)
+        elif self.currentWGR == 9999:
+            max = Field.objects.filter(tournament=self.tournament).exclude(currentWGR=9999).aggregate(Max('currentWGR'))
+            if max.get('currentWGR__max') < (Field.objects.filter(tournament=self.tournament).count() * .14):
+                return max.get('currentWGR__max')
+
+        print ('----------- retruning field *.14')
+        return round(Field.objects.filter(tournament=self.tournament).count() * .14)
 
 
 class PGAWebScores(models.Model):

@@ -326,7 +326,7 @@ class Score(object):
             return 4
         
         for stats in self.score_dict.values():
-            print ('length: ', len(stats.get('thru')))
+            print (stats)
             if len(stats.get('thru')) > 3:
                 #print ('len', stats)
                 continue
@@ -403,7 +403,7 @@ class Score(object):
 
     def tournament_complete(self):
         for v in self.score_dict.values():
-            if (v['rank'] not in ["CUT", "WD", "DQ"] and \
+            if (v['rank'] not in self.not_playing_list and \
                 v['r4'] == "--") or v['rank']  == "T1":
                 return False
         if self.get_round() == 4: 
