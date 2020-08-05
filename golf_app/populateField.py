@@ -336,17 +336,17 @@ def get_pick_link(playerID):
 
 def get_flag(golfer, golfer_data):
     print ('get flag', golfer.lower(), golfer_data)
-    Golfer_obj = Golfer.objects.get_or_create(
+    golfer_obj, created = Golfer_obj = Golfer.objects.get_or_create(
     golfer_pga_num = golfer_data[1][1],
     golfer_name = golfer)
     #golfer_obj.save()
 
     try:
-        print (golfer, golfer_data)
-        if Golfer.objects.filter(golfer_pga_num=golfer_data[1][1]).exists():
-            golfer = Golfer.objects.get(golfer_pga_num=golfer_data[1][1])
+        print ('created', created, 'map_link ', golfer_obj.flag_link)
+        if golfer_obj.flag_link not in [None, ' ']:  #Golfer.objects.filter(golfer_pga_num=golfer_data[1][1]).exists():
+            #golfer = Golfer.objects.get(golfer_pga_num=golfer_data[1][1])
             print ('flag from db')
-            return golfer.flag_link
+            return golfer_obj.flag_link
 
         elif golfer[1]=='.' and golfer[3] =='.':
             name = str(golfer_data[1][1]) + '.' + golfer[0].lower() + '-' + golfer[2].lower() + '--' + golfer.split(' ')[1].strip(', Jr.').lower()
