@@ -336,6 +336,11 @@ def get_pick_link(playerID):
 
 def get_flag(golfer, golfer_data):
     print ('get flag', golfer.lower(), golfer_data)
+    Golfer_obj = Golfer.objects.get_or_create(
+    golfer_pga_num = golfer_data[1][1],
+    golfer_name = golfer)
+    #golfer_obj.save()
+
     try:
         print (golfer, golfer_data)
         if Golfer.objects.filter(golfer_pga_num=golfer_data[1][1]).exists():
@@ -355,9 +360,9 @@ def get_flag(golfer, golfer_data):
         country = (player_soup.find('div', {'class': 'country'}))
 
         flag = country.find('img').get('src')
-        golfer_obj = Golfer()
-        golfer_obj.golfer_pga_num = golfer_data[1][1]
-        golfer_obj.golfer_name = golfer
+        #golfer_obj = Golfer()
+        #golfer_obj.golfer_pga_num = golfer_data[1][1]
+        #golfer_obj.golfer_name = golfer
         golfer_obj.flag_link = "https://www.pgatour.com" + flag
         golfer_obj.save()
         #print (golfer, flag)
