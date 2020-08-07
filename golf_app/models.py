@@ -20,6 +20,13 @@ class Season(models.Model):
     def __str__(self):
         return self.season
 
+    def get_users(self):
+        ''''returns a list of user pk's as dict values'''
+        first_t = Tournament.objects.filter(season=self).first()
+        users = TotalScore.objects.filter(tournament=first_t).values('user')
+        return users
+
+
 class Tournament(models.Model):
     season = models.ForeignKey(Season, on_delete=models.CASCADE)
     name = models.CharField(max_length=264)
@@ -230,7 +237,7 @@ class Field(models.Model):
             if max.get('currentWGR__max') < (Field.objects.filter(tournament=self.tournament).count() * .14):
                 return max.get('currentWGR__max')
 
-        print ('----------- retruning field *.14')
+        #print ('----------- retruning field *.14')
         return round(Field.objects.filter(tournament=self.tournament).count() * .14)
 
 

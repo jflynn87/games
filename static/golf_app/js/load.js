@@ -68,8 +68,8 @@ var total_data = $.parseJSON((data['totals']))
 
 $.each(picks_data, function(player, stats) {
     console.log(player, stats)
-     $('#det-list table').append('<thead style="background-color:lightblue">' + '<tr>' + '<th>' + player + '</th>' + 
-     '<th>' + '</th>' + '<th>' + '</th>' +  '<th>' + '</th>' + '<th>' + '</th>' + '<th>' + '</th>' + 
+     $('#det-list table').append('<thead style="background-color:lightblue">' + '<tr id=' + player + '>' + '<th>' + player + '</th>' + 
+     '<th>' + '</th>' + '<th>' + '<a href="#"> <button> return to top</button> </a>' + '</th>' +  '<th>' + '</th>' + '<th>' + '</th>' + '<th>' + '</th>' + 
      '</thead>' +
      '<thead>' + '<th>' + 'Golfer' + '</th>' +
      '<th>' + 'Current Position' + '</th>' +
@@ -93,10 +93,10 @@ $.each(picks_data, function(player, stats) {
         else {move = ""}
   
       $('#det-list table').append('<tr style=color:' + score['winner'] + '>' +
-      '<td>' +
+      '<td class="small">' +
        '<p "style:font-weight=bold">' + score['pick'].bold() + '</p>' +
-       '<p>' + 'today:' + score['today_score'] + ', thru ' + score['thru'] + '</p>' +
-       '<p>' + 'overall: ' + score['toPar'] + ' ' + move + score['sod_position'] + '</p>' +
+       '<p class=small>' + 'today:' + score['today_score'] + ', thru ' + score['thru'] + '</p>' +
+       '<p class=small>' + 'overall: ' + score['toPar'] + ' ' + move + score['sod_position'] + '</p>' +
        '</td>' +
       '<td>' + score['score'] + '</td>' +
       + '</tr>')
@@ -111,7 +111,7 @@ $.each(total_data, function(p, total) {
     $('#totals').append('<tr>' + '<td>'+ p + '<span class="bonus">' + total['msg'] + ' - Bonus Points: ' + bonus_dtl.toString() + '</span>' + '</td>' + '<td>' + total['total_score'] + '</td>'  + '<td>' + total['cuts']  + '</td>'  + '</tr>')
   }
   else {
-  $('#totals').append('<tr>' + '<td>'+ p + total['msg'] + '</td>' + '<td>' + total['total_score'] + '</td>'  + '<td>' + total['cuts']  + '</td>'  + '</tr>')}
+  $('#totals').append('<tr>' + '<td>'+ '<a href=' + '#' + p +'>' +  p +  '</a>' + total['msg'] + '</td>' + '<td>' + total['total_score'] + '</td>'  + '<td>' + total['cuts']  + '</td>'  + '</tr>')}
 })
 
 

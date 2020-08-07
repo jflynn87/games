@@ -29,6 +29,8 @@ class WDCheck(object):
             else:
                 print ('missed look up', golfer.playerName, self.field.get(golfer.playerName))
                 wd_list.append(golfer.playerName)
+                golfer.withdrawn = True
+                golfer.save()
         results['wd_list'] = wd_list
         results['good_list'] = good_list
         return results
@@ -47,6 +49,8 @@ class WDCheck(object):
                     
 
         return wd_picks
+
+
             
         
     
