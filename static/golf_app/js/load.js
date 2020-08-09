@@ -4,6 +4,7 @@ $(document).ready(function() {
     /*$('#picks-tbl').hide() */
     /*$('#det-list').attr('class', 'pulse')*/
     $('#det-list').attr('class', 'spinner')
+    $('#totals-table').hide()
     start = new Date() 
     console.log(start.toLocaleString())
     $('#local').text.toLocaleString()
@@ -100,7 +101,11 @@ $.each(picks_data, function(player, stats) {
        '</td>' +
       '<td>' + score['score'] + '</td>' +
       + '</tr>')
-      })})
+
+
+    })
+    
+    })
       $('#det-list').attr('class', 'none')
 
 $('#totals').empty()
@@ -108,12 +113,11 @@ $('#totals').empty()
 $.each(total_data, function(p, total) {
   if (total['winner_bonus'] >0 || total['major_bonus'] > 0 || total['cut_bonus'] > 0) {
     var bonus_dtl = total['winner_bonus']  + total['major_bonus'] + total['cut_bonus'] 
-    $('#totals').append('<tr>' + '<td>'+ p + '<span class="bonus">' + total['msg'] + ' - Bonus Points: ' + bonus_dtl.toString() + '</span>' + '</td>' + '<td>' + total['total_score'] + '</td>'  + '<td>' + total['cuts']  + '</td>'  + '</tr>')
+    $('#totals').append('<tr id=totals' + p + '> <td>'+ '<p>' + p + '<span class="bonus">' + total['msg'] + ' - Bonus Points: ' + bonus_dtl.toString() + '</span>' + ' </p>' + '<p>' + total['total_score'] + ' / ' + total['cuts']  + '</p>'  + '</td>' + '</tr>').toggleClass('small')
   }
   else {
-  $('#totals').append('<tr>' + '<td>'+ '<a href=' + '#' + p +'>' +  p +  '</a>' + total['msg'] + '</td>' + '<td>' + total['total_score'] + '</td>'  + '<td>' + total['cuts']  + '</td>'  + '</tr>')}
+  $('#totals').append('<tr id=totals' + p + '>  <td>'+ '<p>' +'<a href=' + '#' + p +'>' +  p +  '</a>' + total['msg'] + '</p>' + '<p>' + total['total_score'] + ' / ' + total['cuts']  + '</td>'  + '</tr>').toggleClass('small')}
 })
-
 
 
 var leaders = $.parseJSON((data['leaders']))
@@ -124,15 +128,16 @@ $('#cut_line').text(data['cut_line'])
 $('#leader').text("Leaders: " + leaders['leaders'] + " ;   score: " + leaders['score'])        
 
 
-/*$('#totals').append()*/
-    /*$('#pulse').hide()*/
-    
-    $('#picks-tbl').show()
-/*    finish = new Date()
-    $('#status').append(finish)
-    $('#status').attr('class', 'updated-status').text('score updated' + finish)
-    $('#time').hide()
-*/
+$('#picks-tbl').show()
+$('#totals-table').show()
+
+
+
+
+$.each(picks_data, function (p, stats) {
+  $.each(stats, function() {
+  $('#totals' + p).append('<td>' + '<p>' +  $(this)[0]['pick'] + '</p>' + '<p>' + $(this)[0]['score']  + '   ' +  format_move($(this)[0]) +  $(this)[0]['sod_position'] + '</p>' + '</td>')
+})})
 
 }
 
@@ -151,3 +156,19 @@ function build_random_data(data) {
   $('#optimal').append('<tr>' + '<td>'+ '</td>' + '<td>' +
    'Total: ' + '</td>' + '<td>' + total_score + '</td>' + '</tr>')
 }
+
+function format_move(score) {
+  if (score['sod_position'] == null) {
+    return '  '} 
+  else if (score['sod_position'].includes('down')) {
+    return '<i class="fa fa-arrow-down text-danger"></i>'
+           } 
+    else if (score['sod_position'].includes('up')) {
+    return '<i class="fa fa-arrow-up text-success"></i>'
+     } 
+    else {return "  "}
+
+  
+
+}
+

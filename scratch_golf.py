@@ -45,34 +45,34 @@ for key in pk_list:#pk_list[-15:]:
     print (t)
     min_list = []
     max_list = []
-    for f6 in Field.objects.filter(tournament=t, group__number=6):
+    for f6 in Field.objects.filter(tournament=t, group__number__gte=6):
         min_list.append(f6.handicap())
-    max_group = Group.objects.filter(tournament=t).aggregate(Max('number'))
-    for f_last in Field.objects.filter(tournament=t, group__number=max_group.get('number__max')):
-        max_list.append(f_last.handicap())
+    #max_group = Group.objects.filter(tournament=t).aggregate(Max('number'))
+    #for f_last in Field.objects.filter(tournament=t, group__number=max_group.get('number__max')):
+    #    max_list.append(f_last.handicap())
 
 
-    f.write('handicap range in group 6: ', min(min_list), max(max_list))
+    f.write('handicap range in group 6: ', min(min_list), max(min_list))
     handicap = 0
 
-    h_dict = {}
-    for u in users:
-        user_o = User.objects.get(pk=u.get('user'))
-        handicap = 0
-        for sd in ScoreDetails.objects.filter(pick__playerName__tournament=t, user=user_o):
-                handicap = handicap + sd.pick.playerName.handicap()
-        score = TotalScore.objects.get(tournament=t, user=sd.user)
-        #print (score)
-        h_dict[user_o.username] = handicap, score.score, score.score - handicap
+#     h_dict = {}
+#     for u in users:
+#         user_o = User.objects.get(pk=u.get('user'))
+#         handicap = 0
+#         for sd in ScoreDetails.objects.filter(pick__playerName__tournament=t, user=user_o):
+#                 handicap = handicap + sd.pick.playerName.handicap()
+#         score = TotalScore.objects.get(tournament=t, user=sd.user)
+#         #print (score)
+#         h_dict[user_o.username] = handicap, score.score, score.score - handicap
 
 
-    sorted_h = sorted(h_dict.items(), key=lambda x: x[1][2])
+#     sorted_h = sorted(h_dict.items(), key=lambda x: x[1][2])
 
-    for k in sorted_h:
-        f.write(k)
-        print (str(k))
+#     for k in sorted_h:
+#         f.write(k)
+#         print (str(k))
 
-f.close()
+# f.close()
 
 
 

@@ -522,13 +522,13 @@ class GetScores(APIView):
         ts = scores.total_scores()
         d = scores.get_picks_by_user() 
         leaders = scores.get_leader()
-        optimal = scores.optimal_picks()
+        #optimal = scores.optimal_picks()
         print (d, ts)
         return Response(({'picks': d,
                           'totals': ts,
                           'leaders': leaders,
                           'cut_line': t.cut_score,
-                          'optimal': optimal
+                          'optimal': json.dumps({})
          }), 200)
 
 class GetDBScores(APIView):
@@ -605,6 +605,7 @@ class NewScoresView(LoginRequiredMixin,ListView):
                             'lookup_errors': None,
                             'tournament': tournament,
                             'thru_list': [],
+                            'groups': Group.objects.filter(tournament=tournament)
                                         })
 
             return context        

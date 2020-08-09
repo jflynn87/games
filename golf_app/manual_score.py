@@ -451,7 +451,7 @@ class Score(object):
                     if self.score_dict[player.playerName]['rank'] not in  ["CUT", "MDF", "WD", "DQ"] and self.score_dict[player.playerName]['rank'] != '':
                         score_list[str(player)] = int(calc_score.formatRank(str(self.score_dict[player.playerName]['rank'])))
                     else:
-                        if self.score_dict[player.playerName]['rank'] == "CUT":
+                        if self.score_dict[player.playerName]['rank'] == self.not_playing_list:
                             group_cuts += 1
                else:
                     continue
@@ -471,7 +471,7 @@ class Score(object):
                       {'golfer': leader, 'rank': golfers.get(leader), 'cuts': cuts_dict.get(group)[0], 'total_golfers': cuts_dict.get(group)[1]}
               except Exception as e:
                   print ('optimal scores exception', e)
-                  min_score[group] = "None", None
+                  min_score[group.number] = "There was none!", None
 
         return json.dumps(min_score)
         #return min_score, total_score, cuts_dict
