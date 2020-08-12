@@ -38,11 +38,13 @@ from golf_app import views, manual_score, scrape_scores, populateField, withdraw
 
 #f = open('handicap.txt', 'wb')
 
-t = Tournament.objects.get(current=True)
+for t in Tournament.objects.filter(season__current=True):
+    try:
+        scrape_scores.ScrapeScores(t).scrape()
+    except Exception as e:
+        print ('Fail: ', t)
 
-sd = ScoreDict.objects.get(tournament=t)
-print (sd)
-print (sd.sorted_dict())
+
 
 # score_dict = ScoreDict.objects.get(tournament=t)
 # print (score_dict)

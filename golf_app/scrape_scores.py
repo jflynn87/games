@@ -45,14 +45,14 @@ class ScrapeScores(object):
             name = driver.find_elements_by_class_name("name")
             for n in name:
                 if n.text == t.name:
-                    print ('name', n.text)
+                    #print ('name', n.text)
                     t_ok = True
         
             if t_ok:
                 cut_line = driver.find_elements_by_class_name("cut-line")
                 for c in cut_line:
                     cut_score  = c.text.rsplit(' ', 1)[1]
-                    print ('full cutt text: ', c.text, 'cut score: ', c.text.rsplit(' ', 1)[1])
+                    #print ('full cutt text: ', c.text, 'cut score: ', c.text.rsplit(' ', 1)[1])
                     if "Projected" in c.text:
                         t.cut_score = "Projected cut score: " + c.text.rsplit(' ', 1)[1]
                         t.save()
@@ -74,7 +74,7 @@ class ScrapeScores(object):
 
                 table = driver.find_elements_by_class_name("leaderboard-table")
                 
-                print (table)
+                #print (table)
                 for t in table[1:]:
                     for tr in t.find_elements_by_tag_name('tr'):
                         #print(tr.text, 'len: ', len(tr.text))
@@ -88,14 +88,14 @@ class ScrapeScores(object):
                                  'thru': row[5].text, 'round_score': row[6].text, 'total_score': row[4].text, 'r1': row[7].text, 'r2': row[8].text, 'r3': row[9].text, 'r4': row[10].text}
                             
                             try:
-                                print ('name/score', n, row[1].text)
+                               # print ('name/score', n, row[1].text)
                                 field = Field.objects.get(tournament=self.tournament, playerName=n)
                                 field.rank = row[1].text         
                                 field.save()
                                 
                             except Exception as e:
                                 print ('in pga, not in field', n, e)
-                print ('scrape scores dict', score_dict)
+                #print ('scrape scores dict', score_dict)
                 ScoreDict.objects.update_or_create(tournament=self.tournament, data=score_dict)
                 f = open("score_dict.json", "w")
 
