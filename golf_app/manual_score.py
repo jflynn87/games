@@ -50,54 +50,6 @@ class Score(object):
         self.not_playing_list = ['CUT', 'WD', 'DQ']
 
 
-    ## don't use this, use the models.py function
-    # def confirm_all_pics(self):
-    #     print ('checking picks')
-
-    #     if self.tournament.started():
-    #         t = Tournament.objects.filter(season__current=True).earliest('pk')
-    #         c=  len(Picks.objects.filter(playerName__tournament=t).values('user').annotate(unum=Count('user')))
-    #         expected_picks = Group.objects.filter(tournament=self.tournament).aggregate(Max('number'))
-    #         print ('expected', expected_picks, expected_picks['number__max'] * c)
-    #         print ('actual', Picks.objects.filter(playerName__tournament=self.tournament).count() - expected_picks['number__max'] * c)
-    #         if Picks.objects.filter(playerName__tournament=self.tournament).count() \
-    #         == (expected_picks.get('number__max') * c):
-    #             print ('equal')
-    #         elif (expected_picks.get('number__max') - Picks.objects.filter(playerName__tournament=self.tournament).count()) \
-    #         % expected_picks.get('number__max') == 0:
-    #             print ('missing full picks')
-    #             #using first tournament, should update to use league
-    #             for user in TotalScore.objects.filter(tournament=t).values('user__username'):
-    #                 if not Picks.objects.filter(playerName__tournament=self.tournament, \
-    #                 user=User.objects.get(username=user.get('user__username'))).exists():
-    #                     print (user.get('user__username'), 'no picks so submit random')
-    #                     self.create_picks(self.tournament, User.objects.get(username=user.get('user__username')))
-    #         else:
-    #             print ('missing individual picks')
-            
-    #         return
-
-    ## don't use this, use the models.py function
-    # @transaction.atomic
-    # def create_picks(self, tournament, user):
-    #     '''takes tournament and user objects and generates random picks.  check for duplication with general pick submit class'''
-
-    #     for group in Group.objects.filter(tournament=tournament):
-    #         pick = Picks()
-    #         random_picks = random.choice(Field.objects.filter(tournament=tournament, group=group, withdrawn=False))
-    #         pick.playerName = Field.objects.get(playerName=random_picks.playerName, tournament=tournament)
-    #         pick.user = user
-    #         pick.save()
-
-    #     pm = PickMethod()
-    #     pm.user = user
-    #     pm.tournament = tournament
-    #     pm.method = '3'
-    #     pm.save()
-
-    #     return
-
-
     def get_picks_by_user(self):
         det_picks = {}
         sd = ScoreDetails.objects.filter(pick__playerName__tournament=self.tournament).order_by('pick__user', 'pick__playerName__group')
@@ -438,42 +390,50 @@ class Score(object):
 
     
     def optimal_picks(self):
-        cuts_dict = {}
-        scores = {}
-        score_list = {}
-        min_score = {}
-        
+
+        optimal_dict = {}
+       
         for group in Group.objects.filter(tournament=self.tournament):
            group_cuts = 0
+           golfer_list = []
+           group_min = group.min_score()
+           print ('group: ', group, 'min', group_min)
 
            for player in Field.objects.filter(tournament=self.tournament, group=group):
-               if str(player) in self.score_dict.keys():  #needed to deal wiht WD's before start of tourn.
-                    if self.score_dict[player.playerName]['rank'] not in  ["CUT", "MDF", "WD", "DQ"] and self.score_dict[player.playerName]['rank'] != '':
-                        score_list[str(player)] = int(calc_score.formatRank(str(self.score_dict[player.playerName]['rank'])))
+               if player.playerName in self.score_dict.keys():  #needed to deal wiht WD's before start of tourn.
+                    #print (player.playerName, self.score_dict[player.playerName]['rank'])
+                    if self.score_dict[player.playerName]['rank'] not in  self.not_playing_list and  \
+                       int(calc_score.formatRank(self.score_dict[player.playerName]['rank'])) == group_min:
+                        golfer_list.append(player.playerName)
+                        #score_list[str(player)] = int(calc_score.formatRank(str(self.score_dict[player.playerName]['rank'])))
                     else:
-                        if self.score_dict[player.playerName]['rank'] == self.not_playing_list:
+                        if self.score_dict[player.playerName]['rank'] in self.not_playing_list:
                             group_cuts += 1
                else:
-                    continue
+                    print (player, 'mot in dict')
 
-           cuts_dict[group] = group_cuts, group.playerCnt
-           scores[group]= score_list
-           score_list = {}
-           total_score = 0
+           optimal_dict[group.number] = {'golfer': golfer_list, 'rank': group_min, 'cuts': group_cuts, 'total_golfers': group.playerCnt}
+           
+
+
+           #cuts_dict[group] = group_cuts, group.playerCnt
+           #scores[group]= score_list
+           #score_list = {}
+           #total_score = 0
  
-        if len(scores) != 0:
-          for group, golfers in scores.items():
-              print (type(group), golfers)
-              try:
-                  leader = (min(golfers, key=golfers.get))
-                  total_score += golfers.get(leader)
-                  min_score[group.number] = \
-                      {'golfer': leader, 'rank': golfers.get(leader), 'cuts': cuts_dict.get(group)[0], 'total_golfers': cuts_dict.get(group)[1]}
-              except Exception as e:
-                  print ('optimal scores exception', e)
-                  min_score[group.number] = "There was none!", None
+        # if len(scores) != 0:
+        #   for group, golfers in scores.items():
+        #       print (type(group), golfers)
+        #       try:
+        #           leader = (min(golfers, key=golfers.get))
+        #           total_score += golfers.get(leader)
+        #           min_score[group.number] = \
+        #               {'golfer': leader, 'rank': golfers.get(leader), 'cuts': cuts_dict.get(group)[0], 'total_golfers': cuts_dict.get(group)[1]}
+        #       except Exception as e:
+        #           print ('optimal scores exception', e)
+        #           min_score[group.number] = "There was none!", None
 
-        return json.dumps(min_score)
+        return json.dumps(optimal_dict)
         #return min_score, total_score, cuts_dict
         
 

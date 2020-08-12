@@ -1,7 +1,7 @@
 #import os
 #os.environ.setdefault("DJANGO_SETTINGS_MODULE","gamesProj.settings")
 
-from golf_app.models import Tournament, TotalScore, ScoreDetails, Field, Picks, PickMethod, BonusDetails
+from golf_app.models import Tournament, TotalScore, ScoreDetails, Field, Picks, PickMethod, BonusDetails, ScoreDict
 from django.contrib.auth.models import User
 from datetime import datetime, timedelta
 
@@ -11,6 +11,7 @@ from selenium import webdriver
 import urllib
 from selenium.webdriver import Chrome, ChromeOptions
 import json
+from golf_app import calc_score
 
 
 
@@ -50,9 +51,15 @@ class ScrapeScores(object):
             if t_ok:
                 cut_line = driver.find_elements_by_class_name("cut-line")
                 for c in cut_line:
-                    print ('cut update', c.text)
-                    t.cut_score = c.text
-                    t.save()
+                    cut_score  = c.text.rsplit(' ', 1)[1]
+                    print ('full cutt text: ', c.text, 'cut score: ', c.text.rsplit(' ', 1)[1])
+                    if "Projected" in c.text:
+                        t.cut_score = "Projected cut score: " + c.text.rsplit(' ', 1)[1]
+                        t.save()
+                    else:
+                        t.cut_score = "Cut Score: " + c.text.rsplit(' ', 1)[1]
+                        t.save()
+                        
 
                 #find playoff data
                 playoff = driver.find_elements_by_class_name("playoff-module")
@@ -79,8 +86,19 @@ class ScrapeScores(object):
                                 n = n[:-1]
                             score_dict[n] =  {'rank': row[1].text, 'change': c, \
                                  'thru': row[5].text, 'round_score': row[6].text, 'total_score': row[4].text, 'r1': row[7].text, 'r2': row[8].text, 'r3': row[9].text, 'r4': row[10].text}
-                #print ('scrape scores dict', score_dict)
+                            
+                            try:
+                                print ('name/score', n, row[1].text)
+                                field = Field.objects.get(tournament=self.tournament, playerName=n)
+                                field.rank = row[1].text         
+                                field.save()
+                                
+                            except Exception as e:
+                                print ('in pga, not in field', n, e)
+                print ('scrape scores dict', score_dict)
+                ScoreDict.objects.update_or_create(tournament=self.tournament, data=score_dict)
                 f = open("score_dict.json", "w")
+
                 f.write(json.dumps(score_dict))
                 f.close()
                 

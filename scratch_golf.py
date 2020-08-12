@@ -3,7 +3,7 @@ os.environ.setdefault("DJANGO_SETTINGS_MODULE","gamesProj.settings")
 
 import django
 django.setup()
-from golf_app.models import Tournament, TotalScore, ScoreDetails, Field, Picks, PickMethod, BonusDetails, Season, Golfer, Group
+from golf_app.models import Tournament, TotalScore, ScoreDetails, Picks, PickMethod, BonusDetails, Season, Golfer, Group, Field, ScoreDict
 from django.contrib.auth.models import User
 from datetime import datetime, timedelta
 import sqlite3
@@ -27,33 +27,44 @@ import urllib
 import json
 from golf_app import views, manual_score, scrape_scores, populateField, withdraw
    
-season = Season.objects.get(current=True)
-users = season.get_users()
-print (users)
+#season = Season.objects.get(current=True)
+#users = season.get_users()
+#print (users)
 
-pk_list = []
-for t in Tournament.objects.filter(season__current=True):
-    pk_list.append(t.pk)
-
-
-#scrape = scrape_scores.ScrapeScores(t)
-#scrape.scrape()
-f = open('handicap.txt', 'wb')
-
-for key in pk_list:#pk_list[-15:]:
-    t = Tournament.objects.get(pk=key)
-    print (t)
-    min_list = []
-    max_list = []
-    for f6 in Field.objects.filter(tournament=t, group__number__gte=6):
-        min_list.append(f6.handicap())
-    #max_group = Group.objects.filter(tournament=t).aggregate(Max('number'))
-    #for f_last in Field.objects.filter(tournament=t, group__number=max_group.get('number__max')):
-    #    max_list.append(f_last.handicap())
+#pk_list = []
+#for t in Tournament.objects.filter(season__current=True):
+#    pk_list.append(t.pk)
 
 
-    f.write('handicap range in group 6: ', min(min_list), max(min_list))
-    handicap = 0
+#f = open('handicap.txt', 'wb')
+
+t = Tournament.objects.get(current=True)
+
+sd = ScoreDict.objects.get(tournament=t)
+print (sd)
+print (sd.sorted_dict())
+
+# score_dict = ScoreDict.objects.get(tournament=t)
+# print (score_dict)
+# score = manual_score.Score(score_dict.data, t)
+# print (score.optimal_picks())
+
+# exit()
+
+# for key in pk_list:#pk_list[-15:]:
+#     t = Tournament.objects.get(pk=key)
+#     print (t)
+#     min_list = []
+#     max_list = []
+#     for f6 in Field.objects.filter(tournament=t, group__number__gte=6):
+#         min_list.append(f6.handicap())
+
+
+#     f.write('handicap range in group 6: ', min(min_list), max(min_list))
+#     handicap = 0
+
+    
+
 
 #     h_dict = {}
 #     for u in users:

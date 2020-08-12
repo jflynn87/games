@@ -1,7 +1,7 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.views.generic import View, TemplateView, ListView, DetailView, CreateView, UpdateView, FormView
 from golf_app.models import Field, Tournament, Picks, Group, TotalScore, ScoreDetails, \
-           mpScores, BonusDetails, PickMethod, PGAWebScores
+           mpScores, BonusDetails, PickMethod, PGAWebScores, ScoreDict
 from golf_app.forms import  CreateManualScoresForm
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponseRedirect, HttpResponse, Http404
@@ -499,13 +499,19 @@ class GetScores(APIView):
         print ('GetScores API VIEW', self.request.GET.get('tournament'))
         t = Tournament.objects.get(pk=self.request.GET.get('tournament'))
 
-        if t.current:
+        if t.current and not t.complete:
             print ('scraping')
             pga_web = scrape_scores.ScrapeScores(t)
             score_dict = pga_web.scrape()
         else:
             print ('not scraping')
-            score_dict = get_score_dict(t)
+            try:
+                sd = ScoreDict.objects.get(tournament=t)
+                score_dict = sd.sorted_dict()
+            except Exception as e:
+                score_dict = get_score_dict(t)
+                print ('using old score dict method', t, e)
+            
         
         scores = manual_score.Score(score_dict, t, 'json')
         # change so this isn't executed when complete, add function to get total scores without updating
@@ -522,15 +528,22 @@ class GetScores(APIView):
         ts = scores.total_scores()
         d = scores.get_picks_by_user() 
         leaders = scores.get_leader()
-        #optimal = scores.optimal_picks()
-        print (d, ts)
+        optimal = scores.optimal_picks()
+        #for k, v in score_dict.items():
+        #    v.update({'sort_rank': calc_score.formatRank(v.get('rank'))})
+        
+        #sorted_score_dict = {k:v for k, v in sorted(score_dict.items(), key=lambda item: item[1].get('sort_rank'))}
+        #sorted_score_dict = sorted(score_dict.items(), key=lambda k, v: k, v.get('sort_rank'))
+        #print ('XXXXXXXXXXX update', sorted_score_dict)            
+        #print (d, ts)
         return Response(({'picks': d,
                           'totals': ts,
                           'leaders': leaders,
                           'cut_line': t.cut_score,
-                          'optimal': json.dumps({})
+                          'optimal': optimal,
+                          'scores': json.dumps(score_dict)
          }), 200)
-
+#sorted_ts_dict = sorted(ts_dict.items(), key=lambda v: v[1].get('total_score'))
 class GetDBScores(APIView):
     
     def get(self, num):
@@ -539,18 +552,28 @@ class GetDBScores(APIView):
         t = Tournament.objects.get(pk=self.request.GET.get('tournament'))
 
         #pga_web = scrape_scores.ScrapeScores(t)
-        score_dict = get_score_dict(t)
+        try:
+            sd = ScoreDict.objects.get(tournament=t)
+            score_dict = sd.sorted_dict()
+            print ('-------- New Scored', score_dict)            
+        except Exception as e:
+            print ('using old score dict', e)
+            score_dict = get_score_dict(t)
         
         scores = manual_score.Score(score_dict, t, 'json')
         #scores.update_scores()
         ts = scores.total_scores()
         d = scores.get_picks_by_user() 
         leaders = scores.get_leader()
-        print ('db leaders', leaders)
+        #print ('db leaders', leaders)
+        optimal = scores.optimal_picks()
+        scores = json.dumps(score_dict)
         return Response(({'picks': d,
                           'totals': ts,
                           'leaders': leaders,
-                          'cut_line': t.cut_score
+                          'cut_line': t.cut_score,
+                          'optimal': optimal, 
+                          'scores': scores
          }), 200)
 
 
@@ -689,12 +712,18 @@ class CheckStarted(APIView):
 #             print ('exception', e)
 #             return Response(e, 500)
 
-class Scores(APIView):
+class OptimalPicks(APIView):
     def get(self, num):
-        print ('scores for 2021')
+        
         try:
+            result_dict = {}
+            t = Tournament.objects.get(pk=self.request.GET.get('tournament'))
             
-            return Response(json.dumps(results_list), 200)
+            for g in Group.objects.filter(tournament=t):
+                result_dict[g.number] = g.best_picks()
+
+            print ('optimal_picks', result_dict)
+            return Response(json.dumps(result_dict), 200)
         except Exception as e:
             print ('exception', e)
-            return Response(e, 500)
+            return Response(json.dumps({e}), 500)

@@ -131,3 +131,21 @@
   font: anton;
   
 }
+
+@media only screen and (max-width: 600px) {
+td .watermark {
+  opacity: .5;
+  z-index: -1;  
+  color: red;  
+  position: relative;
+  
+  
+}
+}
+@media only screen and (min-width: 601px) {
+
+td .watermark {
+  display: none;
+ }
+  
+}

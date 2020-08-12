@@ -18,6 +18,6 @@ urlpatterns= [
     url(r'^new_scores/$', views.NewScoresView.as_view(), name='new_scores'),
     url(r'^new_scores/(?P<pk>\d+)/$',views.NewScoresView.as_view(),name='new_scores'),
     url(r'^started/$', views.CheckStarted.as_view(), name='started'),
-    url(r'^scores/$',views.Scores.as_view(),name='scores'),
+    url(r'^optimal_picks/$',views.OptimalPicks.as_view(),name='optimal_picks'),
 
 ]

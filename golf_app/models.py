@@ -3,10 +3,11 @@ from django.contrib.auth.models import User
 from django.conf import settings
 from django.db.models import Min, Q, Count, Sum, Max
 from datetime import datetime
-from golf_app import pga_score
+#from golf_app import pga_score, calc_score, manual_score
 from django.db import transaction
 import random
 import unidecode
+import json
 
 
 
@@ -155,8 +156,14 @@ class Group(models.Model):
         return str(self.number) + '-' + str(self.tournament)
 
     def min_score(self):
-        min_score = ScoreDetails.objects.filter(pick__playerName__group=self).aggregate(Min('score'))
-        return int(min_score.get('score__min'))
+        min_score = 999  
+        for score in Field.objects.filter(group=self).exclude(rank__in=["CUT", "WD", "DQ"]):
+            if score.rank_as_int() < min_score:
+                min_score = score.rank_as_int()
+        return min_score
+
+    def best_picks(self):
+        return Field.objects.filter(tournament=self.tournament, score=self.min_score())
 
 
 class Golfer(models.Model):
@@ -185,13 +192,14 @@ class Golfer(models.Model):
 
 
 class Field(models.Model):
+
     playerName = models.CharField(max_length = 256, null=True)
     currentWGR = models.IntegerField(unique=False, null=True)
     sow_WGR = models.IntegerField(unique=False, null=True)
     soy_WGR = models.IntegerField(unique=False, null=True)
     tournament = models.ForeignKey(Tournament, on_delete=models.CASCADE)
     group = models.ForeignKey(Group, on_delete=models.CASCADE, null=True)
-    alternate = models.NullBooleanField(null=True)
+    alternate = models.BooleanField(null=True)
     withdrawn = models.BooleanField(default=False)
     partner = models.CharField(max_length=100, null=True, blank=True)
     teamID = models.CharField(max_length=30, null=True, blank=True)
@@ -199,9 +207,11 @@ class Field(models.Model):
     map_link = models.URLField(null=True)
     pic_link = models.URLField(null=True)
     golfer = models.ForeignKey(Golfer, on_delete=models.CASCADE, null=True)
+    rank = models.CharField(max_length=50, null=True)
 
     class Meta:
         ordering = ['group', 'currentWGR']
+        
 
     def __str__(self):
         return  self.playerName
@@ -239,6 +249,21 @@ class Field(models.Model):
 
         #print ('----------- retruning field *.14')
         return round(Field.objects.filter(tournament=self.tournament).count() * .14)
+
+    def rank_as_int(self):
+        if type(self.rank) is int:
+            return self.rank
+        elif self.rank in ["CUT", "WD", "DQ", "MDF"]:
+            return 999
+        elif self.rank in  ['', '--', None]:
+            return 999
+        elif self.rank[0] != 'T':
+            return int(self.rank)
+        elif self.rank[0] == 'T':
+            return int(self.rank[1:])
+        else:
+            return int(self.rank)
+
 
 
 class PGAWebScores(models.Model):
@@ -377,3 +402,29 @@ class mpScores(models.Model):
         #field = Field.objects.filter(group=self.player.group).values('playerName').annotate(Count('result'))
         #print (field)
         #return
+
+class ScoreDict(models.Model):
+    tournament = models.ForeignKey(Tournament, null=True, on_delete=models.CASCADE)
+    data = models.JSONField()
+
+    def __str__(self):
+        return (self.tournament.name)
+
+    def sorted_dict(self):
+        d = self.data
+        for k, v in d.items():
+            if Field.objects.filter(tournament=self.tournament, playerName=k).exists():
+                f = Field.objects.get(tournament=self.tournament, playerName=k)
+                v.update({'sort_rank': f.rank_as_int()})
+            else:
+                if v.get('rank') != None: 
+                    if type(v.get('rank')) == int:
+                        v.update({'sort_rank': v.get('rank')})
+                    else:
+                        v.update({'sort_rank': int(v.get('rank')[1:])})
+                else:
+                    v.update({'sort_rank': 999})
+                
+        sorted_score_dict = {k:v for k, v in sorted(d.items(), key=lambda item: item[1].get('sort_rank'))}
+
+        return sorted_score_dict

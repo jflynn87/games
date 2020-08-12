@@ -4,7 +4,7 @@ from django.contrib import admin
 
 from golf_app.models import Season, Tournament, Field, Picks, Group, TotalScore, \
                 ScoreDetails, Name, BonusDetails, mpScores, PickMethod, PGAWebScores, \
-                Golfer
+                Golfer, ScoreDict
 
 class GroupAdmin(admin.ModelAdmin):
     list_display = ('tournament', 'number', 'playerCnt')
@@ -15,8 +15,6 @@ class FieldAdmin(admin.ModelAdmin):
     list_filter = ['tournament',]
 
 class PicksAdmin(admin.ModelAdmin):
-
-
     list_display = ['user', 'playerName']
     list_filter = ['playerName__tournament', 'user' ]
 
@@ -36,6 +34,13 @@ class PickMethodAdmin(admin.ModelAdmin):
 class GolferAdmin(admin.ModelAdmin):
     list_display = ['golfer_name,',]
 
+class PGAWebScoresAdmin(admin.ModelAdmin):
+    list_filter = ['tournament']
+
+class ScoreDictAdmin(admin.ModelAdmin):
+    list_display = ['tournament']
+    list_filter = ['tournament']
+
 
 
 admin.site.register(Tournament)
@@ -49,5 +54,6 @@ admin.site.register(BonusDetails, BonusDetailsAdmin)
 admin.site.register(Season)
 admin.site.register(mpScores)
 admin.site.register(PickMethod, PickMethodAdmin)
-admin.site.register(PGAWebScores)
+admin.site.register(PGAWebScores, PGAWebScoresAdmin)
 admin.site.register(Golfer)
+admin.site.register(ScoreDict, ScoreDictAdmin)
