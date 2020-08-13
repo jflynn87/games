@@ -25,7 +25,7 @@ from urllib.request import Request, urlopen
 from selenium import webdriver
 import urllib
 import json
-from golf_app import views, manual_score, scrape_scores, populateField, withdraw
+from golf_app import views, manual_score, scrape_scores, populateField, withdraw, scrape_scores_by_id
    
 #season = Season.objects.get(current=True)
 #users = season.get_users()
@@ -38,11 +38,11 @@ from golf_app import views, manual_score, scrape_scores, populateField, withdraw
 
 #f = open('handicap.txt', 'wb')
 
-for t in Tournament.objects.filter(season__current=True):
-    try:
-        scrape_scores.ScrapeScores(t).scrape()
-    except Exception as e:
-        print ('Fail: ', t)
+t = Tournament.objects.get(current=True)
+try:
+    scrape_scores_by_id.ScrapeScores(t).scrape()
+except Exception as e:
+    print ('Fail: ', t, e)
 
 
 

@@ -106,7 +106,8 @@ class Tournament(models.Model):
             c=  len(Picks.objects.filter(playerName__tournament=t).values('user').annotate(unum=Count('user')))
             expected_picks = Group.objects.filter(tournament=self).aggregate(Max('number'))
             print ('expected', expected_picks, expected_picks['number__max'] * c)
-            print ('actual', Picks.objects.filter(playerName__tournament=self).count() - expected_picks['number__max'] * c)
+            print ('pick count', Picks.objects.filter(playerName__tournament=self).count())
+            print ('actual', Picks.objects.filter(playerName__tournament=self).count() - (expected_picks['number__max'] * c))
             if Picks.objects.filter(playerName__tournament=self).count() \
             == (expected_picks.get('number__max') * c):
                 return True
@@ -142,6 +143,14 @@ class Tournament(models.Model):
         pm.tournament = self
         pm.method = '3'
         pm.save()
+
+        bd = BonusDetails()
+        bd.tournament = self
+        bd.user = user
+        bd.winner_bonus = 0
+        bd.cut_bonus = 0
+        bd.major_bonus = 0
+        bd.save()
 
         return
        

@@ -609,8 +609,8 @@ class NewScoresView(LoginRequiredMixin,ListView):
 
            return context
         ## from here all logic should only happen if tournament has started
-
         if not tournament.picks_complete():
+               print ('picks not complete')
                tournament.missing_picks()
 
         try:
