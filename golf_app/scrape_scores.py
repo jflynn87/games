@@ -84,7 +84,7 @@ class ScrapeScores(object):
                             n = row[3].text.split('(')[0].split(',')[0]
                             if n[-1] == ' ':
                                 n = n[:-1]
-                            score_dict[n] =  {'rank': row[1].text, 'change': c, \
+                            score_dict[n.strip(' #')] =  {'rank': row[1].text, 'change': c, \
                                  'thru': row[5].text, 'round_score': row[6].text, 'total_score': row[4].text, 'r1': row[7].text, 'r2': row[8].text, 'r3': row[9].text, 'r4': row[10].text}
                             
                             try:
@@ -97,7 +97,7 @@ class ScrapeScores(object):
                                 print ('in pga, not in field', n, e)
                 #print ('scrape scores dict', score_dict)
                 sd, creates = ScoreDict.objects.get_or_create(tournament=self.tournament)
-                sd.data = json.dumps(score_dict)
+                sd.data = score_dict
                 sd.save()
                 f = open("score_dict.json", "w")
 
