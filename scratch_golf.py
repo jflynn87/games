@@ -26,7 +26,50 @@ from selenium import webdriver
 import urllib
 import json
 from golf_app import views, manual_score, scrape_scores, populateField, withdraw, scrape_scores_by_id
-   
+
+
+first_picks = {'Sam36': ['Sungjae Im', 'Tom Lewis', 'Charles Howell III', 'Dylan Frittelli', 'Harold Varner III', 'Mark Hubbard', 'Ryan Armour', 'Sam Ryder', 'Bronson Burgoon',
+ 'Peter Uihlein', 'Nelson Ledesma', 'John Senden'],
+  'JoeLong': ['Shane Lowry', 'Sung Kang', 'J.T. Poston', 'Dylan Frittelli', 'Andrew Landry', 'Brian Stuard', 'Charl Schwartzel',
+ 'Kyoung-Hoon Lee', 
+'Hank Lebioda',
+'Kramer Hickok',
+'Michael Gligic',
+'Michael Kim'], 
+'BigDipper': ['Webb Simpson',
+'Tom Lewis',
+'Jason Kokrak',
+'Matt Jones',
+'Ryan Moore',
+'Tom Hoge',
+'Russell Knox',
+'Cameron Davis',
+'Jason Dufner',
+'Sebastian Cappelen',
+'Rob Oppenheim',
+'Arjun Atwal',]}
+
+
+t = Tournament.objects.get(current=True)
+
+for k,v in first_picks.items():
+    score = 0
+    #print (k)
+    for p in v:
+        f = Field.objects.get(playerName=p, tournament=t)
+        if f.rank_as_int() > 65:
+            score += 66
+        else:
+            score += f.rank_as_int()
+        #print(p, f.rank_as_int())
+    print (k, score)
+
+
+
+
+
+
+
 #season = Season.objects.get(current=True)
 #users = season.get_users()
 #print (users)
@@ -38,11 +81,21 @@ from golf_app import views, manual_score, scrape_scores, populateField, withdraw
 
 #f = open('handicap.txt', 'wb')
 
-t = Tournament.objects.get(current=True)
-try:
-    scrape_scores_by_id.ScrapeScores(t).scrape()
-except Exception as e:
-    print ('Fail: ', t, e)
+#t = Tournament.objects.get(current=True)
+#try:
+#    scrape_scores_by_id.ScrapeScores(t).scrape()
+#except Exception as e:
+#    print ('Fail: ', t, e)
+
+#from django.contrib.admin.models import LogEntry
+
+#logs = LogEntry.objects.all() #or you can filter, etc.
+#for l in logs:
+#    print (l.action_time)
+#    print (l.get_edited_object())
+
+
+
 
 
 

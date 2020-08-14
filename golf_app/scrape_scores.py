@@ -89,14 +89,16 @@ class ScrapeScores(object):
                             
                             try:
                                # print ('name/score', n, row[1].text)
-                                field = Field.objects.get(tournament=self.tournament, playerName=n)
+                                field = Field.objects.get(tournament=self.tournament, playerName=n.strip(' #'))
                                 field.rank = row[1].text         
                                 field.save()
                                 
                             except Exception as e:
                                 print ('in pga, not in field', n, e)
                 #print ('scrape scores dict', score_dict)
-                ScoreDict.objects.update_or_create(tournament=self.tournament, data=score_dict)
+                sd, creates = ScoreDict.objects.get_or_create(tournament=self.tournament)
+                sd.data = json.dumps(score_dict)
+                sd.save()
                 f = open("score_dict.json", "w")
 
                 f.write(json.dumps(score_dict))

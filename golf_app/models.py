@@ -414,7 +414,7 @@ class mpScores(models.Model):
 
 class ScoreDict(models.Model):
     tournament = models.ForeignKey(Tournament, null=True, on_delete=models.CASCADE)
-    data = models.JSONField()
+    data = models.JSONField(null=True)
 
     def __str__(self):
         return (self.tournament.name)
