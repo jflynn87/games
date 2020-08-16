@@ -77,4 +77,5 @@ from linebot.exceptions import LineBotApiError
 # if __name__ == '__main__':
 #     main()
 
-print (nflgames.games(2020, week=1))
+for g in nflgame.games(2020, 1):
+    print (g)

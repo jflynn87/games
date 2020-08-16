@@ -4,7 +4,8 @@ from golf_app.models import Picks, Tournament, TotalScore, BonusDetails, ScoreDe
     Group, Field
 from django.contrib.auth.models import User
 import csv
-from golf_app import calc_score
+#from golf_app import calc_score
+from golf_app import utils
 from datetime import datetime
 from django.db.models import Count, Max, Min
 from django.db import transaction
@@ -138,10 +139,10 @@ class Score(object):
                 elif self.score_dict.get(pick.playerName.playerName).get('rank') == "WD":
                     pick.score = self.get_wd_score(pick)
                 else:
-                    if int(calc_score.formatRank(self.score_dict.get(pick.playerName.playerName).get('rank'))) > self.get_cut_num():
+                    if int(utils.formatRank(self.score_dict.get(pick.playerName.playerName).get('rank'))) > self.get_cut_num():
                         pick.score=self.get_cut_num()
                     else:
-                        pick.score = calc_score.formatRank(self.score_dict.get(pick.playerName.playerName).get('rank'))
+                        pick.score = utils.formatRank(self.score_dict.get(pick.playerName.playerName).get('rank'))
                 
                 pick.save()
                         
@@ -217,7 +218,7 @@ class Score(object):
                 ts.score = pick.score
                 ts.cut_count = 0
             else:
-                ts.score = calc_score.formatRank(ts.score) + calc_score.formatRank(pick.score)
+                ts.score = utils.formatRank(ts.score) + utils.formatRank(pick.score)
             if pick.thru in self.not_playing_list:
                 ts.cut_count +=1            
 
@@ -403,7 +404,7 @@ class Score(object):
                if player.playerName in self.score_dict.keys():  #needed to deal wiht WD's before start of tourn.
                     #print (player.playerName, self.score_dict[player.playerName]['rank'])
                     if self.score_dict[player.playerName]['rank'] not in  self.not_playing_list and  \
-                       int(calc_score.formatRank(self.score_dict[player.playerName]['rank'])) == group_min:
+                       int(utils.formatRank(self.score_dict[player.playerName]['rank'])) == group_min:
                         golfer_list.append(player.playerName)
                         #score_list[str(player)] = int(calc_score.formatRank(str(self.score_dict[player.playerName]['rank'])))
                     else:

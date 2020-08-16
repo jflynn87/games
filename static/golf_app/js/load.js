@@ -54,28 +54,9 @@ function build_score_tbl(data) {
   var total_data = $.parseJSON((data['totals']))
   var optimal_data = $.parseJSON((data['optimal']))
   var scores = $.parseJSON((data['scores']))
-  
-/*
-  $.each(picks_data, function(player, stats) {
-      console.log(player, stats)
-      $('#det-list table').append('<thead style="background-color:lightblue">' + '<tr id=' + player + '>' + '<th>' + player + '</th>' + 
-      '<th>' + '</th>' + '<th>' + '<a href="#"> <button> return to top</button> </a>' + '</th>' +  '<th>' + '</th>' + '<th>' + '</th>' + '<th>' + '</th>' + 
-      '</thead>' +
-      '<thead>' + '<th>' + 'Golfer' + '</th>' +
-      '<th>' + 'Current Position' + '</th>' +
-      '</thead>')
-      $.each(stats, function(group, score) {
-          $('#det-list table').append('<tr style=color:' + score['winner'] + '>' +
-          '<td class="small">' +
-          '<p "style:font-weight=bold">' + score['pick'].bold() + '</p>' +
-          '<p class=small>' + 'today:' + score['today_score'] + ', thru ' + score['thru'] + '</p>' +
-          '<p class=small>' + 'overall: ' + score['toPar'] + ' ' + format_move(score) + score['sod_position'] + '</p>' +
-          '</td>' +
-          '<td>' + score['score'] + '</td>' +
-          + '</tr>')
-        })
 
-  }) */
+  console.log('optimal', optimal_data)
+ 
 
   $('#det-list table').append('<thead style="background-color:lightblue">' + '<tr>' + '<th> Tournament Scores  </th>' + 
     '<th>' + '</th>' + '<th>' + '<a href="#"> <button> return to top</button> </a>' + '</th>' +  '<th>' + '</th>' + '<th>' + '</th>' + '<th>' + '</th>' + 
@@ -93,8 +74,7 @@ function build_score_tbl(data) {
     '<th>' + 'R4' + '</th>' +
     '</thead>')
   $.each(scores, function(player, data) {
-    console.log([player])
-    $('#det-list table').append('<tr class="small">' +
+    $('#det-list table').append('<tr    class="small">' +
     '<td>' + data['rank']+ '</td>' +
     '<td>' + format_move(data['change']) + data['change'] + '</td>' +
     '<td>' + player.bold() + '</td>' +
@@ -107,11 +87,6 @@ function build_score_tbl(data) {
     '<td>' + data['r4']+ '</td>' +
     '</tr>')
   })
-
-
-
-
-
 
 
   $.each(scores, function(player, stats) {
@@ -135,7 +110,9 @@ function build_score_tbl(data) {
   $.each(picks_data, function (p, stats) {
     
     $.each(stats, function(index) {
-    $('#totals' + p).append('<td>' + '<span class=watermark>' + '<p>' + p.substring(0, 4)  + ' : ' + index +  '</p>'  + '</span>' + '<p>' +  $(this)[0]['pick']  + '</p>' + '<p>' + $(this)[0]['score']  + '   ' +  format_move($(this)[0]['sod_position']) +  $(this)[0]['sod_position'] + '</p>' + '</td>')
+      console.log($(this)[0]['pick'].replace(/ +?/g, ''))
+    $('#totals' + p).append('<td id=' + $(this)[0]['pick'].replace(/ +?/g, '') + '>' + '<span class=watermark>' + '<p>' + p.substring(0, 4)  + ' : ' + index +  '</p>'  + '</span>' + '<p>' +  $(this)[0]['pick']  + '</p>' + '<p>' + $(this)[0]['score']  + '   ' +  format_move($(this)[0]['sod_position']) +  $(this)[0]['sod_position'] + '</p>' + '</td>')
+    if ($.inArray($(this)[0]['pick'], optimal_data[index]['golfer']) !== -1) {$('#' + $(this)[0]['pick'].replace(/ +?/g, '')).addClass('best')} 
   })})
 
   $('#totals').append('<tr id=optimalpicks> <td> <p> Best Pioks </p> </td> </tr>')
@@ -148,12 +125,8 @@ function build_score_tbl(data) {
     $('#cuts').append('<<td> <p>' + data["cuts"] + ' / ' + data['total_golfers'] + '</td>')
   })
 
-
-
   var leaders = $.parseJSON((data['leaders']))
-  console.log(leaders)
-
-
+  
   $('#cut_line').text(data['cut_line'])
   $('#leader').text("Leaders: " + leaders['leaders'] + " ;   score: " + leaders['score'])        
 
@@ -162,24 +135,6 @@ function build_score_tbl(data) {
   $('#totals-table').show()
 
 }
-//build score table function end
-
-/*function build_random_data(data) {
-  optimal = $.parseJSON(data['optimal'])
-  var total_score = 0
-  $.each(optimal, function(group, data) {
-  $('#optimal').append('<tr>' + '<td>' + 'Group ' + group + '</td>' + 
-                        '<td>' + data['golfer'] + '</td>' +
-                        '<td>' + data['rank'] + '</td>' + '</tr>')
-  total_score = total_score + data['rank']
-  $('#cuts').append('<tr>' + '<td>' + 'Group ' + group + '</td>' + 
-  '<td>' + data['cuts'] + '</td>' +
-  '<td>' + data['total_golfers'] + '</td>' + '</tr>')
-  })
-  $('#optimal').append('<tr>' + '<td>'+ '</td>' + '<td>' +
-   'Total: ' + '</td>' + '<td>' + total_score + '</td>' + '</tr>')
-}
-*/
 function format_move(score) {
   if (score == null) {
     return '  '} 

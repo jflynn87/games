@@ -47,26 +47,49 @@ first_picks = {'Sam36': ['Sungjae Im', 'Tom Lewis', 'Charles Howell III', 'Dylan
 'Jason Dufner',
 'Sebastian Cappelen',
 'Rob Oppenheim',
-'Arjun Atwal',]}
+'Arjun Atwal',],
+'JL Choice':
+['Paul Casey',
+'Brendon Todd',
+'Matthias Schwab',
+'Dylan Frittelli',
+'Si woo Kim',
+'Sepp Straka', 
+'Russell Henley', 
+'Will Gordon', 
+'Bronson Burgoon', 
+'Matt Every', 
+'Luke Donald',
+'Ben Taylor']
+}
 
 
 t = Tournament.objects.get(current=True)
 
 for k,v in first_picks.items():
     score = 0
+    cuts = 0
     #print (k)
     for p in v:
+    #    print (p)
         f = Field.objects.get(playerName=p, tournament=t)
-        if f.rank_as_int() > 65:
-            score += 66
+        if f.rank_as_int() > 64:
+            score += 78
+            cuts += 1
         else:
             score += f.rank_as_int()
-        #print(p, f.rank_as_int())
-    print (k, score)
+        #print(p, f.rank_as_int(), score)
+    print ('orig picks: ', k, score, cuts)
+    try:
+        ts = TotalScore.objects.get(tournament=t, user__username=k)
+        print ('game score: ', ts.user, ts.score, ts.cut_count)
+
+    except Exception as e:
+        continue
 
 
 
-
+ 
 
 
 

@@ -132,10 +132,15 @@
   
 }
 
+.best {
+  background-color: lightgreen;
+}
+
 @media only screen and (max-width: 600px) {
 td .watermark {
-  opacity: .5;
-  z-index: -1;  
+  font-weight: 100;
+  /*opacity: .25;
+  z-index: -1;*/  
   color: red;  
   position: relative;
   
@@ -149,3 +154,4 @@ td .watermark {
  }
   
 }
+
