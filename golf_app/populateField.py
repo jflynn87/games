@@ -337,9 +337,12 @@ def get_pick_link(playerID):
 def get_flag(golfer, golfer_data):
     print ('get flag', golfer.lower(), golfer_data)
     golfer_obj, created = Golfer_obj = Golfer.objects.get_or_create(
-    golfer_pga_num = golfer_data[1][1],
-    golfer_name = golfer)
+    golfer_pga_num = golfer_data[1][1])
+    if created:
+        golfer_obj.golfer_name = golfer
+        golfer_obj.save()
     #golfer_obj.save()
+    ## add some code to deal with name changes
 
     try:
         print ('created', created, 'map_link ', golfer_obj.flag_link)

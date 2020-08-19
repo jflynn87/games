@@ -27,6 +27,20 @@ import urllib
 import json
 from golf_app import views, manual_score, scrape_scores, populateField, withdraw, scrape_scores_by_id
 
+d = {}
+for g in Golfer.objects.all().order_by('golfer_pga_num'):
+    if d.get(g.golfer_name) == None:
+        d[g.golfer_name] = 1
+    else:
+        d[g.golfer_name] = d.get('golfer_name') + 1
+    
+    
+for k, v in d.items(): 
+    if v > 1:
+        print (k, v)
+
+exit()
+
 
 first_picks = {'Sam36': ['Sungjae Im', 'Tom Lewis', 'Charles Howell III', 'Dylan Frittelli', 'Harold Varner III', 'Mark Hubbard', 'Ryan Armour', 'Sam Ryder', 'Bronson Burgoon',
  'Peter Uihlein', 'Nelson Ledesma', 'John Senden'],

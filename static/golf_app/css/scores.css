@@ -138,10 +138,8 @@
 
 @media only screen and (max-width: 600px) {
 td .watermark {
-  font-weight: 100;
-  /*opacity: .25;
-  z-index: -1;*/  
-  color: red;  
+  font-family: 'Raleway Dots';
+  color: red;
   position: relative;
   
   

@@ -55,11 +55,10 @@ function build_score_tbl(data) {
   var optimal_data = $.parseJSON((data['optimal']))
   var scores = $.parseJSON((data['scores']))
 
-  console.log('optimal', optimal_data)
  
-
   $('#det-list table').append('<thead style="background-color:lightblue">' + '<tr>' + '<th> Tournament Scores  </th>' + 
-    '<th>' + '</th>' + '<th>' + '<a href="#"> <button> return to top</button> </a>' + '</th>' +  '<th>' + '</th>' + '<th>' + '</th>' + '<th>' + '</th>' + 
+    '<th>' + '</th>' + '<th>' + '<a href="#"> <button> return to top</button> </a>' + '</th>' +  '<th>' + '</th>' + '<th>' + '</th>' + '<th>' + '</th>' +
+    '<th>' + '</th>' + '<th>' + '</th>' + '<th>' + '</th>' + '<th>' + '</th>' + 
     '</thead>' +
     '<thead>' + 
     '<th>' + 'Position' + '</th>' +
@@ -89,10 +88,6 @@ function build_score_tbl(data) {
   })
 
 
-  $.each(scores, function(player, stats) {
-
-  })
-
   $('#det-list').attr('class', 'none')
 
   $('#totals').empty()
@@ -100,27 +95,28 @@ function build_score_tbl(data) {
   $.each(total_data, function(p, total) {
     if (total['winner_bonus'] >0 || total['major_bonus'] > 0 || total['cut_bonus'] > 0) {
       var bonus_dtl = total['winner_bonus']  + total['major_bonus'] + total['cut_bonus'] 
-      $('#totals').append('<tr id=totals' + p + '> <td>'+ '<p>' + p + '<span class="bonus">' + total['msg'] + ' - Bonus Points: ' + bonus_dtl.toString() + '</span>' + ' </p>' + '<p>' + total['total_score'] + ' / ' + total['cuts']  + '</p>'  + '</td>' + '</tr>').addClass('small')
+      $('#totals').append('<tr id=totals' + p + ' class=small> <td>'+ '<p>' + p + '<span class="bonus">' + total['msg'] + ' - Bonus Points: ' + bonus_dtl.toString() + '</span>' + ' </p>' + '<p>' + total['total_score'] + ' / ' + total['cuts']  + '</p>'  + '</td>' + '</tr>')
     }
     else {
-    $('#totals').append('<tr id=totals' + p + '>' + '<td>'+ '<p>' +'<a href=' + '#' + p +'>' +  p +  '</a>' + total['msg'] + '</p>' + '<p>' +  total['total_score'] + ' / ' + total['cuts']  + '</td>'  + '</tr>').addClass('small')}
-  })
+    $('#totals').append('<tr id=totals' + p + ' class=small>' + '<td>'+  p  + total['msg'] + '</p>' + '<p>' +  total['total_score'] + ' / ' + total['cuts']  + '</td>'  + '</tr>')}
+ })
 
-
+ 
   $.each(picks_data, function (p, stats) {
     
     $.each(stats, function(index) {
-      console.log($(this)[0]['pick'].replace(/ +?/g, ''))
     $('#totals' + p).append('<td id=' + $(this)[0]['pick'].replace(/ +?/g, '') + '>' + '<span class=watermark>' + '<p>' + p.substring(0, 4)  + ' : ' + index +  '</p>'  + '</span>' + '<p>' +  $(this)[0]['pick']  + '</p>' + '<p>' + $(this)[0]['score']  + '   ' +  format_move($(this)[0]['sod_position']) +  $(this)[0]['sod_position'] + '</p>' + '</td>')
-    if ($.inArray($(this)[0]['pick'], optimal_data[index]['golfer']) !== -1) {$('#' + $(this)[0]['pick'].replace(/ +?/g, '')).addClass('best')} 
-  })})
+    // console.log(p, $(this)[0]['pick'], $.inArray($(this)[0]['pick'], optimal_data[index]['golfer']))
+    if ($.inArray($(this)[0]['pick'], optimal_data[index]['golfer']) !== -1) {console.log(p, $(this)[0]); $('#' + $(this)[0]['pick'].replace(/ +?/g, '')).addClass('best')} 
+  })}) 
+ 
 
-  $('#totals').append('<tr id=optimalpicks> <td> <p> Best Pioks </p> </td> </tr>')
+  $('#totals').append('<tr id=optimalpicks class=small> <td> <p> Best Pioks </p> </td> </tr>')
   $.each(optimal_data, function(group, data) {
     $('#optimalpicks').append('<<td> <p>' + data["golfer"] + '</p> <p>' + data['rank'] + '</td>')
   })
 
-  $('#totals').append('<tr id=cuts> <td> <p> Cuts </p> </td> </tr>')
+  $('#totals').append('<tr id=cuts class=small> <td> <p> Cuts </p> </td> </tr>')
   $.each(optimal_data, function(group, data) {
     $('#cuts').append('<<td> <p>' + data["cuts"] + ' / ' + data['total_golfers'] + '</td>')
   })
