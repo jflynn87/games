@@ -105,9 +105,9 @@ function build_score_tbl(data) {
   $.each(picks_data, function (p, stats) {
     
     $.each(stats, function(index) {
-    $('#totals' + p).append('<td id=' + $(this)[0]['pick'].replace(/ +?/g, '') + '>' + '<span class=watermark>' + '<p>' + p.substring(0, 4)  + ' : ' + index +  '</p>'  + '</span>' + '<p>' +  $(this)[0]['pick']  + '</p>' + '<p>' + $(this)[0]['score']  + '   ' +  format_move($(this)[0]['sod_position']) +  $(this)[0]['sod_position'] + '</p>' + '</td>')
+    $('#totals' + p).append('<td id=' + p +  $(this)[0]['pick'].replace(/ +?/g, '') + '>' + '<span class=watermark>' + '<p>' + p.substring(0, 4)  + ' : ' + index +  '</p>'  + '</span>' + '<p>' +  $(this)[0]['pick']  + '</p>' + '<p>' + $(this)[0]['score']  + '   ' +  format_move($(this)[0]['sod_position']) +  $(this)[0]['sod_position'] + '</p>' + '</td>')
     // console.log(p, $(this)[0]['pick'], $.inArray($(this)[0]['pick'], optimal_data[index]['golfer']))
-    if ($.inArray($(this)[0]['pick'], optimal_data[index]['golfer']) !== -1) {console.log(p, $(this)[0]); $('#' + $(this)[0]['pick'].replace(/ +?/g, '')).addClass('best')} 
+    if ($.inArray($(this)[0]['pick'], optimal_data[index]['golfer']) !== -1) {console.log(p, $(this)[0]['pick'], $.inArray($(this)[0]['pick'], optimal_data[index]['golfer'])); $('#' + p + $(this)[0]['pick'].replace(/ +?/g, '')).addClass('best')} 
   })}) 
  
 
