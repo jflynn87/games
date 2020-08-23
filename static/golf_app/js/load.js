@@ -102,7 +102,7 @@ function build_score_tbl(data) {
  }) */
 
   $.each(total_data, function(p, total) {
-    $('#totals').append('<tr id=totals' + p + ' class=small>' + '<td>'+  p  + ' (-' + season_totals[p]['diff'] +')' + total['msg'] + '</p>' + '<p>' +  total['total_score'] + ' / ' + total['cuts']  + '</td>'  + '</tr>')
+    $('#totals').append('<tr id=totals' + p + ' class=small>' + '<td>'+  p  + ' (' + season_totals[p]['diff'] +')' + total['msg'] + '</p>' + '<p>' +  total['total_score'] + ' / ' + total['cuts']  + '</td>'  + '</tr>')
     
     if (total['msg']) {$('#totals' + p).append('<td>' + total["msg"] + '</td>') }
     else if (total['winner_bonus'] >0 || total['major_bonus'] > 0 || total['cut_bonus'] > 0) {

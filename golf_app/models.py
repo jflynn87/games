@@ -35,7 +35,7 @@ class Season(models.Model):
             score_dict[u.username] = TotalScore.objects.filter(tournament__season=self, user=u).aggregate(Sum('score'))
         min_score = min(score_dict.items(), key=lambda v: v[1].get('score__sum'))[1].get('score__sum')
         for user, data in sorted(score_dict.items(), key=lambda v: v[1].get('score__sum')):
-            sorted_dict[user] = {'total': data.get('score__sum'), 'diff': int(data.get('score__sum')) - int(min_score)}
+            sorted_dict[user] = {'total': data.get('score__sum'), 'diff':  int(min_score) - int(data.get('score__sum'))}
         return json.dumps(sorted_dict)
 
 
