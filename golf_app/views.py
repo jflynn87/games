@@ -1,7 +1,8 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.views.generic import View, TemplateView, ListView, DetailView, CreateView, UpdateView, FormView
 from golf_app.models import Field, Tournament, Picks, Group, TotalScore, ScoreDetails, \
-           mpScores, BonusDetails, PickMethod, PGAWebScores, ScoreDict
+           mpScores, BonusDetails, PickMethod, PGAWebScores, ScoreDict, UserProfile, \
+           Season
 from golf_app.forms import  CreateManualScoresForm
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponseRedirect, HttpResponse, Http404
@@ -26,7 +27,7 @@ from selenium.webdriver import Chrome
 import csv
 from rest_framework.views import APIView
 from rest_framework.response import Response
-#from rest_framework.permissions import IsAuthenticated, AllowAny
+from django.core.mail import send_mail
 
 
 
@@ -143,7 +144,31 @@ class FieldListView(LoginRequiredMixin,ListView):
                          })
 
         print ('submitting picks', datetime.datetime.now(), request.user, picks_list, 'random:', random_picks)
+        
+        if UserProfile.objects.filter(user=user).exists():
+            profile = UserProfile.objects.get(user=user)
+            if profile.email_picks:
+                email_picks(tournament, user)
+        
+
         return redirect('golf_app:picks_list')
+
+def email_picks(tournament, user):
+
+    mail_picks = "\r"
+    for pick in Picks.objects.filter(playerName__tournament=tournament, user=user):
+        mail_picks = mail_picks + 'Group: ' + str(pick.playerName.group.number) + ' Golfer: ' + pick.playerName.playerName + "\r"
+
+    mail_sub = "Golf Game Picks Submittted: " + tournament.name 
+    mail_t = "Tournament: " + tournament.name + "\r"
+    
+
+    mail_url = "Website to make changes or picks: " + "http://jflynn87.pythonanywhere.com/golf_app/field/"
+    mail_content = mail_t + "\r" + "\r" +mail_picks + "\r"+ mail_url
+    mail_recipients = [user.email]
+    send_mail(mail_sub, mail_content, 'jflynn87g@gmail.com', mail_recipients)  #add fail silently
+
+
 
 def save_picks(user, tournament, pick_list):
     '''takes user obj, tournament obj and pick list and saves picks as well as sets up score detail and Bonus
@@ -519,8 +544,6 @@ class GetScores(APIView):
         if len(score_dict) == 0:
             print ('score_dict empty')
             return Response(({}), 200)
-
-
         
         if t.current and len(score_dict) != 0:
            scores.update_scores()
@@ -529,21 +552,17 @@ class GetScores(APIView):
         d = scores.get_picks_by_user() 
         leaders = scores.get_leader()
         optimal = scores.optimal_picks()
-        #for k, v in score_dict.items():
-        #    v.update({'sort_rank': calc_score.formatRank(v.get('rank'))})
-        
-        #sorted_score_dict = {k:v for k, v in sorted(score_dict.items(), key=lambda item: item[1].get('sort_rank'))}
-        #sorted_score_dict = sorted(score_dict.items(), key=lambda k, v: k, v.get('sort_rank'))
-        #print ('XXXXXXXXXXX update', sorted_score_dict)            
-        #print (d, ts)
+        totals = Season.objects.get(season=t.season).get_total_points()
+
         return Response(({'picks': d,
                           'totals': ts,
                           'leaders': leaders,
                           'cut_line': t.cut_score,
                           'optimal': optimal,
-                          'scores': json.dumps(score_dict)
+                          'scores': json.dumps(score_dict),
+                          'season_totals': totals,
          }), 200)
-#sorted_ts_dict = sorted(ts_dict.items(), key=lambda v: v[1].get('total_score'))
+
 class GetDBScores(APIView):
     
     def get(self, num):
@@ -568,14 +587,16 @@ class GetDBScores(APIView):
         #print ('db leaders', leaders)
         optimal = scores.optimal_picks()
         scores = json.dumps(score_dict)
+        totals = Season.objects.get(season=t.season).get_total_points()
+        
         return Response(({'picks': d,
                           'totals': ts,
                           'leaders': leaders,
                           'cut_line': t.cut_score,
                           'optimal': optimal, 
-                          'scores': scores
+                          'scores': scores,
+                          'season_totals': totals,
          }), 200)
-
 
 
 class NewScoresView(LoginRequiredMixin,ListView):

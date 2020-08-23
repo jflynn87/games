@@ -27,6 +27,17 @@ class Season(models.Model):
         users = TotalScore.objects.filter(tournament=first_t).values('user')
         return users
 
+    def get_total_points(self):
+        score_dict = {}
+        sorted_dict = {}
+        for user in self.get_users():
+            u = User.objects.get(pk=user.get('user'))
+            score_dict[u.username] = TotalScore.objects.filter(tournament__season=self, user=u).aggregate(Sum('score'))
+        min_score = min(score_dict.items(), key=lambda v: v[1].get('score__sum'))[1].get('score__sum')
+        for user, data in sorted(score_dict.items(), key=lambda v: v[1].get('score__sum')):
+            sorted_dict[user] = {'total': data.get('score__sum'), 'diff': int(data.get('score__sum')) - int(min_score)}
+        return json.dumps(sorted_dict)
+
 
 class Tournament(models.Model):
     season = models.ForeignKey(Season, on_delete=models.CASCADE)
@@ -437,3 +448,7 @@ class ScoreDict(models.Model):
         sorted_score_dict = {k:v for k, v in sorted(d.items(), key=lambda item: item[1].get('sort_rank'))}
 
         return sorted_score_dict
+
+class UserProfile(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    email_picks = models.BooleanField(default=False)

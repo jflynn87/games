@@ -54,8 +54,8 @@ function build_score_tbl(data) {
   var total_data = $.parseJSON((data['totals']))
   var optimal_data = $.parseJSON((data['optimal']))
   var scores = $.parseJSON((data['scores']))
-
- 
+  var season_totals = $.parseJSON(data['season_totals'])
+   
   $('#det-list table').append('<thead style="background-color:lightblue">' + '<tr>' + '<th> Tournament Scores  </th>' + 
     '<th>' + '</th>' + '<th>' + '<a href="#"> <button> return to top</button> </a>' + '</th>' +  '<th>' + '</th>' + '<th>' + '</th>' + '<th>' + '</th>' +
     '<th>' + '</th>' + '<th>' + '</th>' + '<th>' + '</th>' + '<th>' + '</th>' + 
@@ -92,14 +92,25 @@ function build_score_tbl(data) {
 
   $('#totals').empty()
 
-  $.each(total_data, function(p, total) {
+  /* $.each(total_data, function(p, total) {
     if (total['winner_bonus'] >0 || total['major_bonus'] > 0 || total['cut_bonus'] > 0) {
       var bonus_dtl = total['winner_bonus']  + total['major_bonus'] + total['cut_bonus'] 
       $('#totals').append('<tr id=totals' + p + ' class=small> <td>'+ '<p>' + p + '<span class="bonus">' + total['msg'] + ' - Bonus Points: ' + bonus_dtl.toString() + '</span>' + ' </p>' + '<p>' + total['total_score'] + ' / ' + total['cuts']  + '</p>'  + '</td>' + '</tr>')
     }
     else {
-    $('#totals').append('<tr id=totals' + p + ' class=small>' + '<td>'+  p  + total['msg'] + '</p>' + '<p>' +  total['total_score'] + ' / ' + total['cuts']  + '</td>'  + '</tr>')}
- })
+    $('#totals').append('<tr id=totals' + p + ' class=small>' + '<td>'+  p  + ' (-' + season_totals[p]['diff'] +')' + total['msg'] + '</p>' + '<p>' +  total['total_score'] + ' / ' + total['cuts']  + '</td>'  + '</tr>')}
+ }) */
+
+  $.each(total_data, function(p, total) {
+    $('#totals').append('<tr id=totals' + p + ' class=small>' + '<td>'+  p  + ' (-' + season_totals[p]['diff'] +')' + total['msg'] + '</p>' + '<p>' +  total['total_score'] + ' / ' + total['cuts']  + '</td>'  + '</tr>')
+    
+    if (total['msg']) {$('#totals' + p).append('<td>' + total["msg"] + '</td>') }
+    else if (total['winner_bonus'] >0 || total['major_bonus'] > 0 || total['cut_bonus'] > 0) {
+      var bonus_dtl = total['winner_bonus']  + total['major_bonus'] + total['cut_bonus'] 
+      $('#totals' + p).append('<td>' + '<span class="bonus">' + total['msg'] + bonus_dtl.toString() + 'points' + '</span>' + '</td>') }
+    else {$('#totals' + p).append('<td> </td>')}
+
+  })
 
  
   $.each(picks_data, function (p, stats) {
@@ -107,16 +118,16 @@ function build_score_tbl(data) {
     $.each(stats, function(index) {
     $('#totals' + p).append('<td id=' + p +  $(this)[0]['pick'].replace(/ +?/g, '') + '>' + '<span class=watermark>' + '<p>' + p.substring(0, 4)  + ' : ' + index +  '</p>'  + '</span>' + '<p>' +  $(this)[0]['pick']  + '</p>' + '<p>' + $(this)[0]['score']  + '   ' +  format_move($(this)[0]['sod_position']) +  $(this)[0]['sod_position'] + '</p>' + '</td>')
     // console.log(p, $(this)[0]['pick'], $.inArray($(this)[0]['pick'], optimal_data[index]['golfer']))
-    if ($.inArray($(this)[0]['pick'], optimal_data[index]['golfer']) !== -1) {console.log(p, $(this)[0]['pick'], $.inArray($(this)[0]['pick'], optimal_data[index]['golfer'])); $('#' + p + $(this)[0]['pick'].replace(/ +?/g, '')).addClass('best')} 
+    if ($.inArray($(this)[0]['pick'], optimal_data[index]['golfer']) !== -1) {$('#' + p + $(this)[0]['pick'].replace(/ +?/g, '')).addClass('best')} 
   })}) 
  
 
-  $('#totals').append('<tr id=optimalpicks class=small> <td> <p> Best Pioks </p> </td> </tr>')
+  $('#totals').append('<tr id=optimalpicks class=small> <td> <p> Best Pioks </p> </td> <td> </td> </tr>')
   $.each(optimal_data, function(group, data) {
     $('#optimalpicks').append('<<td> <p>' + data["golfer"] + '</p> <p>' + data['rank'] + '</td>')
   })
 
-  $('#totals').append('<tr id=cuts class=small> <td> <p> Cuts </p> </td> </tr>')
+  $('#totals').append('<tr id=cuts class=small> <td> <p> Cuts </p> </td> <td> </td> </tr>')
   $.each(optimal_data, function(group, data) {
     $('#cuts').append('<<td> <p>' + data["cuts"] + ' / ' + data['total_golfers'] + '</td>')
   })
