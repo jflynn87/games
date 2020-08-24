@@ -15,12 +15,12 @@ class Bonus(object):
     
         self.tournament = tournament
 
-        self.user == user
+        self. user == user
         
         self.not_playing_list = ['CUT', 'WD', 'DQ']
 
 
-    def create(self):
-        det_picks = {}
-        sd = ScoreDetails.objects.filter(pick__playerName__tournament=self.tournament).order_by('pick__user', 'pick__playerName__group')
-
+    def create_bd(self):
+        pass
+        #bd = BonusDetails()
+        
