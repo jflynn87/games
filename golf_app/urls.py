@@ -19,5 +19,7 @@ urlpatterns= [
     url(r'^new_scores/(?P<pk>\d+)/$',views.NewScoresView.as_view(),name='new_scores'),
     url(r'^started/$', views.CheckStarted.as_view(), name='started'),
     url(r'^optimal_picks/$',views.OptimalPicks.as_view(),name='optimal_picks'),
+    url(r'^get_info/$',views.GetInfo.as_view(),name='get_info'),
+    
 
 ]

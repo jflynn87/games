@@ -16,19 +16,19 @@ class CreateManualScoresForm(forms.ModelForm):
         fields = ('playerName', 'score',)
 
 
-#class CreatePicksForm(forms.ModelForm):
+#class SinglePickGroupForm(forms.ModelForm):
 
 #     class Meta:
 #         model = Picks
 #         fields = ('playerName',)
 #         playerName = forms.ModelChoiceField(queryset=Field.objects.filter(tournament__current=True),
-#         #playerName = forms.ModelChoiceField(queryset=Field.objects.all(),
+         #playerName = forms.ModelChoiceField(queryset=Field.objects.all(),
 #         widget = forms.RadioSelect)
 #
 #
 # group_cnt = Group.objects.filter(tournament__current=True).aggregate(Max('number'))
 # print ('group_cnt', group_cnt)
-# PickFormSet = modelformset_factory(Picks, form=CreatePicksForm, max_num=group_cnt.get('number_max'))
+#PickFormSet = modelformset_factory(Picks, form=SinglePickGroupForm, max_num=group_cnt.get('number_max'))
 # NoPickFormSet = modelformset_factory(Picks, form=CreatePicksForm, extra=group_cnt.get('number_max'))
 
 

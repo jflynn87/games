@@ -149,35 +149,42 @@ def get_field(tournament_number):
 
 def configure_groups(field_list):
     '''takes a list, calculates the number of groups and players per group'''
-
+    print ('config groups')
     group_cnt = 1
     groups = {}
-    if len(field_list) > 119:
+    if len(field_list) > 64:
         group_size = 10
 
         while group_cnt <6:
             groups[group_cnt] = group_size
             group_cnt += 1
 
-        group_size = 15
-        remainder = (len(field_list)-50) % group_size
+        #added to dict at end of funciton
+        group_size = len(field_list) - 50
+        remainder = 0
 
-        remaining_groups = (len(field_list)-(remainder+50))/group_size
+#        group_size = 15
+#        remainder = (len(field_list)-50) % group_size
 
-        while group_cnt < remaining_groups + 5:
-             groups[group_cnt] = group_size
-             group_cnt += 1
-    elif len(field_list) < 20:
-        print ('less than 20')
-        group_size = 3
-        total_groups = int(len(field_list)/group_size)
+#        remaining_groups = (len(field_list)-(remainder+50))/group_size
+
+#        while group_cnt < remaining_groups + 5:
+#             groups[group_cnt] = group_size
+#             group_cnt += 1
+    elif len(field_list) < 31:
+        print ('less than 31')
+        total_groups = 3
+        group_size = int(len(field_list) / total_groups)
+        #total_groups = int(len(field_list)/group_size)
         remainder = len(field_list) % (total_groups*group_size)
         while group_cnt < total_groups:
             groups[group_cnt] = group_size
             group_cnt +=1
     else:
-        group_size = int(len(field_list)/10)
-        remainder = len(field_list) % (group_size*10)
+        #should only be here for fields between 31 - 64 golfers
+        #group_size = int(len(field_list)/10)
+        group_size = 10
+        remainder = len(field_list) % (group_size)
         total_groups = (len(field_list)-(remainder))/group_size
 
         while group_cnt < total_groups:
@@ -224,7 +231,8 @@ def create_groups(tournament_number):
 
     print ('going to get_field')
     field = get_field(tournament_number)
-    OWGR_rankings =  get_worldrank()
+    #OWGR_rankings =  get_worldrank()
+    OWGR_rankings = {}
     PGA_rankings = get_pga_worldrank()
     configure_groups(field)
 

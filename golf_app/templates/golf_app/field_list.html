@@ -45,10 +45,13 @@
         {%endif%}
 
         {% for group in ordered_field_list%}
-        
         <table class="table">
           <th></th>
-          <th>Group:  {{group.grouper.number}}</th> 
+          <th>Group:  {{group.grouper.number}}
+            {%if group.grouper.number == 6 and tournament.last_group_multi_pick%}
+             - pick 5 golfers
+             {%endif%}
+          </th> 
           <th>Name</th>
           <th>OWGR / <span>  <a href="#" data-toggle="tooltip" title="Only available for golfers who were picked">Prior Result <i class="fa fa-info-circle"></i></a> </span>
           </th>
@@ -63,11 +66,18 @@
                 <td> 
                   <p>
                   {%if not player.withdrawn%}
-                  <form method="post">
+                  <form id='pick_form' method="post">
                     {%csrf_token%}
-                     <input id="{{player.pk}}" type="radio" class="my-radio" name="{{group.grouper}}" value="{{player.id}}">  
+                    
+                    {%if player.group.number == 6 and tournament.last_group_multi_pick%}
+                    <input class="my-checkbox" id="{{player.pk}}" type="checkbox" name="multi-group-{{player.group.number}}" value="{{player.id}}">  
+                    {%else%} 
+                    <input id="{{player.pk}}" type="radio" class="my-radio" name="group-{{player.group.number}}" value="{{player.id}}">  
                     {%endif%}
+                   {%endif%}
+                
                   </p>
+
                   <p>
                    <img src="{{player.pic_link}}" alt=""> 
                   </p>
@@ -85,12 +95,11 @@
           </tbody>
               {%endfor%}
           </table>
-        
           {%endfor%}
-
+<div id='pick-status'></div>
   <input type="hidden" name="userid" value="{{user.id}}">
   {%if not tournament.started or tournament.late_picks%}
-    <input type="submit" class="btn btn-primary" value="Submit">
+    <input id='sub_button' type="submit" class="btn btn-primary" value="Submit" >
   {%endif%}
 
 </form>

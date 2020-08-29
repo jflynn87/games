@@ -131,41 +131,62 @@ class Tournament(models.Model):
             if not Picks.objects.filter(playerName__tournament=self, \
                 user=User.objects.get(username=user.get('user__username'))).exists():
                 print (user.get('user__username'), 'no picks so submit random')
-                self.create_picks(User.objects.get(username=user.get('user__username')))
+                self.create_picks(User.objects.get(username=user.get('user__username')), 'missing')
     def get_cut_round(self):
         pass
         #need to store round scores on the SD object to build here
 
     
     @transaction.atomic
-    def create_picks(self, user):
+    def create_picks(self, user, mode=None):
+        max_group = Group.objects.filter(tournament=self).aggregate(Max('number'))
+        max = max_group.get('number__max')
+        random_picks = []
         for group in Group.objects.filter(tournament=self):
+            print ('max', group, group.num_of_picks(), list(Field.objects.filter(tournament=self, group=group, withdrawn=False)))
+            if group.num_of_picks() >  1:
+                for r in random.sample(list(Field.objects.filter(tournament=self, group=group, withdrawn=False)), group.num_of_picks()):
+                    random_picks.append(r)
+            else:
+                random_picks.append(random.choice(Field.objects.filter(tournament=self, group=group, withdrawn=False)))
+        
+        #print ('saving random', user, datetime.now(), random_picks)
+        self.save_picks(random_picks, user, mode)
+
+        return random_picks 
+
+    def save_picks(self,  pick_list, user, mode=None):
+
+        for p in pick_list:
             pick = Picks()
-            if self.manual_score_file:
-                random_picks = random.choice(Field.objects.filter(tournament=self, group=group))
-            else:      
-                random_picks = random.choice(Field.objects.filter(tournament=self, group=group, withdrawn=False))
-            pick.playerName = Field.objects.get(playerName=random_picks.playerName, tournament=self)
+            pick.playerName = p
             pick.user = user
             pick.save()
 
         pm = PickMethod()
         pm.user = user
         pm.tournament = self
-        pm.method = '3'
+        if mode == 'missing':
+            pm.method = '3'
+        elif mode == 'random':
+            pm.method = '2'
+        else:
+            pm.method = '1'
         pm.save()
 
-        bd = BonusDetails()
-        bd.tournament = self
-        bd.user = user
+        bd, created = BonusDetails.objects.get_or_create(tournament=self, user=user)
         bd.winner_bonus = 0
         bd.cut_bonus = 0
         bd.major_bonus = 0
         bd.save()
-
-        return
+        
+        return pick_list
        
-
+    def last_group_multi_pick(self):
+        if len(Field.objects.filter(tournament=self)) > 64:
+            return True
+        else:
+            return False
 
 class Group(models.Model):
     tournament= models.ForeignKey(Tournament, on_delete=models.CASCADE)
@@ -184,6 +205,12 @@ class Group(models.Model):
 
     def best_picks(self):
         return Field.objects.filter(tournament=self.tournament, score=self.min_score())
+
+    def num_of_picks(self):
+        if self.tournament.last_group_multi_pick() and self.number == 6:
+            return 5
+        else:
+            return 1
 
 
 class Golfer(models.Model):

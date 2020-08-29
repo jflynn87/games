@@ -31,9 +31,23 @@ from golf_app import views, manual_score, scrape_scores, populateField, withdraw
 
 
 season = Season.objects.get(current=True)
-print (season.get_total_points())
+#print (season.get_total_points())
 
 #sorted(ts_dict.items(), key=lambda v: v[1].get('total_score'))
+
+for t in Tournament.objects.filter(season=season):
+    field_list = []
+    field = Field.objects.filter(tournament=t).order_by('currentWGR')
+    for f in field:
+        field_list.append(f.handicap())
+    print (t, ' field size: ', len(field))
+    populateField.configure_groups(field)
+    try:
+        print ('group 6 h/c: ', field_list[50], ' - ', field_list[-1])
+    except Exception as e:
+        print ('entire field h/c: ', field_list[0], ' - ', field_list[-1])
+    print (' ')
+
 exit()
 
 first_picks = {'Sam36': ['Sungjae Im', 'Tom Lewis', 'Charles Howell III', 'Dylan Frittelli', 'Harold Varner III', 'Mark Hubbard', 'Ryan Armour', 'Sam Ryder', 'Bronson Burgoon',

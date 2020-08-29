@@ -15,7 +15,7 @@ class Bonus(object):
     
         self.tournament = tournament
 
-        self. user == user
+        self.user == user
         
         self.not_playing_list = ['CUT', 'WD', 'DQ']
 
