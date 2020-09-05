@@ -20,7 +20,7 @@ from selenium.webdriver.support import expected_conditions as EC
 def load_sched(year):
 
     #changing weeks to load preseason weeks (make week 0 and cnt 1)
-    week_cnt = 2
+    week_cnt = 1
     season = Season.objects.get(current=True)
     while week_cnt < 3:
         try:
@@ -69,7 +69,8 @@ def load_sched(year):
             try:
                 week, created = Week.objects.get_or_create(season=season, week=week_cnt)
                 #week.season = season.season
-                week.current = False
+                if not week.current:
+                    week.current = False
                 #week.current = True
                 week.season_model = season
                 #week.week = week_cnt
@@ -107,7 +108,7 @@ def load_sched(year):
 
                         game, created = Games.objects.get_or_create(week=week, home=home, away=away)
                         game.week = week
-                        game.eid = str(week) + str(home) + str(away)
+                        game.eid = str (season.season) + str(week) + str(home) + str(away)
                         game.away = away
                         game.home = home
                         game.date = datetime.strptime(game_date, '%B %d, %Y')
