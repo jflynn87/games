@@ -3,7 +3,7 @@ from django.contrib.auth.models import User
 from django.conf import settings
 from django.db.models import Min, Q, Count, Sum, Max
 from datetime import datetime
-#from golf_app import pga_score, calc_score, manual_score
+from golf_app import utils
 from django.db import transaction
 import random
 import unidecode
@@ -126,15 +126,25 @@ class Tournament(models.Model):
                 return False
 
     def missing_picks(self):
-        t = Tournament.objects.filter(season__current=True).earliest('pk')
-        for user in TotalScore.objects.filter(tournament=t).values('user__username'):
+        #changed  this to use the season obj user list 8/30/2020
+        #t = Tournament.objects.filter(season__current=True).earliest('pk')
+        #for user in TotalScore.objects.filter(tournament=t).values('user__username'):
+        for user in Season.objects.get(current=True).get_users():
             if not Picks.objects.filter(playerName__tournament=self, \
-                user=User.objects.get(username=user.get('user__username'))).exists():
-                print (user.get('user__username'), 'no picks so submit random')
-                self.create_picks(User.objects.get(username=user.get('user__username')), 'missing')
+                user=User.objects.get(pk=user.get('user'))).exists():
+                print (User.objects.get(pk=user.get('user')), 'no picks so submit random')
+                self.create_picks(User.objects.get(pk=user.get('user')), 'missing')
+    
     def get_cut_round(self):
-        pass
-        #need to store round scores on the SD object to build here
+        score_dict = ScoreDict.objects.get(tournament=self)
+        
+        for data in score_dict.data.values():
+            if data.get('rank') == "CUT":
+                if data['r3'] == '--':
+                    return 2
+                elif data['r4'] == "--": 
+                    return 3
+        return 2
 
     
     @transaction.atomic
@@ -183,10 +193,114 @@ class Tournament(models.Model):
         return pick_list
        
     def last_group_multi_pick(self):
-        if len(Field.objects.filter(tournament=self)) > 64:
+        if len(Field.objects.filter(tournament=self)) > 64 and not Group.objects.filter(tournament=self, number=7).exists():
             return True
         else:
             return False
+
+
+    def cut_num(self):
+        sd = ScoreDict.objects.get(tournament=self)
+        score_dict = sd.sorted_dict()
+
+        if not self.has_cut:
+            return len([x for x in score_dict.values() if x['rank'] not in ['WD']]) + 1
+        round = self.get_cut_round()
+        #round = self.get_round()
+        #after cut WD's
+        #commented for rerun, but do i need the if here?  should not get here normally for old tournament?
+        #if self.tournament.current:  wd = len([x for x in self.score_dict.values() if x['rank'] == 'WD' and x['r'+str(round+1)] != '--']) 
+        
+        ##Not working if WD is before cut
+        wd = len([x for x in score_dict.values() if x['rank'] == 'WD' and x['r'+str(round+1)] != '--']) 
+        
+        for v in score_dict.values():
+            if v['rank'] == "CUT":
+                return len([x for x in score_dict.values() if x['rank'] not in self.not_playing_list()]) + wd + 1
+        if self.get_round() != 4 and len(score_dict.values()) >65:
+            return 66
+        else:
+            return len([x for x in score_dict.values() if x['rank'] not in self.not_playing_list()]) + wd + 1
+
+    def get_round(self):
+        round = 0
+        if self.complete:
+            return 4
+        sd = ScoreDict.objects.get(tournament=self)
+        score_dict = sd.sorted_dict()
+
+        for stats in score_dict.values():
+            print (stats)
+            if len(stats.get('thru')) > 3:
+                #print ('len', stats)
+                continue
+            if stats.get('thru')[0] != "F" and stats.get('rank') not in self.not_playing_list():
+                if stats.get('r1')  == '--':
+                    return 1
+                if stats.get('r2') == '--':
+                   return 2
+                elif stats.get('r3') == '--':
+                       return 3
+                elif  stats.get('r4') == '--':
+                       print ('get round - round 4')
+                       return 4
+            elif stats.get('thru')[0] == 'F' and stats.get('rank') not in self.not_playing_list():
+                if stats.get('r2') == '--':
+                    return 2
+                elif stats.get('r3') == '--':
+                    return 3
+                elif stats.get('r4') == '--':
+                    return 4
+                else:
+                    return 4
+            else:
+                return 0
+        print ('exit get_round', round)
+        return round
+
+    def optimal_picks(self):
+        sd = ScoreDict.objects.get(tournament=self)
+        score_dict = sd.sorted_dict()
+
+        optimal_dict = {}
+       
+        for group in Group.objects.filter(tournament=self):
+           group_cuts = 0
+           golfer_list = []
+           group_min = group.min_score()
+           print ('group: ', group, 'min', group_min)
+
+           for player in Field.objects.filter(tournament=self, group=group):
+               if player.playerName in score_dict.keys():  #needed to deal wiht WD's before start of tourn.
+                    #print (player.playerName, self.score_dict[player.playerName]['rank'])
+                    if score_dict[player.playerName]['rank'] not in  self.not_playing_list() and  \
+                       int(utils.formatRank(score_dict[player.playerName]['rank']) - player.handicap()) == group_min:
+                        golfer_list.append(player.playerName)
+                        #score_list[str(player)] = int(calc_score.formatRank(str(self.score_dict[player.playerName]['rank'])))
+                    else:
+                        if score_dict[player.playerName]['rank'] in self.not_playing_list():
+                            group_cuts += 1
+               else:
+                    print (player, 'mot in dict')
+           print (optimal_dict)
+           optimal_dict[group.number] = {'golfer': golfer_list, 'rank': group_min, 'cuts': group_cuts, 'total_golfers': group.playerCnt}
+           
+        return json.dumps(optimal_dict)
+
+    def not_playing_list(self):
+        return ['CUT', 'WD', 'DQ']
+
+    def tournament_complete(self):
+        sd = ScoreDict.objects.get(tournament=self)
+        score_dict = sd.sorted_dict()
+
+        for v in score_dict.values():
+            if (v['rank'] not in self.not_playing_list() and \
+                v['r4'] == "--") or v['rank']  == "T1":
+                return False
+        if self.get_round() == 4: 
+            return True
+
 
 class Group(models.Model):
     tournament= models.ForeignKey(Tournament, on_delete=models.CASCADE)
@@ -199,12 +313,19 @@ class Group(models.Model):
     def min_score(self):
         min_score = 999  
         for score in Field.objects.filter(group=self).exclude(rank__in=["CUT", "WD", "DQ"]):
-            if score.rank_as_int() < min_score:
-                min_score = score.rank_as_int()
+            if (score.rank_as_int() - score.handicap()) < min_score:
+                min_score = score.rank_as_int() - score.handicap()
+                #print (self, score.rank_as_int(), score.handicap())
         return min_score
 
     def best_picks(self):
-        return Field.objects.filter(tournament=self.tournament, score=self.min_score())
+        best_list = []
+        for field in Field.objects.filter(group=self):
+            if (utils.formatRank(field.rank) - field.handicap()) == self.min_score():
+                best_list.append(field.playerName)
+        return best_list
+
+        #return Field.objects.filter(tournament=self.tournament, score=self.min_score())
 
     def num_of_picks(self):
         if self.tournament.last_group_multi_pick() and self.number == 6:
@@ -288,11 +409,11 @@ class Field(models.Model):
     def handicap(self):
        # print((Field.objects.filter(tournament=self.tournament).count() * .14))
         if round(self.currentWGR*.01) < (Field.objects.filter(tournament=self.tournament).count() * .14):
-            return round(self.currentWGR*.01)
+            return int(round(self.currentWGR*.01))
         elif self.currentWGR == 9999:
             max = Field.objects.filter(tournament=self.tournament).exclude(currentWGR=9999).aggregate(Max('currentWGR'))
             if max.get('currentWGR__max') < (Field.objects.filter(tournament=self.tournament).count() * .14):
-                return max.get('currentWGR__max')
+                return int(max.get('currentWGR__max'))
 
         #print ('----------- retruning field *.14')
         return round(Field.objects.filter(tournament=self.tournament).count() * .14)
@@ -344,7 +465,7 @@ class Picks(models.Model):
     #playerName = models.ForeignKey(Field, on_delete=models.CASCADE, blank=True, default='', null=True)
     playerName = models.ForeignKey(Field, on_delete=models.CASCADE, related_name='picks')
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
-    score = models.PositiveIntegerField(null=True)
+    score = models.IntegerField(null=True)
     #auto = models.NullBooleanField(default=False, null=True)
 
     class Meta():
@@ -373,11 +494,12 @@ class PickMethod(models.Model):
 class ScoreDetails(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     pick = models.ForeignKey(Picks, on_delete=models.CASCADE, blank=True, null=True)
-    score = models.PositiveIntegerField(null=True)
+    score = models.IntegerField(null=True)
     toPar = models.CharField(max_length=50, null=True)
     today_score = models.CharField(max_length = 50, null=True)
     thru = models.CharField(max_length=100, null=True)
     sod_position = models.CharField(max_length=100, null=True)
+    gross_score = models.IntegerField(null=True)
 
     def __str__(self):
         return str(self.user) + str(self.pick) + str(self.score)
@@ -451,7 +573,7 @@ class mpScores(models.Model):
         #return
 
 class ScoreDict(models.Model):
-    tournament = models.ForeignKey(Tournament, null=True, on_delete=models.CASCADE)
+    tournament = models.ForeignKey(Tournament, null=True, on_delete=models.CASCADE, related_name='score_dict')
     data = models.JSONField(null=True)
 
     def __str__(self):

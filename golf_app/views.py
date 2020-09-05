@@ -109,7 +109,7 @@ class FieldListView(LoginRequiredMixin,TemplateView):
 
             tournament.save_picks(pick_list, user, 'self')
 
-        print ('submitting picks', datetime.datetime.now(), request.user, pick_list)
+            print ('user submitting picks', datetime.datetime.now(), request.user, pick_list)
         
         if UserProfile.objects.filter(user=user).exists():
             profile = UserProfile.objects.get(user=user)
@@ -117,6 +117,7 @@ class FieldListView(LoginRequiredMixin,TemplateView):
                 email_picks(tournament, user)
 
         return redirect('golf_app:picks_list')
+
 
 def email_picks(tournament, user):
 
@@ -132,42 +133,44 @@ def email_picks(tournament, user):
     mail_content = mail_t + "\r" + "\r" +mail_picks + "\r"+ mail_url
     mail_recipients = [user.email]
     send_mail(mail_sub, mail_content, 'jflynn87g@gmail.com', mail_recipients)  #add fail silently
-
-
-
-def save_picks(user, tournament, pick_list):
-    '''takes user obj, tournament obj and pick list and saves picks as well as sets up score detail and Bonus
-    details for the tournament'''
-
-    for picks in pick_list:
-        pick = Picks()
-        pick.user = user
-        pick.playerName = Field.objects.get(playerName=picks, tournament=tournament)
-        pick.save()
-        sd = ScoreDetails()
-        sd.user = user
-        sd.pick = pick
-        sd.save()
-
-    bd, created = BonusDetails.objects.get_or_create(tournament = tournament, \
-    user = user, winner_bonus = 0, cut_bonus = 0)
-    bd.save()
-
+    
     return
 
+# commented 8/30/2020 use model.py - delete after some testing
+# def save_picks(user, tournament, pick_list):
+#     '''takes user obj, tournament obj and pick list and saves picks as well as sets up score detail and Bonus
+#     details for the tournament'''
 
-def get_picks(request):
-    if request.is_ajax():
-        print (request.user)
-        pick_list = []
-        for pick in Picks.objects.filter(user__username=request.user, playerName__tournament__current=True):
-            pick_list.append(pick.playerName.pk)
-        data = json.dumps(pick_list)
-        return HttpResponse(data, content_type="application/json")
-    else:
-        print ('not ajax')
-        raise Http404
+#     for picks in pick_list:
+#         pick = Picks()
+#         pick.user = user
+#         pick.playerName = Field.objects.get(playerName=picks, tournament=tournament)
+#         pick.save()
+#         sd = ScoreDetails()
+#         sd.user = user
+#         sd.pick = pick
+#         sd.save()
 
+#     bd, created = BonusDetails.objects.get_or_create(tournament = tournament, \
+#     user = user, winner_bonus = 0, cut_bonus = 0)
+#     bd.save()
+
+#     return
+
+
+class GetPicks(APIView):
+    
+    def get(self, num):
+        try: 
+            pick_list = []
+            for pick in Picks.objects.filter(user__username=self.request.user, playerName__tournament__current=True):
+                pick_list.append(pick.playerName.pk)
+            print ('getting picks API response', self.request.user, json.dumps(pick_list))
+            return Response(json.dumps(pick_list), 200)
+        except Exception as e:
+            print ('Get Picks API exception', e)
+            return Response(json.dumps({'status': str(e)}), 500)
+            
 
 class PicksListView(LoginRequiredMixin,ListView):
     login_url = 'login'
@@ -177,135 +180,30 @@ class PicksListView(LoginRequiredMixin,ListView):
     def get_context_data(self,**kwargs):
         context = super(PicksListView, self).get_context_data(**kwargs)
         context.update({
-        #'field_list': Field.group,
         'tournament': Tournament.objects.get(current=True),
         'picks_list': Picks.objects.filter(playerName__tournament__current=True,user=self.request.user),
         })
         return context
 
-## commented 8/2/2020 - delete later
-# class ScoreListView(DetailView):
-#     template_name = 'golf_app/scores.html'
-#     model=TotalScore
+#commented on 8/30 - delete after some testing
+# @transaction.atomic
+# def create_picks(tournament, user):
+#     '''takes tournament and user objects and generates random picks.  check for duplication with general pick submit class'''
 
-#     def dispatch(self, request, *args, **kwargs):
-#         print ('in SLV dispatch')
-#         if kwargs.get('pk') == None:
-#             tournament = Tournament.objects.get(current=True)
-#             self.kwargs['pk'] = str(tournament.pk)
-#         return super(ScoreListView, self).dispatch(request, *args, **kwargs)
-    
-    
-#     def get_context_data(self, **kwargs):
-#         context = super(ScoreListView, self).get_context_data(**kwargs)
-#         tournament = Tournament.objects.get(pk=self.kwargs.get('pk'))
-        
-#         if not tournament.started():
-#            user_dict = {}
-#            for user in Picks.objects.filter(playerName__tournament=tournament).values('user__username').annotate(Count('playerName')):
-#                user_dict[user.get('user__username')]=user.get('playerName__count')
-#                if tournament.pga_tournament_num == '470': #special logic for match player
-#                   scores = (None, None, None, None,None)
-#                #else:  scores=calc_score.calc_score(self.kwargs, request)
-#            self.template_name = 'golf_app/pre_start.html'
+#     for group in Group.objects.filter(tournament=tournament):
+#         pick = Picks()
+#         random_picks = random.choice(Field.objects.filter(tournament=tournament, group=group, withdrawn=False))
+#         pick.playerName = Field.objects.get(playerName=random_picks.playerName, tournament=tournament)
+#         pick.user = user
+#         pick.save()
 
-#            context.update({'user_dict': user_dict,
-#                            'tournament': tournament,
-#                           # 'lookup_errors': scores[4],
-#                                                     })
+#     pm = PickMethod()
+#     pm.user = user
+#     pm.tournament = tournament
+#     pm.method = '3'
+#     pm.save()
 
-#            return context
-#         ## from here all logic should only happen if tournament has started
-
-#         if not tournament.picks_complete():
-#                tournament.missing_picks()
-
-#         if tournament.manual_score_file:
-#            score_dict = {}
-#            file = str(tournament.name) + ' score.csv'
-#            with open(file, encoding="utf8") as csv_file:
-#                 csv_reader = csv.reader(csv_file, delimiter=',')
-#                 for row in csv_reader:
-#                     try:
-#                         name = row[3].split('(')[0].split(',')[0]
-#                         #print (name, len(name), name[len(name)-1])
-#                         if name != '':
-#                            if name[-1] == ' ':
-#                               score_dict[name[:-1]] = {'total': row[0], 'status': row[5], 'score': row[4], 'r1': row[7], 'r2': row[8], 'r3': row[9], 'r4': row[10]}
-#                            else:
-#                               score_dict[name] = {'total': row[0], 'status': row[5], 'score': row[4], 'r1': row[7], 'r2': row[8], 'r3': row[9], 'r4': row[10]}
-#                         else:
-#                             print ('round.csv file == psace', row)
-#                     except Exception as e:
-#                         print ('round.csv file read failed', row, e)
-
-#                 picks = manual_score.Score(score_dict, tournament)
-#                 picks.update_scores()
-#                 picks.total_scores()
-#                 context.update({'scores':TotalScore.objects.filter(tournament=tournament).order_by('score'),
-#                                 'detail_list':picks.get_picks_by_user(),
-#                                 'leader_list':picks.get_leader(),
-#                                 'cut_data':None,
-#                                 'lookup_errors': None,
-#                                 'tournament': tournament,
-#                                 'thru_list': [],
-#     #                                     'optimal_picks': summary_data[0],
-#     #                                     'best_score': summary_data[1],
-#     #                                     'cuts': {'1': 'data', '2': 'data'}
-#                                          })
-
-#                 return context
-
-#         else:
-#             try:
-#                 json_url = tournament.score_json_url
-#                 with urllib.request.urlopen(json_url) as field_json_url:
-#                      data = json.loads(field_json_url.read().decode())
-#                 print ('found pga JSON!')
-#             except Exception as e:
-#                 print ('cant open pga score file', e)
-#                 #run batch to update pgawebscore table
-#                 score_dict = {}
-#                 #for s in PGAWebScores.objects.filter(tournament=tournament):
-#                 #    score_dict[s.golfer.playerName] = \
-#                 #    {'total': s.total, 'status': s.status, 'score': s.score, 'r1': s.r1, 'r2': s.r2, 'r3': s.r3, 'r4': s.r4}
-
-#                 picks = manual_score.Score(score_dict, tournament)
-#                 picks.update_scores()
-#                 picks.total_scores()
-#                 context.update({'scores':TotalScore.objects.filter(tournament=tournament).order_by('score'),
-#                                 'detail_list':picks.get_picks_by_user(),
-#                                 'leader_list':picks.get_leader(),
-#                                 'cut_data':None,
-#                                 'lookup_errors': None,
-#                                 'tournament': tournament,
-#                                 'thru_list': [],
-#     #                                     'optimal_picks': summary_data[0],
-#     #                                     'best_score': summary_data[1],
-#     #                                     'cuts': {'1': 'data', '2': 'data'}
-#                                          })
-
-#                 return context        
-
-
-@transaction.atomic
-def create_picks(tournament, user):
-    '''takes tournament and user objects and generates random picks.  check for duplication with general pick submit class'''
-
-    for group in Group.objects.filter(tournament=tournament):
-        pick = Picks()
-        random_picks = random.choice(Field.objects.filter(tournament=tournament, group=group, withdrawn=False))
-        pick.playerName = Field.objects.get(playerName=random_picks.playerName, tournament=tournament)
-        pick.user = user
-        pick.save()
-
-    pm = PickMethod()
-    pm.user = user
-    pm.tournament = tournament
-    pm.method = '3'
-    pm.save()
-
-    return
+#     return
 
 
 
@@ -347,8 +245,6 @@ class SeasonTotalView(ListView):
                     second_half_scores[score.user] = second_half_score + score.score
 
             if tournament.complete:
-                print ('add new logic')
-                
                 for winner in tournament.winner():
                     score_list.append(winner.user)
                     
@@ -357,54 +253,14 @@ class SeasonTotalView(ListView):
                     else:
                         winner_dict[winner.user] = winner_dict.get(winner.user) + 30/tournament.num_of_winners()
 
-                # winner = TotalScore.objects.filter(tournament=tournament).order_by('score').values('score')
-                # winning_score = winner[0].get('score')
-                # #winning_score = winner[0].score
-                # num_of_winners = winner.filter(score=winning_score, tournament=tournament).count()
-                # win_user_list = []
-                # if num_of_winners == 1:
-                #     winner_data = ([TotalScore.objects.get(tournament=tournament, score=winning_score)], num_of_winners)
-                #     win_user_list.append(User.objects.get(pk=winner_data[0][0].user.pk))
-                #     score_list.append(User.objects.get(pk=winner_data[0][0].user.pk))
-                #     winner_data = (win_user_list, num_of_winners)
-                #     winner_list.append(winner_data)
-                # elif num_of_winners > 1:
-                #     winner_data = ([TotalScore.objects.filter(tournament=tournament, score=winning_score)], num_of_winners)
-                #     #win_user_list = []
-                #     for user in winner_data[0]:
-                #         print ('this', user)
-                #         for name in user:
-                #         #score_list.append(User.objects.get(pk=name.user.pk))
-                #             win_user_list.append(User.objects.get(pk=name.user.pk))
-                #             winner_data = (win_user_list, num_of_winners)
-                #             score_list.append(User.objects.get(pk=name.user.pk))
-                #         winner_list.append(winner_data)
-
-                # else:
-                #      print ('something wrong with winner lookup', 'num of winners: ', len(winner))
-
             display_dict[tournament] = score_list
-
-        
-
-        #print (winner_list)
-        # for winner in winner_list:
-        #     for data in winner[0]:
-        #         prize = winner_dict.get(data)
-        #         if tournament.major:
-        #             prize = prize + (50/winner[1])
-        #         else:
-        #             prize = prize + (30/winner[1])
-        #         winner_dict[data] = prize
 
         total_score_list = []
         total_second_half_score_list = []
         for score in total_scores.values():
-            #print ('fh', total_score_list)
             total_score_list.append(score)
         #added for Mark
         for s in second_half_scores.values():
-            #print ('sh', second_half_score_list)
             total_second_half_score_list.append(s)
 
         ranks = ss.rankdata(total_score_list, method='min')
@@ -416,8 +272,6 @@ class SeasonTotalView(ListView):
         second_half_rank_list = []
         for rank in second_half_ranks:
             second_half_rank_list.append(rank)
-
-
 
         print ()
         print ('display_dict', display_dict)
@@ -475,15 +329,17 @@ def setup(request):
             error_msg = (e)
             return render(request, 'golf_app/setup.html', {'error_msg': error_msg})
 
+
 class AboutView(TemplateView):
     template_name='golf_app/about.html'
+
 
 class AllTime(TemplateView):
     template_name='golf_app/all_time.html'
 
 
 class GetScores(APIView):
-    
+   
     def get(self, num):
         
         print ('GetScores API VIEW', self.request.GET.get('tournament'))
@@ -516,7 +372,7 @@ class GetScores(APIView):
         ts = scores.total_scores()
         d = scores.get_picks_by_user() 
         leaders = scores.get_leader()
-        optimal = scores.optimal_picks()
+        optimal = t.optimal_picks()
         totals = Season.objects.get(season=t.season).get_total_points()
 
         return Response(({'picks': d,
@@ -535,31 +391,29 @@ class GetDBScores(APIView):
         print ('GetScores API VIEW', self.request.GET.get('tournament'))
         t = Tournament.objects.get(pk=self.request.GET.get('tournament'))
 
-        #pga_web = scrape_scores.ScrapeScores(t)
         try:
             sd = ScoreDict.objects.get(tournament=t)
             score_dict = sd.sorted_dict()
-            print ('-------- New Scored', score_dict)            
+            print ('-------- New Score dict used')            
         except Exception as e:
             print ('using old score dict', e)
             score_dict = get_score_dict(t)
         
         scores = manual_score.Score(score_dict, t, 'json')
-        #scores.update_scores()
         ts = scores.total_scores()
         d = scores.get_picks_by_user() 
-        leaders = scores.get_leader()
-        #print ('db leaders', leaders)
-        optimal = scores.optimal_picks()
-        scores = json.dumps(score_dict)
-        totals = Season.objects.get(season=t.season).get_total_points()
         
+        optimal = t.optimal_picks()
+        scores_json = json.dumps(score_dict)
+        totals = Season.objects.get(season=t.season).get_total_points()
+        leaders = scores.get_leader()
+
         return Response(({'picks': d,
                           'totals': ts,
                           'leaders': leaders,
                           'cut_line': t.cut_score,
                           'optimal': optimal, 
-                          'scores': scores,
+                          'scores': scores_json,
                           'season_totals': totals,
          }), 200)
 
@@ -567,8 +421,6 @@ class GetDBScores(APIView):
 class NewScoresView(LoginRequiredMixin,ListView):
     login_url = 'login'
     template_name = 'golf_app/scores.html'
-    #form=CreateManualScoresForm
-    #golfers = manual_score.Score('016').get_picked_golfers()
     queryset = Picks.objects.filter(playerName__tournament__current=True) 
 
     def get_context_data(self, **kwargs):
@@ -652,9 +504,10 @@ class CheckStarted(APIView):
                 pga_web = scrape_scores.ScrapeScores(t)
                 score_dict = pga_web.scrape()
                 tourn = Tournament.objects.get(pk=key)
+                #print ('start check sd', score_dict)
                 score = manual_score.Score(score_dict, t)
-                round = score.get_round()
-                print('round before if', round)
+                round = t.get_round()
+                #print('round before if', round)
                 if round != None and round > 0:
                     score.update_scores()
                 t_status['status'] = tourn.started()
@@ -699,27 +552,29 @@ class CheckStarted(APIView):
 #             return Response(e, 500)
 
 class OptimalPicks(APIView):
-    def get(self, num):
+    pass
+    # def get(self, num):
         
-        try:
-            result_dict = {}
-            t = Tournament.objects.get(pk=self.request.GET.get('tournament'))
+    #     try:
+    #         result_dict = {}
+    #         t = Tournament.objects.get(pk=self.request.GET.get('tournament'))
             
-            for g in Group.objects.filter(tournament=t):
-                result_dict[g.number] = g.best_picks()
+    #         for g in Group.objects.filter(tournament=t):
+    #             result_dict[g.number] = g.best_picks()
 
-            print ('optimal_picks', result_dict)
-            return Response(json.dumps(result_dict), 200)
-        except Exception as e:
-            print ('exception', e)
-            return Response(json.dumps({e}), 500)
+    #         print ('optimal_picks', result_dict)
+    #         return Response(json.dumps(result_dict), 200)
+    #     except Exception as e:
+    #         print ('exception', e)
+    #         return Response(json.dumps({e}), 500)
 
 
 class GetInfo(APIView):
     def get(self, num):
+        print (self.request.GET)
         try:
             info_dict = {}
-            t = Tournament.objects.get(current=True)
+            t = Tournament.objects.get(pk=self.request.GET.get('tournament'))
             total_picks = 0
 
             for g in Group.objects.filter(tournament=t):

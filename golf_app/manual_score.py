@@ -54,6 +54,7 @@ class Score(object):
     def get_picks_by_user(self):
         det_picks = {}
         sd = ScoreDetails.objects.filter(pick__playerName__tournament=self.tournament).order_by('pick__user', 'pick__playerName__group')
+        #print ('get pick by use sd', sd)
 
         for user in sd.values('user').distinct():
             if self.format == "json":
@@ -68,21 +69,37 @@ class Score(object):
                    winner = 'red'
                else:
                    winner = 'black'
+               if pick.pick.playerName.group.num_of_picks() == 1:
+                   g = pick.pick.playerName.group.number
+               else:
+                   count = pick.pick.playerName.group.num_of_picks()
+                   x = 1 
+                   #print ('count', count, 'x', x)
+                   while x <= count:
+                       if det_picks[pick.user.username].get(str(pick.pick.playerName.group.number) + '-' + str(x)) == None:
+                           g = str(pick.pick.playerName.group.number) + '-' + str(x)
+                           break
+                       else:
+                           x += 1
 
-               det_picks[pick.user.username][pick.pick.playerName.group.number]=\
-                   {
-                   'pick': pick.pick.playerName.playerName,
-                   'score': pick.score,
-                   'toPar': pick.toPar,
-                   'today_score': pick.today_score,
-                   'thru': pick.thru,
-                   'sod_position': pick.sod_position,
-                   'winner': winner
-                    }
+               #print (g, pick)    
+               det_picks[pick.user.username][g]=\
+                        {
+                        'pick': pick.pick.playerName.playerName,
+                        'score': pick.score,
+                        'toPar': pick.toPar,
+                        'today_score': pick.today_score,
+                        'thru': pick.thru,
+                        'sod_position': pick.sod_position,
+                        'winner': winner,
+                        'gross_score': pick.gross_score
+                        }
+
+
             else:
                 det_picks[pick.user].append(pick)
 
-
+        print ('get picks result', det_picks)
 
         if self.format == 'json':
             return json.dumps(det_picks)
@@ -130,24 +147,25 @@ class Score(object):
     def update_scores(self):
         print ('start update_scores', datetime.now())
         print (self.score_dict)
-        print ('round', self.get_round())
+        #print ('round', self.get_round())
         print ('update scores dict end')
         for pick in Picks.objects.filter(playerName__tournament=self.tournament):
             try:
                 if self.score_dict.get(pick.playerName.playerName).get('rank') == "CUT":
-                    pick.score = self.get_cut_num()
+                    pick.score = self.tournament.cut_num() 
                 elif self.score_dict.get(pick.playerName.playerName).get('rank') == "WD":
-                    pick.score = self.get_wd_score(pick)
+                    pick.score = self.get_wd_score(pick) 
                 else:
-                    if int(utils.formatRank(self.score_dict.get(pick.playerName.playerName).get('rank'))) > self.get_cut_num():
-                        pick.score=self.get_cut_num()
+                    if int(utils.formatRank(self.score_dict.get(pick.playerName.playerName).get('rank'))) > self.tournament.cut_num():
+                        pick.score=self.tournament.cut_num() 
                     else:
-                        pick.score = utils.formatRank(self.score_dict.get(pick.playerName.playerName).get('rank'))
+                        pick.score = utils.formatRank(self.score_dict.get(pick.playerName.playerName).get('rank')) 
                 
                 pick.save()
                         
                 sd, sd_created = ScoreDetails.objects.get_or_create(user=pick.user, pick=pick)
-                sd.score=pick.score
+                sd.score=pick.score - pick.playerName.handicap()
+                sd.gross_score = pick.score
                 if self.score_dict.get(pick.playerName.playerName).get('rank') == "CUT" or \
                     self.score_dict.get(pick.playerName.playerName).get('rank') == "WD" and self.get_round() < 3:
                     sd.today_score  = "CUT"
@@ -163,17 +181,18 @@ class Score(object):
                 sd.save()
             except Exception as e:
                 print ('withdraw?', pick, e)
-                pick.score  = self.get_cut_num()
+                pick.score  = self.tournament.cut_num()
                 pick.save()
                 sd, sd_created = ScoreDetails.objects.get_or_create(user=pick.user, pick=pick)
-                sd.score=pick.score
+                sd.score=pick.score - pick.playerName.handicap()
+                sd.gross_score = pick.score
                 sd.today_score = "WD"
                 sd.thru = "WD"
                 sd.save()
 
             self.tournament.score_update_time = datetime.now()
             if not self.tournament.complete:
-                self.tournament.complete = self.tournament_complete()
+                self.tournament.complete = self.tournament.tournament_complete()
             self.tournament.save()
 
             if pick.is_winner() and not PickMethod.objects.filter(user=pick.user, method=3, tournament=pick.playerName.tournament).exists():
@@ -273,61 +292,61 @@ class Score(object):
                 bd.save()
 
             
-    def get_round(self):
-        round = 0
-        if self.tournament.complete:
-            return 4
+    # def get_round(self):
+    #     round = 0
+    #     if self.tournament.complete:
+    #         return 4
         
-        for stats in self.score_dict.values():
-            print (stats)
-            if len(stats.get('thru')) > 3:
-                #print ('len', stats)
-                continue
-            if stats.get('thru')[0] != "F" and stats.get('rank') not in self.not_playing_list:
-                if stats.get('r1')  == '--':
-                    return 1
-                if stats.get('r2') == '--':
-                   return 2
-                elif stats.get('r3') == '--':
-                       return 3
-                elif  stats.get('r4') == '--':
-                       print ('get round - round 4')
-                       return 4
-            elif stats.get('thru')[0] == 'F' and stats.get('rank') not in self.not_playing_list:
-                if stats.get('r2') == '--':
-                    return 2
-                elif stats.get('r3') == '--':
-                    return 3
-                elif stats.get('r4') == '--':
-                    return 4
-                else:
-                    return 4
-            else:
-                return 0
-        print ('exit get_round', round)
-        return round
+    #     for stats in self.score_dict.values():
+    #         print (stats)
+    #         if len(stats.get('thru')) > 3:
+    #             #print ('len', stats)
+    #             continue
+    #         if stats.get('thru')[0] != "F" and stats.get('rank') not in self.not_playing_list:
+    #             if stats.get('r1')  == '--':
+    #                 return 1
+    #             if stats.get('r2') == '--':
+    #                return 2
+    #             elif stats.get('r3') == '--':
+    #                    return 3
+    #             elif  stats.get('r4') == '--':
+    #                    print ('get round - round 4')
+    #                    return 4
+    #         elif stats.get('thru')[0] == 'F' and stats.get('rank') not in self.not_playing_list:
+    #             if stats.get('r2') == '--':
+    #                 return 2
+    #             elif stats.get('r3') == '--':
+    #                 return 3
+    #             elif stats.get('r4') == '--':
+    #                 return 4
+    #             else:
+    #                 return 4
+    #         else:
+    #             return 0
+    #     print ('exit get_round', round)
+    #     return round
 
 
-    def get_cut_num(self):
+    # def get_cut_num(self):
     
-        if not self.tournament.has_cut:
-            return len([x for x in self.score_dict.values() if x['rank'] not in ['WD']]) + 1
-        round = self.get_cut_round()
-        #round = self.get_round()
-        #after cut WD's
-        #commented for rerun, but do i need the if here?  should not get here normally for old tournament?
-        #if self.tournament.current:  wd = len([x for x in self.score_dict.values() if x['rank'] == 'WD' and x['r'+str(round+1)] != '--']) 
+    #     if not self.tournament.has_cut:
+    #         return len([x for x in self.score_dict.values() if x['rank'] not in ['WD']]) + 1
+    #     round = self.get_cut_round()
+    #     #round = self.get_round()
+    #     #after cut WD's
+    #     #commented for rerun, but do i need the if here?  should not get here normally for old tournament?
+    #     #if self.tournament.current:  wd = len([x for x in self.score_dict.values() if x['rank'] == 'WD' and x['r'+str(round+1)] != '--']) 
         
-        ##Not working if WD is before cut
-        wd = len([x for x in self.score_dict.values() if x['rank'] == 'WD' and x['r'+str(round+1)] != '--']) 
+    #     ##Not working if WD is before cut
+    #     wd = len([x for x in self.score_dict.values() if x['rank'] == 'WD' and x['r'+str(round+1)] != '--']) 
         
-        for v in self.score_dict.values():
-            if v['rank'] == "CUT":
-                return len([x for x in self.score_dict.values() if x['rank'] not in ['CUT', 'WD']]) + wd + 1
-        if self.get_round() != 4 and len(self.score_dict.values()) >65:
-            return 66
-        else:
-            return len([x for x in self.score_dict.values() if x['rank'] not in ['CUT','WD']]) + wd + 1
+    #     for v in self.score_dict.values():
+    #         if v['rank'] == "CUT":
+    #             return len([x for x in self.score_dict.values() if x['rank'] not in ['CUT', 'WD']]) + wd + 1
+    #     if self.get_round() != 4 and len(self.score_dict.values()) >65:
+    #         return 66
+    #     else:
+    #         return len([x for x in self.score_dict.values() if x['rank'] not in ['CUT','WD']]) + wd + 1
 
 
     def get_leader(self):
@@ -345,7 +364,7 @@ class Score(object):
         if len(leader_dict.keys()) > 0:
             print ('leaders exist', leader_dict)
             self.tournament.leaders = json.dumps(leader_dict)
-            self.tournament.save()
+            #self.tournament.save()
             #leader_dict['leaders'] = (leader_dict)
             return json.dumps(leader_dict)
         else:
@@ -354,13 +373,13 @@ class Score(object):
                 return self.tournament.leaders
             else: return json.dumps('')
 
-    def tournament_complete(self):
-        for v in self.score_dict.values():
-            if (v['rank'] not in self.not_playing_list and \
-                v['r4'] == "--") or v['rank']  == "T1":
-                return False
-        if self.get_round() == 4: 
-            return True
+    # def tournament_complete(self):
+    #     for v in self.score_dict.values():
+    #         if (v['rank'] not in self.not_playing_list and \
+    #             v['r4'] == "--") or v['rank']  == "T1":
+    #             return False
+    #     if self.get_round() == 4: 
+    #         return True
 
     def get_wd_score(self, pick):
         score = self.score_dict.get(pick.playerName.playerName)
@@ -380,62 +399,42 @@ class Score(object):
             return len([x for x in self.score_dict.values() if x['rank'] not in self.not_playing_list]) + 1
 
 
-    def get_cut_round(self):
-        for data in self.score_dict.values():
-            if data.get('rank') == "CUT":
-                if data['r3'] == '--':
-                    return 2
-                elif data['r4'] == "--": 
-                    return 3
-        return 2
+    # def get_cut_round(self):
+    #     for data in self.score_dict.values():
+    #         if data.get('rank') == "CUT":
+    #             if data['r3'] == '--':
+    #                 return 2
+    #             elif data['r4'] == "--": 
+    #                 return 3
+    #     return 2
 
     
-    def optimal_picks(self):
+    # def optimal_picks(self):
 
-        optimal_dict = {}
+    #     optimal_dict = {}
        
-        for group in Group.objects.filter(tournament=self.tournament):
-           group_cuts = 0
-           golfer_list = []
-           group_min = group.min_score()
-           print ('group: ', group, 'min', group_min)
+    #     for group in Group.objects.filter(tournament=self.tournament):
+    #        group_cuts = 0
+    #        golfer_list = []
+    #        group_min = group.min_score()
+    #        print ('group: ', group, 'min', group_min)
 
-           for player in Field.objects.filter(tournament=self.tournament, group=group):
-               if player.playerName in self.score_dict.keys():  #needed to deal wiht WD's before start of tourn.
-                    #print (player.playerName, self.score_dict[player.playerName]['rank'])
-                    if self.score_dict[player.playerName]['rank'] not in  self.not_playing_list and  \
-                       int(utils.formatRank(self.score_dict[player.playerName]['rank'])) == group_min:
-                        golfer_list.append(player.playerName)
-                        #score_list[str(player)] = int(calc_score.formatRank(str(self.score_dict[player.playerName]['rank'])))
-                    else:
-                        if self.score_dict[player.playerName]['rank'] in self.not_playing_list:
-                            group_cuts += 1
-               else:
-                    print (player, 'mot in dict')
+    #        for player in Field.objects.filter(tournament=self.tournament, group=group):
+    #            if player.playerName in self.score_dict.keys():  #needed to deal wiht WD's before start of tourn.
+    #                 #print (player.playerName, self.score_dict[player.playerName]['rank'])
+    #                 if self.score_dict[player.playerName]['rank'] not in  self.not_playing_list and  \
+    #                    int(utils.formatRank(self.score_dict[player.playerName]['rank'])) == group_min:
+    #                     golfer_list.append(player.playerName)
+    #                     #score_list[str(player)] = int(calc_score.formatRank(str(self.score_dict[player.playerName]['rank'])))
+    #                 else:
+    #                     if self.score_dict[player.playerName]['rank'] in self.not_playing_list:
+    #                         group_cuts += 1
+    #            else:
+    #                 print (player, 'mot in dict')
+    #        print (optimal_dict)
+    #        optimal_dict[group.number] = {'golfer': golfer_list, 'rank': group_min, 'cuts': group_cuts, 'total_golfers': group.playerCnt}
 
-           optimal_dict[group.number] = {'golfer': golfer_list, 'rank': group_min, 'cuts': group_cuts, 'total_golfers': group.playerCnt}
-           
-
-
-           #cuts_dict[group] = group_cuts, group.playerCnt
-           #scores[group]= score_list
-           #score_list = {}
-           #total_score = 0
- 
-        # if len(scores) != 0:
-        #   for group, golfers in scores.items():
-        #       print (type(group), golfers)
-        #       try:
-        #           leader = (min(golfers, key=golfers.get))
-        #           total_score += golfers.get(leader)
-        #           min_score[group.number] = \
-        #               {'golfer': leader, 'rank': golfers.get(leader), 'cuts': cuts_dict.get(group)[0], 'total_golfers': cuts_dict.get(group)[1]}
-        #       except Exception as e:
-        #           print ('optimal scores exception', e)
-        #           min_score[group.number] = "There was none!", None
-
-        return json.dumps(optimal_dict)
-        #return min_score, total_score, cuts_dict
+    #     return json.dumps(optimal_dict)
         
 
 

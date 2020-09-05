@@ -22,5 +22,18 @@ class Bonus(object):
 
     def create_bd(self):
         pass
-        #bd = BonusDetails()
         
+    def winner(self):
+        pass
+
+    def no_cut(self):
+        pass
+
+    def major(self):
+        pass
+
+    def best_in_group(self):    
+        pass
+    
+    def playoff_loss(self):
+        pass

@@ -17,6 +17,7 @@
 </label>
 
 <div id='prior-results'></div>
+<p hidden id='tournament_key'>{{tournament.pk}}</p>
 
 <!-- <script type="text/babel" src="{%static 'test-app/src/prior_result.js'%}"></script> -->
 
@@ -45,7 +46,7 @@
         {%endif%}
 
         {% for group in ordered_field_list%}
-        <table class="table">
+        <table id='tbl-group-{{group.grouper.number}}' class="table">
           <th></th>
           <th>Group:  {{group.grouper.number}}
             {%if group.grouper.number == 6 and tournament.last_group_multi_pick%}
@@ -99,7 +100,7 @@
 <div id='pick-status'></div>
   <input type="hidden" name="userid" value="{{user.id}}">
   {%if not tournament.started or tournament.late_picks%}
-    <input id='sub_button' type="submit" class="btn btn-primary" value="Submit" >
+    <input id='sub_button' type="submit" class="btn btn-secondary" value="Submit" >
   {%endif%}
 
 </form>

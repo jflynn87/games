@@ -28,12 +28,29 @@ import json
 from golf_app import views, manual_score, scrape_scores, populateField, withdraw, scrape_scores_by_id
 
 
+t = Tournament.objects.get(season__current=True, pga_tournament_num='013')
+print (t.get_round())
+print (t.cut_num())
+print (t.get_cut_round())
+print (t.tournament_complete())
+exit()
 
+for t in Tournament.objects.filter(season__current=True, pga_tournament_num='013'):
 
-season = Season.objects.get(current=True)
+    for g in Group.objects.filter(tournament=t):
+        print (g)
+        print (g.min_score(), g.best_picks())
+
+exit()
 #print (season.get_total_points())
 
 #sorted(ts_dict.items(), key=lambda v: v[1].get('total_score'))
+
+#fields = BonusDetails._meta.get_fields()
+#print (type(fields), len(fields))
+#for f in fields:
+#    print (f)
+#exit()
 
 for t in Tournament.objects.filter(season=season):
     field_list = []

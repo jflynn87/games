@@ -18,8 +18,8 @@ def formatRank(rank):
     elif rank in  ['', '--', None]:
        return 0
     elif rank[0] != 'T':
-       return rank
+       return int(rank)
     elif rank[0] == 'T':
-       return rank[1:]
+       return int(rank[1:])
     else:
-       return rank
+       return int(rank)

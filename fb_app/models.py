@@ -24,7 +24,7 @@ class Week(models.Model):
     season = models.CharField(max_length=30, null=True)
     season_model = models.ForeignKey(Season, on_delete=models.CASCADE,null=True)
     week = models.PositiveIntegerField()
-    game_cnt = models.PositiveIntegerField()
+    game_cnt = models.PositiveIntegerField(null=True)
     current = models.BooleanField(default=False)
     late_picks = models.BooleanField(default=False)
 
@@ -32,21 +32,22 @@ class Week(models.Model):
         return str(self.week)
 
     def save(self, *args, **kwargs):
-        print ('model self', self)
-        print ('model kwargs', kwargs)
-        last_week = Week.objects.get(current=True)
-        if self.pk != None and last_week.started():
-            for league in League.objects.all():
-                scores = WeekScore()
-                calc_scores(scores, league, last_week)
+        if self.week != 1:
+            print ('model self', self)
+            print ('model kwargs', kwargs)
+            last_week = Week.objects.get(current=True)
+            if self.pk != None and last_week.started():
+                for league in League.objects.all():
+                    scores = WeekScore()
+                    calc_scores(scores, league, last_week)
 
-            if self.current==True:
-                last_week.current = False
-                last_week.save()
+                if self.current==True:
+                    last_week.current = False
+                    last_week.save()
         super(Week, self).save()
 
     def started(self):
-        print ('week started')
+        print ('week started check')
         if Games.objects.filter(week=self, qtr__isnull=False).exists():
             print ('true')
             return True

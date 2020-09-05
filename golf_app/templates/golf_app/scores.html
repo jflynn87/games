@@ -53,7 +53,11 @@
     <th>Player</th>
     <th>Bonus</th>
     {%for group in groups%}
+    {%if group.num_of_picks == 1%}
     <th>{{group.number}}</th>
+    {%else%}
+    <th id='multi-col'  data-picks={{group.num_of_picks}}>{{group.number}}</th>
+    {%endif%}
     {%endfor%}
   </thead>
 

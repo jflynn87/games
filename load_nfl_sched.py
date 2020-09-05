@@ -10,15 +10,19 @@ from bs4 import BeautifulSoup
 import urllib.request
 from datetime import datetime
 from selenium.webdriver import Chrome, ChromeOptions
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+
 
 
 
 def load_sched(year):
 
     #changing weeks to load preseason weeks (make week 0 and cnt 1)
-    week_cnt = 1
+    week_cnt = 2
     season = Season.objects.get(current=True)
-    while week_cnt < 2:
+    while week_cnt < 3:
         try:
             #html = urllib.request.urlopen("http://www.nfl.com/ajax/scorestrip?season=2019&seasonType=PRE&week=4")
             html = urllib.request.urlopen("http://www.nfl.com/ajax/scorestrip?season=" + str(year) + "&seasonType=REG&week=" + str(week_cnt))
@@ -28,10 +32,8 @@ def load_sched(year):
             week = Week()
             week.season = soup.find('gms').attrs['y']
             week.week = soup.find('gms').attrs['w']
-            #week.week = 0
             week.game_cnt = gm_cnt = len(soup.findAll('g'))
             week.current = False
-            #week.current = True
             week.season_model = season
             week.save()
 
@@ -65,45 +67,71 @@ def load_sched(year):
             print ('exception with nfl json', e)
                 
             try:
+                week, created = Week.objects.get_or_create(season=season, week=week_cnt)
+                #week.season = season.season
+                week.current = False
+                #week.current = True
+                week.season_model = season
+                #week.week = week_cnt
+                week.game_cnt = 0
+                week.save()
+
                 url = "https://www.nfl.com/schedules/2020/reg" + str(week_cnt) + "/"
 
                 game_dict = {}
                 options = ChromeOptions()
-                #options.add_argument("--headless")
+                options.add_argument("--headless")
                 options.add_argument("--disable-gpu")
                 driver = Chrome(options=options)
                     
                 driver.get(url)
-                game = driver.find_elements_by_class_name("nfl-c-matchup-strip")
-                            
-                for data in game:
-                    print ('--------------------------')
-                    teams = data.find_elements_by_class_name('nfl-c-matchup-strip__team-fullname')
-                    away = teams[0].text
-                    home = teams[1].text
-                    print (Teams.objects.get(long_name=away))
-                    print (Teams.objects.get(long_name=home))
-                    time = data.find_elements_by_class_name('nfl-c-matchup-strip__date-time')
-                    for t in time:
-                        print ('x', t.text)
+                #sleep.sleep(10)
+                #g = driver.find_elements_by_class_name("nfl-c-matchup-strip__left-area")
+                main = driver.find_element_by_id("main-content")
+                for section in main.find_elements_by_class_name('nfl-o-matchup-group'):
+                    date_t = section.find_element_by_class_name('d3-o-section-title').text.split(',')[1]
+                    month = date_t.split(' ')[1]
+                    day = date_t.split(' ')[2].strip('TH').strip('ND').strip('ST').strip('RD')
+                    game_dow = section.find_element_by_class_name('d3-o-section-title').text.split(',')[0]
+                    game_date = (str(month) + ' ' + str(day) + ', ' + str(season.season))
 
+                    for game_info in section.find_elements_by_class_name('nfl-c-matchup-strip__left-area'):
+                        teams = game_info.find_elements_by_class_name('nfl-c-matchup-strip__team-fullname')
+                        
+                        away = Teams.objects.get(long_name=(teams[0].get_attribute('innerHTML').lstrip().rstrip()))
+                        home = Teams.objects.get(long_name=(teams[1].get_attribute('innerHTML').lstrip().rstrip()))
+                        game_time = game_info.find_element_by_css_selector('p.nfl-c-matchup-strip__date-info')
+                        
+                        print ('teams ', home, away)
+                        print (len(game_time.text), game_time.text)
+
+                        game, created = Games.objects.get_or_create(week=week, home=home, away=away)
+                        game.week = week
+                        game.eid = str(week) + str(home) + str(away)
+                        game.away = away
+                        game.home = home
+                        game.date = datetime.strptime(game_date, '%B %d, %Y')
+                        game.time = str(game_time.text.split(' ')[0] + ' ' + game_time.text.split(' ')[1][:2]) 
+                        game.day = game_dow
+
+
+                        game.save()
+
+                week.game_cnt = Games.objects.filter(week=week).count()
+                week.save()
+                
             except Exception as e:
                 print ('exception with scrape', e)
             finally:
                 week_cnt +=1
                 driver.quit()
 
-
-
-
-
-
-
 if __name__ == '__main__':
     print ('populating script!')
     #clean_db()
     load_sched(2020)
     print ("Populating Complete!")
-    curr_week = Week.objects.get(current=True)
-    print (Games.objects.filter(week__season_model__current=True, week__week__gt=curr_week.week).values('week__week').annotate(Count('week')))
+    #curr_week = Week.objects.get(current=True)
+    #print (Games.objects.filter(week__season_model__current=True, week__week__gt=curr_week.week).values('week__week').annotate(Count('week')))
+    print (Games.objects.filter(week__season_model__current=True).values('week__week').annotate(Count('week')))
 
