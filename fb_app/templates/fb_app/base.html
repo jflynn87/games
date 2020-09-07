@@ -56,12 +56,12 @@
           {%if user.is_superuser%}
           <li class="nav-item btn btn-outline-success"> <a class="navbar-link" href="{% url 'fb_app:fools' %} ">FF Scores</a> </li>
           {%endif%}
-          {% if user.is_authenticated %}
-          <li class="nav-item btn btn-outline-success"> <a class="navbar-link" href="{% url 'logout' %}">Logout</a> </li>
+          <!-- {% if user.is_authenticated %}
+          <li class="nav-item btn btn-outline-success"> <a class="navbar-link" href="{% url 'main_app:logout' %}">Logout</a> </li>
           {%else%}
-          <li class="nav-item btn btn-outline-success"> <a class="navbar-link" href="{% url 'login' %}"> <span class="glyphicon glyphicon-user"></span>Login</a></li>
+          <li class="nav-item btn btn-outline-success"> <a class="navbar-link" href="{% url 'main_app:login' %}"> <span class="glyphicon glyphicon-user"></span>Login</a></li>
           {%endif%}
-
+ -->
         </ul>
       </div>
       </nav>

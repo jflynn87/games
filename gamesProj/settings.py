@@ -59,6 +59,7 @@ INSTALLED_APPS = [
     'golf_app',
     'run_app',
     'port_app',
+    'main_app',
     ]
 
 
@@ -188,7 +189,7 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = 'en-us'
 
-#TIME_ZONE = 'America/Los_Angeles'
+#TIME_ZONE = 'America/New_York'
 TIME_ZONE = 'UTC'
 
 USE_I18N = True

@@ -149,6 +149,12 @@ class Score(object):
         print (self.score_dict)
         #print ('round', self.get_round())
         print ('update scores dict end')
+        for user in self.tournament.season.get_users():
+            if BonusDetails.objects.filter(user=User.objects.get(pk=user.get('user')), tournament=self.tournament).exists():
+                bonus = BonusDetails.objects.get(user=User.objects.get(pk=user.get('user')), tournament=self.tournament)
+                bonus.best_in_group = 0
+                bonus.save()
+
         for pick in Picks.objects.filter(playerName__tournament=self.tournament):
             try:
                 if self.score_dict.get(pick.playerName.playerName).get('rank') == "CUT":
@@ -201,6 +207,13 @@ class Score(object):
                 bd.winner_bonus = 50 + (pick.playerName.group.number*2)
                 bd.save()
 
+            if pick.best_in_group() and not PickMethod.objects.filter(user=pick.user, method=3, tournament=pick.playerName.tournament).exists():
+                print ('best in group', pick.playerName)
+                bd, created = BonusDetails.objects.get_or_create(user=pick.user, tournament=pick.playerName.tournament)
+                bd.best_in_group_bonus = bd.best_in_group_bonus + 10
+                bd.save()
+                
+
         print ('end update_scores', datetime.now())
         return
 
@@ -225,7 +238,8 @@ class Score(object):
                     bd.cut_bonus = 0
                 ts_dict[ts.user.username] = {'total_score': ts.score, 'cuts': ts.cut_count, \
                     'msg': message, 'winner_bonus': bd.winner_bonus, 'major_bonus': bd.major_bonus, \
-                    'cut_bonus': bd.cut_bonus} 
+                    'cut_bonus': bd.cut_bonus, 'playoff_bonus': db.playoff_bonus, \
+                    'best_in_group': db.best_in_group } 
             sorted_ts_dict = sorted(ts_dict.items(), key=lambda v: v[1].get('total_score'))
             return json.dumps(dict(sorted_ts_dict))
        
@@ -290,63 +304,15 @@ class Score(object):
                 bd, created = BonusDetails.objects.get_or_create(user=pick.user, tournament=pick.playerName.tournament)
                 bd.winner_bonus = 50 + (pick.playerName.group.number*2)
                 bd.save()
-
             
-    # def get_round(self):
-    #     round = 0
-    #     if self.tournament.complete:
-    #         return 4
-        
-    #     for stats in self.score_dict.values():
-    #         print (stats)
-    #         if len(stats.get('thru')) > 3:
-    #             #print ('len', stats)
-    #             continue
-    #         if stats.get('thru')[0] != "F" and stats.get('rank') not in self.not_playing_list:
-    #             if stats.get('r1')  == '--':
-    #                 return 1
-    #             if stats.get('r2') == '--':
-    #                return 2
-    #             elif stats.get('r3') == '--':
-    #                    return 3
-    #             elif  stats.get('r4') == '--':
-    #                    print ('get round - round 4')
-    #                    return 4
-    #         elif stats.get('thru')[0] == 'F' and stats.get('rank') not in self.not_playing_list:
-    #             if stats.get('r2') == '--':
-    #                 return 2
-    #             elif stats.get('r3') == '--':
-    #                 return 3
-    #             elif stats.get('r4') == '--':
-    #                 return 4
-    #             else:
-    #                 return 4
-    #         else:
-    #             return 0
-    #     print ('exit get_round', round)
-    #     return round
 
+    def playoff_bonus(self):
+        pass
 
-    # def get_cut_num(self):
-    
-    #     if not self.tournament.has_cut:
-    #         return len([x for x in self.score_dict.values() if x['rank'] not in ['WD']]) + 1
-    #     round = self.get_cut_round()
-    #     #round = self.get_round()
-    #     #after cut WD's
-    #     #commented for rerun, but do i need the if here?  should not get here normally for old tournament?
-    #     #if self.tournament.current:  wd = len([x for x in self.score_dict.values() if x['rank'] == 'WD' and x['r'+str(round+1)] != '--']) 
-        
-    #     ##Not working if WD is before cut
-    #     wd = len([x for x in self.score_dict.values() if x['rank'] == 'WD' and x['r'+str(round+1)] != '--']) 
-        
-    #     for v in self.score_dict.values():
-    #         if v['rank'] == "CUT":
-    #             return len([x for x in self.score_dict.values() if x['rank'] not in ['CUT', 'WD']]) + wd + 1
-    #     if self.get_round() != 4 and len(self.score_dict.values()) >65:
-    #         return 66
-    #     else:
-    #         return len([x for x in self.score_dict.values() if x['rank'] not in ['CUT','WD']]) + wd + 1
+    def no_cut_bonus(self):
+        pass
+   
+
 
 
     def get_leader(self):
@@ -373,13 +339,6 @@ class Score(object):
                 return self.tournament.leaders
             else: return json.dumps('')
 
-    # def tournament_complete(self):
-    #     for v in self.score_dict.values():
-    #         if (v['rank'] not in self.not_playing_list and \
-    #             v['r4'] == "--") or v['rank']  == "T1":
-    #             return False
-    #     if self.get_round() == 4: 
-    #         return True
 
     def get_wd_score(self, pick):
         score = self.score_dict.get(pick.playerName.playerName)
@@ -397,44 +356,5 @@ class Score(object):
             return self.get_cut_round()
         else:
             return len([x for x in self.score_dict.values() if x['rank'] not in self.not_playing_list]) + 1
-
-
-    # def get_cut_round(self):
-    #     for data in self.score_dict.values():
-    #         if data.get('rank') == "CUT":
-    #             if data['r3'] == '--':
-    #                 return 2
-    #             elif data['r4'] == "--": 
-    #                 return 3
-    #     return 2
-
-    
-    # def optimal_picks(self):
-
-    #     optimal_dict = {}
-       
-    #     for group in Group.objects.filter(tournament=self.tournament):
-    #        group_cuts = 0
-    #        golfer_list = []
-    #        group_min = group.min_score()
-    #        print ('group: ', group, 'min', group_min)
-
-    #        for player in Field.objects.filter(tournament=self.tournament, group=group):
-    #            if player.playerName in self.score_dict.keys():  #needed to deal wiht WD's before start of tourn.
-    #                 #print (player.playerName, self.score_dict[player.playerName]['rank'])
-    #                 if self.score_dict[player.playerName]['rank'] not in  self.not_playing_list and  \
-    #                    int(utils.formatRank(self.score_dict[player.playerName]['rank'])) == group_min:
-    #                     golfer_list.append(player.playerName)
-    #                     #score_list[str(player)] = int(calc_score.formatRank(str(self.score_dict[player.playerName]['rank'])))
-    #                 else:
-    #                     if self.score_dict[player.playerName]['rank'] in self.not_playing_list:
-    #                         group_cuts += 1
-    #            else:
-    #                 print (player, 'mot in dict')
-    #        print (optimal_dict)
-    #        optimal_dict[group.number] = {'golfer': golfer_list, 'rank': group_min, 'cuts': group_cuts, 'total_golfers': group.playerCnt}
-
-    #     return json.dumps(optimal_dict)
-        
 
 

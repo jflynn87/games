@@ -647,64 +647,64 @@ class AboutView(TemplateView):
     template_name = 'fb_app/about.html'
 
 
-@login_required
-def user_logout(request):
-    logout(request)
-    return HttpResponseRedirect(reverse('index'))
+# @login_required
+# def user_logout(request):
+#     logout(request)
+#     return HttpResponseRedirect(reverse('index'))
 
-@login_required
-def special(request):
-    return HttpResponse("You are logged in!")
-
-
-def register(request):
-    registered = False
-
-    if request.method == "POST":
-        user_form = UserForm(data=request.POST)
+# @login_required
+# def special(request):
+#     return HttpResponse("You are logged in!")
 
 
-        if user_form.is_valid():
-            user = user_form.save()
-            user.set_password(user.password)
-            user.save()
+# def register(request):
+#     registered = False
 
-            registered = True
-        else:
-            print(user_form.errors)
-
-    else:
-        user_form = UserForm()
+#     if request.method == "POST":
+#         user_form = UserForm(data=request.POST)
 
 
-    return render(request,'fb_app/registration.html',
-                            {'user_form': user_form,
-                             'registered': registered})
+#         if user_form.is_valid():
+#             user = user_form.save()
+#             user.set_password(user.password)
+#             user.save()
 
-def user_login(request):
+#             registered = True
+#         else:
+#             print(user_form.errors)
 
-    if request.method == "POST":
-        username = request.POST.get('username')
-        password = request.POST.get('password')
+#     else:
+#         user_form = UserForm()
 
-        user = authenticate(username=username,password=password)
 
-        if user:
-            if user.is_active:
-                login(request, user)
-                #if Picks.objects.filter(user=user):
-                #    return HttpResponseRedirect(reverse('fb_app:index'))
-                #else:
-                return HttpResponseRedirect(reverse('fb_app:games_list'))
-            else:
-                return HttpResponse("Your account is not active")
-        else:
-            print ("someone tried to log in and failed")
-            #print ("Username: {} and".format(username))
-            print ("Username:", username)
-            return HttpResponse("invalid login details supplied")
-    else:
-        return render(request, 'fb_app/login.html', {})
+#     return render(request,'fb_app/registration.html',
+#                             {'user_form': user_form,
+#                              'registered': registered})
+
+# def user_login(request):
+
+#     if request.method == "POST":
+#         username = request.POST.get('username')
+#         password = request.POST.get('password')
+
+#         user = authenticate(username=username,password=password)
+
+#         if user:
+#             if user.is_active:
+#                 login(request, user)
+#                 #if Picks.objects.filter(user=user):
+#                 #    return HttpResponseRedirect(reverse('fb_app:index'))
+#                 #else:
+#                 return HttpResponseRedirect(reverse('fb_app:games_list'))
+#             else:
+#                 return HttpResponse("Your account is not active")
+#         else:
+#             print ("someone tried to log in and failed")
+#             #print ("Username: {} and".format(username))
+#             print ("Username:", username)
+#             return HttpResponse("invalid login details supplied")
+#     else:
+#         return render(request, 'fb_app/login.html', {})
 
 
 class AllTime(TemplateView):

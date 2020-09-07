@@ -18,19 +18,25 @@ from django.urls import path
 from django.conf.urls import include, url
 from golf_app import views as golf_views
 from fb_app import views
-from main import views as main_views
+from main_app import views as main_views
 from django.conf import settings
-from django.contrib.auth import views as auth_views
+#from django.contrib.auth import views as auth_views
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     url(r'^$', main_views.index,name='index'),
-    url(r'^register/$',main_views.register,name='register'),
+    #url(r'^register/$',main_views.register,name='register'),
+    #url(r'^', include('django.contrib.auth.urls')),
+    url(r'^signup/$', main_views.SignUp.as_view(),name='signup'),
+    #url(r'^login/$', auth_views.LoginView.as_view(template_name='main_app/templates/login.html'),name='login'),
+    #url(r'^logout/$', auth_views.LogoutView.as_view(),name='logout'),
     url(r'^fb_app/', include('fb_app.urls',namespace='fb_app')),
     url(r'^golf_app/', include('golf_app.urls',namespace='golf_app')),
     url(r'^run_app/', include('run_app.urls',namespace='run_app')),
     url(r'^port_app/', include('port_app.urls',namespace='port_app')),
-    url(r'^', include('django.contrib.auth.urls')),
+    url(r'^main_app/', include('main_app.urls',namespace='main_app')),
+    path('accounts/', include('django.contrib.auth.urls')),
+    #url(r'^', include('django.contrib.auth.urls')),
     #url(r'^api-auth/', include('rest_framework.urls')),
 
 

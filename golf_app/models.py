@@ -268,7 +268,7 @@ class Tournament(models.Model):
            group_cuts = 0
            golfer_list = []
            group_min = group.min_score()
-           print ('group: ', group, 'min', group_min)
+           #print ('group: ', group, 'min', group_min)
 
            for player in Field.objects.filter(tournament=self, group=group):
                if player.playerName in score_dict.keys():  #needed to deal wiht WD's before start of tourn.
@@ -282,7 +282,7 @@ class Tournament(models.Model):
                             group_cuts += 1
                else:
                     print (player, 'mot in dict')
-           print (optimal_dict)
+           #print (optimal_dict)
            optimal_dict[group.number] = {'golfer': golfer_list, 'rank': group_min, 'cuts': group_cuts, 'total_golfers': group.playerCnt}
            
         return json.dumps(optimal_dict)
@@ -480,6 +480,13 @@ class Picks(models.Model):
         else:
             return False
 
+    def best_in_group(self):
+        
+        if self.playerName.playerName in self.playerName.group.best_picks():
+            return True
+        else:
+            return False
+
 
 class PickMethod(models.Model):
     CHOICES = (('1', 'player'), ('2', 'random'), ('3', 'auto'))
@@ -522,6 +529,9 @@ class BonusDetails(models.Model):
     winner_bonus = models.IntegerField(default=0)
     cut_bonus = models.IntegerField(default=0)
     major_bonus = models.IntegerField(default=0)
+    playoff_bonus = models.BigIntegerField(default=0)
+    best_in_group_bonus = models.BigIntegerField(default=0)
+
 
     def __str__(self):
         return str(self.user)

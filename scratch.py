@@ -24,6 +24,12 @@ from linebot import LineBotApi
 from linebot.models import TextSendMessage
 from linebot.exceptions import LineBotApiError
 
+
+for game in Games.objects.filter(week__season_model__current=True):
+    print (game.date)
+
+exit()
+
 try:
     url = "https://www.nfl.com/schedules/2020/reg15/"
 

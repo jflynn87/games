@@ -31,9 +31,9 @@
         <nav class="navbar navbar-default navbar-left">
           <ul class='navbar nav'>
             {% if user.is_authenticated %}
-            <li> <a class="navbar-link" href="{% url 'logout' %}">Logout</a> </li>
+            <li> <a class="navbar-link" href="{% url 'main_app:logout' %}">Logout</a> </li>
             {%else%}
-            <li> <a class="navbar-link" href="{% url 'login' %}"> <span class="glyphicon glyphicon-user">Login</span></a> </li>
+            <li> <a class="navbar-link" href="{% url 'main_app:login' %}"> <span class="glyphicon glyphicon-user">Login</span></a> </li>
             {%endif%}
           </ul>
         </nav>

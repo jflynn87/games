@@ -8,7 +8,7 @@ from django.db.models import Count
 import urllib3
 from bs4 import BeautifulSoup
 import urllib.request
-from datetime import datetime
+from datetime import datetime, timezone
 from selenium.webdriver import Chrome, ChromeOptions
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
@@ -22,7 +22,7 @@ def load_sched(year):
     #changing weeks to load preseason weeks (make week 0 and cnt 1)
     week_cnt = 1
     season = Season.objects.get(current=True)
-    while week_cnt < 3:
+    while week_cnt < 2:
         try:
             #html = urllib.request.urlopen("http://www.nfl.com/ajax/scorestrip?season=2019&seasonType=PRE&week=4")
             html = urllib.request.urlopen("http://www.nfl.com/ajax/scorestrip?season=" + str(year) + "&seasonType=REG&week=" + str(week_cnt))
@@ -102,17 +102,29 @@ def load_sched(year):
                         away = Teams.objects.get(long_name=(teams[0].get_attribute('innerHTML').lstrip().rstrip()))
                         home = Teams.objects.get(long_name=(teams[1].get_attribute('innerHTML').lstrip().rstrip()))
                         game_time = game_info.find_element_by_css_selector('p.nfl-c-matchup-strip__date-info')
+                        #tz = game_info.find_element_by_class_name('nfl-c-matchup-strip__date=timezone')
+                        print ('GI', game_info.text.split(' ')[1][3:])
+                        print ('GI', game_info.text.split(' ')[2])
+                        print ('GI', game_info.text.split(' ')[3])
+                        tz = game_time.text.split(' ')[1][3] + game_time.text.split(' ')[2][0] + game_time.text.split(' ')[3][0]
+                        print ('tz', tz)
                         
                         print ('teams ', home, away)
-                        print (len(game_time.text), game_time.text)
+                        #print (len(game_time.text), game_time.text)
 
                         game, created = Games.objects.get_or_create(week=week, home=home, away=away)
                         game.week = week
                         game.eid = str (season.season) + str(week) + str(home) + str(away)
                         game.away = away
                         game.home = home
+                        game.time = str(game_time.text.split(' ')[0] + ' ' + game_time.text.split(' ')[1][:2] + ' ' + tz) 
+                        game_time = str(game_time.text.split(' ')[0] + ' ' + game_time.text.split(' ')[1][:2]) 
                         game.date = datetime.strptime(game_date, '%B %d, %Y')
-                        game.time = str(game_time.text.split(' ')[0] + ' ' + game_time.text.split(' ')[1][:2]) 
+                        print ('game tiem', game_time)
+                        tz_info = 'timezone' + '.' + tz
+                        #est_game_time = datetime.strptime(game_date + ' ' + game_time, '%B %d, %Y %H:%M %p').replace(tzinfo=timezone.utc).astimezone(tz=est)
+                        game.game_time = datetime.strptime(game_date + ' ' + game_time, '%B %d, %Y %H:%M %p')
+                        
                         game.day = game_dow
 
 
