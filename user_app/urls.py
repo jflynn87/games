@@ -2,10 +2,10 @@
 #from django.urls import path
 from django.conf.urls import include, url
 #from django.conf import settings
-from main_app import views
+from user_app import views
 from django.contrib.auth import views as auth_views
 
-app_name = 'main_app'
+app_name = 'user_app'
 
 urlpatterns = [
     #path('admin/', admin.site.urls),
@@ -13,7 +13,8 @@ urlpatterns = [
     #url(r'^', include('django.contrib.auth.urls')),
     #url(r'^register/$',main_views.register,name='register'),
     url(r'^signup/$', views.SignUp.as_view(),name='signup'),
-    url(r'^login/$', auth_views.LoginView.as_view(template_name='main_app/login.html'), name='login'),
+    url(r'^login/$', auth_views.LoginView.as_view(template_name='login.html'), name='login'),
+    #url(r'^accounts/login/$', auth_views.LoginView.as_view(template_name='user_app/login.html'), name='login'),
     url(r'^logout/$', auth_views.LogoutView.as_view(),name='logout'),
 #    url(r'^fb_app/', include('fb_app.urls',namespace='fb_app')),
 #    url(r'^golf_app/', include('golf_app.urls',namespace='golf_app')),

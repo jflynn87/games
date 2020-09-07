@@ -14,8 +14,8 @@ from django.contrib.auth.forms import UserCreationForm
 
 class SignUp(CreateView):
     form_class = UserCreationForm
-    success_url = reverse_lazy('main_app:login')
-    template_name = 'main_app/signup.html'
+    success_url = reverse_lazy('login')
+    template_name = 'user_app/signup.html'
 
 # def user_login(request):
 

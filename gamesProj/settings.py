@@ -59,7 +59,7 @@ INSTALLED_APPS = [
     'golf_app',
     'run_app',
     'port_app',
-    'main_app',
+    'user_app',
     ]
 
 

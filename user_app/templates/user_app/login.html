@@ -1,0 +1,27 @@
+{%extends "base.html"%}
+{%load bootstrap%}
+
+
+{%block tittle_block%}
+  <title>Login - Games</title>
+{%endblock%}
+
+
+{%block body_block%}
+<div class="container">
+  <h1>Log In</h1>
+  
+  <form method="POST">
+    {%csrf_token%}
+    {{form|bootstrap}}
+    <input type="submit" class="btn btn-primary" value="Login">
+  </form>
+  <br>
+  <p><a href="{% url 'user_app:signup' %}"> <button class="btn btn-primary">Register</button></a></p>
+  <p><a href="{% url 'password_reset' %}"> <button class="btn btn-primary">Reset password</button></a></p> 
+
+
+</div>
+
+
+{%endblock%}
