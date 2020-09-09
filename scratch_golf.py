@@ -28,6 +28,10 @@ import json
 from golf_app import views, manual_score, scrape_scores, populateField, withdraw, scrape_scores_by_id
 
 
+
+field = populateField.get_worldrank()
+print ('1', field['Graham Delaet'])
+exit()
 #t = Tournament.objects.get(season__current=True, pga_tournament_num='013')
 t = Tournament.objects.get(current=True)
 print (t.get_round())

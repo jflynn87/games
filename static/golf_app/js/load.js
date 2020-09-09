@@ -100,6 +100,8 @@ function build_score_tbl(data) {
   var scores = $.parseJSON((data['scores']))
   var season_totals = $.parseJSON(data['season_totals'])
 
+  console.log(optimal_data[10])
+
   $('#det-list table').append('<thead style="background-color:lightblue">' + '<tr>' + '<th> Tournament Scores  </th>' + 
     '<th>' + '</th>' + '<th>' + '<a href="#"> <button> return to top</button> </a>' + '</th>' +  '<th>' + '</th>' + '<th>' + '</th>' + '<th>' + '</th>' +
     '<th>' + '</th>' + '<th>' + '</th>' + '<th>' + '</th>' + '<th>' + '</th>' + 
@@ -180,9 +182,9 @@ function build_score_tbl(data) {
 
     //<th>OWGR / <span>  <a href="#" data-toggle="tooltip" title="Only available for golfers who were picked">Prior Result <i class="fa fa-info-circle"></i></a> </span>
     //console.log(index[0]) 
-    //console.log(p, $(this)[0]['pick'], $.inArray($(this)[0]['pick']))
+    //console.log(p, $(this)[0]['pick'], optimal_data[index[0]]['golfer'], $.inArray($(this)[0]['pick'], optimal_data[index]['golfer']), 'idx: ', index)
     //use 0 of the index to strip the extra chars in multi pick groups
-    if ($.inArray($(this)[0]['pick'], optimal_data[index[0]]['golfer']) !== -1) {$('#' + p + $(this)[0]['pick'].replace(/ +?/g, '')).addClass('best')} 
+    if ($.inArray($(this)[0]['pick'], optimal_data[index]['golfer']) !== -1) {$('#' + p + $(this)[0]['pick'].replace(/ +?/g, '')).addClass('best')} 
   })}) 
  
 

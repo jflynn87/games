@@ -27,6 +27,8 @@ class Week(models.Model):
     game_cnt = models.PositiveIntegerField(null=True)
     current = models.BooleanField(default=False)
     late_picks = models.BooleanField(default=False)
+    set_started = models.BooleanField(default=False)
+    set_not_started = models.BooleanField(default=False)
 
     def __str__(self):
         return str(self.week)
@@ -48,6 +50,12 @@ class Week(models.Model):
 
     def started(self):
         print ('week started check')
+        if self.set_started:
+            print ('manually set started')
+            return True
+        if self.set_not_started:
+            print ('manually set not started')
+            return False
         if Games.objects.filter(week=self, qtr__isnull=False).exists():
             print ('true')
             return True
@@ -277,9 +285,7 @@ def calc_scores(self, league, week, loser_list=None, proj_loser_list=None):
             #print (data)
         except Exception as e:
             #use for testing
-            print ('score file using local', e)
-            with open ('c:/users/john/pythonProjects/games/gamesProj/fb_app/nfl_scores.json') as f:
-               data = json.load(f)
+            print ('need to figure out how to do scores!')            
 
         try:
                 for score in Games.objects.filter(week=week).exclude(final=True):

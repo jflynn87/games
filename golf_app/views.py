@@ -298,7 +298,10 @@ def setup(request):
 
     if request.method == "GET":
         if request.user.is_superuser:
-            t = Tournament.objects.get(current=True)
+            if Tournament.objects.filter(current=True).exists():
+                t = Tournament.objects.get(current=True)
+            else:
+                t = None
             json_url = 'https://statdata.pgatour.com/r/current/message.json'
             #print (json_url)
 

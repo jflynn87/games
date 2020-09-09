@@ -151,8 +151,9 @@ class Score(object):
         print ('update scores dict end')
         for user in self.tournament.season.get_users():
             if BonusDetails.objects.filter(user=User.objects.get(pk=user.get('user')), tournament=self.tournament).exists():
+                print ('----------------------reset best in group----------------')
                 bonus = BonusDetails.objects.get(user=User.objects.get(pk=user.get('user')), tournament=self.tournament)
-                bonus.best_in_group = 0
+                bonus.best_in_group_bonus = 0
                 bonus.save()
 
         for pick in Picks.objects.filter(playerName__tournament=self.tournament):
@@ -208,7 +209,7 @@ class Score(object):
                 bd.save()
 
             if pick.best_in_group() and not PickMethod.objects.filter(user=pick.user, method=3, tournament=pick.playerName.tournament).exists():
-                print ('best in group', pick.playerName)
+                #print ('best in group', pick.playerName)
                 bd, created = BonusDetails.objects.get_or_create(user=pick.user, tournament=pick.playerName.tournament)
                 bd.best_in_group_bonus = bd.best_in_group_bonus + 10
                 bd.save()

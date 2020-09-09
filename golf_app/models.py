@@ -98,7 +98,7 @@ class Tournament(models.Model):
         winning_score= TotalScore.objects.filter(tournament=self).aggregate(Min('score'))
         
         if TotalScore.objects.filter(tournament=self, user=user, score=winning_score.get('score__min')).exists():
-            print ('true', TotalScore.objects.filter(tournament=self, user=user, score=winning_score.get('score__min')))
+            print ('winning picks', TotalScore.objects.filter(tournament=self, user=user, score=winning_score.get('score__min')))
             return True
         else:
             return False
@@ -153,7 +153,7 @@ class Tournament(models.Model):
         max = max_group.get('number__max')
         random_picks = []
         for group in Group.objects.filter(tournament=self):
-            print ('max', group, group.num_of_picks(), list(Field.objects.filter(tournament=self, group=group, withdrawn=False)))
+            #print ('max', group, group.num_of_picks(), list(Field.objects.filter(tournament=self, group=group, withdrawn=False)))
             if group.num_of_picks() >  1:
                 for r in random.sample(list(Field.objects.filter(tournament=self, group=group, withdrawn=False)), group.num_of_picks()):
                     random_picks.append(r)
@@ -230,7 +230,7 @@ class Tournament(models.Model):
         score_dict = sd.sorted_dict()
 
         for stats in score_dict.values():
-            print (stats)
+            #print (stats)
             if len(stats.get('thru')) > 3:
                 #print ('len', stats)
                 continue
@@ -407,16 +407,19 @@ class Field(models.Model):
             return s.score
 
     def handicap(self):
-       # print((Field.objects.filter(tournament=self.tournament).count() * .14))
-        if round(self.currentWGR*.01) < (Field.objects.filter(tournament=self.tournament).count() * .14):
+        #print ('handicap:', self.playerName, self.currentWGR)
+        
+        #print((Field.objects.filter(tournament=self.tournament).count() * .14))
+        if round(self.currentWGR*.01) < (Field.objects.filter(tournament=self.tournament).count() * .13):
             return int(round(self.currentWGR*.01))
-        elif self.currentWGR == 9999:
-            max = Field.objects.filter(tournament=self.tournament).exclude(currentWGR=9999).aggregate(Max('currentWGR'))
-            if max.get('currentWGR__max') < (Field.objects.filter(tournament=self.tournament).count() * .14):
-                return int(max.get('currentWGR__max'))
+        #elif self.currentWGR == 9999:
+        #    max = Field.objects.filter(tournament=self.tournament).exclude(currentWGR=9999).aggregate(Max('currentWGR'))
+        #    print ('max: ', max, max.get('currentWGR__max'))
+        #    if max.get('currentWGR__max') < (Field.objects.filter(tournament=self.tournament).count() * .14):
+        #        return int(max.get('currentWGR__max'))
 
         #print ('----------- retruning field *.14')
-        return round(Field.objects.filter(tournament=self.tournament).count() * .14)
+        return round(Field.objects.filter(tournament=self.tournament).count() * .13)
 
     def rank_as_int(self):
         if type(self.rank) is int:

@@ -42,7 +42,8 @@ def get_pga_worldrank():
             player = (row.find('td', {'class': 'player-name'}).text).strip('\n')
             rank = row.find('td').text.strip('\n').strip(' ')
             last_week=  row.find('td', {'class': 'hidden-print hidden-small hidden-medium'}).text.strip('\n')
-            ranks[player.capitalize()] = [int(rank), int(last_week), 0]
+            #ranks[player.capitalize()] = [int(rank), int(last_week), 0]
+            ranks[player] = [int(rank), int(last_week), 0]
         except Exception as e:
             print('exception 2', e)
 
@@ -82,13 +83,14 @@ def get_worldrank():
                 if i == 3:
                     break
             player = (row.find('td', {'class': 'name'}).text).replace('(Am)','').replace(' Jr','').replace('(am)','')
-            ranks[player.capitalize()] = rank_list
+            #ranks[player.title()] = rank_list
+            ranks[player] = rank_list
         except Exception as e:
             print('exeption 1',row,e)
 
     print ('end owgr.com lookup')
     
-    print (ranks.get('Adam scott'))
+    #print (ranks.get('Mark anderson'))
     return ranks
 
 
@@ -184,7 +186,7 @@ def configure_groups(field_list):
         #should only be here for fields between 31 - 64 golfers
         #group_size = int(len(field_list)/10)
         group_size = 10
-        remainder = len(field_list) % (group_size)
+        remainder = len(field_list) % (group_size)     
         total_groups = (len(field_list)-(remainder))/group_size
 
         while group_cnt < total_groups:
@@ -200,7 +202,7 @@ def configure_groups(field_list):
 
 
     for k,v in groups.items():
-        Group.objects.get_or_create(tournament=Tournament.objects.get(current=True), number=k,playerCnt=v)[0]
+        Group.objects.get_or_create(tournament=Tournament.objects.get(current=True, season__current=True), number=k,playerCnt=v)[0]
 
     print (groups)
     return groups
@@ -231,12 +233,15 @@ def create_groups(tournament_number):
 
     print ('going to get_field')
     field = get_field(tournament_number)
-    #OWGR_rankings =  get_worldrank()
-    OWGR_rankings = {}
+    OWGR_rankings =  get_worldrank()
+    #OWGR_rankings = {}
+    print ('a')
     PGA_rankings = get_pga_worldrank()
+    print ('b')
     configure_groups(field)
-
+    print ('c')
     tournament = Tournament.objects.get(current=True, season=season)
+    print ('d')
 
     print (len(field))
 
@@ -254,11 +259,12 @@ def create_groups(tournament_number):
         # fix this to get 0 index of ranking list
         try:
             #rank = OWGR_rankings[player.capitalize()][0]
-            rank = OWGR_rankings[player.capitalize()]
+            #rank = OWGR_rankings[player.capitalize()]
+            rank = OWGR_rankings[player]
         except Exception:
             try:
                 print ('not in owgr', player)
-                rank = PGA_rankings[player.capitalize()]
+                rank = PGA_rankings[player]
             except Exception:
                 print ('no rank found',player)
                 rank = [9999, 9999, 9999]
@@ -343,7 +349,7 @@ def get_pick_link(playerID):
     return "https://pga-tour-res.cloudinary.com/image/upload/c_fill,d_headshots_default.png,f_auto,g_face:center,h_85,q_auto,r_max,w_85/headshots_" + playerID + ".png"
 
 def get_flag(golfer, golfer_data):
-    print ('get flag', golfer.lower(), golfer_data)
+    print ('get flag', golfer, golfer_data)
     golfer_obj, created = Golfer_obj = Golfer.objects.get_or_create(
     golfer_pga_num = golfer_data[1][1])
     if created:

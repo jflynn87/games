@@ -24,6 +24,33 @@ from linebot import LineBotApi
 from linebot.models import TextSendMessage
 from linebot.exceptions import LineBotApiError
 
+try:
+    url = "https://www.vegasinsider.com/nfl/odds/las-vegas/"
+
+    game_dict = {}
+    options = ChromeOptions()
+    options.add_argument("--headless")
+    options.add_argument("--disable-gpu")
+    driver = Chrome(options=options)
+        
+    driver.get(url)
+    #sleep.sleep(10)
+    #g = driver.find_elements_by_class_name("nfl-c-matchup-strip__left-area")
+    main = driver.find_element_ccs_selector("tbody.frodds-data-tbl")
+
+    for data in main:
+        print (data.text)
+
+except Exception as e:
+    print ('exception with scrape', e)
+finally:
+    week_cnt +=1
+    driver.quit()
+
+exit()
+
+
+
 
 for game in Games.objects.filter(week__season_model__current=True):
     print (game.date)

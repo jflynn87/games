@@ -438,11 +438,13 @@ class ScoresView(TemplateView):
                 print ('losers', loser_list)
                 print ('proj', proj_loser_list)
                 week_scores = WeekScore
-                scores = calc_scores(week_scores, league, week, loser_list, proj_loser_list)
+                scores = (None, None, None, None, None, None)
+                #scores = calc_scores(week_scores, league, week, loser_list, proj_loser_list)
             else:
                 print ("IN GET calling CALC scores", datetime.datetime.now())
                 week_scores = WeekScore
-                scores = calc_scores(week_scores, league, week)
+                #scores = calc_scores(week_scores, league, week)
+                scores = (None, None, None, None, None, None)
                 print ("BACK from calc scores", datetime.datetime.now())
 
 
@@ -462,13 +464,13 @@ class ScoresView(TemplateView):
             'week': week,
             'pending': pick_pending,
             'games': Games.objects.filter(week=week).order_by('eid'),
-            'scores': scores_list,
-            #'scores': WeekScore.objects.filter(week=week, player__league=league).order_by('player__name_id'),
-            'projected_ranks': projected_ranks,
-            'projected_scores': projected_scores,
-            'ranks': ranks,
-            'totals': total_score_list,
-            'season_ranks': season_ranks,
+            #'scores': scores_list,
+            
+            #'projected_ranks': projected_ranks,
+            #'projected_scores': projected_scores,
+            #'ranks': ranks,
+            #'totals': total_score_list,
+            #'season_ranks': season_ranks,
             'league': league
             })
 

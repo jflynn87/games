@@ -11,7 +11,7 @@ register = template.Library()
 
 @register.filter
 def check_final(qtr):
-    if qtr[0:5] in ['final', 'Final']:
+    if qtr != None and qtr[0:5] in ['final', 'Final']:
         return True
     else:
         return False
