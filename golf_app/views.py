@@ -503,6 +503,11 @@ class CheckStarted(APIView):
             print ('post', key)
 
             t = Tournament.objects.get(pk=key)
+
+            if t.set_notstarted:
+               return Response(json.dumps({'status': 'overrode to not started'}))
+
+
             if not t.started():
                 pga_web = scrape_scores.ScrapeScores(t)
                 score_dict = pga_web.scrape()
@@ -510,7 +515,7 @@ class CheckStarted(APIView):
                 #print ('start check sd', score_dict)
                 score = manual_score.Score(score_dict, t)
                 round = t.get_round()
-                #print('round before if', round)
+   
                 if round != None and round > 0:
                     score.update_scores()
                 t_status['status'] = tourn.started()

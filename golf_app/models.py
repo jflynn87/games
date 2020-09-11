@@ -311,17 +311,20 @@ class Group(models.Model):
         return str(self.number) + '-' + str(self.tournament)
 
     def min_score(self):
+        #print ('min score ', datetime.now(), self)
         min_score = 999  
         for score in Field.objects.filter(group=self).exclude(rank__in=["CUT", "WD", "DQ"]):
             if (score.rank_as_int() - score.handicap()) < min_score:
                 min_score = score.rank_as_int() - score.handicap()
                 #print (self, score.rank_as_int(), score.handicap())
+        #print ('end min score ', datetime.now(), self)
         return min_score
 
     def best_picks(self):
         best_list = []
+        min_score = self.min_score()
         for field in Field.objects.filter(group=self):
-            if (utils.formatRank(field.rank) - field.handicap()) == self.min_score():
+            if (utils.formatRank(field.rank) - field.handicap()) == min_score:
                 best_list.append(field.playerName)
         return best_list
 

@@ -93,7 +93,7 @@ var limit = 5;
 $('input.my-checkbox').on('change', function(evt) {
    if($("input[name='multi-group-6']:checked").length > limit) {
        this.checked = false;
-       alert (limit.toString() + ' picks already selected')
+       alert (limit.toString() + ' picks already selected.  Deselect a pick first to change your picks')
    }
    get_info(info)
 })

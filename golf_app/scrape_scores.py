@@ -104,6 +104,7 @@ class ScrapeScores(object):
                 f.write(json.dumps(score_dict))
                 f.close()
                 
+                print (score_dict)
                 return (score_dict)                
             else:
                 print ('scrape scores t mismatch', t, name)
