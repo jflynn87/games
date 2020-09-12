@@ -556,6 +556,15 @@ class TotalScore(models.Model):
         else:
             return False
 
+    def total_handicap(self):
+        handi = 0
+        for pick in Picks.objects.filter(playerName__tournament=self.tournament, user=self.user):
+            handi = handi + pick.playerName.handicap() 
+        return handi
+
+
+
+
 
 class mpScores(models.Model):
     bracket = models.CharField(max_length=5)

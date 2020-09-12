@@ -33,8 +33,12 @@ from golf_app import views, manual_score, scrape_scores, populateField, withdraw
 start = datetime.now()
 print (start)
 t = Tournament.objects.get(current=True)
-
-
+handi_d = {}
+for ts in TotalScore.objects.filter(tournament=t):
+    print (ts.user, ts.total_handicap())
+#print (handi_d)
+print (datetime.now() - start)
+exit()
 old_start = datetime.now()
 web1 = scrape_scores_picks.ScrapeScores(t).scrape()
 old_finish = datetime.now()

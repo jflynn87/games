@@ -125,7 +125,7 @@ function build_score_tbl(data) {
     if (total['msg']) {$('#totals' + p).append('<td>' + total["msg"] + '</td>') }
     else if (total['winner_bonus'] >0 || total['major_bonus'] > 0 || total['cut_bonus'] > 0 || total['best_in_group'] > 0  || total['playoff_bonus'] > 0) {
       var bonus_dtl = total['winner_bonus']  + total['major_bonus'] + total['cut_bonus'] + total['best_in_group'] + total['playoff_bonus']
-      $('#totals' + p).append('<td>' + '<span class="bonus">' + total['msg'] + bonus_dtl.toString() + 'points' + '</span>' + '</td>') }
+      $('#totals' + p).append('<td>' + total['msg'] + '<span class="bonus">' + '<p>' + 'h/c: ' + total['handicap'] + '</p>' + '<p>' +  'B: ' + bonus_dtl.toString() + '</p>' + '</span>' + '</td>') }
     else {$('#totals' + p).append('<td> </td>')}
 
   })
@@ -158,7 +158,7 @@ function build_score_tbl(data) {
       $('#tt-' + $(this)[0]['pick'].replace(/ +?/g, '') + '[data-toggle="tooltip"]').tooltip({trigger:"hover",
                                             delay:{"show":400,"hide":800}, "title": 'gross score: ' + $(this)[0]['gross_score']
                                             })
-      console.log($(this)[0]['today_score'], $(this)[0]['today_score'].length)                                            
+      
       if ($(this)[0]['today_score'] == 'CUT') {$('#' + p + $(this)[0]['pick'].replace(/ +?/g, '')).addClass('cut')}
     
     //console.log(p, $(this)[0]['pick'], optimal_data[index[0]]['golfer'], $.inArray($(this)[0]['pick'], optimal_data[index[0]]['golfer']), 'idx: ', index)
