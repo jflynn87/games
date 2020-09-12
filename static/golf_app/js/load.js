@@ -15,30 +15,7 @@ $(document).ready(function() {
         console.log('DB load success');
         build_score_tbl(json)
         console.log('first load duration: ', start, new Date()) 
-        //get_scores()
-/*         $.ajax({
-          type: "GET",
-          url: "/golf_app/get_scores/",
-          data: {'tournament' : $('#tournament_key').text()},
-          dataType: 'json',
-          success: function (json_update) {
-            console.log('second load connected', typeof(json_update), $.isEmptyObject(json_update))
-            if (!$.isEmptyObject(json_update)) {
-            
-            build_score_tbl(json_update) }
-            console.log('updated load duration: ', start, new Date()) 
-            var finish = new Date().toLocaleString()
-            $('#status').append(finish)
-            $('#status').attr('class', 'updated-status').text('score updated: ' + finish)
-            $('#time').hide()
-        
-                                                },
-          failure: function(json_update) {
-            console.log('fail');
-            console.log(json_update);
-          }
-        })
- */      },
+      },
       failure: function(json) {
         console.log('fail');
         console.log(json);
@@ -102,7 +79,7 @@ function build_score_tbl(data) {
   var scores = $.parseJSON((data['scores']))
   var season_totals = $.parseJSON(data['season_totals'])
 
-  console.log(optimal_data)
+  console.log(total_data)
 
   $('#det-list table').append('<thead style="background-color:lightblue">' + '<tr>' + '<th> Tournament Scores  </th>' + 
     '<th>' + '</th>' + '<th>' + '<a href="#"> <button> return to top</button> </a>' + '</th>' +  '<th>' + '</th>' + '<th>' + '</th>' + '<th>' + '</th>' +
@@ -146,8 +123,8 @@ function build_score_tbl(data) {
     $('#totals').append('<tr id=totals' + p + ' class=small>' + '<td>'+  p  + ' (' + season_totals[p]['diff'] +')'  + '</p>' + '<p>' +  total['total_score'] + ' / ' + total['cuts']  + '</td>'  + '</tr>')
     
     if (total['msg']) {$('#totals' + p).append('<td>' + total["msg"] + '</td>') }
-    else if (total['winner_bonus'] >0 || total['major_bonus'] > 0 || total['cut_bonus'] > 0) {
-      var bonus_dtl = total['winner_bonus']  + total['major_bonus'] + total['cut_bonus'] 
+    else if (total['winner_bonus'] >0 || total['major_bonus'] > 0 || total['cut_bonus'] > 0 || total['best_in_group'] > 0  || total['playoff_bonus'] > 0) {
+      var bonus_dtl = total['winner_bonus']  + total['major_bonus'] + total['cut_bonus'] + total['best_in_group'] + total['playoff_bonus']
       $('#totals' + p).append('<td>' + '<span class="bonus">' + total['msg'] + bonus_dtl.toString() + 'points' + '</span>' + '</td>') }
     else {$('#totals' + p).append('<td> </td>')}
 

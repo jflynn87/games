@@ -30,13 +30,43 @@ from golf_app import views, manual_score, scrape_scores, populateField, withdraw
 
 
 #t = Tournament.objects.get(season__current=True, pga_tournament_num='013')
+new_start = datetime.now()
 t = Tournament.objects.get(current=True)
+sd = ScoreDict.objects.get(tournament=t)
+
+#web = scrape_scores_by_id.ScrapeScores(t).scrape()
+#new_finish = datetime.now() 
+#print ('new: ', new_finish - new_start)
+
+old_start = datetime.now()
+web1 = scrape_scores.ScrapeScores(t).scrape()
+old_finish = datetime.now()
+
+print ('old: ', old_finish - old_start)
+#print ('new: ', new_finish - new_start)
+
+exit()
+
+scores = manual_score.Score(sd.data, t)
+scores.update_scores()
+
+for bd in BonusDetails.objects.filter(tournament=t):
+    print (bd.user, bd.best_in_group_bonus)
+
+print (scores.total_scores())
+
+
+exit()
+
+
+start = (datetime.now())
 optimal_picks  = json.loads(t.optimal_picks())
 print (type(optimal_picks), optimal_picks)
 for pick in Picks.objects.filter(playerName__tournament=t):
-    print (pick.playerName, ': ', optimal_picks.get(str(pick.playerName.group.number)).get('golfer'))
-print (datetime.now())
-exit()
+    if pick.playerName.playerName in optimal_picks.get(str(pick.playerName.group.number)).get('golfer'):
+        print (pick, ' in')
+    #print (pick.playerName, ': ', optimal_picks.get(str(pick.playerName.group.number)).get('golfer'))
+print (start - datetime.now()) 
 
 for t in Tournament.objects.filter(season__current=True, pga_tournament_num='013'):
 

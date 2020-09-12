@@ -323,7 +323,7 @@ class Group(models.Model):
     def best_picks(self):
         best_list = []
         min_score = self.min_score()
-        for field in Field.objects.filter(group=self):
+        for field in Field.objects.filter(group=self, score__le=self.tournament.cut_num()):
             if (utils.formatRank(field.rank) - field.handicap()) == min_score:
                 best_list.append(field.playerName)
         return best_list
@@ -410,18 +410,8 @@ class Field(models.Model):
             return s.score
 
     def handicap(self):
-        #print ('handicap:', self.playerName, self.currentWGR)
-        
-        #print((Field.objects.filter(tournament=self.tournament).count() * .14))
         if round(self.currentWGR*.01) < (Field.objects.filter(tournament=self.tournament).count() * .13):
             return int(round(self.currentWGR*.01))
-        #elif self.currentWGR == 9999:
-        #    max = Field.objects.filter(tournament=self.tournament).exclude(currentWGR=9999).aggregate(Max('currentWGR'))
-        #    print ('max: ', max, max.get('currentWGR__max'))
-        #    if max.get('currentWGR__max') < (Field.objects.filter(tournament=self.tournament).count() * .14):
-        #        return int(max.get('currentWGR__max'))
-
-        #print ('----------- retruning field *.14')
         return round(Field.objects.filter(tournament=self.tournament).count() * .13)
 
     def rank_as_int(self):
@@ -602,7 +592,7 @@ class ScoreDict(models.Model):
                 f = Field.objects.get(tournament=self.tournament, playerName=k)
                 v.update({'sort_rank': f.rank_as_int()})
             else:
-                if v.get('rank') != None: 
+                if v.get('rank') != None and v.get('rank') not in self.tournament.not_playing_list(): 
                     if type(v.get('rank')) == int:
                         v.update({'sort_rank': v.get('rank')})
                     else:

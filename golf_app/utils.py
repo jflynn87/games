@@ -23,3 +23,11 @@ def formatRank(rank):
        return int(rank[1:])
     else:
        return int(rank)
+
+def format_name(name):
+    '''take a name string and match pga conventions '''
+    if len(name.split(' ')) == 2:
+        return name
+    else:
+        print (name.split(' '))
+        return (name.strip(', Jr.').strip(',Jr ').strip(', Jr.').strip('(a)').strip(',').strip('Jr.'))
