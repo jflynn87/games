@@ -79,7 +79,7 @@ function build_score_tbl(data) {
   var scores = $.parseJSON((data['scores']))
   var season_totals = $.parseJSON(data['season_totals'])
 
-  console.log(total_data)
+  console.log(picks_data)
 
   $('#det-list table').append('<thead style="background-color:lightblue">' + '<tr>' + '<th> Tournament Scores  </th>' + 
     '<th>' + '</th>' + '<th>' + '<a href="#"> <button> return to top</button> </a>' + '</th>' +  '<th>' + '</th>' + '<th>' + '</th>' + '<th>' + '</th>' +
@@ -153,11 +153,13 @@ function build_score_tbl(data) {
     $('#totals' + p).append('<td id=' + p +  $(this)[0]['pick'].replace(/ +?/g, '') + '>' + '<span class=watermark>' + 
     '<p>' + p.substring(0, 4)  + ' : ' + index +  '</p>'  + '</span>' + '<p>' +  $(this)[0]['pick']  + '</p>' + '<p>' + $(this)[0]['score'] +
     '<span > <a id=tt-' + $(this)[0]['pick'].replace(/ +?/g, '') + ' href="#" data-toggle="tooltip" > <i class="fa fa-info-circle"></i> </a> </span>' +
-     '</p>' + '   ' +  format_move($(this)[0]['sod_position']) +  $(this)[0]['sod_position'] + '</p>' +  '</td>')
+     '</p>' +  $(this)[0]['toPar'] +  '   ' +  format_move($(this)[0]['sod_position']) +  $(this)[0]['sod_position'] + '</p>' +  '</td>')
      //console.log($('#tt-' + $(this)[0]['pick'].replace(/ +?/g, '') + '[data-toggle="tooltip"]'))
       $('#tt-' + $(this)[0]['pick'].replace(/ +?/g, '') + '[data-toggle="tooltip"]').tooltip({trigger:"hover",
                                             delay:{"show":400,"hide":800}, "title": 'gross score: ' + $(this)[0]['gross_score']
                                             })
+      console.log($(this)[0]['today_score'], $(this)[0]['today_score'].length)                                            
+      if ($(this)[0]['today_score'] == 'CUT') {$('#' + p + $(this)[0]['pick'].replace(/ +?/g, '')).addClass('cut')}
     
     //console.log(p, $(this)[0]['pick'], optimal_data[index[0]]['golfer'], $.inArray($(this)[0]['pick'], optimal_data[index[0]]['golfer']), 'idx: ', index)
     

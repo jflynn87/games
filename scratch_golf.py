@@ -25,22 +25,49 @@ from urllib.request import Request, urlopen
 from selenium import webdriver
 import urllib
 import json
-from golf_app import views, manual_score, scrape_scores, populateField, withdraw, scrape_scores_by_id
+from golf_app import views, manual_score, scrape_scores, populateField, withdraw, scrape_scores_picks
 
 
 
 #t = Tournament.objects.get(season__current=True, pga_tournament_num='013')
-new_start = datetime.now()
+start = datetime.now()
+print (start)
 t = Tournament.objects.get(current=True)
-sd = ScoreDict.objects.get(tournament=t)
+
+
+old_start = datetime.now()
+web1 = scrape_scores_picks.ScrapeScores(t).scrape()
+old_finish = datetime.now()
+
+print (old_finish - old_start)
+print (web1)
+exit()
+
+#score_dict = ScoreDict.objects.get(tournament=t)
+#print ('after sd: ', datetime.now() - start)
+
+score_start = datetime.now()
+scores = manual_score.Score(score_dict, t, 'json')
+ts = scores.total_scores()
+print ('total_score: ', datetime.now() - score_start)
+d = scores.get_picks_by_user() 
+
+optimal_start = datetime.now()
+optimal = t.optimal_picks()
+print ('optimal: ', datetime.now() - optimal_start)
+
+#scores_json = json.dumps(score_dict)
+season_start = datetime.now()
+totals = Season.objects.get(season=t.season).get_total_points()
+print ('season: ', datetime.now() - season_start)
+leaders = scores.get_leader()
+
+print ('verall: ', datetime.now() - start)
+
 
 #web = scrape_scores_by_id.ScrapeScores(t).scrape()
 #new_finish = datetime.now() 
 #print ('new: ', new_finish - new_start)
-
-old_start = datetime.now()
-web1 = scrape_scores.ScrapeScores(t).scrape()
-old_finish = datetime.now()
 
 print ('old: ', old_finish - old_start)
 #print ('new: ', new_finish - new_start)

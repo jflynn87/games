@@ -73,10 +73,7 @@ class ScrapeScores(object):
                     t.playoff = True
 
                 table = driver.find_element_by_id("stroke-play-container")
-                
-
                 for row in table.find_elements_by_class_name('line-row'):
-                    
                     n = row.find_element_by_class_name('player-name-col').text 
                     rank = row.find_element_by_class_name('position').text 
                     for e in row.find_elements_by_class_name('position-movement'): c = e.get_attribute('innerHTML')
@@ -90,22 +87,13 @@ class ScrapeScores(object):
                     score_dict[n] =  {'rank': rank, 'change': c, \
                                  'thru': thru, 'round_score': round_score, 'total_score': total_score , 'r1': round_list[0], 'r2': round_list[1], 'r3': round_list[2], 'r4': round_list[3]}
                     
-                    
-                #     try:
-                #        field = Field.objects.get(tournament=self.tournament, playerName=utils.format_name(n))
-                #        field.rank = rank         
-                #        field.save()
-                        
-                #     except Exception as e:
-                #        print ('in pga, not in field', n, e)
-                # print ('scrape scores dict', score_dict)
                 sd, creates = ScoreDict.objects.get_or_create(tournament=self.tournament)
                 sd.data = score_dict
                 sd.save()
-                f = open("score_dict.json", "w")
+                #f = open("score_dict.json", "w")
 
-                f.write(json.dumps(score_dict))
-                f.close()
+                #f.write(json.dumps(score_dict))
+                #f.close()
                 
                 print (score_dict)
                 return (score_dict)                

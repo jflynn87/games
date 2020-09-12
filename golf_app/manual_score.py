@@ -154,6 +154,7 @@ class Score(object):
         #make cut num 1 lookup on model
         cut_num = self.tournament.cut_num()
         optimal_picks = json.loads(self.tournament.optimal_picks())
+        round = self.tournament.get_round()
         print (optimal_picks)
 
         for user in self.tournament.season.get_users():
@@ -167,7 +168,7 @@ class Score(object):
             #print ('1 -', pick.playerName.playerName)
             try:
                 if self.score_dict.get(pick.playerName.playerName).get('rank') == "CUT":
-                    pick.score = self.tournament.cut_num() 
+                    pick.score = cut_num
                 elif self.score_dict.get(pick.playerName.playerName).get('rank') == "WD":
                     pick.score = self.get_wd_score(pick) 
                 else:
@@ -185,7 +186,7 @@ class Score(object):
                 sd.score=pick.score - pick.playerName.handicap()
                 sd.gross_score = pick.score
                 if self.score_dict.get(pick.playerName.playerName).get('rank') == "CUT" or \
-                    self.score_dict.get(pick.playerName.playerName).get('rank') == "WD" and self.get_round() < 3:
+                    self.score_dict.get(pick.playerName.playerName).get('rank') == "WD" and round < 3:
                     sd.today_score  = "CUT"
                     sd.thru  = "CUT"
                 elif self.score_dict.get(pick.playerName.playerName).get('rank') == "WD":
