@@ -261,6 +261,7 @@ class Tournament(models.Model):
     def optimal_picks(self):
         sd = ScoreDict.objects.get(tournament=self)
         score_dict = sd.sorted_dict()
+        cut_num = self.cut_num()
 
         optimal_dict = {}
        
@@ -272,14 +273,20 @@ class Tournament(models.Model):
 
            for player in Field.objects.filter(tournament=self, group=group):
                if player.playerName in score_dict.keys():  #needed to deal wiht WD's before start of tourn.
-                    #print (player.playerName, self.score_dict[player.playerName]['rank'])
-                    if score_dict[player.playerName]['rank'] not in  self.not_playing_list() and  \
-                       int(utils.formatRank(score_dict[player.playerName]['rank']) - player.handicap()) == group_min:
+                    #print (group, player.playerName, score_dict[player.playerName]['rank'])
+                    if (score_dict[player.playerName]['rank'] not in  self.not_playing_list() and  \
+                       int(utils.formatRank(score_dict[player.playerName]['rank']) - player.handicap()) == group_min) or \
+                       cut_num - player.handicap() == group_min:  
                         golfer_list.append(player.playerName)
+                     #   print (group, golfer_list)
                         #score_list[str(player)] = int(calc_score.formatRank(str(self.score_dict[player.playerName]['rank'])))
-                    else:
-                        if score_dict[player.playerName]['rank'] in self.not_playing_list():
-                            group_cuts += 1
+                    #elif cut_num - player.handicap() == group_min:
+                    #    print (player.playerName, 'elif')
+                    #    golfer_list.append(player.playerName)
+                    #else:
+                     #   print (player.playerName, 'failed optimal check')                      
+                    if score_dict[player.playerName]['rank'] in self.not_playing_list():
+                        group_cuts += 1
                else:
                     print (player, 'mot in dict')
            #print (optimal_dict)
@@ -312,10 +319,21 @@ class Group(models.Model):
 
     def min_score(self):
         #print ('min score ', datetime.now(), self)
+        score_dict = ScoreDict.objects.get(tournament=self.tournament)
+        cut_num = self.tournament.cut_num()
         min_score = 999  
-        for score in Field.objects.filter(group=self).exclude(rank__in=["CUT", "WD", "DQ"]):
-            if (score.rank_as_int() - score.handicap()) < min_score:
-                min_score = score.rank_as_int() - score.handicap()
+
+        for score in Field.objects.filter(group=self):
+            try:
+                if score_dict.data.get(score.playerName).get('rank') in self.tournament.not_playing_list():
+                    if cut_num - score.handicap() < min_score:
+                        min_score = cut_num - score.handicap()
+                elif utils.formatRank(score_dict.data.get(score.playerName).get('rank')) - score.handicap() < min_score:
+                    min_score = utils.formatRank(score_dict.data.get(score.playerName).get('rank')) - score.handicap()
+                #else:
+                #    print ('not min', score.playerName, score_dict.data.get(score.playerName).get('rank'), utils.formatRank(score_dict.data.get(score.playerName).get('rank')))
+            except Exception as e:
+                print (score.playerName, e, 'exclded from min score')
                 #print (self, score.rank_as_int(), score.handicap())
         #print ('end min score ', datetime.now(), self)
         return min_score

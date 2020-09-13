@@ -29,22 +29,25 @@ from golf_app import views, manual_score, scrape_scores, populateField, withdraw
 
 
 
-#t = Tournament.objects.get(season__current=True, pga_tournament_num='013')
-start = datetime.now()
-print (start)
 t = Tournament.objects.get(current=True)
-handi_d = {}
-for ts in TotalScore.objects.filter(tournament=t):
-    print (ts.user, ts.total_handicap())
-#print (handi_d)
-print (datetime.now() - start)
+old_start = datetime.now()
+#web1 = scrape_scores_picks.ScrapeScores(t).scrape()
+old_finish = datetime.now()
+
+sd = ScoreDict.objects.get(tournament=t)
+for group in Group.objects.filter(tournament=t):
+    print (group, group.min_score())
+#print (sd.data.get('Kevin Streelman'))
+ 
+start = datetime.now()
+print (t.optimal_picks())
 exit()
 old_start = datetime.now()
 web1 = scrape_scores_picks.ScrapeScores(t).scrape()
 old_finish = datetime.now()
 
 print (old_finish - old_start)
-print (web1)
+#print (web1)
 exit()
 
 #score_dict = ScoreDict.objects.get(tournament=t)

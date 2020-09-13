@@ -79,7 +79,7 @@ function build_score_tbl(data) {
   var scores = $.parseJSON((data['scores']))
   var season_totals = $.parseJSON(data['season_totals'])
 
-  console.log(picks_data)
+  console.log(total_data)
 
   $('#det-list table').append('<thead style="background-color:lightblue">' + '<tr>' + '<th> Tournament Scores  </th>' + 
     '<th>' + '</th>' + '<th>' + '<a href="#"> <button> return to top</button> </a>' + '</th>' +  '<th>' + '</th>' + '<th>' + '</th>' + '<th>' + '</th>' +
@@ -123,7 +123,7 @@ function build_score_tbl(data) {
     $('#totals').append('<tr id=totals' + p + ' class=small>' + '<td>'+  p  + ' (' + season_totals[p]['diff'] +')'  + '</p>' + '<p>' +  total['total_score'] + ' / ' + total['cuts']  + '</td>'  + '</tr>')
     
     if (total['msg']) {$('#totals' + p).append('<td>' + total["msg"] + '</td>') }
-    else if (total['winner_bonus'] >0 || total['major_bonus'] > 0 || total['cut_bonus'] > 0 || total['best_in_group'] > 0  || total['playoff_bonus'] > 0) {
+    else if (total['winner_bonus'] >0 || total['major_bonus'] > 0 || total['cut_bonus'] > 0 || total['best_in_group'] > 0  || total['playoff_bonus'] > 0 || total['handicap'] > 0) {
       var bonus_dtl = total['winner_bonus']  + total['major_bonus'] + total['cut_bonus'] + total['best_in_group'] + total['playoff_bonus']
       $('#totals' + p).append('<td>' + total['msg'] + '<span class="bonus">' + '<p>' + 'h/c: ' + total['handicap'] + '</p>' + '<p>' +  'B: ' + bonus_dtl.toString() + '</p>' + '</span>' + '</td>') }
     else {$('#totals' + p).append('<td> </td>')}

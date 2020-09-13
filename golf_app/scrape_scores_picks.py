@@ -9,13 +9,13 @@ from selenium import webdriver
 from selenium.webdriver import Chrome, ChromeOptions
 import json
 from golf_app import utils
-
+from bs4 import BeautifulSoup
 
 
 
 class ScrapeScores(object):
 
-    def __init__(self, tournament, url=None):
+    def __init__(self, tournament, url=None, mode=None):
         self.tournament = tournament
         if url != None:
             self.url = url
@@ -27,6 +27,11 @@ class ScrapeScores(object):
             self.url = "https://www.pgatour.com/competition/2020/" + t_name + "/leaderboard.html"
         print (self.url)
 
+        if mode == 'picks':
+            self.mode = 'picks'
+        else:
+            self.mode = 'all'
+
 
     def scrape(self):
         score_dict = {}
@@ -36,14 +41,27 @@ class ScrapeScores(object):
         driver = Chrome(options=options)
       
         driver.get(self.url)
+
+        
+        #html = urllib.request.urlopen("https://nypost.com/odds/")
+        soup = BeautifulSoup(driver.page_source, 'html.parser')
+
+        table = (soup.find("div", {'id':'stroke-play-container'}))
+
         t = self.tournament
         t_ok = False
         try:
-            name = driver.find_elements_by_class_name("name")
-            for n in name:
-                if n.text == t.name:
-                    #print ('name', n.text)
-                    t_ok = True
+            #name = driver.find_elements_by_class_name("name")
+            title = soup.find('h1', {'class', 'name'})
+            name = title.text
+
+            if t.name == name.lstrip().rstrip():
+            #for n in name:
+            #    if n.text == t.name:
+                 #print ('name', n.text)
+               t_ok = True
+            else:
+                print ('scrape name issue', 'db: ', t.name, 'scrape: ', name)
         
             if t_ok:
                 cut_line = driver.find_elements_by_class_name("cut-line")
@@ -69,34 +87,22 @@ class ScrapeScores(object):
                 if len(playoff) > 0:
                     t.playoff = True
 
-                table = driver.find_element_by_id("stroke-play-container")
-
-                for pick in Picks.objects.filter(playerName__tournament=self.tournament).values('playerName__playerID').distinct():
-                    print (pick.get('playerName__playerID'))
-
-                    for row in table.find_elements_by_class_name('line-row-' + str(pick.get('playerName__playerID'))):
-                        n = row.find_element_by_class_name('player-name-col').text 
-                        rank = row.find_element_by_class_name('position').text 
-                        for e in row.find_elements_by_class_name('position-movement'): c = e.get_attribute('innerHTML')
-                        thru = row.find_element_by_class_name('thru').text 
-                        total_score = row.find_element_by_class_name('total').text 
-                        round_score = row.find_element_by_class_name('round').text 
-                        round_list = []
-                        for i in range(len(row.find_elements_by_class_name('round-x'))):
-                            round_list.append(row.find_elements_by_class_name('round-x')[i].text)
-                        
-                        score_dict[n] =  {'rank': rank, 'change': c, \
-                                    'thru': thru, 'round_score': round_score, 'total_score': total_score , 'r1': round_list[0], 'r2': round_list[1], 'r3': round_list[2], 'r4': round_list[3]}
-                        
-                sd, creates = ScoreDict.objects.get_or_create(tournament=self.tournament)
-                sd.pick_data = score_dict
-                sd.save()
-                #f = open("score_dict.json", "w")
-
-                #f.write(json.dumps(score_dict))
-                #f.close()
+                #table = driver.find_element_by_id("stroke-play-container")
+                sd, created = ScoreDict.objects.get_or_create(tournament=self.tournament)                
+                if self.mode == 'picks':
+                    for pick in Picks.objects.filter(playerName__tournament=self.tournament).values('playerName__playerID').distinct():
+                        row =  table.find("tr", {'class': 'line-row-' + str(pick.get('playerName__playerID'))})
+                        data = get_data(self, row)
+                        score_dict[data[0]] =  data[1]
+                    sd.pick_data = score_dict
+                else:  #doing for all or None 
+                    for row in table.find_all("tr", {'class': 'line-row'}):
+                        data = get_data(self, row)
+                        score_dict[data[0]] =  data[1]
+                    sd.data = score_dict
                 
-                print (score_dict)
+                sd.save()
+
                 return (score_dict)                
             else:
                 print ('scrape scores t mismatch', t, name)
@@ -108,4 +114,39 @@ class ScrapeScores(object):
 
         finally:
             driver.quit()
+
+def get_data(self, row):
+
+        
+        #print (row)
+        n = row.find('td', {'class': 'player-name'}).text
+        if n[-1] == ' ':
+            n = n[:-1]
+        #print ('p', n)
+        rank = row.find('td', {'class': 'position'}).text 
+        #print ('r', rank)
+        #for e in row.find('div', {'class': 'position-movement'}): c = e.get_attribute('innerHTML')
+        pos = row.find('td', {'class': 'position-movement'})
+        
+        movement = pos.find('div', {'class': 'position-movement'})
+        if movement.span != None:
+            c= str(movement.span) + movement.text
+        else:
+            c= movement.text
+        
+        #print ('pos 2', len(c), type(c))
+        #print (c.text, c.span)
+        #for x in c: print(x.innerHTML)
+        thru = row.find('td', {'class': 'thru'}).text 
+        total_score = row.find('td', {'class': 'total'}).text 
+        round_score = row.find('td', {'class': 'round'}).text 
+        round_list = []
+        for i in range(len(row.find_all('td', {'class': 'round-x'}))):
+            round_list.append(row.find_all('td', {'class': 'round-x'})[i].text)
+
+        return (n, {'rank': rank, 'change': c, \
+             'thru': thru, 'round_score': round_score, 'total_score': total_score , 'r1': round_list[0], 'r2': round_list[1], 'r3': round_list[2], 'r4': round_list[3]})
+
+        
+
 

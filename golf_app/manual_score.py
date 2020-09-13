@@ -99,7 +99,7 @@ class Score(object):
             else:
                 det_picks[pick.user].append(pick)
 
-        print ('get picks result', det_picks)
+        #print ('get picks result', det_picks)
 
         if self.format == 'json':
             return json.dumps(det_picks)
@@ -166,6 +166,7 @@ class Score(object):
 
         for pick in Picks.objects.filter(playerName__tournament=self.tournament):
             #print ('1 -', pick.playerName.playerName)
+            #print (self.score_dict)
             try:
                 if self.score_dict.get(pick.playerName.playerName).get('rank') == "CUT":
                     pick.score = cut_num
@@ -181,7 +182,7 @@ class Score(object):
                         pick.score = utils.formatRank(self.score_dict.get(pick.playerName.playerName).get('rank')) 
                 #print ('end checking cut num', datetime.now())
                 pick.save()
-                
+                #print ("2")    
                 sd, sd_created = ScoreDetails.objects.get_or_create(user=pick.user, pick=pick)
                 sd.score=pick.score - pick.playerName.handicap()
                 sd.gross_score = pick.score
