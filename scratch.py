@@ -4,7 +4,7 @@ os.environ.setdefault("DJANGO_SETTINGS_MODULE","gamesProj.settings")
 import django
 django.setup()
 #from golf_app.models import Tournament, TotalScore, ScoreDetails, Field, Picks, PickMethod
-from fb_app.models import Season, Week, Games, Teams, Picks, League, Player, calc_scores, MikeScore, WeekScore
+from fb_app.models import Season, Week, Games, Teams, Picks, League, Player, calc_scores, MikeScore, WeekScore, get_data
 from django.contrib.auth.models import User
 from datetime import datetime, timedelta
 from django.db.models import Min, Q, Count, Sum, Max
@@ -28,7 +28,8 @@ from fb_app import scrape_cbs
 
 
 
-
+web = get_data()
+print (web)
 
 
 
