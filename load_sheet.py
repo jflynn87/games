@@ -22,7 +22,8 @@ def readSheet(file,numPlayers):
         #test this for a single digit week....This gets the week from the start of the shhet
         week = []
 
-        for data in soup.findAll('t')[1:3]:
+        for data in soup.findAll('t')[0:1]:
+        #for data in soup.findAll('t')[1]:
             week.append(data.text)
         week_str = ''.join(week)
         print ('week: ' + week_str)
@@ -145,4 +146,4 @@ def readSheet(file,numPlayers):
 
 
 
-readSheet('19-20 FOOTBALL FOOLS.xml', 26)
+readSheet('20-21 FOOTBALL FOOLS.xml', 26)

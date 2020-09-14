@@ -25,7 +25,7 @@ from urllib.request import Request, urlopen
 from selenium import webdriver
 import urllib
 import json
-from golf_app import views, manual_score, scrape_scores, populateField, withdraw, scrape_scores_picks
+from golf_app import views, manual_score, scrape_scores, populateField, withdraw, scrape_scores_picks, utils
 
 
 
@@ -35,10 +35,22 @@ old_start = datetime.now()
 old_finish = datetime.now()
 
 sd = ScoreDict.objects.get(tournament=t)
-for group in Group.objects.filter(tournament=t):
-    print (group, group.min_score())
-#print (sd.data.get('Kevin Streelman'))
+d = {}
+cut_num = t.cut_num()
+for golfer in Field.objects.filter(tournament=t, group__number=6):
+    try:
+        if sd.data.get(golfer.playerName).get('rank') not in t.not_playing_list():
+            d[golfer.playerName]=golfer.currentWGR, utils.formatRank(sd.data.get(golfer.playerName).get('rank')), golfer.handicap(), utils.formatRank(sd.data.get(golfer.playerName).get('rank')) - golfer.handicap()
+        else:
+            d[golfer.playerName]=golfer.currentWGR, cut_num, golfer.handicap(), cut_num - golfer.handicap()
+    except Exception as e:
+        print ('f potter', golfer.playerName, e)
+    #print (group, group.min_score())
+sorted_d = ({k:v for k, v in sorted(d.items(), key=lambda item: item[1][0])})
+for k, v in sorted_d.items():
+    print (k, v)
  
+exit()
 start = datetime.now()
 print (t.optimal_picks())
 exit()

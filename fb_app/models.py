@@ -10,6 +10,8 @@ import urllib
 import json
 import scipy.stats as ss
 from django.db.models import Q
+from bs4 import BeautifulSoup
+from fb_app import scrape_cbs
 
 # Create your models here.
 
@@ -276,29 +278,28 @@ def calc_scores(self, league, week, loser_list=None, proj_loser_list=None):
     print (week)
 
     if Games.objects.filter(week=week).exclude(final=True).exists():
-        print ('MODELS games exist')
-        json_url = 'http://www.nfl.com/liveupdate/scores/scores.json'
+                
+            try:
+                print ('---------- updating football game scores')
 
-        try:
-            with urllib.request.urlopen(json_url) as field_json_url:
-                data = json.loads(field_json_url.read().decode())
-            #print (data)
-        except Exception as e:
-            #use for testing
-            print ('need to figure out how to do scores!')            
+                data = get_data()
 
-        try:
                 for score in Games.objects.filter(week=week).exclude(final=True):
-                    home_score = data[score.eid]['home']['score']['T']
-                    home_team = data[score.eid]['home']["abbr"]
-                    away_team = data[score.eid]['away']["abbr"]
-                    away_score = data[score.eid]['away']['score']['T']
-                    print ('score data', score.eid, score.home, data[score.eid]['qtr'])
-                    if data[score.eid]['clock'] != None and data[score.eid]['qtr'] != "Final":
-                        qtr = data[score.eid]["qtr"] + ' : ' + data[score.eid]["clock"]
-                    else:
-                        print ('else', score.home, score.away,score.qtr)
-                        qtr = data[score.eid]["qtr"]
+                    print ('game', score)
+                    print ('data: ', data[score.eid])
+
+                    home_score = int(data[score.eid]['home_score'])
+                    home_team = data[score.eid]['home']
+                    away_team = data[score.eid]['away']
+                    away_score =int(data[score.eid]['away_score'])
+                    qtr = data[score.eid]['qtr']
+                    #print ('score data', score.eid, score.home, data[score.eid]['qtr'])
+
+                    #if data[score.eid]['clock'] != None and data[score.eid]['qtr'] != "Final":
+                    #    qtr = data[score.eid]["qtr"] + ' : ' + data[score.eid]["clock"]
+                    #else:
+                    #    print ('else', score.home, score.away,score.qtr)
+                    #    qtr = data[score.eid]["qtr"]
                     if home_score == away_score:
                         tie = True
                         winner = None
@@ -316,9 +317,10 @@ def calc_scores(self, league, week, loser_list=None, proj_loser_list=None):
                     setattr(score, 'away_score',away_score)
                     setattr(score, 'winner', winner)
                     setattr(score, 'loser', loser)
-                    setattr(score, 'qtr',qtr)
-                    #print ('qtr', qtr[0:5])
-                    if qtr[0:5]  in ["final", "Final"]:
+                    setattr(score, 'qtr',qtr.lower())
+                    print ('qtr', qtr[0:5], score)
+                    if qtr[0:5]  in ["final", "Final", "FINAL"]:
+                        print (score, 'setting final')
                         setattr(score, 'final', True)
                         setattr(score, 'tie', tie)
                     else:
@@ -332,10 +334,11 @@ def calc_scores(self, league, week, loser_list=None, proj_loser_list=None):
                     # else:
                     #     setattr(score, 'tie', False)
 
+                 
                     score.save()
 
 
-        except KeyError as e:
+            except KeyError as e:
                 print ('NFL score file not ready for the week', e)
                 pass
 
@@ -410,3 +413,49 @@ def calc_scores(self, league, week, loser_list=None, proj_loser_list=None):
     print (datetime.datetime.now())
 
     return (scores_list, ranks, projected_scores_list, projected_ranks, total_score_list, season_ranks)
+
+def get_data():
+        
+        print ('scraping CBS com')
+
+        try:
+            game_dict = {}
+            week = Week.objects.get(current=True)
+
+            html = urllib.request.urlopen("https://www.cbssports.com/nfl/scoreboard/")
+            soup = BeautifulSoup(html, 'html.parser')
+
+            games = soup.find_all('div', {'class': 'single-score-card'})
+
+            for game in games:
+                teams = game.find_all('a', {'class': 'helper-team-name'})
+                scores = game.find_all('td', {'class': 'total-score'})
+            
+                if teams != None and len(teams) == 2:
+                #print(teams)
+                    away_team = Teams.objects.get(long_name=teams[0].text)
+                    home_team = Teams.objects.get(long_name=teams[1].text)
+                if len(scores) == 2:
+                    away_score = scores[0].text
+                    home_score = scores[1].text
+                else:
+                    away_score = 0
+                    home_score = 0
+                
+                status = game.find('div', {'class': 'game-status'})
+                if status != None:
+                    qtr = status.text.lstrip().rstrip()
+
+                game_dict[str(week.season_model.season) + str(week.week) + str(home_team.nfl_abbr) + str(away_team.nfl_abbr)]  = {
+                    'home': home_team.nfl_abbr,
+                    'home_score': home_score,
+                    'away': away_team.nfl_abbr,
+                    'away_score': away_score,
+                    'qtr': qtr
+                }
+            print ('updated data', game_dict)        
+            return game_dict
+        except Exception as e:
+            print ('issue scraping CBS', e)
+            return {}   
+
