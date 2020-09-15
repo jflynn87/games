@@ -173,9 +173,9 @@ def configure_groups(field_list):
 #        while group_cnt < remaining_groups + 5:
 #             groups[group_cnt] = group_size
 #             group_cnt += 1
-    elif len(field_list) < 31:
-        print ('less than 31')
-        total_groups = 3
+    elif len(field_list) > 29 and len(field_list) < 65 :
+        print ('bet 30 - 64, 10 groups')
+        total_groups = 10
         group_size = int(len(field_list) / total_groups)
         #total_groups = int(len(field_list)/group_size)
         remainder = len(field_list) % (total_groups*group_size)
@@ -183,9 +183,10 @@ def configure_groups(field_list):
             groups[group_cnt] = group_size
             group_cnt +=1
     else:
-        #should only be here for fields between 31 - 64 golfers
+        #should only be here for fields less than 30 golfers
+        print ('field less than 30')
         #group_size = int(len(field_list)/10)
-        group_size = 10
+        group_size = 3
         remainder = len(field_list) % (group_size)     
         total_groups = (len(field_list)-(remainder))/group_size
 

@@ -210,24 +210,28 @@ class Score(object):
                 sd.thru = "WD"
                 sd.save()
 
-            #print ('checking winner ', datetime.now())
+            
             if pick.is_winner() and not PickMethod.objects.filter(user=pick.user, method=3, tournament=pick.playerName.tournament).exists():
                 print ('winner', pick.playerName)
                 bd = BonusDetails.objects.get(user=pick.user, tournament=pick.playerName.tournament)
                 bd.winner_bonus = 50 + (pick.playerName.group.number*2)
                 bd.save()
-            #print ('end checking winner ', datetime.now())
-           
-            
-            #if pick.best_in_group() and not PickMethod.objects.filter(user=pick.user, method=3, tournament=pick.playerName.tournament).exists():
-            
-            if pick.playerName.playerName in optimal_picks.get(str(pick.playerName.group.number)).get('golfer') and not PickMethod.objects.filter(user=pick.user, method=3, tournament=pick.playerName.tournament).exists():
-                #print ('best in group', pick.playerName)
-                #bd, created = BonusDetails.objects.get_or_create(user=pick.user, tournament=pick.playerName.tournament)
+
+            if pick.playoff_loser() and not PickMethod.objects.filter(user=pick.user, method=3, tournament=pick.playerName.tournament).exists():
+                print ('playoff loser', pick.playerName)
                 bd = BonusDetails.objects.get(user=pick.user, tournament=pick.playerName.tournament)
-                bd.best_in_group_bonus = bd.best_in_group_bonus + 10
+                bd.playoff_bonus = 25
                 bd.save()
-            #print ('end best in group ', datetime.now())
+            
+            if pick.playerName.playerName in optimal_picks.get(str(pick.playerName.group.number)).get('golfer') \
+              and not PickMethod.objects.filter(user=pick.user, method=3, tournament=pick.playerName.tournament).exists() \
+              and not pick.is_winner() \
+              and not pick.playoff_loser() \
+              and pick.playerName.group.playerCnt > 4:
+                  bd = BonusDetails.objects.get(user=pick.user, tournament=pick.playerName.tournament)
+                  bd.best_in_group_bonus = bd.best_in_group_bonus + 10
+                  bd.save()
+
 
         self.tournament.score_update_time = datetime.now()
         self.tournament.save()

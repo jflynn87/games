@@ -20,23 +20,22 @@ from selenium.webdriver import Chrome, ChromeOptions
 
 #
 import requests
-from linebot import LineBotApi
-from linebot.models import TextSendMessage
-from linebot.exceptions import LineBotApiError
+#from linebot import LineBotApi
+#from linebot.models import TextSendMessage
+#from linebot.exceptions import LineBotApiError
 from bs4 import BeautifulSoup
 from fb_app import scrape_cbs
 
 
 
-web = get_data()
-print (web)
 
 
 
 game_dict = {}
 week = Week.objects.get(current=True)
-game = Games.objects.get(week=week, eid='20201CAROAK')
-game.eid = '20201CARLV'
+game = Games.objects.get(week=week, eid='20201MINGB')
+game.final = False
+game.tie = False
 game.save()
 
 #web = scrape_cbs.ScrapeCBS().get_data()

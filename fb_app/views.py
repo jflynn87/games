@@ -59,10 +59,15 @@ def ajax_get_spreads(request):
                     spread = line [1]
                     #print ('o/a', line[0])
 
+                if fav == "Team":
+                    fav = "Football Team"
+                elif dog == "Team":
+                    dog = "Football Team"
+
                 fav_obj = Teams.objects.get(long_name__iexact=fav)
                 dog_obj = Teams.objects.get(long_name__iexact=dog)
                 week = Week.objects.get(current=True)
-                print (week)
+                #print (week)
                 if Games.objects.filter(Q(week=week) & Q(home=fav_obj) & Q(away=dog_obj)).exists():
                     game = Games.objects.get(Q(week=week) & Q(home=fav_obj) & Q(away=dog_obj))
                     game.fav=fav_obj
@@ -88,11 +93,11 @@ def ajax_get_spreads(request):
                     #games_dict[game.eid] = (str(game_fav), spread)
                     games_dict.append((game.eid, game.fav.nfl_abbr.lower(), str(fav_obj.get_record()), game.dog.nfl_abbr, str(dog_obj.get_record()), spread))
                 else:
-                    print ('game not found')
+                    print ('game not found:', fav, dog)
                 
                 
             except Exception as e:
-                print ('spread look up error', e, game)
+                print ('spread look up error', e, game, fav, dog)
         print (games_dict)
         data = json.dumps(games_dict)
         return HttpResponse(data, content_type="application/json")
@@ -595,7 +600,7 @@ class SeasonTotals(ListView):
                         winners = WeekScore.objects.filter(score=winning_score.get('score__min'), week=score_week, player__league=league)
                         for winner in winners:
                                 score = winners_dict.get(winner.player.name)
-                                winners_dict[winner.player.name] = score + 25/len(winners)
+                                winners_dict[winner.player.name] = score + 30/len(winners)
                                 score_list.append(winner.player.name)
 
                     except IndexError:

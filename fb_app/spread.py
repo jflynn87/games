@@ -50,6 +50,7 @@ class Spreads(object):
             elif Games.objects.filter(Q(week=week) & Q(home=dog_obj) & Q(away=fav_obj)).exists():
                 Games.objects.filter(Q(week=week) & Q(home=dog_obj) & Q(away=fav_obj)).update(fav=fav_obj, dog=dog_obj, spread=spread)
             except Exception as e:
+                print (fav, dog)
                 print ('spread look up error', e)
 
         except Exception as e:

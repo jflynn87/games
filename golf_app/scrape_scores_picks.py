@@ -42,8 +42,6 @@ class ScrapeScores(object):
       
         driver.get(self.url)
 
-        
-        #html = urllib.request.urlopen("https://nypost.com/odds/")
         soup = BeautifulSoup(driver.page_source, 'html.parser')
 
         table = (soup.find("div", {'id':'stroke-play-container'}))
@@ -51,14 +49,10 @@ class ScrapeScores(object):
         t = self.tournament
         t_ok = False
         try:
-            #name = driver.find_elements_by_class_name("name")
             title = soup.find('h1', {'class', 'name'})
             name = title.text
 
             if t.name == name.lstrip().rstrip():
-            #for n in name:
-            #    if n.text == t.name:
-                 #print ('name', n.text)
                t_ok = True
             else:
                 print ('scrape name issue', 'db: ', t.name, 'scrape: ', name)
@@ -94,8 +88,8 @@ class ScrapeScores(object):
                         row =  table.find("tr", {'class': 'line-row-' + str(pick.get('playerName__playerID'))})
                         data = get_data(self, row)
                         score_dict[data[0]] =  data[1]
-                    sd.pick_data = score_dict
-                else:  #doing for all or None 
+                    #sd.pick_data = score_dict
+                else:  #doing for "all" or None 
                     for row in table.find_all("tr", {'class': 'line-row'}):
                         data = get_data(self, row)
                         score_dict[data[0]] =  data[1]
@@ -122,21 +116,17 @@ def get_data(self, row):
         n = row.find('td', {'class': 'player-name'}).text
         if n[-1] == ' ':
             n = n[:-1]
-        #print ('p', n)
+
         rank = row.find('td', {'class': 'position'}).text 
-        #print ('r', rank)
-        #for e in row.find('div', {'class': 'position-movement'}): c = e.get_attribute('innerHTML')
         pos = row.find('td', {'class': 'position-movement'})
         
         movement = pos.find('div', {'class': 'position-movement'})
+
         if movement.span != None:
             c= str(movement.span) + movement.text
         else:
             c= movement.text
-        
-        #print ('pos 2', len(c), type(c))
-        #print (c.text, c.span)
-        #for x in c: print(x.innerHTML)
+
         thru = row.find('td', {'class': 'thru'}).text 
         total_score = row.find('td', {'class': 'total'}).text 
         round_score = row.find('td', {'class': 'round'}).text 

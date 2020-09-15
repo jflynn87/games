@@ -268,7 +268,9 @@ class Tournament(models.Model):
         for group in Group.objects.filter(tournament=self):
            group_cuts = 0
            golfer_list = []
+           gm_start = datetime.now()
            group_min = group.min_score()
+           print ('group min duration: ', datetime.now() - gm_start)
            #print ('group: ', group, 'min', group_min)
 
            for player in Field.objects.filter(tournament=self, group=group):
@@ -324,6 +326,7 @@ class Group(models.Model):
         min_score = 999  
 
         for score in Field.objects.filter(group=self):
+            print ('min score calc: ', datetime.now())
             try:
                 if score_dict.data.get(score.playerName).get('rank') in self.tournament.not_playing_list():
                     if cut_num - score.handicap() < min_score:
@@ -501,6 +504,12 @@ class Picks(models.Model):
         else:
             return False
 
+    def playoff_loser(self):
+        if self.playerName.tournament.playoff and ScoreDetails.objects.filter(pick=self, score=2, pick__playerName__tournament__complete=True):
+            return True
+        else:
+            return False
+
 
 class PickMethod(models.Model):
     CHOICES = (('1', 'player'), ('2', 'random'), ('3', 'auto'))
@@ -609,6 +618,7 @@ class ScoreDict(models.Model):
     tournament = models.ForeignKey(Tournament, null=True, on_delete=models.CASCADE, related_name='score_dict')
     data = models.JSONField(null=True)
     pick_data = models.JSONField(null=True)
+
 
     def __str__(self):
         return (self.tournament.name)

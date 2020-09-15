@@ -28,15 +28,147 @@ import json
 from golf_app import views, manual_score, scrape_scores, populateField, withdraw, scrape_scores_picks, utils
 
 
+season = Season.objects.get(season='2020')
+g6_total = 0
+g6_hc = 0
+last_total = 0
+last_hc = 0
+t_count = 0
+for t in Tournament.objects.filter(season=season):
+    if  Group.objects.filter(tournament=t, number=7).exists():
+        group = Group.objects.get(tournament=t, number=7)
+        if group.playerCnt > 6:
+            try:
+                print (t)
+                sd = ScoreDict.objects.get(tournament=t)
+                
+                group_6 = Field.objects.filter(tournament=t, group__number=6).order_by('currentWGR')
+                group_6_score = 0
+                handi = 0
+                for golfer in group_6[:5]: 
+                    #print (golfer)
+                    if sd.data[golfer.playerName]['rank'] not in t.not_playing_list():
+                        group_6_score = group_6_score + utils.formatRank(sd.data[golfer.playerName]['rank']) - golfer.handicap()
+                        handi = handi + golfer.handicap()
+                    else:
+                        group_6_score = group_6_score + (int(t.cut_num()) - golfer.handicap())
+                        handi = handi + golfer.handicap()
+                    
+                last_group = Field.objects.filter(tournament=t).order_by('-currentWGR')
+                last_score = 0
+                last_handi = 0
+                for golfer in last_group[:5]: 
+                    #print (golfer)
+                    if sd.data[golfer.playerName]['rank'] not in t.not_playing_list():
+                        last_score = last_score + utils.formatRank(sd.data[golfer.playerName]['rank']) - golfer.handicap()
+                        last_handi = last_handi + golfer.handicap()
+                    else:
+                        last_score = last_score + (int(t.cut_num()) - golfer.handicap())
+                        last_handi = last_handi + golfer.handicap()
+
+                print ('G6 score: ', group_6_score)
+                print ('G6 handi: ', handi)
+                print ('last score: ', last_score)
+                print ('last handi: ', last_handi)
+                g6_total = g6_total + group_6_score
+                g6_hc = g6_hc + handi
+                last_total = last_total + last_score
+                last_hc = last_hc + last_handi
+                t_count += 1
+
+            
+
+
+            except Exception as e:
+                print ('issue: ', t, e)
+        else:
+            print ("T group size too small", t)
+    else:
+        print ("T too small", t)
+
+print  ('group 6 total: ', g6_total)
+print  ('group 6 h/c: ', g6_hc)
+print  ('last group total: ', last_total)
+print  ('last group hc: ', last_hc)
+print  ('total tournaments: ', t_count)
+
+        
+exit()
+
+
 
 t = Tournament.objects.get(current=True)
-old_start = datetime.now()
-#web1 = scrape_scores_picks.ScrapeScores(t).scrape()
-old_finish = datetime.now()
 
-sd = ScoreDict.objects.get(tournament=t)
-d = {}
+#start = datetime.now()
+#web1 = scrape_scores_picks.ScrapeScores(t).scrape()
+#scrape_finish = datetime.now()
+
+#print ('scrape time: ', scrape_finish - start)
+
+## attempt to speed up best in group function
+
+start_cut = datetime.now()
+
+score_dict = ScoreDict.objects.get(tournament=t)
 cut_num = t.cut_num()
+min_score = 999  
+print (type(score_dict))
+
+for score in Field.objects.filter(group__number=6, tournament=t):
+    #print ('min score calc: ', datetime.now())
+    try:
+        if score_dict.data.get(score.playerName).get('rank') in ['CUT', 'WD']:
+            if cut_num - score.handicap() < min_score:
+                min_score = cut_num - score.handicap()
+        elif utils.formatRank(score_dict.data.get(score.playerName).get('rank')) - score.handicap() < min_score:
+            min_score = utils.formatRank(score_dict.data.get(score.playerName).get('rank')) - score.handicap()
+        #else:
+        #    print ('not min', score.playerName, score_dict.data.get(score.playerName).get('rank'), utils.formatRank(score_dict.data.get(score.playerName).get('rank')))
+    
+    except Exception as e:
+        continue
+        #print (score.playerName, e, 'exclded from min score')
+print ('min 1: ', min_score)
+
+print ('cut round 1: ', datetime.now() - start_cut )
+
+
+
+start_cut = datetime.now()
+
+score_dict = ScoreDict.objects.get(tournament=t)
+cut_num = t.cut_num()
+min_score = 999  
+
+for k, v in score_dict.data.items():
+    try:
+        if Field.objects.filter(playerName=k, group__number=6, tournament=t).exists():
+            field = Field.objects.get(playerName=k, group__number=6, tournament=t)
+            #print (cut_num, field.handicap())
+            if v.get('rank') in ['CUT', 'WD']:
+                if cut_num - field.handicap() < min_score:
+                    #print ('cut is best')
+                    min_score = cut_num - field.handicap()
+            elif utils.formatRank(v.get('rank')) - field.handicap() < min_score:
+                #print ('no cut best')
+                min_score = utils.formatRank(v.get('rank')) - field.handicap()
+        
+    except Exception as e:
+        print (e)
+        #continue
+        #print (score.playerName, e, 'exclded from min score')
+    #print (min_score)
+print ('min 2: ', min_score)
+
+
+
+print ('cut round 2: ', datetime.now() - start_cut )
+
+exit()
+
+#### end of best pick perf seciton
+
+
 for golfer in Field.objects.filter(tournament=t, group__number=6):
     try:
         if sd.data.get(golfer.playerName).get('rank') not in t.not_playing_list():

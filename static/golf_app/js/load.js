@@ -122,6 +122,7 @@ function build_score_tbl(data) {
   $.each(total_data, function(p, total) {
     $('#totals').append('<tr id=totals' + p + ' class=small>' + '<td>'+  p  + ' (' + season_totals[p]['diff'] +')'  + '</p>' + '<p>' +  total['total_score'] + ' / ' + total['cuts']  + '</td>'  + '</tr>')
     
+    //clean this up.  Always display and drop the if.
     if (total['msg']) {$('#totals' + p).append('<td>' + total["msg"] + '</td>') }
     else if (total['winner_bonus'] >0 || total['major_bonus'] > 0 || total['cut_bonus'] > 0 || total['best_in_group'] > 0  || total['playoff_bonus'] > 0 || total['handicap'] > 0) {
       var bonus_dtl = total['winner_bonus']  + total['major_bonus'] + total['cut_bonus'] + total['best_in_group'] + total['playoff_bonus']
