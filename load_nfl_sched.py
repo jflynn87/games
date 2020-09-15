@@ -24,12 +24,12 @@ def load_sched(year):
     season = Season.objects.get(current=True)
     while week_cnt < 3:
             try:
-                week, created = Week.objects.get_or_create(season=season, week=week_cnt)
+                week, created = Week.objects.get_or_create(season_model=season, week=week_cnt)
                 #week.season = season.season
                 if not week.current:
                     week.current = False
                 #week.current = True
-                week.season_model = season
+                week.season = season.season
                 #week.week = week_cnt
                 week.game_cnt = 0
                 week.save()
