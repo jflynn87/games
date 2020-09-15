@@ -23,49 +23,6 @@ def load_sched(year):
     week_cnt = 2
     season = Season.objects.get(current=True)
     while week_cnt < 3:
-        try:
-            #html = urllib.request.urlopen("http://www.nfl.com/ajax/scorestrip?season=2019&seasonType=PRE&week=4")
-            html = urllib.request.urlopen("http://www.nfl.com/ajax/scorestrip?season=" + str(year) + "&seasonType=REG&week=" + str(week_cnt))
-            soup = BeautifulSoup(html, 'html.parser')
-
-
-            week = Week()
-            week.season = soup.find('gms').attrs['y']
-            week.week = soup.find('gms').attrs['w']
-            week.game_cnt = gm_cnt = len(soup.findAll('g'))
-            week.current = False
-            week.season_model = season
-            week.save()
-
-            for NFLgame in soup.findAll('g'):
-
-                game=Games()
-
-                game.week = week
-                game.eid = NFLgame.attrs['eid']
-                try:
-                    game.home = Teams.objects.get(nfl_abbr=NFLgame.attrs['h'])
-                except Exception:
-                    game.home = Teams.objects.get(mike_abbr=NFLgame.attrs['h'])
-
-                try:
-                    game.away = Teams.objects.get(nfl_abbr=NFLgame.attrs['v'])
-                except Exception:
-                    game.away = Teams.objects.get(mike_abbr=NFLgame.attrs['v'])
-
-                date = NFLgame.attrs['eid'][0:4] + '-' + NFLgame.attrs['eid'][4:6] + '-' + NFLgame.attrs['eid'][6:8]
-
-                game.date = datetime.strptime(date, '%Y-%m-%d')
-                game.time = NFLgame.attrs['t']
-                game.day = NFLgame.attrs['d']
-
-                print (game.home, game.away)
-                game.save()
-
-            week_cnt +=1
-        except Exception as e:
-            print ('exception with nfl json', e)
-                
             try:
                 week, created = Week.objects.get_or_create(season=season, week=week_cnt)
                 #week.season = season.season
