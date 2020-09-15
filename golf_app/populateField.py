@@ -43,6 +43,15 @@ def get_pga_worldrank():
             rank = row.find('td').text.strip('\n').strip(' ')
             last_week=  row.find('td', {'class': 'hidden-print hidden-small hidden-medium'}).text.strip('\n')
             #ranks[player.capitalize()] = [int(rank), int(last_week), 0]
+            try:
+                rank = int(rank)
+            except Exception as e:
+                rank = 9999
+            try:
+                last_week = int(last_week)
+            except Exception as e:
+                last_week = 0
+
             ranks[player] = [int(rank), int(last_week), 0]
         except Exception as e:
             print('exception 2', e)
@@ -82,7 +91,9 @@ def get_worldrank():
                 i += 1
                 if i == 3:
                     break
-            player = (row.find('td', {'class': 'name'}).text).replace('(Am)','').replace(' Jr','').replace('(am)','')
+            #player = (row.find('td', {'class': 'name'}).text).replace('(Am)','').replace(' Jr','').replace('(am)','')
+            player = (row.find('td', {'class': 'name'})).text.split('(')[0]
+            
             #ranks[player.title()] = rank_list
             ranks[player] = rank_list
         except Exception as e:
@@ -129,8 +140,12 @@ def get_field(tournament_number):
 
 
     for player in data["Tournament"]["Players"][0:]:
-        #name = (' '.join(reversed(player["PlayerName"].split(', ')))).replace('Jr.','')
-        name = (' '.join(reversed(player["PlayerName"].split(', '))).replace(' Jr.','').replace('(am)',''))
+        if 'Jr' in player["PlayerName"]:
+            name = player["PlayerName"].split(' ')[2] + ' ' + player["PlayerName"].split(' ')[0] + ' ' +player["PlayerName"].split(' ')[1][:-1]
+        else:    
+            #name = (' '.join(reversed(player["PlayerName"].split(', ')))).replace('Jr.','')
+            #name = (' '.join(reversed(player["PlayerName"].split(', '))).replace(' Jr.','').replace('(am)',''))
+            name = (' '.join(reversed(player["PlayerName"].split(', '))).replace('(am)', '').replace('(a)', ''))
         playerID = player['TournamentPlayerId']
         try:
             if player["isAlternate"] == "Yes":
@@ -350,7 +365,7 @@ def get_pick_link(playerID):
     return "https://pga-tour-res.cloudinary.com/image/upload/c_fill,d_headshots_default.png,f_auto,g_face:center,h_85,q_auto,r_max,w_85/headshots_" + playerID + ".png"
 
 def get_flag(golfer, golfer_data):
-    print ('get flag', golfer, golfer_data)
+    #print ('get flag', golfer, golfer_data)
     golfer_obj, created = Golfer_obj = Golfer.objects.get_or_create(
     golfer_pga_num = golfer_data[1][1])
     if created:
@@ -363,7 +378,7 @@ def get_flag(golfer, golfer_data):
         print ('created', created, 'map_link ', golfer_obj.flag_link)
         if golfer_obj.flag_link not in [None, ' ']:  #Golfer.objects.filter(golfer_pga_num=golfer_data[1][1]).exists():
             #golfer = Golfer.objects.get(golfer_pga_num=golfer_data[1][1])
-            print ('flag from db')
+           # print ('flag from db')
             return golfer_obj.flag_link
 
         elif golfer[1]=='.' and golfer[3] =='.':

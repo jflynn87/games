@@ -28,6 +28,28 @@ import json
 from golf_app import views, manual_score, scrape_scores, populateField, withdraw, scrape_scores_picks, utils
 
 
+
+field = populateField.get_field('026')
+
+print (len(field))
+
+
+exit()
+
+urls:  ['https://www.pgatour.com/competition/2020/the-cj-cup-at-nine-bridges/leaderboard.html',
+         'https://www.pgatour.com/competition/2020/the-zozo-championship/leaderboard.html',
+         'https://www.pgatour.com/competition/2020/wgc-hsbc-champions/leaderboard.html',
+         'https://www.pgatour.com/competition/2020/at-t-pebble-beach-pro-am/leaderboard.html',
+         'https://www.pgatour.com/competition/2020/genesis-invitational/leaderboard.html',
+         #'https://www.pgatour.com/competition/2020/wgc-mexico-championship/leaderboard.html',   can't find?
+         'https://www.pgatour.com/competition/2020/wgc-fedex-st-jude-invitational/leaderboard.html'
+
+
+]
+
+
+
+
 season = Season.objects.get(season='2020')
 g6_total = 0
 g6_hc = 0
