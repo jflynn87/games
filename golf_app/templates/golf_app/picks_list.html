@@ -10,7 +10,7 @@
       <ul>
         {% for pick in picks_list%}
 
-        <li>Group {{pick.playerName.group.number}}:    {{pick.playerName.playerName}}, OWGR: {{pick.playerName.currentWGR}}</li>
+        <li>Group {{pick.playerName.group.number}}:    {{pick.playerName.playerName}}, OWGR: {{pick.playerName.currentWGR}},  Handicap: {{pick.playerName.handicap}}</li> 
 
         {%endfor%}
       </ul>

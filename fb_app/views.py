@@ -365,9 +365,10 @@ class ScoresView(TemplateView):
         if kwargs.get('pk')  == None:
             week = Week.objects.get(current=True)
             if request.user.is_anonymous and \
-            Picks.objects.filter(week__pk=week.pk, player__league__league="Football Fools").count() == 0:
+            Picks.objects.filter(week__pk=week.pk, player__league__league="Football Fools").count() < 20:
                 print ('debug 1')
-                last_week = Week.objects.get(pk=(week.pk-1))
+                last_week_n = week.week -1
+                last_week = Week.objects.get(season_model__current=True, week=last_week_n)
                 self.kwargs['pk'] = str(last_week.pk)
             else:
                 print ('debug 2')

@@ -1,7 +1,7 @@
 from golf_app.models import Picks, Tournament, TotalScore, BonusDetails, ScoreDetails, PickMethod, \
     Group, Field
 from django.contrib.auth.models import User
-from golf_app import scrape_scores
+from golf_app import scrape_scores_picks
 
 
 class WDCheck(object):
@@ -12,7 +12,7 @@ class WDCheck(object):
         else:
             self.tournament = tournament
         if field == None:
-            self.field = scrape_scores.ScrapeScores(self.tournament).scrape()
+            self.field = scrape_scores_picks.ScrapeScores(self.tournament).scrape()
         else:
             self.field = field
 
@@ -21,7 +21,7 @@ class WDCheck(object):
         wd_list = []
         good_list = []
         
-        #print (field)
+        print (self.field)
         for golfer in Field.objects.filter(tournament = self.tournament):
             #if golfer.playerName in {key.split(', Jr.') for key in field.keys()}:
             if golfer.playerName in self.field.keys():

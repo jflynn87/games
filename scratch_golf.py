@@ -28,10 +28,16 @@ import json
 from golf_app import views, manual_score, scrape_scores, populateField, withdraw, scrape_scores_picks, utils
 
 
+t = Tournament.objects.get(current=True)
 
-field = populateField.get_field('026')
+print (t)
+print (len(Field.objects.filter(tournament=t, withdrawn=True)))
 
-print (len(field))
+for golfer in Field.objects.filter(tournament=t):
+    golfer.withdrawn = False
+    golfer.save()
+
+print (len(Field.objects.filter(tournament=t, withdrawn=True)))
 
 
 exit()

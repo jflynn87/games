@@ -5,7 +5,7 @@ from datetime import datetime, timedelta
 #from django.db.models import Min, Q, Count, Sum, Max
 from requests import get
 from selenium import webdriver
-#import urllib
+import urllib
 from selenium.webdriver import Chrome, ChromeOptions
 import json
 from golf_app import utils
@@ -21,7 +21,7 @@ class ScrapeScores(object):
             self.url = url
         elif self.tournament.current:
             self.url = "https://www.pgatour.com/leaderboard.html"
-            #self.url = "https://www.pgatour.com/competition/2020/sentry-tournament-of-champions/leaderboard.html"
+            #self.url = "https://www.pgatour.com/competition/2021/safeway-open/leaderboard.html"
         else:
             t_name = self.tournament.name.replace(' ', '-').lower()
             self.url = "https://www.pgatour.com/competition/2020/" + t_name + "/leaderboard.html"
@@ -34,6 +34,18 @@ class ScrapeScores(object):
 
 
     def scrape(self):
+
+        # try:
+
+        #     html = urllib.request.urlopen(self.url)
+        #     soup = BeautifulSoup(html, 'html.parser')
+
+        #     name = soup.find('h1', {'class': 'name'})
+        #     print (name.text.replace(' - Leaderboard', '').lstrip().rstrip())
+        
+        # except Exception as e:
+        #     print ('Scrape Error finding Tournament Name', e)
+
         score_dict = {}
         options = ChromeOptions()
         options.add_argument("--headless")
@@ -54,21 +66,26 @@ class ScrapeScores(object):
 
             if t.name == name.lstrip().rstrip():
                t_ok = True
-            else:
+            elif t.name == name.replace(' - Leaderboard', '').lstrip().rstrip():
+                t_ok = True
+            else: 
                 print ('scrape name issue', 'db: ', t.name, 'scrape: ', name)
         
             if t_ok:
-                cut_line = driver.find_elements_by_class_name("cut-line")
-                for c in cut_line:
-                    cut_score  = c.text.rsplit(' ', 1)[1]
-                    #print ('full cutt text: ', c.text, 'cut score: ', c.text.rsplit(' ', 1)[1])
-                    if "Projected" in c.text:
-                        t.cut_score = "Projected cut score: " + c.text.rsplit(' ', 1)[1]
-                        t.save()
-                    else:
-                        t.cut_score = "Cut Score: " + c.text.rsplit(' ', 1)[1]
-                        t.save()
-                        
+                try:
+                    cut_line = driver.find_elements_by_class_name("cut-line")
+                    for c in cut_line:
+                        cut_score  = c.text.rsplit(' ', 1)[1]
+                        #print ('full cutt text: ', c.text, 'cut score: ', c.text.rsplit(' ', 1)[1])
+                        if "Projected" in c.text:
+                            t.cut_score = "Projected cut score: " + c.text.rsplit(' ', 1)[1]
+                            t.save()
+                        else:
+                            t.cut_score = "Cut Score: " + c.text.rsplit(' ', 1)[1]
+                            t.save()
+                except Exception as e:
+                    print ('issue scraping cut-info class from pga leaderboard', e)
+                    
 
                 #find playoff data
                 playoff = driver.find_elements_by_class_name("playoff-module")
@@ -82,7 +99,9 @@ class ScrapeScores(object):
                     t.playoff = True
 
                 #table = driver.find_element_by_id("stroke-play-container")
+                
                 sd, created = ScoreDict.objects.get_or_create(tournament=self.tournament)                
+                
                 if self.mode == 'picks':
                     for pick in Picks.objects.filter(playerName__tournament=self.tournament).values('playerName__playerID').distinct():
                         row =  table.find("tr", {'class': 'line-row-' + str(pick.get('playerName__playerID'))})
@@ -96,7 +115,7 @@ class ScrapeScores(object):
                     sd.data = score_dict
                 
                 sd.save()
-
+                print (score_dict)
                 return (score_dict)                
             else:
                 print ('scrape scores t mismatch', t, name)
@@ -116,20 +135,32 @@ def get_data(self, row):
         n = row.find('td', {'class': 'player-name'}).text
         if n[-1] == ' ':
             n = n[:-1]
-
+        
         rank = row.find('td', {'class': 'position'}).text 
         pos = row.find('td', {'class': 'position-movement'})
         
         movement = pos.find('div', {'class': 'position-movement'})
 
-        if movement.span != None:
-            c= str(movement.span) + movement.text
-        else:
-            c= movement.text
+        try:
+            if movement.span != None:
+                c= str(movement.span) + movement.text
+            else:
+                c= movement.text
+        except Exception as e:
+            c = '--'
+            print ('cant scrape poasition move span')
+        if row.find('td', {'class': 'thru'}) != None:
+            thru = row.find('td', {'class': 'thru'}).text 
+            round_score = row.find('td', {'class': 'round'}).text 
+        elif row.find('td', {'class': 'tee-time'}) != None: 
+            thru = row.find('td', {'class': 'tee-time'}).text
+            round_score = 'E'
+        else: 
+            thru = "no info"
+            round_score = 'E'
 
-        thru = row.find('td', {'class': 'thru'}).text 
         total_score = row.find('td', {'class': 'total'}).text 
-        round_score = row.find('td', {'class': 'round'}).text 
+        
         round_list = []
         for i in range(len(row.find_all('td', {'class': 'round-x'}))):
             round_list.append(row.find_all('td', {'class': 'round-x'})[i].text)

@@ -11,18 +11,22 @@ def format_score(score):
 
 
 def formatRank(rank):
-    '''takes in a sting and returns a string formatted for the right display or calc'''
-
+    from golf_app.models import Tournament
+    '''takes in a sting and returns a string formatted for the right display or calc.  '''
+    t = Tournament.objects.get(current=True)
+    #if rank in t.not_playing_list():
+    #    return 999
+    #print (type(rank), rank)
     if type(rank) is int:
         return rank
-    elif rank in  ['', '--', None]:
-       return 0
+    elif rank in  ['', '--', None] or rank in t.not_playing_list():
+       return 999
     elif rank[0] != 'T':
        return int(rank)
     elif rank[0] == 'T':
        return int(rank[1:])
     else:
-       return int(rank)
+       return rank
 
 def format_name(name):
     '''take a name string and match pga conventions '''

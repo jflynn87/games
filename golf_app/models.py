@@ -223,14 +223,16 @@ class Tournament(models.Model):
             return len([x for x in score_dict.values() if x['rank'] not in self.not_playing_list()]) + wd + 1
 
     def get_round(self):
+        
         round = 0
         if self.complete:
             return 4
+        
         sd = ScoreDict.objects.get(tournament=self)
         score_dict = sd.sorted_dict()
-
+        
         for stats in score_dict.values():
-            #print (stats)
+            print (stats)
             if len(stats.get('thru')) > 3:
                 #print ('len', stats)
                 continue
@@ -626,20 +628,24 @@ class ScoreDict(models.Model):
     def sorted_dict(self):
         d = self.data
         for k, v in d.items():
-            if Field.objects.filter(tournament=self.tournament, playerName=k).exists():
-                f = Field.objects.get(tournament=self.tournament, playerName=k)
-                v.update({'sort_rank': f.rank_as_int()})
-            else:
-                if v.get('rank') != None and v.get('rank') not in self.tournament.not_playing_list(): 
-                    if type(v.get('rank')) == int:
-                        v.update({'sort_rank': v.get('rank')})
-                    else:
-                        v.update({'sort_rank': int(v.get('rank')[1:])})
-                else:
-                    v.update({'sort_rank': 999})
-                
-        sorted_score_dict = {k:v for k, v in sorted(d.items(), key=lambda item: item[1].get('sort_rank'))}
+            v.update({'sort_rank': utils.formatRank(v.get('rank'))})
+            # if Field.objects.filter(tournament=self.tournament, playerName=k).exists():
+            #     f = Field.objects.get(tournament=self.tournament, playerName=k)
+            #     v.update({'sort_rank': f.rank_as_int()})
+            # else:
 
+
+                # if v.get('rank') != None and v.get('rank') not in self.tournament.not_playing_list(): 
+                #     if type(v.get('rank')) == int:
+                #         v.update({'sort_rank': v.get('rank')})
+                #     else:
+                #         v.update({'sort_rank': int(v.get('rank')[1:])})
+                # else:
+                #     v.update({'sort_rank': 999})
+
+        print ('sorting')        
+        sorted_score_dict = {k:v for k, v in sorted(d.items(), key=lambda item: item[1].get('sort_rank'))}
+        print ('sorted')        
         return sorted_score_dict
 
 class UserProfile(models.Model):

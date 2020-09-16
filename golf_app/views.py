@@ -510,7 +510,7 @@ class CheckStarted(APIView):
 
 
             if not t.started():
-                pga_web = scrape_scores.ScrapeScores(t)
+                pga_web = scrape_scores_picks.ScrapeScores(t)
                 score_dict = pga_web.scrape()
                 tourn = Tournament.objects.get(pk=key)
                 #print ('start check sd', score_dict)
