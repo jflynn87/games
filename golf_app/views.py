@@ -615,24 +615,24 @@ class OptimalPicks(APIView):
 
 
 class GetInfo(APIView):
-    pass
-    # def get(self, num):
-    #     print (self.request.GET)
-    #     try:
-    #         info_dict = {}
-    #         t = Tournament.objects.get(pk=self.request.GET.get('tournament'))
-    #         total_picks = 0
 
-    #         for g in Group.objects.filter(tournament=t):
-    #             info_dict[g.number] = g.num_of_picks()
-    #             total_picks += g.num_of_picks()
-    #         info_dict['total'] = total_picks
+    def get(self, num):
+        print (self.request.GET)
+        try:
+            info_dict = {}
+            t = Tournament.objects.get(pk=self.request.GET.get('tournament'))
+            total_picks = 0
 
-    #         print ('info dict', info_dict)
-    #         return Response(json.dumps(info_dict), 200)
-    #     except Exception as e:
-    #         print ('exception', e)
-    #         return Response(json.dumps({e}), 500)
+            for g in Group.objects.filter(tournament=t):
+                info_dict[g.number] = g.num_of_picks()
+                total_picks += g.num_of_picks()
+            info_dict['total'] = total_picks
+
+            print ('info dict', info_dict)
+            return Response(json.dumps(info_dict), 200)
+        except Exception as e:
+            print ('exception', e)
+            return Response(json.dumps({e}), 500)
 
 def get_info(t):
     try:

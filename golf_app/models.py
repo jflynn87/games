@@ -275,11 +275,16 @@ class Tournament(models.Model):
            print ('group min duration: ', datetime.now() - gm_start)
            #print ('group: ', group, 'min', group_min)
 
+           clean_dict = {key.replace('(a)', '').strip(): v for key, v in score_dict.items()}
+           print (clean_dict)
+
            for player in Field.objects.filter(tournament=self, group=group):
-               if player.playerName in score_dict.keys():  #needed to deal wiht WD's before start of tourn.
+               #if player.playerName in score_dict.keys():  #needed to deal wiht WD's before start of tourn.
+               if player.playerName in clean_dict:  #needed to deal wiht WD's before start of tourn.
                     #print (group, player.playerName, score_dict[player.playerName]['rank'])
-                    if (score_dict[player.playerName]['rank'] not in  self.not_playing_list() and  \
-                       int(utils.formatRank(score_dict[player.playerName]['rank']) - player.handicap()) == group_min) or \
+                    #if (score_dict[player.playerName]['rank'] not in  self.not_playing_list() and  \
+                    if (clean_dict[player.playerName]['rank'] not in  self.not_playing_list() and  \
+                       int(utils.formatRank(clean_dict[player.playerName]['rank']) - player.handicap()) == group_min) or \
                        cut_num - player.handicap() == group_min:  
                         golfer_list.append(player.playerName)
                      #   print (group, golfer_list)
@@ -289,7 +294,8 @@ class Tournament(models.Model):
                     #    golfer_list.append(player.playerName)
                     #else:
                      #   print (player.playerName, 'failed optimal check')                      
-                    if score_dict[player.playerName]['rank'] in self.not_playing_list():
+                    #if score_dict[player.playerName]['rank'] in self.not_playing_list():
+                    if clean_dict[player.playerName]['rank'] in self.not_playing_list():
                         group_cuts += 1
                else:
                     print (player, 'mot in dict')
@@ -324,17 +330,20 @@ class Group(models.Model):
     def min_score(self):
         #print ('min score ', datetime.now(), self)
         score_dict = ScoreDict.objects.get(tournament=self.tournament)
+        clean_dict = score_dict.clean_dict()
         cut_num = self.tournament.cut_num()
         min_score = 999  
 
         for score in Field.objects.filter(group=self):
             print ('min score calc: ', datetime.now())
             try:
-                if score_dict.data.get(score.playerName).get('rank') in self.tournament.not_playing_list():
+                #if score_dict.data.get(score.playerName).get('rank') in self.tournament.not_playing_list():
+                if clean_dict.get(score.playerName).get('rank') in self.tournament.not_playing_list():
                     if cut_num - score.handicap() < min_score:
                         min_score = cut_num - score.handicap()
-                elif utils.formatRank(score_dict.data.get(score.playerName).get('rank')) - score.handicap() < min_score:
-                    min_score = utils.formatRank(score_dict.data.get(score.playerName).get('rank')) - score.handicap()
+                #elif utils.formatRank(score_dict.data.get(score.playerName).get('rank')) - score.handicap() < min_score:
+                elif utils.formatRank(clean_dict.get(score.playerName).get('rank')) - score.handicap() < min_score:
+                    min_score = utils.formatRank(clean_dict.get(score.playerName).get('rank')) - score.handicap()
                 #else:
                 #    print ('not min', score.playerName, score_dict.data.get(score.playerName).get('rank'), utils.formatRank(score_dict.data.get(score.playerName).get('rank')))
             except Exception as e:
@@ -647,6 +656,9 @@ class ScoreDict(models.Model):
         sorted_score_dict = {k:v for k, v in sorted(d.items(), key=lambda item: item[1].get('sort_rank'))}
         print ('sorted')        
         return sorted_score_dict
+
+    def clean_dict(self):
+        return  {key.replace('(a)', '').strip(): v for key, v in self.data.items()}
 
 class UserProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
