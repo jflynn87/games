@@ -50,38 +50,39 @@ $.ajax({
 
 })
 
-$('#tournament_key').ready(function (){
-  $.ajax({
-    type: "GET",
-    url: "/golf_app/get_info/",
-    dataType: 'json',
-    //async: false,
-    data: {'tournament' : $('#tournament_key').text()},
-    success: function (json) {
-      info= $.parseJSON(json)
+// $('#tournament_key').ready(function (){
+//   $.ajax({
+//     type: "GET",
+//     url: "/golf_app/get_info/",
+//     dataType: 'json',
+//     //async: false,
+//     data: {'tournament' : $('#tournament_key').text()},
+//     success: function (json) {
+//       info= $.parseJSON(json)
       
-    },
-    failure: function(json) {
-      console.log('get info fail');
-      console.log(json);
-      return {}
-    }
-  })
-})
+//     },
+//     failure: function(json) {
+//       console.log('get info fail');
+//       console.log(json);
+//       return {}
+//     }
+//   })
+// })
 
 
 function build_score_tbl(data) {
   $('#det-list').empty()
   $('#det-list').append('<table class="table">' + '</table>')
   
-  console.log(info)
+  //console.log(info)
   var picks_data = $.parseJSON((data['picks']))
   var total_data = $.parseJSON((data['totals']))
   var optimal_data = $.parseJSON((data['optimal']))
   var scores = $.parseJSON((data['scores']))
   var season_totals = $.parseJSON(data['season_totals'])
+  var info = $.parseJSON(data['info'])
 
-  console.log(total_data)
+  console.log(info)
 
   $('#det-list table').append('<thead style="background-color:lightblue">' + '<tr>' + '<th> Tournament Scores  </th>' + 
     '<th>' + '</th>' + '<th>' + '<a href="#"> <button> return to top</button> </a>' + '</th>' +  '<th>' + '</th>' + '<th>' + '</th>' + '<th>' + '</th>' +

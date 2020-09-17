@@ -349,6 +349,7 @@ class GetScores(APIView):
         print ('GetScores API VIEW', self.request.GET.get('tournament'))
         t = Tournament.objects.get(pk=self.request.GET.get('tournament'))
         sd = ScoreDict.objects.get(tournament=t)
+        info = get_info(t)
 
         if t.current and not t.complete:
             print ('scraping')
@@ -400,6 +401,7 @@ class GetScores(APIView):
                           'optimal': optimal,
                           'scores': json.dumps(score_dict),
                           'season_totals': totals,
+                          'info': json.dumps(info),
          }), 200)
 
 class GetDBScores(APIView):
@@ -407,10 +409,11 @@ class GetDBScores(APIView):
     def get(self, num):
         
         #fix info race condition in load.js and remove sleep
-        time.sleep(5)
+        
         print ('GetScores API VIEW', self.request.GET.get('tournament'))
         t = Tournament.objects.get(pk=self.request.GET.get('tournament'))
         sd, created = ScoreDict.objects.get_or_create(tournament=t)
+        info = get_info(t)
 
         # try:
         #     sd = ScoreDict.objects.get(tournament=t)
@@ -439,6 +442,7 @@ class GetDBScores(APIView):
                             'optimal': display_data.get('display_data').get('optimal'), 
                             'scores': display_data.get('display_data').get('scores'),
                             'season_totals': display_data.get('display_data').get('totals'),
+                            'info': json.dumps(info),
             }), 200)
         except Exception as e:
             print ('old logic')
@@ -611,20 +615,38 @@ class OptimalPicks(APIView):
 
 
 class GetInfo(APIView):
-    def get(self, num):
-        print (self.request.GET)
-        try:
-            info_dict = {}
-            t = Tournament.objects.get(pk=self.request.GET.get('tournament'))
-            total_picks = 0
+    pass
+    # def get(self, num):
+    #     print (self.request.GET)
+    #     try:
+    #         info_dict = {}
+    #         t = Tournament.objects.get(pk=self.request.GET.get('tournament'))
+    #         total_picks = 0
 
-            for g in Group.objects.filter(tournament=t):
-                info_dict[g.number] = g.num_of_picks()
-                total_picks += g.num_of_picks()
-            info_dict['total'] = total_picks
+    #         for g in Group.objects.filter(tournament=t):
+    #             info_dict[g.number] = g.num_of_picks()
+    #             total_picks += g.num_of_picks()
+    #         info_dict['total'] = total_picks
 
-            print ('info dict', info_dict)
-            return Response(json.dumps(info_dict), 200)
-        except Exception as e:
-            print ('exception', e)
-            return Response(json.dumps({e}), 500)
+    #         print ('info dict', info_dict)
+    #         return Response(json.dumps(info_dict), 200)
+    #     except Exception as e:
+    #         print ('exception', e)
+    #         return Response(json.dumps({e}), 500)
+
+def get_info(t):
+    try:
+        info_dict = {}
+        t = Tournament.objects.get(pk=t.pk)
+        total_picks = 0
+
+        for g in Group.objects.filter(tournament=t):
+            info_dict[g.number] = g.num_of_picks()
+            total_picks += g.num_of_picks()
+        info_dict['total'] = total_picks
+
+        print ('info dict', info_dict)
+        return info_dict
+    except Exception as e:
+        print ('exception', e)
+        return Response({'error': e})
