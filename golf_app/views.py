@@ -28,6 +28,7 @@ import csv
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from django.core.mail import send_mail
+import time
 
 
 
@@ -347,6 +348,7 @@ class GetScores(APIView):
         
         print ('GetScores API VIEW', self.request.GET.get('tournament'))
         t = Tournament.objects.get(pk=self.request.GET.get('tournament'))
+        sd = ScoreDict.objects.get(tournament=t)
 
         if t.current and not t.complete:
             print ('scraping')
@@ -356,7 +358,6 @@ class GetScores(APIView):
         else:
             print ('not scraping')
             try:
-                sd = ScoreDict.objects.get(tournament=t)
                 score_dict = sd.sorted_dict()
             except Exception as e:
                 score_dict = get_score_dict(t)
@@ -379,6 +380,19 @@ class GetScores(APIView):
         optimal = t.optimal_picks()
         totals = Season.objects.get(season=t.season).get_total_points()
 
+        display_dict = {}
+        display_dict['display_data'] = {'picks': d,
+                          'totals': ts,
+                          'leaders': leaders,
+                          'cut_line': t.cut_score,
+                          'optimal': optimal,
+                          'scores': json.dumps(score_dict),
+                          'season_totals': totals,}
+
+        sd.pick_data = json.dumps(display_dict)
+        sd.save()
+
+
         return Response(({'picks': d,
                           'totals': ts,
                           'leaders': leaders,
@@ -392,34 +406,52 @@ class GetDBScores(APIView):
     
     def get(self, num):
         
+        #fix info race condition in load.js and remove sleep
+        time.sleep(5)
         print ('GetScores API VIEW', self.request.GET.get('tournament'))
         t = Tournament.objects.get(pk=self.request.GET.get('tournament'))
+        sd, created = ScoreDict.objects.get_or_create(tournament=t)
+
+        # try:
+        #     sd = ScoreDict.objects.get(tournament=t)
+        #     score_dict = sd.sorted_dict()
+        #     print ('-------- New Score dict used')            
+        # except Exception as e:
+        #     print ('using old score dict', e)
+        #     score_dict = get_score_dict(t)
+        
+        # scores = manual_score.Score(score_dict, t, 'json')
+        # ts = scores.total_scores()
+        # d = scores.get_picks_by_user() 
+        
+        # optimal = t.optimal_picks()
+        # scores_json = json.dumps(score_dict)
+        # totals = Season.objects.get(season=t.season).get_total_points()
+        # leaders = scores.get_leader()
 
         try:
-            sd = ScoreDict.objects.get(tournament=t)
-            score_dict = sd.sorted_dict()
-            print ('-------- New Score dict used')            
+            display_data = json.loads(sd.pick_data)
+                
+            return Response(({'picks': display_data.get('display_data').get('picks'),
+                            'totals': display_data.get('display_data').get('totals'),
+                            'leaders': display_data.get('display_data').get('leaders'),
+                            'cut_line': display_data.get('display_data').get('cut_line'),
+                            'optimal': display_data.get('display_data').get('optimal'), 
+                            'scores': display_data.get('display_data').get('scores'),
+                            'season_totals': display_data.get('display_data').get('totals'),
+            }), 200)
         except Exception as e:
-            print ('using old score dict', e)
-            score_dict = get_score_dict(t)
-        
-        scores = manual_score.Score(score_dict, t, 'json')
-        ts = scores.total_scores()
-        d = scores.get_picks_by_user() 
-        
-        optimal = t.optimal_picks()
-        scores_json = json.dumps(score_dict)
-        totals = Season.objects.get(season=t.season).get_total_points()
-        leaders = scores.get_leader()
+            print ('old logic')
 
-        return Response(({'picks': d,
-                          'totals': ts,
-                          'leaders': leaders,
-                          'cut_line': t.cut_score,
-                          'optimal': optimal, 
-                          'scores': scores_json,
-                          'season_totals': totals,
-         }), 200)
+
+            return Response(({'picks': None,
+                               'totals': None,
+                               'leaders': None,
+                               'cut_line': None,
+                               'optimal': None, 
+                               'scores': None,
+                               'season_totals': None,
+              }), 200)
 
 
 class NewScoresView(LoginRequiredMixin,ListView):

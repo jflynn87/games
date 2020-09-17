@@ -25,25 +25,6 @@ $(document).ready(function() {
 
 
 $('#tournament_key').ready(function (){
-  $.ajax({
-    type: "GET",
-    url: "/golf_app/get_info/",
-    dataType: 'json',
-    data: {'tournament' : $('#tournament_key').text()},
-    success: function (json) {
-       info= $.parseJSON(json)
-    },
-    failure: function(json) {
-      console.log('get info fail');
-      console.log(json);
-    }
-  })
-  
-})
-
-
-
-$('#tournament_key').ready(function (){
 $.ajax({
   type: "GET",
   url: "/golf_app/get_scores/",
@@ -69,10 +50,31 @@ $.ajax({
 
 })
 
+$('#tournament_key').ready(function (){
+  $.ajax({
+    type: "GET",
+    url: "/golf_app/get_info/",
+    dataType: 'json',
+    //async: false,
+    data: {'tournament' : $('#tournament_key').text()},
+    success: function (json) {
+      info= $.parseJSON(json)
+      
+    },
+    failure: function(json) {
+      console.log('get info fail');
+      console.log(json);
+      return {}
+    }
+  })
+})
+
 
 function build_score_tbl(data) {
   $('#det-list').empty()
   $('#det-list').append('<table class="table">' + '</table>')
+  
+  console.log(info)
   var picks_data = $.parseJSON((data['picks']))
   var total_data = $.parseJSON((data['totals']))
   var optimal_data = $.parseJSON((data['optimal']))

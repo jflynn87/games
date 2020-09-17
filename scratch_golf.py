@@ -28,11 +28,51 @@ import json
 from golf_app import views, manual_score, scrape_scores, populateField, withdraw, scrape_scores_picks, utils
 
 
-t = Tournament.objects.get(current=True)
+#for t in Tournament.objects.filter(season__current=True):
+#    print (t, t.pk)
 
+t = Tournament.objects.get(pk=126)
+user = User.objects.get(username='j_beningufirudo')
 print (t)
-print (len(Field.objects.filter(tournament=t, withdrawn=True)))
 
+Picks.objects.filter(user=user).delete()
+ScoreDetails.objects.filter(user=user).delete()
+
+
+for pick in ScoreDetails.objects.filter(pick__playerName__tournament=t, user__username='jcarl62'):
+
+    jb_pick = Picks()
+    jb_pick.user = user
+    jb_pick.playerName = pick.pick.playerName
+    jb_pick.score = pick.pick.score
+    jb_pick.save()
+
+    bonus, c = BonusDetails.objects.get_or_create(user=user, tournament=t, winner_bonus=0, cut_bonus=0, major_bonus=0, best_in_group_bonus=0, playoff_bonus=0)
+    #bonus.save()
+
+    PickMethod.objects.get_or_create(method=3, tournament=t, user=user)
+
+    sd = ScoreDetails()
+    sd.user = user
+    sd.pick = pick.pick
+    sd.score = pick.score
+    sd.toPar = pick.toPar
+    sd.today_score = pick.today_score
+    sd.thru = pick.thru
+    sd.sod_position = pick.sod_position
+    sd.gross_score = pick.gross_score
+    sd.save()
+
+TotalScore.objects.get_or_create(user=user, tournament=t, score=573)
+
+
+
+
+
+
+
+
+exit()
 for golfer in Field.objects.filter(tournament=t):
     golfer.withdrawn = False
     golfer.save()

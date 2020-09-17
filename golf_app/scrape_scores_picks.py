@@ -115,7 +115,7 @@ class ScrapeScores(object):
                     sd.data = score_dict
                 
                 sd.save()
-                print (score_dict)
+                #print (score_dict)
                 return (score_dict)                
             else:
                 print ('scrape scores t mismatch', t, name)
