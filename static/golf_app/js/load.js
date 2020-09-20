@@ -23,6 +23,32 @@ $(document).ready(function() {
     })
 })
 
+// $(document).ready(function() {
+//   //$('#det-list').attr('class', 'spinner')
+//   //$('#totals-table').hide()
+//   start = new Date() 
+//   //console.log(start.toLocaleString())
+//   //$('#local').text.toLocaleString()
+//   //$('#status').append(start.toLocaleString())
+
+//   $.ajax({
+//     type: "GET",
+//     url: "/golf_app/cbs_scores/",
+//     data: {'tournament' : $('#tournament_key').text()},
+//     dataType: 'json',
+//     success: function (json) {
+//       console.log('cbs load success');
+//       build_score_tbl(json)
+//       $('#status').text('scores from CBS, getting PGA scores')
+//       console.log('cbs load duration: ', start, new Date()) 
+//     },
+//     failure: function(json) {
+//       console.log('fail');
+//       console.log(json);
+//     }
+//   })
+// })
+
 
 $('#tournament_key').ready(function (){
 $.ajax({
@@ -82,7 +108,8 @@ function build_score_tbl(data) {
   var season_totals = $.parseJSON(data['season_totals'])
   var info = $.parseJSON(data['info'])
 
-  console.log(info)
+  //console.log('season totals: ', season_totals)
+  //console.log('totals', total_data)
 
   $('#det-list table').append('<thead style="background-color:lightblue">' + '<tr>' + '<th> Tournament Scores  </th>' + 
     '<th>' + '</th>' + '<th>' + '<a href="#"> <button> return to top</button> </a>' + '</th>' +  '<th>' + '</th>' + '<th>' + '</th>' + '<th>' + '</th>' +

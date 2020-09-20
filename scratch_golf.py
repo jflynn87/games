@@ -25,7 +25,77 @@ from urllib.request import Request, urlopen
 from selenium import webdriver
 import urllib
 import json
-from golf_app import views, manual_score, scrape_scores, populateField, withdraw, scrape_scores_picks, utils
+from golf_app import views, manual_score, scrape_scores, populateField, withdraw, scrape_scores_picks, utils, scrape_cbs_golf
+from unidecode import unidecode
+
+
+scrape_cbs_golf.ScrapeCBS().get_data()
+exit()
+
+s = datetime.now()
+t = Tournament.objects.get(current=True)
+
+for g in Field.objects.filter(tournament=t):
+    print (g, g.currentWGR, g.handi)
+
+
+
+exit()
+for g in Group.objects.filter(tournament=t).order_by('number'):
+    start = datetime.now()
+    print (g, g.min_score(), datetime.now()-start)
+
+print ('current process: ', datetime.now() - s)
+
+
+
+
+
+
+
+
+exit()
+
+
+for f in Field.objects.filter(tournament=t).order_by('number'):
+    if f.playerName not in web.keys():
+        for k,v in web.items():
+            if unidecode(k) == unidecode(f.playerName):
+                break
+        if unidecode(k) == unidecode(f.playerName):
+            continue
+        else:
+            field_name_len = len(f.playerName.split(' '))
+            cbs_name_len = len(k.split(' '))
+            print (f.playerName, 'field_len', field_name_len, 'cbs len:', cbs_name_len)
+            if unidecode(k.split(' ')[cbs_name_len-1]) == unidecode(f.playerName.split(' ')[field_name_len-1]) and \
+               unidecode(k.split[0][1]) == unidecode(f.playerName.split[0][1]):
+               print ('found match', f.playerName )
+
+
+            
+            #print ('not in cbd', f.playerName)
+
+exit()
+
+print ('============================================')
+
+for f in Field.objects.filter(tournament=t):
+    if f.playerName not in pga.keys():
+        for k, v in pga.items():
+            if k.replace('(a)', '').strip() == f.playerName:
+                break
+        if k.replace('(a)', '').strip() == f.playerName:
+            continue
+        else:
+            print ('not in pga', f)
+
+    
+
+
+#print (web)
+
+exit()
 
 
 #for t in Tournament.objects.filter(season__current=True):

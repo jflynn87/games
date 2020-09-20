@@ -10,6 +10,7 @@ from datetime import datetime
 from django.db.models import Count, Max, Min
 from django.db import transaction
 import random
+from unidecode import unidecode
 
 
 class Score(object):
@@ -167,37 +168,43 @@ class Score(object):
         for pick in Picks.objects.filter(playerName__tournament=self.tournament):
             #print ('1 -', pick.playerName.playerName)
             #print (self.score_dict)
+
+            data = self.score_dict.get(unidecode(pick.playerName.playerName))
+            if data == None:
+                print ('*********', 'player name issue', pick.playerName.playerName, '*************')
+                for k, v in self.score_dict.items():
+                    if v.get('pga_num') == pick.playerName.playerID:
+                        data = v
+                        print ('pick data from pga_num', pick)
+
             try:
-                if self.score_dict.get(pick.playerName.playerName).get('rank') == "CUT":
+                if data.get('rank') == "CUT":
                     pick.score = cut_num
-                elif self.score_dict.get(pick.playerName.playerName).get('rank') == "WD":
+                elif data.get('rank') == "WD":
                     pick.score = self.get_wd_score(pick) 
                 else:
-                    #print ('checking cut num', datetime.now())
-                    if int(utils.formatRank(self.score_dict.get(pick.playerName.playerName).get('rank'))) > cut_num:
+                    if int(utils.formatRank(data.get('rank'))) > cut_num:
                          pick.score=cut_num 
-                    # if int(utils.formatRank(self.score_dict.get(pick.playerName.playerName).get('rank'))) > self.tournament.cut_num():
-                    #     pick.score=self.tournament.cut_num() 
                     else:
-                        pick.score = utils.formatRank(self.score_dict.get(pick.playerName.playerName).get('rank')) 
+                        pick.score = utils.formatRank(data.get('rank')) 
                 #print ('end checking cut num', datetime.now())
                 pick.save()
                 #print ("2")    
                 sd, sd_created = ScoreDetails.objects.get_or_create(user=pick.user, pick=pick)
                 sd.score=pick.score - pick.playerName.handicap()
                 sd.gross_score = pick.score
-                if self.score_dict.get(pick.playerName.playerName).get('rank') == "CUT" or \
-                    self.score_dict.get(pick.playerName.playerName).get('rank') == "WD" and round < 3:
+                if data.get('rank') == "CUT" or \
+                    data.get('rank') == "WD" and round < 3:
                     sd.today_score  = "CUT"
                     sd.thru  = "CUT"
-                elif self.score_dict.get(pick.playerName.playerName).get('rank') == "WD":
+                elif data.get('rank') == "WD":
                     sd.today_score = "WD"
                     sd.thru = "WD"
                 else:
-                    sd.today_score = self.score_dict.get(pick.playerName.playerName).get('round_score')
-                    sd.thru  = self.score_dict.get(pick.playerName.playerName).get('thru')
-                sd.toPar = self.score_dict.get(pick.playerName.playerName).get('total_score')
-                sd.sod_position = self.score_dict.get(pick.playerName.playerName).get('change')
+                    sd.today_score = data.get('round_score')
+                    sd.thru  = data.get('thru')
+                sd.toPar = data.get('total_score')
+                sd.sod_position = data.get('change')
                 sd.save()
             except Exception as e:
                 print ('withdraw?', pick, e)

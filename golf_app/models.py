@@ -5,8 +5,7 @@ from django.db.models import Min, Q, Count, Sum, Max
 from datetime import datetime
 from golf_app import utils
 from django.db import transaction
-import random
-import unidecode
+from unidecode import unidecode
 import json
 
 
@@ -276,25 +275,14 @@ class Tournament(models.Model):
            #print ('group: ', group, 'min', group_min)
 
            clean_dict = {key.replace('(a)', '').strip(): v for key, v in score_dict.items()}
-           print (clean_dict)
+           #print (clean_dict)
 
            for player in Field.objects.filter(tournament=self, group=group):
-               #if player.playerName in score_dict.keys():  #needed to deal wiht WD's before start of tourn.
                if player.playerName in clean_dict:  #needed to deal wiht WD's before start of tourn.
-                    #print (group, player.playerName, score_dict[player.playerName]['rank'])
-                    #if (score_dict[player.playerName]['rank'] not in  self.not_playing_list() and  \
                     if (clean_dict[player.playerName]['rank'] not in  self.not_playing_list() and  \
                        int(utils.formatRank(clean_dict[player.playerName]['rank']) - player.handicap()) == group_min) or \
                        cut_num - player.handicap() == group_min:  
                         golfer_list.append(player.playerName)
-                     #   print (group, golfer_list)
-                        #score_list[str(player)] = int(calc_score.formatRank(str(self.score_dict[player.playerName]['rank'])))
-                    #elif cut_num - player.handicap() == group_min:
-                    #    print (player.playerName, 'elif')
-                    #    golfer_list.append(player.playerName)
-                    #else:
-                     #   print (player.playerName, 'failed optimal check')                      
-                    #if score_dict[player.playerName]['rank'] in self.not_playing_list():
                     if clean_dict[player.playerName]['rank'] in self.not_playing_list():
                         group_cuts += 1
                else:
@@ -332,13 +320,14 @@ class Group(models.Model):
         score_dict = ScoreDict.objects.get(tournament=self.tournament)
         clean_dict = score_dict.clean_dict()
         cut_num = self.tournament.cut_num()
+        not_playing_list = self.tournament.not_playing_list()
         min_score = 999  
 
         for score in Field.objects.filter(group=self):
-            print ('min score calc: ', datetime.now())
+            start = datetime.now()
             try:
                 #if score_dict.data.get(score.playerName).get('rank') in self.tournament.not_playing_list():
-                if clean_dict.get(score.playerName).get('rank') in self.tournament.not_playing_list():
+                if clean_dict.get(score.playerName).get('rank') in not_playing_list:
                     if cut_num - score.handicap() < min_score:
                         min_score = cut_num - score.handicap()
                 #elif utils.formatRank(score_dict.data.get(score.playerName).get('rank')) - score.handicap() < min_score:
@@ -349,16 +338,17 @@ class Group(models.Model):
             except Exception as e:
                 print (score.playerName, e, 'exclded from min score')
                 #print (self, score.rank_as_int(), score.handicap())
-        #print ('end min score ', datetime.now(), self)
+            #print ('end min score ', datetime.now() - start, self)
         return min_score
 
-    def best_picks(self):
-        best_list = []
-        min_score = self.min_score()
-        for field in Field.objects.filter(group=self, score__le=self.tournament.cut_num()):
-            if (utils.formatRank(field.rank) - field.handicap()) == min_score:
-                best_list.append(field.playerName)
-        return best_list
+    #deprecate for optimal_pick function
+    # def best_picks(self):
+    #     best_list = []
+    #     min_score = self.min_score()
+    #     for field in Field.objects.filter(group=self, score__le=self.tournament.cut_num()):
+    #         if (utils.formatRank(field.rank) - field.handicap()) == min_score:
+    #             best_list.append(field.playerName)
+    #     return best_list
 
         #return Field.objects.filter(tournament=self.tournament, score=self.min_score())
 
@@ -391,7 +381,7 @@ class Golfer(models.Model):
             name = str(self.golfer_pga_num) + '.' + self.pga_web_name_format()
         else:
             name = str(self.golfer_pga_num) + '.' + self.pga_web_name_format()
-        return 'https://www.pgatour.com/players/player.' + unidecode.unidecode(name) + '.html'
+        return 'https://www.pgatour.com/players/player.' + unidecode(name) + '.html'
 
 
 class Field(models.Model):
@@ -411,6 +401,7 @@ class Field(models.Model):
     pic_link = models.URLField(null=True)
     golfer = models.ForeignKey(Golfer, on_delete=models.CASCADE, null=True)
     rank = models.CharField(max_length=50, null=True)
+    handi = models.IntegerField(null=True)
 
     class Meta:
         ordering = ['group', 'currentWGR']
@@ -629,6 +620,8 @@ class ScoreDict(models.Model):
     tournament = models.ForeignKey(Tournament, null=True, on_delete=models.CASCADE, related_name='score_dict')
     data = models.JSONField(null=True)
     pick_data = models.JSONField(null=True)
+    cbs_data = models.JSONField(null=True)
+
 
 
     def __str__(self):
@@ -652,9 +645,9 @@ class ScoreDict(models.Model):
                 # else:
                 #     v.update({'sort_rank': 999})
 
-        print ('sorting')        
+        
         sorted_score_dict = {k:v for k, v in sorted(d.items(), key=lambda item: item[1].get('sort_rank'))}
-        print ('sorted')        
+        
         return sorted_score_dict
 
     def clean_dict(self):

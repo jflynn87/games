@@ -335,7 +335,7 @@ def create_groups(tournament_number):
              currentWGR=v[0][0], sow_WGR=v[0][1], soy_WGR=v[0][2], \
              group=groups, alternate=v[1][0], \
              playerID=v[1][1], pic_link= get_pick_link(v[1][1]), \
-             map_link= map_link, golfer=Golfer.objects.get(golfer_pga_num=v[1][1]))
+             map_link= map_link, golfer=Golfer.objects.get(golfer_pga_num=v[1][1]), handi=calc_handi(v[0][0], len(field)))
           player_cnt +=1
         elif player_cnt == groups.playerCnt:
           #print (k,v[0], str(groups.number), str(groups.playerCnt))
@@ -344,7 +344,7 @@ def create_groups(tournament_number):
              currentWGR=v[0][0], sow_WGR=v[0][1], soy_WGR=v[0][2], \
              group=groups, alternate=v[1][0], \
              playerID=v[1][1], pic_link= get_pick_link(v[1][1]), \
-             map_link= map_link, golfer=Golfer.objects.get(golfer_pga_num=v[1][1]))
+             map_link= map_link, golfer=Golfer.objects.get(golfer_pga_num=v[1][1]), handi=calc_handi(v[0][0], len(field)))
           group_num +=1
           player_cnt = 1
           if Field.objects.filter(tournament=tournament).count() < len(field):
@@ -406,6 +406,12 @@ def get_flag(golfer, golfer_data):
         return None
         #else:
     #    return None
+
+
+def calc_handi(owgr, field_cnt):
+    if round(owgr*.01) < (field_cnt * .13):
+        return int(round(owgr*.01))
+    return round(field_cnt * .13)
 
 
 

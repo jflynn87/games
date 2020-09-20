@@ -106,11 +106,15 @@ class ScrapeScores(object):
                     for pick in Picks.objects.filter(playerName__tournament=self.tournament).values('playerName__playerID').distinct():
                         row =  table.find("tr", {'class': 'line-row-' + str(pick.get('playerName__playerID'))})
                         data = get_data(self, row)
+                        data[1].update({'pga_num': pick.playerID})
                         score_dict[data[0]] =  data[1]
                     #sd.pick_data = score_dict
                 else:  #doing for "all" or None 
                     for row in table.find_all("tr", {'class': 'line-row'}):
+                        ele_class = row['class'][1].split('-')[2]
+                        #print (ele_class, ele_class)
                         data = get_data(self, row)
+                        data[1].update({'pga_num': ele_class})
                         score_dict[data[0]] =  data[1]
                     sd.data = score_dict
                 

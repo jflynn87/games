@@ -13,7 +13,7 @@ from django.urls import reverse, reverse_lazy
 from django.contrib.auth.models import User
 import datetime
 from golf_app import populateField, calc_score, optimal_picks,\
-     manual_score, scrape_scores, scrape_scores_picks
+     manual_score, scrape_scores, scrape_scores_picks, scrape_cbs_golf
 from django.utils import timezone
 from django.core.exceptions import ObjectDoesNotExist
 from django.db.models import Min, Q, Count, Sum, Max
@@ -29,6 +29,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from django.core.mail import send_mail
 import time
+
 
 
 
@@ -351,6 +352,23 @@ class GetScores(APIView):
         sd = ScoreDict.objects.get(tournament=t)
         info = get_info(t)
 
+        if t.complete:
+            display_data = json.loads(sd.pick_data)
+                
+            return Response(({'picks': display_data.get('display_data').get('picks'),
+                            'totals': display_data.get('display_data').get('totals'),
+                            'leaders': display_data.get('display_data').get('leaders'),
+                            'cut_line': display_data.get('display_data').get('cut_line'),
+                            'optimal': display_data.get('display_data').get('optimal'), 
+                            'scores': display_data.get('display_data').get('scores'),
+                            'season_totals': display_data.get('display_data').get('season_totals'),
+                            'info': json.dumps(info),
+            }), 200)
+
+
+
+
+
         if t.current and not t.complete:
             print ('scraping')
             #pga_web = scrape_scores.ScrapeScores(t)
@@ -359,7 +377,7 @@ class GetScores(APIView):
         else:
             print ('not scraping')
             try:
-                score_dict = sd.sorted_dict()
+                score_dict = sd.pick_data()
             except Exception as e:
                 score_dict = get_score_dict(t)
                 print ('using old score dict method', t, e)
@@ -441,7 +459,7 @@ class GetDBScores(APIView):
                             'cut_line': display_data.get('display_data').get('cut_line'),
                             'optimal': display_data.get('display_data').get('optimal'), 
                             'scores': display_data.get('display_data').get('scores'),
-                            'season_totals': display_data.get('display_data').get('totals'),
+                            'season_totals': display_data.get('display_data').get('season_totals'),
                             'info': json.dumps(info),
             }), 200)
         except Exception as e:
@@ -650,3 +668,70 @@ def get_info(t):
     except Exception as e:
         print ('exception', e)
         return Response({'error': e})
+
+
+
+class CBSScores(APIView):
+
+    ## not started, add code
+
+    def get(self, num):
+        #print (self.request.GET)
+
+        try:
+            
+            #info_dict = {}
+            t = Tournament.objects.get(pk=self.request.GET.get('tournament'))
+
+            if t.complete:
+                return Response(({}), 200)
+
+            sd = ScoreDict.objects.get(tournament=t)
+            info = get_info(t)
+            if not t.current:
+                return (json.dumps({'error': 'only for current tournament'}), 500)
+
+            score_dict = scrape_cbs_golf.ScrapeCBS().get_data()
+
+        
+            scores = manual_score.Score(score_dict, t, 'json')
+            # change so this isn't executed when complete, add function to get total scores without updating
+            #print (len(score_dict))
+            if len(score_dict) == 0:
+                print ('score_dict empty')
+                return Response(({}), 200)
+        
+            if t.current and len(score_dict) != 0:
+                scores.update_scores()
+        
+                ts = scores.total_scores()
+                d = scores.get_picks_by_user() 
+                leaders = scores.get_leader()
+                optimal = t.optimal_picks()
+                totals = Season.objects.get(season=t.season).get_total_points()
+
+                display_dict = {}
+                display_dict['display_data'] = {'picks': d,
+                                'totals': ts,
+                                'leaders': leaders,
+                                'cut_line': t.cut_score,
+                                'optimal': optimal,
+                                'scores': json.dumps(score_dict),
+                                'season_totals': totals,}
+
+                sd.cbs_data = json.dumps(display_dict)
+                sd.save()
+
+                return Response(({'picks': d,
+                                'totals': ts,
+                                'leaders': leaders,
+                                'cut_line': t.cut_score,
+                                'optimal': optimal,
+                                'scores': json.dumps(score_dict),
+                                'season_totals': totals,
+                                'info': json.dumps(info),
+                }), 200)
+
+        except Exception as e:
+            print ('exception', e)
+            return Response(json.dumps({'error': e}), 500)

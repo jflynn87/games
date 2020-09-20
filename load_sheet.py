@@ -94,7 +94,7 @@ def readSheet(file,numPlayers):
                 scores.save()
 
                 my_total = 0
-                for score in WeekScore.objects.filter(week__lte=mike_score_week, player=player):
+                for score in WeekScore.objects.filter(week__lte=mike_score_week, player=player, week__season_model__current=True):
                     my_total += score.score
 
 
