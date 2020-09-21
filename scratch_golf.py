@@ -29,11 +29,44 @@ from golf_app import views, manual_score, scrape_scores, populateField, withdraw
 from unidecode import unidecode
 
 
-scrape_cbs_golf.ScrapeCBS().get_data()
-exit()
 
 s = datetime.now()
-t = Tournament.objects.get(current=True)
+#t = Tournament.objects.get(current=True)
+t = Tournament.objects.get(pga_tournament_num='464', season__current=True)
+#url = "https://www.pgatour.com/competition/2021/safeway-open/leaderboard.html"
+#web = scrape_scores_picks.ScrapeScores(t,url, None).scrape()
+sd = ScoreDict.objects.get(tournament=t)
+
+#data = json.loads(sd.data)
+
+
+
+score_dict = sd.sorted_dict()
+scores = manual_score.Score(score_dict, t, 'json')
+ts = scores.total_scores()
+d = scores.get_picks_by_user() 
+        
+optimal = t.optimal_picks()
+scores_json = json.dumps(score_dict)
+totals = Season.objects.get(season=t.season).get_total_points()
+leaders = scores.get_leader()
+
+display_dict = {}
+display_dict['display_data'] = {'picks': d,
+                    'totals': ts,
+                    'leaders': leaders,
+                    'cut_line': t.cut_score,
+                    'optimal': optimal,
+                    'scores': json.dumps(score_dict),
+                    'season_totals': totals,}
+
+sd.pick_data = json.dumps(display_dict)
+sd.save()
+
+
+exit()
+
+
 
 for g in Field.objects.filter(tournament=t):
     print (g, g.currentWGR, g.handi)

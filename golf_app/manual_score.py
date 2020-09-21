@@ -267,8 +267,8 @@ class Score(object):
                     bd.cut_bonus = 0
                 ts_dict[ts.user.username] = {'total_score': ts.score, 'cuts': ts.cut_count, \
                     'msg': message, 'winner_bonus': bd.winner_bonus, 'major_bonus': bd.major_bonus, \
-                    'cut_bonus': bd.cut_bonus, 'playoff_bonus': db.playoff_bonus, \
-                    'best_in_group': db.best_in_group_bonus, 'handicap': ts.total_handicap()} 
+                    'cut_bonus': bd.cut_bonus, 'playoff_bonus': bd.playoff_bonus, \
+                    'best_in_group': bd.best_in_group_bonus, 'handicap': ts.total_handicap()} 
             sorted_ts_dict = sorted(ts_dict.items(), key=lambda v: v[1].get('total_score'))
             return json.dumps(dict(sorted_ts_dict))
        

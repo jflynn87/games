@@ -23,31 +23,33 @@ $(document).ready(function() {
     })
 })
 
-// $(document).ready(function() {
-//   //$('#det-list').attr('class', 'spinner')
-//   //$('#totals-table').hide()
-//   start = new Date() 
-//   //console.log(start.toLocaleString())
-//   //$('#local').text.toLocaleString()
-//   //$('#status').append(start.toLocaleString())
+$(document).ready(function() {
+  //$('#det-list').attr('class', 'spinner')
+  //$('#totals-table').hide()
+  start = new Date() 
+  //console.log(start.toLocaleString())
+  //$('#local').text.toLocaleString()
+  //$('#status').append(start.toLocaleString())
 
-//   $.ajax({
-//     type: "GET",
-//     url: "/golf_app/cbs_scores/",
-//     data: {'tournament' : $('#tournament_key').text()},
-//     dataType: 'json',
-//     success: function (json) {
-//       console.log('cbs load success');
-//       build_score_tbl(json)
-//       $('#status').text('scores from CBS, getting PGA scores')
-//       console.log('cbs load duration: ', start, new Date()) 
-//     },
-//     failure: function(json) {
-//       console.log('fail');
-//       console.log(json);
-//     }
-//   })
-// })
+  $.ajax({
+    type: "GET",
+    url: "/golf_app/cbs_scores/",
+    data: {'tournament' : $('#tournament_key').text()},
+    dataType: 'json',
+    success: function (json) {
+      console.log('cbs load success');
+      console.log('len', json, $.isEmptyObject(json))
+      if (!$.isEmptyObject(json)) {
+      build_score_tbl(json)
+      $('#status').text('scores from CBS, getting PGA scores')
+      console.log('cbs load duration: ', start, new Date()) 
+    }},
+    failure: function(json) {
+      console.log('fail');
+      console.log(json);
+    }
+  })
+})
 
 
 $('#tournament_key').ready(function (){

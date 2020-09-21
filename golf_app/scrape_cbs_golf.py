@@ -32,10 +32,15 @@ class ScrapeCBS(object):
             soup = BeautifulSoup(html, 'html.parser')
 
             leaderboard = soup.find('div', {'id': 'TableGolfLeaderboard'})
+
+            if leaderboard == None:
+                return {}
+
             rows = leaderboard.find_all('tr', {'class': 'TableBase-bodyTr'})
 
-            print (len(rows))
+            print ('cbs rows length: ', len(rows))
             for r  in (rows):
+                #print (r)
                 pos_sect = r.find_all('td', {'class': "TableBase-bodyTd"})
                 pos =  pos_sect[1].text
 
