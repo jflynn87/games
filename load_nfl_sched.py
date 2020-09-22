@@ -74,22 +74,16 @@ def load_sched(year):
                         game.eid = str (season.season) + str(week) + str(home) + str(away)
                         game.away = away
                         game.home = home
-                        #game.time = str(game_time.text.split(' ')[0] + ' ' + game_time.text.split(' ')[1][:2] + ' ' + tz) 
                         game_time = str(game_time.text.split(' ')[0] + ' ' + game_time.text.split(' ')[1][:2]) 
-                        #game.date = datetime.strptime(web_game_date, '%B %d, %Y')
                         print ('game tiem', game_time)
 
-                        #tz_info = 'timezone' + '.' + tz
-                        #est_game_time = datetime.strptime(game_date + ' ' + game_time, '%B %d, %Y %H:%M %p').replace(tzinfo=timezone.utc).astimezone(tz=est)
                         if tz == 'JST':
-                            diff = '+09:00'
+                            diff = '+00:00'
+                        else:
+                            diff = '+00:00'
                         web_time = datetime.strptime(web_game_date + ' ' + game_time + ' ' + diff, '%B %d, %Y %H:%M %p %z')
                         game.game_time = web_time
-
-                        #game.game_time = datetime(web_time, tzinfo=pytz.timezone('Asia/Tokyo'))
-                        
                         game.day = game_dow
-
 
                         game.save()
 
