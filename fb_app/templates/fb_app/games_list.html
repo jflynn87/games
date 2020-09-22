@@ -3,6 +3,7 @@
 {%load static%}
 {{form.media.css}}
 {%block body_block%}
+{%load tz%}
 
 <script src="{% static "fb_app/js/games_list.js"%}" type="text/javascript" ></script>
 
@@ -63,7 +64,8 @@
     <tbody id="game_tbl">
       {%for game in games_list%}
       <tr id='game{{forloop.counter}}' name="{{game.eid}}">
-        <td>{{game.day}} {{game.time}}</td>
+        <td>{{game.game_time | timezone:"America/New_York"}}</td>
+        <!-- <td>{{game.day}} {{game.time}}</td> -->
         {%if game.fav == game.home%}
         <td id="fav{{forloop.counter}}">{%if game.fav%} {{game.fav}} <span class="record"> {{game.fav.get_record}} </span> {%else%} {{game.home}} <span class="record"> {{game.home.get_record}} </span>{%endif%}</td>
         {%else%}

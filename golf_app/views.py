@@ -464,16 +464,19 @@ class GetDBScores(APIView):
             }), 200)
         except Exception as e:
             print ('old logic')
+            return Response(({}), 200)
 
 
-            return Response(({'picks': None,
-                               'totals': None,
-                               'leaders': None,
-                               'cut_line': None,
-                               'optimal': None, 
-                               'scores': None,
-                               'season_totals': None,
-              }), 200)
+
+            #return Response({'picks': None,
+            #                   'totals': None,
+            #                   'leaders': [],
+            #                   'cut_line': None,
+            #                    'optimal': None, 
+            #                   'scores': None,
+            #                   'season_totals': None,
+            #                   'info': json.dumps(info)
+            #  }, 200)
 
 
 class NewScoresView(LoginRequiredMixin,ListView):

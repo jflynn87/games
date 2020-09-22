@@ -33,12 +33,7 @@ from unidecode import unidecode
 s = datetime.now()
 #t = Tournament.objects.get(current=True)
 t = Tournament.objects.get(pga_tournament_num='464', season__current=True)
-#url = "https://www.pgatour.com/competition/2021/safeway-open/leaderboard.html"
-#web = scrape_scores_picks.ScrapeScores(t,url, None).scrape()
 sd = ScoreDict.objects.get(tournament=t)
-
-#data = json.loads(sd.data)
-
 
 
 score_dict = sd.sorted_dict()

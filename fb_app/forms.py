@@ -17,7 +17,7 @@ class CreatePicksForm(ModelForm):
     def __init__(self, *args, **kwargs):
         super (CreatePicksForm, self).__init__(*args, **kwargs)
         team_list = []
-        for game in Games.objects.filter(week__current=True):
+        for game in Games.objects.filter(week__current=True).order_by('game_time'):
             team_list.append(game.home)
             team_list.append(game.away)
         self.fields['team'].queryset = Teams.objects.filter(nfl_abbr__in=team_list)

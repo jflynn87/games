@@ -213,7 +213,8 @@ class GameListView(LoginRequiredMixin,ListView):
             #get_spreads()
         except Exception:
             print ('no spreads available')
-        games=Games.objects.filter(week=week).order_by("eid")
+        #games=Games.objects.filter(week=week).order_by("eid")
+        games=Games.objects.filter(week=week).order_by("game_time")
         if Picks.objects.filter(player=player, week=week).exists():
             form = PickFormSet(queryset=Picks.objects.filter(week=week, player=player))
         else:

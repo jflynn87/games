@@ -13,16 +13,16 @@ from selenium.webdriver import Chrome, ChromeOptions
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-
+import pytz
 
 
 
 def load_sched(year):
 
     #changing weeks to load preseason weeks (make week 0 and cnt 1)
-    week_cnt = 2
+    week_cnt = 3
     season = Season.objects.get(current=True)
-    while week_cnt < 3:
+    while week_cnt < 4:
             try:
                 week, created = Week.objects.get_or_create(season_model=season, week=week_cnt)
                 #week.season = season.season
@@ -51,7 +51,7 @@ def load_sched(year):
                     month = date_t.split(' ')[1]
                     day = date_t.split(' ')[2].strip('TH').strip('ND').strip('ST').strip('RD')
                     game_dow = section.find_element_by_class_name('d3-o-section-title').text.split(',')[0]
-                    game_date = (str(month) + ' ' + str(day) + ', ' + str(season.season))
+                    web_game_date = (str(month) + ' ' + str(day) + ', ' + str(season.season))
 
                     for game_info in section.find_elements_by_class_name('nfl-c-matchup-strip__left-area'):
                         teams = game_info.find_elements_by_class_name('nfl-c-matchup-strip__team-fullname')
@@ -74,13 +74,19 @@ def load_sched(year):
                         game.eid = str (season.season) + str(week) + str(home) + str(away)
                         game.away = away
                         game.home = home
-                        game.time = str(game_time.text.split(' ')[0] + ' ' + game_time.text.split(' ')[1][:2] + ' ' + tz) 
+                        #game.time = str(game_time.text.split(' ')[0] + ' ' + game_time.text.split(' ')[1][:2] + ' ' + tz) 
                         game_time = str(game_time.text.split(' ')[0] + ' ' + game_time.text.split(' ')[1][:2]) 
-                        game.date = datetime.strptime(game_date, '%B %d, %Y')
+                        #game.date = datetime.strptime(web_game_date, '%B %d, %Y')
                         print ('game tiem', game_time)
-                        tz_info = 'timezone' + '.' + tz
+
+                        #tz_info = 'timezone' + '.' + tz
                         #est_game_time = datetime.strptime(game_date + ' ' + game_time, '%B %d, %Y %H:%M %p').replace(tzinfo=timezone.utc).astimezone(tz=est)
-                        game.game_time = datetime.strptime(game_date + ' ' + game_time, '%B %d, %Y %H:%M %p')
+                        if tz == 'JST':
+                            diff = '+09:00'
+                        web_time = datetime.strptime(web_game_date + ' ' + game_time + ' ' + diff, '%B %d, %Y %H:%M %p %z')
+                        game.game_time = web_time
+
+                        #game.game_time = datetime(web_time, tzinfo=pytz.timezone('Asia/Tokyo'))
                         
                         game.day = game_dow
 

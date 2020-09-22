@@ -7,6 +7,7 @@ from golf_app import utils
 from django.db import transaction
 from unidecode import unidecode
 import json
+import random
 
 
 

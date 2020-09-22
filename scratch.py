@@ -6,7 +6,7 @@ django.setup()
 #from golf_app.models import Tournament, TotalScore, ScoreDetails, Field, Picks, PickMethod
 from fb_app.models import Season, Week, Games, Teams, Picks, League, Player, calc_scores, MikeScore, WeekScore, get_data
 from django.contrib.auth.models import User
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from django.db.models import Min, Q, Count, Sum, Max
 from django.db.models.functions import ExtractWeek, ExtractYear
 import time
@@ -25,8 +25,17 @@ import requests
 #from linebot.exceptions import LineBotApiError
 from bs4 import BeautifulSoup
 from fb_app import scrape_cbs
+import pytz
 
+week = Week.objects.get(current=True)
+eastern = pytz.timezone('America/New_York')
 
+for game in Games.objects.filter(week=week):
+    print (game.eid, game.game_time)
+    est = game.game_time.astimezone(eastern)
+    print (est)
+    
+exit()
 
 
 

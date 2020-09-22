@@ -13,9 +13,12 @@ $(document).ready(function() {
       dataType: 'json',
       success: function (json) {
         console.log('DB load success');
-        build_score_tbl(json)
+        console.log(json, typeof(json))
+        if (!$.isEmptyObject(json)) {
+          build_score_tbl(json)
+         
         console.log('first load duration: ', start, new Date()) 
-      },
+      }},
       failure: function(json) {
         console.log('fail');
         console.log(json);
@@ -38,7 +41,7 @@ $(document).ready(function() {
     dataType: 'json',
     success: function (json) {
       console.log('cbs load success');
-      console.log('len', json, $.isEmptyObject(json))
+      console.log('cbs len', json, $.isEmptyObject(json))
       if (!$.isEmptyObject(json)) {
       build_score_tbl(json)
       $('#status').text('scores from CBS, getting PGA scores')
