@@ -185,13 +185,14 @@ function build_score_tbl(data) {
   
  
   $.each(picks_data, function (p, stats) {
+    
     $.each(stats, function(index) {
     $('#totals' + p).append('<td id=' + p +  $(this)[0]['pick'].replace(/ +?/g, '') + '>' + '<span class=watermark>' + 
     '<p>' + p.substring(0, 4)  + ' : ' + index +  '</p>'  + '</span>' + '<p>' +  $(this)[0]['pick']  + '</p>' + '<p>' + $(this)[0]['score'] +
     '<span > <a id=tt-' + $(this)[0]['pick'].replace(/ +?/g, '') + ' href="#" data-toggle="tooltip" > <i class="fa fa-info-circle"></i> </a> </span>' +
      '</p>' +  $(this)[0]['toPar'] +  '   ' +  format_move($(this)[0]['sod_position']) +  $(this)[0]['sod_position'] + '</p>' +  '</td>')
-     //console.log($('#tt-' + $(this)[0]['pick'].replace(/ +?/g, '') + '[data-toggle="tooltip"]'))
-      $('#tt-' + $(this)[0]['pick'].replace(/ +?/g, '') + '[data-toggle="tooltip"]').tooltip({trigger:"hover",
+     //console.log($('#tt-' + $(this)[0]['pick'].replace(/ +?/g, '').replace(/\./g,' ') + '[data-toggle="tooltip"]'))
+      $('#tt-' + $(this)[0]['pick'].replace(/ +?/g, '').replace(/ +?/g, '').replace(/\./g,' ') + '[data-toggle="tooltip"]').tooltip({trigger:"hover",
                                             delay:{"show":400,"hide":800}, "title": 'gross score: ' + $(this)[0]['gross_score']
                                             })
       

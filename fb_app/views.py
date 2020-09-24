@@ -400,8 +400,8 @@ class ScoresView(TemplateView):
         print (pick_data)
 
         if week.started():
-
             if len(pick_pending) > 0 and week.started():
+            #if len(pick_pending) > 0:
                 sorted_spreads = sorted(week.get_spreads().items(), key=lambda x: x[1][2],reverse=True)
                 for player in pick_pending:
                     for i, game in enumerate(sorted_spreads):
@@ -802,5 +802,218 @@ class UpdateSeasonTotal(APIView):
 class UpdateSeasonRank(APIView):
     pass
 
+class NewScoresView(TemplateView):
+    template_name="fb_app/new_scores.html"
+    model = Week
+
+
+    def dispatch(self, request, *args, **kwargs):
+        print ('kwargs', kwargs)
+
+        if kwargs.get('pk')  == None:
+            week = Week.objects.get(current=True)
+            if request.user.is_anonymous and \
+            Picks.objects.filter(week__pk=week.pk, player__league__league="Football Fools").count() < 20:
+                print ('debug 1')
+                last_week_n = week.week -1
+                last_week = Week.objects.get(season_model__current=True, week=last_week_n)
+                self.kwargs['pk'] = str(last_week.pk)
+            else:
+                print ('loggedin')
+                self.kwargs['pk']= str(week.pk)
+        
+        return super(NewScoresView, self).dispatch(request, *args, **kwargs)
+
+
+    def get_context_data(self, **kwargs):
+
+        context = super(NewScoresView, self).get_context_data(**kwargs)
+        print (self.kwargs)
+        week = Week.objects.get(pk=self.kwargs.get('pk'))
+    
+        base_data = self.get_base_data()
+
+        user = base_data[0]
+        player = base_data[1]
+        league = base_data[2]
+
+        print ('before pick data')
+        pick_data = self.get_picks(player, league, week)
+
+        player_list = pick_data[0]
+        pick_pending = pick_data[1]
+        pick_dict = pick_data[2]
+
+        print (pick_data)
+
+        if week.started():
+
+            if len(pick_pending) > 0 and week.started():
+                sorted_spreads = sorted(week.get_spreads().items(), key=lambda x: x[1][2],reverse=True)
+                for player in pick_pending:
+                    for i, game in enumerate(sorted_spreads):
+                        pick = Picks()
+                        pick.week = week
+                        pick.player = player
+                        pick.pick_num = 16 - i
+                        pick.team = game[1][1]
+                        pick.save()
+
+            if self.request.POST:
+                loser_list = []
+                proj_loser_list = []
+                winners = self.request.POST.getlist('winners')
+                for winner in winners:
+                    team_obj = Teams.objects.get(nfl_abbr=winner)
+                    game = Games.objects.get(winner=team_obj,week=week)
+                    loser_list.append(Teams.objects.get(nfl_abbr=game.loser))
+
+                projected = self.request.POST.getlist('projected')
+
+                for team in self.request.POST.getlist('tie'):
+                    loser_list.append(Teams.objects.get(nfl_abbr=team))
+
+                for proj in projected:
+                    proj_obj = Teams.objects.get(nfl_abbr=proj)
+                    try:
+                        if Games.objects.get(winner=proj_obj, week=week):
+                            game = Games.objects.get(winner=proj_obj, week=week)
+                            proj_loser_list.append(Teams.objects.get(nfl_abbr=game.loser))
+                    except ObjectDoesNotExist:
+                        try:
+                            if Games.objects.get(home=proj_obj, week=week):
+                                game = Games.objects.get(home=proj_obj, week=week)
+                                proj_loser_list.append(Teams.objects.get(nfl_abbr=game.away))
+                        except ObjectDoesNotExist:
+                            if Games.objects.get(away=proj_obj, week=week):
+                                game = Games.objects.get(away=proj_obj, week=week)
+                                proj_loser_list.append(Teams.objects.get(nfl_abbr=game.home))
+
+                print ('players', player_list)
+                print ('losers', loser_list)
+                print ('proj', proj_loser_list)
+                week_scores = WeekScore
+                #scores = (None, None, None, None, None, None)
+                scores = calc_scores(week_scores, league, week, loser_list, proj_loser_list)
+            else:
+                print ("XXIN GET calling CALC scores", datetime.datetime.now())
+                week_scores = WeekScore
+                #scores = calc_scores(week_scores, league, week)
+                scores = (None, None, None, None, None, None)
+                print ("BACK from calc scores", datetime.datetime.now())
+
+
+            print (datetime.datetime.now())
+
+            scores_list = scores[0]
+            ranks = scores[1]
+            projected_scores = scores[2]
+            projected_ranks = scores[3]
+            total_score_list = scores[4]
+            season_ranks = scores[5]
+
+        
+            context.update({
+            'players': player_list,
+            'picks': pick_dict,
+            'week': week,
+            'pending': pick_pending,
+            'games': Games.objects.filter(week=week).order_by('eid'),
+            'scores': scores_list,
+            
+            'projected_ranks': projected_ranks,
+            'projected_scores': projected_scores,
+            'ranks': ranks,
+            'totals': total_score_list,
+            'season_ranks': season_ranks,
+            'league': league
+            })
+
+            print (datetime.datetime.now())
+            
+
+
+            #print (context)
+            return context
+        else:
+            print ('week not started')
+            context.update ({'players': player_list,
+                        #'picks': pick_dict,
+                        'week': week,
+                        'pending': pick_pending,
+                        'games': Games.objects.filter(week=week).order_by('eid'),
+                             })
+            return context
+
+    def post(self, request, **kwargs):
+
+        context = self.get_context_data()
+
+        return render(request, 'fb_app/scores.html', {
+        'players': context['players'],
+        'picks': context['picks'],
+        'week': context['week'],
+        'pending': context['pending'],
+        'games': context['games'],
+        'scores': context['scores'],
+        'projected_ranks': context['projected_ranks'],
+        'projected_scores': context['projected_scores'],
+        'ranks': context['ranks'],
+        'totals': context['totals'],
+        'season_ranks': context['season_ranks'],
+        })
+
+
+    def get_base_data(self):
+        '''takes in view object and calculates the user, player, league and week,
+         returns a tuple of objects'''
+
+        print ('base', self.kwargs)
+
+        if self.kwargs.get('league') == 'ff' and self.request.user.is_superuser:
+            user = User.objects.get(username=self.request.user)
+            player = Player.objects.get(name=user)
+            league = League.objects.get(league="Football Fools")
+
+        elif self.request.user.is_authenticated:
+            user = User.objects.get(username=self.request.user)
+            player = Player.objects.get(name=user)
+            league = player.league
+
+        else:
+            league = League.objects.get(league="Football Fools")
+            user= None
+            player = None
+
+        return (user, player, league)
+
+
+    def get_picks(self, player, league, week):
+        '''takes in objects from base and returns a tuple with player lists and
+        a dictionary of picks'''
+
+        player_list = []
+        pick_list_by_num = []
+        pick_pending = []
+        pick_dict_by_num = {}
+        pick_num = 16
+
+        for player in Player.objects.filter(league=league, active=True).order_by('name_id'):
+            if Picks.objects.filter(week=week, player=player):
+                player_list.append(player)
+            else:
+                pick_pending.append(player)
+
+        if len(player_list) > 0:
+            while pick_num > 16- week.game_cnt:
+                if Picks.objects.filter(week=week, pick_num=pick_num, player__league=league, player__active=True):
+                    for picks in Picks.objects.filter(week=week, pick_num=pick_num, player__league=league, player__active=True).order_by('player__name_id'):
+                         pick_list_by_num.append(picks)    #was picks.team
+                    pick_dict_by_num[pick_num]=pick_list_by_num
+                    pick_list_by_num = []
+                    pick_num -= 1
+
+        print ('pic dic', pick_dict_by_num)
+        return (player_list, pick_pending, pick_dict_by_num)
 
 

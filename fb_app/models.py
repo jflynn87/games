@@ -1,7 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import User
 from django.conf import settings
-from django.db.models import Q
+from django.db.models import Q, Sum
 from django.core.exceptions import ObjectDoesNotExist
 
 import datetime
@@ -9,7 +9,7 @@ import urllib3
 import urllib
 import json
 import scipy.stats as ss
-from django.db.models import Q
+#from django.db.models import Q
 from bs4 import BeautifulSoup
 from fb_app import scrape_cbs
 
@@ -35,20 +35,20 @@ class Week(models.Model):
     def __str__(self):
         return str(self.week)
 
-    # def save(self, *args, **kwargs):
-    #     if self.week != 1:
-    #         print ('model self', self)
-    #         print ('model kwargs', kwargs)
-    #         last_week = Week.objects.get(current=True)
-    #         if self.pk != None and last_week.started():
-    #             for league in League.objects.all():
-    #                 scores = WeekScore()
-    #                 calc_scores(scores, league, last_week)
+    def save(self, *args, **kwargs):
+        if self.week != 1:
+            print ('model self', self)
+            print ('model kwargs', kwargs)
+            last_week = Week.objects.get(current=True)
+            if self.pk != None and last_week.started():
+                for league in League.objects.all():
+                    scores = WeekScore()
+                    calc_scores(scores, league, last_week)
 
-    #             if self.current==True:
-    #                 last_week.current = False
-    #                 last_week.save()
-    #     super(Week, self).save()
+                if self.current==True:
+                    last_week.current = False
+                    last_week.save()
+        super(Week, self).save()
 
     def started(self):
         print ('week started check')
@@ -62,22 +62,13 @@ class Week(models.Model):
             print ('true')
             return True
         else:
-            json_url = 'http://www.nfl.com/liveupdate/scores/scores.json'
-            try:
-                with urllib.request.urlopen(json_url) as field_json_url:
-                    data = json.loads(field_json_url.read().decode())
-                for game_id, details in data.items():
-                    print (self.week-1)
-                    if Games.objects.filter(week__week=self.week-1, eid=game_id).exists():
-                        print ('last weeks scores on nfl.com')
-                        return False
-                    elif details['qtr'] not in [' ', None]:
-                        return True
-                return False
+            web = scrape_cbs.ScrapeCBS(self).get_data()
+            print (web)
+            return False
 
-            except Exception as e:
-                print ('cant open nfl json in started check', e)
-                return False
+            #except Exception as e:
+            #    print ('cant open nfl json in started check', e)
+            #    return False
 
         
 
@@ -109,7 +100,171 @@ class Week(models.Model):
 
         return spread_dict
 
+    def calc_scores(self, league):
+        pass
     
+    def score_ranks(self, league):
+        u = []
+        l = []
+        for score in WeekScore.objects.filter(week=self, player__league=league):
+            u.append(score.player.name.username)
+            l.append(score.score)
+
+        l_rank = ss.rankdata(l, method='min')
+        d = {}
+
+        for i, user in enumerate(u):
+            d[user] = l_rank[i]
+
+        return d
+
+    def proj_ranks(self, league):
+        u = []
+        l = []
+        for score in WeekScore.objects.filter(week=self, player__league=league):
+            u.append(score.player.name.username)
+            l.append(score.projected_score)
+
+        l_rank = ss.rankdata(l, method='min')
+        d = {}
+
+        for i, user in enumerate(u):
+            d[user] = l_rank[i]
+
+        return d
+
+    def update_games(self):
+        if Games.objects.filter(week=self).exclude(final=True).exists():
+            try:
+                print ('---------- updating football game scores')
+                #data = get_data()
+                data = scrape_cbs.ScrapeCBS(self).get_data()
+
+                for game in Games.objects.filter(week=self).exclude(final=True):
+                    print ('game', game)
+                    print ('data: ', data[game.eid])
+
+                    home_score = int(data[game.eid]['home_score'])
+                    home_team = data[game.eid]['home']
+                    away_team = data[game.eid]['away']
+                    away_score =int(data[game.eid]['away_score'])
+                    qtr = data[game.eid]['qtr']
+
+                    if home_score == away_score:
+                        tie = True
+                        winner = None
+                        loser = None
+                    elif home_score > away_score:
+                        winner = Teams.objects.get(nfl_abbr=home_team)
+                        loser = Teams.objects.get(nfl_abbr=away_team)
+                        tie = False
+                    else:
+                        winner = Teams.objects.get(nfl_abbr=away_team)
+                        loser = Teams.objects.get(nfl_abbr=home_team)
+                        tie = False
+
+                    setattr(game, 'home_score',home_score)
+                    setattr(game, 'away_score',away_score)
+                    setattr(game, 'winner', winner)
+                    setattr(game, 'loser', loser)
+                    if qtr == None:
+                        setattr(game, 'qtr', None)
+                        
+                    else:
+                        setattr(game, 'qtr',qtr.lower())                        
+                        print ('qtr', qtr[0:5], game)
+                        if qtr[0:5]  in ["final", "Final", "FINAL"]:
+                            print (game, 'setting final')
+                            setattr(game, 'final', True)
+                            setattr(game, 'tie', tie)
+                        else:
+                            setattr(game, 'tie', False)
+                
+                    game.save()
+
+            except KeyError as e:
+                print ('NFL score file not ready for the week', e)
+                pass
+
+            return
+
+    def update_scores(self, league):
+        start = datetime.datetime.now()
+
+        loser_list = []
+        proj_loser_list = []
+        score_dict = {}
+        for game in Games.objects.filter(week=self):
+            loser_list.append(game.loser)
+
+            if not game.final:
+                if game.home_score > game.away_score:
+                    proj_loser_list.append(game.away)
+                elif game.home_score < game.away_score:
+                    proj_loser_list.append(game.home)
+
+        for player in Player.objects.filter(league=league, active=True):
+            score_dict[player.name.username] = {'score': 0, 'proj_score': 0}
+            
+        for pick in Picks.objects.filter(team__in=loser_list, week=self, player__league=league):
+            score_dict[pick.player.name.username].update({'score': score_dict.get(pick.player.name.username).get('score') + pick.pick_num})
+            score_dict[pick.player.name.username].update({'proj_score': score_dict.get(pick.player.name.username).get('proj_score') + pick.pick_num})
+        
+        for pick in Picks.objects.filter(team__in=proj_loser_list, player__league=league):
+            score_dict[pick.player.name.username].update({'proj_score': score_dict.get(pick.player.name.username).get('proj_score') + pick.pick_num})
+
+        for player in Player.objects.filter(league=league, active=True):
+            sd, created = WeekScore.objects.get_or_create(player=player, week=self)
+            sd.score = score_dict[player.name.username].get('score')
+            sd.projected_score = score_dict[player.name.username].get('proj_score')
+            
+        print ('update_scores duration: ', datetime.datetime.now() - start)
+
+        return score_dict
+
+    def get_scores(self, league, loser_list=None, proj_loser_list=None):
+        start = datetime.datetime.now()
+        print ('starting calc_scores', start)
+        print ('score week: ', self.week)
+
+        print ('player and score object creation start')
+        
+        self.update_games()
+        scores = self.update_scores(league)
+        
+        score_dict = {}
+        user_list = []
+        picks_dict = {}
+
+        print ('league: ', league, type(league))
+        for player in Player.objects.filter(league=league):
+            score_dict[player.name.username] = {}
+        
+        for pick in Picks.objects.filter(player__league=league, week=self):
+            try:
+                score_dict[pick.player.name.username]['picks'].update({pick.pick_num: pick.team.nfl_abbr})
+            except Exception as e:
+                score_dict[pick.player.name.username]['picks'] = {pick.pick_num: pick.team.nfl_abbr}
+
+        for user, score in scores.items():
+            score_dict[user].update(score)
+
+        
+        for user, rank in self.score_ranks(league).items():
+            score_dict[user].update({'rank': rank})
+        
+        for user, rank in self.proj_ranks(league).items():
+            score_dict[user].update({'proj_rank': rank})
+
+        for player in Player.objects.filter(league=league):
+            score_dict[player.name.username].update({'season_total': player.season_total()})
+        
+        for player, rank in league.season_ranks().items():
+            score_dict[player].update({'season_rank': rank})
+
+
+        print (score_dict)
+        print (datetime.datetime.now() - start)
 
 
 class Teams(models.Model):
@@ -121,14 +276,12 @@ class Teams(models.Model):
     wins = models.PositiveIntegerField(default=0)
     losses = models.PositiveIntegerField(default=0)
     pic = models.URLField(null=True)
-#    objects = TeamManager()
 
     class Meta:
         ordering = ('nfl_abbr',)
 
     def __str__(self):
         return str(self.nfl_abbr)
-
 
     def get_mike_abbr(self):
         return self.mike_abbr
@@ -185,6 +338,22 @@ class League(models.Model):
     def __str__(self):
         return self.league
 
+    def season_ranks(self):
+        u = []
+        l = []
+        for player in Player.objects.filter(league=self):
+            u.append(player.name.username)
+            l.append(player.season_total())
+
+        l_rank = ss.rankdata(l, method='min')
+        d = {}
+
+        for i, user in enumerate(u):
+            d[user] = l_rank[i]
+
+        return d
+
+
 class Player(models.Model):
     league = models.ForeignKey(League, on_delete=models.CASCADE)
     name = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
@@ -199,6 +368,10 @@ class Player(models.Model):
             return True
         else:
             return False
+
+    def season_total(self):
+        score = WeekScore.objects.filter(player=self, week__season_model__current=True).aggregate(Sum('score'))
+        return score.get('score__sum')
 
 class Picks(models.Model):
     week = models.ForeignKey(Week,on_delete=models.CASCADE, db_index=True)
@@ -258,8 +431,7 @@ class WeekScore(models.Model):
 
     def __str__(self):
         return str(self.player)
-
-
+       
 
 class MikeScore(models.Model):
     week = models.ForeignKey(Week, on_delete=models.CASCADE)

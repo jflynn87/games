@@ -4,7 +4,7 @@ os.environ.setdefault("DJANGO_SETTINGS_MODULE","gamesProj.settings")
 import django
 django.setup()
 #from golf_app.models import Tournament, TotalScore, ScoreDetails, Field, Picks, PickMethod
-from fb_app.models import Season, Week, Games, Teams, Picks, League, Player, calc_scores, MikeScore, WeekScore, get_data
+from fb_app.models import Season, Week, Games, Teams, Picks, League, Player, calc_scores, MikeScore, WeekScore#, get_data
 from django.contrib.auth.models import User
 from datetime import datetime, timedelta, timezone
 from django.db.models import Min, Q, Count, Sum, Max
@@ -27,6 +27,26 @@ from bs4 import BeautifulSoup
 from fb_app import scrape_cbs
 import pytz
 
+
+#week = Week.objects.get(current=True)
+#scrape_cbs.ScrapeCBS(week).get_data()
+#exit()
+
+start = datetime.now()
+#player = Player.objects.get(name__username="john")
+l = League.objects.get(league='Golfers')
+#print (l.season_ranks())
+#exit()
+week = Week.objects.get(current=True)
+
+print (l)
+#week.update_games()
+#r = week.update_scores(l)
+s = week.get_scores(l)
+
+print (s)
+print ('dur: ', datetime.now() - start)
+exit()
 week = Week.objects.get(current=True)
 eastern = pytz.timezone('America/New_York')
 

@@ -78,7 +78,9 @@ def load_sched(year):
                         print ('game tiem', game_time)
 
                         if tz == 'JST':
-                            diff = '+00:00'
+                            diff = '+09:00'
+                        elif tz == 'UST':
+                            diff = '+06:00'
                         else:
                             diff = '+00:00'
                         web_time = datetime.strptime(web_game_date + ' ' + game_time + ' ' + diff, '%B %d, %Y %H:%M %p %z')
