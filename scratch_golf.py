@@ -29,6 +29,9 @@ from golf_app import views, manual_score, scrape_scores, populateField, withdraw
 from unidecode import unidecode
 
 
+t = Tournament.objects.get(current=True)
+web = scrape_cbs_golf.ScrapeCBS().get_data()
+exit()
 
 s = datetime.now()
 #t = Tournament.objects.get(current=True)

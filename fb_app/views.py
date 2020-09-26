@@ -748,39 +748,45 @@ class UpdateNFLScores(APIView):
 class UpdateScores(APIView):
     
     def get_week(self):
-        week = Week.objects.get(week=self.request.GET.get('week'), \
-            season_model=Season.objects.get(season=self.request.GET.get('season')))
         return week
         
     def get_player(self):
-        player = Player.objects.get(name=User.objects.get(pk=self.request.user.pk))
+
         return player
 
+    
     def get(self, num):
-        week = self.get_week()
-
-        if week.started():
-            player = self.get_player()
-            d = {}
-            s = scores.Scores(week, player.league)
-            for game, g_score in s.get_nfl_scores().items():
-                d[game]= g_score
-            for player in Player.objects.filter(league=player.league):
-                u = {}
-                u.update ({'score': s.get_week_scores()[player.name.username],
-                        'week_rank': str(s.get_week_rank()[player.name.username]),
-                        'week_proj': s.get_week_proj()[player.name.username],
-                        'week_proj_rank': str(s.get_week_proj_rank()[player.name.username]),
-                        'season_total': s.get_season_total()[player.name.username],
-                        'season_rank': str(s.get_season_rank()[player.name.username]),
-                    })
-                d[player.name.username]=u
-            d['losers'] = s.get_losers()
+        week = Week.objects.get(week=self.request.GET.get('week'), \
+            season_model=Season.objects.get(season=self.request.GET.get('season')))
+        player = Player.objects.get(name=User.objects.get(pk=self.request.user.pk))
         
-            print (d)
-            
-            data = json.dumps(d)
-            print (data)
+        if week.started():
+           games = week.update_games()
+           
+           d = week.get_scores(player.league)
+           print ('d: ',  d) 
+            # d = {}
+            # s = scores.Scores(week, player.league)
+            # for game, g_score in s.get_nfl_scores().items():
+            #     d[game]= g_score
+            # for player in Player.objects.filter(league=player.league):
+            #     u = {}
+            #     u.update ({'score': s.get_week_scores()[player.name.username],
+            #             'week_rank': str(s.get_week_rank()[player.name.username]),
+            #             'week_proj': s.get_week_proj()[player.name.username],
+            #             'week_proj_rank': str(s.get_week_proj_rank()[player.name.username]),
+            #             'season_total': s.get_season_total()[player.name.username],
+            #             'season_rank': str(s.get_season_rank()[player.name.username]),
+            #         })
+            #     d[player.name.username]=u
+            # d['losers'] = s.get_losers()
+        
+            # print (d)
+           for k,v in d.items():
+               print (k, type(k))
+               print (v, type(v))
+           data = json.dumps(d)
+           print ('Update Scores data', data)
         else:
             data = json.dumps('week not started')
         

@@ -181,6 +181,7 @@ class Week(models.Model):
                             setattr(game, 'tie', False)
                 
                     game.save()
+                    
 
             except KeyError as e:
                 print ('NFL score file not ready for the week', e)
@@ -265,7 +266,7 @@ class Week(models.Model):
 
         print (score_dict)
         print (datetime.datetime.now() - start)
-
+        return score_dict
 
 class Teams(models.Model):
     mike_abbr = models.CharField(max_length=4, null=True)
@@ -371,7 +372,7 @@ class Player(models.Model):
 
     def season_total(self):
         score = WeekScore.objects.filter(player=self, week__season_model__current=True).aggregate(Sum('score'))
-        return score.get('score__sum')
+        return int(score.get('score__sum'))
 
 class Picks(models.Model):
     week = models.ForeignKey(Week,on_delete=models.CASCADE, db_index=True)

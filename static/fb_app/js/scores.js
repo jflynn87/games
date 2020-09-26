@@ -1,13 +1,9 @@
 $( document ).ready(function() { 
-
-/* $(document).on('click', function() { */
-  setInterval (function() {(refresh(200000), 200000)}) 
+    refresh()
+    setInterval (refresh, 60000) 
 })
 function refresh() {
     console.log('js linked') 
-        
-    // setInterval(function() { 
-    
     
     $.ajax({
         type: "GET",
@@ -19,6 +15,7 @@ function refresh() {
         dataType: 'json',
         /*context: document.body, */
         success: function (json) {
+            console.log(json)
             if ($.parseJSON(json) == 'week not started') {
                 console.log('week not started')
             }

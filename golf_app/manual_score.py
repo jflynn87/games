@@ -176,6 +176,11 @@ class Score(object):
                     if v.get('pga_num') == pick.playerName.playerID:
                         data = v
                         print ('pick data from pga_num', pick)
+                    elif pick.playerName.playerName.replace('Jr.', '').replace('Jr','').rstrip(' ') == k:
+                        print ('strip JR: ', k)
+                        data = v
+                    else:
+                        continue
 
             try:
                 if data.get('rank') == "CUT":
@@ -208,7 +213,7 @@ class Score(object):
                 sd.save()
             except Exception as e:
                 print ('withdraw?', pick, e)
-                pick.score  = self.tournament.cut_num()
+                pick.score  = cut_num
                 pick.save()
                 sd, sd_created = ScoreDetails.objects.get_or_create(user=pick.user, pick=pick)
                 sd.score=pick.score - pick.playerName.handicap()
@@ -394,13 +399,16 @@ class Score(object):
         if not self.tournament.has_cut:
             return len([x for x in self.score_dict.values() if x['rank'] not in self.not_playing_list]) + 1
         
-        if score.get('r1') =='--' or score.get('r2') == '--' or score.get('r3') == '--':
+        cut_indicators = ['--', '-', '_']
+
+        if score.get('r1') in cut_indicators or score.get('r2') in cut_indicators or score.get('r3') in cut_indicators:
                 print ('didnt get to r3')
-                return self.get_cut_num()
-        elif score.get('r3') != '--' and self.get_cut_round() < 3:
+                return self.tournament.cut_num()
+        elif score.get('r3') not in cut_indicators and self.tournament.get_cut_round() < 3:
                 return len([x for x in self.score_dict.values() if x['rank'] not in self.not_playing_list]) + 1
-        elif score.get('r4') == '--' and self.get_cut_round() < 4:
-            return self.get_cut_round()
+        # fix this if, retrun cut num?
+        elif score.get('r4') in cut_indicators and self.tournament.get_cut_round() < 4:
+            return self.tournament.cut_num()
         else:
             return len([x for x in self.score_dict.values() if x['rank'] not in self.not_playing_list]) + 1
 

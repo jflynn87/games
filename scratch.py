@@ -33,7 +33,9 @@ import pytz
 #exit()
 
 start = datetime.now()
-#player = Player.objects.get(name__username="john")
+player = Player.objects.get(name__username="john")
+print (player.season_total(), type(player.season_total()))
+
 l = League.objects.get(league='Golfers')
 #print (l.season_ranks())
 #exit()
@@ -47,6 +49,8 @@ s = week.get_scores(l)
 print (s)
 print ('dur: ', datetime.now() - start)
 exit()
+
+
 week = Week.objects.get(current=True)
 eastern = pytz.timezone('America/New_York')
 

@@ -166,40 +166,21 @@ function build_score_tbl(data) {
 
   })
 
-  //$(function () {
-  //  console.log('hiver', $(this)[0])
-  //  $('[data-toggle="tooltip"]').tooltip({trigger:"hover",
- //                                         delay:{"show":400,"hide":800
-//                                          content: 'connecting',
-//                                          content: function (callback) {
-//                                            'gross score ' + $(this)[0]['gross_score'], {}, function(data) {
- //                                             callback(data)
-  //                                          } }}})
-//}})
-
-/* $(function () {
-  $('[data-toggle="tooltip"]').tooltip({trigger:"hover",
-                                        delay:{"show":400,"hide":800}, "title": "TEST" //$(this)[0]['gross_score']
-                                        })})
- */
-  
  
   $.each(picks_data, function (p, stats) {
-    
+    let filler = /[\s\.]/g;
     $.each(stats, function(index) {
-    $('#totals' + p).append('<td id=' + p +  $(this)[0]['pick'].replace(/ +?/g, '') + '>' + '<span class=watermark>' + 
+      var pick = $(this)[0]['pick'].replace(filler, '')
+    $('#totals' + p).append('<td id=' + p +  pick + '>' + '<span class=watermark>' + 
     '<p>' + p.substring(0, 4)  + ' : ' + index +  '</p>'  + '</span>' + '<p>' +  $(this)[0]['pick']  + '</p>' + '<p>' + $(this)[0]['score'] +
-    '<span > <a id=tt-' + $(this)[0]['pick'].replace(/ +?/g, '') + ' href="#" data-toggle="tooltip" > <i class="fa fa-info-circle"></i> </a> </span>' +
+    '<span > <a id=tt-' + pick + ' href="#" data-toggle="tooltip" > <i class="fa fa-info-circle"></i> </a> </span>' +
      '</p>' +  $(this)[0]['toPar'] +  '   ' +  format_move($(this)[0]['sod_position']) +  $(this)[0]['sod_position'] + '</p>' +  '</td>')
-     //console.log($('#tt-' + $(this)[0]['pick'].replace(/ +?/g, '').replace(/\./g,' ') + '[data-toggle="tooltip"]'))
-      $('#tt-' + $(this)[0]['pick'].replace(/ +?/g, '').replace(/ +?/g, '').replace(/\./g,' ') + '[data-toggle="tooltip"]').tooltip({trigger:"hover",
+     //console.log($('#tt-' + $(this)[0]['pick'].replace(/ +?/g, '').replace(/\./g,'') + '[data-toggle="tooltip"]'))
+      $('#tt-' + pick + '[data-toggle="tooltip"]').tooltip({trigger:"hover",
                                             delay:{"show":400,"hide":800}, "title": 'gross score: ' + $(this)[0]['gross_score']
-                                            })
-      
-      if ($(this)[0]['today_score'] == 'CUT') {$('#' + p + $(this)[0]['pick'].replace(/ +?/g, '')).addClass('cut')}
-    
-    //console.log(p, $(this)[0]['pick'], optimal_data[index[0]]['golfer'], $.inArray($(this)[0]['pick'], optimal_data[index[0]]['golfer']), 'idx: ', index)
-    
+                                            }) 
+     
+      if ($(this)[0]['today_score'] == 'CUT') {$('#' + p + pick).addClass('cut')}
     
     //use 0 of the index to strip the extra chars in multi pick groups.  Need to fix for tournaments with 10 groups.
     

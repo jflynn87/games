@@ -140,9 +140,9 @@ class Tournament(models.Model):
         
         for data in score_dict.data.values():
             if data.get('rank') == "CUT":
-                if data['r3'] == '--':
+                if data['r3'] in ['--', '_', '-']:
                     return 2
-                elif data['r4'] == "--": 
+                elif data['r4'] in ['--', '_', '-']: 
                     return 3
         return 2
 
@@ -215,7 +215,7 @@ class Tournament(models.Model):
         wd = len([x for x in score_dict.values() if x['rank'] == 'WD' and x['r'+str(round+1)] != '--']) 
         
         for v in score_dict.values():
-            if v['rank'] == "CUT":
+            if v['rank'] in self.not_playing_list():
                 return len([x for x in score_dict.values() if x['rank'] not in self.not_playing_list()]) + wd + 1
         if self.get_round() != 4 and len(score_dict.values()) >65:
             return 66
