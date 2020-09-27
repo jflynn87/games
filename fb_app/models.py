@@ -114,7 +114,7 @@ class Week(models.Model):
         d = {}
 
         for i, user in enumerate(u):
-            d[user] = l_rank[i]
+            d[user] = int(l_rank[i])
 
         return d
 
@@ -129,7 +129,7 @@ class Week(models.Model):
         d = {}
 
         for i, user in enumerate(u):
-            d[user] = l_rank[i]
+            d[user] = int(l_rank[i])
 
         return d
 
@@ -138,10 +138,11 @@ class Week(models.Model):
             try:
                 print ('---------- updating football game scores')
                 #data = get_data()
-                data = scrape_cbs.ScrapeCBS(self).get_data()
+                web = scrape_cbs.ScrapeCBS(self).get_data()
+                data  = web['games']
 
                 for game in Games.objects.filter(week=self).exclude(final=True):
-                    print ('game', game)
+                    print ('game', game, game.eid)
                     print ('data: ', data[game.eid])
 
                     home_score = int(data[game.eid]['home_score'])
@@ -181,13 +182,12 @@ class Week(models.Model):
                             setattr(game, 'tie', False)
                 
                     game.save()
-                    
 
             except KeyError as e:
-                print ('NFL score file not ready for the week', e)
+                print ('update scores NFL score file not ready for the week', e)
                 pass
 
-            return
+            return web
 
     def update_scores(self, league):
         start = datetime.datetime.now()
@@ -350,7 +350,7 @@ class League(models.Model):
         d = {}
 
         for i, user in enumerate(u):
-            d[user] = l_rank[i]
+            d[user] = int(l_rank[i])
 
         return d
 

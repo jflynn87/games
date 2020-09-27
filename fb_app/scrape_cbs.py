@@ -39,10 +39,11 @@ class ScrapeCBS(object):
             games = soup.find_all('div', {'class': 'single-score-card'})
 
             for game in games:
+                
                 teams = game.find_all('a', {'class': 'helper-team-name'})
                 scores = game.find_all('td', {'class': 'total-score'})
             
-                print (teams)
+                #print (teams)
                 if teams != None and len(teams) == 2:
                 #print(teams)
                     away_team = Teams.objects.get(long_name=teams[0].text)
@@ -54,15 +55,26 @@ class ScrapeCBS(object):
                     else:
                         away_score = 0
                         home_score = 0
-                    
-                    pregame = game.find('div', {'class': 'game-status pregame'})
-                    #print ('pregame: ', pregame)
-                    if pregame.text != None: 
+
+                    status = game.find('div', {'class': 'game-status'})
+                    #print (len(status), status)
+                    if len(status) == 1:
+                        qtr = status.text
+                    elif len(status) > 1 and 'pregame' in status['class']:
                         qtr = None
                     else:
-                        status = game.find('div', {'class': 'game-status'})
-                        if status != None:
-                            qtr = status.text.lstrip().rstrip()
+                        print ('status parse issue ', status)
+                        qtr = None
+
+                
+                    #pregame = game.find('div', {'class': 'game-status pregame'})
+                    #print ('pregame: ', pregame)
+                    #if pregame.text != None: 
+                    #    qtr = None
+                    #else:
+                    #    status = game.find('div', {'class': 'game-status'})
+                    #    if status != None:
+                    #        qtr = status.text.lstrip().rstrip()
 
                     game_dict[str(week.season_model.season) + str(week.week) + str(home_team.nfl_abbr) + str(away_team.nfl_abbr)]  = {
                         'home': home_team.nfl_abbr,
@@ -72,7 +84,7 @@ class ScrapeCBS(object):
                         'qtr': qtr
                     }
             print ('updated data', game_dict)        
-            return game_dict
+            return {'games': game_dict}
         except Exception as e:
             print ('issue scraping CBS', e)
             return {}   

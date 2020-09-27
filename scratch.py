@@ -28,9 +28,11 @@ from fb_app import scrape_cbs
 import pytz
 
 
-#week = Week.objects.get(current=True)
+week = Week.objects.get(current=True)
+d = week.update_games()
+print (len(d))
 #scrape_cbs.ScrapeCBS(week).get_data()
-#exit()
+exit()
 
 start = datetime.now()
 player = Player.objects.get(name__username="john")

@@ -204,7 +204,7 @@ class Tournament(models.Model):
         score_dict = sd.sorted_dict()
 
         if not self.has_cut:
-            return len([x for x in score_dict.values() if x['rank'] not in ['WD']]) + 1
+            return len([x for x in score_dict.values() if x['rank'] not in ['WD', 'DQ']]) + 1
         round = self.get_cut_round()
         #round = self.get_round()
         #after cut WD's
@@ -262,16 +262,16 @@ class Tournament(models.Model):
 
     def optimal_picks(self):
         sd = ScoreDict.objects.get(tournament=self)
-        score_dict = sd.sorted_dict()
+        score_dict = sd.data
         cut_num = self.cut_num()
-
+        print ('sd type', type(score_dict), len(score_dict))
         optimal_dict = {}
        
         for group in Group.objects.filter(tournament=self):
            group_cuts = 0
            golfer_list = []
            gm_start = datetime.now()
-           group_min = group.min_score()
+           group_min = group.min_score(cut_num)
            print ('group min duration: ', datetime.now() - gm_start)
            #print ('group: ', group, 'min', group_min)
 
@@ -316,11 +316,12 @@ class Group(models.Model):
     def __str__(self):
         return str(self.number) + '-' + str(self.tournament)
 
-    def min_score(self):
+    def min_score(self, cut_num=None):
         #print ('min score ', datetime.now(), self)
         score_dict = ScoreDict.objects.get(tournament=self.tournament)
         clean_dict = score_dict.clean_dict()
-        cut_num = self.tournament.cut_num()
+        if cut_num == None:
+            cut_num = self.tournament.cut_num()
         not_playing_list = self.tournament.not_playing_list()
         min_score = 999  
 

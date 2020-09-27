@@ -28,9 +28,77 @@ import json
 from golf_app import views, manual_score, scrape_scores, populateField, withdraw, scrape_scores_picks, utils, scrape_cbs_golf
 from unidecode import unidecode
 
-
+start = datetime.now()
 t = Tournament.objects.get(current=True)
-web = scrape_cbs_golf.ScrapeCBS().get_data()
+scrape_cbs_golf.ScrapeCBS().get_data()
+print (datetime.now() - start)
+exit()
+# start = datetime.now()
+# sd = ScoreDict.objects.get(tournament=t)
+# score_dict = sd.sorted_dict()
+
+# if not t.has_cut:
+#     print ('no cut: ', len([x for x in score_dict.values() if x['rank'] not in ['WD', 'DQ']]) + 1)
+
+# if t.get_round() < 3:
+#     print ('round less than 3', '66')
+# elif len([x for x in score_dict.values() if x['rank'] in t.not_playing_list()]) > 10:
+#     print ('in elif: ',  len([x for x in score_dict.values() if x['rank'] not in t.not_playing_list()]))
+
+# print ('dur: ', datetime.now() - start)
+# exit()
+
+# wd = len([x for x in score_dict.values() if x['rank'] == 'WD' and x['r'+str(round+1)] != '--']) 
+
+# for v in score_dict.values():
+#     if v['rank'] in self.not_playing_list():
+#         return len([x for x in score_dict.values() if x['rank'] not in self.not_playing_list()]) + wd + 1
+# if self.get_round() != 4 and len(score_dict.values()) >65:
+#     return 66
+# else:
+#     return len([x for x in score_dict.values() if x['rank'] not in self.not_playing_list()]) + wd + 1
+
+print (t.cut_num())
+for g in Group.objects.filter(tournament=t):
+    start = datetime.now()
+
+    score_dict = ScoreDict.objects.get(tournament=t)
+    clean_dict = score_dict.clean_dict()
+    print ('clean dict', datetime.now() - start)
+    #cut_num = t.cut_num()
+    cut_num = 75
+    print ('cut_num', datetime.now() - start)
+    not_playing_list = t.not_playing_list()
+    min_score = 999  
+    print ('prep', datetime.now() - start)
+    for score in Field.objects.filter(group=g):
+        
+        try:
+            #if score_dict.data.get(score.playerName).get('rank') in self.tournament.not_playing_list():
+            if clean_dict.get(score.playerName).get('rank') in not_playing_list:
+                if cut_num - score.handicap() < min_score:
+                    min_score = cut_num - score.handicap()
+            #elif utils.formatRank(score_dict.data.get(score.playerName).get('rank')) - score.handicap() < min_score:
+            elif utils.formatRank(clean_dict.get(score.playerName).get('rank')) - score.handicap() < min_score:
+                min_score = utils.formatRank(clean_dict.get(score.playerName).get('rank')) - score.handicap()
+            #else:
+            #    print ('not min', score.playerName, score_dict.data.get(score.playerName).get('rank'), utils.formatRank(score_dict.data.get(score.playerName).get('rank')))
+        except Exception as e:
+            print (score.playerName, e, 'exclded from min score')
+            #print (self, score.rank_as_int(), score.handicap())
+        #print ('end min score ', datetime.now() - start, self)
+    print (score.group, min_score, datetime.now() - start)
+exit()
+
+
+
+
+
+
+
+
+
+print (t.optimal_picks())
 exit()
 
 s = datetime.now()

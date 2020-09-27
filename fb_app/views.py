@@ -785,7 +785,8 @@ class UpdateScores(APIView):
            for k,v in d.items():
                print (k, type(k))
                print (v, type(v))
-           data = json.dumps(d)
+           display = {**d, **games}
+           data = json.dumps(display)
            print ('Update Scores data', data)
         else:
             data = json.dumps('week not started')
