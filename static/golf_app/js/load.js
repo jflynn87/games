@@ -55,7 +55,7 @@ $(document).ready(function() {
  })
 
 
-/*$('#tournament_key').ready(function (){
+$('#tournament_key').ready(function (){
 $.ajax({
   type: "GET",
   url: "/golf_app/get_scores/",
@@ -80,7 +80,7 @@ $.ajax({
 })
 
 })
-*/
+
 // $('#tournament_key').ready(function (){
 //   $.ajax({
 //     type: "GET",
