@@ -747,14 +747,6 @@ class UpdateNFLScores(APIView):
 
 class UpdateScores(APIView):
     
-    def get_week(self):
-        return week
-        
-    def get_player(self):
-
-        return player
-
-    
     def get(self, num):
         week = Week.objects.get(week=self.request.GET.get('week'), \
             season_model=Season.objects.get(season=self.request.GET.get('season')))
@@ -762,36 +754,23 @@ class UpdateScores(APIView):
         
         if week.started():
            games = week.update_games()
-           
-           d = week.get_scores(player.league)
+           d = {'player-data': week.get_scores(player.league)}
            print ('d: ',  d) 
-            # d = {}
-            # s = scores.Scores(week, player.league)
-            # for game, g_score in s.get_nfl_scores().items():
-            #     d[game]= g_score
-            # for player in Player.objects.filter(league=player.league):
-            #     u = {}
-            #     u.update ({'score': s.get_week_scores()[player.name.username],
-            #             'week_rank': str(s.get_week_rank()[player.name.username]),
-            #             'week_proj': s.get_week_proj()[player.name.username],
-            #             'week_proj_rank': str(s.get_week_proj_rank()[player.name.username]),
-            #             'season_total': s.get_season_total()[player.name.username],
-            #             'season_rank': str(s.get_season_rank()[player.name.username]),
-            #         })
-            #     d[player.name.username]=u
-            # d['losers'] = s.get_losers()
-        
-            # print (d)
-           for k,v in d.items():
-               print (k, type(k))
-               print (v, type(v))
            display = {**d, **games}
            data = json.dumps(display)
            print ('Update Scores data', data)
         else:
-            data = json.dumps('week not started')
+            data = json.dumps({'msg': 'week not started'})
         
         return Response(data, 200)
+
+    def post(self, num):
+        print ('in post', self.request.POST)
+
+        data = json.dumps({'testing': 'does this work?'})
+
+        return Response(data, 200)
+
         
 
 class UpdateProj(APIView):
@@ -867,6 +846,9 @@ class NewScoresView(TemplateView):
                         pick.save()
 
             if self.request.POST:
+
+                print ('POST ****', self.request.POST)
+
                 loser_list = []
                 proj_loser_list = []
                 winners = self.request.POST.getlist('winners')
@@ -956,7 +938,7 @@ class NewScoresView(TemplateView):
 
         context = self.get_context_data()
 
-        return render(request, 'fb_app/scores.html', {
+        return render(request, 'fb_app/new_scores.html', {
         'players': context['players'],
         'picks': context['picks'],
         'week': context['week'],
@@ -1022,5 +1004,29 @@ class NewScoresView(TemplateView):
 
         print ('pic dic', pick_dict_by_num)
         return (player_list, pick_pending, pick_dict_by_num)
+
+
+class UpdateProj(APIView):
+    
+    def get(self, num):
+        print ('COMNNECTED')
+        print (self.request.GET)
+        # week = Week.objects.get(week=self.request.GET.get('week'), \
+        #     season_model=Season.objects.get(season=self.request.GET.get('season')))
+        # player = Player.objects.get(name=User.objects.get(pk=self.request.user.pk))
+        
+        # if week.started():
+        #    games = week.update_games()
+        #    d = {'player-data': week.get_scores(player.league)}
+        #    print ('d: ',  d) 
+        #    display = {**d, **games}
+        #    data = json.dumps(display)
+        #    print ('Update Scores data', data)
+        # else:
+        #     data = json.dumps('week not started')
+        
+        return Response(data, 200)
+
+
 
 

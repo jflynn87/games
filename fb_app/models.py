@@ -58,12 +58,21 @@ class Week(models.Model):
         if self.set_not_started:
             print ('manually set not started')
             return False
-        if Games.objects.filter(week=self, qtr__isnull=False).exists():
+        #if Games.objects.filter(week=self, qtr__isnull=False).exists():
+        if Games.objects.filter(week=self, qtr__isnull=False).exclude(qtr='pregame').exists():
             print ('true')
             return True
         else:
             web = scrape_cbs.ScrapeCBS(self).get_data()
-            print (web)
+            games = web['games']
+            print (games)
+            
+            for k, v in games.items():
+                if v.get('qtr') not in [None, 'pregame']:
+                    print ('week started based on scrape: ', v)
+                    return True
+                else:
+                    return False
             return False
 
             #except Exception as e:
@@ -196,13 +205,19 @@ class Week(models.Model):
         proj_loser_list = []
         score_dict = {}
         for game in Games.objects.filter(week=self):
-            loser_list.append(game.loser)
+            #loser_list.append(game.loser)
 
             if not game.final:
                 if game.home_score > game.away_score:
                     proj_loser_list.append(game.away)
                 elif game.home_score < game.away_score:
                     proj_loser_list.append(game.home)
+            else:
+                if game.tie and league.ties_lose:
+                    loser_list.append(game.home)
+                    loser_list.append(game.away)
+                else:
+                    loser_list.append(game.loser)
 
         for player in Player.objects.filter(league=league, active=True):
             score_dict[player.name.username] = {'score': 0, 'proj_score': 0}
@@ -211,17 +226,32 @@ class Week(models.Model):
             score_dict[pick.player.name.username].update({'score': score_dict.get(pick.player.name.username).get('score') + pick.pick_num})
             score_dict[pick.player.name.username].update({'proj_score': score_dict.get(pick.player.name.username).get('proj_score') + pick.pick_num})
         
-        for pick in Picks.objects.filter(team__in=proj_loser_list, player__league=league):
+        for pick in Picks.objects.filter(team__in=proj_loser_list, player__league=league, week=self):
             score_dict[pick.player.name.username].update({'proj_score': score_dict.get(pick.player.name.username).get('proj_score') + pick.pick_num})
 
         for player in Player.objects.filter(league=league, active=True):
             sd, created = WeekScore.objects.get_or_create(player=player, week=self)
             sd.score = score_dict[player.name.username].get('score')
             sd.projected_score = score_dict[player.name.username].get('proj_score')
+            sd.save()
             
         print ('update_scores duration: ', datetime.datetime.now() - start)
 
         return score_dict
+
+    def project_scors(self, league, proj_list):
+        '''just built to use from UI to update projectoins'''
+        proj_score_dict = {}
+        for player in Player.objects.filter(league=league):
+            proj_score_dict[player.name.username] = 0
+        
+        for pick in Picks.objects.filter(week=self, league=league):
+            if pick.team.nfl_abbr not in proj_list:
+                proj_score_dict[pick.player.username] = proj_score_dict[pick.player.username] + pick.pick_num
+
+        return proj_score_dict       
+
+
 
     def get_scores(self, league, loser_list=None, proj_loser_list=None):
         start = datetime.datetime.now()

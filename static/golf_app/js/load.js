@@ -168,7 +168,7 @@ function build_score_tbl(data) {
 
  
   $.each(picks_data, function (p, stats) {
-    let filler = /[\s\.]/g;
+    let filler = /[\s\.\']/g;
     $.each(stats, function(index) {
       var pick = $(this)[0]['pick'].replace(filler, '')
     $('#totals' + p).append('<td id=' + p +  pick + '>' + '<span class=watermark>' + 

@@ -33,7 +33,8 @@ class ScrapeCBS(object):
             game_dict = {}
             week = Week.objects.get(current=True)
 
-            html = urllib.request.urlopen("https://www.cbssports.com/nfl/scoreboard/")
+            html = urllib.request.urlopen("https://www.cbssports.com/nfl/scoreboard/all/2020/regular/" + str(week.week) + "/")
+            # html = urllib.request.urlopen("https://www.cbssports.com/nfl/scoreboard/")
             soup = BeautifulSoup(html, 'html.parser')
 
             games = soup.find_all('div', {'class': 'single-score-card'})
@@ -57,14 +58,14 @@ class ScrapeCBS(object):
                         home_score = 0
 
                     status = game.find('div', {'class': 'game-status'})
-                    #print (len(status), status)
+                    print (len(status), type(status), status)
                     if len(status) == 1:
                         qtr = status.text
                     elif len(status) > 1 and 'pregame' in status['class']:
-                        qtr = None
+                        qtr = 'pregame'
                     else:
-                        print ('status parse issue ', status)
-                        qtr = None
+                        #print ('status parse issue ', status)
+                        qtr = status.text.lstrip().rstrip()
 
                 
                     #pregame = game.find('div', {'class': 'game-status pregame'})

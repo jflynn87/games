@@ -29,15 +29,11 @@ from golf_app import views, manual_score, scrape_scores, populateField, withdraw
 from unidecode import unidecode
 
 start = datetime.now()
-t = Tournament.objects.get(current=True)
-scrape_cbs_golf.ScrapeCBS().get_data()
-print (datetime.now() - start)
-exit()
-# start = datetime.now()
-# sd = ScoreDict.objects.get(tournament=t)
-# score_dict = sd.sorted_dict()
+t= Tournament.objects.get(current=True)
+sd = ScoreDict.objects.get(tournament=t)
+score_dict = sd.sorted_dict()
 
-# if not t.has_cut:
+#if not t.has_cut:
 #     print ('no cut: ', len([x for x in score_dict.values() if x['rank'] not in ['WD', 'DQ']]) + 1)
 
 # if t.get_round() < 3:
@@ -58,20 +54,24 @@ exit()
 # else:
 #     return len([x for x in score_dict.values() if x['rank'] not in self.not_playing_list()]) + wd + 1
 
-print (t.cut_num())
+cut_num = t.cut_num()
 for g in Group.objects.filter(tournament=t):
     start = datetime.now()
 
     score_dict = ScoreDict.objects.get(tournament=t)
     clean_dict = score_dict.clean_dict()
-    print ('clean dict', datetime.now() - start)
+    #print ('clean dict', datetime.now() - start)
     #cut_num = t.cut_num()
-    cut_num = 75
-    print ('cut_num', datetime.now() - start)
+    #cut_num = 75
+    #print ('cut_num', datetime.now() - start)
     not_playing_list = t.not_playing_list()
     min_score = 999  
     print ('prep', datetime.now() - start)
-    for score in Field.objects.filter(group=g):
+    min_handi = Field.objects.filter(group=g).order_by('currentWGR').first()
+    print (min_handi.playerName, min_handi.currentWGR)
+    max_handi = Field.objects.filter(group=g).order_by('currentWGR').last()
+    print (max_handi.playerName, max_handi.currentWGR)
+    for score in Field.objects.filter(group=g).order_by('-currentWGR'):
         
         try:
             #if score_dict.data.get(score.playerName).get('rank') in self.tournament.not_playing_list():

@@ -29,9 +29,9 @@ import pytz
 
 
 week = Week.objects.get(current=True)
-d = week.update_games()
-print (len(d))
-#scrape_cbs.ScrapeCBS(week).get_data()
+#d = week.update_games()
+#print (len(d))
+scrape_cbs.ScrapeCBS(week).get_data()
 exit()
 
 start = datetime.now()

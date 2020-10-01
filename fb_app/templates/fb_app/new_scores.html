@@ -5,19 +5,21 @@
 {%load fb_extras%}
 
 {%block body_block%} 
+<script src="{% static 'fb_app/js/scores.js'%}" type="text/javascript" ></script> 
 
-<p>Connetcted</p>
 
 <div id='loading'>
   <img src="{%static 'fb_app/images/LT1.gif'%}"></img>
+  <h3>Updating Scores....</h3>
 </div>
 
 
 
-<script src="{% static 'fb_app/js/scores.js'%}" type="text/javascript" ></script> 
+
 <p hidden id='week'>{{week.week}}</p>
 <p hidden id='season'>{{week.season_model.season}}</p>
-<p hidden id='player'>{{league.league}}</p>
+<p hidden id='league'>{{league.league}}</p>
+<p hidden id='game_cnt'>{{week.game_cnt}}</p>
 
 
 {%if not week.started%}
@@ -31,140 +33,16 @@
 
 {%if week.started%}
 
-<table class="table table-striped" id='picks-tbl'>
-  <thead id='players'>
-     <th>week {{week}}</th>
-    {%for player in players%}
-    <th>{{player}}</th>
-      {%endfor%}
-  </thead>
-  <tbody>
-      <tr id="ranks">
-        <td>rank</td>
-        {%for rank in ranks%}
-        <td class="ranks">{{rank}}</td>
-        {%endfor%}
-      </tr>
-      <tr id='scores'>
-        <td>score</td>
-        {%for score in scores%}
-        <td class=>{{score}}</td>
-        {%endfor%}
-      </tr>
-      <tr id='proj'>
-        <td>projected</td>
-        {%for proj in projected_scores%}        
-        <td>{{proj}}</td>
-        {%endfor%}
-      </tr>
-      <tr id='proj_rank'>
-        <td>projected rank</td>
-        {%for rank in projected_ranks%}
-        <td class=ranks>{{rank}}</td>
-        {%endfor%}
-      </tr>
-
-      {%for pick_num, picks in picks.items%}
-      <tr id='picks'>
-        <td>{{pick_num}}</td>
-        {%for pick in picks%}
-        {% if pick.is_loser%}
-        <td class="loser">{{pick.team}}</td>
-        {%else%}
-        <td>{{pick.team}}</td>
-        {%endif%}
-        {%endfor%}
-      </tr>
-      {%endfor%}
-
-      <tr id='season_total'>
-        <td>season total</td>
-      {%for score in totals%}
-        <td> {{score}}</td>
-      {%endfor%}
-      </tr>
-      <tr id='season_rank'>
-        <td>season rank</td>
-        {%for rank in season_ranks%}
-        <td class="ranks">{{rank}}</td>
-        {%endfor%}
-      </tr>
-      <tr>
-         <th>week {{week}}</th>
-        {%for player in players%}
-        <th>{{player}}</th>
-          {%endfor%}
-      </tr>
-  </tbody>
-</table>
-<div class="row">
-<div class="column">
-
-  <h4>NFL Scoreboard</h4>
-<table id="score-tbl" class="table table-sm">
-  <thead>
-  <th>Home</th>
-  <th>Score</th>
-  <th>Visitor</th>
-  <th>Score</th>
-  <th>QTR</th>
-  </thead>
-  <tbody>
-    {%for game in games%}
-    <tr id={{game.eid}}>
-      <td id='{{game.eid}}home'>{{game.home.nfl_abbr}}</td>
-      <td id='{{game.eid}}home_score'>{{game.home_score}}</td>
-      <td id='{{game.eid}}away'>{{game.away.nfl_abbr}}</td>
-      <td id='{{game.eid}}away_score'>{{game.away_score}}</td>
-      <td id='{{game.eid}}qtr'>{{game.qtr}}</td>
-    </tr>
-    {%endfor%}
-</table>
-</div>
-<div class="column">
-  <h4>Winner/Projected</h4>
-  <table id= 'winners' class="table table-sm">
-    <thead>
-    <th>Team</th>
-    </thead>
-    <tbody>
-      {%for game in games%}
-      <form method="post">
-      {%csrf_token%}
-      <tr id='{{game.eid}}winners'>
-        {%if game.qtr|check_final and game.tie%}
-        <td>Tie, no winner </td>
-        <input name='tie' type="hidden" value={{game.home.nfl_abbr}}>
-        <input name='tie' type="hidden" value={{game.away.nfl_abbr}}>
-        <td hidden>{{game.home.nfl_abbr}}</td>
-        <td hidden>{{game.away.nfl_abbr}}</td>
-        {%elif game.qtr|check_final %}
-        <input name="winners" type="hidden" value={{game.winner.nfl_abbr}}>
-        <td>{{game.winner.nfl_abbr}}</td>
-        {%else%}
-        <td><select name='projected'>
-          <option  selected>{{game.home.nfl_abbr}}</option>
-          <option>{{game.away.nfl_abbr}}</option>
-        </td>
-      {%endif%}
-      </tr>
-      {%endfor%}
-      </tbody>
-      </table>
-      {%if week.current%}
-      <button type="submit" class="btn btn-primary">Update Scores</button>
-      {%endif%}
-</div>
-  </form>
-</div>
-
-<!--
-<script
-  <script src="http://code.jquery.com/jquery-3.3.1.js"
-  integrity="sha256-2Kok7MbOyxpgUVvAk/HJ2jigOSYS2auK4Pfzbm7uH60="
-  crossorigin="anonymous"></script> -->
+<div id='picks-sect'></div>
   <script src="{% static "fb_app/js/ranks.js"%}" type="text/javascript"></script>
 
+    <div id='nfl-scores'> 
+      <form id='winners-form' method='post'>
+        {%csrf_token%}
+       <table id='score-tbl' class='table'> </table>    
+       
+      </form>
+</div>
 
 {%endif%}
 {%endblock%}
