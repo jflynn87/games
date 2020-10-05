@@ -127,12 +127,19 @@ class Week(models.Model):
 
         return d
 
-    def proj_ranks(self, league):
+    def proj_ranks(self, league, proj_score=None):
+        print (proj_score, type(proj_score))
         u = []
         l = []
-        for score in WeekScore.objects.filter(week=self, player__league=league):
-            u.append(score.player.name.username)
-            l.append(score.projected_score)
+        if proj_score == None:
+            for score in WeekScore.objects.filter(week=self, player__league=league):
+                u.append(score.player.name.username)
+                l.append(score.projected_score)
+        else:
+            for user, score in proj_score.items():
+                print ('new code: ', u, l)
+                u.append(user)
+                l.append(score)
 
         l_rank = ss.rankdata(l, method='min')
         d = {}
@@ -140,6 +147,7 @@ class Week(models.Model):
         for i, user in enumerate(u):
             d[user] = int(l_rank[i])
 
+        print('got thru proj_ranks', d)
         return d
 
     def update_games(self):
@@ -222,11 +230,11 @@ class Week(models.Model):
         for player in Player.objects.filter(league=league, active=True):
             score_dict[player.name.username] = {'score': 0, 'proj_score': 0}
             
-        for pick in Picks.objects.filter(team__in=loser_list, week=self, player__league=league):
+        for pick in Picks.objects.filter(team__in=loser_list, week=self, player__league=league, player__active=True):
             score_dict[pick.player.name.username].update({'score': score_dict.get(pick.player.name.username).get('score') + pick.pick_num})
             score_dict[pick.player.name.username].update({'proj_score': score_dict.get(pick.player.name.username).get('proj_score') + pick.pick_num})
         
-        for pick in Picks.objects.filter(team__in=proj_loser_list, player__league=league, week=self):
+        for pick in Picks.objects.filter(team__in=proj_loser_list, player__league=league, week=self, player__active=True):
             score_dict[pick.player.name.username].update({'proj_score': score_dict.get(pick.player.name.username).get('proj_score') + pick.pick_num})
 
         for player in Player.objects.filter(league=league, active=True):
@@ -242,10 +250,10 @@ class Week(models.Model):
     def project_scors(self, league, proj_list):
         '''just built to use from UI to update projectoins'''
         proj_score_dict = {}
-        for player in Player.objects.filter(league=league):
+        for player in Player.objects.filter(league=league, active=True):
             proj_score_dict[player.name.username] = 0
         
-        for pick in Picks.objects.filter(week=self, league=league):
+        for pick in Picks.objects.filter(week=self, league=league, player__active=True):
             if pick.team.nfl_abbr not in proj_list:
                 proj_score_dict[pick.player.username] = proj_score_dict[pick.player.username] + pick.pick_num
 
@@ -268,14 +276,18 @@ class Week(models.Model):
         picks_dict = {}
 
         print ('league: ', league, type(league))
-        for player in Player.objects.filter(league=league):
+        for player in Player.objects.filter(league=league, active=True):
             score_dict[player.name.username] = {}
         
-        for pick in Picks.objects.filter(player__league=league, week=self):
+        for pick in Picks.objects.filter(player__league=league, week=self, player__active=True).order_by('player__name__username').order_by('pick_num'):
+            if pick.is_loser():
+                status = 'loser' 
+            else:
+                status = 'reg'
             try:
-                score_dict[pick.player.name.username]['picks'].update({pick.pick_num: pick.team.nfl_abbr})
+                score_dict[pick.player.name.username]['picks'].update({pick.pick_num: {'team': pick.team.nfl_abbr, 'status': status}})
             except Exception as e:
-                score_dict[pick.player.name.username]['picks'] = {pick.pick_num: pick.team.nfl_abbr}
+                score_dict[pick.player.name.username]['picks'] = {pick.pick_num: {'team': pick.team.nfl_abbr, 'status': status}}
 
         for user, score in scores.items():
             score_dict[user].update(score)
@@ -287,7 +299,7 @@ class Week(models.Model):
         for user, rank in self.proj_ranks(league).items():
             score_dict[user].update({'proj_rank': rank})
 
-        for player in Player.objects.filter(league=league):
+        for player in Player.objects.filter(league=league, active=True):
             score_dict[player.name.username].update({'season_total': player.season_total()})
         
         for player, rank in league.season_ranks().items():
@@ -372,7 +384,7 @@ class League(models.Model):
     def season_ranks(self):
         u = []
         l = []
-        for player in Player.objects.filter(league=self):
+        for player in Player.objects.filter(league=self, active=True):
             u.append(player.name.username)
             l.append(player.season_total())
 

@@ -9,7 +9,7 @@
 
 
 <div id='loading'>
-  <img src="{%static 'fb_app/images/LT1.gif'%}"></img>
+  <img src="{%static 'fb_app/images/LT1.gif'%}" height="100%" width="80%"></img>
   <h3>Updating Scores....</h3>
 </div>
 
@@ -37,12 +37,12 @@
   <script src="{% static "fb_app/js/ranks.js"%}" type="text/javascript"></script>
 
     <div id='nfl-scores'> 
-      <form id='winners-form' method='post'>
-        {%csrf_token%}
+      <!-- <form id='winners-form' method='post'>
+        {%csrf_token%}  -->
        <table id='score-tbl' class='table'> </table>    
        
-      </form>
-</div>
+       <!-- </form> -->
+       </div>
 
 {%endif%}
 {%endblock%}

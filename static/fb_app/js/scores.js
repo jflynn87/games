@@ -31,7 +31,7 @@ function build_page(json) {
 picks_data = $.parseJSON(json)['player-data']
 games = $.parseJSON(json)['games']
 
-//console.log(picks_data)
+console.log(picks_data)
 //console.log(picks_data)
 
 
@@ -52,10 +52,10 @@ $('#picks-tbl').append('<tr id="rank"> <th>' + 'Rank' + '</th> </tr>' +
 
 $.each(picks_data, function(player, data) {
     //console.log(data['score'])
-    $('#rank').append('<td>' + data['rank'] + '</td>')
+    $('#rank').append('<td class=ranks>' + data['rank'] + '</td>')
     $('#score').append('<td>' + data['score'] + '</td>')
     $('#proj').append('<td>' + data['proj_score'] + '</td>')
-    $('#proj_rank').append('<td>' + data['proj_rank'] + '</td>')
+    $('#proj_rank').append('<td class=ranks>'  + data['proj_rank'] + '</td>')
 })    
 
 for (var i= 16; i > 16 - parseInt($('#game_cnt').text()); i -- ) {
@@ -63,7 +63,7 @@ for (var i= 16; i > 16 - parseInt($('#game_cnt').text()); i -- ) {
     
 $.each(picks_data, function(player, data) {
     $.each(data['picks'], function(index) {
-        $('#pick-' + index).append('<td>' + data['picks'][index] + '</td>')
+        $('#pick-' + index).append('<td class=' + data['picks'][index]['status'] + '>' + data['picks'][index]['team'] + '</td>')
     })
 })
 
@@ -88,7 +88,7 @@ $('#sub-btn').remove()
 
 //$('#nfl-scores').append('<table id="score-tbl" class="table table-sm">' + '</table>')
 
-$('#nfl-scores').append('<button id=sub-btn type="button" class="btn btn-primary">Update Scores</button>')
+$('#nfl-scores').append('<button disabled id=sub-btn type="button" class="btn btn-primary">Not Available</button>')
 
 //headers
 $('#score-tbl').append('<thead style="background-color:lightblue">' + '<th> Home </th>' +
@@ -110,37 +110,64 @@ $.each(games, function(id,game) {
     //console.log(game)
     $('#score-tbl').append('<tr id=' + id + '>' + '<td>' + game['home'] + '</td>' + '<td>' + game['home_score'] + '</td>' +
                            '<td>' + game['away'] + '</td>' + '<td>' + game['away_score'] + '</td>' +
-                                    '<td>' + game['qtr'] + '</td>')
+                                    '<td id=qtr' + id + '>' + game['qtr'] + '</td>')
 
                                         if (game['qtr'].substring(0,5) == 'FINAL') {
-                                            if (parseInt(game['home_score']) > parseInt(game['away_score'])) {$('#' + id).append('<td> <input name=winners type=hidden value=' + game['home'] + '> </input> ' + game['home'] + '</td>')}
-                                            else if (parseInt(game['home_score']) < parseInt(game['away_score'])) {$('#' + id).append('<td> <input name=winners type=hidden value=' + game['away'] + '> </input> ' + game['away'] + '</td>')}
-                                            else if (parseInt(game['home_score']) == parseInt(game['away_score'])) {$('#' + id).append('<td> <input name=tie type=hidden value=' + game['home'] + '> </input>' + '<input name=tie type=hidden value=' + game['away'] + '> </input>' + 'Tie, no winner' + '</td>')}
+                                            if (parseInt(game['home_score']) > parseInt(game['away_score'])) {$('#' + id).append('<td id=winner' + id + '> <input name=winners type=hidden value=' + game['home'] + '> </input> ' + game['home'] + '</td>')}
+                                            else if (parseInt(game['home_score']) < parseInt(game['away_score'])) {$('#' + id).append('<td id=winner' + id + '> <input name=winners type=hidden value=' + game['away'] + '> </input> ' + game['away'] + '</td>')}
+                                            else if (parseInt(game['home_score']) == parseInt(game['away_score'])) {$('#' + id).append('<td id=winner' + id + '> <input name=tie type=hidden value=' + game['home'] + '> </input>' + '<input name=tie type=hidden value=' + game['away'] + '> </input>' + 'Tie, no winner' + '</td>')}
                                                                                     }
-                                        else {$('#' + id).append('<td> <select name=projected> <option selected>' + game['home'] + '</option>' + 
-                                                                 '<option>' + game['away'] + '</option> </select> </td>' 
+                                        else {$('#' + id).append('<td> <form method=POST> <select id=winner' + id + '> <option value=1 selected=selected>' + game['home'] + '</option>' + 
+                                                                 '<option value=2>' + game['away'] + '</option> </select>  <form> </td>' 
                                         )}
 
 })
-
+color()
 
 }  //closes build_page
+
+function color() {
+    $('td.ranks').each(function( index ) {
+          if($( this ).text()== '1'){
+             $(this).css("background-color","#ff3333");
+          }
+          else if ($(this).text() == '2') {
+            $(this).css("background-color","#ccebff");
+
+          }
+          else if ($(this).text() == '3') {
+            $(this).css("background-color","#ffff99");
+
+          }
+    });
+  }
+
 
 
 $(document).on('click', '#sub-btn', function() {
     console.log('clicked')
     token = $.cookie('csrftoken')
-    console.log($('score-tbl').tr)
-    console.log($('score-tbl').tr.length)
-    for (i=0; i< $('#score-tbl').tr.length; i++) {console.log($(this).children()[5])}
-
+    t = document.getElementById('score-tbl')
+    //console.log(t.rows)
+    //console.log(t.rows.length)
+    var proj_winners = new Array()
+    //start with 1 to skip header
+    for (var i=1, row; row = t.rows[i]; i++) {
+        if ($('#qtr' + row.id).text() ==  "FINAL") {
+            proj_winners.push($('#winner' + row.id)[0].innerText)
+        }
+        else {
+           proj_winners.push($('#winner' + row.id).children("option").filter(":selected").text()) 
+            }
+        }
+    console.log('proj',  proj_winners)
     $.ajax({
         type: "GET",
-        url: "/fb_app/update_proj",
+        url: "/fb_app/update_proj/",
         data: {'week' : $('#week').text(), 
                'league': $('#league').text(),
                'season': $('#season').text(),
-               //'winners': $('#score-tbl'),
+               'winners': proj_winners,
               
             },
         dataType: 'json',

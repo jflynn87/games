@@ -28,7 +28,41 @@ from fb_app import scrape_cbs
 import pytz
 
 
-week = Week.objects.get(current=True)
+
+
+#week = Week.objects.get(current=True)
+
+l = League.objects.get(league="Football Fools")
+
+for p in Player.objects.filter(league=l, active=True):
+    print (p)
+
+exit()
+
+f = open("picksweek4prefix.txt", "w")
+for pick in Picks.objects.filter(week=week, player__league=l):
+    
+    f.write(pick.player.name.username + ',' + str(pick.pick_num) + ',' + str(pick.team.nfl_abbr) + '\n')
+    #f.write('\n')
+f.close()
+    
+    
+
+
+for player in Player.objects.filter(league=l).order_by('name'):
+    prior_pick = Picks.objects.filter(week=week, player=player).order_by('-pick_num')[0]
+    for p in Picks.objects.filter(week=week, player=player).order_by('-pick_num').exclude(pick_num = prior_pick.pick_num):
+        if p.pick_num + 1 == prior_pick.pick_num:
+            prior_pick = p
+        #print ('good', p)
+        else:
+            print (player.name, p.pick_num, p.team, prior_pick.pick_num, prior_pick.team)    
+            prior_pick = p
+        
+print (Picks.objects.filter(week=week, player__league=l).count())
+
+exit()
+
 #d = week.update_games()
 #print (len(d))
 scrape_cbs.ScrapeCBS(week).get_data()

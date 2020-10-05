@@ -750,7 +750,10 @@ class UpdateScores(APIView):
     def get(self, num):
         week = Week.objects.get(week=self.request.GET.get('week'), \
             season_model=Season.objects.get(season=self.request.GET.get('season')))
-        player = Player.objects.get(name=User.objects.get(pk=self.request.user.pk))
+        try:
+            player = Player.objects.get(name=User.objects.get(pk=self.request.user.pk))
+        except Exception as e:
+            player = Player.objects.get(name=User.objects.get(username='milt'))
         
         if week.started():
            games = week.update_games()
@@ -1009,23 +1012,34 @@ class NewScoresView(TemplateView):
 class UpdateProj(APIView):
     
     def get(self, num):
-        print ('COMNNECTED')
-        print (self.request.GET)
-        # week = Week.objects.get(week=self.request.GET.get('week'), \
-        #     season_model=Season.objects.get(season=self.request.GET.get('season')))
-        # player = Player.objects.get(name=User.objects.get(pk=self.request.user.pk))
-        
-        # if week.started():
-        #    games = week.update_games()
-        #    d = {'player-data': week.get_scores(player.league)}
-        #    print ('d: ',  d) 
-        #    display = {**d, **games}
-        #    data = json.dumps(display)
-        #    print ('Update Scores data', data)
-        # else:
-        #     data = json.dumps('week not started')
-        
-        return Response(data, 200)
+        try:
+            print ('COMNNECTED')
+            print (self.request.GET)
+            print (self.request.GET.getlist('winners[]'))
+
+            w = Week.objects.get(week=self.request.GET.get('week'), season_model__current=True)
+            l = League.objects.get(league=self.request.GET.get('league'))
+            proj_dict = {}
+
+            for player in Player.objects.filter(league=l) :
+                proj_score = 0
+                for pick in Picks.objects.filter(player=player, week=w):
+                    if pick.team.nfl_abbr not in (self.request.GET.getlist('winners[]')):
+                        proj_score += pick.pick_num
+                proj_dict[player.name.username] = {'proj_score': proj_score}
+
+            print ('update proj: ', proj_dict)
+            proj_rank = w.proj_ranks(l, proj_dict)
+            print ('update proj ranks: ', proj_rank)
+
+            for player, score in proj_dict.items():
+                proj_dict[player].update({'proj_rank': proj_rank[player]})
+             
+
+            return Response(json.dumps(proj_dict), 200)
+        except Exception as e:
+            print ('update proj issue', e)
+            return Response(json.dumps({'msg': 'update error'}))
 
 
 
