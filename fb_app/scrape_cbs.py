@@ -34,7 +34,7 @@ class ScrapeCBS(object):
             week = Week.objects.get(current=True)
 
             html = urllib.request.urlopen("https://www.cbssports.com/nfl/scoreboard/all/2020/regular/" + str(week.week) + "/")
-            # html = urllib.request.urlopen("https://www.cbssports.com/nfl/scoreboard/")
+            #html = urllib.request.urlopen("https://www.cbssports.com/nfl/scoreboard/")
             soup = BeautifulSoup(html, 'html.parser')
 
             games = soup.find_all('div', {'class': 'single-score-card'})

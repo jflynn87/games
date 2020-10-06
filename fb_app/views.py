@@ -20,7 +20,7 @@ from django.forms import formset_factory, modelformset_factory
 from collections import OrderedDict
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from fb_app import scores
+from fb_app import scores, scrape_cbs
 
 #from fb_app import calc_score
 
@@ -757,8 +757,11 @@ class UpdateScores(APIView):
         
         if week.started():
            games = week.update_games()
+           if games == None:
+               games = scrape_cbs.ScrapeCBS(week).get_data()
            d = {'player-data': week.get_scores(player.league)}
            print ('d: ',  d) 
+           print ('***** games', games)
            display = {**d, **games}
            data = json.dumps(display)
            print ('Update Scores data', data)

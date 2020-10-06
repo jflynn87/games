@@ -35,20 +35,20 @@ class Week(models.Model):
     def __str__(self):
         return str(self.week)
 
-    def save(self, *args, **kwargs):
-        if self.week != 1:
-            print ('model self', self)
-            print ('model kwargs', kwargs)
-            last_week = Week.objects.get(current=True)
-            if self.pk != None and last_week.started():
-                for league in League.objects.all():
-                    scores = WeekScore()
-                    calc_scores(scores, league, last_week)
+    # def save(self, *args, **kwargs):
+    #     if self.week != 1:
+    #         print ('model self', self)
+    #         print ('model kwargs', kwargs)
+    #         last_week = Week.objects.get(current=True)
+    #         if self.pk != None and last_week.started():
+    #             for league in League.objects.all():
+    #                 scores = WeekScore()
+    #                 calc_scores(scores, league, last_week)
 
-                if self.current==True:
-                    last_week.current = False
-                    last_week.save()
-        super(Week, self).save()
+    #             if self.current==True:
+    #                 last_week.current = False
+    #                 last_week.save()
+    #     super(Week, self).save()
 
     def started(self):
         print ('week started check')

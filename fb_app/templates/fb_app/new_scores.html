@@ -27,8 +27,14 @@
 
 <h2>Week {{week}}: come back when the games begin.</h2
 <br>
-<h4>Picks Submitted: {%for player in players%} {{player}} {%endfor%}</h4>
-{%if pending%}<h4>Picks Pending from: {%for player in pending%} {{player}} </h4> {%endfor%} {%endif%}
+<h4>Picks Submitted:</h4>
+ {%for player in players%} <li> {{player}} </li> {%endfor%}
+{%if pending%}
+<h4>Picks Pending from: </h4>
+{%for player in pending%}
+<li> {{player}} </li> 
+{%endfor%}
+{%endif%}
 {%endif%}
 
 {%if week.started%}

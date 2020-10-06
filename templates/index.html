@@ -6,16 +6,24 @@
     <p></p>
     <p></p>
 
-    <p>Golf Game Options</p>
-    <a href="{% url 'golf_app:field' %}"> <button class="btn btn-primary">Make Golf picks</button></a>
+    <h3>Golf Game Options</h3>
+    <a href="{% url 'golf_app:field' %}"> <button class="btn btn-primary">Make Picks</button></a>
+    <br>
+    <br>
     <a href="{% url 'golf_app:new_scores'%}"> <button class="btn btn-primary">Current Week Scores</button></a>
+    <br>
+    <br>
     <a href="{% url 'golf_app:total_score'%}"> <button class="btn btn-primary">Season Totals</button></a>
    
     <br>
     <br>
-    <p>Football Game Options</p>
-    <a href="{% url 'fb_app:games_list' %}"> <button class="btn btn-primary">Make Football Picks</button></a>
+    <h3>Football Game Options</h3>
+    <a href="{% url 'fb_app:games_list' %}"> <button class="btn btn-primary">Make Picks</button></a>
+    <br>
+    <br>
     <a href="{% url 'fb_app:scores_list' %}"> <button class="btn btn-primary">Current Week Scores</button></a>
+    <br>
+    <br>
     <a href="{% url 'fb_app:season_total' %}"> <button class="btn btn-primary">Season Totals</button></a>
     
     <br>

@@ -12,17 +12,16 @@ function get_team_name(team_id) {
 };
 
 function get_game_id(team_name) {
+  console.log(team_name)
   var game_list = {}
   games = document.getElementById('game_tbl')
 
   for (var j = 1; j <= games.rows.length; j++){
-      game_list[$.trim(document.getElementById('fav'+j).innerText).split("(")[0].toUpperCase()] =
-        'game'+j
-      game_list[$.trim(document.getElementById('dog'+j).innerText).split("(")[0].toUpperCase()] =
-        'game'+j
+      game_list[$.trim($('#fav'+j).text().split("(")[0].toUpperCase())] = 'game'+j
+      game_list[$.trim($('#dog'+j).text().split("(")[0].toUpperCase())] = 'game'+j
 
         }
-
+        console.log(game_list)
   return game_list[team_name]
 };
 
@@ -39,20 +38,17 @@ function get_game_id(team_name) {
     picks = document.getElementById('pickstbl')
     var pick_list = []
     for (p=1; p <= picks.rows.length; p++) {
-       pick_list.push(document.getElementById('pick' + (17-p)).children[0].value)
-
+       //pick_list.push(document.getElementById('pick' + (17-p)).children[0].value)
+       pick_list.push($('#pick' + (17-p)).children().children("option").filter(":selected").text())
+       
     }
 
     for (var k=0; k < pick_list.length; k++) {
-
-      if (pick_list[k] != '') {
-         var pick = (pick_list[k]);
-         var team_name = get_team_name(pick);
-         var game_id = get_game_id(team_name);
+        if (pick_list[k] != '---------') {
+         //var pick = (pick_list[k]);
+         var game_id = get_game_id(pick_list[k]);
          game = document.getElementById(game_id)
-         game.style.textDecorationLine = 'line-through';
-         game.style.textDecorationStyle = 'dotted'
-         /*game.style.color ='#d9d9d9';*/
+         game.style.background = 'yellow';
 
       }
 }
