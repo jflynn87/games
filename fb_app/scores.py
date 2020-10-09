@@ -1,4 +1,4 @@
-from fb_app.models import Games, calc_scores, WeekScore, Player
+from fb_app.models import Games, WeekScore, Player
 import scipy.stats as ss
 from django.db.models import Sum
 

@@ -1,9 +1,10 @@
 $( document ).ready(function() { 
     refresh()
-    setInterval (refresh, 600000) 
+    setInterval (refresh, 90000) 
 })
 function refresh() {
     console.log('js linked') 
+    $('#status').html('<p class=status> Updating Scores ... </p>')
     
     $.ajax({
         type: "GET",
@@ -14,7 +15,6 @@ function refresh() {
                
             },
         dataType: 'json',
-        /*context: document.body, */
         success: function (json) {
             //console.log(json)
             if ($.parseJSON(json)['msg'] == 'week not started') {
@@ -27,11 +27,11 @@ function refresh() {
         })}
 
 function build_page(json) {
-//console.log(json)
+
 picks_data = $.parseJSON(json)['player-data']
 games = $.parseJSON(json)['games']
 
-console.log(picks_data)
+//console.log(picks_data)
 //console.log(picks_data)
 
 
@@ -54,8 +54,8 @@ $.each(picks_data, function(player, data) {
     //console.log(data['score'])
     $('#rank').append('<td class=ranks>' + data['rank'] + '</td>')
     $('#score').append('<td>' + data['score'] + '</td>')
-    $('#proj').append('<td>' + data['proj_score'] + '</td>')
-    $('#proj_rank').append('<td class=ranks>'  + data['proj_rank'] + '</td>')
+    $('#proj').append('<td id=proj_score-' + player + '>' + data['proj_score'] + '</td>')
+    $('#proj_rank').append('<td class=ranks id=proj_rank-' + player + '>'  + data['proj_rank'] + '</td>')
 })    
 
 for (var i= 16; i > 16 - parseInt($('#game_cnt').text()); i -- ) {
@@ -72,7 +72,7 @@ $('#picks-tbl').append('<tr id="season_total"> <th>' + 'Season Total' + '</th> <
 
 $.each(picks_data, function(player, data) {
     $('#season_total').append('<td>' + data['season_total'] + '</td>' )
-    $('#season_rank').append('<td>' + data['season_rank'] + '</td>' )
+    $('#season_rank').append('<td class=ranks>' + data['season_rank'] + '</td>' )
 })
 
 $('#picks-tbl').append('<th> Week' + $("#week").text() + '</th> </thead>')
@@ -88,7 +88,7 @@ $('#sub-btn').remove()
 
 //$('#nfl-scores').append('<table id="score-tbl" class="table table-sm">' + '</table>')
 
-$('#nfl-scores').append('<button disabled id=sub-btn type="button" class="btn btn-primary">Not Available</button>')
+$('#nfl-scores').append('<button id=sub-btn type="button" class="btn btn-primary">Project Scores</button>')
 
 //headers
 $('#score-tbl').append('<thead style="background-color:lightblue">' + '<th> Home </th>' +
@@ -98,12 +98,6 @@ $('#score-tbl').append('<thead style="background-color:lightblue">' + '<th> Home
                                                                       '<th> Qtr </th>' +
                                                                       '<th> Winner </th>' +
                                                             '</thead>')
-
-
-//$('#nfl-row').append('<div class=column id=winners> <table class=table sm> <th> Winners </th> </table></div>')  
-//$('#nfl-row').append('<div class=column id=winners></div>')
-//$('#nfl-scores').append('<form method=POST> </form>')
-//$('#nfl-scores form').append('<table id=score-tbl> </table>')
 
 
 $.each(games, function(id,game) {
@@ -123,6 +117,7 @@ $.each(games, function(id,game) {
 
 })
 color()
+$('#status').html('<p class=none> Scores Updated:  ' + new Date($.now()) +  '</p>').removeAttr('hidden')
 
 }  //closes build_page
 
@@ -146,7 +141,13 @@ function color() {
 
 $(document).on('click', '#sub-btn', function() {
     console.log('clicked')
-    token = $.cookie('csrftoken')
+    $(window).scrollTop(0); 
+    $('#proj').find('td').each(function() {$(this).html('...').addClass('status') })
+    $('#proj').find('th').html('Proj Updating...')
+    $('#proj_rank').find('td').each(function() {$(this).html('...').addClass('status') })
+    $('#proj_rank').find('th').html('Proj Updating...')
+
+    //token = $.cookie('csrftoken')
     t = document.getElementById('score-tbl')
     //console.log(t.rows)
     //console.log(t.rows.length)
@@ -179,127 +180,23 @@ $(document).on('click', '#sub-btn', function() {
             }
             else {
                 console.log('success')
-                update_proj(json)
+                update_proj($.parseJSON(json))
             }}
         })
     
     })
 
+
+
 function update_proj(json) {
-    console.log(json)
+    $('#proj').find('th').html('Projected Score')
+    $('#proj_rank').find('th').html('Projected Rank')    
+    $.each(json, function(player, data) {
+
+    $('#proj_score-' + player).html(data['proj_score']).removeClass('status').show()
+    $('#proj_rank-' + player).text(data['proj_rank']).removeClass('status').show()
+    color()
+ 
+
+})
 }
-
-
-
-           
-//             for (i = 1; i < table.rows.length; ++i) { 
-//                 game = table.rows[i]
-//                 $('#' + game.id + 'home_score').text(updates[game.id]['home_score'])
-//                 $('#' + game.id + 'away_score').text(updates[game.id]['away_score'])
-//                 $('#' + game.id + 'qtr').text(updates[game.id]['qtr'])
-                
-                
-//                 if (updates[game.id]['final'] === true) {
-//                    $('#winners > tbody').find('tr').each(function() {
-//                     if (typeof($(this).find('input').val()) === 'undefined' && $(this).attr('id')==game.id + 'winners') {
-//                         console.log('inside if', game.id)
-//                         $(this).children().remove()
-//                         $(this).append('<input type="hidden" value=' + updates[game.id]['winner'] + '"' + ' name="winners" />')
-//                         $(this).append('<td>' + updates[game.id]["winner"] + '</td>')
-//                    }
-//                 })
-//                 }
-//             }
-
-            
-//             var player_list = player_index()
-//             console.log(updates['losers'])
-            
-//             $('#scores').find('td').each (function(index, text) {
-                
-//                 if (index > 0) {
-//                     $(this).text(updates[player_list[index-1]]['score'])
-             
-//             }}) 
-                
-//             $('#ranks').find('td').each (function(index, text) {
-//                 if (index > 0) {
-//                 $(this).text(updates[player_list[index-1]]['week_rank'])
-//                 $(this).css('background-color', rank_color($(this)))
-//             }}) 
-
-//             $('#proj').find('td').each (function(index, text) {
-//                 if (index > 0) {
-//                 $(this).text(updates[player_list[index-1]]['week_proj'])
-
-//             }});
-
-             
-
-//             $('#proj_rank').find('td').each (function(index, text) {
-//                 if (index > 0) {
-//                 $(this).text(updates[player_list[index-1]]['week_proj_rank'])
-//                 $(this).css('background-color', rank_color($(this)))
-//             }}) 
-
-//             $('#season_total').find('td').each (function(index, text) {
-//                 if (index > 0) {
-//                 $(this).text(updates[player_list[index-1]]['season_total'])
-             
-//             }}) 
-
-//             $('#season_rank').find('td').each (function(index, text) {
-//                 if (index > 0) {
-//                 $(this).text(updates[player_list[index-1]]['season_rank'])
-             
-//             }}) 
-            
-//             $('#picks-tbl tr').each(function(){
-//                 $(this).find('td').each(function(){
-//                   if ($.inArray($(this).text(), updates['losers']) !== -1) {
-//                         $(this).css('color', 'red')
-//                     }
-//                 })
-//             })
-//         }
-//     },
-//         failure: function (json) {
-//             console.log('fail')
-//         }
-//         })
-
-    
-//     // , 2000000 })
-// }
-
-
-
-// function player_index() {
-//     var player_list = []
-//     $('#players').find('th').each (function(index) {
-//         if (index>0) {
-//     player_list.push($(this).text())
-//     }})
-//     return player_list
-
-  
-// };                      
-
-// function rank_color(field) {
-
-//         /* figure out how to import this from ranks */
-//         if(field.text()== '1'){
-//             bc = "#ff3333";
-//         }
-//         else if (field.text() == '2') {
-//             bc = "#ccebff";
-//         }
-//         else if (field.text() == '3') {
-//             bc ="#ffff99";
-//         }
-//         else {
-//             bc = 'white'}
-
-//         return bc
-// }
-

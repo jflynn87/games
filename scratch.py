@@ -4,7 +4,7 @@ os.environ.setdefault("DJANGO_SETTINGS_MODULE","gamesProj.settings")
 import django
 django.setup()
 #from golf_app.models import Tournament, TotalScore, ScoreDetails, Field, Picks, PickMethod
-from fb_app.models import Season, Week, Games, Teams, Picks, League, Player, calc_scores, MikeScore, WeekScore#, get_data
+from fb_app.models import Season, Week, Games, Teams, Picks, League, Player,  MikeScore, WeekScore
 from django.contrib.auth.models import User
 from datetime import datetime, timedelta, timezone
 from django.db.models import Min, Q, Count, Sum, Max
@@ -31,12 +31,14 @@ import pytz
 
 
 #week = Week.objects.get(current=True)
-
+start = datetime.now()
 l = League.objects.get(league="Football Fools")
+week = Week.objects.get(current=True)
 
-for p in Player.objects.filter(league=l, active=True):
-    print (p)
+#print (week.started())
+print (week.picks_complete(l))
 
+print (datetime.now() - start)
 exit()
 
 f = open("picksweek4prefix.txt", "w")

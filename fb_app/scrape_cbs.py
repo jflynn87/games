@@ -58,7 +58,7 @@ class ScrapeCBS(object):
                         home_score = 0
 
                     status = game.find('div', {'class': 'game-status'})
-                    print (len(status), type(status), status)
+                    #print (len(status), type(status), status)
                     if len(status) == 1:
                         qtr = status.text
                     elif len(status) > 1 and 'pregame' in status['class']:
