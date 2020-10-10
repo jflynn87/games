@@ -165,8 +165,10 @@ class Score(object):
                 bonus.best_in_group_bonus = 0
                 bonus.save()
 
-        for pick in Picks.objects.filter(playerName__tournament=self.tournament):
-            #print ('1 -', pick.playerName.playerName)
+        # comment to make this a bulk update
+        for pick in Picks.objects.filter(playerName__tournament=self.tournament):  
+            pick_loop_start = datetime.now()
+            print ('1 -', pick.playerName.playerName)
             #print (self.score_dict)
 
             data = self.score_dict.get(unidecode(pick.playerName.playerName))
@@ -192,9 +194,9 @@ class Score(object):
                          pick.score=cut_num 
                     else:
                         pick.score = utils.formatRank(data.get('rank')) 
-                #print ('end checking cut num', datetime.now())
-                pick.save()
-                #print ("2")    
+                
+                pick.save()  
+
                 sd, sd_created = ScoreDetails.objects.get_or_create(user=pick.user, pick=pick)
                 sd.score=pick.score - pick.playerName.handicap()
                 sd.gross_score = pick.score
@@ -210,7 +212,7 @@ class Score(object):
                     sd.thru  = data.get('thru')
                 sd.toPar = data.get('total_score')
                 sd.sod_position = data.get('change')
-                sd.save()
+                sd.save()  
             except Exception as e:
                 print ('withdraw?', pick, e)
                 pick.score  = cut_num
@@ -244,7 +246,7 @@ class Score(object):
                   bd.best_in_group_bonus = bd.best_in_group_bonus + 10
                   bd.save()
 
-
+            #print ('FFFFFFFFFFF pick loop finish: ', pick, datetime.now() - pick_loop_start)
         self.tournament.score_update_time = datetime.now()
         self.tournament.save()
 

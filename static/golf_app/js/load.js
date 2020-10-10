@@ -158,7 +158,7 @@ function build_score_tbl(data) {
     $('#totals').append('<tr id=totals' + p + ' class=small>' + '<td>'+  p  + ' (' + season_totals[p]['diff'] +')'  + '</p>' + '<p>' +  total['total_score'] + ' / ' + total['cuts']  + '</td>'  + '</tr>')
     
     //clean this up.  Always display and drop the if.
-    if (total['msg']) {$('#totals' + p).append('<td>' + total["msg"] + '</td>') }
+    if (total['msg']) {$('#totals' + p).append('<p> h/c: ' + total['handicap'] + '</p> <td>' + total["msg"] + '</td>') }
     else if (total['winner_bonus'] >0 || total['major_bonus'] > 0 || total['cut_bonus'] > 0 || total['best_in_group'] > 0  || total['playoff_bonus'] > 0 || total['handicap'] > 0) {
       var bonus_dtl = total['winner_bonus']  + total['major_bonus'] + total['cut_bonus'] + total['best_in_group'] + total['playoff_bonus']
       $('#totals' + p).append('<td>' + total['msg'] + '<span class="bonus">' + '<p>' + 'h/c: ' + total['handicap'] + '</p>' + '<p>' +  'B: ' + bonus_dtl.toString() + '</p>' + '</span>' + '</td>') }
@@ -184,7 +184,7 @@ function build_score_tbl(data) {
     
     //use 0 of the index to strip the extra chars in multi pick groups.  Need to fix for tournaments with 10 groups.
     
-    if ($.inArray($(this)[0]['pick'], optimal_data[index[0]]['golfer']) !== -1) {$('#' + p + $(this)[0]['pick'].replace(/ +?/g, '')).addClass('best')} 
+    if ($.inArray($(this)[0]['pick'], optimal_data[index[0]]['golfer']) !== -1) {$('#' + p + $(this)[0]['pick'].replace(filler, '')).addClass('best')} 
   })}) 
  
 

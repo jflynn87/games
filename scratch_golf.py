@@ -30,8 +30,74 @@ from unidecode import unidecode
 
 start = datetime.now()
 t= Tournament.objects.get(current=True)
-sd = ScoreDict.objects.get(tournament=t)
-score_dict = sd.sorted_dict()
+s = ScoreDict.objects.get(tournament=t)
+score_dict = s.data
+cut_num = t.cut_num()
+
+for p in Picks.objects.filter(playerName__tournament=t).values('playerName').distinct():
+
+    pick = Picks.objects.filter(playerName__pk=p.get('playerName')).first()
+    pick_loop_start = datetime.now()
+    #print ('1 -', pick.playerName.playerName)
+
+    data = score_dict.get(unidecode(pick.playerName.playerName))
+    if data == None:
+        print ('*********', 'player name issue', pick.playerName.playerName, '*************')
+        for k, v in score_dict.items():
+            if v.get('pga_num') == pick.playerName.playerID:
+                data = v
+                print ('pick data from pga_num', pick)
+            elif pick.playerName.playerName.replace('Jr.', '').replace('Jr','').rstrip(' ') == k:
+                print ('strip JR: ', k)
+                data = v
+            else:
+                continue
+
+
+    if data.get('rank') == "CUT":
+        pick.score = cut_num
+    elif data.get('rank') == "WD":
+        pick.score = self.get_wd_score(pick) 
+    else:
+        if int(utils.formatRank(data.get('rank'))) > cut_num:
+                pick.score=cut_num 
+        else:
+            pick.score = utils.formatRank(data.get('rank')) 
+
+    #pick.save()  commented as part of batch attempt
+    Picks.objects.filter(playerName__tournament=t, playerName=pick.playerName).update(score=pick.score)
+
+    #sd, sd_created = ScoreDetails.objects.get_or_create(user=pick.user, pick=pick)
+    sd = ScoreDetails.objects.get(user=pick.user, pick=pick)
+    sd.score=pick.score - pick.playerName.handicap()
+    sd.gross_score = pick.score
+    if data.get('rank') == "CUT" or \
+        data.get('rank') == "WD" and round < 3:
+        sd.today_score  = "CUT"
+        sd.thru  = "CUT"
+    elif data.get('rank') == "WD":
+        sd.today_score = "WD"
+        sd.thru = "WD"
+    else:
+        sd.today_score = data.get('round_score')
+        sd.thru  = data.get('thru')
+    sd.toPar = data.get('total_score')
+    sd.sod_position = data.get('change')
+    #sd.save()  commented as part of batch attempt
+    ScoreDetails.objects.filter(pick__playerName__tournament=t, pick__playerName=pick.playerName).update(
+        today_score=sd.today_score,
+        thru=sd.thru,
+        toPar=sd.toPar,
+        sod_position='test'
+    )
+
+print ('finish time', datetime.now() - start)
+
+exit()
+
+#score_dict = sd.sorted_dict()
+
+
 
 #if not t.has_cut:
 #     print ('no cut: ', len([x for x in score_dict.values() if x['rank'] not in ['WD', 'DQ']]) + 1)

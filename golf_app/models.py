@@ -115,12 +115,15 @@ class Tournament(models.Model):
         if self.started():
             t = Tournament.objects.filter(season__current=True).earliest('pk')
             c=  len(Picks.objects.filter(playerName__tournament=t).values('user').annotate(unum=Count('user')))
-            expected_picks = Group.objects.filter(tournament=self).aggregate(Max('number'))
-            print ('expected', expected_picks, expected_picks['number__max'] * c)
+            #expected_picks = Group.objects.filter(tournament=self).aggregate(Max('number'))
+            expected_picks = 0
+            for group in Group.objects.filter(tournament=self):
+                expected_picks += group.num_of_picks()
+            print ('expected', expected_picks, expected_picks * c)
             print ('pick count', Picks.objects.filter(playerName__tournament=self).count())
-            print ('actual', Picks.objects.filter(playerName__tournament=self).count() - (expected_picks['number__max'] * c))
+            print ('actual', Picks.objects.filter(playerName__tournament=self).count() - (expected_picks * c))
             if Picks.objects.filter(playerName__tournament=self).count() \
-            == (expected_picks.get('number__max') * c):
+            == (expected_picks * c):
                 return True
             else:
                 return False
@@ -278,7 +281,7 @@ class Tournament(models.Model):
            clean_dict = {key.replace('(a)', '').strip(): v for key, v in score_dict.items()}
            #print (clean_dict)
 
-           for player in Field.objects.filter(tournament=self, group=group):
+           for player in Field.objects.filter(tournament=self, group=group).exclude(withdrawn=True):
                if player.playerName in clean_dict:  #needed to deal wiht WD's before start of tourn.
                     if (clean_dict[player.playerName]['rank'] not in  self.not_playing_list() and  \
                        int(utils.formatRank(clean_dict[player.playerName]['rank']) - player.handicap()) == group_min) or \
@@ -325,34 +328,17 @@ class Group(models.Model):
         not_playing_list = self.tournament.not_playing_list()
         min_score = 999  
 
-        for score in Field.objects.filter(group=self):
+        for score in Field.objects.filter(group=self).exclude(withdrawn=True):
             start = datetime.now()
             try:
-                #if score_dict.data.get(score.playerName).get('rank') in self.tournament.not_playing_list():
-                if clean_dict.get(score.playerName).get('rank') in not_playing_list:
+                 if clean_dict.get(score.playerName).get('rank') in not_playing_list:
                     if cut_num - score.handicap() < min_score:
                         min_score = cut_num - score.handicap()
-                #elif utils.formatRank(score_dict.data.get(score.playerName).get('rank')) - score.handicap() < min_score:
-                elif utils.formatRank(clean_dict.get(score.playerName).get('rank')) - score.handicap() < min_score:
+                 elif utils.formatRank(clean_dict.get(score.playerName).get('rank')) - score.handicap() < min_score:
                     min_score = utils.formatRank(clean_dict.get(score.playerName).get('rank')) - score.handicap()
-                #else:
-                #    print ('not min', score.playerName, score_dict.data.get(score.playerName).get('rank'), utils.formatRank(score_dict.data.get(score.playerName).get('rank')))
             except Exception as e:
                 print (score.playerName, e, 'exclded from min score')
-                #print (self, score.rank_as_int(), score.handicap())
-            #print ('end min score ', datetime.now() - start, self)
         return min_score
-
-    #deprecate for optimal_pick function
-    # def best_picks(self):
-    #     best_list = []
-    #     min_score = self.min_score()
-    #     for field in Field.objects.filter(group=self, score__le=self.tournament.cut_num()):
-    #         if (utils.formatRank(field.rank) - field.handicap()) == min_score:
-    #             best_list.append(field.playerName)
-    #     return best_list
-
-        #return Field.objects.filter(tournament=self.tournament, score=self.min_score())
 
     def num_of_picks(self):
         if self.tournament.last_group_multi_pick() and self.number == 6:
@@ -425,14 +411,20 @@ class Field(models.Model):
     def prior_year_finish(self):
         last_season = str(int(self.tournament.season.season)-1)
         t = Tournament.objects.get(name=self.tournament.name, season__season=last_season)
-        s = ScoreDetails.objects.filter(pick__playerName__tournament=t, pick__playerName__playerName=self).first()
-   
-        if s == None:
+        sd = ScoreDict.objects.get(tournament=t)
+        try:
+            return sd.data.get(self.playerName).get('rank')
+        except Exception as e:
             return 'n/a'
-        elif s.today_score == "cut":
-            return s.today_score
-        else:
-            return s.score
+        #@s = ScoreDetails.objects.filter(pick__playerName__tournament=t, pick__playerName__playerName=self).first()
+   
+        #if s == None:
+        #    return 'n/a'
+        #elif s.today_score == "cut":
+        #elif s == "cut":
+        #    return s
+        #else:
+        #    return s
 
     def handicap(self):
         if round(self.currentWGR*.01) < (Field.objects.filter(tournament=self.tournament).count() * .13):

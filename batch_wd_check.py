@@ -53,10 +53,20 @@ else:
 
 mail_picks = ''
 
+pick_status_dict = {}
+for player in t.season.get_users():
+    print(player)
+    user = User.objects.get(id=player.get('user'))
+    pick_status_dict[user.username] = str(Picks.objects.filter(user__id=user.id, playerName__tournament=t).count())
+    
+
 mail_sub = "Golf Game Withdrawal Update"
 mail_t = "Tournament: " + t.name + "\r"
 mail_url = "Website to make changes or picks: " + "http://jflynn87.pythonanywhere.com"
-mail_content = mail_t + "\r" + mail_field + "\r" +mail_picks + "\r"+ mail_url
+mail_content = mail_t + "\r" + mail_field + "\r" +mail_picks + "\r"+ mail_url + "\r" 
+for p, c in pick_status_dict.items():
+    mail_content = mail_content + "\r" + p + ' pick count:  ' + c
+
 mail_recipients = ['jflynn87@hotmail.com']
 send_mail(mail_sub, mail_content, 'jflynn87g@gmail.com', mail_recipients)  #add fail silently
 
