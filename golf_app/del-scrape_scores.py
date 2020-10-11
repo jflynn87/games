@@ -96,6 +96,8 @@ class ScrapeScores(object):
                 #f.close()
                 
                 print (score_dict)
+
+
                 return (score_dict)                
             else:
                 print ('scrape scores t mismatch', t, name)

@@ -13,7 +13,7 @@ from django.urls import reverse, reverse_lazy
 from django.contrib.auth.models import User
 import datetime
 from golf_app import populateField, calc_score, optimal_picks,\
-     manual_score, scrape_scores, scrape_scores_picks, scrape_cbs_golf
+     manual_score, scrape_scores_picks, scrape_cbs_golf
 from django.utils import timezone
 from django.core.exceptions import ObjectDoesNotExist
 from django.db.models import Min, Q, Count, Sum, Max
@@ -366,9 +366,6 @@ class GetScores(APIView):
             }), 200)
 
 
-
-
-
         if t.current and not t.complete:
             print ('scraping')
             #pga_web = scrape_scores.ScrapeScores(t)
@@ -379,7 +376,8 @@ class GetScores(APIView):
             try:
                 score_dict = sd.pick_data()
             except Exception as e:
-                score_dict = get_score_dict(t)
+                score_dict = {}
+                #score_dict = get_score_dict(t)
                 print ('using old score dict method', t, e)
             
         
@@ -426,29 +424,10 @@ class GetDBScores(APIView):
     
     def get(self, num):
         
-        #fix info race condition in load.js and remove sleep
-        
         print ('GetScores API VIEW', self.request.GET.get('tournament'))
         t = Tournament.objects.get(pk=self.request.GET.get('tournament'))
         sd, created = ScoreDict.objects.get_or_create(tournament=t)
         info = get_info(t)
-
-        # try:
-        #     sd = ScoreDict.objects.get(tournament=t)
-        #     score_dict = sd.sorted_dict()
-        #     print ('-------- New Score dict used')            
-        # except Exception as e:
-        #     print ('using old score dict', e)
-        #     score_dict = get_score_dict(t)
-        
-        # scores = manual_score.Score(score_dict, t, 'json')
-        # ts = scores.total_scores()
-        # d = scores.get_picks_by_user() 
-        
-        # optimal = t.optimal_picks()
-        # scores_json = json.dumps(score_dict)
-        # totals = Season.objects.get(season=t.season).get_total_points()
-        # leaders = scores.get_leader()
 
         try:
             display_data = json.loads(sd.pick_data)
@@ -465,19 +444,6 @@ class GetDBScores(APIView):
         except Exception as e:
             print ('old logic')
             return Response(({}), 200)
-
-
-
-            #return Response({'picks': None,
-            #                   'totals': None,
-            #                   'leaders': [],
-            #                   'cut_line': None,
-            #                    'optimal': None, 
-            #                   'scores': None,
-            #                   'season_totals': None,
-            #                   'info': json.dumps(info)
-            #  }, 200)
-
 
 class NewScoresView(LoginRequiredMixin,ListView):
     login_url = 'login'

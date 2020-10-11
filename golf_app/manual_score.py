@@ -11,6 +11,7 @@ from django.db.models import Count, Max, Min
 from django.db import transaction
 import random
 from unidecode import unidecode
+from django.utils import timezone
 
 
 class Score(object):
@@ -153,22 +154,31 @@ class Score(object):
             self.tournament.complete = self.tournament.tournament_complete()
 
         #make cut num 1 lookup on model
-        cut_num = self.tournament.cut_num()
+        #cut_num = self.tournament.cut_num()
+        cut_num = self.tournament.saved_cut_num
+        print ('after cut num', datetime.now() - start)
         optimal_picks = json.loads(self.tournament.optimal_picks())
-        round = self.tournament.get_round()
-        print (optimal_picks)
+        print ('after optimal', datetime.now() - start)
+        #round = self.tournament.get_round()
+        round = self.tournament.saved_round
+        print ('after round', datetime.now() - start)
+        #print (optimal_picks)
 
-        for user in self.tournament.season.get_users():
-            if BonusDetails.objects.filter(user=User.objects.get(pk=user.get('user')), tournament=self.tournament).exists():
-                #print ('----------------------reset best in group----------------')
-                bonus = BonusDetails.objects.get(user=User.objects.get(pk=user.get('user')), tournament=self.tournament)
-                bonus.best_in_group_bonus = 0
-                bonus.save()
+        #for user in self.tournament.season.get_users():
+        #if BonusDetails.objects.filter(tournament=self.tournament).exists():
+        BonusDetails.objects.filter(tournament=self.tournament).update(best_in_group_bonus=0)
+            #print ('----------------------reset best in group----------------')
+            #bonus = BonusDetails.objects.get(user=User.objects.get(pk=user.get('user')), tournament=self.tournament)
+            #bonus.best_in_group_bonus = 0
+            #bonus.save()
 
         # comment to make this a bulk update
-        for pick in Picks.objects.filter(playerName__tournament=self.tournament):  
-            pick_loop_start = datetime.now()
-            print ('1 -', pick.playerName.playerName)
+        #for pick in Picks.objects.filter(playerName__tournament=self.tournament):  
+        print ('starting pick loop time to here', datetime.now() - start)
+        loop_start = datetime.now()
+        for p in Picks.objects.filter(playerName__tournament=self.tournament).values('playerName').distinct():
+            #pick_loop_start = datetime.now()
+            pick = Picks.objects.filter(playerName__pk=p.get('playerName')).first()
             #print (self.score_dict)
 
             data = self.score_dict.get(unidecode(pick.playerName.playerName))
@@ -195,7 +205,8 @@ class Score(object):
                     else:
                         pick.score = utils.formatRank(data.get('rank')) 
                 
-                pick.save()  
+                #pick.save()  comment for bulk update
+                Picks.objects.filter(playerName__tournament=self.tournament, playerName=pick.playerName).update(score=pick.score)
 
                 sd, sd_created = ScoreDetails.objects.get_or_create(user=pick.user, pick=pick)
                 sd.score=pick.score - pick.playerName.handicap()
@@ -212,44 +223,71 @@ class Score(object):
                     sd.thru  = data.get('thru')
                 sd.toPar = data.get('total_score')
                 sd.sod_position = data.get('change')
-                sd.save()  
+                #sd.save()  comment for bulk update
+                ScoreDetails.objects.filter(pick__playerName__tournament=self.tournament, pick__playerName=pick.playerName).update(
+                                            score=sd.score,
+                                            gross_score=pick.score,
+                                            today_score=sd.today_score,
+                                            thru=sd.thru,
+                                            toPar=sd.toPar,
+                                            sod_position=sd.sod_position
+                                        )
+
             except Exception as e:
                 print ('withdraw?', pick, e)
-                pick.score  = cut_num
-                pick.save()
-                sd, sd_created = ScoreDetails.objects.get_or_create(user=pick.user, pick=pick)
-                sd.score=pick.score - pick.playerName.handicap()
+                #pick.score  = cut_num
+                #pick.save()
+                Picks.objects.filter(playerName__tournament=self.tournament, playerName=pick.playerName).update(score=cut_num - pick.playerName.handicap())
+                #sd, sd_created = ScoreDetails.objects.get_or_create(user=pick.user, pick=pick)
+                sd.score=pick.score - pick.playerName.handicap() 
                 sd.gross_score = pick.score
                 sd.today_score = "WD"
                 sd.thru = "WD"
-                sd.save()
-
+                #sd.save()   comment for bulk update
+                ScoreDetails.objects.filter(pick__playerName__tournament=self.tournament, pick__playerName=pick.playerName).update(
+                                            score=cut_num - pick.playerName.handicap(),
+                                            gross_score=sd.gross_score,
+                                            today_score=sd.today_score,
+                                            thru=sd.thru
+                                            )
             
-            if pick.is_winner() and not PickMethod.objects.filter(user=pick.user, method=3, tournament=pick.playerName.tournament).exists():
-                print ('winner', pick.playerName)
-                bd = BonusDetails.objects.get(user=pick.user, tournament=pick.playerName.tournament)
-                bd.winner_bonus = 50 + (pick.playerName.group.number*2)
-                bd.save()
+            if pick.is_winner():
+                for winner in Pick.objects.filter(playerName=pick.playerName):
+                    if not PickMethod.objects.filter(user=winner.user, method=3, tournament=winner.playerName.tournament).exists():
+                        BonusDetails.objects.get(user=winner.user, tournament=winner.playerName.tournament).update(winner_bonus=50 + (winner.playerName.group.number * 2))
+            # if pick.is_winner() and not PickMethod.objects.filter(user=pick.user, method=3, tournament=pick.playerName.tournament).exists():
+            #     print ('winner', pick.playerName)
+            #     bd = BonusDetails.objects.get(user=pick.user, tournament=pick.playerName.tournament)
+            #     bd.winner_bonus = 50 + (pick.playerName.group.number*2)
+            #     bd.save()
 
-            if pick.playoff_loser() and not PickMethod.objects.filter(user=pick.user, method=3, tournament=pick.playerName.tournament).exists():
-                print ('playoff loser', pick.playerName)
-                bd = BonusDetails.objects.get(user=pick.user, tournament=pick.playerName.tournament)
-                bd.playoff_bonus = 25
-                bd.save()
+            if pick.playoff_loser():
+                for loser in Pick.objects.filter(playerName=pick.playerName):
+                    if not PickMethod.objects.filter(user=loser.user, method=3, tournament=loser.playerName.tournament).exists():
+                        BonusDetails.objects.get(user=loser.user, tournament=loser.playerName.tournament).update(playoff_bonus= 25)
+
+            # if pick.playoff_loser() and not PickMethod.objects.filter(user=pick.user, method=3, tournament=pick.playerName.tournament).exists():
+            #     print ('playoff loser', pick.playerName)
+            #     bd = BonusDetails.objects.get(user=pick.user, tournament=pick.playerName.tournament)
+            #     bd.playoff_bonus = 25
+            #     bd.save()
             
-            if pick.playerName.playerName in optimal_picks.get(str(pick.playerName.group.number)).get('golfer') \
-              and not PickMethod.objects.filter(user=pick.user, method=3, tournament=pick.playerName.tournament).exists() \
-              and not pick.is_winner() \
-              and not pick.playoff_loser() \
-              and pick.playerName.group.playerCnt > 4:
-                  bd = BonusDetails.objects.get(user=pick.user, tournament=pick.playerName.tournament)
-                  bd.best_in_group_bonus = bd.best_in_group_bonus + 10
-                  bd.save()
-
-            #print ('FFFFFFFFFFF pick loop finish: ', pick, datetime.now() - pick_loop_start)
-        self.tournament.score_update_time = datetime.now()
+            if pick.playerName.playerName in optimal_picks.get(str(pick.playerName.group.number)).get('golfer'):
+                for best in Picks.objects.filter(playerName=pick.playerName):
+                    if not PickMethod.objects.filter(user=best.user, method=3, tournament=best.playerName.tournament).exists() \
+                       and not pick.is_winner() \
+                       and not pick.playoff_loser() \
+                       and best.playerName.group.playerCnt > 4:
+                          bd = BonusDetails.objects.get(user=best.user, tournament=best.playerName.tournament)
+                          bd.best_in_group_bonus = bd.best_in_group_bonus + 10
+                          bd.save()
+            #print ('pick loop: ', p, ' ', datetime.now() - start)
+        ## end of bulk update section
+            
+        self.tournament.score_update_time = datetime.now(tz=timezone.utc)
         self.tournament.save()
 
+        print ('score loop duration', datetime.now() - loop_start)
         print ('update_scores duration', datetime.now() - start)
         return
 

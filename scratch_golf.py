@@ -25,14 +25,20 @@ from urllib.request import Request, urlopen
 from selenium import webdriver
 import urllib
 import json
-from golf_app import views, manual_score, scrape_scores, populateField, withdraw, scrape_scores_picks, utils, scrape_cbs_golf
+from golf_app import views, manual_score, populateField, withdraw, scrape_scores_picks, utils, scrape_cbs_golf
 from unidecode import unidecode
 
 start = datetime.now()
 t= Tournament.objects.get(current=True)
-s = ScoreDict.objects.get(tournament=t)
-score_dict = s.data
-cut_num = t.cut_num()
+#s = ScoreDict.objects.get(tournament=t)
+#score_dict = s.data
+#cut_num = t.cut_num()
+
+web = scrape_scores_picks.ScrapeScores(t).scrape()
+#manual_score.Score(score_dict, t).update_scores()
+print (datetime.now() - start)
+
+exit()
 
 for p in Picks.objects.filter(playerName__tournament=t).values('playerName').distinct():
 

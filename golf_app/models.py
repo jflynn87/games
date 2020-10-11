@@ -58,6 +58,10 @@ class Tournament(models.Model):
     has_cut = models.BooleanField(default=True)
     leaders = models.CharField(null=True, max_length=500, blank=True)
     playoff = models.BooleanField(default=False)
+    saved_cut_num = models.IntegerField(null=True)
+    saved_round = models.IntegerField(null=True)
+    saved_cut_round = models.IntegerField(null=True)
+
 
     #def get_queryset(self):t
     #    return self.objects.filter().first()
@@ -208,7 +212,8 @@ class Tournament(models.Model):
 
         if not self.has_cut:
             return len([x for x in score_dict.values() if x['rank'] not in ['WD', 'DQ']]) + 1
-        round = self.get_cut_round()
+        #round = self.get_cut_round()
+        round = self.saved_cut_round
         #round = self.get_round()
         #after cut WD's
         #commented for rerun, but do i need the if here?  should not get here normally for old tournament?
@@ -266,7 +271,8 @@ class Tournament(models.Model):
     def optimal_picks(self):
         sd = ScoreDict.objects.get(tournament=self)
         score_dict = sd.data
-        cut_num = self.cut_num()
+        #cut_num = self.cut_num()
+        cut_num = self.saved_cut_num
         print ('sd type', type(score_dict), len(score_dict))
         optimal_dict = {}
        
@@ -324,7 +330,8 @@ class Group(models.Model):
         score_dict = ScoreDict.objects.get(tournament=self.tournament)
         clean_dict = score_dict.clean_dict()
         if cut_num == None:
-            cut_num = self.tournament.cut_num()
+            #cut_num = self.tournament.cut_num()
+            cut_num = self.tournament.saved_cut_num
         not_playing_list = self.tournament.not_playing_list()
         min_score = 999  
 

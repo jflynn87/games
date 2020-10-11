@@ -7,6 +7,10 @@ from requests import get
 from selenium import webdriver
 import urllib
 from selenium.webdriver import Chrome, ChromeOptions
+from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.common.by import By
 import json
 from golf_app import utils
 from bs4 import BeautifulSoup
@@ -34,7 +38,7 @@ class ScrapeScores(object):
 
 
     def scrape(self):
-
+        start = datetime.now()
         # try:
 
         #     html = urllib.request.urlopen(self.url)
@@ -50,16 +54,21 @@ class ScrapeScores(object):
         options = ChromeOptions()
         options.add_argument("--headless")
         options.add_argument("--disable-gpu")
+
         driver = Chrome(options=options)
-      
+
+        print ('driver pre url: ', datetime.now() - start)
         driver.get(self.url)
+        print ('driver after url: ', datetime.now() - start)
 
         soup = BeautifulSoup(driver.page_source, 'html.parser')
-
+        print ('driver after soup: ', datetime.now() - start)
         table = (soup.find("div", {'id':'stroke-play-container'}))
-
+        print ('driver after table: ', datetime.now() - start)
         t = self.tournament
         t_ok = False
+
+        print ('driver initialized: ', datetime.now() - start)
         try:
             title = soup.find('h1', {'class', 'name'})
             name = title.text
@@ -113,13 +122,19 @@ class ScrapeScores(object):
                     for row in table.find_all("tr", {'class': 'line-row'}):
                         ele_class = row['class'][1].split('-')[2]
                         #print (ele_class, ele_class)
-                        data = get_data(self, row)
+                        data = self.get_data(row)
                         data[1].update({'pga_num': ele_class})
                         score_dict[data[0]] =  data[1]
                     sd.data = score_dict
+                    print (len(sd.data))
                 
                 sd.save()
                 #print (score_dict)
+                self.tournament.saved_cut_num = self.tournament.cut_num()
+                self.tournament.saved_round = self.tournament.get_round()
+                self.tournament.saved_cut_round = self.tournament.get_cut_round()
+                self.tournament.save()
+
                 return (score_dict)                
             else:
                 print ('scrape scores t mismatch', t, name)
@@ -132,45 +147,45 @@ class ScrapeScores(object):
         finally:
             driver.quit()
 
-def get_data(self, row):
+    def get_data(self, row):
 
-        
-        #print (row)
-        n = row.find('td', {'class': 'player-name'}).text
-        if n[-1] == ' ':
-            n = n[:-1]
-        
-        rank = row.find('td', {'class': 'position'}).text 
-        pos = row.find('td', {'class': 'position-movement'})
-        
-        movement = pos.find('div', {'class': 'position-movement'})
+            
+            #print (row)
+            n = row.find('td', {'class': 'player-name'}).text
+            if n[-1] == ' ':
+                n = n[:-1]
+            
+            rank = row.find('td', {'class': 'position'}).text 
+            pos = row.find('td', {'class': 'position-movement'})
+            
+            movement = pos.find('div', {'class': 'position-movement'})
 
-        try:
-            if movement.span != None:
-                c= str(movement.span) + movement.text
-            else:
-                c= movement.text
-        except Exception as e:
-            c = '--'
-            print ('cant scrape poasition move span')
-        if row.find('td', {'class': 'thru'}) != None:
-            thru = row.find('td', {'class': 'thru'}).text 
-            round_score = row.find('td', {'class': 'round'}).text 
-        elif row.find('td', {'class': 'tee-time'}) != None: 
-            thru = row.find('td', {'class': 'tee-time'}).text
-            round_score = 'E'
-        else: 
-            thru = "no info"
-            round_score = 'E'
+            try:
+                if movement.span != None:
+                    c= str(movement.span) + movement.text
+                else:
+                    c= movement.text
+            except Exception as e:
+                c = '--'
+                print ('cant scrape poasition move span')
+            if row.find('td', {'class': 'thru'}) != None:
+                thru = row.find('td', {'class': 'thru'}).text 
+                round_score = row.find('td', {'class': 'round'}).text 
+            elif row.find('td', {'class': 'tee-time'}) != None: 
+                thru = row.find('td', {'class': 'tee-time'}).text
+                round_score = 'E'
+            else: 
+                thru = "no info"
+                round_score = 'E'
 
-        total_score = row.find('td', {'class': 'total'}).text 
-        
-        round_list = []
-        for i in range(len(row.find_all('td', {'class': 'round-x'}))):
-            round_list.append(row.find_all('td', {'class': 'round-x'})[i].text)
+            total_score = row.find('td', {'class': 'total'}).text 
+            
+            round_list = []
+            for i in range(len(row.find_all('td', {'class': 'round-x'}))):
+                round_list.append(row.find_all('td', {'class': 'round-x'})[i].text)
 
-        return (n, {'rank': rank, 'change': c, \
-             'thru': thru, 'round_score': round_score, 'total_score': total_score , 'r1': round_list[0], 'r2': round_list[1], 'r3': round_list[2], 'r4': round_list[3]})
+            return (n, {'rank': rank, 'change': c, \
+                'thru': thru, 'round_score': round_score, 'total_score': total_score , 'r1': round_list[0], 'r2': round_list[1], 'r3': round_list[2], 'r4': round_list[3]})
 
         
 
