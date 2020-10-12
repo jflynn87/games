@@ -15,19 +15,7 @@ from django.db.models import Min, Q, Count, Sum, Max
 #from fb_app.scores import Scores
 #from urllib.request import Request, urlopen
 
-team_list = []
-h = Teams.objects.get(nfl_abbr="NE")
-team_list.append(h)
-a = Teams.objects.get(nfl_abbr="DEN")
-team_list.append(a)
-game = Games.objects.get(eid="20205NEDEN")
 week = Week.objects.get(current=True)
-l = League.objects.get(league="Golfers")
-
-week.game_cnt = week.game_cnt -1
-week.save()
-
-game.delete()
 
 print ('****** pick summary before update ******')
 #for p in Picks.objects.filter(week=week, player__league=l).values('player__name__username').annotate(Count('player')):
@@ -41,14 +29,27 @@ for pick in Picks.objects.filter(week=week):
     #f.write('\n')
 f.close()
 
-for pick in Picks.objects.filter(team__in=team_list, week=week):
-    pick.delete()
+
+
+
+leagues = ['Golfers',]
+games = ["20205NEDEN",]  #eid of cancelled games
+
+
+team_list = []
+for l in League.objects.filter(league__in=leagues):
+    for game in Games.objects.filter(eid__in=games):
+        team_list.append(game.home)
+        team_list.append(game.away)
+
+    for pick in Picks.objects.filter(team__in=team_list, week=week, player__league=l):
+        pick.delete()
 
 # find missing pics
 
 fix_list = []
 #for player in Player.objects.filter(league=l).order_by('name'):
-for player in Player.objects.filter(active=True).order_by('name'):
+for player in Player.objects.filter(league=l, active=True).order_by('name'):
     prior_pick = Picks.objects.filter(week=week, player=player).order_by('-pick_num')[0]
     for p in Picks.objects.filter(week=week, player=player).order_by('-pick_num').exclude(pick_num = prior_pick.pick_num):
         if p.pick_num + 1 == prior_pick.pick_num:
@@ -68,13 +69,13 @@ for u in fix_list:
 
 print ("###### updated players")
 #print (Picks.objects.filter(week=week, player__league=l))
-print (Picks.objects.filter(week=week))
+print (Picks.objects.filter(week=week, player__league=l))
 
 
 print ('****** pick summary after update ******')
 
 #for p in Picks.objects.filter(week=week, player__league=l).values('player__name__username').annotate(Count('player')):
-for p in Picks.objects.filter(week=week).values('player__name__username').annotate(Count('player')):
+for p in Picks.objects.filter(week=week, player__league=l).values('player__name__username').annotate(Count('player')):
     print (p.get('player__name__username'), ' : ', p.get('player__count'))
 
 

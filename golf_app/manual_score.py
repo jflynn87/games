@@ -152,6 +152,7 @@ class Score(object):
 
         if not self.tournament.complete:
             self.tournament.complete = self.tournament.tournament_complete()
+            self.tournament.save()
 
         #make cut num 1 lookup on model
         #cut_num = self.tournament.cut_num()
@@ -176,9 +177,6 @@ class Score(object):
         #for pick in Picks.objects.filter(playerName__tournament=self.tournament):  
         print ('starting pick loop time to here', datetime.now() - start)
         loop_start = datetime.now()
-
-        self.tournament.score_update_time = datetime.now(tz=timezone.utc)  #this is ealy, but need to save before the bonus calcs
-        self.tournament.save()
 
         for p in Picks.objects.filter(playerName__tournament=self.tournament).values('playerName').distinct():
             #pick_loop_start = datetime.now()
@@ -292,6 +290,9 @@ class Score(object):
                           bd.save()
             #print ('pick loop: ', p, ' ', datetime.now() - start)
         ## end of bulk update section
+
+        self.tournament.score_update_time = datetime.now(tz=timezone.utc)  
+        self.tournament.save()
             
 
         print ('score loop duration', datetime.now() - loop_start)

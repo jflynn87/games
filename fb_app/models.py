@@ -293,6 +293,7 @@ class Week(models.Model):
     def picks_complete(self, league):
         players = Player.objects.filter(league=league, active=True).count()
         picks = Picks.objects.filter(week=self, player__league=league).count()
+        # not adjusting game cnt for postponed as expecting not to happen before picks complete
         print (players, self.game_cnt)
         if picks == self.game_cnt * players:
             return True
@@ -338,19 +339,20 @@ class Games(models.Model):
     dog = models.ForeignKey(Teams, on_delete=models.CASCADE,null=True, related_name='dog')
     home = models.ForeignKey(Teams, on_delete=models.CASCADE,null=True, related_name='home', db_index=True)
     away = models.ForeignKey(Teams, on_delete=models.CASCADE,null=True, related_name='away', db_index=True)
-    opening = models.CharField(max_length=10, null=True)
-    spread = models.CharField(max_length=10,null=True)
-    winner = models.ForeignKey(Teams, on_delete=models.CASCADE,null=True, related_name='winner')
-    loser = models.ForeignKey(Teams, on_delete=models.CASCADE,null=True, related_name='loser')
+    opening = models.CharField(max_length=10, null=True, blank=True)
+    spread = models.CharField(max_length=10,null=True, blank=True)
+    winner = models.ForeignKey(Teams, on_delete=models.CASCADE,null=True, related_name='winner', blank=True)
+    loser = models.ForeignKey(Teams, on_delete=models.CASCADE,null=True, related_name='loser', blank=True)
     final = models.BooleanField(default=False)
-    home_score = models.PositiveIntegerField(null=True)
-    away_score = models.PositiveIntegerField(null=True)
+    home_score = models.PositiveIntegerField(null=True, blank=True)
+    away_score = models.PositiveIntegerField(null=True, blank=True)
     qtr = models.CharField(max_length=25, null=True)
     tie = models.BooleanField(default=False)
-    date = models.DateField(null=True)
-    time = models.CharField(max_length=20, null=True)
-    day = models.CharField(max_length=10, null=True)
-    game_time = models.DateTimeField(null=True)
+    date = models.DateField(null=True, blank=True)
+    time = models.CharField(max_length=20, null=True, blank=True)
+    day = models.CharField(max_length=10, null=True, blank=True)
+    game_time = models.DateTimeField(null=True, blank=True)
+    postponed = models.BooleanField(default=False)
 
     def __str__(self):
         return str(self.home) + str(self.away)
