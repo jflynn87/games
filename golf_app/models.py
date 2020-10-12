@@ -495,7 +495,7 @@ class Picks(models.Model):
         return str(self.playerName) if self.playerName else ''
 
     def is_winner(self):
-        if ScoreDetails.objects.filter(pick=self, score=1, pick__playerName__tournament__complete=True):
+        if ScoreDetails.objects.filter(pick=self, gross_score=1, pick__playerName__tournament__complete=True):
             return True
         else:
             return False
@@ -508,7 +508,8 @@ class Picks(models.Model):
             return False
 
     def playoff_loser(self):
-        if self.playerName.tournament.playoff and ScoreDetails.objects.filter(pick=self, score=2, pick__playerName__tournament__complete=True):
+        if self.playerName.tournament.playoff and ScoreDetails.objects.filter(pick=self, gross_score=2, pick__playerName__tournament__complete=True):
+        #if self.playerName.tournament.playoff and ScoreDetails.objects.filter(pick=self, score=2):
             return True
         else:
             return False

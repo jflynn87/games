@@ -30,6 +30,15 @@ from unidecode import unidecode
 
 start = datetime.now()
 t= Tournament.objects.get(current=True)
+picks = Picks.objects.filter(playerName__playerName="Matthew Wolff", playerName__tournament=t)
+for p in picks:
+    sd = ScoreDetails.objects.get(pick=p)
+    print ('complete: ', p.playerName.tournament.complete)
+    print ('playoff: ', p.playerName.tournament.playoff)
+    print (sd, sd.score)
+    print (p.playoff_loser())
+
+exit() 
 #s = ScoreDict.objects.get(tournament=t)
 #score_dict = s.data
 #cut_num = t.cut_num()
