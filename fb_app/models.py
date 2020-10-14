@@ -151,46 +151,51 @@ class Week(models.Model):
                 web = scrape_cbs.ScrapeCBS(self).get_data()
                 data  = web['games']
 
+
                 for game in Games.objects.filter(week=self).exclude(final=True):
-                    print ('game', game, game.eid)
+                    try:
+                        print ('game', game, game.eid)
 
-                    home_score = int(data[game.eid]['home_score'])
-                    home_team = data[game.eid]['home']
-                    away_team = data[game.eid]['away']
-                    away_score =int(data[game.eid]['away_score'])
-                    qtr = data[game.eid]['qtr']
+                        home_score = int(data[game.eid]['home_score'])
+                        home_team = data[game.eid]['home']
+                        away_team = data[game.eid]['away']
+                        away_score =int(data[game.eid]['away_score'])
+                        qtr = data[game.eid]['qtr']
 
-                    if home_score == away_score:
-                        tie = True
-                        winner = None
-                        loser = None
-                    elif home_score > away_score:
-                        winner = Teams.objects.get(nfl_abbr=home_team)
-                        loser = Teams.objects.get(nfl_abbr=away_team)
-                        tie = False
-                    else:
-                        winner = Teams.objects.get(nfl_abbr=away_team)
-                        loser = Teams.objects.get(nfl_abbr=home_team)
-                        tie = False
-
-                    setattr(game, 'home_score',home_score)
-                    setattr(game, 'away_score',away_score)
-                    setattr(game, 'winner', winner)
-                    setattr(game, 'loser', loser)
-                    if qtr == None:
-                        setattr(game, 'qtr', None)
-                        
-                    else:
-                        setattr(game, 'qtr',qtr.lower())                        
-                        print ('qtr', qtr[0:5], game)
-                        if qtr[0:5]  in ["final", "Final", "FINAL"]:
-                            print (game, 'setting final')
-                            setattr(game, 'final', True)
-                            setattr(game, 'tie', tie)
+                        if home_score == away_score:
+                            tie = True
+                            winner = None
+                            loser = None
+                        elif home_score > away_score:
+                            winner = Teams.objects.get(nfl_abbr=home_team)
+                            loser = Teams.objects.get(nfl_abbr=away_team)
+                            tie = False
                         else:
-                            setattr(game, 'tie', False)
-                
-                    game.save()
+                            winner = Teams.objects.get(nfl_abbr=away_team)
+                            loser = Teams.objects.get(nfl_abbr=home_team)
+                            tie = False
+
+                        setattr(game, 'home_score',home_score)
+                        setattr(game, 'away_score',away_score)
+                        setattr(game, 'winner', winner)
+                        setattr(game, 'loser', loser)
+                        if qtr == None:
+                            setattr(game, 'qtr', None)
+                            
+                        else:
+                            setattr(game, 'qtr',qtr.lower())                        
+                            print ('qtr', qtr[0:5], game)
+                            if qtr[0:5]  in ["final", "Final", "FINAL"]:
+                                print (game, 'setting final')
+                                setattr(game, 'final', True)
+                                setattr(game, 'tie', tie)
+                            else:
+                                setattr(game, 'tie', False)
+                    
+                        game.save()
+
+                    except Exception as e:
+                        print ('failed to update game: ', game, e)
 
             except KeyError as e:
                 print ('update scores NFL score file not ready for the week', e)
@@ -208,6 +213,7 @@ class Week(models.Model):
             #loser_list.append(game.loser)
 
             if not game.final:
+                print ('not final', game, game.home_score, game.away_score)
                 if game.home_score > game.away_score:
                     proj_loser_list.append(game.away)
                 elif game.home_score < game.away_score:
@@ -218,7 +224,7 @@ class Week(models.Model):
                     loser_list.append(game.away)
                 else:
                     loser_list.append(game.loser)
-
+        print ('proj_loser', proj_loser_list)
         for player in Player.objects.filter(league=league, active=True):
             score_dict[player.name.username] = {'score': 0, 'proj_score': 0}
             
@@ -236,6 +242,7 @@ class Week(models.Model):
                 sd.projected_score = score_dict[player.name.username].get('proj_score')
                 sd.save()
             
+        print ('##### checking score dict in model update score', score_dict)
         print ('update_scores duration: ', datetime.datetime.now() - start)
 
         return score_dict
@@ -344,8 +351,8 @@ class Games(models.Model):
     winner = models.ForeignKey(Teams, on_delete=models.CASCADE,null=True, related_name='winner', blank=True)
     loser = models.ForeignKey(Teams, on_delete=models.CASCADE,null=True, related_name='loser', blank=True)
     final = models.BooleanField(default=False)
-    home_score = models.PositiveIntegerField(null=True, blank=True)
-    away_score = models.PositiveIntegerField(null=True, blank=True)
+    home_score = models.PositiveIntegerField(null=True, default=0)
+    away_score = models.PositiveIntegerField(null=True, default=0)
     qtr = models.CharField(max_length=25, null=True)
     tie = models.BooleanField(default=False)
     date = models.DateField(null=True, blank=True)

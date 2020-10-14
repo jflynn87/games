@@ -907,11 +907,12 @@ class UpdateProj(APIView):
             l = League.objects.get(league=self.request.GET.get('league'))
             proj_dict = {}
 
-            for player in Player.objects.filter(league=l) :
+            for player in Player.objects.filter(league=l, active=True):
                 proj_score = 0
                 for pick in Picks.objects.filter(player=player, week=w):
-                    if pick.team.nfl_abbr not in (self.request.GET.getlist('winners[]')):
-                        proj_score += pick.pick_num
+                    if  Games.objects.filter(Q(home=pick.team) | Q(away=pick.team), week=w, postponed=False).exists():
+                        if pick.team.nfl_abbr not in (self.request.GET.getlist('winners[]')):
+                            proj_score += pick.pick_num
                 proj_dict[player.name.username] = {'proj_score': proj_score}
 
             print ('update proj: ', proj_dict)

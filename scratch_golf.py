@@ -29,6 +29,19 @@ from golf_app import views, manual_score, populateField, withdraw, scrape_scores
 from unidecode import unidecode
 
 start = datetime.now()
+owgr = populateField.get_worldrank()
+field = populateField.get_field('521')
+
+for name in field.keys():
+    if owgr.get(name) == None:
+        populateField.fix_name(name, owgr)
+
+exit()
+
+
+
+
+
 t= Tournament.objects.get(current=True)
 picks = Picks.objects.filter(playerName__playerName="Matthew Wolff", playerName__tournament=t)
 for p in picks:

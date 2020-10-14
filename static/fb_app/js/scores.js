@@ -1,6 +1,6 @@
 $( document ).ready(function() { 
     refresh()
-    setInterval (refresh, 90000) 
+    setInterval (refresh, 120000) 
 })
 function refresh() {
     console.log('js linked') 
@@ -122,6 +122,7 @@ $('#status').html('<p class=none> Scores Updated:  ' + new Date($.now()) +  '</p
 }  //closes build_page
 
 function color() {
+    $('td.ranks').each(function() {$(this).css("background-color", "transparent")})
     $('td.ranks').each(function( index ) {
           if($( this ).text()== '1'){
              $(this).css("background-color","#ff3333");
@@ -154,7 +155,8 @@ $(document).on('click', '#sub-btn', function() {
     var proj_winners = new Array()
     //start with 1 to skip header
     for (var i=1, row; row = t.rows[i]; i++) {
-        if ($('#qtr' + row.id).text() ==  "FINAL") {
+        
+        if ($('#qtr' + row.id).text().substring(0,5) ==  "FINAL") {
             proj_winners.push($('#winner' + row.id)[0].innerText)
         }
         else {

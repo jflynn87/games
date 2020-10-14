@@ -34,9 +34,18 @@ import pytz
 start = datetime.now()
 l = League.objects.get(league="Football Fools")
 week = Week.objects.get(current=True)
+player = Player.objects.get(name__username='TOKYO')
+winners = ['DAL', 'HOU', 'NE']
 
-#print (week.started())
-print (week.picks_complete(l))
+for pick in Picks.objects.filter(player=player, week=week):
+    if pick.team.nfl_abbr not in winners \
+     and Games.objects.filter(Q(home=pick.team) | Q(away=pick.team), postponed=False).exists():
+        print ('exists works: ', pick)
+    else:
+        print ('in else: ', pick)
+
+
+
 
 print (datetime.now() - start)
 exit()

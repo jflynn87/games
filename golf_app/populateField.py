@@ -252,7 +252,10 @@ def create_groups(tournament_number):
     OWGR_rankings =  get_worldrank()
     #OWGR_rankings = {}
     print ('a')
-    PGA_rankings = get_pga_worldrank()
+    try:
+        PGA_rankings = get_pga_worldrank()
+    except Exception as e:
+        print ('pga wgr failed: ', e)
     print ('b')
     configure_groups(field)
     print ('c')
@@ -279,8 +282,9 @@ def create_groups(tournament_number):
             rank = OWGR_rankings[player]
         except Exception:
             try:
+                rank = fix_name(player, OWGR_rankings)
                 print ('not in owgr', player)
-                rank = PGA_rankings[player]
+                #rank = PGA_rankings[player]
             except Exception:
                 print ('no rank found',player)
                 rank = [9999, 9999, 9999]
@@ -421,3 +425,30 @@ if __name__ == '__main__':
     #create_groups()
 
     print ("Populating Complete!")
+
+
+def fix_name(player, owgr_rankings):
+    print ('trying to fix name: ', player)
+    
+    if owgr_rankings.get(player) != None:
+        return (owgr_rankings.get(player))
+
+    for k, v in owgr_rankings.items():
+        owgr_name = k.split(' ')
+        pga_name = player.split(' ')
+        #print (owgr_name, pga_name)
+        
+        if unidecode.unidecode(owgr_name[len(owgr_name)-1]) == unidecode.unidecode(pga_name[len(pga_name)-1]) \
+           and k[0:1] == player[0:1]:
+            print ('last name, first initial match', player)
+            return v
+        elif unidecode.unidecode(owgr_name[len(owgr_name)-2]) == unidecode.unidecode(pga_name[len(pga_name)-1]) \
+            and k[0:1] == player[0:1]:
+            print ('last name, first initial match, cut owgr suffix', player)
+            return v
+
+    return None
+
+    
+    
+
