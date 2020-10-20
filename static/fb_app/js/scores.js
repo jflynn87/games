@@ -1,3 +1,4 @@
+let filler = /[\s\.\']/g;
 $( document ).ready(function() { 
     refresh()
     setInterval (refresh, 120000) 
@@ -50,12 +51,14 @@ $('#picks-tbl').append('<tr id="rank"> <th>' + 'Rank' + '</th> </tr>' +
                        '<tr id="proj_rank"> <th>' + 'Projected Rank' + '</th> </tr>'  
 )
 
+
+
 $.each(picks_data, function(player, data) {
     //console.log(data['score'])
     $('#rank').append('<td class=ranks>' + data['rank'] + '</td>')
     $('#score').append('<td>' + data['score'] + '</td>')
-    $('#proj').append('<td id=proj_score-' + player + '>' + data['proj_score'] + '</td>')
-    $('#proj_rank').append('<td class=ranks id=proj_rank-' + player + '>'  + data['proj_rank'] + '</td>')
+    $('#proj').append('<td id=proj_score-' + player.replace(filler, '') + '>' + data['proj_score'] + '</td>')
+    $('#proj_rank').append('<td class=ranks id=proj_rank-' + player.replace(filler, '') + '>'  + data['proj_rank'] + '</td>')
 })    
 
 for (var i= 16; i > 16 - parseInt($('#game_cnt').text()); i -- ) {
@@ -122,20 +125,21 @@ $('#status').html('<p class=none> Scores Updated:  ' + new Date($.now()) +  '</p
 }  //closes build_page
 
 function color() {
-    $('td.ranks').each(function() {$(this).css("background-color", "transparent")})
+    //this isn't working, still using the ranks file
     $('td.ranks').each(function( index ) {
-          if($( this ).text()== '1'){
+
+          if($(this).text()== '1'){
              $(this).css("background-color","#ff3333");
           }
           else if ($(this).text() == '2') {
             $(this).css("background-color","#ccebff");
-
           }
           else if ($(this).text() == '3') {
             $(this).css("background-color","#ffff99");
-
           }
-    });
+          else {$(this).css("background-color","transparent")}
+        
+        });
   }
 
 
@@ -195,8 +199,8 @@ function update_proj(json) {
     $('#proj_rank').find('th').html('Projected Rank')    
     $.each(json, function(player, data) {
 
-    $('#proj_score-' + player).html(data['proj_score']).removeClass('status').show()
-    $('#proj_rank-' + player).text(data['proj_rank']).removeClass('status').show()
+    $('#proj_score-' + player.replace(filler, '')).html(data['proj_score']).removeClass('status').show()
+    $('#proj_rank-' + player.replace(filler, '')).text(data['proj_rank']).removeClass('status').show()
     color()
  
 

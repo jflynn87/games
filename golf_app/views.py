@@ -90,6 +90,7 @@ class FieldListView(LoginRequiredMixin,TemplateView):
         
         if Picks.objects.filter(playerName__tournament=tournament, user=user).count()>0:
             Picks.objects.filter(playerName__tournament=tournament, user=user).delete()
+            ScoreDetails.objects.filter(pick__playerName__tournament=tournament, user=user).delete()
 
         if request.POST.get('random') == 'random':
             picks = tournament.create_picks(user, 'random')    
@@ -393,6 +394,7 @@ class GetScores(APIView):
         
         ts = scores.total_scores()
         d = scores.get_picks_by_user() 
+        
         leaders = scores.get_leader()
         optimal = t.optimal_picks()
         totals = Season.objects.get(season=t.season).get_total_points()
@@ -443,7 +445,7 @@ class GetDBScores(APIView):
             }), 200)
         except Exception as e:
             print ('old logic')
-            return Response(({}), 200)
+            return Response({}, 200)
 
 class NewScoresView(LoginRequiredMixin,ListView):
     login_url = 'login'

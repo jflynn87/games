@@ -15,6 +15,7 @@ function color() {
             $(this).css("background-color","#ffff99");
 
           }
+          else {$(this).css("background-color","transparent")}
     });
   }
  

@@ -29,35 +29,30 @@ from golf_app import views, manual_score, populateField, withdraw, scrape_scores
 from unidecode import unidecode
 
 start = datetime.now()
-owgr = populateField.get_worldrank()
-field = populateField.get_field('521')
 
-for name in field.keys():
-    if owgr.get(name) == None:
-        populateField.fix_name(name, owgr)
+t= Tournament.objects.get(current=True)
+print (t)
+print (ScoreDetails.objects.filter(pick__playerName__tournament=t).order_by('user').count())
 
 exit()
 
+print (ScoreDetails.objects.filter().count())
 
+users = Season.objects.get(current=True).get_users()
+print (users)
+for u in users:
+    user = User.objects.get(pk=u.get('user'))
+    for p in Picks.objects.filter(playerName__tournament=t, user=user):
+        sd, created = ScoreDetails.objects.get_or_create(pick=p, user=user)
 
-
-
-t= Tournament.objects.get(current=True)
-picks = Picks.objects.filter(playerName__playerName="Matthew Wolff", playerName__tournament=t)
-for p in picks:
-    sd = ScoreDetails.objects.get(pick=p)
-    print ('complete: ', p.playerName.tournament.complete)
-    print ('playoff: ', p.playerName.tournament.playoff)
-    print (sd, sd.score)
-    print (p.playoff_loser())
-
-exit() 
-#s = ScoreDict.objects.get(tournament=t)
-#score_dict = s.data
-#cut_num = t.cut_num()
+print (ScoreDetails.objects.filter(pick__playerName__tournament=t).order_by('user').count())
+print (ScoreDetails.objects.filter().count())
+exit()
 
 web = scrape_scores_picks.ScrapeScores(t).scrape()
-#manual_score.Score(score_dict, t).update_scores()
+scores = manual_score.Score(web, t).update_scores()
+print (scores)
+
 print (datetime.now() - start)
 
 exit()

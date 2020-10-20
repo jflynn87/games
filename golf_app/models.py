@@ -180,6 +180,9 @@ class Tournament(models.Model):
             pick.user = user
             pick.save()
 
+            sd, created = ScoreDetails.objects.get_or_create(pick=pick, user=user)
+            sd.save()
+
         pm = PickMethod()
         pm.user = user
         pm.tournament = self

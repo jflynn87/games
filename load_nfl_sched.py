@@ -20,9 +20,9 @@ import pytz
 def load_sched(year):
 
     #changing weeks to load preseason weeks (make week 0 and cnt 1)
-    week_cnt = 5
+    week_cnt = 6
     season = Season.objects.get(current=True)
-    while week_cnt < 6:
+    while week_cnt < 9:
             try:
                 week, created = Week.objects.get_or_create(season_model=season, week=week_cnt)
                 #week.season = season.season

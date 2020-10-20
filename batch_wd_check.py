@@ -13,7 +13,7 @@ django.setup()
 from golf_app.models import Tournament, TotalScore, ScoreDetails, Field, Picks, PickMethod, BonusDetails
 from django.contrib.auth.models import User
 from datetime import datetime, timedelta, timezone
-from golf_app import scrape_scores
+
 from golf_app import manual_score
 from golf_app import withdraw
 from django.core.mail import send_mail
