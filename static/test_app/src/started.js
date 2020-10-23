@@ -73,7 +73,7 @@ const e = React.createElement;
                  return (React.createElement(
                   'h5',
                   {key: 'items'},          
-                  'Started'   
+                  'Started - refresh to see picks'   
                  ))
               }
           }

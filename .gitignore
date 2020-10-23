@@ -23,7 +23,7 @@ static-cdn-local/admin/
 static-cdn-local/css/
 static-cdn-local/img/
 static-cdn-local/js/
-static-cdn-local/rest_framework/
+#static-cdn-local/rest_framework/
 bin/
 include/
 lib/
