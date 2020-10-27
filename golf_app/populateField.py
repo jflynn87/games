@@ -268,6 +268,7 @@ def create_groups(tournament_number):
     name_switch = False
 
     for player in field:
+        print (player)
         if Name.objects.filter(PGA_name=player).exists():
             name_switch = True
             name = Name.objects.get(PGA_name=player)
@@ -329,7 +330,7 @@ def create_groups(tournament_number):
             golfer_dict[link[:5]]=link
 
     for k, v in sorted(group_dict.items(), key=lambda x: x[1][0]):
-        #print (k, v)
+        #print ('key/val: ', k, v)
         map_link = get_flag(k, v)
         if player_cnt < groups.playerCnt:
           #print (k,v[0], str(groups.number), str(groups.playerCnt))
@@ -379,7 +380,7 @@ def get_flag(golfer, golfer_data):
     ## add some code to deal with name changes
 
     try:
-        print ('created', created, 'map_link ', golfer_obj.flag_link)
+        #print ('created', created, 'map_link ', golfer_obj.flag_link)
         if golfer_obj.flag_link not in [None, ' ']:  #Golfer.objects.filter(golfer_pga_num=golfer_data[1][1]).exists():
             #golfer = Golfer.objects.get(golfer_pga_num=golfer_data[1][1])
            # print ('flag from db')
@@ -447,7 +448,7 @@ def fix_name(player, owgr_rankings):
             print ('last name, first initial match, cut owgr suffix', player)
             return v
 
-    return None
+    return [9999, 9999, 9999]
 
     
     
