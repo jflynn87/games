@@ -372,6 +372,14 @@ class GetScores(APIView):
             #pga_web = scrape_scores.ScrapeScores(t)
             pga_web = scrape_scores_picks.ScrapeScores(t)
             score_dict = pga_web.scrape()
+            ## store round, cut num, cut round to speed up access
+            t.saved_cut_num = t.cut_num(score_dict)
+            t.saved_round = t.get_round(score_dict)
+            t.saved_cut_round = t.get_cut_round(score_dict) 
+            t.save()
+
+
+
         else:
             print ('not scraping')
             try:

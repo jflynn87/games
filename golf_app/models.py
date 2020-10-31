@@ -142,10 +142,16 @@ class Tournament(models.Model):
                 print (User.objects.get(pk=user.get('user')), 'no picks so submit random')
                 self.create_picks(User.objects.get(pk=user.get('user')), 'missing')
     
-    def get_cut_round(self):
-        score_dict = ScoreDict.objects.get(tournament=self)
+    def get_cut_round(self, sd=None):
+        if sd == None:
+            sd = ScoreDict.objects.get(tournament=self)
+            score_dict = sd.data
+        else:
+            score_dict = sd
         
-        for data in score_dict.data.values():
+        #score_dict = ScoreDict.objects.get(tournament=self)
+        
+        for data in score_dict.values():
             if data.get('rank') == "CUT":
                 if data['r3'] in ['--', '_', '-']:
                     return 2
@@ -209,67 +215,101 @@ class Tournament(models.Model):
             return False
 
 
-    def cut_num(self):
-        sd = ScoreDict.objects.get(tournament=self)
-        score_dict = sd.sorted_dict()
-
+    def cut_num(self, sd=None):
         if not self.has_cut:
-            return len([x for x in score_dict.values() if x['rank'] not in ['WD', 'DQ']]) + 1
+            return len([x for x in score_dict.values() if x['rank'] not in self.not_playing_list()]) + 1
+
+        if sd == None:
+            sd = ScoreDict.objects.get(tournament=self)
+            score_dict = sd.sorted_dict()
+        else:
+            #score_dict = {k:v for k, v in sorted(sd.items(), key=lambda item: item[1].get('sort_rank'))}
+            score_dict = sd
+
         #round = self.get_cut_round()
         round = self.saved_cut_round
+        
         #round = self.get_round()
         #after cut WD's
         #commented for rerun, but do i need the if here?  should not get here normally for old tournament?
         #if self.tournament.current:  wd = len([x for x in self.score_dict.values() if x['rank'] == 'WD' and x['r'+str(round+1)] != '--']) 
         
-        ##Not working if WD is before cut
+        #just for wd after cut
         wd = len([x for x in score_dict.values() if x['rank'] == 'WD' and x['r'+str(round+1)] != '--']) 
-        
-        for v in score_dict.values():
-            if v['rank'] in self.not_playing_list():
-                return len([x for x in score_dict.values() if x['rank'] not in self.not_playing_list()]) + wd + 1
-        if self.get_round() != 4 and len(score_dict.values()) >65:
-            return 66
-        else:
-            return len([x for x in score_dict.values() if x['rank'] not in self.not_playing_list()]) + wd + 1
+        print ('wd: ', wd)        
 
-    def get_round(self):
         
-        round = 0
+        if self.saved_round == 1:
+            return 66
+        elif self.saved_round <= self.saved_cut_round:
+            c_score =  (int(self.cut_score.split(' ')[len(self.cut_score.split(' '))-1]))
+            return len([x for x in score_dict.values() if int(x['total_score']) <= c_score and x['rank'] not in self.not_playing_list()]) + 1 
+        else:
+            #for v in score_dict.values():
+            #    if v['rank'] in self.not_playing_list():
+            return len([x for x in score_dict.values() if x['rank'] not in self.not_playing_list()]) + wd + 1
+            #if self.get_round() != 4 and len(score_dict.values()) >65:
+            #    return 66
+            #else:
+            #    return len([x for x in score_dict.values() if x['rank'] not in self.not_playing_list()]) + wd + 1
+
+    def get_round(self, sd=None):
+
         if self.complete:
             return 4
+
+
+        if sd == None:
+           sd = ScoreDict.objects.get(tournament=self)
+           score_dict = sd.sorted_dict()
+        else:
+        #     #score_dict = {k:v for k, v in sorted(sd.items(), key=lambda item: item[1].get('sort_rank'))}
+           score_dict = sd
+
+        if len([x for x in score_dict.values() if x['r1'] == '--' and x['rank'] not in ['WD', 'DQ']]) > 0:
+            return 1
+        elif len([x for x in score_dict.values() if x['r2'] == '--' and x['rank'] not in ['WD', 'DQ']]) > 0:
+            return 2
+        elif len([x for x in score_dict.values() if x['r3'] == '--' and x['rank'] not in ['WD', 'DQ']]) > 0:
+            return 3
+        elif len([x for x in score_dict.values() if x['r4'] == '--' and x['rank'] not in ['WD', 'DQ']]) > 0:
+            return 4
+        else:
+            return 0
+
+
+        # round = 0
+
+
         
-        sd = ScoreDict.objects.get(tournament=self)
-        score_dict = sd.sorted_dict()
-        
-        for stats in score_dict.values():
-            print (stats)
-            if len(stats.get('thru')) > 3:
-                #print ('len', stats)
-                continue
-            if stats.get('thru')[0] != "F" and stats.get('rank') not in self.not_playing_list():
-                if stats.get('r1')  == '--':
-                    return 1
-                if stats.get('r2') == '--':
-                   return 2
-                elif stats.get('r3') == '--':
-                       return 3
-                elif  stats.get('r4') == '--':
-                       print ('get round - round 4')
-                       return 4
-            elif stats.get('thru')[0] == 'F' and stats.get('rank') not in self.not_playing_list():
-                if stats.get('r2') == '--':
-                    return 2
-                elif stats.get('r3') == '--':
-                    return 3
-                elif stats.get('r4') == '--':
-                    return 4
-                else:
-                    return 4
-            else:
-                return 0
-        print ('exit get_round', round)
-        return round
+        # for stats in score_dict.values():
+        #     print (stats)
+        #     if len(stats.get('thru')) > 3:
+        #         #print ('len', stats)
+        #         continue
+        #     if stats.get('thru')[0] != "F" and stats.get('rank') not in self.not_playing_list():
+        #         if stats.get('r1')  == '--':
+        #             return 1
+        #         if stats.get('r2') == '--':
+        #            return 2
+        #         elif stats.get('r3') == '--':
+        #                return 3
+        #         elif  stats.get('r4') == '--':
+        #                print ('get round - round 4')
+        #                return 4
+        #     elif stats.get('thru')[0] == 'F' and stats.get('rank') not in self.not_playing_list():
+        #         if stats.get('r2') == '--':
+        #             return 2
+        #         elif stats.get('r3') == '--':
+        #             return 3
+        #         elif stats.get('r4') == '--':
+        #             return 4
+        #         else:
+        #             return 4
+        #     else:
+        #         return 0
+        # print ('exit get_round', round)
+        # return round
 
     def optimal_picks(self):
         sd = ScoreDict.objects.get(tournament=self)

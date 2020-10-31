@@ -31,8 +31,16 @@ from unidecode import unidecode
 start = datetime.now()
 
 t= Tournament.objects.get(current=True)
+#t= Tournament.objects.get(pga_tournament_num='047', season__current=True)
 print (t)
-print (ScoreDetails.objects.filter(pick__playerName__tournament=t).order_by('user').count())
+
+web = scrape_scores_picks.ScrapeScores(t).scrape()
+
+c_score =  (int(t.cut_score.split(' ')[len(t.cut_score.split(' '))-1]))
+
+
+print (len([x for x in web.values() if int(x['total_score']) <= c_score and x['rank'] != 'WD']))
+#print (ScoreDetails.objects.filter(pick__playerName__tournament=t).order_by('user').count())
 
 exit()
 

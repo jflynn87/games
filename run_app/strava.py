@@ -15,7 +15,7 @@ import json
 
 class StravaData(object):
 
-    def __init__(self):
+    def __init__(self, start_date=None):
         self.auth_url = "https://www.strava.com/oauth/token"
 
         payload = {
@@ -35,17 +35,25 @@ class StravaData(object):
         
         print (self.access_token)
 
+        if start_date == None:
+            self.start_date = Run.objects.latest('date')
+        else:
+            self.start_date  = start_date 
+
 
     def get_runs(self):
         
         try:
             run_list = []
             
-            last_run = Run.objects.latest('date')
+            #last_run = Run.objects.latest('date')
+            print ('sd', self.start_date)
+            last_run = self.start_date
 
             end = time.time()
 
-            start = int(time.mktime(last_run.date.timetuple()))
+            #start = int(time.mktime(last_run.date.timetuple()))
+            start = int(time.mktime(last_run.timetuple()))
             now = int(time.time())
             
             activities_url = "https://www.strava.com/api/v3/athlete/activities"

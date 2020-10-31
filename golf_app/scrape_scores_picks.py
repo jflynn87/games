@@ -130,10 +130,10 @@ class ScrapeScores(object):
                 
                 sd.save()
                 #print (score_dict)
-                self.tournament.saved_cut_num = self.tournament.cut_num()
-                self.tournament.saved_round = self.tournament.get_round()
-                self.tournament.saved_cut_round = self.tournament.get_cut_round()
-                self.tournament.save()
+                #self.tournament.saved_cut_num = self.tournament.cut_num()
+                #self.tournament.saved_round = self.tournament.get_round()
+                #self.tournament.saved_cut_round = self.tournament.get_cut_round() 
+                #self.tournament.save()
 
                 return (score_dict)                
             else:
@@ -173,12 +173,15 @@ class ScrapeScores(object):
                 round_score = row.find('td', {'class': 'round'}).text 
             elif row.find('td', {'class': 'tee-time'}) != None: 
                 thru = row.find('td', {'class': 'tee-time'}).text
-                round_score = 'E'
+                round_score = '0'
             else: 
                 thru = "no info"
-                round_score = 'E'
+                round_score = '0'
 
             total_score = row.find('td', {'class': 'total'}).text 
+
+            if total_score == 'E':
+                total_score = '0'
             
             round_list = []
             for i in range(len(row.find_all('td', {'class': 'round-x'}))):

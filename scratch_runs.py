@@ -26,22 +26,28 @@ import requests
 from pprint import pprint
 from run_app import strava
 import time
+import json
 
 
 
 start = datetime.now()
 print ('starting.... ', datetime.now())
-runs = strava.StravaData()
+runs = strava.StravaData(datetime.strptime('Oct 1 2020', '%b %d %Y'))
 run_dict =  runs.get_runs()
 
-for a, d in run_dict.items():
-    print ("DATE: ", a.split('T')[0],  
-    "DIST: ", round(d[1]/1000, 2), 
-    "TIME: ",  timedelta(seconds=d[2]), 
-    "CALS: " , d[3])
+for row in json.loads(run_dict):
+    if Run.objects.filter(date=row['date']).exists():
+        continue
+    else:
+
+        print ('missing:  ', "DATE: ", row['date'],  
+        "DIST: ", round(row['distance']/1000, 2), 
+        "TIME: ",  timedelta(seconds=row['time']), 
+        "CALS: " , row['calories'])
+
 
 print ('finsihed.... ', datetime.now() - start)
-
+  
 
 
 
