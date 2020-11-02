@@ -151,7 +151,7 @@ class Score(object):
         #print (self.score_dict)
 
         if not self.tournament.complete:
-            self.tournament.complete = self.tournament.tournament_complete()
+            self.tournament.complete = self.tournament.tournament_complete(self.score_dict)
             self.tournament.save()
 
         #make cut num 1 lookup on model

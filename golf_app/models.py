@@ -242,7 +242,15 @@ class Tournament(models.Model):
         if self.saved_round == 1:
             return 66
         elif self.saved_round <= self.saved_cut_round:
-            c_score =  (int(self.cut_score.split(' ')[len(self.cut_score.split(' '))-1]))
+            c_score =  (self.cut_score.split(' ')[len(self.cut_score.split(' '))-1])
+            if c_score in [None, 'info']:
+                return len([x for x in score_dict.values() if x['rank'] not in self.not_playing_list()]) + 1 
+
+            if c_score == 'E':
+                c_score = 0
+            else:
+                c_score = int(c_score)
+
             return len([x for x in score_dict.values() if int(x['total_score']) <= c_score and x['rank'] not in self.not_playing_list()]) + 1 
         else:
             #for v in score_dict.values():
@@ -266,16 +274,16 @@ class Tournament(models.Model):
         #     #score_dict = {k:v for k, v in sorted(sd.items(), key=lambda item: item[1].get('sort_rank'))}
            score_dict = sd
 
-        if len([x for x in score_dict.values() if x['r1'] == '--' and x['rank'] not in ['WD', 'DQ']]) > 0:
+        if len([x for x in score_dict.values() if x['r1'] == '--' and x['rank'] not in self.not_playing_list()]) > 0:
             return 1
-        elif len([x for x in score_dict.values() if x['r2'] == '--' and x['rank'] not in ['WD', 'DQ']]) > 0:
+        elif len([x for x in score_dict.values() if x['r2'] == '--' and x['rank'] not in self.not_playing_list()]) > 0:
             return 2
-        elif len([x for x in score_dict.values() if x['r3'] == '--' and x['rank'] not in ['WD', 'DQ']]) > 0:
+        elif len([x for x in score_dict.values() if x['r3'] == '--' and x['rank'] not in self.not_playing_list()]) > 0:
             return 3
-        elif len([x for x in score_dict.values() if x['r4'] == '--' and x['rank'] not in ['WD', 'DQ']]) > 0:
+        elif len([x for x in score_dict.values() if x['r4'] == '--' and x['rank'] not in self.not_playing_list()]) > 0:
             return 4
         else:
-            return 0
+            return 4
 
 
         # round = 0
@@ -348,16 +356,25 @@ class Tournament(models.Model):
     def not_playing_list(self):
         return ['CUT', 'WD', 'DQ']
 
-    def tournament_complete(self):
-        sd = ScoreDict.objects.get(tournament=self)
-        score_dict = sd.sorted_dict()
+    def tournament_complete(self, sd=None):
+        if sd == None:
+           sd = ScoreDict.objects.get(tournament=self)
+           score_dict = sd.sorted_dict()
+        else:
+           score_dict = sd
+
+        #sd = ScoreDict.objects.get(tournament=self)
+        #score_dict = sd.sorted_dict()
 
         for v in score_dict.values():
             if (v['rank'] not in self.not_playing_list() and \
                 v['r4'] == "--") or v['rank']  == "T1":
                 return False
-        if self.get_round() == 4: 
+
+        if self.get_round(sd) == 4: 
             return True
+        else:
+            return False
 
 
 class Group(models.Model):

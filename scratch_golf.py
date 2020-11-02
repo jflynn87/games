@@ -30,6 +30,11 @@ from unidecode import unidecode
 
 start = datetime.now()
 
+for t in Tournament.objects.filter(season__season='2020'):
+    print (t, t.cut_score)
+
+exit()
+
 t= Tournament.objects.get(current=True)
 #t= Tournament.objects.get(pga_tournament_num='047', season__current=True)
 print (t)
