@@ -3,7 +3,7 @@ os.environ.setdefault("DJANGO_SETTINGS_MODULE","gamesProj.settings")
 
 import django
 django.setup()
-from run_app.models import Schedule, Plan, Run
+from run_app.models import Schedule, Plan, Run, Shoes
 from datetime import timedelta, datetime
 import time
 from django.db.models import Max
@@ -32,11 +32,12 @@ import json
 
 start = datetime.now()
 print ('starting.... ', datetime.now())
-runs = strava.StravaData(datetime.strptime('Oct 1 2020', '%b %d %Y'))
+runs = strava.StravaData(datetime.strptime('Sep 15 2020', '%b %d %Y'))
 run_dict =  runs.get_runs()
 
 for row in json.loads(run_dict):
-    if Run.objects.filter(date=row['date']).exists():
+    day = row['date'].split('T')[0]
+    if Run.objects.filter(date=day).exists() or row['activity'] != "Run":
         continue
     else:
 
@@ -44,6 +45,21 @@ for row in json.loads(run_dict):
         "DIST: ", round(row['distance']/1000, 2), 
         "TIME: ",  timedelta(seconds=row['time']), 
         "CALS: " , row['calories'])
+        date = row['date'].split('T')[0]
+        dist = round(row['distance']/1000, 2), 
+        t =  timedelta(seconds=row['time']), 
+        cals = row['calories']
+
+        Run.objects.get_or_create(date=datetime.strptime(date, '%Y-%m-%d'), 
+                    dist = dist, 
+                    time = t,
+                    cals = cals,
+                    shoes = Shoes.objects.get(main_shoe=True),
+                    location = 1
+                     )
+
+
+
 
 
 print ('finsihed.... ', datetime.now() - start)

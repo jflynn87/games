@@ -112,9 +112,11 @@ function build_score_tbl(data) {
   var scores = $.parseJSON((data['scores']))
   var season_totals = $.parseJSON(data['season_totals'])
   var info = $.parseJSON(data['info'])
+  var t_data = $.parseJSON(data['t_data'])
 
-  //console.log('season totals: ', season_totals)
-  //console.log('totals', total_data)
+  //console.log(t_data[0]['fields']['saved_round'])
+  console.log('T info: ', t_data[0])
+//  console.log('totals', total_data)
 
   $('#det-list table').append('<thead style="background-color:lightblue">' + '<tr>' + '<th> Tournament Scores  </th>' + 
     '<th>' + '</th>' + '<th>' + '<a href="#"> <button> return to top</button> </a>' + '</th>' +  '<th>' + '</th>' + '<th>' + '</th>' + '<th>' + '</th>' +
@@ -204,8 +206,13 @@ function build_score_tbl(data) {
 
   var leaders = $.parseJSON((data['leaders']))
   
-  $('#cut_line').text(data['cut_line'])
-  $('#leader').text("Leaders: " + leaders['leaders'] + " ;   score: " + leaders['score'])        
+  if (t_data[0]['fields']['complete']) {
+    $('#cut_line').text('Tournament Complete')  
+                                        }
+  else {
+    $('#cut_line').text('Round ' + t_data[0]['fields']['saved_round'] +  ', '  + data['cut_line']) 
+       }
+  $('#leader').text("Leaders: " + leaders['leaders'] + leaders['score'])        
 
 
   $('#picks-tbl').show()

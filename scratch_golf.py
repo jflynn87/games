@@ -30,8 +30,20 @@ from unidecode import unidecode
 
 start = datetime.now()
 
-for t in Tournament.objects.filter(season__season='2020'):
-    print (t, t.cut_score)
+owgr = populateField.get_worldrank()
+
+f = open("owgr.txt", "w")
+for k,v in owgr.items():
+    try:
+        line = k + ' ' + str(v)
+        f.write(line)
+        f.write('/n')
+    except Exception as e:
+        continue
+f.close()
+
+for name in Field.objects.filter(tournament__current=True):
+    populateField.fix_name(name.playerName, owgr)
 
 exit()
 

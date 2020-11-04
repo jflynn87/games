@@ -29,7 +29,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from django.core.mail import send_mail
 import time
-
+from django.core import serializers
 
 
 
@@ -188,27 +188,6 @@ class PicksListView(LoginRequiredMixin,ListView):
         })
         return context
 
-#commented on 8/30 - delete after some testing
-# @transaction.atomic
-# def create_picks(tournament, user):
-#     '''takes tournament and user objects and generates random picks.  check for duplication with general pick submit class'''
-
-#     for group in Group.objects.filter(tournament=tournament):
-#         pick = Picks()
-#         random_picks = random.choice(Field.objects.filter(tournament=tournament, group=group, withdrawn=False))
-#         pick.playerName = Field.objects.get(playerName=random_picks.playerName, tournament=tournament)
-#         pick.user = user
-#         pick.save()
-
-#     pm = PickMethod()
-#     pm.user = user
-#     pm.tournament = tournament
-#     pm.method = '3'
-#     pm.save()
-
-#     return
-
-
 
 class SeasonTotalView(ListView):
     template_name="golf_app/season_total.html"
@@ -364,6 +343,7 @@ class GetScores(APIView):
                             'scores': display_data.get('display_data').get('scores'),
                             'season_totals': display_data.get('display_data').get('season_totals'),
                             'info': json.dumps(info),
+                            't_data': serializers.serialize("json", [t])
             }), 200)
 
 
@@ -406,7 +386,8 @@ class GetScores(APIView):
         leaders = scores.get_leader()
         optimal = t.optimal_picks()
         totals = Season.objects.get(season=t.season).get_total_points()
-
+        t_data = serializers.serialize("json", [t, ])
+        print ('T DATA: ', t_data)
         display_dict = {}
         display_dict['display_data'] = {'picks': d,
                           'totals': ts,
@@ -414,7 +395,8 @@ class GetScores(APIView):
                           'cut_line': t.cut_score,
                           'optimal': optimal,
                           'scores': json.dumps(score_dict),
-                          'season_totals': totals,}
+                          'season_totals': totals,
+                          't_data': t_data,}
 
         sd.pick_data = json.dumps(display_dict)
         sd.save()
@@ -438,6 +420,9 @@ class GetDBScores(APIView):
         t = Tournament.objects.get(pk=self.request.GET.get('tournament'))
         sd, created = ScoreDict.objects.get_or_create(tournament=t)
         info = get_info(t)
+        t_data = serializers.serialize("json", [t, ])
+        print ('T DATA: ', type(t_data), t_data)
+
 
         try:
             display_data = json.loads(sd.pick_data)
@@ -450,6 +435,7 @@ class GetDBScores(APIView):
                             'scores': display_data.get('display_data').get('scores'),
                             'season_totals': display_data.get('display_data').get('season_totals'),
                             'info': json.dumps(info),
+                            't_data': display_data.get('display_data').get('t_data')
             }), 200)
         except Exception as e:
             print ('old logic')

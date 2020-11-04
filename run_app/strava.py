@@ -36,7 +36,8 @@ class StravaData(object):
         print (self.access_token)
 
         if start_date == None:
-            self.start_date = Run.objects.latest('date')
+            run = Run.objects.latest('date')
+            self.start_date = run.date
         else:
             self.start_date  = start_date 
 

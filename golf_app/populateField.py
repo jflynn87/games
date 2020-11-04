@@ -266,7 +266,7 @@ def create_groups(tournament_number):
 
     group_dict = {}
     name_switch = False
-
+    name_issues = []
     for player in field:
         print (player)
         if Name.objects.filter(PGA_name=player).exists():
@@ -283,8 +283,10 @@ def create_groups(tournament_number):
             rank = OWGR_rankings[player]
         except Exception:
             try:
-                rank = fix_name(player, OWGR_rankings)
-                print ('not in owgr', player)
+                lookup = fix_name(player, OWGR_rankings)
+                print ('not in owgr', player, lookup)
+                name_issues.append((player, lookup))
+                rank = lookup[1]
                 #rank = PGA_rankings[player]
             except Exception:
                 print ('no rank found',player)
@@ -296,13 +298,13 @@ def create_groups(tournament_number):
             name_switch = False
 
         group_dict[player] = [rank, field.get(player)]
-
+ 
 
     player_cnt = 1
     group_num = 1
 
     groups = Group.objects.get(tournament=tournament, number=group_num)
-
+    print (name_issues)
     print ('group_dict before field save', group_dict)
 
     #create dict of player links for picture lookup
@@ -434,21 +436,30 @@ def fix_name(player, owgr_rankings):
     if owgr_rankings.get(player) != None:
         return (owgr_rankings.get(player))
 
+    print (player.replace(',', '').split(' '))
     for k, v in owgr_rankings.items():
-        owgr_name = k.split(' ')
-        pga_name = player.split(' ')
+        owgr_name = k.replace(',', '').split(' ')
+        pga_name = player.replace(',', '').split(' ')
         #print (owgr_name, pga_name)
         
         if unidecode.unidecode(owgr_name[len(owgr_name)-1]) == unidecode.unidecode(pga_name[len(pga_name)-1]) \
            and k[0:1] == player[0:1]:
             print ('last name, first initial match', player)
-            return v
+            return k, v
         elif unidecode.unidecode(owgr_name[len(owgr_name)-2]) == unidecode.unidecode(pga_name[len(pga_name)-1]) \
             and k[0:1] == player[0:1]:
             print ('last name, first initial match, cut owgr suffix', player)
-            return v
-
-    return [9999, 9999, 9999]
+            return k, v
+        elif len(owgr_name) == 3 and len(pga_name) == 3 and unidecode.unidecode(owgr_name[len(owgr_name)-2]) == unidecode.unidecode(pga_name[len(pga_name)-2]) \
+            and unidecode.unidecode(owgr_name[0]) == unidecode.unidecode(pga_name[0]):
+            print ('last name, first name, cut both suffix', player)
+            return k, v
+        elif unidecode.unidecode(owgr_name[0]) == unidecode.unidecode(pga_name[len(pga_name)-1]) \
+            and unidecode.unidecode(owgr_name[len(owgr_name)-1]) == unidecode.unidecode(pga_name[0]):
+            print ('names reversed', player)
+            return k, v
+    print ('didnt find match', pga_name)
+    return None, [9999, 9999, 9999]
 
     
     
