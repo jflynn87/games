@@ -32,7 +32,7 @@ import json
 
 start = datetime.now()
 print ('starting.... ', datetime.now())
-runs = strava.StravaData(datetime.strptime('Sep 15 2020', '%b %d %Y'))
+runs = strava.StravaData(datetime.strptime('Sep 1 2020', '%b %d %Y'))
 run_dict =  runs.get_runs()
 
 for row in json.loads(run_dict):
@@ -46,9 +46,10 @@ for row in json.loads(run_dict):
         "TIME: ",  timedelta(seconds=row['time']), 
         "CALS: " , row['calories'])
         date = row['date'].split('T')[0]
-        dist = round(row['distance']/1000, 2), 
-        t =  timedelta(seconds=row['time']), 
+        dist = round(row['distance']/1000, 2) 
+        t =  timedelta(seconds=row['time']) 
         cals = row['calories']
+
 
         Run.objects.get_or_create(date=datetime.strptime(date, '%Y-%m-%d'), 
                     dist = dist, 

@@ -386,7 +386,7 @@ class Group(models.Model):
         return str(self.number) + '-' + str(self.tournament)
 
     def min_score(self, cut_num=None):
-        #print ('min score ', datetime.now(), self)
+        print ('min score ', datetime.now(), self)
         score_dict = ScoreDict.objects.get(tournament=self.tournament)
         clean_dict = score_dict.clean_dict()
         if cut_num == None:

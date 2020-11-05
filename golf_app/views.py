@@ -410,6 +410,7 @@ class GetScores(APIView):
                           'scores': json.dumps(score_dict),
                           'season_totals': totals,
                           'info': json.dumps(info),
+                          't_data': t_data,
          }), 200)
 
 class GetDBScores(APIView):

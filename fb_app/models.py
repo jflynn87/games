@@ -12,6 +12,7 @@ import scipy.stats as ss
 #from django.db.models import Q
 from bs4 import BeautifulSoup
 from fb_app import scrape_cbs
+from django.core import serializers
 
 # Create your models here.
 
@@ -256,15 +257,17 @@ class Week(models.Model):
         print ('player and score object creation start')
         
         self.update_games()
+        print ('finished updating scores: ', datetime.datetime.now() - start)
         scores = self.update_scores(league)
         
         score_dict = {}
         user_list = []
         picks_dict = {}
 
-        print ('league: ', league, type(league))
         for player in Player.objects.filter(league=league, active=True):
             score_dict[player.name.username] = {}
+        
+        print ('before building pick dict:', datetime.datetime.now() - start)
         
         for pick in Picks.objects.filter(player__league=league, week=self, player__active=True).order_by('player__name__username').order_by('pick_num'):
             if pick.is_loser():
@@ -276,6 +279,7 @@ class Week(models.Model):
             except Exception as e:
                 score_dict[pick.player.name.username]['picks'] = {pick.pick_num: {'team': pick.team.nfl_abbr, 'status': status}}
 
+        print ('after building pick dict:', datetime.datetime.now() - start)
         for user, score in scores.items():
             score_dict[user].update(score)
 
@@ -294,7 +298,7 @@ class Week(models.Model):
 
 
         #print (score_dict)
-        print (datetime.datetime.now() - start)
+        print ('get scores durations: ', datetime.datetime.now() - start)
         return score_dict
 
     def picks_complete(self, league):

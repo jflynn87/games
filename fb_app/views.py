@@ -694,11 +694,11 @@ class UpdateScores(APIView):
                games = scrape_cbs.ScrapeCBS(week).get_data()
            #d = {'player-data': week.get_scores(player.league)}
            d = {'player-data': week.get_scores(league)}
-           print ('d: ',  d) 
-           print ('***** games', games)
+           #print ('d: ',  d) 
+           #print ('***** games', games)
            display = {**d, **games}
            data = json.dumps(display)
-           print ('Update Scores data', data)
+           #print ('Update Scores data', data)
         else:
             data = json.dumps({'msg': 'week not started'})
         
@@ -823,24 +823,6 @@ class NewScoresView(TemplateView):
                              })
             return context
 
-    # def post(self, request, **kwargs):
-
-    #     context = self.get_context_data()
-
-    #     return render(request, 'fb_app/new_scores.html', {
-    #     'players': context['players'],
-    #     'picks': context['picks'],
-    #     'week': context['week'],
-    #     'pending': context['pending'],
-    #     'games': context['games'],
-    #     'scores': context['scores'],
-    #     'projected_ranks': context['projected_ranks'],
-    #     'projected_scores': context['projected_scores'],
-    #     'ranks': context['ranks'],
-    #     'totals': context['totals'],
-    #     'season_ranks': context['season_ranks'],
-    #     })
-
 
     def get_base_data(self):
         '''takes in view object and calculates the user, player, league and week,
@@ -899,8 +881,6 @@ class UpdateProj(APIView):
     
     def get(self, num):
         try:
-            print ('COMNNECTED')
-            print (self.request.GET)
             print (self.request.GET.getlist('winners[]'))
 
             w = Week.objects.get(week=self.request.GET.get('week'), season_model__current=True)
@@ -915,9 +895,9 @@ class UpdateProj(APIView):
                             proj_score += pick.pick_num
                 proj_dict[player.name.username] = {'proj_score': proj_score}
 
-            print ('update proj: ', proj_dict)
+            #print ('update proj: ', proj_dict)
             proj_rank = w.proj_ranks(l, proj_dict)
-            print ('update proj ranks: ', proj_rank)
+            #print ('update proj ranks: ', proj_rank)
 
             for player, score in proj_dict.items():
                 proj_dict[player].update({'proj_rank': proj_rank[player]})

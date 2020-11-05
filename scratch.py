@@ -26,16 +26,35 @@ import requests
 from bs4 import BeautifulSoup
 from fb_app import scrape_cbs
 import pytz
-
+from django.core import serializers
 
 
 
 #week = Week.objects.get(current=True)
 start = datetime.now()
-l = League.objects.get(league="Football Fools")
+l = League.objects.get(league="Golfers")
 week = Week.objects.get(current=True)
 player = Player.objects.get(name__username='TOKYO')
-winners = ['DAL', 'HOU', 'NE']
+score_dict = {}
+
+for player in Player.objects.filter(league=l, active=True):
+    score_dict[player.name.username] = {}
+
+for pick in Picks.objects.filter(player__league=l, week=week, player__active=True).order_by('player__name__username').order_by('pick_num'):
+    start_loop = datetime.now()
+    if pick.is_loser():
+        status = 'loser' 
+    else:
+        status = 'reg'
+    try:
+        score_dict[pick.player.name.username]['picks'].update({pick.pick_num: {'team': pick.team.nfl_abbr, 'status': status}})
+    except Exception as e:
+        score_dict[pick.player.name.username]['picks'] = {pick.pick_num: {'team': pick.team.nfl_abbr, 'status': status}}
+    print (datetime.now() - start_loop)
+print (datetime.now() - start)
+
+exit()
+
 
 for pick in Picks.objects.filter(player=player, week=week):
     if pick.team.nfl_abbr not in winners \
