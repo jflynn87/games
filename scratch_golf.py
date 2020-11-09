@@ -30,6 +30,26 @@ from unidecode import unidecode
 
 start = datetime.now()
 
+t = Tournament.objects.get(current=True)
+
+for sd in ScoreDetails.objects.filter(pick__playerName__tournament=t):
+    print (sd.pick.playerName, sd.toPar, sd.today_score)
+
+exit()
+t= Tournament.objects.get(pga_tournament_num='014', season__season='2019')
+
+web = scrape_scores_picks.ScrapeScores(t, "https://www.pgatour.com/competition/2019/masters-tournament/leaderboard.html", None).scrape()
+print (web)
+
+#sd = ScoreDict()
+
+#sd.tournament = t
+#sd.data = web
+#sd.save()
+
+
+exit()
+
 owgr = populateField.get_worldrank()
 
 f = open("owgr.txt", "w")
@@ -372,6 +392,7 @@ urls:  ['https://www.pgatour.com/competition/2020/the-cj-cup-at-nine-bridges/lea
          'https://www.pgatour.com/competition/2020/genesis-invitational/leaderboard.html',
          #'https://www.pgatour.com/competition/2020/wgc-mexico-championship/leaderboard.html',   can't find?
          'https://www.pgatour.com/competition/2020/wgc-fedex-st-jude-invitational/leaderboard.html'
+         
 
 
 ]
@@ -379,7 +400,7 @@ urls:  ['https://www.pgatour.com/competition/2020/the-cj-cup-at-nine-bridges/lea
 
 
 
-season = Season.objects.get(season='2020')
+season = Season.objects.get(season='2019')
 g6_total = 0
 g6_hc = 0
 last_total = 0

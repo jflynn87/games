@@ -286,39 +286,6 @@ class Tournament(models.Model):
             return 4
 
 
-        # round = 0
-
-
-        
-        # for stats in score_dict.values():
-        #     print (stats)
-        #     if len(stats.get('thru')) > 3:
-        #         #print ('len', stats)
-        #         continue
-        #     if stats.get('thru')[0] != "F" and stats.get('rank') not in self.not_playing_list():
-        #         if stats.get('r1')  == '--':
-        #             return 1
-        #         if stats.get('r2') == '--':
-        #            return 2
-        #         elif stats.get('r3') == '--':
-        #                return 3
-        #         elif  stats.get('r4') == '--':
-        #                print ('get round - round 4')
-        #                return 4
-        #     elif stats.get('thru')[0] == 'F' and stats.get('rank') not in self.not_playing_list():
-        #         if stats.get('r2') == '--':
-        #             return 2
-        #         elif stats.get('r3') == '--':
-        #             return 3
-        #         elif stats.get('r4') == '--':
-        #             return 4
-        #         else:
-        #             return 4
-        #     else:
-        #         return 0
-        # print ('exit get_round', round)
-        # return round
-
     def optimal_picks(self):
         sd = ScoreDict.objects.get(tournament=self)
         score_dict = sd.data
@@ -468,17 +435,20 @@ class Field(models.Model):
     def get_absolute_url(self):
         return reverse("golf_app:show_picks",kwargs={'pk':self.pk})
 
-#    def get_group(self, args):
-#        group = self.objects.filter(group=args)
-#        return group
-
     def formatted_name(self):
         return self.playerName.replace(' Jr.','').replace('(am)','')
 
     def prior_year_finish(self):
-        last_season = str(int(self.tournament.season.season)-1)
-        t = Tournament.objects.get(name=self.tournament.name, season__season=last_season)
+        try:
+            last_season = str(int(self.tournament.season.season)-1)
+            t = Tournament.objects.get(name=self.tournament.name, season__season=last_season)
+        except Exception as e:
+            last_season = str(int(self.tournament.season.season)-2)
+            t = Tournament.objects.get(name=self.tournament.name, season__season=last_season)
+        
+        
         sd = ScoreDict.objects.get(tournament=t)
+
         try:
             return sd.data.get(self.playerName).get('rank')
         except Exception as e:

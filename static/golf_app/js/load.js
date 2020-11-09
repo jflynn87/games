@@ -177,10 +177,16 @@ function build_score_tbl(data) {
     let filler = /[\s\.\']/g;
     $.each(stats, function(index) {
       var pick = $(this)[0]['pick'].replace(filler, '')
-    $('#totals' + p).append('<td id=' + p +  pick + '>' + '<span class=watermark>' + 
+     
+      if ($(this)[0]['toPar'] == 0) {
+        toPar = "E"
+      }
+      else {toPar = $(this)[0]['toPar']} 
+    
+      $('#totals' + p).append('<td id=' + p +  pick + '>' + '<span class=watermark>' + 
     '<p>' + p.substring(0, 4)  + ' : ' + index +  '</p>'  + '</span>' + '<p>' +  $(this)[0]['pick']  + '</p>' + '<p>' + $(this)[0]['score'] +
     '<span > <a id=tt-' + pick + ' href="#" data-toggle="tooltip" > <i class="fa fa-info-circle"></i> </a> </span>' +
-     '</p>' +  $(this)[0]['toPar'] +  '   ' +  format_move($(this)[0]['sod_position']) +  $(this)[0]['sod_position'] + '</p>' +  '</td>')
+     '</p>' +  toPar +  '   ' +  format_move($(this)[0]['sod_position']) +  $(this)[0]['sod_position'] + '</p>' +  '</td>')
      //console.log($('#tt-' + $(this)[0]['pick'].replace(/ +?/g, '').replace(/\./g,'') + '[data-toggle="tooltip"]'))
       $('#tt-' + pick + '[data-toggle="tooltip"]').tooltip({trigger:"hover",
                                             delay:{"show":400,"hide":800}, "title": 'gross score: ' + $(this)[0]['gross_score']

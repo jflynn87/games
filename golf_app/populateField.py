@@ -131,9 +131,9 @@ def get_field(tournament_number):
     tourny.complete=False
     tourny.score_update_time = datetime.datetime.now()
     tourny.cut_score = "no cut info"
-    tourney.saved_cut_num = 0
-    tourney.saved_round = 0
-    tourney.saved_cut_round = 0
+    tourny.saved_cut_num = 65
+    tourny.saved_round = 1
+    tourny.saved_cut_round = 2
     tourny.save()
 
     #Tournament.objects.get_or_create(season=season, name=tourny.name,start_date=tourny.start_date, field_json_url=tourny.field_json_url, score_json_url=tourny.score_json_url, current=True, complete=False)

@@ -72,6 +72,7 @@ class DashboardView(ListView):
 
             while week_i <= 2:
                 start_week = w - timedelta(weeks=week_i)
+                print ('start week: ', start_week)
                 try:
                     compare_week = week_data.get(year=str(datetime.datetime.strftime(start_week, '%Y')), week=str(datetime.datetime.strftime(start_week, '%W')))
                     wk_total_dist = compare_week.get('total_dist')
@@ -79,6 +80,7 @@ class DashboardView(ListView):
                 except ObjectDoesNotExist:
                     wk_total_dist = 0
                     wk_long_run = 0
+                print ('data: ', start_week, compare_week, wk_total_dist, weekly_total)
                 if wk_total_dist > weekly_total:
                     weekly_total = wk_total_dist
                 if wk_long_run > long_run:

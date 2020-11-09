@@ -24,8 +24,39 @@ function refresh() {
             }
             else {
                 build_page(json)
+                get_picks()
             }}
         })}
+
+
+function get_picks() { 
+    $.ajax({
+        type: "GET",
+        url: "/fb_app/get_picks/",
+        data: {'week' : $('#week').text(), 
+               'league': $('#league').text(),
+               'season': $('#season').text()
+               
+            },
+        dataType: 'json',
+        success: function (json) {
+            //console.log(json)
+            if ($.parseJSON(json)['msg']) {
+                console.log('error')
+                //$('#loading').hide()
+            }
+            else {
+                $.each($.parseJSON(json), function(player, data) {
+                    $.each(data['picks'], function(index) {
+                    $('#pick-' + player.replace(filler, '') + index).text(data['picks'][index]['team']).toggleClass(data['picks'][index]['status']).removeClass('status')
+    })
+})
+            }},
+        failure: function(json) { 
+            console.log('failure', json)
+        }
+        })
+}
 
 function build_page(json) {
 
@@ -39,19 +70,17 @@ games = $.parseJSON(json)['games']
 //add table
 $('#picks-sect').empty()
 
-$('#picks-sect').append('<table id=picks-tbl class="table table-striped"> <tbody>' + '</tbody> </table>')
+$('#picks-sect').append('<table id=picks-tbl class="table table-striped"> </table>')
 
 //headers
 $('#picks-tbl').append('<thead style="background-color:lightblue">' + '<th> Week' + $("#week").text() + '</th> </thead>')
 $.each(picks_data, function(player, data) {$('#picks-tbl thead tr').append('<th>' + player + '</th>') }  )
   
-$('#picks-tbl').append('<tr id="rank"> <th>' + 'Rank' + '</th> </tr>' + 
+$('#picks-tbl').append('<tbody>  <tr id="rank"> <th>' + 'Rank' + '</th> </tr>' + 
                        '<tr id="score"> <th>' + 'Score' + '</th> </tr>' + 
                        '<tr id="proj"> <th>' + 'Projected' + '</th> </tr>' + 
-                       '<tr id="proj_rank"> <th>' + 'Projected Rank' + '</th> </tr>'  
+                       '<tr id="proj_rank"> <th>' + 'Projected Rank' + '</th> </tr> </tbody>'  
 )
-
-
 
 $.each(picks_data, function(player, data) {
     //console.log(data['score'])
@@ -62,13 +91,11 @@ $.each(picks_data, function(player, data) {
 })    
 
 for (var i= 16; i > 16 - parseInt($('#game_cnt').text()); i -- ) {
-    $('#picks-tbl').append('<tr id=pick-' + i + '> <td>' + i + '</td> </tr>')}
-    
-$.each(picks_data, function(player, data) {
-    $.each(data['picks'], function(index) {
-        $('#pick-' + index).append('<td class=' + data['picks'][index]['status'] + '>' + data['picks'][index]['team'] + '</td>')
-    })
-})
+    $('#picks-tbl').append('<tr id=pick-' + i + '> <td>' + i + '</td> </tr>')
+    $.each(picks_data, function(player, data) {
+        $('#pick-' + i).append('<td id=pick-' + player.replace(filler, '') + i +' class=status> updating... </td>')
+    })}
+   
 
 $('#picks-tbl').append('<tr id="season_total"> <th>' + 'Season Total' + '</th> </tr>' + 
                        '<tr id="season_rank"> <th>' + 'Season Rank' + '</th> </tr>' )
@@ -86,10 +113,6 @@ $.each(picks_data, function(player, data) {
 $('#loading').hide()
 $('#score-tbl').empty()
 $('#sub-btn').remove()
-//build NFL game sect
-//$('#nfl-scores').empty()
-
-//$('#nfl-scores').append('<table id="score-tbl" class="table table-sm">' + '</table>')
 
 $('#nfl-scores').append('<button id=sub-btn type="button" class="btn btn-primary">Project Scores</button>')
 

@@ -22,6 +22,7 @@ urlpatterns = [
     #url(r'^update_scores/$', views.UpdateScores.as_view(),name='update_scores'),
     path('update_scores/', views.UpdateScores.as_view()),
     path('update_proj/', views.UpdateProj.as_view()),
+    path('get_picks/', views.GetPicks.as_view()),
     #url(r'^update_proj/$', views.UpdateProj.as_view(),name='update_proj'),
     #url(r'^update_rank/$', views.UpdateRank.as_view(),name='update_rank'),
     #url(r'^update_proj_rank/$', views.UpdateProjRank.as_view(),name='update_proj_rank'),

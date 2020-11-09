@@ -173,10 +173,10 @@ class ScrapeScores(object):
                 round_score = row.find('td', {'class': 'round'}).text 
             elif row.find('td', {'class': 'tee-time'}) != None: 
                 thru = row.find('td', {'class': 'tee-time'}).text
-                round_score = '0'
+                round_score = 'E'
             else: 
                 thru = "no info"
-                round_score = '0'
+                round_score = 'E'
 
             total_score = row.find('td', {'class': 'total'}).text 
 

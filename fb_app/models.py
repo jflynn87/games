@@ -64,16 +64,18 @@ class Week(models.Model):
             print ('true')
             return True
         else:
+            print ('checking if stated on cbs scores')
             web = scrape_cbs.ScrapeCBS(self).get_data()
             games = web['games']
-            print (games)
+            
             
             for k, v in games.items():
-                if v.get('qtr') not in [None, 'pregame']:
+                print (k , v)
+                if v.get('qtr') not in [None, 'pregame', 'postponed']:
                     print ('week started based on scrape: ', v)
                     return True
-                else:
-                    return False
+                #else:
+                #     return False
             return False
         return False
         
@@ -269,15 +271,15 @@ class Week(models.Model):
         
         print ('before building pick dict:', datetime.datetime.now() - start)
         
-        for pick in Picks.objects.filter(player__league=league, week=self, player__active=True).order_by('player__name__username').order_by('pick_num'):
-            if pick.is_loser():
-                status = 'loser' 
-            else:
-                status = 'reg'
-            try:
-                score_dict[pick.player.name.username]['picks'].update({pick.pick_num: {'team': pick.team.nfl_abbr, 'status': status}})
-            except Exception as e:
-                score_dict[pick.player.name.username]['picks'] = {pick.pick_num: {'team': pick.team.nfl_abbr, 'status': status}}
+        # for pick in Picks.objects.filter(player__league=league, week=self, player__active=True).order_by('player__name__username').order_by('pick_num'):
+        #     if pick.is_loser():
+        #         status = 'loser' 
+        #     else:
+        #         status = 'reg'
+        #     try:
+        #         score_dict[pick.player.name.username]['picks'].update({pick.pick_num: {'team': pick.team.nfl_abbr, 'status': status}})
+        #     except Exception as e:
+        #         score_dict[pick.player.name.username]['picks'] = {pick.pick_num: {'team': pick.team.nfl_abbr, 'status': status}}
 
         print ('after building pick dict:', datetime.datetime.now() - start)
         for user, score in scores.items():

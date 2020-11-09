@@ -692,13 +692,9 @@ class UpdateScores(APIView):
            games = week.update_games()
            if games == None:
                games = scrape_cbs.ScrapeCBS(week).get_data()
-           #d = {'player-data': week.get_scores(player.league)}
            d = {'player-data': week.get_scores(league)}
-           #print ('d: ',  d) 
-           #print ('***** games', games)
            display = {**d, **games}
            data = json.dumps(display)
-           #print ('Update Scores data', data)
         else:
             data = json.dumps({'msg': 'week not started'})
         
@@ -909,5 +905,36 @@ class UpdateProj(APIView):
             return Response(json.dumps({'msg': 'update error'}))
 
 
+        for player in Player.objects.filter(league=league, active=True):
+            score_dict[player.name.username] = {}
+        
+        print ('before building pick dict:', datetime.datetime.now() - start)
 
+
+class GetPicks(APIView):
+    
+    def get(self, num):
+        try:
+            score_dict = {}
+            league = League.objects.get(league=self.request.GET.get('league'))
+            week = Week.objects.get(week=self.request.GET.get('week'), season_model__current=True)
+            for player in Player.objects.filter(league=league, active=True):
+                score_dict[player.name.username] = {}
+        
+
+            for pick in Picks.objects.filter(player__league=league, week=week, player__active=True).order_by('player__name__username').order_by('pick_num'):
+                if pick.is_loser():
+                    status = 'loser' 
+                else:
+                    status = 'reg'
+                try:
+                    score_dict[pick.player.name.username]['picks'].update({pick.pick_num: {'team': pick.team.nfl_abbr, 'status': status}})
+                except Exception as e:
+                    score_dict[pick.player.name.username]['picks'] = {pick.pick_num: {'team': pick.team.nfl_abbr, 'status': status}}
+
+            return Response(json.dumps(score_dict), 200)
+
+        except Exception as e:
+            print ('get picks api issue: ', e)
+            return Response(json.dumps({'msg': e}), 200)
 
