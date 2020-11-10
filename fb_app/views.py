@@ -915,6 +915,7 @@ class GetPicks(APIView):
     
     def get(self, num):
         try:
+            print ('get picks', self.request.GET)
             score_dict = {}
             league = League.objects.get(league=self.request.GET.get('league'))
             week = Week.objects.get(week=self.request.GET.get('week'), season_model__current=True)

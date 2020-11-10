@@ -90,6 +90,7 @@ $.each(picks_data, function(player, data) {
     $('#proj_rank').append('<td class=ranks id=proj_rank-' + player.replace(filler, '') + '>'  + data['proj_rank'] + '</td>')
 })    
 
+
 for (var i= 16; i > 16 - parseInt($('#game_cnt').text()); i -- ) {
     $('#picks-tbl').append('<tr id=pick-' + i + '> <td>' + i + '</td> </tr>')
     $.each(picks_data, function(player, data) {
