@@ -216,15 +216,15 @@ class Tournament(models.Model):
 
 
     def cut_num(self, sd=None):
-        if not self.has_cut:
-            return len([x for x in score_dict.values() if x['rank'] not in self.not_playing_list()]) + 1
-
         if sd == None:
             sd = ScoreDict.objects.get(tournament=self)
             score_dict = sd.sorted_dict()
         else:
             #score_dict = {k:v for k, v in sorted(sd.items(), key=lambda item: item[1].get('sort_rank'))}
             score_dict = sd
+
+        if not self.has_cut:
+            return len([x for x in score_dict.values() if x['rank'] not in self.not_playing_list()]) + 1
 
         #round = self.get_cut_round()
         round = self.saved_cut_round
@@ -432,8 +432,8 @@ class Field(models.Model):
     def __str__(self):
         return  self.playerName
 
-    def get_absolute_url(self):
-        return reverse("golf_app:show_picks",kwargs={'pk':self.pk})
+    #def get_absolute_url(self):
+    #    return reverse("golf_app:show_picks",kwargs={'pk':self.pk})
 
     def formatted_name(self):
         return self.playerName.replace(' Jr.','').replace('(am)','')
@@ -441,11 +441,10 @@ class Field(models.Model):
     def prior_year_finish(self):
         try:
             last_season = str(int(self.tournament.season.season)-1)
-            t = Tournament.objects.get(name=self.tournament.name, season__season=last_season)
+            t = Tournament.objects.get(pga_tournament_num=self.tournament.pga_tournament_num, season__season=last_season)
         except Exception as e:
             last_season = str(int(self.tournament.season.season)-2)
-            t = Tournament.objects.get(name=self.tournament.name, season__season=last_season)
-        
+            t = Tournament.objects.get(pga_tournament_num=self.tournament.pga_tournament_num, season__season=last_season)
         
         sd = ScoreDict.objects.get(tournament=t)
 
