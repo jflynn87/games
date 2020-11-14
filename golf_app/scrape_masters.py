@@ -130,7 +130,8 @@ class ScrapeScores(object):
                 except Exception as e:
                     print ('row execptino', e)
             
-            cut = len([x for x in score_dict.values() if int(utils.formatRank(x['rank'])) <= 50 and x['rank'] not in self.tournament.not_playing_list()]) + 1 
+            cut_num = len([x for x in score_dict.values() if int(utils.formatRank(x['rank'])) <= 50 and x['rank'] not in self.tournament.not_playing_list()]) + 1 
+            cut_score = [x for x in score_dict.values() if int(utils.formatRank(x['rank'])) <= 50 and x['rank'] not in self.tournament.not_playing_list()]) + 1 
             self.tournament.cut_score = 'Cut Number ' + str(cut)
             self.tournament.save()
 
