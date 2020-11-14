@@ -243,6 +243,7 @@ class Tournament(models.Model):
             return 66
         elif self.saved_round <= self.saved_cut_round:
             c_score =  (self.cut_score.split(' ')[len(self.cut_score.split(' '))-1])
+
             if c_score in [None, 'info']:
                 return len([x for x in score_dict.values() if x['rank'] not in self.not_playing_list()]) + 1 
 

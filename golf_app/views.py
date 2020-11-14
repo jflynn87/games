@@ -13,7 +13,7 @@ from django.urls import reverse, reverse_lazy
 from django.contrib.auth.models import User
 import datetime
 from golf_app import populateField, calc_score, optimal_picks,\
-     manual_score, scrape_scores_picks, scrape_cbs_golf
+     manual_score, scrape_scores_picks, scrape_cbs_golf, scrape_masters
 from django.utils import timezone
 from django.core.exceptions import ObjectDoesNotExist
 from django.db.models import Min, Q, Count, Sum, Max
@@ -349,9 +349,15 @@ class GetScores(APIView):
 
         if t.current and not t.complete:
             print ('scraping')
-            #pga_web = scrape_scores.ScrapeScores(t)
+    
+
             pga_web = scrape_scores_picks.ScrapeScores(t)
             score_dict = pga_web.scrape()
+
+            #score_dict = scrape_masters.ScrapeScores(t).scrape()
+            
+            #print (score_dict)
+    
             ## store round, cut num, cut round to speed up access
             t.saved_cut_num = t.cut_num(score_dict)
             t.saved_round = t.get_round(score_dict)

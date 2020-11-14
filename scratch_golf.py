@@ -25,21 +25,24 @@ from urllib.request import Request, urlopen
 from selenium import webdriver
 import urllib
 import json
-from golf_app import views, manual_score, populateField, withdraw, scrape_scores_picks, utils, scrape_cbs_golf
+from golf_app import views, manual_score, populateField, withdraw, scrape_scores_picks, utils, scrape_cbs_golf, scrape_masters
 from unidecode import unidecode
 
 start = datetime.now()
 
 t = Tournament.objects.get(current=True)
 
-for sd in ScoreDetails.objects.filter(pick__playerName__tournament=t):
-    print (sd.pick.playerName, sd.toPar, sd.today_score)
+web = scrape_masters.ScrapeScores(t).scrape()
+for k, v in web.items():
+    print (k, v)
+
+print (len(web))
 
 exit()
 t= Tournament.objects.get(pga_tournament_num='014', season__season='2019')
 
 web = scrape_scores_picks.ScrapeScores(t, "https://www.pgatour.com/competition/2019/masters-tournament/leaderboard.html", None).scrape()
-print (web)
+#print (web)
 
 #sd = ScoreDict()
 
