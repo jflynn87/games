@@ -151,10 +151,12 @@ class ScrapeScores(object):
 
             
             #print (row)
-            n = row.find('td', {'class': 'player-name'}).text
+            #hard cocding courses to strip for RSM, make this extend to others
+            n = row.find('td', {'class': 'player-name'}).text.rstrip('(SS)').rstrip('(PL)').rstrip(' ')
             if n[-1] == ' ':
                 n = n[:-1]
-            
+
+
             rank = row.find('td', {'class': 'position'}).text 
             pos = row.find('td', {'class': 'position-movement'})
             

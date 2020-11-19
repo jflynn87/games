@@ -80,7 +80,7 @@ class Tournament(models.Model):
         if ScoreDetails.objects.filter(pick__playerName__tournament=self).\
             exclude(Q(score=None) | Q(score=0) | \
                     Q(thru=None) | Q(thru__in=["not started", " ", "", '--']) | \
-                    Q(today_score='WD')).exists():
+                    Q(today_score='WD')).exclude(gross_score=self.saved_cut_num).exists():
             print (self, 'tournament started based on picks lookup')
             print ('finishing started check', datetime.now())
             return True
@@ -275,6 +275,9 @@ class Tournament(models.Model):
         #     #score_dict = {k:v for k, v in sorted(sd.items(), key=lambda item: item[1].get('sort_rank'))}
            score_dict = sd
 
+        if len([x for x in score_dict.values() if x['r1'] == '--']) == len(score_dict):
+            return 0
+
         if len([x for x in score_dict.values() if x['r1'] == '--' and x['rank'] not in self.not_playing_list()]) > 0:
             return 1
         elif len([x for x in score_dict.values() if x['r2'] == '--' and x['rank'] not in self.not_playing_list()]) > 0:
@@ -284,7 +287,7 @@ class Tournament(models.Model):
         elif len([x for x in score_dict.values() if x['r4'] == '--' and x['rank'] not in self.not_playing_list()]) > 0:
             return 4
         else:
-            return 4
+            return 0
 
 
     def optimal_picks(self):

@@ -62,6 +62,7 @@ const e = React.createElement;
             placeholder))
           }
           else {
+              console.log('in else')
               console.log(JSON.parse(data))
               console.log(JSON.parse(data)['status'])
               if (!JSON.parse(data)['status']) {
@@ -72,8 +73,8 @@ const e = React.createElement;
                  ))}
                  return (React.createElement(
                   'h5',
-                  {key: 'items'},          
-                  'Started - refresh to see picks'   
+                  {key: 'items'}, 
+                  JSON.parse(data)['status']           
                  ))
               }
           }

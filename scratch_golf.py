@@ -32,11 +32,13 @@ start = datetime.now()
 
 t = Tournament.objects.get(current=True)
 
-web = scrape_masters.ScrapeScores(t).scrape()
-for k, v in web.items():
-    print (k, v)
+#web = scrape_masters.ScrapeScores(t).scrape()
+print (t.get_round())
+print (t.started())
+sd = ScoreDetails.objects.filter(pick__playerName__tournament=t)
 
-print (len(web))
+for s in sd:
+    print(s.pick, s.thru, s.score, s.rank)
 
 exit()
 t= Tournament.objects.get(pga_tournament_num='014', season__season='2019')

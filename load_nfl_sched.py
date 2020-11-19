@@ -20,7 +20,8 @@ import pytz
 def load_sched(year):
 
     #changing weeks to load preseason weeks (make week 0 and cnt 1)
-    week_cnt = 9
+    current_week = Week.objects.get(current=True)
+    week_cnt = current_week.week + 1
     season = Season.objects.get(current=True)
     while week_cnt < 12:
             try:

@@ -532,20 +532,24 @@ class CheckStarted(APIView):
             t = Tournament.objects.get(pk=key)
 
             if t.set_notstarted:
-               return Response(json.dumps({'status': 'overrode to not started'}))
+               return Response(json.dumps({'status': 'Overrode to not started'}), 200)
 
 
             if not t.started():
                 pga_web = scrape_scores_picks.ScrapeScores(t)
                 score_dict = pga_web.scrape()
-                tourn = Tournament.objects.get(pk=key)
+                #tourn = Tournament.objects.get(pk=key)
                 #print ('start check sd', score_dict)
                 score = manual_score.Score(score_dict, t)
                 round = t.get_round()
    
                 if round != None and round > 0:
-                    score.update_scores()
-                t_status['status'] = tourn.started()
+                    score.update_scores() 
+                if t.started():
+                    t_status['status'] = 'Started - refresh to see picks'
+                else:
+                    t_status['status'] = 'Not Started'
+                #t_status['status'] = tourn.started()
                 print ('responding', t_status)
             return Response(json.dumps(t_status), 200)
         except Exception as e:

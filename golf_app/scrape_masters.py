@@ -131,7 +131,7 @@ class ScrapeScores(object):
                     print ('row execptino', e)
             
             cut_num = len([x for x in score_dict.values() if int(utils.formatRank(x['rank'])) <= 50 and x['rank'] not in self.tournament.not_playing_list()]) + 1 
-            cut_score = [x for x in score_dict.values() if int(utils.formatRank(x['rank'])) <= 50 and x['rank'] not in self.tournament.not_playing_list()]) + 1 
+            cut_score = [x for x in score_dict.values() if int(utils.formatRank(x['rank'])) <= 50 and x['rank'] not in self.tournament.not_playing_list()] + 1 
             self.tournament.cut_score = 'Cut Number ' + str(cut)
             self.tournament.save()
 
