@@ -46,7 +46,7 @@ if len(score['wd_list']) > 0:
         mail_field = mail_field + golfer + ", "
 
     for golfer, user in wd_picks.items():
-        mail_field = mail_field + "\r" + golfer, user
+        mail_field = mail_field + "\r" + golfer + ': ' + str(user)
 else:
     mail_field = "no wd's"
 
