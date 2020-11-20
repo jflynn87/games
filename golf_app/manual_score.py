@@ -237,7 +237,7 @@ class Score(object):
 
             except Exception as e:
                 print ('withdraw?', pick, e)
-                #pick.score  = cut_num
+                pick.score  = cut_num
                 #pick.save()
                 Picks.objects.filter(playerName__tournament=self.tournament, playerName=pick.playerName).update(score=cut_num - pick.playerName.handicap())
                 #sd, sd_created = ScoreDetails.objects.get_or_create(user=pick.user, pick=pick)
@@ -245,12 +245,14 @@ class Score(object):
                 sd.gross_score = pick.score
                 sd.today_score = "WD"
                 sd.thru = "WD"
+                sd.toPar = "WD"
                 #sd.save()   comment for bulk update
                 ScoreDetails.objects.filter(pick__playerName__tournament=self.tournament, pick__playerName=pick.playerName).update(
                                             score=cut_num - pick.playerName.handicap(),
                                             gross_score=sd.gross_score,
                                             today_score=sd.today_score,
-                                            thru=sd.thru
+                                            thru=sd.thru,
+                                            toPar=sd.toPar
                                             )
             
             if pick.is_winner():

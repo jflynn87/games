@@ -245,8 +245,8 @@ class Tournament(models.Model):
             c_score =  (self.cut_score.split(' ')[len(self.cut_score.split(' '))-1])
 
             if c_score in [None, 'info']:
-                return len([x for x in score_dict.values() if x['rank'] not in self.not_playing_list()]) + 1 
-
+                #return len([x for x in score_dict.values() if x['rank'] not in self.not_playing_list()]) + 1 
+                return 66
             if c_score == 'E':
                 c_score = 0
             else:
