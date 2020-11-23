@@ -35,8 +35,41 @@ $(document).ready(function() {
       console.log(json);
     }
   })
+ 
+
 })
   
+$(document).on("click", "#download", function() {
+  console.log('clicked download')
+  $.ajax({
+    type: "GET",
+    url: "/golf_app/get_field_csv/",
+    dataType: 'json',
+    data: {'tournament' : $('#tournament_key').text()},
+    success: function (json) {
+          data = $.parseJSON(json)
+          let csv = "data:text/csv;charset=utf-8," 
+          csv += 'Golfer' + ',' + 'currentWGR' + ',' + 'sow_WGR' + 
+          ',' + 'soy_WGR' + ',' + 'prior year finish' + ',' + 'handicap' + '\n'
+          $.each(data, function(i) {
+            console.log(data[i]['fields'])
+          csv += data[i]['fields']['playerName'] + ',' + data[i]['fields']['currentWGR']  + ',' + data[i]['fields']['sow_WGR'] + 
+          ',' + data[i]['fields']['soy_WGR'] + ',' + $('#prior' + data[i]['fields']['playerID']).text().replace('prior: ', '').trim() + ',' + data[i]['fields']['handi']
+          csv += '\n'
+          })
+          var file = encodeURI(csv)
+          window.open(file)
+          
+
+        },
+        failure: function(json) {
+          console.log('fail');
+          console.log(json);
+        }
+
+      })
+      
+})
 
 
 

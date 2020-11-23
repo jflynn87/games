@@ -80,7 +80,7 @@ class DashboardView(ListView):
                 except ObjectDoesNotExist:
                     wk_total_dist = 0
                     wk_long_run = 0
-                print ('data: ', start_week, compare_week, wk_total_dist, weekly_total)
+                #print ('data: ', start_week, compare_week, wk_total_dist, weekly_total)
                 if wk_total_dist > weekly_total:
                     weekly_total = wk_total_dist
                 if wk_long_run > long_run:

@@ -711,3 +711,18 @@ class CBSScores(APIView):
         except Exception as e:
             print ('exception', e)
             return Response(json.dumps({'error': e}), 500)
+
+
+class GetFieldCSV(APIView):
+
+    def get(self, num):
+        print ('get field csv', self.request.GET)
+        try:
+            t = Tournament.objects.get(pk=self.request.GET.get('tournament'))
+            data = serializers.serialize('json', Field.objects.filter(tournament=t))
+            return Response(data, 200)
+            # return Response(json.dumps(data), 200)
+        except Exception as e:
+            print ('exception', e)
+            return Response(json.dumps({e}), 500)
+

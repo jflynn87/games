@@ -287,7 +287,7 @@ class Tournament(models.Model):
         elif len([x for x in score_dict.values() if x['r4'] == '--' and x['rank'] not in self.not_playing_list()]) > 0:
             return 4
         else:
-            return 0
+            return 4
 
 
     def optimal_picks(self):

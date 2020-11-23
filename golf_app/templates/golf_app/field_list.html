@@ -35,10 +35,12 @@
           <p>or click for random picks  <input type="submit" class="btn btn-primary" value="Random"> </p>
         </form>
         {%else%}
-        <p>Tournament Started - too late to make picks</p>
-
+        <p> <span style="text-align:left;">Tournament Started - too late to make picks</span>
+        <span style="float: right;  ">
+        <a href="#" id="download">
+        <i class="fas fa-file-download" title="Download CSV" data-toggle="tooltip"> Download Data</i></a></span></p>
         {%endif%}
-
+        
         {% if error_message %}
           <div class="alert alert-danger">
           <h2>{{error_message}}</h2>
@@ -54,13 +56,11 @@
              {%endif%}
           </th> 
           <th>Name</th>
-          <!-- <th>OWGR / <span>  <a href="#" data-toggle="tooltip" title="Only available for golfers who were picked">Prior Result <i class="fa fa-info-circle"></i></a> </span> -->
           <th>OWGR / Prior Result</th> 
-          
           </th>
         {% for player in group.list%}
         <tbody>
-            <tr>
+            <tr id='player{{player.playerID}}'>
               <td hidden id='playerID'>{{player.playerID}}</td>
               <td></td>
               {%if player.withdrawn%}
@@ -90,8 +90,8 @@
               <td class="small"> <p>cur: {{player.currentWGR}} </p>
                    <p> prior: {{player.sow_WGR}} </p>
                    <p> soy: {{player.soy_WGR}} </p>
-                   <p> prior: {{player.prior_year_finish}}</p>
-                   <p> <a href="#" data-toggle="tooltip" title="Deducted from score"><i class="fa fa-info-circle"></i> handicap: {{player.handicap}} </i> </p>
+                   <p id='prior{{player.playerID}}'> prior: {{player.prior_year_finish}}</p>
+                   <p> <a href="#" data-toggle="tooltip" title="Deducted from score"><i class="fa fa-info-circle"></i> handicap: {{player.handicap}} </a> </p>
               </td>
               {%endif%} 
             </tr>
