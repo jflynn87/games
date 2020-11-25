@@ -41,80 +41,76 @@ $(document).ready(function() {
   
 $(document).on("click", "#download", function() {
   console.log('clicked download')
-  $.ajax({
-    type: "GET",
-    url: "/golf_app/get_field_csv/",
-    dataType: 'json',
-    data: {'tournament' : $('#tournament_key').text()},
-    success: function (json) {
-          data = $.parseJSON(json)
-          let csv = "data:text/csv;charset=utf-8," 
-          csv += 'Golfer' + ',' + 'currentWGR' + ',' + 'sow_WGR' + 
-          ',' + 'soy_WGR' + ',' + 'prior year finish' + ',' + 'handicap' + '\n'
-          $.each(data, function(i) {
-            console.log(data[i]['fields'])
-          csv += data[i]['fields']['playerName'] + ',' + data[i]['fields']['currentWGR']  + ',' + data[i]['fields']['sow_WGR'] + 
-          ',' + data[i]['fields']['soy_WGR'] + ',' + $('#prior' + data[i]['fields']['playerID']).text().replace('prior: ', '').trim() + ',' + data[i]['fields']['handi']
-          csv += '\n'
-          })
-          var file = encodeURI(csv)
-          window.open(file)
           
+          let csv = "data:text/csv;charset=utf-8,sep=|" + '\n'
 
-        },
-        failure: function(json) {
-          console.log('fail');
-          console.log(json);
-        }
+          
+          
+          csv +=  'Golfer' + '|' + 'Group Number' + '|' + 'currentWGR' + '|' + 'sow_WGR' + 
+          '|' + 'soy_WGR' + '|' + 'prior year finish' + '|' + 'handicap' + '|' + 'Google Search' + '\n'
+         
+          $.ajax({
+            type: "GET",
+            url: "/golf_app/get_field_csv/",
+            dataType: 'json',
+            data: {'tournament' : $('#tournament_key').text()},
+            success: function (json) {
+              golfers = $.parseJSON(json)
 
-      })
+
+              fetch("/golf_app/get_group_num/",
+                  {method: "POST",
+                  headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': $.cookie('csrftoken')
+                          },
+                   body: JSON.stringify({'tournament_key': $('#tournament_key').text()})
+                  })
+              .then((response) =>  response.json())
+              .then((responseJSON) => {
+              //groups = response.json()
+                groups = $.parseJSON(responseJSON)[0]
+
+
+                $.each(golfers, function(i) {
+                if (!golfers[i]['fields']['withdrawn']){
+                  group_pk = golfers[i]['fields']['group']
+                  group_num = groups[group_pk]  
+
+                  //csv += golfers[i]['fields']['playerName'].replace(',', '') + ',' +
+                  csv += '=HYPERLINK("https://www.google.com/search?q=' + golfers[i]['fields']['playerName'] + '","' +  golfers[i]['fields']['playerName'] + '")' + '|' +
+                  group_num + '|' +
+                  golfers[i]['fields']['currentWGR']  + '|' +
+                  golfers[i]['fields']['sow_WGR'] + '|' +
+                  golfers[i]['fields']['soy_WGR'] + '|' +
+                  $('#prior' + golfers[i]['fields']['playerID']).text().replace('prior: ', '').trim() + '|' + 
+                  golfers[i]['fields']['handi'] + '|' + ' ' 
+                  //'=HYPERLINK("https://www.google.com/search?q=' + golfers[i]['fields']['playerName'].replace(',', '') + '","' + golfers[i]['fields']['playerName'].replace(',', '') + '")'
+                  //'=HYPERLINK("https://www.google.com/search?q=' + golfers[i]['fields']['playerName'].replace(',', '') + '")' 
+                    csv += '\n'
+          
+            }})
       
-})
-
-
-
-
-/*
-  $.ajax({
-    type: "GET",
-    url: "/golf_app/ajax/get_picks/",
-    dataType: 'json',
-    //context: document.body
-    success: function (json) {
-      var i;
-      var data = $.parseJSON(json)
-      for (i = 0; i < data.length; ++i) {
-          $('#' + data[i]).attr('checked', 'checked');
-        }
-        $('#pulse').hide()
-        $('#main').show()
-        get_info(info)
-
-    },
-    failure: function(json) {
-      console.log('fail');
-      console.log(json);
-    }
-  })
-})
-*/
-//create global variable of the tournament groups and required picks
-/*$('#tournament_key').ready(function() {
-$.ajax({
-  type: "GET",
-  url: "/golf_app/get_info/",
-  dataType: 'json',
-  data: {'tournament' : $('#tournament_key').text()},
-  success: function (json) {
-    info = $.parseJSON((json))
-  },
-  failure: function(json) {
-    console.log('get info fail');
-    console.log(json);
-  }
-})
-})
-*/
+          var encodedUri = encodeURI(csv);
+          var link = document.createElement("a");
+          link.setAttribute("href", encodedUri);
+          link.setAttribute("download", $('#t-name').text() + " field.csv");
+          document.body.appendChild(link); // Required for FF
+          link.click();
+ 
+        })
+       
+      },
+      failure: function(json) {
+        console.log('get csv data fail');
+        console.log(json);
+        alert('sorry, download failed.  please tell John')
+      }
+    })
+      
+      })  
+      
 
 $(function () {
   $('[data-toggle="tooltip"]').tooltip({trigger:"hover",

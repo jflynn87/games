@@ -27,11 +27,20 @@ import urllib
 import json
 from golf_app import views, manual_score, populateField, withdraw, scrape_scores_picks, utils, scrape_cbs_golf, scrape_masters
 from unidecode import unidecode
+from django.core import serializers
 
 start = datetime.now()
 
 t = Tournament.objects.get(current=True)
 
+data = serializers.serialize('json', Group.objects.filter(tournament=t))
+print (data)
+print ('ccccccccc')
+groups = json.loads(data)
+for g in groups:
+    if g.get('pk') == 1183:
+        print (g['fields']['number'])
+exit()
 #web = scrape_masters.ScrapeScores(t).scrape()
 
 g5 = Field.objects.filter(tournament=t, group__number=6).exclude(withdrawn=True)

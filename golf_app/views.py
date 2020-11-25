@@ -726,3 +726,36 @@ class GetFieldCSV(APIView):
             print ('exception', e)
             return Response(json.dumps({e}), 500)
 
+
+class GetGroupNum(APIView):
+
+    def get(self, request):
+        print ('get group num', self.request.GET.get('group_pk'))
+        try:
+            #t = Tournament.objects.get(pk=self.request.GET.get('tournament'))
+            #data = serializers.serialize('json', Field.objects.filter(tournament=t))
+            group = Group.objects.get(pk=self.request.GET.get('group_pk'))
+
+            return Response(json.dumps({'group_num': group.number}), 200)
+            # return Response(json.dumps(data), 200)
+        except Exception as e:
+            print ('exception', e)
+            return Response(json.dumps({e}), 500)
+
+    def post(self, request):
+        print ('get group num', request.data)
+        try:
+            group_dict = {}
+            t = Tournament.objects.get(pk=request.data.get('tournament_key'))
+            #data = serializers.serialize('json', Group.objects.filter(tournament=t))
+            for g in Group.objects.filter(tournament=t):
+                group_dict[g.pk] = g.number
+
+
+            #return Response(json.dumps({'group_num': group.number}), 200)
+            print (group_dict)
+            return Response(json.dumps([group_dict]), 200)
+        except Exception as e:
+            print ('exception', e)
+            return Response(json.dumps({e}), 500)
+

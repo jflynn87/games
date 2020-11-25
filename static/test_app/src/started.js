@@ -25,7 +25,7 @@ const e = React.createElement;
             'X-CSRFToken': $.cookie('csrftoken')
           },
 
-          body  : JSON.stringify({'key': $('#tournament_key').text()})
+          body  : {'key': $('#tournament_key').text()}
         })
         .then(response => {
           console.log(response)
