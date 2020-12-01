@@ -1,10 +1,12 @@
 let filler = /[\s\.\']/g;
 $( document ).ready(function() { 
-    refresh()
+    var first_time = true
+    refresh(first_time)
     setInterval (refresh, 120000) 
 })
-function refresh() {
-    console.log('js linked') 
+function refresh(first_time) {
+    console.log('js linked', first_time) 
+    
     $('#status').html('<p class=status> Updating Scores ... </p>')
     
     $.ajax({
@@ -23,7 +25,7 @@ function refresh() {
                 $('#loading').hide()
             }
             else {
-                build_page(json)
+                build_page(json, first_time)
                 get_picks()
             }}
         })}
@@ -58,7 +60,7 @@ function get_picks() {
         })
 }
 
-function build_page(json) {
+function build_page(json,first_time) {
 
 picks_data = $.parseJSON(json)['player-data']
 games = $.parseJSON(json)['games']
@@ -70,16 +72,17 @@ games = $.parseJSON(json)['games']
 //add table
 $('#picks-sect').empty()
 
+//if (first_time) {
 $('#picks-sect').append('<table id=picks-tbl class="table table-striped"> </table>')
 
 //headers
 $('#picks-tbl').append('<thead style="background-color:lightblue">' + '<th> Week' + $("#week").text() + '</th> </thead>')
-$.each(picks_data, function(player, data) {$('#picks-tbl thead tr').append('<th>' + player + '</th>') }  )
+$.each(picks_data, function(player, data) {$('#picks-tbl thead tr').append('<th id=name' + player +'>' + player + '</th>') }  )
   
-$('#picks-tbl').append('<tbody>  <tr id="rank"> <th>' + 'Rank' + '</th> </tr>' + 
+$('#picks-tbl').append('<tbody> <tr id="rank"> <th>' + 'Rank' + '</th> </tr>' + 
                        '<tr id="score"> <th>' + 'Score' + '</th> </tr>' + 
                        '<tr id="proj"> <th>' + 'Projected' + '</th> </tr>' + 
-                       '<tr id="proj_rank"> <th>' + 'Projected Rank' + '</th> </tr> </tbody>'  
+                       '<tr id="proj_rank"> <th>' + 'Projected Rank' + '</th> </tr> </tbody> '  
 )
 
 $.each(picks_data, function(player, data) {
@@ -94,7 +97,11 @@ $.each(picks_data, function(player, data) {
 for (var i= 16; i > 16 - parseInt($('#game_cnt').text()); i -- ) {
     $('#picks-tbl').append('<tr id=pick-' + i + '> <td>' + i + '</td> </tr>')
     $.each(picks_data, function(player, data) {
-        $('#pick-' + i).append('<td id=pick-' + player.replace(filler, '') + i +' class=status> updating... </td>')
+        console.log('ft', first_time)
+        //if (first_time) {
+        $('#pick-' + i).append('<td id=pick-' + player.replace(filler, '') + i +' class=status> updating... </td>') 
+        //}
+        //else {$('#pick-' + i).append('<td id=pick-' + player.replace(filler, '') + i +'>' + $('#pick-' +  player.replace(filler, '') + i).text() + '</td>')}
     })}
    
 
@@ -109,7 +116,7 @@ $.each(picks_data, function(player, data) {
 $('#picks-tbl').append('<th> Week' + $("#week").text() + '</th> </thead>')
 $.each(picks_data, function(player, data) {
     $('#picks-tbl').append('<th>' + player + '</th>') }  )
-
+//}
 
 $('#loading').hide()
 $('#score-tbl').empty()

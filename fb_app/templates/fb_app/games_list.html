@@ -29,7 +29,8 @@
 {%endif%}
 
 
-<h3 style="background-color:lightblue">Week:  {{week.week}}  {%if week.started and not week.late_picks%} Week started - no changes {%endif%}</h3>
+<h3 style="background-color:lightblue"> Week: <select id='week-list'> <option value="{{week.week}}" selected> {{week.week}}</option> </select> 
+    {%if week.started and not week.late_picks%} Week started - no changes {%endif%}</h3>
 <p class='status' id='status'>updating spreads.....</p>
 <div class="updated-status">
   <p>Lowest points win, losing picks get that number of points</p>

@@ -51,13 +51,20 @@ for row in json.loads(run_dict):
         cals = row['calories']
 
 
-        Run.objects.get_or_create(date=datetime.strptime(date, '%Y-%m-%d'), 
-                    dist = dist, 
-                    time = t,
-                    cals = cals,
-                    shoes = Shoes.objects.get(main_shoe=True),
-                    location = 1
-                     )
+        if Run.objects.filter(date=datetime.strptime(date, '%Y-%m-%d'), dist = dist).exists():
+            pass
+        else:
+            run = Run()
+
+            run.date=datetime.strptime(date, '%Y-%m-%d')
+            run.dist = dist 
+            run.time = t
+            run.cals = cals
+            
+            run.shoes = Shoes.objects.get(main_shoe=True)
+            run.location = 1
+
+            run.save()
 
 
 

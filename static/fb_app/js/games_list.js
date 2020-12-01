@@ -12,7 +12,7 @@ function get_team_name(team_id) {
 };
 
 function get_game_id(team_name) {
-  console.log(team_name)
+  //console.log(team_name)
   var game_list = {}
   games = document.getElementById('game_tbl')
 
@@ -21,7 +21,7 @@ function get_game_id(team_name) {
       game_list[$.trim($('#dog'+j).text().split("(")[0].toUpperCase())] = 'game'+j
 
         }
-        console.log(game_list)
+        //console.log(game_list)
   return game_list[team_name]
 };
 
@@ -60,7 +60,7 @@ function validate() {
   var pick_list = []
   for (p=1; p <= picks.rows.length; p++) {
     if (document.getElementById('pick' + (17-p)).children[0].value == '') {
-        console.log('pick' + (17-p))
+        //console.log('pick' + (17-p))
         var missing_picks = true
         break}
       }
@@ -70,26 +70,42 @@ function validate() {
 }
 
 };
-
-$('#week4').on('change', function () {
-  console.log('week change')
-  $.ajax({
-    type: "GET",
-    url: "/golf_app/ajax/ajax_get_games/",
-    dataType: 'json',
-    //context: document.body
-    success: function (json) {
-      var i;
-      for (i = 0; i < json.length; ++i) {
-          $('#' + json[i]).attr('checked', 'checked');
-        }
-    },
-    failure: function(json) {
-      console.log('fail');
-      console.log(json);
-    }
+$(document).on('change', $("select[id^='week-list']"), function () {
+  console.log('caught click', $('#week-list').val())
+  fetch("/fb_app/get_games/",
+  {method: "POST",
+  headers: {
+    'Accept': 'application/json',
+    'Content-Type': 'application/json',
+    'X-CSRFToken': $.cookie('csrftoken')
+          },
+   body: JSON.stringify({'week_key': $('#week-list').val()})
   })
+.then((response) =>  response.json())
+.then((responseJSON) => {
+//groups = response.json()
+games = $.parseJSON(responseJSON)
+console.log(games)
+})
 
+})
+
+$(document).ready(function () {
+  console.log('get weeks') 
+  fetch("/fb_app/get_weeks/",
+  {method: "GET",
+  })
+.then((response) =>  response.json())
+.then((responseJSON) => {
+      weeks = $.parseJSON(responseJSON)
+      console.log(weeks)
+      $.each(weeks, function(i) {
+        console.log('week: ', weeks[i]['fields']['week'])
+        if (!weeks[i]['fields']['current']) {
+        $('#week-list').append('<option value=' + weeks[i]['fields']['week'] +'>' + weeks[i]['fields']['week'] + '</option>' ) }
+
+      })
+})
 })
 
 $(document).ready(function () {

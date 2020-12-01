@@ -21,6 +21,7 @@ from collections import OrderedDict
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from fb_app import scrape_cbs
+from django.core import serializers
 
 #from fb_app import calc_score
 
@@ -939,3 +940,67 @@ class GetPicks(APIView):
             print ('get picks api issue: ', e)
             return Response(json.dumps({'msg': e}), 200)
 
+class UpdateGamesList(APIView):
+    
+    def get(self, num):
+        try:
+            print ('get picks', self.request.GET)
+            score_dict = {}
+            league = League.objects.get(league=self.request.GET.get('league'))
+            week = Week.objects.get(week=self.request.GET.get('week'), season_model__current=True)
+            for player in Player.objects.filter(league=league, active=True):
+                score_dict[player.name.username] = {}
+        
+
+            for pick in Picks.objects.filter(player__league=league, week=week, player__active=True).order_by('player__name__username').order_by('pick_num'):
+                if pick.is_loser():
+                    status = 'loser' 
+                else:
+                    status = 'reg'
+                try:
+                    score_dict[pick.player.name.username]['picks'].update({pick.pick_num: {'team': pick.team.nfl_abbr, 'status': status}})
+                except Exception as e:
+                    score_dict[pick.player.name.username]['picks'] = {pick.pick_num: {'team': pick.team.nfl_abbr, 'status': status}}
+
+            return Response(json.dumps(score_dict), 200)
+
+        except Exception as e:
+            print ('get picks api issue: ', e)
+            return Response(json.dumps({'msg': e}), 200)
+
+
+class GetWeeks(APIView):
+    
+    def get(self, request):
+        try:
+            print ('get weeks', request.GET)
+
+            c_week = Week.objects.get(current=True)
+
+            data = serializers.serialize('json', Week.objects.filter(week__gte=c_week.week, season=c_week.season))
+            print ('getWeeks', data)
+            return Response(data, 200)
+            #return Response(json.dumps(score_dict), 200)
+
+        except Exception as e:
+            print ('get weeks api issue: ', e)
+            return Response(json.dumps({'msg': e}), 200)
+
+
+
+class GetGames(APIView):
+    
+    def post(self, request):
+        try:
+            print ('get games', request.data)
+
+            week = Week.objects.get(week=request.data['week_key'], season_model__current=True)
+
+            data = serializers.serialize('json', Games.objects.filter(week=week))
+            print ('getWeeks', data)
+            return Response(data, 200)
+            #return Response(json.dumps(score_dict), 200)
+
+        except Exception as e:
+            print ('get games api issue: ', e)
+            return Response(json.dumps({'msg': e}), 200)

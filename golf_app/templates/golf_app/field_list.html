@@ -23,7 +23,7 @@
 
 {% regroup field_list by group as ordered_field_list %}
 
-    <div id='main'>
+    <div id='main' style='display:none'>
         
         <h4 id="t-name">{{tournament.name}}</h4>
 
@@ -34,6 +34,10 @@
           <input type="text" name="random" value="random" hidden>
           <p>or click for random picks  <input type="submit" class="btn btn-primary" value="Random"> </p>
         </form>
+        <span style="float: right;  ">
+          <a href="#" id="download">
+          <i class="fas fa-file-download" title="Download CSV" data-toggle="tooltip"> Download Data</i></a></span>
+  
         {%else%}
         <p> <span style="text-align:left;">Tournament Started - too late to make picks</span>
         <span style="float: right;  ">

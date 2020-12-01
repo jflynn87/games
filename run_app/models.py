@@ -63,7 +63,7 @@ class Schedule(models.Model):
     week = models.CharField(max_length=5)
     date = models.DateField()
     dist = models.PositiveIntegerField(null=True)
-    type = models.CharField(max_length=100)
+    sched_type = models.CharField(max_length=100)
     run = models.ForeignKey(Run, on_delete=models.CASCADE, null=True, related_name='schedule')
 
 

@@ -42,12 +42,12 @@ $(document).ready(function() {
 $(document).on("click", "#download", function() {
   console.log('clicked download')
           
-          let csv = "data:text/csv;charset=utf-8,sep=|" + '\n'
+          let csv = "data:text/csv;charset=utf-8," 
 
           
           
-          csv +=  'Golfer' + '|' + 'Group Number' + '|' + 'currentWGR' + '|' + 'sow_WGR' + 
-          '|' + 'soy_WGR' + '|' + 'prior year finish' + '|' + 'handicap' + '|' + 'Google Search' + '\n'
+          csv +=  'Golfer' + ',' + 'Group Number' + ',' + 'currentWGR' + ',' + 'sow_WGR' + 
+          ',' + 'soy_WGR' + ',' + 'prior year finish' + ',' + 'handicap' + ',' + 'Google Search' + '\n'
          
           $.ajax({
             type: "GET",
@@ -78,17 +78,15 @@ $(document).on("click", "#download", function() {
                   group_pk = golfers[i]['fields']['group']
                   group_num = groups[group_pk]  
 
-                  //csv += golfers[i]['fields']['playerName'].replace(',', '') + ',' +
-                  csv += '=HYPERLINK("https://www.google.com/search?q=' + golfers[i]['fields']['playerName'] + '","' +  golfers[i]['fields']['playerName'] + '")' + '|' +
-                  group_num + '|' +
-                  golfers[i]['fields']['currentWGR']  + '|' +
-                  golfers[i]['fields']['sow_WGR'] + '|' +
-                  golfers[i]['fields']['soy_WGR'] + '|' +
-                  $('#prior' + golfers[i]['fields']['playerID']).text().replace('prior: ', '').trim() + '|' + 
-                  golfers[i]['fields']['handi'] + '|' + ' ' 
-                  //'=HYPERLINK("https://www.google.com/search?q=' + golfers[i]['fields']['playerName'].replace(',', '') + '","' + golfers[i]['fields']['playerName'].replace(',', '') + '")'
-                  //'=HYPERLINK("https://www.google.com/search?q=' + golfers[i]['fields']['playerName'].replace(',', '') + '")' 
-                    csv += '\n'
+                  csv += golfers[i]['fields']['playerName'].replace(',', '') + ',' +
+                  group_num + ',' +
+                  golfers[i]['fields']['currentWGR']  + ',' +
+                  golfers[i]['fields']['sow_WGR'] + ',' +
+                  golfers[i]['fields']['soy_WGR'] + ',' +
+                  $('#prior' + golfers[i]['fields']['playerID']).text().replace('prior: ', '').trim() + ',' + 
+                  golfers[i]['fields']['handi'] + ',' +  
+                   '=HYPERLINK("https://www.google.com/search?q=' + golfers[i]['fields']['playerName'].replace('  ', '%20').replace(',', '') + '")' 
+                  csv += '\n'
           
             }})
       

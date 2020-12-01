@@ -169,14 +169,15 @@ class RunDetailView(DetailView):
     pass
 
 class RunUpdateView(UpdateView):
-    fields = ('date','dist', 'cals', 'time', 'location', 'shoes')
+    #fields = ('date','dist', 'cals', 'time', 'location', 'shoes')
     model = Run
-    success_url = reverse_lazy("run_app:shoe_list")
+    success_url = reverse_lazy("run_app:run_list")
+    form_class=CreateRunForm
 
 
 class RunDeleteView(DeleteView):
     model= Run
-    success_url = reverse_lazy("run_app:dashboard")
+    success_url = reverse_lazy("run_app:run_list")
 
 class ScheduleView(DetailView):
     model=Plan
@@ -273,16 +274,26 @@ class getRunKeeperData(APIView):
                     dist = round(data['distance']/1000,2)
                     time = timedelta(seconds=data['time'])
                     cals = data['calories']
-                    shoes = Shoes.objects.get(main_shoe=True)
-                    location = 1
+                    #shoe = Shoes.objects.get(main_shoe=True)
+                    #location = 1
 
-                    Run.objects.get_or_create(date=datetime.datetime.strptime(date, '%Y-%m-%d'), 
-                    dist = dist, 
-                    time = time,
-                    cals = cals,
-                    shoes = Shoes.objects.get(main_shoe=True),
-                    location = 1
-                     )
+                    print ('shoes', type(Shoes.objects.get(main_shoe=True)))
+
+                    if Run.objects.filter(date=datetime.datetime.strptime(date, '%Y-%m-%d'), dist = dist).exists():
+                        pass
+                    else:
+                        run = Run()
+
+                        run.date=datetime.datetime.strptime(date, '%Y-%m-%d')
+                        run.dist = dist 
+                        run.time = time
+                        run.cals = cals
+                        
+                        run.shoes = Shoes.objects.get(main_shoe=True)
+                        run.location = 1
+
+                        run.save()
+                     
                 else:
                     print ('not a run: ', data)
             
