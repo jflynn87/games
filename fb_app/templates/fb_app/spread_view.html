@@ -3,8 +3,15 @@
 {%load tz%}
 {%block body_block%}
 
+<script src="{% static "fb_app/js/get_spreads.js"%}" type="text/javascript" ></script>
 
   <div class="container">
+
+    <p id='week_key' hidden>{{week.pk}}</p>
+    <p class='status' id='status'>updating spreads.....</p>
+  <div class="updated-status">
+    <p>Home team in CAPS</p>
+</div>
 
 
     <h1>Week {{week.week}} Games</h1>

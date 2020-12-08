@@ -96,7 +96,7 @@ $("#week-list").change(function () {
 
 $(document).ready(function () {
   console.log('get weeks') 
-  get_spreads()
+  //get_spreads()
     
   fetch("/fb_app/get_weeks/",
   {method: "GET",
@@ -117,18 +117,11 @@ $(document).ready(function () {
 })
 })
 
-function get_spreads() {
-//$(document).ready(function () {
+/* function get_spreads() {
   console.log('getting spreads')
   $('#status').text('updating spreads ....').attr('class', 'status')
   fetch("/fb_app/get_spreads/" + $('#week_key').text(),
   {method: "GET",
-//  headers: {
-//    'Accept': 'application/json',
-//    'Content-Type': 'application/json',
-//    'X-CSRFToken': $.cookie('csrftoken')
-//          },
-//   body: JSON.stringify({'week_key': $('#week-list').val()})
   })
 .then((response) =>  response.json())
 .then((responseJSON) => {
@@ -160,7 +153,7 @@ function get_spreads() {
       $('#status').text('spreads updated: ' + now).attr('class', 'updated-status')
     })
   }
-
+ */
 $(window).resize(function() {
   console.log($(window).width())
   $('#picksect').attr('class', 'row')

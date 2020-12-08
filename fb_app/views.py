@@ -666,19 +666,22 @@ class SpreadView(TemplateView):
             return Week.objects.get(pk=self.kwargs.get('pk'))
         else:
             print ('getting current week games')
-            return Week.objects.get(current=True)
+            c_week = Week.objects.get(current=True)
+            if c_week.started():
+                return Week.objects.get(season_model__current=True, week=c_week.week+1)
+            else:
+                return Week.objects.get(current=True)
 
     def get_context_data(self,**kwargs):
         context = super(SpreadView, self).get_context_data(**kwargs)
         context.update({
         'week': self.get_week(),
         'games': Games.objects.filter(week=self.get_week())
-
         })
         return context
 
     def get_queryset(self):
-        return Games.objects.filter(week=self.get_week())
+        return Games.objects.filter(week=self.get_week()).order_by('game_time')
 
 
 
