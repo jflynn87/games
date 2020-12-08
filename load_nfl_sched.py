@@ -62,6 +62,9 @@ def load_sched(year):
                         away = Teams.objects.get(long_name=(teams[0].get_attribute('innerHTML').lstrip().rstrip()))
                         home = Teams.objects.get(long_name=(teams[1].get_attribute('innerHTML').lstrip().rstrip()))
                         game_time = game_info.find_element_by_css_selector('p.nfl-c-matchup-strip__date-info')
+                        print ('--------------')
+                        print (game_time.text)
+                        print ('--------------')
                         #tz = game_info.find_element_by_class_name('nfl-c-matchup-strip__date=timezone')
                         print ('GI', game_info.text.split(' ')[1][3:])
                         print ('GI', game_info.text.split(' ')[2])
@@ -84,10 +87,10 @@ def load_sched(year):
                             jst = pytz.timezone('Asia/Tokyo')
                             orig_time = jst.localize(datetime.strptime(web_game_date + ' ' + game_time, '%B %d, %Y %H:%M %p'))
                             web_time = orig_time.astimezone(pytz.utc)
-                        elif tz == 'UST':
-                            ust = pytz.timezone('America/New_York')
-                            orig_time = ust.localize(datetime.strptime(web_game_date + ' ' + game_time, '%B %d, %Y %H:%M %p'))
-                            web_time = orig_time.astimezone(pytz.utc)
+                        #elif tz == 'UST':
+                        #    ust = pytz.timezone('America/New_York')
+                        #    orig_time = ust.localize(datetime.strptime(web_game_date + ' ' + game_time, '%B %d, %Y %H:%M %p'))
+                        #    web_time = orig_time.astimezone(pytz.utc)
                         else:
                             print ('in time else')
                             web_time = datetime.strptime(web_game_date + ' ' + game_time, '%B %d, %Y %H:%M %p')
