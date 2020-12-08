@@ -18,7 +18,7 @@
     <br>
     <br>
     <h3>Football Game Options</h3>
-    <a href="{% url 'fb_app:games_list' %}"> <button class="btn btn-primary">Make Picks</button></a>
+    <a href="{% url 'fb_app:games_list' pk=fb_week.pk %}"> <button class="btn btn-primary">Make Picks</button></a>
     <br>
     <br>
     <a href="{% url 'fb_app:scores_list' %}"> <button class="btn btn-primary">Current Week Scores</button></a>

@@ -29,8 +29,17 @@ import pytz
 from django.core import serializers
 
 
+est = pytz.timezone('US/Eastern')
 
-#week = Week.objects.get(current=True)
+
+week = Week.objects.get(current=True)
+for game in Games.objects.filter(week=week).order_by('game_time'):
+    print (game, game.game_time, game.game_time.tzinfo)
+    #print (game, game.game_time.astimezone(est))
+exit()
+
+
+
 start = datetime.now()
 l = League.objects.get(league="Golfers")
 week = Week.objects.get(current=True)

@@ -1,6 +1,7 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.views.generic import View, TemplateView, ListView, DetailView, CreateView, UpdateView, FormView
 from golf_app.models import Tournament
+from fb_app.models import Week
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponseRedirect, HttpResponse
 from django.contrib.auth import authenticate, login, logout
@@ -43,9 +44,10 @@ class SignUp(CreateView):
 
 
 def index(request):
-    print ('first here')
+
     if request.method == "GET":
         return render(request, 'index.html', {
+            'fb_week': Week.objects.get(current=True),
                 })
 
         #return render(request, 'index.html', {

@@ -52,7 +52,7 @@ class Week(models.Model):
     #     super(Week, self).save()
 
     def started(self):
-        print ('week started check')
+        print ('week started check', self.current)
         if self.set_started:
             print ('manually set started')
             return True
@@ -61,8 +61,11 @@ class Week(models.Model):
             return False
         #if Games.objects.filter(week=self, qtr__isnull=False).exists():
         if Games.objects.filter(week=self, qtr__isnull=False).exclude(qtr__in=['pregame', 'postponed']).exists():
-            print ('true')
+            print ('week started based on db scores')
             return True
+        elif not self.current:
+            print ('future week, not started')
+            return False
         else:
             print ('checking if stated on cbs scores')
             web = scrape_cbs.ScrapeCBS(self).get_data()
@@ -76,7 +79,9 @@ class Week(models.Model):
                     return True
                 #else:
                 #     return False
+            print ('week not started after scrape')
             return False
+        print ('week not started after scrape2 - shouldnt be here?')
         return False
         
 

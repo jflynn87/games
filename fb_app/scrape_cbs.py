@@ -21,7 +21,6 @@ class ScrapeCBS(object):
 
     def __init__(self, week):
         self.week = week
-        #self.teams
 
 
     def get_data(self):
@@ -34,7 +33,7 @@ class ScrapeCBS(object):
             week = Week.objects.get(current=True)
 
             html = urllib.request.urlopen("https://www.cbssports.com/nfl/scoreboard/all/2020/regular/" + str(week.week) + "/")
-            #html = urllib.request.urlopen("https://www.cbssports.com/nfl/scoreboard/")
+
             soup = BeautifulSoup(html, 'html.parser')
 
             games = soup.find_all('div', {'class': 'single-score-card'})
@@ -84,7 +83,7 @@ class ScrapeCBS(object):
                         'away_score': away_score,
                         'qtr': qtr
                     }
-            print ('updated data', game_dict)        
+            #print ('updated data', game_dict)        
             return {'games': game_dict}
         except Exception as e:
             print ('issue scraping CBS', e)

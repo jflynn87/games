@@ -23,7 +23,7 @@ def load_sched(year):
     current_week = Week.objects.get(current=True)
     week_cnt = current_week.week + 1
     season = Season.objects.get(current=True)
-    while week_cnt < 14:
+    while week_cnt < 15:
             try:
                 week, created = Week.objects.get_or_create(season_model=season, week=week_cnt)
                 #week.season = season.season
@@ -41,6 +41,8 @@ def load_sched(year):
                 options = ChromeOptions()
                 options.add_argument("--headless")
                 options.add_argument("--disable-gpu")
+
+
                 driver = Chrome(options=options)
                     
                 driver.get(url)
@@ -79,12 +81,17 @@ def load_sched(year):
                         print ('game tiem', game_time)
 
                         if tz == 'JST':
-                            diff = '+09:00'
-                        elif tz == 'UST':
-                            diff = '+06:00'
+                            jst = pytz.timezone('Asia/Tokyo')
+                            orig_time = jst.localize(datetime.strptime(web_game_date + ' ' + game_time, '%B %d, %Y %H:%M %p'))
+                            web_time = orig_time.astimezone(pytz.utc)
+                        elif tz = 'UST':
+                            ust = pytz.timezone('America/New_York')
+                            orig_time = ust.localize(datetime.strptime(web_game_date + ' ' + game_time, '%B %d, %Y %H:%M %p'))
+                            web_time = orig_time.astimezone(pytz.utc)
                         else:
-                            diff = '+00:00'
-                        web_time = datetime.strptime(web_game_date + ' ' + game_time + ' ' + diff, '%B %d, %Y %H:%M %p %z')
+                            print ('in time else')
+                            web_time = datetime.strptime(web_game_date + ' ' + game_time, '%B %d, %Y %H:%M %p')
+                        
                         game.game_time = web_time
                         game.day = game_dow
 
