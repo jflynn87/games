@@ -80,8 +80,10 @@ def load_sched(year):
                         game.eid = str (season.season) + str(week) + str(home) + str(away)
                         game.away = away
                         game.home = home
-                        game_time = str(game_time.text.split(' ')[0] + ' ' + game_time.text.split(' ')[1][:2]) 
+                        game_time = game_time.text.split(' ')[0] + ' ' + game_time.text.split(' ')[1][:2] 
                         print ('game tiem', game_time)
+
+
 
                         if tz == 'JST':
                             jst = pytz.timezone('Asia/Tokyo')
