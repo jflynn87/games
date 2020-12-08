@@ -676,15 +676,9 @@ class SpreadView(TemplateView):
         context = super(SpreadView, self).get_context_data(**kwargs)
         context.update({
         'week': self.get_week(),
-        'games': Games.objects.filter(week=self.get_week())
+        'games': Games.objects.filter(week=self.get_week()).order_by('game_time')
         })
         return context
-
-    def get_queryset(self):
-        return Games.objects.filter(week=self.get_week()).order_by('game_time')
-
-
-
 
 
 class GetGames(APIView):
