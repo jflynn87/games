@@ -93,7 +93,9 @@ def load_sched(year):
                         #    web_time = orig_time.astimezone(pytz.utc)
                         else:
                             print ('in time else')
-                            web_time = datetime.strptime(web_game_date + ' ' + game_time, '%B %d, %Y %H:%M %p')
+                            utc = pytz.timezone('UTC')
+                            #web_time = datetime.strptime(web_game_date + ' ' + game_time, '%B %d, %Y %H:%M %p')
+                            web_time = utc.localize(datetime.strptime(web_game_date + ' ' + game_time, '%B %d, %Y %H:%M %p'))
                         
                         game.game_time = web_time
                         game.day = game_dow
