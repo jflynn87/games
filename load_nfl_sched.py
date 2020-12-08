@@ -84,7 +84,7 @@ def load_sched(year):
                             jst = pytz.timezone('Asia/Tokyo')
                             orig_time = jst.localize(datetime.strptime(web_game_date + ' ' + game_time, '%B %d, %Y %H:%M %p'))
                             web_time = orig_time.astimezone(pytz.utc)
-                        elif tz = 'UST':
+                        elif tz == 'UST':
                             ust = pytz.timezone('America/New_York')
                             orig_time = ust.localize(datetime.strptime(web_game_date + ' ' + game_time, '%B %d, %Y %H:%M %p'))
                             web_time = orig_time.astimezone(pytz.utc)
