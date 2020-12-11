@@ -28,11 +28,13 @@ class CreateRunForm(ModelForm):
         self.fields['date'].initial = date.today()
 
     def clean(self):
-        cd = super(CreateRunForm, self).clean()
-        try:
-            Run.objects.get(date=cd['date'])
-            raise forms.ValidationError('A run already exists for that date')
-        except ObjectDoesNotExist:
-            pass
-
-        return cd
+         cd = super(CreateRunForm, self).clean()
+         if not self.instance.pk:
+            try:
+                Run.objects.get(date=cd['date'], dist=cd['dist'])
+                raise forms.ValidationError('A run already exists for that date/distance')
+            except ObjectDoesNotExist:
+                pass
+            #except Exception as e:                
+            #    raise forms.ValidationError('unknown form error' + str(e))
+         return cd

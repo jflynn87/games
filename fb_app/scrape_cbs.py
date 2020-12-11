@@ -6,7 +6,7 @@
 
 import datetime
 #import urllib3
-import urllib
+import urllib.request
 import json
 #import scipy.stats as ss
 #from django.db.models import Q

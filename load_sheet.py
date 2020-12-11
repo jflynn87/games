@@ -21,7 +21,7 @@ def readSheet(file,numPlayers):
 
         #test this for a single digit week....This gets the week from the start of the shhet
         week = []
-
+        print (soup.findAll('t'))
         for data in soup.findAll('t')[0:1]:
         #for data in soup.findAll('t')[1]:
             week.append(data.text)
@@ -135,7 +135,7 @@ def readSheet(file,numPlayers):
                 #print (player, pick_list)
                 i += 1
 
-            picks_check = validate_picks.validate(pick_list)
+            picks_check = validate_picks.validate(pick_list, app_week)
             if not picks_check[0]:
                 print (str(player), picks_check[0], picks_check[1])
             else:
