@@ -585,7 +585,7 @@ class GetPicks(APIView):
     
     def get(self, num):
         try:
-            print ('get picks', self.request.GET)
+            #print ('get picks', self.request.GET)
             score_dict = {}
             league = League.objects.get(league=self.request.GET.get('league'))
             week = Week.objects.get(week=self.request.GET.get('week'), season_model__current=True)
@@ -647,7 +647,7 @@ class GetWeeks(APIView):
             c_week = Week.objects.get(current=True)
 
             data = serializers.serialize('json', Week.objects.filter(week__gte=c_week.week, season=c_week.season))
-            print ('getWeeks', data)
+            #print ('getWeeks', data)
             return Response(data, 200)
             #return Response(json.dumps(score_dict), 200)
 
@@ -681,8 +681,32 @@ class SpreadView(TemplateView):
         return context
 
 
-class GetGames(APIView):
-    pass
+class GetPick(APIView):
+    def post(self, request):
+        #print ('XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX')
+        #print ('in GetPick post', request.data)
+        data = {}
+        for pick in Picks.objects.filter(week__week=request.data['week'], pick_num=int(request.data['pick_num']), week__season_model__current=True, player__league__league=request.data['league']):
+            try:
+                data[pick.pick_num].update({str(pick.player.name.username): 
+                    {'team': pick.team.nfl_abbr, 
+                    'loser': pick.is_loser()}})
+            except Exception as e:
+                data[pick.pick_num] = {str(pick.player.name.username): 
+                    {'team': pick.team.nfl_abbr, 
+                    'loser': pick.is_loser()}}
+                
+              #   try:
+              #      score_dict[pick.player.name.username]['picks'].update({pick.pick_num: {'team': pick.team.nfl_abbr, 'status': status}})
+              #  except Exception as e:
+              #      score_dict[pick.player.name.username]['picks'] = {pick.pick_num: {'team': pick.team.nfl_abbr, 'status': status}}
+
+            
+            #print ('data', data)
+            #data = json.dumps({'testing': 'does this work?'})
+
+        return Response(json.dumps(data), 200)
+
 # class GetGames(APIView):
     
 #     def post(self, request):

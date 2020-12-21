@@ -28,6 +28,10 @@ from run_app import strava
 import time
 import json
 
+for day in Schedule.objects.filter(plan__name="Nagano 21"):
+    print (day.date, day.dist)
+
+exit()
 
 
 start = datetime.now()

@@ -183,9 +183,25 @@ class ScheduleView(DetailView):
     model=Plan
 
     def get_context_data(self, **kwargs):
+            today = datetime.datetime.now()
+            try:
+                plan = Plan.objects.get(pk=self.kwargs.get('pk'))
+                for day in Schedule.objects.filter(plan=plan, run=None, date__lte=datetime.datetime.today()):
+                    print ('updating plan', day)
+                    if Run.objects.filter(date=day.date).exists():
+                        print (day.date)
+                        run = Run.objects.get(date=day.date)
+                        day.run = run
+                        day.save()
+                        print ('updated schedule', day)
+            except Exception as e:
+                print ('no schedule update', e)
+                
+
+
             context = super(ScheduleView, self).get_context_data(**kwargs)
             plan = Plan.objects.get(pk=self.kwargs.get('pk'))
-            today = datetime.datetime.now()
+            #today = datetime.datetime.now()
             if today <= datetime.datetime.combine(plan.end_date, datetime.datetime.min.time()):
                 current_week = Schedule.objects.filter(date=today).values('week').first()
                 last_week = Schedule.objects.filter(week=int(current_week.get('week'))-1).values('week').first()
@@ -194,25 +210,27 @@ class ScheduleView(DetailView):
 
             expected = Schedule.objects.filter(Q(plan__id=plan.id) & Q(date__lte=today) & Q(dist__gt=0)).aggregate((Sum('dist')), (Count('date')))
             actual = Run.objects.filter(Q(date__lte=today) & Q(date__gte=plan.start_date)).aggregate(Sum('dist'), (Count('date')))
-            base_expected = Schedule.objects.filter(Q(plan__id=plan.id) & Q(date__lte='2018-12-16') & Q(dist__gt=0)).aggregate((Sum('dist')), (Count('date')))
-            base_actual = Run.objects.filter(Q(date__lte='2018-12-16') & Q(date__gte=plan.start_date)).aggregate(Sum('dist'), (Count('date')))
-            race_expected = Schedule.objects.filter(Q(plan__id=plan.id) & Q(date__lte=today) & Q(date__gte='2018-12-17') & Q(dist__gt=0)).aggregate((Sum('dist')), (Count('date')))
-            race_actual = Run.objects.filter(Q(date__lte=today) & Q(date__gte='2018-12-17')).aggregate(Sum('dist'), (Count('date')))
+            #base_expected = Schedule.objects.filter(Q(plan__id=plan.id) & Q(date__lte=plan.start_date) & Q(dist__gt=0)).aggregate((Sum('dist')), (Count('date')))
+            #base_actual = Run.objects.filter(Q(date__lte=plan.start_date) & Q(date__gte=plan.start_date)).aggregate(Sum('dist'), (Count('date')))
+            
+            race_expected = Schedule.objects.filter(Q(plan__id=plan.id) & Q(date__lte=today) & Q(date__gte=plan.start_date) & Q(dist__gt=0)).aggregate((Sum('dist')), (Count('date')))
+            race_actual = Run.objects.filter(Q(date__lte=today) & Q(date__gte=plan.start_date)).aggregate(Sum('dist'), (Count('date')))
+           
 
-            base_plan_km = base_expected.get('dist__sum')*1.6
-            base_expected['plan_km']=base_plan_km
-            base_actual['dist_percent']= (base_actual.get('dist__sum')/base_expected.get('plan_km')) * 100
-            base_actual['run_percent']= (base_actual.get('date__count')/base_expected.get('date__count')) * 100
+            #base_plan_km = base_expected.get('dist__sum')*1.6
+            #base_expected['plan_km']=base_plan_km
+            #base_actual['dist_percent']= (base_actual.get('dist__sum')/base_expected.get('plan_km')) * 100
+            #base_actual['run_percent']= (base_actual.get('date__count')/base_expected.get('date__count')) * 100
 
             race_plan_km = race_expected.get('dist__sum')*1.6
             race_expected['plan_km']=race_plan_km
             race_actual['dist_percent']= (race_actual.get('dist__sum')/race_expected.get('plan_km')) * 100
             race_actual['run_percent']= (race_actual.get('date__count')/race_expected.get('date__count')) * 100
 
-            plan_km = expected.get('dist__sum')*1.6
-            expected['plan_km']=plan_km
-            actual['dist_percent']= (actual.get('dist__sum')/expected.get('plan_km')) * 100
-            actual['run_percent']= (actual.get('date__count')/expected.get('date__count')) * 100
+            #plan_km = expected.get('dist__sum')*1.6
+            #expected['plan_km']=plan_km
+            #actual['dist_percent']= (actual.get('dist__sum')/expected.get('plan_km')) * 100
+            #actual['run_percent']= (actual.get('date__count')/expected.get('date__count')) * 100
             print (actual)
 
 
@@ -223,11 +241,11 @@ class ScheduleView(DetailView):
                 'last_week': Schedule.objects.filter(plan__pk=self.kwargs.get('pk'), week__in=[last_week.get('week')]),
                 'current_week': Schedule.objects.filter(plan__pk=self.kwargs.get('pk'), week__in=[current_week.get('week')]),
                 'next_week': Schedule.objects.filter(plan__pk=self.kwargs.get('pk'), week__in=[next_week.get('week')]),
-                'schedule': Schedule.objects.filter(plan__pk=self.kwargs.get('pk')).exclude(week__in=[last_week.get('week'), current_week.get('week'), next_week.get('week')]),
+                'schedule': Schedule.objects.filter(plan__pk=self.kwargs.get('pk')).exclude(week__in=[last_week.get('week'), current_week.get('week'), next_week.get('week')]).order_by('date'),
                 'expected': expected,
                 'actual': actual,
-                'base_expected': base_expected,
-                'base_actual': base_actual,
+                #'base_expected': base_expected,
+                #'base_actual': base_actual,
                 'race_expected': race_expected,
                 'race_actual': race_actual,
 
@@ -241,8 +259,8 @@ class ScheduleView(DetailView):
                 'schedule': Schedule.objects.filter(plan__pk=self.kwargs.get('pk')).order_by('-date'),
                 'expected': expected,
                 'actual': actual,
-                'base_expected': base_expected,
-                'base_actual': base_actual,
+                #'base_expected': base_expected,
+                #'base_actual': base_actual,
                 'race_expected': race_expected,
                 'race_actual': race_actual,
 

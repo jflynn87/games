@@ -30,8 +30,9 @@ def get_schedule():
                 schedule.plan = plan
                 schedule.date  = date
                 schedule.week = week
-                dist = str(day.string)
-                print ('day.string', day.string)
+                #dist = str(day.string)
+#                print ('day.string', day.string)
+                schedule.dist = 0
                 if day.string[-3:] == 'run' and day.string[1] != '-':
                     schedule.dist = int(str(day.string).split(' ')[0])
                 if day.string[-3:] == 'run' and day.string[1] == '-':
@@ -60,14 +61,13 @@ def get_schedule():
                 if day.string[-3:] == 'hon':
                     schedule.dist = 26
 
-                schedule.type = day.string
-                print (schedule.date, schedule.week, schedule.dist, schedule.type)
-                #schedule.save()
+                schedule.sched_type = day.string
+                print ('date', schedule.date, 'week', schedule.week, 'dist', schedule.dist, 'type', schedule.sched_type)
+                schedule.save()
                 #print (date, schedule.week, schedule.dist, schedule.type)
                 date = date + timedelta(days=1)
-                print ('dates: ', type(date), type(plan.end_date))
-                if date > plan.end_date:
-                    break
+            if date > plan.end_date:
+                break
 
 
 

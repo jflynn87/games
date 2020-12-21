@@ -24,7 +24,7 @@
         <td>{{race_actual.dist_percent|floatformat:"0"}}</td>
         <td>{{race_actual.run_percent|floatformat:"0"}}</td>
       </tr>
-      <tr>
+      <!-- <tr>
         <td>Base</td>
         <td>{{base_actual.dist__sum|floatformat:"0"}}</td>
         <td>{{base_expected.plan_km|floatformat}}</td>
@@ -42,7 +42,7 @@
         <td>{{expected.date__count}}</td>
         <td>{{actual.dist_percent|floatformat:"0"}}</td>
         <td>{{actual.run_percent|floatformat:"0"}}</td>
-      </tr>
+      </tr> -->
     </tbody>
   </thead>
 
@@ -63,7 +63,7 @@
       <td>{{day.week}}</td>
       <td>{{day.date | date:"D, n/j"}}</td>
       <td>{{day.dist}}</td>
-      <td>{{day.type}}</td>
+      <td>{{day.sched_type}}</td>
       <td>{{day.run.dist}}</td>
     </tr>
     {%endfor%}
@@ -72,7 +72,7 @@
       <td>{{day.week}}</td>
       <td>{{day.date | date:"D, n/j"}}</td>
       <td>{{day.dist}}</td>
-      <td>{{day.type}}</td>
+      <td>{{day.sched_type}}</td>
       <td>{{day.run.dist}}</td>
     </tr>
     {%endfor%}
@@ -81,7 +81,7 @@
       <td>{{day.week}}</td>
       <td>{{day.date | date:"D, n/j"}}</td>
       <td>{{day.dist}}</td>
-      <td>{{day.type}}</td>
+      <td>{{day.sched_type}}</td>
       <td>{{day.run.dist}}</td>
     </tr>
     {%endfor%}
@@ -93,7 +93,7 @@
       <td>{{day.week}}</td>
       <td>{{day.date | date:"D, n/j"}}</td>
       <td>{{day.dist}}</td>
-      <td>{{day.type}}</td>
+      <td>{{day.sched_type}}</td>
       <td>{{day.run.dist}}</td>
     </tr>
     {%endfor%}
