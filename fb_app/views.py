@@ -5,7 +5,7 @@ from fb_app.models import Games, Week, Picks, Player, League, Teams, WeekScore, 
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth import authenticate, login, logout
-from django.http import HttpResponseRedirect, HttpResponse
+from django.http import HttpResponseRedirect, HttpResponse, JsonResponse
 from django.urls import reverse, reverse_lazy
 from fb_app.forms import UserForm, CreatePicksForm#, PickFormSet, NoPickFormSet
 from django.core.exceptions import ObjectDoesNotExist
@@ -683,8 +683,6 @@ class SpreadView(TemplateView):
 
 class GetPick(APIView):
     def post(self, request):
-        #print ('XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX')
-        #print ('in GetPick post', request.data)
         data = {}
         for pick in Picks.objects.filter(week__week=request.data['week'], pick_num=int(request.data['pick_num']), week__season_model__current=True, player__league__league=request.data['league']):
             try:
@@ -696,16 +694,37 @@ class GetPick(APIView):
                     {'team': pick.team.nfl_abbr, 
                     'loser': pick.is_loser()}}
                 
-              #   try:
-              #      score_dict[pick.player.name.username]['picks'].update({pick.pick_num: {'team': pick.team.nfl_abbr, 'status': status}})
-              #  except Exception as e:
-              #      score_dict[pick.player.name.username]['picks'] = {pick.pick_num: {'team': pick.team.nfl_abbr, 'status': status}}
-
-            
-            #print ('data', data)
-            #data = json.dumps({'testing': 'does this work?'})
-
         return Response(json.dumps(data), 200)
+
+
+class FBLeaderboard(APIView):
+    def get(self, request):
+
+        try:
+            data = {}
+            player = Player.objects.get(name=request.user)
+            
+            #league = League.objects.get(league=player.league)
+            ranks = player.league.season_ranks()
+            
+            for p in Player.objects.filter(league=player.league):
+                
+                data[p.name.username] = {'score': p.season_total(),
+                                            'rank': ranks[p.name.username],
+                                            'behind': p.season_points_behind()
+                                        }
+            #sorted_data = {k: v for k, v in sorted(data.items(), key=lambda item: item[1][1])}
+            sorted_data = sorted(data.items(), key=lambda x: x[1]['rank'])
+            print (sorted_data)
+        except Exception as e:
+            print ('error: ', e)
+            sorted_data['error'] = {'msg': str(e)}
+                
+        return Response(json.dumps(sorted_data), 200)
+
+
+
+
 
 # class GetGames(APIView):
     

@@ -30,6 +30,20 @@ from django.core import serializers
 import docx2txt
 
 
+data = {}
+l = League.objects.get(league="Golfers")
+print (l.leading_score())
+
+players = Player.objects.filter(league=l)
+
+for p in players:
+    print (p, p.season_points_behind())
+exit()
+
+TotalScore.objects.filter(league=player.league)
+#for score in TotalScore.objects.filter(league=player.league):
+
+
 
 def parse_sheet(sheet, players=None):
     
@@ -112,11 +126,11 @@ def fix_name(name):
 
 
 
-#parse_sheet('20-21 FOOTBALL FOOLS-week14.docx')
-print ('XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX')
-parse_sheet('THANKSGIVING.docx')
-print ('XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX')
-parse_sheet('week14-sheet.docx')
-print ('XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX')
-parse_sheet('20-21 FOOTBALL FOOLS-wek13.docx')
-print ('XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX')
+# #parse_sheet('20-21 FOOTBALL FOOLS-week14.docx')
+# print ('XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX')
+# parse_sheet('THANKSGIVING.docx')
+# print ('XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX')
+# parse_sheet('week14-sheet.docx')
+# print ('XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX')
+# parse_sheet('20-21 FOOTBALL FOOLS-wek13.docx')
+# print ('XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX')

@@ -405,6 +405,7 @@ class GetScores(APIView):
                           't_data': t_data,}
 
         sd.pick_data = json.dumps(display_dict)
+        sd.data = score_dict  #added 12/22 to try to fix DB data
         sd.save()
 
 
@@ -759,3 +760,19 @@ class GetGroupNum(APIView):
             print ('exception', e)
             return Response(json.dumps({e}), 500)
 
+class GolfLeaderboard(APIView):
+    def get(self, request):
+
+        try:
+            data = {}
+            season = Season.objects.get(current=True)
+
+            data = dict(json.loads(season.get_total_points()))
+                        
+            sorted_data = sorted(data.items(), key=lambda x: x[1]['total'])
+            print (sorted_data)
+        except Exception as e:
+            print ('error: ', e)
+            sorted_data['error'] = {'msg': str(e)}
+                
+        return Response(json.dumps(sorted_data), 200)

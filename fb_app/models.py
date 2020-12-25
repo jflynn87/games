@@ -23,6 +23,7 @@ class Season(models.Model):
     def __str__(self):
         return (str)(self.season)
 
+
 class Week(models.Model):
     season = models.CharField(max_length=30, null=True)
     season_model = models.ForeignKey(Season, on_delete=models.CASCADE,null=True)
@@ -405,6 +406,13 @@ class League(models.Model):
 
         return d
 
+    def leading_score(self):
+        l = []
+        for player in Player.objects.filter(league=self):
+            l.append(player.season_total())
+
+        return min(l)
+
 
 class Player(models.Model):
     league = models.ForeignKey(League, on_delete=models.CASCADE)
@@ -437,6 +445,10 @@ class Player(models.Model):
                     pick.pick_num = 16 - i
                     pick.team = game[1][1]
                     pick.save()
+
+    def season_points_behind(self):
+        return self.league.leading_score() - self.season_total()  
+         
 
 
 

@@ -12,7 +12,7 @@ from django.db import transaction
 import random
 from unidecode import unidecode
 from django.utils import timezone
-
+from django.db.models import Q
 
 class Score(object):
     
@@ -160,30 +160,25 @@ class Score(object):
         print ('after cut num', datetime.now() - start)
         optimal_picks = json.loads(self.tournament.optimal_picks())
         print ('after optimal', datetime.now() - start)
-        #round = self.tournament.get_round()
         round = self.tournament.saved_round
         print ('after round', datetime.now() - start)
-        #print (optimal_picks)
 
-        #for user in self.tournament.season.get_users():
-        #if BonusDetails.objects.filter(tournament=self.tournament).exists():
         BonusDetails.objects.filter(tournament=self.tournament).update(best_in_group_bonus=0)
-            #print ('----------------------reset best in group----------------')
-            #bonus = BonusDetails.objects.get(user=User.objects.get(pk=user.get('user')), tournament=self.tournament)
-            #bonus.best_in_group_bonus = 0
-            #bonus.save()
-
-        # comment to make this a bulk update
-        #for pick in Picks.objects.filter(playerName__tournament=self.tournament):  
         print ('starting pick loop time to here', datetime.now() - start)
         loop_start = datetime.now()
-
+        
         for p in Picks.objects.filter(playerName__tournament=self.tournament).values('playerName').distinct():
-            #pick_loop_start = datetime.now()
+            pick_loop_start = datetime.now()
             pick = Picks.objects.filter(playerName__pk=p.get('playerName')).first()
-            #print (self.score_dict)
+            
+            if ScoreDetails.objects.filter(pick=pick, today_score__in=self.not_playing_list).exists(): 
+                print ('skipping cut/wd/finished pick: ', pick.playerName)
+                continue
 
-            data = self.score_dict.get(unidecode(pick.playerName.playerName))
+            #data = self.score_dict.get(unidecode(pick.playerName.playerName))
+            temp = [x for x in self.score_dict.values() if x['pga_num'] == pick.playerName.golfer.golfer_pga_num]
+            data = temp[0] 
+            #print (data)
             if data == None:
                 print ('*********', 'player name issue', pick.playerName.playerName, '*************')
                 for k, v in self.score_dict.items():
@@ -198,17 +193,22 @@ class Score(object):
 
             try:
                 if data.get('rank') == "CUT":
-                    pick.score = cut_num
+                    #pick.score = cut_num
+                    score = cut_num
                 elif data.get('rank') == "WD":
-                    pick.score = self.get_wd_score(pick) 
+                    #pick.score = self.get_wd_score(pick) 
+                    score = self.get_wd_score(pick) 
                 else:
                     if int(utils.formatRank(data.get('rank'))) > cut_num:
-                         pick.score=cut_num 
+                         #pick.score=cut_num 
+                         score=cut_num 
                     else:
-                        pick.score = utils.formatRank(data.get('rank')) 
+                        #pick.score = utils.formatRank(data.get('rank')) 
+                        score = utils.formatRank(data.get('rank')) 
                 
                 #pick.save()  comment for bulk update
-                Picks.objects.filter(playerName__tournament=self.tournament, playerName=pick.playerName).update(score=pick.score)
+                #Picks.objects.filter(playerName__tournament=self.tournament, playerName=pick.playerName).update(score=pick.score)
+                Picks.objects.filter(playerName__tournament=self.tournament, playerName=pick.playerName).update(score=score)
 
                 sd, sd_created = ScoreDetails.objects.get_or_create(user=pick.user, pick=pick)
                 sd.score=pick.score - pick.playerName.handicap()
@@ -225,6 +225,8 @@ class Score(object):
                     sd.thru  = data.get('thru')
                 sd.toPar = data.get('total_score')
                 sd.sod_position = data.get('change')
+
+
                 #sd.save()  comment for bulk update
                 ScoreDetails.objects.filter(pick__playerName__tournament=self.tournament, pick__playerName=pick.playerName).update(
                                             score=sd.score,
@@ -256,30 +258,15 @@ class Score(object):
                                             )
             
             if pick.is_winner():
-                print (pick)
+                print ('winner: ', pick)
                 for winner in Picks.objects.filter(playerName=pick.playerName):
                     if not PickMethod.objects.filter(user=winner.user, method=3, tournament=winner.playerName.tournament).exists():
                         BonusDetails.objects.filter(user=winner.user, tournament=winner.playerName.tournament).update(winner_bonus=50 + (winner.playerName.group.number * 2))
                         
-            # if pick.is_winner() and not PickMethod.objects.filter(user=pick.user, method=3, tournament=pick.playerName.tournament).exists():
-            #     print ('winner', pick.playerName)
-            #     bd = BonusDetails.objects.get(user=pick.user, tournament=pick.playerName.tournament)
-            #     bd.winner_bonus = 50 + (pick.playerName.group.number*2)
-            #     bd.save()
-
             if pick.playoff_loser():
                 for loser in Picks.objects.filter(playerName=pick.playerName):
                     if not PickMethod.objects.filter(user=loser.user, method=3, tournament=loser.playerName.tournament).exists():
                         BonusDetails.objects.filter(user=loser.user, tournament=loser.playerName.tournament).update(playoff_bonus= 25)
-                        #bd = BonusDetails.objects.get(user=loser.user, tournament=loser.playerName.tournament)
-                        #bd.playoff_bonus= 25
-                        #bd.save()
-
-            # if pick.playoff_loser() and not PickMethod.objects.filter(user=pick.user, method=3, tournament=pick.playerName.tournament).exists():
-            #     print ('playoff loser', pick.playerName)
-            #     bd = BonusDetails.objects.get(user=pick.user, tournament=pick.playerName.tournament)
-            #     bd.playoff_bonus = 25
-            #     bd.save()
             
             if pick.playerName.playerName in optimal_picks.get(str(pick.playerName.group.number)).get('golfer'):
                 for best in Picks.objects.filter(playerName=pick.playerName):
@@ -290,7 +277,7 @@ class Score(object):
                           bd = BonusDetails.objects.get(user=best.user, tournament=best.playerName.tournament)
                           bd.best_in_group_bonus = bd.best_in_group_bonus + 10
                           bd.save()
-            #print ('pick loop: ', p, ' ', datetime.now() - start)
+            print ('pick loop: ', p, ' ', Picks.objects.filter(playerName__pk=p.get('playerName')).count(), ' ', datetime.now() - pick_loop_start)
         ## end of bulk update section
 
         self.tournament.score_update_time = datetime.now(tz=timezone.utc)  
@@ -453,12 +440,14 @@ class Score(object):
 
         if score.get('r1') in cut_indicators or score.get('r2') in cut_indicators or score.get('r3') in cut_indicators:
                 print ('didnt get to r3')
-                return self.tournament.cut_num()
+                #return self.tournament.cut_num()
+                return self.tournament.saved_cut_num
         elif score.get('r3') not in cut_indicators and self.tournament.get_cut_round() < 3:
                 return len([x for x in self.score_dict.values() if x['rank'] not in self.not_playing_list]) + 1
         # fix this if, retrun cut num?
         elif score.get('r4') in cut_indicators and self.tournament.get_cut_round() < 4:
-            return self.tournament.cut_num()
+            #return self.tournament.cut_num()
+            return self.tournament.saved_cut_num
         else:
             return len([x for x in self.score_dict.values() if x['rank'] not in self.not_playing_list]) + 1
 

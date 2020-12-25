@@ -67,3 +67,39 @@ body {
   color: gray;
   font-size: 75%;
 }
+
+.my-card {
+  border: 25px;
+  border-color: black;
+}
+
+.card {
+  border-color: #00588b;
+  border-width: 3px;
+  text-align: center;
+  width: 23%;
+  
+}
+
+.mytable th, td{
+    padding-left: 5px;
+}
+
+
+.middle {
+  width: 1%;
+}
+
+.highlight {
+   background-color: red;
+}
+
+
+@media only screen and (max-width: 767px) {
+.table {
+  background-color: cyan;
+}
+.card {
+  width: 30em;
+}
+}

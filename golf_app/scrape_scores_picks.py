@@ -1,4 +1,4 @@
-from golf_app.models import Picks, ScoreDict
+from golf_app.models import Picks, ScoreDict, Field
 #from django.contrib.auth.models import User
 from datetime import datetime, timedelta
 
@@ -25,7 +25,7 @@ class ScrapeScores(object):
             self.url = url
         elif self.tournament.current:
             self.url = "https://www.pgatour.com/leaderboard.html"
-            #self.url = "https://www.pgatour.com/competition/2021/safeway-open/leaderboard.html"
+            #self.url = "https://www.pgatour.com/competition/2021/mayakoba-golf-classic/leaderboard.html"
         else:
             t_name = self.tournament.name.replace(' ', '-').lower()
             self.url = "https://www.pgatour.com/competition/2020/" + t_name + "/leaderboard.html"
@@ -121,9 +121,17 @@ class ScrapeScores(object):
                 else:  #doing for "all" or None 
                     for row in table.find_all("tr", {'class': 'line-row'}):
                         ele_class = row['class'][1].split('-')[2]
-                        #print (ele_class, ele_class)
                         data = self.get_data(row)
-                        data[1].update({'pga_num': ele_class})
+                        try:
+                            field = Field.objects.get(golfer__golfer_pga_num=ele_class, tournament=self.tournament)
+                            field.rank = data[1]['rank']
+                            field.save()
+                        except Exception as e:
+                            print ('field lookup issue in scrape', ' pga_num: ', ele_class, data[0], e)
+                            field.handi = 0
+                        data[1].update({'pga_num': ele_class,
+                                        'handicap': field.handi
+                                        })
                         score_dict[data[0]] =  data[1]
                     sd.data = score_dict
                     print (len(sd.data))
@@ -141,7 +149,7 @@ class ScrapeScores(object):
                 return {}
         
         except Exception as e:
-            print (e)
+            print ('scrape scores failed: ', e)
             return {}
 
         finally:

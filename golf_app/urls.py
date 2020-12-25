@@ -23,6 +23,7 @@ urlpatterns= [
     url(r'^cbs_scores/$',views.CBSScores.as_view(),name='cbs_scores'),
     url(r'^get_field_csv/$',views.GetFieldCSV.as_view(),name='get_field_csv'),
     url(r'^get_group_num/$',views.GetGroupNum.as_view(),name='get_group_num'),
+    path('golf_leaderboard/', views.GolfLeaderboard.as_view()),
     
 
 ]

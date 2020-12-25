@@ -21,6 +21,7 @@ urlpatterns = [
     path('update_proj/', views.UpdateProj.as_view()),
     path('get_picks/', views.GetPicks.as_view()),
     path('get_weeks/', views.GetWeeks.as_view()),
+    path('fb_leaderboard/', views.FBLeaderboard.as_view()),
     #path('get_games/', views.GetGames.as_view()),
     #path('get_pick/', views.GetPick.as_view()),
     url(r'^get_pick/$',views.GetPick.as_view(),name='get_pick'),

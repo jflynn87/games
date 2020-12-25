@@ -10,7 +10,7 @@ def format_score(score):
         return score
 
 
-def formatRank(rank):
+def formatRank(rank, tournament=None):
     from golf_app.models import Tournament
     '''takes in a sting and returns a string formatted for the right display or calc.  '''
     t = Tournament.objects.get(current=True)
@@ -20,7 +20,11 @@ def formatRank(rank):
     if type(rank) is int:
         return rank
     elif rank in  ['', '--', None] or rank in t.not_playing_list():
-       return 999
+       #return 999
+       if t == None:
+           return 999
+       else:
+           return t.saved_cut_num 
     elif rank[0] != 'T':
        return int(rank)
     elif rank[0] == 'T':

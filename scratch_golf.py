@@ -28,10 +28,75 @@ import json
 from golf_app import views, manual_score, populateField, withdraw, scrape_scores_picks, utils, scrape_cbs_golf, scrape_masters
 from unidecode import unidecode
 from django.core import serializers
+from golf_app.utils import formatRank
 
 start = datetime.now()
+s = Season.objects.get(current=True)
+
+print (s.get_total_points())
+exit()
+
 
 t = Tournament.objects.get(current=True)
+
+golfers = list(t.season.get_users())
+user = User.objects.get(username='milt')
+print (golfers, type(golfers))
+print ([x for x in golfers if x.get('user') == user.pk])
+exit()
+
+sd = ScoreDict.objects.get(tournament=t)
+
+print ('score dict: ', len(sd.data))
+scores = manual_score.Score(sd.data, t).update_scores()
+print (scores)
+exit()
+
+print (Picks.objects.filter(playerName__tournament=t).values('playerName').distinct().count())
+
+exit()
+
+
+for g in Group.objects.filter(tournament=t):
+    g_min = g.min_score()
+    
+    print (g, g_min)
+    #f = Field.objects.filter(tournament=self, group=group).exclude(withdrawn=True)
+    
+
+
+
+
+
+
+
+
+
+exit()
+        #if group.number == 6:
+        #    if field.rank in ["CUT", "WD"]:
+        #        print (field.playerName, field.handi, t.saved_cut_num)
+        #    else:    
+        #        print (field.playerName, field.handi, formatRank(field.rank))
+
+exit()
+#m = sorted(sd.values(), key = lambda data: (sum(formatRank(data['rank']), data['handicap'])))
+
+print (m)
+exit()
+
+
+#print (sd.clean_dict()
+for k, v in sd.data.items():
+    print (k, v)
+exit()
+for group in Group.objects.filter(tournament=t):
+    start = datetime.now()
+    group.min_score()
+    print (datetime.now() - start)
+    #print (t, group, group.min_score())
+
+exit()
 
 data = serializers.serialize('json', Group.objects.filter(tournament=t))
 print (data)

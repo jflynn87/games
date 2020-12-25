@@ -34,8 +34,8 @@ class Season(models.Model):
             u = User.objects.get(pk=user.get('user'))
             score_dict[u.username] = TotalScore.objects.filter(tournament__season=self, user=u).aggregate(Sum('score'))
         min_score = min(score_dict.items(), key=lambda v: v[1].get('score__sum'))[1].get('score__sum')
-        for user, data in sorted(score_dict.items(), key=lambda v: v[1].get('score__sum')):
-            sorted_dict[user] = {'total': data.get('score__sum'), 'diff':  int(min_score) - int(data.get('score__sum'))}
+        for i, (user, data) in enumerate(sorted(score_dict.items(), key=lambda v: v[1].get('score__sum'))):
+            sorted_dict[user] = {'total': data.get('score__sum'), 'diff':  int(min_score) - int(data.get('score__sum')), 'rank': i+1}
         return json.dumps(sorted_dict)
 
 
@@ -256,6 +256,7 @@ class Tournament(models.Model):
         else:
             #for v in score_dict.values():
             #    if v['rank'] in self.not_playing_list():
+
             return len([x for x in score_dict.values() if x['rank'] not in self.not_playing_list()]) + wd + 1
             #if self.get_round() != 4 and len(score_dict.values()) >65:
             #    return 66
@@ -291,38 +292,56 @@ class Tournament(models.Model):
 
 
     def optimal_picks(self):
-        sd = ScoreDict.objects.get(tournament=self)
-        score_dict = sd.data
+        #sd = ScoreDict.objects.get(tournament=self)
+        #score_dict = sd.data
         #cut_num = self.cut_num()
-        cut_num = self.saved_cut_num
-        print ('sd type', type(score_dict), len(score_dict))
+        #cut_num = self.saved_cut_num
+        #print ('sd type', type(score_dict), len(score_dict))
         optimal_dict = {}
-       
+
         for group in Group.objects.filter(tournament=self):
-           group_cuts = 0
+
            golfer_list = []
            gm_start = datetime.now()
-           group_min = group.min_score(cut_num)
-           print ('group min duration: ', datetime.now() - gm_start)
-           #print ('group: ', group, 'min', group_min)
+           group_cuts = Field.objects.filter(group=group, rank__in=self.not_playing_list()).count()
 
-           clean_dict = {key.replace('(a)', '').strip(): v for key, v in score_dict.items()}
-           #print (clean_dict)
+           group_min = group.min_score(mode='full')
+           print (group_min)
+           for gm in group_min:
+               f = Field.objects.get(pk=gm[0])
+               golfer_list.append(f.playerName)
 
-           for player in Field.objects.filter(tournament=self, group=group).exclude(withdrawn=True):
-               if player.playerName in clean_dict:  #needed to deal wiht WD's before start of tourn.
-                    if (clean_dict[player.playerName]['rank'] not in  self.not_playing_list() and  \
-                       int(utils.formatRank(clean_dict[player.playerName]['rank']) - player.handicap()) == group_min) or \
-                       cut_num - player.handicap() == group_min:  
-                        golfer_list.append(player.playerName)
-                    if clean_dict[player.playerName]['rank'] in self.not_playing_list():
-                        group_cuts += 1
-               else:
-                    print (player, 'mot in dict')
-           #print (optimal_dict)
-           optimal_dict[group.number] = {'golfer': golfer_list, 'rank': group_min, 'cuts': group_cuts, 'total_golfers': group.playerCnt}
-           
+               optimal_dict[group.number] = {'golfer': golfer_list, 'rank': gm[1], 'cuts': group_cuts, 'total_golfers': group.playerCnt}
+
         return json.dumps(optimal_dict)
+
+##commented on 12/23 - delete if above works
+
+        # for group in Group.objects.filter(tournament=self):
+        #    group_cuts = 0
+        #    golfer_list = []
+        #    gm_start = datetime.now()
+        #    group_min = group.min_score(cut_num)
+        #    print ('group min duration: ', datetime.now() - gm_start)
+        #    #print ('group: ', group, 'min', group_min)
+
+        #    clean_dict = {key.replace('(a)', '').strip(): v for key, v in score_dict.items()}
+        #    #print (clean_dict)
+
+        #    for player in Field.objects.filter(tournament=self, group=group).exclude(withdrawn=True):
+        #        if player.playerName in clean_dict:  #needed to deal wiht WD's before start of tourn.
+        #             if (clean_dict[player.playerName]['rank'] not in  self.not_playing_list() and  \
+        #                int(utils.formatRank(clean_dict[player.playerName]['rank']) - player.handicap()) == group_min) or \
+        #                cut_num - player.handicap() == group_min:  
+        #                 golfer_list.append(player.playerName)
+        #             if clean_dict[player.playerName]['rank'] in self.not_playing_list():
+        #                 group_cuts += 1
+        #        else:
+        #             print (player, 'mot in dict')
+        #    #print (optimal_dict)
+        #    optimal_dict[group.number] = {'golfer': golfer_list, 'rank': group_min, 'cuts': group_cuts, 'total_golfers': group.playerCnt}
+        # print (optimal_dict)   
+        # return json.dumps(optimal_dict)
 
     def not_playing_list(self):
         return ['CUT', 'WD', 'DQ']
@@ -356,27 +375,49 @@ class Group(models.Model):
     def __str__(self):
         return str(self.number) + '-' + str(self.tournament)
 
-    def min_score(self, cut_num=None):
-        print ('min score ', datetime.now(), self)
-        score_dict = ScoreDict.objects.get(tournament=self.tournament)
-        clean_dict = score_dict.clean_dict()
-        if cut_num == None:
-            #cut_num = self.tournament.cut_num()
-            cut_num = self.tournament.saved_cut_num
-        not_playing_list = self.tournament.not_playing_list()
-        min_score = 999  
+    def min_score(self, cut_num=None, mode=None):
+        start = datetime.now()
+        f = list(Field.objects.filter(group=self).exclude(withdrawn=True).values('pk', 'rank', 'handi'))
+        s = [(x['pk'], (int(utils.formatRank(x['rank'], self.tournament))) - int(x['handi'])) for x in f]
+        #print (s)
+        score = min(s, key= lambda x: x[1])
+        #print (self, score, Field.objects.get(pk=score[0]))
+        print ('duration: ', datetime.now() - start)
+        if mode == None:
+            return score[1]
+        elif mode == 'full':
+            return [x for x in s if x[1] == score[1]]
+            #return score
+        else:
+            return score[1]
 
-        for score in Field.objects.filter(group=self).exclude(withdrawn=True):
-            start = datetime.now()
-            try:
-                 if clean_dict.get(score.playerName).get('rank') in not_playing_list:
-                    if cut_num - score.handicap() < min_score:
-                        min_score = cut_num - score.handicap()
-                 elif utils.formatRank(clean_dict.get(score.playerName).get('rank')) - score.handicap() < min_score:
-                    min_score = utils.formatRank(clean_dict.get(score.playerName).get('rank')) - score.handicap()
-            except Exception as e:
-                print (score.playerName, e, 'exclded from min score')
-        return min_score
+## commented on 12/23/2021 - delete if other logic works
+
+
+        # print ('min score ', datetime.now(), self)
+        # score_dict = ScoreDict.objects.get(tournament=self.tournament)
+        # clean_dict = score_dict.clean_dict()
+        
+        # if cut_num == None:
+        #     #cut_num = self.tournament.cut_num()
+        #     cut_num = self.tournament.saved_cut_num
+        # not_playing_list = self.tournament.not_playing_list()
+        # min_score = 999  
+
+        # for score in Field.objects.filter(group=self).exclude(withdrawn=True):
+        #     start = datetime.now()
+        #     try:
+        #          if clean_dict.get(score.playerName).get('rank') in not_playing_list:
+        #             if cut_num - score.handicap() < min_score:
+        #                 min_score = cut_num - score.handicap()
+        #          elif utils.formatRank(clean_dict.get(score.playerName).get('rank')) - score.handicap() < min_score:
+        #             min_score = utils.formatRank(clean_dict.get(score.playerName).get('rank')) - score.handicap()
+        #     except Exception as e:
+        #         print (score.playerName, e, 'exclded from min score')
+        #    the next 2 lines are not tested       
+        #          num = [x for x in clean_dict.values() if x.get('pga_num') == score.golfer.golfer_pga_num]
+        #         print (score.playerName, score.golfer.golfer_pga_num, num)
+        # return min_score
 
     def num_of_picks(self):
         if self.tournament.last_group_multi_pick() and self.number == 6:

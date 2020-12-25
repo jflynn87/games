@@ -4,12 +4,12 @@
 {%block body_block%}
 
 <script src='{% static "run_app/js/dashboard.js"%}' type="text/javascript" ></script>
-<script src='{% static "static-cdn-local/js/react-django.ui.js" %}' ></script>
+
 
 
 
 <div id='runs'>
-     
+  <!-- <script src='{% static "static-cdn-local/static-cdn-local/js/react-django.ui.js" %}' ></script>      -->
 </div>
 <div class="row">
   <div class="col">
@@ -62,7 +62,7 @@
           <td class="dist">{{shoe.dist|floatformat:"0"}}</td>
           <td>{{shoe.num}}</td>
         </tr>
-        {%endfor%}
+        {%endfor %}
       </tbody>
     </table>
     <a href="{% url 'run_app:add_run' %}"> <button class="btn btn-primary">Add Run</button></a>
@@ -71,9 +71,7 @@
     {%for schedule in plan_list%}
     <a href="/run_app/plan/{{schedule.id}}"> <button class="btn btn-primary">Schedule: {{schedule}}</button></a>
     {%endfor%}
-    
-    
-  </div>
+     
        
 </div>
 
