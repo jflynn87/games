@@ -11,7 +11,7 @@
 <div class=row>
      <div class="card">
       <h3>Golf Game</h3>
-      <img src="{%static '/img/IMG_4425.jpg'%}..." class="card-img-top" style="height: 27rem;" alt="...">
+      <img src="{%static 'img/IMG_4425.jpg'%}" class="card-img-top" style="height: 27rem;" alt="...">
       <div class="card-body">
         <h4 class="card-title" style="font-weight: bold;">Select an Option</h4>
         <a href="{% url 'golf_app:field' %}"> <button class="btn btn-primary">Make Picks</button></a>
@@ -29,13 +29,13 @@
         <h3>Golf Leaderboard</h3>
       <script src='{% static "golf_app/js/leaderboard.js"%}' type="text/javascript" ></script>
       <script type="text/javascript"> update_lb();</script>
-      <img src="{%static '/img/IMG_4425.jpg'%}..." class="card-img-top" style="height: 27rem;" alt="...">
+      <img src="{%static '/img/IMG_4425.jpg'%}" class="card-img-top" style="height: 27rem;" alt="...">
       <div id='golf_lb_body' class="card-body"></div>
       </div>
       <div class=middle></div>
      <div class="card">
       <h3>Football Game</h3>
-      <img src="{%static '/img/SBTrophy1050.jpg'%}..." style="height: 27rem;" class="card-img-top" alt="...">
+      <img src="{%static '/img/SBTrophy1050.jpg'%}" style="height: 27rem;" class="card-img-top" alt="...">
       <div class="card-body">
         <h4 class="card-title" style="font-weight: bold;">Select an Option</h4>
         <!-- <a href="{% url 'fb_app:games_list' pk=fb_week.pk %}" class="btn btn-primary">Make Picks</a> -->
@@ -54,7 +54,7 @@
       <h3>Football Leaderboard</h3>
     <script src='{% static "fb_app/js/leaderboard.js"%}' type="text/javascript" ></script>
     <script type="text/javascript"> update_lb();</script>
-    <img src="{%static '/img/SBTrophy1050.jpg'%}..." class="card-img-top" style="height: 27rem;" alt="...">
+    <img src="{%static '/img/SBTrophy1050.jpg'%}" class="card-img-top" style="height: 27rem;" alt="...">
     <div id='fb_lb_body' class='card-body'></div>
     </div>
 
