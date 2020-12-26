@@ -21,6 +21,7 @@ from collections import OrderedDict
 from rest_framework.views import APIView
 from rest_framework import generics
 from rest_framework.response import Response
+from rest_framework.permissions import IsAuthenticated, AllowAny
 from fb_app import scrape_cbs
 from django.core import serializers
 from bs4 import BeautifulSoup
@@ -171,7 +172,7 @@ class GameListView(LoginRequiredMixin,ListView):
 
     def post(self, request, **kwargs):
 
-         print ('submitting picks', request.POST, kwargs)
+         print ('submitting picks', request.user.username, request.POST, kwargs)
              
          #week = Week.objects.get(current=True)
          week = self.get_week()
@@ -185,24 +186,24 @@ class GameListView(LoginRequiredMixin,ListView):
          pick_list = []
          if request.POST.get('favs') == 'favs':
             sorted_spreads = sorted(week.get_spreads().items(), key=lambda x: x[1][2], reverse=True)
-            print ('sspreads', sorted_spreads)
+            #print ('sspreads', sorted_spreads)
             #list of tuples returned by sort, use tuple to find fav
             for g in sorted_spreads:
                 pick_list.append(g[1][0])
-            print (pick_list)
+            print ('picking favs', pick_list)
          else:
             PickFormSet = modelformset_factory(Picks, form=CreatePicksForm, max_num=(week.game_cnt))
             formset = PickFormSet(request.POST, form_kwargs={'week': week})
 
             if formset.is_valid():
-                print ('valid')
+                #print ('valid')
                 
                 for form in formset:
                     cd = form.cleaned_data
                     team = cd.get('team')
                     pick_list.append(team)
             else:
-                print (formset.errors)
+                print ('pick formset errors: ', formset.errors)
                 return render (request, 'fb_app/games_list.html', {
                 'form': formset,
                 'message': formset.errors,
@@ -377,9 +378,9 @@ class AllTime(TemplateView):
     template_name="fb_app/all_time.html"
 
 def ajax_get_games(request, week):
-    print ('in getting gamesS')
+    #print ('in getting gamesS')
     if request.is_ajax():
-        print (request)
+       # print (request)
         games = Games.objects.filter(week__week='3')
         data = json.dumps(games)
         return HttpResponse(data, content_type="application/json")
@@ -391,7 +392,7 @@ def ajax_get_games(request, week):
 class UpdateScores(APIView):
     
     def get(self, num):
-        print ('*** update scores: ', self.request.GET)
+        #print ('*** update scores: ', self.request.GET)
         week = Week.objects.get(week=self.request.GET.get('week'), \
             season_model=Season.objects.get(season=self.request.GET.get('season')))
         
@@ -415,7 +416,7 @@ class UpdateScores(APIView):
         return Response(data, 200)
 
     def post(self, num):
-        print ('in post', self.request.POST)
+        #print ('in post', self.request.POST)
 
         data = json.dumps({'testing': 'does this work?'})
 
@@ -435,12 +436,10 @@ class NewScoresView(TemplateView):
             week = Week.objects.get(current=True)
             if (request.user.is_anonymous or kwargs.get('league') == 'ff') and \
             Picks.objects.filter(week__pk=week.pk, player__league__league="Football Fools").count() < 20:
-                print ('debug 1')
                 last_week_n = week.week -1
                 last_week = Week.objects.get(season_model__current=True, week=last_week_n)
                 self.kwargs['pk'] = str(last_week.pk)
             else:
-                print ('loggedin')
                 self.kwargs['pk']= str(week.pk)
         print ('finsihed new score dispatch: ', datetime.datetime.now() - start)
         return super(NewScoresView, self).dispatch(request, *args, **kwargs)
@@ -467,7 +466,7 @@ class NewScoresView(TemplateView):
                         player.submit_default_picks(week)
         
         if league.ties_lose:
-            print ('ties lose')
+            #print ('ties lose')
             game_cnt = Games.objects.filter(week=week).exclude(postponed=True).count()
         else:
             game_cnt = week.game_cnt              
@@ -547,7 +546,7 @@ class UpdateProj(APIView):
     
     def get(self, num):
         try:
-            print (self.request.GET.getlist('winners[]'))
+            #print (self.request.GET.getlist('winners[]'))
 
             w = Week.objects.get(week=self.request.GET.get('week'), season_model__current=True)
             l = League.objects.get(league=self.request.GET.get('league'))
@@ -585,7 +584,7 @@ class GetPicks(APIView):
     
     def get(self, num):
         try:
-            #print ('get picks', self.request.GET)
+            print ('get picks', self.request.GET)
             score_dict = {}
             league = League.objects.get(league=self.request.GET.get('league'))
             week = Week.objects.get(week=self.request.GET.get('week'), season_model__current=True)
@@ -613,7 +612,7 @@ class UpdateGamesList(APIView):
     
     def get(self, num):
         try:
-            print ('get picks', self.request.GET)
+            #print ('get picks', self.request.GET)
             score_dict = {}
             league = League.objects.get(league=self.request.GET.get('league'))
             week = Week.objects.get(week=self.request.GET.get('week'), season_model__current=True)
@@ -642,7 +641,7 @@ class GetWeeks(APIView):
     
     def get(self, request):
         try:
-            print ('get weeks', request.GET)
+            #print ('get weeks', request.GET)
 
             c_week = Week.objects.get(current=True)
 
@@ -682,7 +681,9 @@ class SpreadView(TemplateView):
 
 
 class GetPick(APIView):
+    permission_classes = [AllowAny]
     def post(self, request):
+
         data = {}
         for pick in Picks.objects.filter(week__week=request.data['week'], pick_num=int(request.data['pick_num']), week__season_model__current=True, player__league__league=request.data['league']):
             try:
@@ -715,9 +716,10 @@ class FBLeaderboard(APIView):
                                         }
             #sorted_data = {k: v for k, v in sorted(data.items(), key=lambda item: item[1][1])}
             sorted_data = sorted(data.items(), key=lambda x: x[1]['rank'])
-            print (sorted_data)
+            #print (sorted_data)
         except Exception as e:
             print ('error: ', e)
+            sorted_data = {}
             sorted_data['error'] = {'msg': str(e)}
                 
         return Response(json.dumps(sorted_data), 200)

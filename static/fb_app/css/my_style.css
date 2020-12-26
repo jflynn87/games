@@ -95,10 +95,7 @@ body {
 }
 
 
-@media only screen and (max-width: 767px) {
-.table {
-  background-color: cyan;
-}
+@media only screen and (max-width: 1199px) {
 .card {
   width: 30em;
 }

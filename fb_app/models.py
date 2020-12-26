@@ -109,7 +109,7 @@ class Week(models.Model):
                            spread = str(spread) + str(char)
                     spread_dict[game.eid]=(game.fav, game.dog, float(spread))
                 except Exception:
-                    print (game, game.fav, game.dog)
+                    #print (game, game.fav, game.dog)
                     spread_dict[game.eid]=(game.home, game.away, 0)
 
         return spread_dict
@@ -163,7 +163,7 @@ class Week(models.Model):
 
                 for game in Games.objects.filter(week=self).exclude(final=True):
                     try:
-                        print ('game', game, game.eid)
+                        #print ('game', game, game.eid)
 
                         home_score = int(data[game.eid]['home_score'])
                         home_team = data[game.eid]['home']
@@ -193,7 +193,7 @@ class Week(models.Model):
                             
                         else:
                             setattr(game, 'qtr',qtr.lower())                        
-                            print ('qtr', qtr[0:5], game)
+                            #print ('qtr', qtr[0:5], game)
                             if qtr[0:5]  in ["final", "Final", "FINAL"]:
                                 print (game, 'setting final')
                                 setattr(game, 'final', True)
@@ -222,7 +222,7 @@ class Week(models.Model):
             #loser_list.append(game.loser)
 
             if not game.final:
-                print ('not final', game, game.home_score, game.away_score)
+                #print ('not final', game, game.home_score, game.away_score)
                 if game.home_score > game.away_score:
                     proj_loser_list.append(game.away)
                 elif game.home_score < game.away_score:

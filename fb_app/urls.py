@@ -19,7 +19,7 @@ urlpatterns = [
     url(r'^ajax_get_games/$', views.ajax_get_games,name='ajax_get_games'),
     path('update_scores/', views.UpdateScores.as_view()),
     path('update_proj/', views.UpdateProj.as_view()),
-    path('get_picks/', views.GetPicks.as_view()),
+    #path('get_picks/', views.GetPicks.as_view()),
     path('get_weeks/', views.GetWeeks.as_view()),
     path('fb_leaderboard/', views.FBLeaderboard.as_view()),
     #path('get_games/', views.GetGames.as_view()),

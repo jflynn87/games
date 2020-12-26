@@ -29,7 +29,7 @@ function refresh(first_time) {
 
 
 function get_picks() { 
-
+        
         for (var i=16; i > 16 - parseInt($('#game_cnt').text()); i--) {
             fetch("/fb_app/get_pick/",
             {method: "POST",
