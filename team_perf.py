@@ -44,18 +44,6 @@ def calc_results():
     for p in Player.objects.filter(league=league):
         league_dict[p.name.username] = {}
 
-
-    # for team in Teams.objects.all():
-    #     team_dict[team] = {'picked_and_won': 0,
-    #                        'picked_and_lost': 0,
-    #                        'picked_against_won': 0,
-    #                        'picked_against_lost': 0,
-    #                        'tie': 0,
-    #                        'right': 0,
-    #                        'wrong': 0,
-    #                        'points_lost': 0,
-    #                        'points_won': 0}
-    
     total_points = 0
     for week in Week.objects.filter(season_model=season).order_by('week'):
         count = Games.objects.filter(week=week).count()
@@ -81,7 +69,7 @@ def calc_results():
     print ('win: ', win)
     print ('lose: ', lose)
 
-    exit()
+    #exit()
 
     for player in Player.objects.filter(league=league):
         for team in Teams.objects.all():
@@ -132,6 +120,7 @@ def calc_results():
         league_dict[user.username].update(team_dict)
 
     print (league_dict)
+    print (datetime.now() - start)
     
     for player, data in league_dict.items():
         print ('XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX')

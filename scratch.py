@@ -4,7 +4,7 @@ os.environ.setdefault("DJANGO_SETTINGS_MODULE","gamesProj.settings")
 import django
 django.setup()
 #from golf_app.models import Tournament, TotalScore, ScoreDetails, Field, Picks, PickMethod
-from fb_app.models import Season, Week, Games, Teams, Picks, League, Player,  MikeScore, WeekScore
+from fb_app.models import Season, Week, Games, Teams, Picks, League, Player,  MikeScore, WeekScore, PickPerformance
 from django.contrib.auth.models import User
 from datetime import datetime, timedelta, timezone
 from django.db.models import Min, Q, Count, Sum, Max
@@ -30,19 +30,35 @@ from django.core import serializers
 import docx2txt
 
 
-data = {}
-l = League.objects.get(league="Golfers")
-print (l.leading_score())
+start = datetime.now()
+league = League.objects.get(league="Football Fools")
+season = Season.objects.get(current=True)
+#player = Player.objects.get(name__username="john")
 
-players = Player.objects.filter(league=l)
+stats, created = PickPerformance.objects.get_or_create(season=season, league=league)
+stats.calculate()
+exit()
+#print (stats.all_team_results())
 
-for p in players:
-    print (p, p.season_points_behind())
+data = json.loads(stats.data)
+print (type(data))
+
+player_data = data.get(player.name.username)
+print (type(player_data))
+player_d = [{k: {'wrong': d['wrong'], 'right': d['right'], 'win_percent': "{:.0%}".format(round(int(d['right'])/(int(d['right'])+int(d['wrong'])),2))}} for k, d in player_data.items()]
+
+print (player_d)
+
+#perf.player_results(player)
+#player_data = [{'team': d['team'],  'wrong': d['wrong'], 'right': d['right']} for p, d in json.loads(stats.data)[player.name.username]]
+print ('dur: ', datetime.now()- start)
+
 exit()
 
-TotalScore.objects.filter(league=player.league)
-#for score in TotalScore.objects.filter(league=player.league):
+for p in league.player:
+    print (p)
 
+exit()
 
 
 def parse_sheet(sheet, players=None):

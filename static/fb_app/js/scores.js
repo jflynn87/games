@@ -142,9 +142,10 @@ $.each(games, function(id,game) {
                                     '<td id=qtr>' + game['qtr'] + '</td>')
 
                                         if (game['qtr'].substring(0,5) == 'FINAL') {
-                                            if (parseInt(game['home_score']) > parseInt(game['away_score'])) {$('#' + id).append('<td id=winner> <input name=winners type=hidden value=' + game['home'] + '> </input> ' + game['home'] + '</td>')}
-                                            else if (parseInt(game['home_score']) < parseInt(game['away_score'])) {$('#' + id).append('<td id=winner> <input name=winners type=hidden value=' + game['away'] + '> </input> ' + game['away'] + '</td>')}
-                                            else if (parseInt(game['home_score']) == parseInt(game['away_score'])) {$('#' + id).append('<td id=winner> <input name=tie type=hidden value=' + game['home'] + '> </input>' + '<input name=tie type=hidden value=' + game['away'] + '> </input>' + 'Tie, no winner' + '</td>')}
+                                            update_winner(id, game)
+                                            //if (parseInt(game['home_score']) > parseInt(game['away_score'])) {$('#' + id).append('<td id=winner> <input name=winners type=hidden value=' + game['home'] + '> </input> ' + game['home'] + '</td>')}
+                                            //else if (parseInt(game['home_score']) < parseInt(game['away_score'])) {$('#' + id).append('<td id=winner> <input name=winners type=hidden value=' + game['away'] + '> </input> ' + game['away'] + '</td>')}
+                                            //else if (parseInt(game['home_score']) == parseInt(game['away_score'])) {$('#' + id).append('<td id=winner> <input name=tie type=hidden value=' + game['home'] + '> </input>' + '<input name=tie type=hidden value=' + game['away'] + '> </input>' + 'Tie, no winner' + '</td>')}
                                                                                     }
                                         else {$('#' + id).append('<td> <form method=POST> <select id=winner> <option value=1 selected=selected>' + game['home'] + '</option>' + 
                                                                  '<option value=2>' + game['away'] + '</option> </select>  <form> </td>' 
@@ -175,15 +176,13 @@ $.each(games, function(id,game) {
     $('#' + id + ' #away_score').text(game['away_score'])
     $('#' + id + ' #qtr').text(game['qtr'])
 
-    if (game['qtr'].substring(0,5) == 'FINAL') {
-        if (parseInt(game['home_score']) > parseInt(game['away_score'])) {$('#' + id + ' #winner').html('<input name=winners type=hidden value=' + game['home'] + '> </input> ' + game['home'])}
-        else if (parseInt(game['home_score']) < parseInt(game['away_score'])) {$('#' + id + ' #winner').html('<input name=winners type=hidden value=' + game['away'] + '> </input> ' + game['away'])}
-        else if (parseInt(game['home_score']) == parseInt(game['away_score'])) {$('#' + id).html('<td id=winner> <input name=tie type=hidden value=' + game['home'] + '> </input>' + '<input name=tie type=hidden value=' + game['away'] + '> </input>' + 'Tie, no winner' + '</td>')}
+     if (game['qtr'].substring(0,5) == 'FINAL') {
+        // $('#' + id + ' #winner').empty()
+        // if (parseInt(game['home_score']) > parseInt(game['away_score'])) {$('#' + id + ' #winner').html('<input name=winners type=hidden value=' + game['home'] + '> </input> ' + game['home'])}
+        // else if (parseInt(game['home_score']) < parseInt(game['away_score'])) {$('#' + id + ' #winner').html('<input name=winners type=hidden value=' + game['away'] + '> </input> ' + game['away'])}
+        // else if (parseInt(game['home_score']) == parseInt(game['away_score'])) {$('#' + id).html('<td id=winner> <input name=tie type=hidden value=' + game['home'] + '> </input>' + '<input name=tie type=hidden value=' + game['away'] + '> </input>' + 'Tie, no winner' + '</td>')}
+        update_winner(id, game)
                                                 }
-    //else {$('#' + id).append('<td> <form method=POST> <select id=winner> <option value=1 selected=selected>' + game['home'] + '</option>' + 
-    //                         '<option value=2>' + game['away'] + '</option> </select>  <form> </td>' 
-    //)
-//}
 
 
 
@@ -192,6 +191,22 @@ $.each(games, function(id,game) {
 })
 
 }
+
+function update_winner(id, game) {
+    //$('#' + id + ' #winner').detach()
+    winner = $('#' + id + ' #winner')
+    winner.remove()
+    if (game['qtr'].substring(0,5) == 'FINAL') {
+        if (parseInt(game['home_score']) > parseInt(game['away_score'])) {$('#' + id).append('<td id=winner> <input name=winners type=hidden value=' + game['home'] + '> </input> ' + game['home'] + '</td>')}
+        else if (parseInt(game['home_score']) < parseInt(game['away_score'])) {$('#' + id).append('<td id=winner> <input name=winners type=hidden value=' + game['away'] + '> </input> ' + game['away'] + '</td>')}
+        else if (parseInt(game['home_score']) == parseInt(game['away_score'])) {$('#' + id).append('<td id=winner> <input name=tie type=hidden value=' + game['home'] + '> </input>' + '<input name=tie type=hidden value=' + game['away'] + '> </input>' + 'Tie, no winner' + '</td>')}
+                                                }
+    else {$('#' + id).append('<td> <form method=POST> <select id=winner> <option value=1 selected=selected>' + game['home'] + '</option>' + 
+                            '<option value=2>' + game['away'] + '</option> </select>  <form> </td>' 
+    )}
+
+}
+
 
 $('#status').html('<p class=none> Scores Updated:  ' + new Date($.now()) +  '</p>').removeAttr('hidden')
 color()

@@ -1,0 +1,95 @@
+{%extends "fb_app/base.html"%}
+
+{%load mathfilters%}
+{%load static%}
+{%load fb_extras%}
+
+{%block body_block%} 
+
+<h1>Pick Results by Team</h1>
+
+<div id=player class="mb-4 mt-4">
+    <h3>Select Player: </h3>
+<select name="player" id="player-select" onchange="change_selected()"> 
+    {%for player in player_list%}
+    {%if user.username == player.name.username%}
+    <option selected value="{{player.name.pk}}">{{player.name.username}}</option>
+    {%else%}
+    <option value="{{player.name.pk}}">{{player.name.username}}</option>
+    {%endif%}
+    {%endfor%}
+</select>
+
+</div>
+
+<div id='stats' class='status' sty>
+    Loading...
+</div>
+
+
+<script>
+
+function get_team_stats(player_key) {
+    
+    const xhr = new XMLHttpRequest()
+    const method = "GET"
+    const player = document.getElementById('player-select')
+    //console.log(player)
+    const url = "/fb_app/all_team_results/" + player_key 
+    const responseType = "json"
+
+    xhr.responseType = responseType
+    xhr.open(method, url)
+    xhr.onload = function () {
+        const serverResponse = xhr.response
+        const stats = serverResponse.response
+        //console.log(xhr.response)
+        build_screen(stats)
+    }
+
+    xhr.send() 
+
+    }
+
+function build_screen(stats) {
+    playerData = stats.player_data 
+    leagueData = stats.league_data 
+    
+    finalString = '<table class=table> <thead> <th>Team</th> <th> Right </th> <th> Wrong </th> <th> Win % </th> <th> League Right </th> <th> League Wrong </th> <th> League Win % </th> </thead>'
+    var i;
+    for (i=0; i < Object.keys(playerData).length; i++) {
+        currentItem = formatEle(Object.entries(playerData)[i],  leagueData[Object.keys(playerData)[i]])
+        finalString += currentItem
+
+        }
+    ele = document.getElementById('stats')
+    ele.classList.remove('status')
+    ele.innerHTML = finalString
+}
+
+function formatEle(playerD, leagueD) {
+    var formattedEle = "<tr> <td>" +  playerD[0] +"</td> <td> " + 
+                                        playerD[1].right + "</td> <td>" + 
+                                      playerD[1].wrong + "</td> <td>" +
+                                        playerD[1].win_percent + "</td> <td>" +
+                                        leagueD.right + "</td> <td>" +
+                                        leagueD.wrong +  "</td> <td>" +
+                                        leagueD.win_percent + "</td> </tr>"
+    
+    return formattedEle
+}
+
+//const stats = get_team_stats()
+const stats = change_selected()
+
+function change_selected() {
+    console.log('change selecetd')
+    var sel = document.getElementById('player-select')
+    var opts = sel.selectedIndex
+    player_key = sel[opts].value
+    console.log(player_key)
+    get_team_stats(player_key)
+}
+</script>
+
+{%endblock body_block%}

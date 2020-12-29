@@ -1,6 +1,6 @@
 from django.contrib import admin
 from fb_app.models import Week, Games, Picks, Player, League, Teams, MikeScore, \
-    WeekScore, Season
+    WeekScore, Season, PickPerformance
 
 # Register your models here.
 
@@ -24,6 +24,11 @@ class MikeScoreAdmin(admin.ModelAdmin):
     list_display = ['week', 'player']
     list_filter = ['week', 'player']
 
+class PickPerformanceAdmin(admin.ModelAdmin):
+    list_display = ['season',]
+    list_filter = ['season', ]
+
+
 admin.site.register(Week, WeekAdmin)
 admin.site.register(Games, GamesAdmin)
 admin.site.register(Picks, PicksAdmin)
@@ -33,3 +38,4 @@ admin.site.register(Teams)
 admin.site.register(MikeScore, MikeScoreAdmin)
 admin.site.register(WeekScore, WeekScoreAdmin)
 admin.site.register(Season)
+admin.site.register(PickPerformance)

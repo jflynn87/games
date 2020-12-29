@@ -521,3 +521,107 @@ class MikeScore(models.Model):
         return str(self.player) + str(self.total)
 
 
+class PickPerformance(models.Model):
+    season = models.ForeignKey(Season, on_delete=models.CASCADE)
+    league = models.ForeignKey(League, on_delete=models.CASCADE)
+    data = models.JSONField(null=True)
+
+    def __str__(self):
+        return str(self.season)
+
+    def calculate(self):
+
+        start = datetime.datetime.now()
+        c_week = Week.objects.get(current=True)
+        team_dict = {}
+        league_dict = {}
+
+        for p in Player.objects.filter(league=self.league):
+            league_dict[p.name.username] = {}
+
+        for player in Player.objects.filter(league=self.league):
+            for team in Teams.objects.all():
+                team_dict[team.nfl_abbr] = {'picked_and_won': 0,
+                                'picked_and_lost': 0,
+                                'picked_against_won': 0,
+                                'picked_against_lost': 0,
+                                'tie': 0,
+                                'right': 0,
+                                'wrong': 0,
+                                'points_lost': 0,
+                                'points_won': 0}
+
+            user = player.name
+            for week in Week.objects.filter(week__lt=c_week.week, season_model=self.season):
+                for pick in Picks.objects.filter(week=week, player__name=user).order_by('-pick_num'):
+                    #print ('pick: ', pick)
+                    game =  Games.objects.get(Q(week=week) & (Q(home=pick.team) | Q(away=pick.team)))
+                    if game.tie:
+                        team_dict[game.home.nfl_abbr].update({'tie': team_dict[game.home.nfl_abbr]['tie'] +1})
+                        team_dict[game.away.nfl_abbr].update({'tie': team_dict[game.away.nfl_abbr]['tie'] +1})
+                        if pick.player.league.ties_lose:
+                            team_dict[game.home.nfl_abbr].update({'wrong': team_dict[game.home.nfl_abbr]['wrong'] +1})
+                            team_dict[game.away.nfl_abbr].update({'wrong': team_dict[game.away.nfl_abbr]['wrong'] +1})
+                            team_dict[game.home.nfl_abbr].update({'points_lost': team_dict[game.home.nfl_abbr]['points_lost'] + pick.pick_num})
+                            team_dict[game.away.nfl_abbr].update({'points_lost': team_dict[game.away.nfl_abbr]['points_lost'] + pick.pick_num})
+                        else:
+                            team_dict[game.home.nfl_abbr].update({'right': team_dict[game.home.nfl_abbr]['right'] +1})
+                            team_dict[game.away.nfl_abbr].update({'right': team_dict[game.away.nfl_abbr]['right'] +1})
+                            team_dict[game.away.nfl_abbr].update({'points_won': team_dict[game.away.nfl_abbr]['points_won'] + pick.pick_num})
+                    else:
+                        if pick.team == game.winner:
+                            team_dict[pick.team.nfl_abbr].update({'picked_and_won': team_dict[pick.team.nfl_abbr]['picked_and_won'] +1})
+                            team_dict[pick.team.nfl_abbr].update({'right': team_dict[pick.team.nfl_abbr]['right'] +1})
+                            team_dict[pick.team.nfl_abbr].update({'points_won': team_dict[pick.team.nfl_abbr]['points_won'] + pick.pick_num})
+
+                            team_dict[game.loser.nfl_abbr].update({'picked_against_lost': team_dict[game.loser.nfl_abbr]['picked_against_lost'] +1})
+                            team_dict[game.loser.nfl_abbr].update({'right': team_dict[game.loser.nfl_abbr]['right'] +1})
+                            #team_dict[pick.team].update({'points_won': team_dict[pick.team]['points_lost'] + pick.pick_num})
+                        elif pick.team == game.loser:
+                            team_dict[pick.team.nfl_abbr].update({'picked_and_lost': team_dict[pick.team.nfl_abbr]['picked_and_lost'] +1})
+                            team_dict[pick.team.nfl_abbr].update({'wrong': team_dict[pick.team.nfl_abbr]['wrong'] +1})
+                            team_dict[pick.team.nfl_abbr].update({'points_lost': team_dict[pick.team.nfl_abbr]['points_lost'] + pick.pick_num})
+
+                            team_dict[game.winner.nfl_abbr].update({'picked_against_won': team_dict[game.winner.nfl_abbr]['picked_against_won'] +1})
+                            team_dict[game.winner.nfl_abbr].update({'wrong': team_dict[game.winner.nfl_abbr]['wrong'] +1})
+                            team_dict[game.winner.nfl_abbr].update({'points_lost': team_dict[game.winner.nfl_abbr]['points_lost'] + pick.pick_num})
+            league_dict[user.username].update(team_dict)
+
+        self.data = json.dumps(league_dict)
+        self.save()
+        print ('stats dict duration: ', datetime.datetime.now() - start)
+
+        return json.dumps(league_dict)
+        
+    def team_results(self, team):
+        '''takes a nfl_abbr (string) or "ALL" for a team and returns a dict object'''
+        data = json.loads(self.data)
+        results_dict = {}
+        
+        wrong = sum(t[team]['wrong'] for t in data.values())
+        right = sum(t[team]['right'] for t in data.values())
+        results_dict = {'team': team, 'right': right, 'wrong': wrong}
+
+        return results_dict
+
+    def all_team_results(self):
+        '''takes PickPerformane object and returns a dict'''
+        data = json.loads(self.data)
+        results_dict = {}
+
+        for team in Teams.objects.all():
+            wrong = sum(t[team.nfl_abbr]['wrong'] for t in data.values())
+            right = sum(t[team.nfl_abbr]['right'] for t in data.values())
+            results_dict[team.nfl_abbr] = {'wrong': wrong, 'right': right, 
+            'win_percent': "{:.0%}".format(round(int(right)/(int(right)+int(wrong)),2))}
+
+        return results_dict
+
+
+
+
+
+    
+        
+
+

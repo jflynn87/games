@@ -67,5 +67,6 @@ class Schedule(models.Model):
     run = models.ForeignKey(Run, on_delete=models.CASCADE, null=True, related_name='schedule')
 
 
+
     def __str__(self):
         return str(self.plan) + str(self.week) + str(self.date)

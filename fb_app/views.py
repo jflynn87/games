@@ -1,7 +1,7 @@
 from django.shortcuts import render, redirect
 from django.views.generic import ListView, TemplateView, View, DetailView, UpdateView
 import urllib.request
-from fb_app.models import Games, Week, Picks, Player, League, Teams, WeekScore, Season
+from fb_app.models import Games, Week, Picks, Player, League, Teams, WeekScore, Season, PickPerformance
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth import authenticate, login, logout
@@ -21,7 +21,7 @@ from collections import OrderedDict
 from rest_framework.views import APIView
 from rest_framework import generics
 from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated, AllowAny
+from rest_framework.permissions import AllowAny
 from fb_app import scrape_cbs
 from django.core import serializers
 from bs4 import BeautifulSoup
@@ -723,6 +723,62 @@ class FBLeaderboard(APIView):
             sorted_data['error'] = {'msg': str(e)}
                 
         return Response(json.dumps(sorted_data), 200)
+
+
+class Analytics(TemplateView):
+    template_name="fb_app/analytics.html"
+
+    def get_context_data(self, **kwargs):
+        context = super(Analytics, self).get_context_data(**kwargs)
+        if self.request.user.is_authenticated:
+            player = Player.objects.get(name=self.request.user)
+            context.update(
+                {'player_list': Player.objects.filter(league=player.league, active=True)}            
+                          )
+        else:
+            context.update(
+                {'player_list': Player.objects.filter(league=League.objects.get(league='Football Fools'), active=True)}
+                           )
+        return context
+
+
+class GetTeamResults(APIView):
+    def get(self, request, nfl_abbr):
+        print (request.GET, 'nfl: ', nfl_abbr)
+        try:
+            data = {}
+            player = Player.objects.get(name=request.user)
+            stats = PickPerformance.objects.get(season__current=True, league=player.league)
+
+            return JsonResponse({'response': stats.team_results(nfl_abbr)}, status=200)
+            #print (sorted_data)
+        except Exception as e:
+            print ('GetTeamsResul error: ', e)
+            
+            return JsonResponse({'response': {'error': str(e)}}, status=400)
+
+
+class AllTeamResults(APIView):
+    def get(self, request, player_key):
+        try:
+            player = Player.objects.get(name__pk=player_key)
+            stats = PickPerformance.objects.get(season__current=True, league=player.league)
+            player_stats = json.loads(stats.data)[player.name.username]
+
+            league_data = stats.all_team_results()
+            player_data = [{k: {'wrong': d['wrong'], 'right': d['right'], 'win_percent': "{:.0%}".format(round(int(d['right'])/(int(d['right'])+int(d['wrong'])),2))} for k, d in player_stats.items()}]
+            print (type(player_data), len(player_data), player_data)
+            sorted_player_data = {k: v for k, v in sorted(player_data[0].items(), key=lambda item: item[1]['win_percent'])}
+            print (sorted_player_data)
+            data = {
+                'player_data': sorted_player_data,
+                'league_data': league_data
+            }
+            return JsonResponse({'response': data}, status=200)
+        except Exception as e:
+            print ('AllTeamsResults error: ', e)
+            
+            return JsonResponse({'respoonse': {'error': str(e)}}, status=400)
 
 
 
