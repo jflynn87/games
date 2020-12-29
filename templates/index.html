@@ -50,6 +50,9 @@
         <a href="{% url 'fb_app:season_total' %}" class="btn btn-primary">Season Totals</a>
         <br>
         <br>
+        <a href="{% url 'fb_app:analytics' %}"> <button class="btn btn-primary">Analytics</button></a>
+        <br>
+        <br>
         <a href="{% url 'fb_app:about'%}"> <button class="btn btn-primary">About</button></a>
 
 
@@ -73,7 +76,7 @@
       <a href="{% url 'golf_app:setup' %}"> <button class="btn btn-primary">Golf Setup</button></a>
       <a href="{% url 'port_app:add_position' %}"> <button class="btn btn-primary">Portfolio</button></a>
       <a href="{% url 'admin:index' %}"> <button class="btn btn-primary">Admin</button></a>
-      <a href="{% url 'fb_app:analytics' %}"> <button class="btn btn-primary">Analytics</button></a>
+      
     {%endif%}
 
   <p hidden id='username'>{{request.user.username}}</p>

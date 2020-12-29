@@ -83,11 +83,9 @@ function formatEle(playerD, leagueD) {
 const stats = change_selected()
 
 function change_selected() {
-    console.log('change selecetd')
     var sel = document.getElementById('player-select')
     var opts = sel.selectedIndex
     player_key = sel[opts].value
-    console.log(player_key)
     get_team_stats(player_key)
 }
 </script>
