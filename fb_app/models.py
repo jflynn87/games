@@ -588,19 +588,33 @@ class PickPerformance(models.Model):
             league_dict[user.username].update(team_dict)
 
         self.data = json.dumps(league_dict)
-        self.save()
+        self.save() 
         print ('stats dict duration: ', datetime.datetime.now() - start)
 
         return json.dumps(league_dict)
         
     def team_results(self, team):
-        '''takes a nfl_abbr (string) or "ALL" for a team and returns a dict object'''
+        '''takes a nfl_abbr (string) for a team and returns a dict object'''
         data = json.loads(self.data)
         results_dict = {}
         
         wrong = sum(t[team]['wrong'] for t in data.values())
         right = sum(t[team]['right'] for t in data.values())
-        results_dict = {'team': team, 'right': right, 'wrong': wrong}
+        picked_and_won = sum(t[team]['picked_and_won'] for t in data.values())
+        picked_and_lost = sum(t[team]['picked_and_lost'] for t in data.values())
+        picked_against_lost = sum(t[team]['picked_against_lost'] for t in data.values())
+        picked_against_won = sum(t[team]['picked_against_won'] for t in data.values())
+        points_won = sum(t[team]['points_won'] for t in data.values())
+        points_lost = sum(t[team]['points_lost'] for t in data.values())
+
+        results_dict = {'team': team, 'right': right, 'wrong': wrong, 
+                        'picked_and_lost': picked_and_lost, 
+                        'picked_and_won': picked_and_won,
+                        'picked_against_lost': picked_against_lost,
+                        'picked_against_won': picked_against_won,
+                        'points_won': points_won,
+                        'points_lost': points_lost,
+        }
 
         return results_dict
 

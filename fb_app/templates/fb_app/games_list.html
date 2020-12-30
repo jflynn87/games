@@ -51,73 +51,72 @@
 </form>
 </div>
 {%endif%}
-<div id='gamesect' class="row">
-<div class="space">
-  <br>
-</div>
-<div class="games column">
-   <table class='table table-sm game_tbl'>
-     <thead>
-      <th>Game Time</th>
-      <th>Fav</th>
-      <th>Line</th>
-      <th>Dog</th>
-    </thead>
-    <tbody id="game_tbl">
-      {%for game in games_list%}
-      <tr id='game{{forloop.counter}}' name="{{game.eid}}">
 
-        <td>{{game.game_time | timezone:"America/New_York" | date:'D'}}, {{game.game_time | timezone:"America/New_York" | date:"P"}} </td>
-        <!-- <td>{{game.day}} {{game.time}}</td> -->
-        {%if game.fav == game.home%}
-        <td id="fav{{forloop.counter}}">{%if game.fav%} {{game.fav}} <span class="record"> {{game.fav.get_record}} </span> {%else%} {{game.home}} <span class="record"> {{game.home.get_record}} </span>{%endif%}</td>
-        {%else%}
-        <td id="fav{{forloop.counter}}" >{%if game.fav%} {{game.fav | lower}} <span class="record"> {{game.fav.get_record}} </span> {%else%} {{game.home}} <span class="record"> {{game.home.get_record}} </span> {%endif%}</td>
-        {%endif%}
-        <td class="spread" id="spread{{forloop.counter}}"> {{game.spread}} </td>
-        {%if game.dog == game.home%}
-        <td id="dog{{forloop.counter}}" >{%if game.dog%}{{game.dog}} <span class="record"> {{game.dog.get_record}} </span> {%else%} {{game.away}} <span class="record"> {{game.away.get_record}} </span> {%endif%}</td>
-        {%else%}
-        <td id="dog{{forloop.counter}}" >{%if game.dog%}{{game.dog | lower}} <span class="record"> {{game.dog.get_record}} </span> {%else%} {{game.away | lower}} <span class="record"> {{game.away.get_record}} </span> {%endif%}</td>
-        {%endif%}
-      </tr>
+<div id="gamesect" class="container-fluid"> 
+  <div class="row">
+  <div class="picks">
+    <table class='table table-sm game_tbl'>
+      <thead>
+        <th>Game Time</th>
+        <th>Fav</th>
+        <th>Line</th>
+        <th>Dog</th>
+      </thead>
+      <tbody id="game_tbl">
+        {%for game in games_list%}
+        <tr id='game{{forloop.counter}}' name="{{game.eid}}">
 
-      {%endfor%}
-    </tbody>
-   </table>
-</div>
-<br>
+          <td>{{game.game_time | timezone:"America/New_York" | date:'D'}}, {{game.game_time | timezone:"America/New_York" | date:"P"}} </td>
+          <!-- <td>{{game.day}} {{game.time}}</td> -->
+          {%if game.fav == game.home%}
+          <td id="fav{{forloop.counter}}">{%if game.fav%} {{game.fav}} <span class="record"> {{game.fav.get_record}} </span> {%else%} {{game.home}} <span class="record"> {{game.home.get_record}} </span>{%endif%}</td>
+          {%else%}
+          <td id="fav{{forloop.counter}}" >{%if game.fav%} {{game.fav | lower}} <span class="record"> {{game.fav.get_record}} </span> {%else%} {{game.home}} <span class="record"> {{game.home.get_record}} </span> {%endif%}</td>
+          {%endif%}
+          <td class="spread" id="spread{{forloop.counter}}"> {{game.spread}} </td>
+          {%if game.dog == game.home%}
+          <td id="dog{{forloop.counter}}" >{%if game.dog%}{{game.dog}} <span class="record"> {{game.dog.get_record}} </span> {%else%} {{game.away}} <span class="record"> {{game.away.get_record}} </span> {%endif%}</td>
+          {%else%}
+          <td id="dog{{forloop.counter}}" >{%if game.dog%}{{game.dog | lower}} <span class="record"> {{game.dog.get_record}} </span> {%else%} {{game.away | lower}} <span class="record"> {{game.away.get_record}} </span> {%endif%}</td>
+          {%endif%}
+        </tr>
 
-<div id= 'picksect' class="column">
-  <!-- <div class= "column table table-sm">  -->
-    <table class='table table-sm'>
-    <thead>
-        <th>Pick#</th>
-        <th>Pick List</th>
-    </thead>
-    <tbody id ='pickstbl'>
-
-      {{ form.media.js }}
-      <form id="pick_form" method="POST">
-        {%csrf_token%}
-
-        {{ form.management_form}}
-        {%for pick in form%}
-      <tr>
-        <td>{{17|sub:forloop.counter}}</td>
-        <td id=pick{{17|sub:forloop.counter}}>{{pick.team}} </td>
-        <td class="hidden">{{pick.id}}</td>
-      </tr>
         {%endfor%}
       </tbody>
-  </table>
-  {%if not week.started or week.late_picks%}
-  <button type="submit" onclick="validate()" class="btn btn-primary">Submit Picks</button>
-  {%endif%}
-</form>
+    </table>
   </div>
-  
+<div class='middle'></div>
+
+  <div id="picksect" class="picks">
+        <table class='table table-sm'>
+      <thead>
+          <th>Pick#</th>
+          <th>Pick List</th>
+      </thead>
+      <tbody id ='pickstbl'>
+
+        {{ form.media.js }}
+        <form id="pick_form" method="POST">
+          {%csrf_token%}
+
+          {{ form.management_form}}
+          {%for pick in form%}
+        <tr>
+          <td>{{17|sub:forloop.counter}}</td>
+          <td id=pick{{17|sub:forloop.counter}}>{{pick.team}} </td>
+          <td class="hidden">{{pick.id}}</td>
+        </tr>
+          {%endfor%}
+        </tbody>
+    </table>
+    {%if not week.started or week.late_picks%}
+    <button type="submit" onclick="validate()" class="btn btn-primary">Submit Picks</button>
+    {%endif%}
+  </form>
+</div>  
+  </div>
 </div>
+
 
 <div>
   <table>

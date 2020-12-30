@@ -16,12 +16,13 @@ body {
   display: flex;
 }
 
-.column {
+/*.column {
 /*  flex: 40%; */
-  padding-left: 2em;
+ /* padding-left: 2em;
+  width: 40%;
   /*height: 700px;*/
 
-}
+/*}
 */
 .game_tbl {
   height: 60%;
@@ -94,9 +95,19 @@ body {
    background-color: red;
 }
 
+.picks {
+  width: 40%;
+}
+
+
 
 @media only screen and (max-width: 1199px) {
 .card {
   width: 30em;
 }
+
+.picks {
+  width: 30em;
+}
+
 }

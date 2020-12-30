@@ -116,80 +116,9 @@ $(document).ready(function () {
       )
 })
 })
-
-/* function get_spreads() {
-  console.log('getting spreads')
-  $('#status').text('updating spreads ....').attr('class', 'status')
-  fetch("/fb_app/get_spreads/" + $('#week_key').text(),
-  {method: "GET",
-  })
-.then((response) =>  response.json())
-.then((responseJSON) => {
-  json = $.parseJSON(responseJSON)
-  console.log(json)
-      for (i = 0; i < json.length; ++i) {
-
-        console.log(json[i][0])
-        row = $('tr[name=' + json[i][0] + ']')
-
-        $('td', row).each(function () {
-
-          if ($(this).prop('id').startsWith('spread')) {
-            $(this).html(json[i][5])
-          }
-          else if ($(this).prop('id').startsWith('fav')) {
-            $(this).html(json[i][1] +"<span class='record'>" + json[i][2] + "</span>")
-            
-          }
-          else if ($(this).prop('id').startsWith('dog')) {
-            $(this).html(json[i][3] + "<span class='record'>" + json[i][4] + "</span>")
-
-          }
-        })
-      }
-      var months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
-      now = new Date()
-      console.log(now)
-      $('#status').text('spreads updated: ' + now).attr('class', 'updated-status')
-    })
-  }
- */
-$(window).resize(function() {
-  console.log($(window).width())
-  $('#picksect').attr('class', 'row')
-})
+//commented on update to bootstrap 5.0
+//$(window).resize(function() {
+//  console.log($(window).width())
+//  $('#picksect').attr('class', 'row')
+//})
   
-// function rebuild_page(games) {
-//   $('#game_tbl').empty()
-//     var i = 1
-//     $.each(games, function(eid, game) {
-//       $('#game_tbl').append('<tr id="game' + i + '" name=' + eid  +'>' + '<td>' + game['time'] + '</td>' + 
-//         '<td id=fav' + i + '>' + game['home'] + '<span class=record> (' + game['home_record'] + ') </span> </td>' +
-//         '<td class=spread id=spread' + i +'>' + game['spread'] + '</td>' +
-//         '<td id=dog' + i + '>' + game['away'] + '<span class=record> (' + game['away_record'] + ') </span> </td>' +
-//         '</tr>')
-//       i ++
-//     })
-//     if (Object.keys(games).length !=  $('#pickstbl tr').length) {
-//         $('#form-TOTAL_FORMS') = Object.keys(games).length
-//         if (Object.keys(games).length <  $('#pickstbl tr').length) {
-//           for (i=$('#pickstbl tr').length; i == Object.keys(games).length; i++) {
-//             $('#pickstbl').append('<tr>' +
-//                                   '<td>' + Object.keys(games).length - i + '</td>' +
-//                                   '<td id=pick' + Object.keys(games).length - i + '>' + Object.keys(games).length - i + '</td>' +
-
-            
-//             </tr>')
-//           }
-//         }
-//         else (//delete selectors)
-//     }
-
-
-//   $('#pickstbl tr').each(function (i) {
-//     document.getElementById('id_form-' + i.toString() + '-team').selectedIndex = 0
-//   })
-
-//   get_spreads()
-
-// }

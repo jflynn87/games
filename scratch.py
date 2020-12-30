@@ -36,7 +36,7 @@ season = Season.objects.get(current=True)
 #player = Player.objects.get(name__username="john")
 
 stats, created = PickPerformance.objects.get_or_create(season=season, league=league)
-print (stats.data)
+print (stats.team_results('NYG'))
 #stats.calculate()
 exit()
 #print (stats.all_team_results())

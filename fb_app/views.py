@@ -766,7 +766,8 @@ class AllTeamResults(APIView):
             player_stats = json.loads(stats.data)[player.name.username]
 
             league_data = stats.all_team_results()
-            player_data = [{k: {'wrong': d['wrong'], 'right': d['right'], 'win_percent': "{:.0%}".format(round(int(d['right'])/(int(d['right'])+int(d['wrong'])),2))} for k, d in player_stats.items()}]
+            player_data = [{k: {'wrong': d['wrong'], 'right': d['right'],
+             'win_percent': "{:.0%}".format(round(int(d['right'])/(int(d['right'])+int(d['wrong'])),2))} for k, d in player_stats.items()}]
             #print (type(player_data), len(player_data), player_data)
             sorted_player_data = {k: v for k, v in sorted(player_data[0].items(), key=lambda item: item[1]['win_percent'])}
             #print (sorted_player_data)
