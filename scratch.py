@@ -31,12 +31,13 @@ import docx2txt
 
 
 start = datetime.now()
-league = League.objects.get(league="Football Fools")
+league = League.objects.get(league="Golfers")
 season = Season.objects.get(current=True)
 #player = Player.objects.get(name__username="john")
 
 stats, created = PickPerformance.objects.get_or_create(season=season, league=league)
-stats.calculate()
+print (stats.data)
+#stats.calculate()
 exit()
 #print (stats.all_team_results())
 
