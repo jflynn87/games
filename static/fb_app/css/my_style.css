@@ -99,6 +99,10 @@ body {
   width: 40%;
 }
 
+.detail-view {
+  font-family: Verdana, Geneva, Tahoma, sans-serif;
+
+}
 
 
 @media only screen and (max-width: 1199px) {

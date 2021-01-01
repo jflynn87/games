@@ -29,7 +29,8 @@ urlpatterns = [
     url(r'^get_spreads/(?P<pk>\d+)/$',views.GetSpreads.as_view(),name='get_spreads'),
     url(r'^new_scores/$',views.NewScoresView.as_view(),name='new_scores'),
     path('analytics/',views.Analytics.as_view(), name='analytics'),
-    path('result_by_team/<str:nfl_abbr>', views.GetTeamResults.as_view()),
+    #path('result_by_team/<str:nfl_abbr>', views.GetTeamResults.as_view()),
     path('all_team_results/<int:player_key>', views.AllTeamResults.as_view()),
+    path('detailed_results/<int:player_key>/<str:nfl_abbr>', views.TeamResults.as_view()),
 
     ]

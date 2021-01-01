@@ -742,20 +742,20 @@ class Analytics(TemplateView):
         return context
 
 
-class GetTeamResults(APIView):
-    def get(self, request, nfl_abbr):
-        print (request.GET, 'nfl: ', nfl_abbr)
-        try:
-            data = {}
-            player = Player.objects.get(name=request.user)
-            stats = PickPerformance.objects.get(season__current=True, league=player.league)
+# class GetTeamResults(APIView):
+#     def get(self, request, nfl_abbr):
+#         print (request.GET, 'nfl: ', nfl_abbr)
+#         try:
+#             data = {}
+#             player = Player.objects.get(name=request.user)
+#             stats = PickPerformance.objects.get(season__current=True, league=player.league)
 
-            return JsonResponse({'response': stats.team_results(nfl_abbr)}, status=200)
-            #print (sorted_data)
-        except Exception as e:
-            print ('GetTeamsResul error: ', e)
+#             return JsonResponse({'response': stats.team_results(nfl_abbr)}, status=200)
+#             #print (sorted_data)
+#         except Exception as e:
+#             print ('GetTeamsResul error: ', e)
             
-            return JsonResponse({'response': {'error': str(e)}}, status=400)
+#             return JsonResponse({'response': {'error': str(e)}}, status=400)
 
 
 class AllTeamResults(APIView):
@@ -780,6 +780,27 @@ class AllTeamResults(APIView):
             print ('AllTeamsResults error: ', e)
             
             return JsonResponse({'respoonse': {'error': str(e)}}, status=400)
+
+class TeamResults(APIView):
+    def get(self, request, player_key, nfl_abbr):
+        print (request.GET, 'nfl: ', nfl_abbr, player_key)
+        try:
+            data = {}
+            player = Player.objects.get(name__pk=player_key)
+            stats = PickPerformance.objects.get(season__current=True, league=player.league)
+            player_stats = stats.team_results(nfl_abbr, player)
+            league_stats = stats.team_results(nfl_abbr)
+            data = {'response': {'player_stats': player_stats,
+                                'league_stats': league_stats,}
+                                }
+
+
+            return JsonResponse(data, status=200)
+            #print (sorted_data)
+        except Exception as e:
+            print ('GetTeamsResul error: ', e)
+            
+            return JsonResponse({'response': {'error': str(e)}}, status=400)
 
 
 

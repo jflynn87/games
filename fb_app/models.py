@@ -576,7 +576,7 @@ class PickPerformance(models.Model):
 
                             team_dict[game.loser.nfl_abbr].update({'picked_against_lost': team_dict[game.loser.nfl_abbr]['picked_against_lost'] +1})
                             team_dict[game.loser.nfl_abbr].update({'right': team_dict[game.loser.nfl_abbr]['right'] +1})
-                            #team_dict[pick.team].update({'points_won': team_dict[pick.team]['points_lost'] + pick.pick_num})
+                            team_dict[game.loser.nfl_abbr].update({'points_won': team_dict[game.loser.nfl_abbr]['points_won'] + pick.pick_num})
                         elif pick.team == game.loser:
                             team_dict[pick.team.nfl_abbr].update({'picked_and_lost': team_dict[pick.team.nfl_abbr]['picked_and_lost'] +1})
                             team_dict[pick.team.nfl_abbr].update({'wrong': team_dict[pick.team.nfl_abbr]['wrong'] +1})
@@ -593,11 +593,17 @@ class PickPerformance(models.Model):
 
         return json.dumps(league_dict)
         
-    def team_results(self, team):
-        '''takes a nfl_abbr (string) for a team and returns a dict object'''
-        data = json.loads(self.data)
+    def team_results(self, team, player=None):
+        '''takes a nfl_abbr (string) for a team, option player obj and returns a dict object'''
+        if player:
+            data = {}
+            d = json.loads(self.data)[player.name.username]
+            data[player] = d
+        else:
+            data = json.loads(self.data)
         results_dict = {}
         
+        #print (data)
         wrong = sum(t[team]['wrong'] for t in data.values())
         right = sum(t[team]['right'] for t in data.values())
         picked_and_won = sum(t[team]['picked_and_won'] for t in data.values())
