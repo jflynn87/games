@@ -119,25 +119,11 @@ class GameListView(LoginRequiredMixin,ListView):
     def get_context_data(self, **kwargs):
         context = super(GameListView, self).get_context_data(**kwargs)
         print ('game list view', self.kwargs)
-        #week = Week.objects.get(current=True)
-#        if self.kwargs.get('pk') != None:
-#            print ('kwargs driving week')
-#            week= Week.objects.get(pk=self.kwargs.get('pk'))
-#        else:
-#            print ('getting current week games')
-#            week = Week.objects.get(current=True)
         week = self.get_week()
         player=Player.objects.get(name=self.request.user)
         #not adjusting game cnt as expect postponed only after picks done
         PickFormSet = modelformset_factory(Picks, form=CreatePicksForm, max_num=(week.game_cnt))
         NoPickFormSet = modelformset_factory(Picks, form=CreatePicksForm, extra=(week.game_cnt))
-
-#        try:
-#            print ('skipping preads')
-#            #get_spreads()
-#        except Exception:
-#            print ('no spreads available')
-        #games=Games.objects.filter(week=week).order_by("eid")
         games=Games.objects.filter(week=week).order_by("game_time")
         if Picks.objects.filter(player=player, week=week).exists():
             form = PickFormSet(queryset=Picks.objects.filter(week=week, player=player), form_kwargs={'week': week})
@@ -151,7 +137,6 @@ class GameListView(LoginRequiredMixin,ListView):
         if Picks.objects.filter(week=week, player=player).count() > 0:
             context.update({
             'week': week,
-            #'week': Week.objects.filter(season_model__current=True, week__gte=week.week),
             'games_list': games,
             'form': form,
             'teams': team_dict
@@ -159,7 +144,6 @@ class GameListView(LoginRequiredMixin,ListView):
         else:
             context.update({
             'week': week,
-            #'week': Week.objects.filter(season_model__current=True, week__gte=week.week),
             'games_list': games,
             'form': form,
             'teams': team_dict
@@ -743,22 +727,6 @@ class Analytics(TemplateView):
         return context
 
 
-# class GetTeamResults(APIView):
-#     def get(self, request, nfl_abbr):
-#         print (request.GET, 'nfl: ', nfl_abbr)
-#         try:
-#             data = {}
-#             player = Player.objects.get(name=request.user)
-#             stats = PickPerformance.objects.get(season__current=True, league=player.league)
-
-#             return JsonResponse({'response': stats.team_results(nfl_abbr)}, status=200)
-#             #print (sorted_data)
-#         except Exception as e:
-#             print ('GetTeamsResul error: ', e)
-            
-#             return JsonResponse({'response': {'error': str(e)}}, status=400)
-
-
 class AllTeamResults(APIView):
     def get(self, request, player_key):
         try:
@@ -781,6 +749,7 @@ class AllTeamResults(APIView):
             print ('AllTeamsResults error: ', e)
             
             return JsonResponse({'respoonse': {'error': str(e)}}, status=400)
+
 
 class TeamResults(APIView):
     def get(self, request, player_key, nfl_abbr):
@@ -812,7 +781,7 @@ class CreatePlayoffs(CreateView, LoginRequiredMixin):
     def get_context_data(self, **kwargs):
         context = super(CreatePlayoffs, self).get_context_data(**kwargs)
         player = Player.objects.get(name=self.request.user)
-        game = Games.objects.get(eid='202017DETMIN')
+        game = Games.objects.get(week__current=True, playoff_picks=True)
 
         if PlayoffPicks.objects.filter(player=player, game=game).exists():
             form = CreatePlayoffsForm(instance=PlayoffPicks.objects.get(player=player, game=game))
@@ -833,54 +802,6 @@ class CreatePlayoffs(CreateView, LoginRequiredMixin):
         if PlayoffPicks.objects.filter(player=player, game=game).exists():
             PlayoffPicks.objects.filter(player=player, game=game).delete()
         
+        print ('submitting playoff form; ', request.user, datetime.datetime.now())
         return super(CreatePlayoffs, self).post(request, **kwargs)
 
-
-
-# class GetGames(APIView):
-    
-#     def post(self, request):
-#         try:
-#             print ('get games', request.data)
-#             games = {}
-#             week = Week.objects.get(week=request.data['week_key'], season_model__current=True)
-
-#             for game in Games.objects.filter(week=week).order_by('game_time'):
-                
-                
-#                 est = pytz.timezone('US/Eastern')
-#                 kick_off = game.game_time.astimezone(est)
-#                 dow = kick_off.strftime('%a')
-#                 kick_off_display = str(dow) + ', ' + dateformat.TimeFormat(kick_off).P() 
-
-#                 games[game.eid] = {#'time': datetime.datetime.strftime(game.game_time, "%m/%d/%Y, %H"),
-#                                    'time': kick_off_display,
-#                                    'home': game.home.nfl_abbr,
-#                                    'home_record': game.home.get_record(),
-#                                    'away': game.away.nfl_abbr.lower(),
-#                                    'away_record': game.away.get_record(),
-#                                    'spread': game.spread
-#                     }
-
-#             print ('getWeeks', games)
-#             return Response(json.dumps(games), 200)
-#             #return Response(json.dumps(score_dict), 200)
-
-#         except Exception as e:
-#             print ('get games api issue: ', e)
-#             return Response(json.dumps({'msg': e}), 200)
-
-
-# def format_time(time):
-#         """
-#         Copied from django code repoitory, utils/dateformat.py
-#         Time, in 12-hour hours, minutes and 'a.m.'/'p.m.', with minutes left off
-#         if they're zero and the strings 'midnight' and 'noon' if appropriate.
-#         Examples: '1 a.m.', '1:30 p.m.', 'midnight', 'noon', '12:30 p.m.'
-#         Proprietary extension.
-#         """
-#         if time.minute == 0 and time.hour == 0:
-#             return _('midnight')
-#         if time.minute == 0 and time.hour == 12:
-#             return _('noon')
-#         return '%s %s' % (time.f(), time.a())

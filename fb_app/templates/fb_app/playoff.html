@@ -6,7 +6,7 @@
 {%block body_block%} 
 
 <div class=container>
-<h1 class="mb-3" style="text-align: center;">Super Bowl Pool - {{game.away}} at {{game.home}}</h1>
+<h1 class="mb-3" style="text-align: center;">Super Bowl Pool - {{game.away}} @ {{game.home}}</h1>
 <form  method="POST">
 {{form | bootstrap}}
 {%csrf_token%}

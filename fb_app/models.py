@@ -372,6 +372,7 @@ class Games(models.Model):
     day = models.CharField(max_length=10, null=True, blank=True)
     game_time = models.DateTimeField(null=True, blank=True)
     postponed = models.BooleanField(default=False)
+    playoff_picks = models.BooleanField(default=False)
 
     def __str__(self):
         return str(self.home) + str(self.away)

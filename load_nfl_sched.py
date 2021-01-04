@@ -23,7 +23,7 @@ def load_sched(year):
     current_week = Week.objects.get(current=True)
     week_cnt = current_week.week + 1
     season = Season.objects.get(current=True)
-    while week_cnt < 18:
+    while week_cnt < 19:
             try:
                 week, created = Week.objects.get_or_create(season_model=season, week=week_cnt)
                 #week.season = season.season
@@ -35,7 +35,15 @@ def load_sched(year):
                 week.game_cnt = 0
                 week.save()
 
-                url = "https://www.nfl.com/schedules/2020/reg" + str(week_cnt) + "/"
+                if week_cnt > 17:
+                    url_week = 'post' + str(week_cnt - 17)
+                else:
+                    url_week = 'reg' + str(week_cnt)
+
+
+                #url = "https://www.nfl.com/schedules/2020/" + str(week_cnt) + "/"
+                url = "https://www.nfl.com/schedules/2020/" + url_week + "/"
+                print (url)
 
                 game_dict = {}
                 options = ChromeOptions()
@@ -54,6 +62,7 @@ def load_sched(year):
                     month = date_t.split(' ')[1]
                     day = date_t.split(' ')[2].strip('TH').strip('ND').strip('ST').strip('RD')
                     game_dow = section.find_element_by_class_name('d3-o-section-title').text.split(',')[0]
+                    #fix the year for Jan games
                     web_game_date = (str(month) + ' ' + str(day) + ', ' + str(season.season))
 
                     for game_info in section.find_elements_by_class_name('nfl-c-matchup-strip__left-area'):

@@ -36,7 +36,7 @@ class CreatePlayoffsForm(ModelForm):
 
     def __init__(self, *args, **kwargs):
         super (CreatePlayoffsForm, self).__init__(*args, **kwargs)
-        game = Games.objects.get(eid='202017DETMIN')
+        game = Games.objects.get(week__current=True, playoff_picks=True)
         teams_list = [game.home.nfl_abbr, game.away.nfl_abbr]
         self.fields['winning_team'].queryset = Teams.objects.filter(nfl_abbr__in=teams_list)
         self.fields['player'].widget = forms.HiddenInput()
