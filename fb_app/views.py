@@ -1,13 +1,14 @@
 from django.shortcuts import render, redirect
-from django.views.generic import ListView, TemplateView, View, DetailView, UpdateView
+from django.views.generic import ListView, TemplateView, View, DetailView, UpdateView, CreateView
 import urllib.request
-from fb_app.models import Games, Week, Picks, Player, League, Teams, WeekScore, Season, PickPerformance
+from fb_app.models import Games, Week, Picks, Player, League, Teams, WeekScore, Season, PickPerformance, PlayoffPicks
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth import authenticate, login, logout
 from django.http import HttpResponseRedirect, HttpResponse, JsonResponse
 from django.urls import reverse, reverse_lazy
-from fb_app.forms import UserForm, CreatePicksForm#, PickFormSet, NoPickFormSet
+#from fb_app.forms import UserForm, CreatePicksForm#, PickFormSet, NoPickFormSet
+from fb_app.forms import CreatePicksForm, CreatePlayoffsForm
 from django.core.exceptions import ObjectDoesNotExist
 from fb_app.validate_picks import validate
 from django.contrib.auth.models import User
@@ -803,6 +804,36 @@ class TeamResults(APIView):
             return JsonResponse({'response': {'error': str(e)}}, status=400)
 
 
+class CreatePlayoffs(CreateView, LoginRequiredMixin):
+    template_name='fb_app/playoff.html'
+    form_class = CreatePlayoffsForm
+    success_url = '/'
+    
+    def get_context_data(self, **kwargs):
+        context = super(CreatePlayoffs, self).get_context_data(**kwargs)
+        player = Player.objects.get(name=self.request.user)
+        game = Games.objects.get(eid='202017DETMIN')
+
+        if PlayoffPicks.objects.filter(player=player, game=game).exists():
+            form = CreatePlayoffsForm(instance=PlayoffPicks.objects.get(player=player, game=game))
+        else:
+            form = CreatePlayoffsForm(initial={'player':player, 'game': game})
+
+        context.update(
+                {'player': player,
+                 'game': game,
+                 'form': form
+                })
+        return context
+
+    def post(self, request, **kwargs):
+        player = Player.objects.get(name=self.request.user)
+        game = Games.objects.get(pk=request.POST.get('game'))
+
+        if PlayoffPicks.objects.filter(player=player, game=game).exists():
+            PlayoffPicks.objects.filter(player=player, game=game).delete()
+        
+        return super(CreatePlayoffs, self).post(request, **kwargs)
 
 
 

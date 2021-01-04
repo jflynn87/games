@@ -638,6 +638,29 @@ class PickPerformance(models.Model):
         return results_dict
 
 
+class PlayoffPicks(models.Model):
+    player = models.ForeignKey(Player, on_delete=models.CASCADE)
+    game = models.ForeignKey(Games, on_delete=models.CASCADE)
+    rushing_yards = models.PositiveIntegerField()
+    passing_yards = models.PositiveIntegerField()
+    total_points_scored = models.PositiveIntegerField()
+    points_on_fg = models.PositiveIntegerField()
+    takeaways = models.PositiveIntegerField()
+    sacks = models.PositiveIntegerField()
+    def_special_teams_tds = models.PositiveIntegerField()
+    team_one_runner = models.PositiveIntegerField()
+    team_one_receiver = models.PositiveIntegerField()
+    team_one_passing = models.PositiveIntegerField()
+    team_two_runner = models.PositiveIntegerField()
+    team_two_receiver = models.PositiveIntegerField()
+    team_two_passing = models.PositiveIntegerField()
+    winning_team = models.ForeignKey(Teams, on_delete=models.CASCADE)
+
+    def __str__(self):
+        return str(self.player) + str(self.game)
+
+
+
 
 
 

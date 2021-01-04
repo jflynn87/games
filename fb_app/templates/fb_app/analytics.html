@@ -92,14 +92,11 @@ function get_details(team) {
     var opts = sel.selectedIndex
     player_key = sel[opts].value
 
-    console.log('get details', team, player_key )
-    
     fetch("/fb_app/detailed_results/" + player_key + '/' + team,
             {method: "GET",
             })
         .then((response) =>  response.json())
         .then((responseJSON) => {
-            console.log(responseJSON)
             buildDtlRow(responseJSON.response, team, player_key)
         })
     }
@@ -126,7 +123,6 @@ function build_screen(stats) {
 }
 
 function formatEle(playerD, leagueD) {
-    console.log(playerD)
     var formattedEle = "<tr id=" + playerD[0] + " class=summary-row"  + " onclick=get_details('" + playerD[0] +"')> <td> <span>" + playerD[0] + " <i class='fas fa-plus-circle fa-sm' style='color:lightblue;'></i> </span> </td>" +
                                  "<td>" + playerD[1].right + "</td>" +
                                  "<td>" + playerD[1].wrong + "</td>" +
@@ -168,7 +164,6 @@ function getSelectedPlayer() {
 
 function change_selected() {
     player = getSelectedPlayer()
-    console.log(player)
     get_all_team_stats(player)
 }
 
@@ -184,7 +179,6 @@ document.getElementById('stats').onclick = function(event) {
 }}
  */
 function buildDtlRow(details, team, player) {
-    console.log('dtl', details.player_stats, team)
     
     wonPicked = document.getElementById('picked-won-' + team)
     wonPicked.innerHTML = details.player_stats.picked_and_won + ' pts: +' + details.player_stats.points_won

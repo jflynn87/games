@@ -32,5 +32,6 @@ urlpatterns = [
     #path('result_by_team/<str:nfl_abbr>', views.GetTeamResults.as_view()),
     path('all_team_results/<int:player_key>', views.AllTeamResults.as_view()),
     path('detailed_results/<int:player_key>/<str:nfl_abbr>', views.TeamResults.as_view()),
+    path('playoff_entry/',views.CreatePlayoffs.as_view(),name='playoff_entry'),
 
     ]

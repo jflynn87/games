@@ -48,6 +48,7 @@ def index(request):
 
         return render(request, 'index.html', {
             'fb_week': Week.objects.get(current=True),
+            'sb_users': User.objects.filter(username__in=['john', 'jcarl62'])
             
                 })
 

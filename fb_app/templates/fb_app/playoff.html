@@ -1,0 +1,16 @@
+{%extends "fb_app/base.html"%}
+{% load bootstrap %}
+{%load static%}
+{%load fb_extras%}
+
+{%block body_block%} 
+
+<div class=container>
+<h1 class="mb-3" style="text-align: center;">Super Bowl Pool - {{game.away}} at {{game.home}}</h1>
+<form  method="POST">
+{{form | bootstrap}}
+{%csrf_token%}
+<button class="btn btn-primary" action="submit">Submit</button>
+</form>
+</div>
+{%endblock%}

@@ -72,13 +72,18 @@
     <br>
     {%if user.is_superuser%}
     <p>John's Menu:</p>
+
       <a href="{% url 'run_app:dashboard' %}"> <button class="btn btn-primary">Runs</button></a>
       <a href="{% url 'golf_app:setup' %}"> <button class="btn btn-primary">Golf Setup</button></a>
       <a href="{% url 'port_app:add_position' %}"> <button class="btn btn-primary">Portfolio</button></a>
       <a href="{% url 'admin:index' %}"> <button class="btn btn-primary">Admin</button></a>
       
     {%endif%}
-
+    {%if user in sb_users%}
+    <p>Super Bowl</p>
+    <a href="{% url 'fb_app:playoff_entry' %}"> <button class="btn btn-primary">FB Playoffs</button></a>
+    {%endif%}
+  
   <p hidden id='username'>{{request.user.username}}</p>
   </div>
 {% endblock %}
