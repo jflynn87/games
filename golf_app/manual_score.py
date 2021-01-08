@@ -160,6 +160,7 @@ class Score(object):
         print ('after cut num', datetime.now() - start)
         optimal_picks = json.loads(self.tournament.optimal_picks())
         print ('after optimal', datetime.now() - start)
+        print (optimal_picks)
         curr_round = self.tournament.saved_round
         print ('after round', datetime.now() - start)
 

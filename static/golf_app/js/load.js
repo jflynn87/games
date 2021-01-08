@@ -12,8 +12,8 @@ $(document).ready(function() {
       data: {'tournament' : $('#tournament_key').text()},
       dataType: 'json',
       success: function (json) {
-        console.log('DB load success');
-        console.log(json, typeof(json))
+       // console.log('DB load success');
+       // console.log(json, typeof(json))
         if (!$.isEmptyObject(json)) {
           build_score_tbl(json)
          
@@ -115,7 +115,7 @@ function build_score_tbl(data) {
   var t_data = $.parseJSON(data['t_data'])
 
   //console.log(t_data[0]['fields']['saved_round'])
-  console.log('T info: ', t_data[0])
+  //console.log('T info: ', t_data[0])
 //  console.log('totals', total_data)
 
   $('#det-list table').append('<thead style="background-color:lightblue">' + '<tr>' + '<th> Tournament Scores  </th>' + 
@@ -195,9 +195,11 @@ function build_score_tbl(data) {
       if ($(this)[0]['today_score'] == 'CUT') {$('#' + p + pick).addClass('cut')}
     
     //use 0 of the index to strip the extra chars in multi pick groups.  Need to fix for tournaments with 10 groups.
-    
-    if ($.inArray($(this)[0]['pick'], optimal_data[index[0]]['golfer']) !== -1) {$('#' + p + $(this)[0]['pick'].replace(filler, '')).addClass('best')} 
+    console.log($(this)[0]['pick'], optimal_data[index]['golfer'])
+    //if ($.inArray($(this)[0]['pick'], optimal_data[index[0]]['golfer']) !== -1) {$('#' + p + $(this)[0]['pick'].replace(filler, '')).addClass('best')} 
+    if ($.inArray($(this)[0]['pick'], optimal_data[index]['golfer']) !== -1) {$('#' + p + $(this)[0]['pick'].replace(filler, '')).addClass('best')} 
   })}) 
+    
  
 
   $('#totals').append('<tr id=optimalpicks class=small> <td> <p> Best Picks </p> </td> <td> </td> </tr>')
