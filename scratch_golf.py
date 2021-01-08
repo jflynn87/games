@@ -31,13 +31,17 @@ from django.core import serializers
 from golf_app.utils import formatRank
 
 start = datetime.now()
-s = Season.objects.get(current=True)
+#s = Season.objects.get(current=True)
 
-print (s.get_total_points())
+t = Tournament.objects.get(current=True)
+for sd in ScoreDetails.objects.filter(pick__playerName__tournament=t):
+    sd.today_score = None
+    sd.save()
+
+#print (s.get_total_points())
 exit()
 
 
-t = Tournament.objects.get(current=True)
 
 golfers = list(t.season.get_users())
 user = User.objects.get(username='milt')

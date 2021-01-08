@@ -773,35 +773,46 @@ class TeamResults(APIView):
             return JsonResponse({'response': {'error': str(e)}}, status=400)
 
 
-class CreatePlayoffs(CreateView, LoginRequiredMixin):
-    template_name='fb_app/playoff.html'
+class CreatePlayoffs(LoginRequiredMixin, CreateView):
+    template_name='fb_app/playoff_form.html'
     form_class = CreatePlayoffsForm
     success_url = '/'
+    redirect_field_name = '/'
     
     def get_context_data(self, **kwargs):
         context = super(CreatePlayoffs, self).get_context_data(**kwargs)
-        player = Player.objects.get(name=self.request.user)
+        #player = Player.objects.get(name=self.request.user)
         game = Games.objects.get(week__current=True, playoff_picks=True)
 
-        if PlayoffPicks.objects.filter(player=player, game=game).exists():
-            form = CreatePlayoffsForm(instance=PlayoffPicks.objects.get(player=player, game=game))
-        else:
-            form = CreatePlayoffsForm(initial={'player':player, 'game': game})
-
         context.update(
-                {'player': player,
-                 'game': game,
-                 'form': form
-                })
+                {'game': game})
         return context
 
-    def post(self, request, **kwargs):
-        player = Player.objects.get(name=self.request.user)
-        game = Games.objects.get(pk=request.POST.get('game'))
+    def form_valid(self, form):
+        playoff_picks = form.save(commit=False)
+        playoff_picks.player = Player.objects.get(name=self.request.user)
+        playoff_picks.game = Games.objects.get(week__current=True, playoff_picks=True)
+        playoff_picks.save()
+        return super().form_valid(form)
 
-        if PlayoffPicks.objects.filter(player=player, game=game).exists():
-            PlayoffPicks.objects.filter(player=player, game=game).delete()
-        
-        print ('submitting playoff form; ', request.user, datetime.datetime.now())
-        return super(CreatePlayoffs, self).post(request, **kwargs)
+
+class UpdatePlayoffs(LoginRequiredMixin, UpdateView):
+    template_name='fb_app/playoff_form.html'
+    model = PlayoffPicks
+    form_class = CreatePlayoffsForm
+    success_url = '/'
+    redirect_field_name = '/'
+
+    def get_context_data(self, **kwargs):
+        context = super(UpdatePlayoffs, self).get_context_data(**kwargs)
+        #player = Player.objects.get(name=self.request.user)
+        game = Games.objects.get(week__current=True, playoff_picks=True)
+
+        context.update(
+                {'game': game})
+        return context
+
+    
+class PlayoffScores(LoginRequiredMixin, TemplateView):
+    template_name = 'fb_app/playoff_score.html'
 

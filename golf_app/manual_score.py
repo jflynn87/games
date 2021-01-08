@@ -160,13 +160,13 @@ class Score(object):
         print ('after cut num', datetime.now() - start)
         optimal_picks = json.loads(self.tournament.optimal_picks())
         print ('after optimal', datetime.now() - start)
-        round = self.tournament.saved_round
+        curr_round = self.tournament.saved_round
         print ('after round', datetime.now() - start)
 
         BonusDetails.objects.filter(tournament=self.tournament).update(best_in_group_bonus=0)
         print ('starting pick loop time to here', datetime.now() - start)
         loop_start = datetime.now()
-        
+
         for p in Picks.objects.filter(playerName__tournament=self.tournament).values('playerName').distinct():
             pick_loop_start = datetime.now()
             pick = Picks.objects.filter(playerName__pk=p.get('playerName')).first()
@@ -175,7 +175,6 @@ class Score(object):
                 print ('skipping cut/wd/finished pick: ', pick.playerName)
                 continue
 
-            #data = self.score_dict.get(unidecode(pick.playerName.playerName))
             temp = [x for x in self.score_dict.values() if x['pga_num'] == pick.playerName.golfer.golfer_pga_num]
             data = temp[0] 
             #print (data)
@@ -203,18 +202,19 @@ class Score(object):
                          #pick.score=cut_num 
                          score=cut_num 
                     else:
-                        #pick.score = utils.formatRank(data.get('rank')) 
                         score = utils.formatRank(data.get('rank')) 
-                
-                #pick.save()  comment for bulk update
-                #Picks.objects.filter(playerName__tournament=self.tournament, playerName=pick.playerName).update(score=pick.score)
+
                 Picks.objects.filter(playerName__tournament=self.tournament, playerName=pick.playerName).update(score=score)
 
+                #this doesn't work, only creates one SD record rater than all
                 sd, sd_created = ScoreDetails.objects.get_or_create(user=pick.user, pick=pick)
-                sd.score=pick.score - pick.playerName.handicap()
+                
+                sd.score=score - pick.playerName.handicap()
+                #sd.score=pick.score - pick.playerName.handicap()
+                
                 sd.gross_score = pick.score
                 if data.get('rank') == "CUT" or \
-                    data.get('rank') == "WD" and round < 3:
+                    data.get('rank') == "WD" and curr_round < 3:
                     sd.today_score  = "CUT"
                     sd.thru  = "CUT"
                 elif data.get('rank') == "WD":
@@ -225,7 +225,6 @@ class Score(object):
                     sd.thru  = data.get('thru')
                 sd.toPar = data.get('total_score')
                 sd.sod_position = data.get('change')
-
 
                 #sd.save()  comment for bulk update
                 ScoreDetails.objects.filter(pick__playerName__tournament=self.tournament, pick__playerName=pick.playerName).update(

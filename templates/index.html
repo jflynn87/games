@@ -79,11 +79,17 @@
       <a href="{% url 'admin:index' %}"> <button class="btn btn-primary">Admin</button></a>
       
     {%endif%}
-    {%if user in sb_users%}
+    {%if game%}
     <p>Super Bowl</p>
-    <a href="{% url 'fb_app:playoff_entry' %}"> <button class="btn btn-primary">FB Playoffs</button></a>
+    {%if picks%}
+    <a href="{% url 'fb_app:playoff_entry' pk=picks.pk %}"> <button class="btn btn-primary">FB Playoffs</button></a>
+    {%else%}
+    <a href="{% url 'fb_app:playoff_entry' %}"> <button class="btn btn-primary">FB Playoffs Entry</button></a>
+    
     {%endif%}
-  
-  <p hidden id='username'>{{request.user.username}}</p>
+    <a href="{% url 'fb_app:playoff_score' %}"> <button class="btn btn-primary">FB Playoffs Score</button></a>
+    {%endif%}
+
+    <p hidden id='username'>{{request.user.username}}</p>
   </div>
 {% endblock %}

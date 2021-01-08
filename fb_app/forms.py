@@ -7,6 +7,7 @@ from fb_app.models import Games, Picks, Teams, Week, PlayoffPicks
 from django_select2 import *
 from django_select2.forms import ModelSelect2Widget
 from django.forms.formsets import BaseFormSet
+from django.core.exceptions import ValidationError
 
 
 
@@ -32,15 +33,18 @@ class CreatePicksForm(ModelForm):
         
 
 class CreatePlayoffsForm(ModelForm):
-    #team = forms.ModelChoiceField(queryset=Teams.objects.all(), widget=Select2Widget)
+
+    class Meta:
+        model = PlayoffPicks
+        exclude =  ['player', 'game']
 
     def __init__(self, *args, **kwargs):
         super (CreatePlayoffsForm, self).__init__(*args, **kwargs)
         game = Games.objects.get(week__current=True, playoff_picks=True)
         teams_list = [game.home.nfl_abbr, game.away.nfl_abbr]
         self.fields['winning_team'].queryset = Teams.objects.filter(nfl_abbr__in=teams_list)
-        self.fields['player'].widget = forms.HiddenInput()
-        self.fields['game'].widget = forms.HiddenInput()
+        #self.fields['player'].widget = forms.HiddenInput()
+        #self.fields['game'].widget = forms.HiddenInput()
         
         self.fields['rushing_yards'].label = "Rushing yards:  (total both teams - actual)"
         self.fields['rushing_yards'].widget.attrs['placeholder'] = "Total rushing yards, sum both teams"
@@ -81,18 +85,13 @@ class CreatePlayoffsForm(ModelForm):
         self.fields['team_two_passing'].label = "Top passer: (away team top passing yards - actual) x 3"
         self.fields['team_two_passing'].widget.attrs['placeholder'] = "Top passing yards, away team"
 
+    def clean_points_on_fg(self):
+            data = self.cleaned_data['points_on_fg']
+            if not data % 3 == 0:
+               raise ValidationError("FG points should be divisible by 3") 
+            return data
 
 
-
-
-
-
-
-
-
-    class Meta:
-        model = PlayoffPicks
-        fields =  '__all__'
 
 
 

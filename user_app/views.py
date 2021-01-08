@@ -1,7 +1,7 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.views.generic import View, TemplateView, ListView, DetailView, CreateView, UpdateView, FormView
-from golf_app.models import Tournament 
-from fb_app.models import Week 
+from golf_app.models import Tournament  
+from fb_app.models import Week, Games, PlayoffPicks 
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponseRedirect, HttpResponse
 from django.contrib.auth import authenticate, login, logout
@@ -46,15 +46,30 @@ class SignUp(CreateView):
 
 def index(request):
 
+        week = Week.objects.get(current=True)
+        try:
+                
+            if Games.objects.filter(week=week, playoff_picks=True).exists():
+                game = Games.objects.get(week=week, playoff_picks=True)
+            else:
+                game = None
+        except Exception as e:
+            game = None
+    
+        try:
+            if PlayoffPicks.objects.filter(player__name=request.user).exists():
+                picks = PlayoffPicks.objects.get(player__name=request.user)
+            else:
+                picks = None
+        except Exception as e:
+            picks = None
+    
         return render(request, 'index.html', {
-            'fb_week': Week.objects.get(current=True),
-            'sb_users': User.objects.filter(username__in=['john', 'jcarl62'])
-            
+            'fb_week': week,
+            'sb_users': User.objects.filter(username__in=['john', 'jcarl62']),
+            'game': game,
+            'picks': picks
                 })
-
-        #return render(request, 'index.html', {
-        #'tournament': Tournament.objects.get(current=True),
-        #})
 
 
 @login_required

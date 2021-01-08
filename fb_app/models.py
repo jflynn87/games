@@ -1,4 +1,5 @@
 from django.db import models
+from django.db.models import constraints
 from django.contrib.auth.models import User
 from django.conf import settings
 from django.db.models import Q, Sum
@@ -649,16 +650,65 @@ class PlayoffPicks(models.Model):
     takeaways = models.PositiveIntegerField()
     sacks = models.PositiveIntegerField()
     def_special_teams_tds = models.PositiveIntegerField()
-    team_one_runner = models.PositiveIntegerField()
-    team_one_receiver = models.PositiveIntegerField()
-    team_one_passing = models.PositiveIntegerField()
-    team_two_runner = models.PositiveIntegerField()
-    team_two_receiver = models.PositiveIntegerField()
-    team_two_passing = models.PositiveIntegerField()
+    home_runner = models.PositiveIntegerField()
+    home_receiver = models.PositiveIntegerField()
+    home_passing = models.PositiveIntegerField()
+    away_runner = models.PositiveIntegerField()
+    away_receiver = models.PositiveIntegerField()
+    away_passing = models.PositiveIntegerField()
     winning_team = models.ForeignKey(Teams, on_delete=models.CASCADE)
 
     def __str__(self):
         return str(self.player) + str(self.game)
+
+    class Meta:
+        constraints = [
+        models.UniqueConstraint(fields=['player', 'game'], name='duplicate_picks')]
+
+
+class PlayoffScores(models.Model):
+    picks = models.ForeignKey(PlayoffPicks, on_delete=models.CASCADE)
+    rushing_yards = models.IntegerField()
+    passing_yards = models.IntegerField()
+    total_points_scored = models.IntegerField()
+    points_on_fg = models.IntegerField()
+    takeaways = models.IntegerField()
+    sacks = models.IntegerField()
+    def_special_teams_tds = models.IntegerField()
+    home_runner = models.IntegerField()
+    home_receiver = models.IntegerField()
+    home_passing = models.IntegerField()
+    away_runner = models.IntegerField()
+    away_receiver = models.IntegerField()
+    away_passing = models.IntegerField()
+    winning_team = models.IntegerField()
+    total_score = models.IntegerField()
+    
+
+    def __str__(self):
+        return str(self.picks.player, self.picks.game)
+
+
+class PlayoffStats(models.Model):
+    game = models.ForeignKey(Games, on_delete=models.CASCADE, null=True)
+    rushing_yards = models.IntegerField(null=True)
+    passing_yards = models.IntegerField(null=True)
+    total_points_scored = models.IntegerField(null=True)
+    points_on_fg = models.IntegerField(null=True)
+    takeaways = models.IntegerField(null=True)
+    sacks = models.IntegerField(null=True)
+    def_special_teams_tds = models.IntegerField(null=True)
+    home_runner = models.IntegerField(null=True)
+    home_receiver = models.IntegerField(null=True)
+    home_passing = models.IntegerField(null=True)
+    away_runner = models.IntegerField(null=True)
+    away_receiver = models.IntegerField(null=True)
+    away_passing = models.IntegerField(null=True)
+    data = models.JSONField(null=True)
+
+    def __str__(self):
+        return str(self.game)
+
 
 
 

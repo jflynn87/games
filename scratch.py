@@ -4,7 +4,7 @@ os.environ.setdefault("DJANGO_SETTINGS_MODULE","gamesProj.settings")
 import django
 django.setup()
 #from golf_app.models import Tournament, TotalScore, ScoreDetails, Field, Picks, PickMethod
-from fb_app.models import Season, Week, Games, Teams, Picks, League, Player,  MikeScore, WeekScore, PickPerformance
+from fb_app.models import Season, Week, Games, Teams, Picks, League, Player,  MikeScore, WeekScore, PickPerformance, PlayoffStats
 from django.contrib.auth.models import User
 from datetime import datetime, timedelta, timezone
 from django.db.models import Min, Q, Count, Sum, Max
@@ -15,7 +15,7 @@ from urllib import request
 import json
 #from fb_app.scores import Scores
 #from urllib.request import Request, urlopen
-from selenium.webdriver import Chrome, ChromeOptions
+#from selenium.webdriver import Chrome, ChromeOptions
 #
 
 #
@@ -24,13 +24,41 @@ import requests
 #from linebot.models import TextSendMessage
 #from linebot.exceptions import LineBotApiError
 from bs4 import BeautifulSoup
-from fb_app import scrape_cbs
+from fb_app import scrape_cbs, scrape_cbs_playoff, playoff_stats
 import pytz
 from django.core import serializers
-import docx2txt
+#import docx2txt
 
 
 start = datetime.now()
+#week = Week.objects.get(current=True)
+#web = scrape_cbs_playoff.ScrapeCBS(week)
+
+#d = web.get_data()
+#for k, v in d.items():
+#    try:
+#        for a, b in v.items():
+#            print ('----------------------')
+#            print(a, b)
+#    except Exception as e:
+#        print ('----------------------')
+#        print (k, v)
+
+#p_stats = PlayoffStats()
+game = Games.objects.get(week__current=True, playoff_picks=True)
+#p_stats.data = d
+#p_stats.save()
+
+#stats = PlayoffStats.objects.get(game=game)
+stats = playoff_stats.Stats()
+print (stats.get_all_stats())
+#print (stats.total_passing_yards())
+
+print (datetime.now() - start)
+
+
+exit()
+
 league = League.objects.get(league="Golfers")
 season = Season.objects.get(current=True)
 #player = Player.objects.get(name__username="john")

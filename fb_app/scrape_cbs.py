@@ -1,20 +1,9 @@
-#from django.db import models
-#from django.contrib.auth.models import User
-#from django.conf import settings
-#from django.db.models import Q
-#from django.core.exceptions import ObjectDoesNotExist
-
 import datetime
-#import urllib3
+
 import urllib.request
 import json
-#import scipy.stats as ss
-#from django.db.models import Q
-
 from bs4 import BeautifulSoup
 
-
-### before using need to sort out circular ref oof models #####
 
 
 class ScrapeCBS(object):

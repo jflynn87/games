@@ -7,6 +7,19 @@
 
 <div class=container>
 <h1 class="mb-3" style="text-align: center;">Super Bowl Pool - {{game.away}} @ {{game.home}}</h1>
+
+{%if form.errors%}
+    <div class="alert alert-danger">
+        <strong>{{form.errors}}</strong>
+    </div>
+{%endif%}
+
+{%if not form.instance.pk%}
+    <h3>Create</h3>
+{%else%}
+    <h3>Update</h3>
+{%endif%}
+
 <form  method="POST">
 {{form | bootstrap}}
 {%csrf_token%}
