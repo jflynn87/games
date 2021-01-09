@@ -195,9 +195,13 @@ function build_score_tbl(data) {
       if ($(this)[0]['today_score'] == 'CUT') {$('#' + p + pick).addClass('cut')}
     
     //use 0 of the index to strip the extra chars in multi pick groups.  Need to fix for tournaments with 10 groups.
-    console.log($(this)[0]['pick'], optimal_data[index]['golfer'])
-    //if ($.inArray($(this)[0]['pick'], optimal_data[index[0]]['golfer']) !== -1) {$('#' + p + $(this)[0]['pick'].replace(filler, '')).addClass('best')} 
-    if ($.inArray($(this)[0]['pick'], optimal_data[index]['golfer']) !== -1) {$('#' + p + $(this)[0]['pick'].replace(filler, '')).addClass('best')} 
+    //console.log($(this)[0]['pick'], optimal_data[index], info[10])
+    
+    if (info[10] == 1) {if ($.inArray($(this)[0]['pick'], optimal_data[index]['golfer']) !== -1) {$('#' + p + $(this)[0]['pick'].replace(filler, '')).addClass('best')} }
+    else {
+    //next line commented in Kapalua as it has 10 groups.  does it work in regular tournament?
+    if ($.inArray($(this)[0]['pick'], optimal_data[index[0]]['golfer']) !== -1) {$('#' + p + $(this)[0]['pick'].replace(filler, '')).addClass('best')} 
+    }
   })}) 
     
  

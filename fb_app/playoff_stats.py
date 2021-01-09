@@ -29,9 +29,16 @@ class Stats(object):
         all_stats['def_special_teams_tds'] = self.def_special_teams_tds()
         all_stats['home_runner'] = self.home_runner()
         all_stats['home_receiver'] = self.home_receiver()
+        all_stats['home_passing'] = self.home_passing()
+        all_stats['home_passer_rating'] = self.home_passer_rating()
+        all_stats['away_runner'] = self.away_runner()
+        all_stats['away_receiver'] = self.away_receiver()
+        all_stats['away_passing'] = self.away_passing()
+        all_stats['away_passer_rating'] = self.away_passer_rating()
 
         return all_stats
     
+
     def total_rushing_yards(self):
         if self.stats.rushing_yards != None:
             print (self.stats.rushing_yards)
@@ -39,6 +46,7 @@ class Stats(object):
         else:
             print ('no override')
             return int(self.stats.data['home']['team_stats']['rushing']) + int(self.stats.data['away']['team_stats']['rushing'])
+
 
     def total_passing_yards(self):
         if self.stats.passing_yards != None:
@@ -48,6 +56,7 @@ class Stats(object):
             print ('no override')
             return int(self.stats.data['home']['team_stats']['passing']) + int(self.stats.data['away']['team_stats']['passing'])
 
+
     def total_points(self):
         if self.stats.total_points_scored != None:
             print (self.stats.total_points_scored)
@@ -55,6 +64,7 @@ class Stats(object):
         else:
             print ('no override')
             return int(self.stats.data['home']['team_stats']['score']) + int(self.stats.data['away']['team_stats']['score'])
+
 
     def points_on_fg(self):
         if self.stats.points_on_fg != None:
@@ -67,6 +77,7 @@ class Stats(object):
             
             return (home_fg + away_fg) *3
 
+
     def takeaways(self):
         if self.stats.takeaways != None:
             print (self.stats.takeaways)
@@ -75,6 +86,7 @@ class Stats(object):
             print ('no override')
             return int(self.stats.data['home']['team_stats']['turnovers']) + int(self.stats.data['away']['team_stats']['turnovers'])
     
+
     def sacks(self):
         if self.stats.sacks != None:
             print (self.stats.sacks)
@@ -86,6 +98,7 @@ class Stats(object):
 
             return int(home_sacks) + int(away_sacks)
 
+
     def def_special_teams_tds(self):
         if self.stats.def_special_teams_tds != None:
             print (self.stats.def_special_teams_tds)
@@ -94,6 +107,7 @@ class Stats(object):
             print ('no override')
             return int(self.stats.data['home']['team_stats']['other_tds']) + int(self.stats.data['away']['team_stats']['other_tds'])
 
+
     def home_runner(self):
         if self.stats.home_runner != None:
             print (self.stats.home_runner)
@@ -101,7 +115,8 @@ class Stats(object):
         else:
             print ('no override')
             return max(int(f['yards']) for f in self.stats.data['home']['rushing'].values())
-        
+
+
     def home_receiver(self):
         if self.stats.home_receiver != None:
             print (self.stats.home_receiver)
@@ -111,8 +126,57 @@ class Stats(object):
             return max(int(f['yards']) for f in self.stats.data['home']['receiving'].values())
 
 
+    def home_passing(self):
+        if self.stats.home_passing != None:
+            print (self.stats.home_passing)
+            return self.stats.home_passing
+        else:
+            print ('no override')
+            return max(int(f['yards']) for f in self.stats.data['home']['passing'].values())
 
-    # team_one_passing = models.IntegerField(null=True)
-    # team_two_runner = models.IntegerField(null=True)
-    # team_two_receiver = models.IntegerField(null=True)
-    # team_two_passing = models.IntegerField(null=True)
+    
+    def home_passer_rating(self):
+        ### update model for this
+        if self.stats.home_passing != None:
+            print (self.stats.home_passing)
+            return self.stats.home_passing
+        else:
+            print ('no override')
+            return max(float(f['rating']) for f in self.stats.data['home']['passing'].values())
+
+
+    def away_runner(self):
+        if self.stats.away_runner != None:
+            print (self.stats.away_runner)
+            return self.stats.away_runner
+        else:
+            print ('no override')
+            return max(int(f['yards']) for f in self.stats.data['away']['rushing'].values())
+        
+    
+    def away_receiver(self):
+        if self.stats.away_receiver != None:
+            print (self.stats.away_receiver)
+            return self.stats.away_receiver
+        else:
+            print ('no override')
+            return max(int(f['yards']) for f in self.stats.data['away']['receiving'].values())
+
+
+    def away_passing(self):
+        if self.stats.away_passing != None:
+            print (self.stats.away_passing)
+            return self.stats.away_passing
+        else:
+            print ('no override')
+            return max(int(f['yards']) for f in self.stats.data['away']['passing'].values())
+
+
+    def away_passer_rating(self):
+        ### update model for this
+        if self.stats.away_passing != None:
+            print (self.stats.away_passing)
+            return self.stats.away_passing
+        else:
+            print ('no override')
+            return max(float(f['rating']) for f in self.stats.data['away']['passing'].values())

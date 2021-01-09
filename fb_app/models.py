@@ -653,9 +653,11 @@ class PlayoffPicks(models.Model):
     home_runner = models.PositiveIntegerField()
     home_receiver = models.PositiveIntegerField()
     home_passing = models.PositiveIntegerField()
+    home_passer_rating = models.PositiveIntegerField(default=100.0)
     away_runner = models.PositiveIntegerField()
     away_receiver = models.PositiveIntegerField()
     away_passing = models.PositiveIntegerField()
+    away_passer_rating = models.PositiveIntegerField(default=100.0)
     winning_team = models.ForeignKey(Teams, on_delete=models.CASCADE)
 
     def __str__(self):
@@ -701,10 +703,13 @@ class PlayoffStats(models.Model):
     home_runner = models.IntegerField(null=True)
     home_receiver = models.IntegerField(null=True)
     home_passing = models.IntegerField(null=True)
+    home_passer_rating = models.FloatField(null=True)
     away_runner = models.IntegerField(null=True)
     away_receiver = models.IntegerField(null=True)
     away_passing = models.IntegerField(null=True)
+    away_passer_rating = models.FloatField(null=True)
     data = models.JSONField(null=True)
+
 
     def __str__(self):
         return str(self.game)

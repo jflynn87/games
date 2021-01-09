@@ -1,7 +1,7 @@
 from django.shortcuts import render, redirect
 from django.views.generic import ListView, TemplateView, View, DetailView, UpdateView, CreateView
 import urllib.request
-from fb_app.models import Games, Week, Picks, Player, League, Teams, WeekScore, Season, PickPerformance, PlayoffPicks
+from fb_app.models import Games, Week, Picks, Player, League, Teams, WeekScore, Season, PickPerformance, PlayoffPicks, PlayoffScores, PlayoffStats
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth import authenticate, login, logout
@@ -23,7 +23,7 @@ from rest_framework.views import APIView
 from rest_framework import generics
 from rest_framework.response import Response
 from rest_framework.permissions import AllowAny
-from fb_app import scrape_cbs
+from fb_app import scrape_cbs, scrape_cbs_playoff
 from django.core import serializers
 from bs4 import BeautifulSoup
 import pytz
@@ -816,3 +816,72 @@ class UpdatePlayoffs(LoginRequiredMixin, UpdateView):
 class PlayoffScores(LoginRequiredMixin, TemplateView):
     template_name = 'fb_app/playoff_score.html'
 
+    def get_context_data(self, **kwargs):
+        context = super(PlayoffScores, self).get_context_data(**kwargs)
+        #player = Player.objects.get(name=self.request.user)
+        game = Games.objects.get(week__current=True, playoff_picks=True)
+
+        context.update(
+                {'game': game})
+        return context
+
+
+class UpdatePlayoffScores(APIView):
+    def get(self, request):
+        
+        try:
+            #data = {}
+            game = Games.objects.get(week__current=True, playoff_picks=True)
+            print (game)
+            stats, created = PlayoffStats.objects.get_or_create(game=game)
+            picks = {}
+
+            if stats.data:
+                if stats.data.get('qtr') != "Final":
+                    web = scrape_cbs_playoff.ScrapeCBS()
+                    stat_data = web.get_data()
+                else:
+                    stat_data = stats.data
+            else:
+                web = scrape_cbs_playoff.ScrapeCBS()
+                stat_data = web.get_data()
+
+            for p in PlayoffPicks.objects.filter(game=game):
+                picks[p.player.name.username]= {
+                    'rushing_yards': p.rushing_yards,
+                    'passing_yards': p.passing_yards,
+                    'total_points_scored': p.total_points_scored,
+                    'points_on_fg': p.points_on_fg,
+                    'takeaways': p.takeaways,
+                    'sacks': p.sacks,
+                    'def_special_teams_tds': p.def_special_teams_tds,
+                    'home_runner': p.home_runner,
+                    'home_receiver': p.home_receiver,
+                    'home_passing': p.home_passing,
+                    'home_passer_rating': p.home_passer_rating,
+                    'away_runner': p.away_runner,
+                    'away_receiver': p.away_receiver,
+                    'away_passing': p.away_passing,
+                    'away_passer_rating': p.away_passer_rating,
+                    'winning_team': p.winning_team.nfl_abbr
+
+                }
+
+            data = {'response':
+                    {'picks': picks,
+                     'stats': stat_data, 
+                    }}
+            
+            # player_stats = stats.team_results(nfl_abbr, player)
+            # league_stats = stats.team_results(nfl_abbr)
+            # data = {'response': {'player_stats': player_stats,
+            #                     'league_stats': league_stats,}
+            #                     }
+
+            print(data)
+            return JsonResponse(data, status=200)
+            #print (sorted_data)
+        except Exception as e:
+            print ('UpdatePlayoffScores error: ', e)
+            
+            return JsonResponse({'response': {'error': str(e)}}, status=400)

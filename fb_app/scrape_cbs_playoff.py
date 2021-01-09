@@ -8,9 +8,8 @@ from fb_app.models import Week, Teams
 
 class ScrapeCBS(object):
 
-    def __init__(self, week):
-        self.week = week
-
+    def __init__(self):
+        pass
 
     def get_data(self):
 
@@ -42,7 +41,7 @@ class ScrapeCBS(object):
             away_stats = stats.find('div', {'id': 'player-stats-away'})
             home_stats = stats.find('div', {'id': 'player-stats-home'})
             
-            #passing section
+            #passing yards section
             home_passing_dtl = self.passing_stats(home_stats.find('div', {'class': 'passing-ctr'}))
             away_passing_dtl = self.passing_stats(away_stats.find('div', {'class': 'passing-ctr'}))
             stat_dict['home']['passing'] = home_passing_dtl
@@ -116,6 +115,13 @@ class ScrapeCBS(object):
 
 ##end other TD's
 
+## QB rating 
+
+
+
+## end QB rating
+
+            #print (stat_dict)
             return stat_dict
 
         except Exception as e:
@@ -127,10 +133,12 @@ class ScrapeCBS(object):
             for row in ele.find_all('tr', {'class': 'no-hover data-row'}):
                 player = row.find('td', {'class': 'name-element'})
                 data = row.find_all('td', {'class': 'number-element'})
+                rating = row.find_all('td', {'class': 'hover-data'})[3].text
                 stat_dict.update( {player.text.strip(): {'cp/att': data[0].text,
                     'yards': data[1].text,
                     'tds': data[2].text,
                     'ints': data[3].text,
+                    'rating': rating
                 }})
 
             return stat_dict

@@ -57,8 +57,8 @@ def index(request):
             game = None
     
         try:
-            if PlayoffPicks.objects.filter(player__name=request.user).exists():
-                picks = PlayoffPicks.objects.get(player__name=request.user)
+            if PlayoffPicks.objects.filter(player__name=request.user, week=week).exists():
+                picks = PlayoffPicks.objects.get(player__name=request.user, week=week)
             else:
                 picks = None
         except Exception as e:

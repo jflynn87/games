@@ -31,26 +31,20 @@ from django.core import serializers
 
 
 start = datetime.now()
-#week = Week.objects.get(current=True)
+week = Week.objects.get(current=True)
 #web = scrape_cbs_playoff.ScrapeCBS(week)
 
 #d = web.get_data()
-#for k, v in d.items():
-#    try:
-#        for a, b in v.items():
-#            print ('----------------------')
-#            print(a, b)
-#    except Exception as e:
-#        print ('----------------------')
-#        print (k, v)
-
 #p_stats = PlayoffStats()
-game = Games.objects.get(week__current=True, playoff_picks=True)
+#game = Games.objects.get(week__current=True, playoff_picks=True)
+#p_stats.game = game
 #p_stats.data = d
 #p_stats.save()
+#exit()
 
 #stats = PlayoffStats.objects.get(game=game)
 stats = playoff_stats.Stats()
+
 print (stats.get_all_stats())
 #print (stats.total_passing_yards())
 
