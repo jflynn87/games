@@ -35,7 +35,9 @@ class Stats(object):
         all_stats['away_passing'] = self.away_passing()
         all_stats['away_passer_rating'] = self.away_passer_rating()
         all_stats['winning_team'] = self.winning_team()
+        all_stats['teams'] = self.teams()
 
+       # print ('XXXXXall stats', all_stats['teams'])
         return all_stats
     
 
@@ -199,4 +201,9 @@ class Stats(object):
                 print ('no winner')
                 return 'No winner'
 
-        
+
+    def teams(self):
+        print ('teams sect', self.stats.data['home']['team'])
+        return {'home': self.stats.data['home']['team'],
+                'away': self.stats.data['away']['team']
+                        }

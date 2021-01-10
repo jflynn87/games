@@ -11,7 +11,8 @@ function update_scores() {
     .then((responseJSON) => {
           data = responseJSON
           console.log(data)
-
+          if (!data.response.error) {
+         
           $('#stats-sect').append('<table id=stat-tbl class="table table-striped table-bordered"><tbody> </tbody> </table>')
 
           $('#stat-tbl').append('<thead><th>Stat Category</th><th>Game Stats</th></thead>') 
@@ -24,14 +25,14 @@ function update_scores() {
             '<tr id=takeaways>' + '<td>Total Takeaways * 50</td> <td>' + data.response.stats.takeaways  + '</td>' +
             '<tr id=total_sacks>' + '<td>Total Sacks * 30</td> <td>' + data.response.stats.sacks + '</td>' +
             '<tr id=total_d_td>' + '<td>Total Def/Spec Team TDs * 100</td> <td>' + data.response.stats.def_special_teams_tds + '</td>' +
-            '<tr id=home_top_rusher>' + '<td>Home Top Rusher * 3</td> <td>' + data.response.stats.home_runner + '</td>' +
-            '<tr id=home_top_receiver>' + '<td>Home Top Receiver * 3</td> <td>' + data.response.stats.home_receiver + '</td>' +
+            '<tr id=home_top_rusher>' + '<td>' + data.response.stats.teams.home + ' Top Rusher * 3</td> <td>' + data.response.stats.home_runner + '</td>' +
+            '<tr id=home_top_receiver>' + '<td>' + data.response.stats.teams.home + 'Top Receiver * 3</td> <td>' + data.response.stats.home_receiver + '</td>' +
             //'<tr id=home_top_passer>' + '<td>Home Top Passer * 3</td> <td>' + data.response.stats.home_passing + '</td>' +
-            '<tr id=home_top_rating>' + '<td>Home Top Passer Rating * 3</td> <td>' + data.response.stats.home_passer_rating + '</td>' +
-            '<tr id=away_top_rusher>' + '<td>Away Top Rusher * 3</td> <td>' + data.response.stats.away_runner + '</td>' +
-            '<tr id=away_top_receiver>' + '<td>Away Top Receiver * 3</td> <td>' + data.response.stats.away_receiver + '</td>' +
+            '<tr id=home_top_rating>' + '<td>' + data.response.stats.teams.home + ' Top Passer Rating * 3</td> <td>' + data.response.stats.home_passer_rating + '</td>' +
+            '<tr id=away_top_rusher>' + '<td>' + data.response.stats.teams.away + ' Top Rusher * 3</td> <td>' + data.response.stats.away_runner + '</td>' +
+            '<tr id=away_top_receiver>' + '<td>' + data.response.stats.teams.away + ' Top Receiver * 3</td> <td>' + data.response.stats.away_receiver + '</td>' +
             //'<tr id=away_top_passer>' + '<td>Away Top Passer * 3</td> <td>' + data.response.stats.away_passing + '</td>' +
-            '<tr id=away_top_rating>' + '<td>Away Top Passer Rating * 3</td> <td>' + data.response.stats.away_passer_rating + '</td>'  +
+            '<tr id=away_top_rating>' + '<td>' + data.response.stats.teams.away + ' Top Passer Rating * 3</td> <td>' + data.response.stats.away_passer_rating + '</td>'  +
             '<tr id=winning_team>' + '<td>Winning Team (100 points)</td> <td>' + data.response.stats.winning_team + '</td>'  
                )
 
@@ -78,8 +79,13 @@ function update_scores() {
                 $('#winning_team').append('<td>' + data.response.scores[player].winning_team + '</td>')  
                 
             
-            
+
             })  //closes each.pics
+        } 
+        else {
+            $('#stats-sect').append('<h2> Scores Not Ready </h2>')
+        }
+
             $('#message').hide()
             $('#stats-sect').toggleClass('status')
           }) 
