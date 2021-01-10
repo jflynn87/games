@@ -20,20 +20,20 @@ function update_scores() {
             '<tr id=total_score style="font-weight:bold;">' + '<td>Total Points</td> <td></td>' +  
             '<tr id=passing_yards>' + '<td>Total Passing Yards</td> <td>' + data.response.stats.total_passing_yards  + '</td>' +
             '<tr id=rushing_yards>' + '<td>Total Rushing Yards</td> <td>' + data.response.stats.total_rushing_yards  + '</td>' +
-            '<tr id=total_points>' + '<td>Total Points</td> <td>' + data.response.stats.total_points  + '</td>' +
-            '<tr id=point_from_fg>' + '<td>Total Points from FG</td> <td>' + data.response.stats.points_on_fg  + '</td>' +
-            '<tr id=takeaways>' + '<td>Total Takeaways</td> <td>' + data.response.stats.takeaways  + '</td>' +
-            '<tr id=total_sacks>' + '<td>Total Sacks</td> <td>' + data.response.stats.sacks + '</td>' +
-            '<tr id=total_d_td>' + '<td>Total Def/Spec Team TDs</td> <td>' + data.response.stats.def_special_teams_tds + '</td>' +
-            '<tr id=home_top_rusher>' + '<td>Home Top Rusher</td> <td>' + data.response.stats.home_runner + '</td>' +
-            '<tr id=home_top_receiver>' + '<td>Home Top Receiver</td> <td>' + data.response.stats.home_receiver + '</td>' +
-            '<tr id=home_top_passer>' + '<td>Home Top Passer</td> <td>' + data.response.stats.home_passing + '</td>' +
-            '<tr id=home_top_rating>' + '<td>Home Top Passer Rating</td> <td>' + data.response.stats.home_passer_rating + '</td>' +
-            '<tr id=away_top_rusher>' + '<td>Away Top Rusher</td> <td>' + data.response.stats.away_runner + '</td>' +
-            '<tr id=away_top_receiver>' + '<td>Away Top Receiver</td> <td>' + data.response.stats.away_receiver + '</td>' +
-            '<tr id=away_top_passer>' + '<td>Away Top Passer</td> <td>' + data.response.stats.away_passing + '</td>' +
-            '<tr id=away_top_rating>' + '<td>Away Top Passer Rating</td> <td>' + data.response.stats.away_passer_rating + '</td>'  +
-            '<tr id=winning_team>' + '<td>Winning Team</td> <td>' + data.response.stats.winning_team + '</td>'  
+            '<tr id=total_points>' + '<td>Total Points * 5</td> <td>' + data.response.stats.total_points  + '</td>' +
+            '<tr id=point_from_fg>' + '<td>Total Points from FG *5</td> <td>' + data.response.stats.points_on_fg  + '</td>' +
+            '<tr id=takeaways>' + '<td>Total Takeaways * 20</td> <td>' + data.response.stats.takeaways  + '</td>' +
+            '<tr id=total_sacks>' + '<td>Total Sacks * 20</td> <td>' + data.response.stats.sacks + '</td>' +
+            '<tr id=total_d_td>' + '<td>Total Def/Spec Team TDs * 50</td> <td>' + data.response.stats.def_special_teams_tds + '</td>' +
+            '<tr id=home_top_rusher>' + '<td>Home Top Rusher * 3</td> <td>' + data.response.stats.home_runner + '</td>' +
+            '<tr id=home_top_receiver>' + '<td>Home Top Receiver * 3</td> <td>' + data.response.stats.home_receiver + '</td>' +
+            '<tr id=home_top_passer>' + '<td>Home Top Passer * 3</td> <td>' + data.response.stats.home_passing + '</td>' +
+            '<tr id=home_top_rating>' + '<td>Home Top Passer Rating * 3</td> <td>' + data.response.stats.home_passer_rating + '</td>' +
+            '<tr id=away_top_rusher>' + '<td>Away Top Rusher * 3</td> <td>' + data.response.stats.away_runner + '</td>' +
+            '<tr id=away_top_receiver>' + '<td>Away Top Receiver * 3</td> <td>' + data.response.stats.away_receiver + '</td>' +
+            '<tr id=away_top_passer>' + '<td>Away Top Passer * 3</td> <td>' + data.response.stats.away_passing + '</td>' +
+            '<tr id=away_top_rating>' + '<td>Away Top Passer Rating * 3</td> <td>' + data.response.stats.away_passer_rating + '</td>'  +
+            '<tr id=winning_team>' + '<td>Winning Team (20 points)</td> <td>' + data.response.stats.winning_team + '</td>'  
                )
 
 

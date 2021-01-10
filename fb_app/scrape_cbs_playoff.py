@@ -21,8 +21,8 @@ class ScrapeCBS(object):
 
             week = Week.objects.get(current=True)
 
-            #html = urllib.request.urlopen("https://www.cbssports.com/nfl/scoreboard/all/2020/regular/" + str(week.week) + "/")
-            html = urllib.request.urlopen("https://www.cbssports.com/nfl/gametracker/boxscore/NFL_20210103_DAL@NYG/")
+            html = urllib.request.urlopen("https://www.cbssports.com/nfl/gametracker/boxscore/NFL_20210109_LAR@SEA/")
+            #html = urllib.request.urlopen("https://www.cbssports.com/nfl/gametracker/boxscore/NFL_20210103_DAL@NYG/")
 
             soup = BeautifulSoup(html, 'html.parser')
 
