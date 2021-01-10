@@ -28,6 +28,7 @@ from django.core import serializers
 from bs4 import BeautifulSoup
 import pytz
 from django.utils import dateformat
+from math import ceil
 
 
 
@@ -838,13 +839,15 @@ class UpdatePlayoffScores(APIView):
             if stats.data:
                 if stats.data.get('qtr') != "Final":
                     web = scrape_cbs_playoff.ScrapeCBS()
-                    stats.data = web.get_data()
+                    updated_stats = calc_qb_ratings(web.get_data())
+                    stats.data = updated_stats 
                     stats.save()
                 #else:
                 #    pass
             else:
                 web = scrape_cbs_playoff.ScrapeCBS()
-                stats.data = web.get_data()
+                updated_stats = calc_qb_ratings(web.get_data())
+                stats.data = updated_stats 
                 stats.save()
 
             stat_data = playoff_stats.Stats().get_all_stats()
@@ -914,6 +917,7 @@ def calc_scores(picks, stats, game):
                     'home_runner': abs(p['home_runner'] - stats['home_runner']) *3,
                     'home_receiver': abs(p['home_receiver'] - stats['home_receiver']) *3,
                     #'home_passing': abs(p['home_passing'] - stats['home_passing']) *3,
+                    #'home_passer_rating': round(abs(p['home_passer_rating'] - stats['home_passer_rating']) *3,2), - CBS has the wrong rating 
                     'home_passer_rating': round(abs(p['home_passer_rating'] - stats['home_passer_rating']) *3,2),
                     'away_runner': abs(p['away_runner'] - stats['away_runner']) *3,
                     'away_receiver': abs(p['away_receiver'] - stats['away_receiver']) *3,
@@ -928,3 +932,33 @@ def calc_scores(picks, stats, game):
         score_dict[player].update({'player_total': total})
 
     return score_dict
+
+
+def calc_qb_ratings(stats):
+    '''takes a dict, updates it and returns the updated dict'''
+    #qb_list = []
+    #qb_list.append(stats['home']['passing'])
+    #qb_list.append(stats['away']['passing'])
+    #print (qb_list)
+
+    for team, data in stats.items():
+        print (team)
+        if team in ['home', 'away']:
+            for k, v in data['passing'].items():
+                comp = int(v['cp/att'].split('/')[0])
+                att = int(v['cp/att'].split('/')[1])
+                
+                rating_a = ((comp/att) - .3) * 5
+                rating_b = ((int(v['yards'])/att) -3) *.25
+                rating_c = (int(v['tds'])/att) *20
+                rating_d = 2.375 - ((int(v['ints'])/att) *25)
+
+                multiplier = 10 ** 1
+                
+                final_rating = ceil((((rating_a + rating_b + rating_c + rating_d) / 6) * 100) * multiplier) / multiplier
+
+                print (k, final_rating)
+
+                stats[team]['passing'][k].update({'rating': final_rating})
+    
+    return (stats)

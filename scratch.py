@@ -28,6 +28,7 @@ from fb_app import scrape_cbs, scrape_cbs_playoff, playoff_stats
 import pytz
 from django.core import serializers
 #import docx2txt
+from math import ceil
 
 
 start = datetime.now()
@@ -45,12 +46,26 @@ game= Games.objects.get(week__current=True, playoff_picks=True)
 stats = PlayoffStats.objects.get(game=game)
 data = stats.data
 #print (data['home']['team_stats'])
-home_score = data['home']['team_stats']['score']
-away_score = data['away']['team_stats']['score']
-if home_score > away_score:
-    print (data['home']['team'], home_score)
-elif away_score > home_score:
-    print (data['home']['team'], home_score)
+qb = data['away']['passing']
+print (qb)
+
+for k, v in qb.items():
+    comp = int(v['cp/att'].split('/')[0])
+    att = int(v['cp/att'].split('/')[1])
+    
+    rating_a = ((comp/att) - .3) * 5
+    rating_b = ((int(v['yards'])/att) -3) *.25
+    rating_c = (int(v['tds'])/att) *20
+    rating_d = 2.375 - ((int(v['ints'])/att) *25)
+
+    multiplier = 10 ** 1
+    
+    final_rating = ceil((((rating_a + rating_b + rating_c + rating_d) / 6) * 100) * multiplier) / multiplier
+
+    print (k, final_rating)
+
+
+
 
 #winner = max(home_score, away_score)
 

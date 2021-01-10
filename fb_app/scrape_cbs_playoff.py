@@ -140,7 +140,7 @@ class ScrapeCBS(object):
                     'yards': data[1].text,
                     'tds': data[2].text,
                     'ints': data[3].text,
-                    'rating': rating
+                    #'rating': rating  - stat is wrong on cbs.com so will calc separately
                 }})
 
             return stat_dict

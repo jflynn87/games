@@ -36,7 +36,7 @@ class CreatePlayoffsForm(ModelForm):
 
     class Meta:
         model = PlayoffPicks
-        exclude =  ['player', 'game']
+        exclude =  ['player', 'game', 'home_passing', 'away_passing']
 
     def __init__(self, *args, **kwargs):
         super (CreatePlayoffsForm, self).__init__(*args, **kwargs)
@@ -44,10 +44,10 @@ class CreatePlayoffsForm(ModelForm):
         teams_list = [game.home.nfl_abbr, game.away.nfl_abbr]
         self.fields['winning_team'].queryset = Teams.objects.filter(nfl_abbr__in=teams_list)
         
-        self.fields['rushing_yards'].label = "Rushing yards:  (total both teams - actual)"
+        self.fields['rushing_yards'].label = "Rushing yards:  (total both teams - actual) / 2"
         self.fields['rushing_yards'].widget.attrs['placeholder'] = "Total rushing yards, sum both teams"
         
-        self.fields['passing_yards'].label = "Passing yards:  (total both teams - actual)"
+        self.fields['passing_yards'].label = "Passing yards:  (total both teams - actual) / 3"
         self.fields['passing_yards'].widget.attrs['placeholder'] = "Total passing yards, sum both teams"
         
         self.fields['total_points_scored'].label = "Total Points:  (total both teams - actual) x 5"
@@ -56,13 +56,13 @@ class CreatePlayoffsForm(ModelForm):
         self.fields['points_on_fg'].label = "Points from FG's:  (total both teams FG's - actual) x 5"
         self.fields['points_on_fg'].widget.attrs['placeholder'] = "Sum of points from FG's"
         
-        self.fields['takeaways'].label = "Take aways:  (total both teams takeaways - actual) x 20"
+        self.fields['takeaways'].label = "Take aways:  (total both teams takeaways - actual) x 50"
         self.fields['takeaways'].widget.attrs['placeholder'] = "Sum of takeaways, both teams"
         
-        self.fields['sacks'].label = "Sum of sacks:  (total both teams sacks - actual) x 20"
+        self.fields['sacks'].label = "Sum of sacks:  (total both teams sacks - actual) x 30"
         self.fields['sacks'].widget.attrs['placeholder'] = "Sum of sacks, both teams"
         
-        self.fields['def_special_teams_tds'].label = "Sum of D/ST TD's:  (total both teams D/ST TD's  - actual) x 50"
+        self.fields['def_special_teams_tds'].label = "Sum of D/ST TD's:  (total both teams D/ST TD's  - actual) x 100"
         self.fields['def_special_teams_tds'].widget.attrs['placeholder'] = "Sum of D/ST TD's, both teams"
         
         self.fields['home_runner'].label = "Home top rusher: (rushing yards - actual) x 3"
@@ -71,10 +71,10 @@ class CreatePlayoffsForm(ModelForm):
         self.fields['home_receiver'].label = "Home top receiver: (receiving yards - actual) x 3"
         self.fields['home_receiver'].widget.attrs['placeholder'] = "Top receiver yards, home team"
 
-        self.fields['home_passing'].label = "Home top passer: (top passing yards - actual) x 3"
-        self.fields['home_passing'].widget.attrs['placeholder'] = "Top passing yards, home team"
+        #self.fields['home_passing'].label = "Home top passer: (top passing yards - actual) x 3"
+        #self.fields['home_passing'].widget.attrs['placeholder'] = "Top passing yards, home team"
 
-        self.fields['home_passer_rating'].label = "Home top passer rating: (top passer rating - actual)"
+        self.fields['home_passer_rating'].label = "Home top passer rating: (top passer rating - actual) x 3"
         self.fields['home_passer_rating'].widget.attrs['placeholder'] = "Top passer rating, home team"
 
         self.fields['away_runner'].label = "Away top rusher: (top rushing yards - actual) x 3"
@@ -83,19 +83,32 @@ class CreatePlayoffsForm(ModelForm):
         self.fields['away_receiver'].label = "Away top receiver: (top receiving yards - actual) x 3"
         self.fields['away_receiver'].widget.attrs['placeholder'] = "Top receiving yards, away team"
 
-        self.fields['away_passing'].label = "Away top passer: (top passing yards - actual) x 3"
-        self.fields['away_passing'].widget.attrs['placeholder'] = "Top passing yards, away team"
+        #self.fields['away_passing'].label = "Away top passer: (top passing yards - actual) x 3"
+        #self.fields['away_passing'].widget.attrs['placeholder'] = "Top passing yards, away team"
 
-        self.fields['away_passer_rating'].label = "Away top passer rating: (top passer rating - actual)"
+        self.fields['away_passer_rating'].label = "Away top passer rating: (top passer rating - actual) x 3"
         self.fields['away_passer_rating'].widget.attrs['placeholder'] = "Top passer rating, away team"
 
 
 
     def clean_points_on_fg(self):
-            data = self.cleaned_data['points_on_fg']
-            if not data % 3 == 0:
-               raise ValidationError("FG points should be divisible by 3") 
-            return data
+        data = self.cleaned_data['points_on_fg']
+        if not data % 3 == 0:
+            raise ValidationError("FG points should be divisible by 3") 
+        return data
+
+    def clean_home_passer_rating(self):
+        data = self.cleaned_data['home_passer_rating']
+        if not data < 158.33:
+            raise ValidationError("Rating must be between 0 - 158.33") 
+        return data
+
+    def clean_away_passer_rating(self):
+        data = self.cleaned_data['away_passer_rating']
+        if not data < 158.33:
+            raise ValidationError("Rating must be between 0 - 158.33") 
+        return data
+
 
 
 
