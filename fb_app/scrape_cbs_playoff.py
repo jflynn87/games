@@ -22,7 +22,7 @@ class ScrapeCBS(object):
             game = Games.objects.get(week__current=True, playoff_picks=True)
             
 
-            print ('url', 'https://www.cbssports.com/nfl/gametracker/boxscore/NFL_' + str(game.game_time.date()).replace('-', '') + '_' + game.away.typo_name + '@' + game.home.nfl_abbr + '/')
+            print ('url', 'https://www.cbssports.com/nfl/gametracker/boxscore/NFL_' + str(game.game_time.date()).replace('-', '') + '_' + game.away.nfl_abbr + '@' + game.home.nfl_abbr + '/')
             html = urllib.request.urlopen('https://www.cbssports.com/nfl/gametracker/boxscore/NFL_' + str(game.game_time.date()).replace('-', '') + '_' + game.away.nfl_abbr + '@' + game.home.nfl_abbr + '/')
             #html = urllib.request.urlopen("https://www.cbssports.com/nfl/gametracker/boxscore/NFL_20210103_DAL@NYG/")
 
