@@ -3,7 +3,7 @@ import datetime
 import urllib.request
 import json
 from bs4 import BeautifulSoup
-from fb_app.models import Week, Teams
+from fb_app.models import Week, Teams, Games
 
 
 class ScrapeCBS(object):
@@ -19,9 +19,11 @@ class ScrapeCBS(object):
         try:
             stat_dict = {}
 
-            week = Week.objects.get(current=True)
+            game = Games.objects.get(week__current=True, playoff_picks=True)
+            
 
-            html = urllib.request.urlopen("https://www.cbssports.com/nfl/gametracker/boxscore/NFL_20210109_LAR@SEA/")
+            print ('url', 'https://www.cbssports.com/nfl/gametracker/boxscore/NFL_' + str(game.game_time.date()).replace('-', '') + '_' + game.away.typo_name + '@' + game.home.nfl_abbr + '/')
+            html = urllib.request.urlopen('https://www.cbssports.com/nfl/gametracker/boxscore/NFL_' + str(game.game_time.date()).replace('-', '') + '_' + game.away.nfl_abbr + '@' + game.home.nfl_abbr + '/')
             #html = urllib.request.urlopen("https://www.cbssports.com/nfl/gametracker/boxscore/NFL_20210103_DAL@NYG/")
 
             soup = BeautifulSoup(html, 'html.parser')

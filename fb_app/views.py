@@ -897,27 +897,27 @@ def calc_scores(picks, stats, game):
     for player, p in picks.items():
         print ('calc scorre for:', player)
         if p['winning_team'] == winning_team:
-            winner = -20
+            winner = -100
         elif p['winning_team'] != "No winner":
-            winner = 20
+            winner = 100
         else:
             winner = 0
                 
         score_dict[player]= {
-                    'rushing_yards': abs(p['rushing_yards'] - stats['total_rushing_yards']),
-                    'passing_yards': abs(p['passing_yards'] - stats['total_passing_yards']),
+                    'rushing_yards': round(abs(p['rushing_yards'] - stats['total_rushing_yards']) / 2, 2),
+                    'passing_yards': round(abs(p['passing_yards'] - stats['total_passing_yards']) / 3, 2),
                     'total_points_scored': abs(p['total_points_scored'] - stats['total_points']) * 5,
                     'points_on_fg': abs(p['points_on_fg'] - stats['points_on_fg']) * 5,
-                    'takeaways': abs(p['takeaways'] - stats['takeaways']) *20,
-                    'sacks': abs(p['sacks'] - stats['sacks']) *20,
-                    'def_special_teams_tds': abs(p['def_special_teams_tds'] - stats['def_special_teams_tds']) * 50,
+                    'takeaways': abs(p['takeaways'] - stats['takeaways']) *50,
+                    'sacks': abs(p['sacks'] - stats['sacks']) *30,
+                    'def_special_teams_tds': abs(p['def_special_teams_tds'] - stats['def_special_teams_tds']) * 100,
                     'home_runner': abs(p['home_runner'] - stats['home_runner']) *3,
                     'home_receiver': abs(p['home_receiver'] - stats['home_receiver']) *3,
-                    'home_passing': abs(p['home_passing'] - stats['home_passing']) *3,
+                    #'home_passing': abs(p['home_passing'] - stats['home_passing']) *3,
                     'home_passer_rating': round(abs(p['home_passer_rating'] - stats['home_passer_rating']) *3,2),
                     'away_runner': abs(p['away_runner'] - stats['away_runner']) *3,
                     'away_receiver': abs(p['away_receiver'] - stats['away_receiver']) *3,
-                    'away_passing': round(abs(p['away_passing'] - stats['away_passing']) *3,2),
+                    #'away_passing': round(abs(p['away_passing'] - stats['away_passing']) *3,2),
                     'away_passer_rating': round(abs(p['away_passer_rating'] - stats['away_passer_rating']) *3,2),
                     'winning_team': winner,
                     
