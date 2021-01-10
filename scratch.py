@@ -31,7 +31,7 @@ from django.core import serializers
 
 
 start = datetime.now()
-week = Week.objects.get(current=True)
+game= Games.objects.get(week__current=True, playoff_picks=True)
 #web = scrape_cbs_playoff.ScrapeCBS(week)
 
 #d = web.get_data()
@@ -42,10 +42,20 @@ week = Week.objects.get(current=True)
 #p_stats.save()
 #exit()
 
-#stats = PlayoffStats.objects.get(game=game)
-stats = playoff_stats.Stats()
+stats = PlayoffStats.objects.get(game=game)
+data = stats.data
+#print (data['home']['team_stats'])
+home_score = data['home']['team_stats']['score']
+away_score = data['away']['team_stats']['score']
+if home_score > away_score:
+    print (data['home']['team'], home_score)
+elif away_score > home_score:
+    print (data['home']['team'], home_score)
 
-print (stats.get_all_stats())
+#winner = max(home_score, away_score)
+
+#return max(float(f['rating']) for f in self.stats.data['away']['passing'].values())
+#print (winner)
 #print (stats.total_passing_yards())
 
 print (datetime.now() - start)

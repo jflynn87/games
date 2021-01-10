@@ -708,6 +708,7 @@ class PlayoffStats(models.Model):
     away_receiver = models.IntegerField(null=True)
     away_passing = models.IntegerField(null=True)
     away_passer_rating = models.FloatField(null=True)
+    winning_team = models.ForeignKey(Teams, on_delete=models.CASCADE, null=True)
     data = models.JSONField(null=True)
 
 

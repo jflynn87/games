@@ -57,13 +57,15 @@ def index(request):
             game = None
     
         try:
-            if PlayoffPicks.objects.filter(player__name=request.user, week=week).exists():
-                picks = PlayoffPicks.objects.get(player__name=request.user, week=week)
+            if PlayoffPicks.objects.filter(player__name=request.user, game=game).exists():
+                picks = PlayoffPicks.objects.get(player__name=request.user, game=game)
             else:
                 picks = None
         except Exception as e:
             picks = None
     
+        print ('game', game)
+        print ('picks', picks)
         return render(request, 'index.html', {
             'fb_week': week,
             'sb_users': User.objects.filter(username__in=['john', 'jcarl62']),

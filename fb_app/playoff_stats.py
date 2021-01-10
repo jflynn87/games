@@ -8,13 +8,12 @@ class Stats(object):
 
     def __init__(self, game=None):
         
-        print (game)
         if game == None:
             self.game = Games.objects.get(week__current=True, playoff_picks=True)
         else:
             self.game=game
 
-        print (self.game)
+        print ('playoff stats game', self.game)
         #self.score = Playoffscores.objects.get(game=game)
         self.stats = PlayoffStats.objects.get(game=self.game)
         
@@ -35,6 +34,7 @@ class Stats(object):
         all_stats['away_receiver'] = self.away_receiver()
         all_stats['away_passing'] = self.away_passing()
         all_stats['away_passer_rating'] = self.away_passer_rating()
+        all_stats['winning_team'] = self.winning_team()
 
         return all_stats
     
@@ -180,3 +180,23 @@ class Stats(object):
         else:
             print ('no override')
             return max(float(f['rating']) for f in self.stats.data['away']['passing'].values())
+ 
+    def winning_team(self):
+        if self.stats.winning_team != None:
+            print (self.stats.winning_team)
+            return self.stats.winning_team
+        else:
+            print ('no override')
+            home_score = self.stats.data['home']['team_stats']['score']
+            away_score = self.stats.data['away']['team_stats']['score']
+            if home_score > away_score:
+                print ('home team wins')
+                return self.stats.data['home']['team']
+            elif away_score > home_score:
+                print ('away team wins')
+                return self.stats.data['away']['team']
+            else:
+                print ('no winner')
+                return 'No winner'
+
+        

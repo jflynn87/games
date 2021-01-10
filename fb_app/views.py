@@ -23,7 +23,7 @@ from rest_framework.views import APIView
 from rest_framework import generics
 from rest_framework.response import Response
 from rest_framework.permissions import AllowAny
-from fb_app import scrape_cbs, scrape_cbs_playoff
+from fb_app import scrape_cbs, scrape_cbs_playoff, playoff_stats
 from django.core import serializers
 from bs4 import BeautifulSoup
 import pytz
@@ -832,19 +832,22 @@ class UpdatePlayoffScores(APIView):
         try:
             #data = {}
             game = Games.objects.get(week__current=True, playoff_picks=True)
-            print (game)
             stats, created = PlayoffStats.objects.get_or_create(game=game)
             picks = {}
 
             if stats.data:
                 if stats.data.get('qtr') != "Final":
                     web = scrape_cbs_playoff.ScrapeCBS()
-                    stat_data = web.get_data()
-                else:
-                    stat_data = stats.data
+                    stats.data = web.get_data()
+                    stats.save()
+                #else:
+                #    pass
             else:
                 web = scrape_cbs_playoff.ScrapeCBS()
-                stat_data = web.get_data()
+                stats.data = web.get_data()
+                stats.save()
+
+            stat_data = playoff_stats.Stats().get_all_stats()
 
             for p in PlayoffPicks.objects.filter(game=game):
                 picks[p.player.name.username]= {
@@ -867,16 +870,15 @@ class UpdatePlayoffScores(APIView):
 
                 }
 
+            # print ('pre calc', picks)
+            # print ('pre calc stats', stat_data)
+            scores = calc_scores(picks, stat_data, game)
+
             data = {'response':
                     {'picks': picks,
-                     'stats': stat_data, 
+                     'stats': stat_data,
+                     'scores': scores
                     }}
-            
-            # player_stats = stats.team_results(nfl_abbr, player)
-            # league_stats = stats.team_results(nfl_abbr)
-            # data = {'response': {'player_stats': player_stats,
-            #                     'league_stats': league_stats,}
-            #                     }
 
             print(data)
             return JsonResponse(data, status=200)
@@ -885,3 +887,44 @@ class UpdatePlayoffScores(APIView):
             print ('UpdatePlayoffScores error: ', e)
             
             return JsonResponse({'response': {'error': str(e)}}, status=400)
+
+
+def calc_scores(picks, stats, game):
+    '''takes 2 dictionaries and a game obj, returns a dictionany of scores'''
+    print ('in clac')
+    score_dict = {}
+    winning_team =  stats['winning_team']
+    for player, p in picks.items():
+        print ('calc scorre for:', player)
+        if p['winning_team'] == winning_team:
+            winner = -20
+        elif p['winning_team'] != "No winner":
+            winner = 20
+        else:
+            winner = 0
+                
+        score_dict[player]= {
+                    'rushing_yards': abs(p['rushing_yards'] - stats['total_rushing_yards']),
+                    'passing_yards': abs(p['passing_yards'] - stats['total_passing_yards']),
+                    'total_points_scored': abs(p['total_points_scored'] - stats['total_points']) * 5,
+                    'points_on_fg': abs(p['points_on_fg'] - stats['points_on_fg']) * 5,
+                    'takeaways': abs(p['takeaways'] - stats['takeaways']) *20,
+                    'sacks': abs(p['sacks'] - stats['sacks']) *20,
+                    'def_special_teams_tds': abs(p['def_special_teams_tds'] - stats['def_special_teams_tds']) * 50,
+                    'home_runner': abs(p['home_runner'] - stats['home_runner']) *3,
+                    'home_receiver': abs(p['home_receiver'] - stats['home_receiver']) *3,
+                    'home_passing': abs(p['home_passing'] - stats['home_passing']) *3,
+                    'home_passer_rating': round(abs(p['home_passer_rating'] - stats['home_passer_rating']) *3,2),
+                    'away_runner': abs(p['away_runner'] - stats['away_runner']) *3,
+                    'away_receiver': abs(p['away_receiver'] - stats['away_receiver']) *3,
+                    'away_passing': round(abs(p['away_passing'] - stats['away_passing']) *3,2),
+                    'away_passer_rating': round(abs(p['away_passer_rating'] - stats['away_passer_rating']) *3,2),
+                    'winning_team': winner,
+                    
+                   }
+        print (score_dict[player].values())
+        total = round(sum(score_dict[player].values()),2)
+
+        score_dict[player].update({'player_total': total})
+
+    return score_dict
