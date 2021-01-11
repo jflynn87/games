@@ -33,9 +33,11 @@ from math import ceil
 
 start = datetime.now()
 game= Games.objects.get(week__current=True, playoff_picks=True)
-#web = scrape_cbs_playoff.ScrapeCBS(week)
+web = scrape_cbs_playoff.ScrapeCBS()
 
-#d = web.get_data()
+d = web.get_data()
+print (d)
+exit()
 #p_stats = PlayoffStats()
 #game = Games.objects.get(week__current=True, playoff_picks=True)
 #p_stats.game = game

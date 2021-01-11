@@ -21,9 +21,19 @@ class ScrapeCBS(object):
 
             game = Games.objects.get(week__current=True, playoff_picks=True)
             
+            try:
+                print ('url', 'https://www.cbssports.com/nfl/gametracker/live/NFL_' + str(game.game_time.date()).replace('-', '') + '_' + game.away.nfl_abbr + '@' + game.home.nfl_abbr + '/')
+                html = urllib.request.urlopen('https://www.cbssports.com/nfl/gametracker/live/NFL_' + str(game.game_time.date()).replace('-', '') + '_' + game.away.nfl_abbr + '@' + game.home.nfl_abbr + '/')
+                                                
+            except Exception:
 
-            print ('url', 'https://www.cbssports.com/nfl/gametracker/boxscore/NFL_' + str(game.game_time.date()).replace('-', '') + '_' + game.away.nfl_abbr + '@' + game.home.nfl_abbr + '/')
-            html = urllib.request.urlopen('https://www.cbssports.com/nfl/gametracker/boxscore/NFL_' + str(game.game_time.date()).replace('-', '') + '_' + game.away.nfl_abbr + '@' + game.home.nfl_abbr + '/')
+                try:
+                    print ('url', 'https://www.cbssports.com/nfl/gametracker/boxscore/NFL_' + str(game.game_time.date()).replace('-', '') + '_' + game.away.nfl_abbr + '@' + game.home.nfl_abbr + '/')
+                    html = urllib.request.urlopen('https://www.cbssports.com/nfl/gametracker/boxscore/NFL_' + str(game.game_time.date()).replace('-', '') + '_' + game.away.nfl_abbr + '@' + game.home.nfl_abbr + '/')
+                except Exception as e:
+                    print ('playoff scrape cant find url')
+            
+            
             #html = urllib.request.urlopen("https://www.cbssports.com/nfl/gametracker/boxscore/NFL_20210103_DAL@NYG/")
 
             soup = BeautifulSoup(html, 'html.parser')
