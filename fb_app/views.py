@@ -874,7 +874,7 @@ class UpdatePlayoffScores(APIView):
                 }
 
             # print ('pre calc', picks)
-            # print ('pre calc stats', stat_data)
+            #print ('pre calc stats', stat_data)
             scores = calc_scores(picks, stat_data, game)
 
             data = {'response':
@@ -883,7 +883,7 @@ class UpdatePlayoffScores(APIView):
                      'scores': scores
                     }}
 
-            print(data)
+            #print(data)
             return JsonResponse(data, status=200)
             #print (sorted_data)
         except Exception as e:
@@ -891,74 +891,295 @@ class UpdatePlayoffScores(APIView):
             
             return JsonResponse({'response': {'error': str(e)}}, status=400)
 
+class PlayoffGameStarted(APIView):
+    '''takes a request and returns json'''
+    def get(self, request):
+        #make game a parameter, for now assume it is just the current week game
+        game = Games.objects.get(playoff_picks=True, week__current=True)
+        try:
+            if game.qtr in ['pregame', None]:
+                stats, created = PlayoffStats.objects.get_or_create(game=game)
+                
+
+                #if created or stats.data.get('qtr') == 'pregame' or stats.data.get('qtr') == None:
+                print (len(stats.data))
+                if stats.data == None or len(stats.data) == 0 or stats.data.get('qtr') == 'pregame' or stats.data.get('qtr') == None:
+                    print ('started checking web scrape created is: ', created)
+                    web = scrape_cbs_playoff.ScrapeCBS().get_data()
+                    stats.data = web
+                    stats.save()
+
+                    #if created:
+                    if  web['qtr'] in ['pregame', None]:
+                        print ('NOT started during create sect based on not being pregame')
+                        return JsonResponse({'response': {'game_started': False}})
+                    else:
+                        print ('started during create sect based on not being pregame')
+                        return JsonResponse({'response': {'game_started': True}})
+                elif stats.data.get('qtr') != 'pregame' and stats.data.get('qtr') != None:
+                    print ('started based on stats data qtr not pregame/none')
+                    return JsonResponse({'response': {'game_started': True}})
+                else:
+                    print ('playoff started check in else but shouldnt get here')
+                    return JsonResponse({'response': {'game_started': False}})
+            else:
+                print ('game started based on game DB not = pregame')
+                return JsonResponse({'response': {'game_started': True}})
+
+        except Exception as e:
+            print ('not finding game started', e)
+            return JsonResponse({'response': {'game_started': False}})
+
+
+
+## helper functions
 
 def calc_scores(picks, stats, game):
-    '''takes 2 dictionaries and a game obj, returns a dictionany of scores'''
-    print ('in clac')
+    '''takes 2 dicts and returns a dict of scores'''
+
     score_dict = {}
+    for user in picks.keys():
+        score_dict[user] = {}
+ 
+    total_points_diff = min(abs(v['total_points_scored'] - stats['total_points']) for v in picks.values())
+    total_points_winners = [k for k, v in picks.items() if abs(v['total_points_scored'] - stats['total_points']) == total_points_diff]
+    total_points_losers = [k for k, v in picks.items() if abs(v['total_points_scored'] - stats['total_points']) != total_points_diff]
+    for winner in total_points_winners:
+        score_dict[winner].update({'total_points_scored': round(1/len(total_points_winners), 2)})
+    for loser in total_points_losers:
+        score_dict[loser].update({'total_points_scored': 0})
+    
+    fg_points_diff = min(abs(v['points_on_fg'] - stats['points_on_fg']) for v in picks.values())
+    fg_points_winners = [k for k, v in picks.items() if abs(v['points_on_fg'] - stats['points_on_fg']) == fg_points_diff]
+    fg_points_losers = [k for k, v in picks.items() if abs(v['points_on_fg'] - stats['points_on_fg']) != fg_points_diff]
+    for winner in fg_points_winners:
+        score_dict[winner].update({'points_on_fg': round(1/len(fg_points_winners), 2)})
+    for loser in fg_points_losers:
+        score_dict[loser].update({'points_on_fg': 0})
+
+    takeaways_diff = min(abs(v['takeaways'] - stats['takeaways']) for v in picks.values())
+    takeaways_winners = [k for k, v in picks.items() if abs(v['takeaways'] - stats['takeaways']) == takeaways_diff]
+    takeaways_losers = [k for k, v in picks.items() if abs(v['takeaways'] - stats['takeaways']) != takeaways_diff]
+    for winner in takeaways_winners:
+        score_dict[winner].update({'takeaways': round(1/len(takeaways_winners), 2)})
+    for loser in takeaways_losers:
+        score_dict[loser].update({'takeaways': 0})
+
+    sacks_diff = min(abs(v['sacks'] - stats['sacks']) for v in picks.values())
+    sacks_winners = [k for k, v in picks.items() if abs(v['sacks'] - stats['sacks']) == sacks_diff]
+    sacks_losers = [k for k, v in picks.items() if abs(v['sacks'] - stats['sacks']) != sacks_diff]
+    for winner in sacks_winners:
+        score_dict[winner].update({'sacks': round(1/len(sacks_winners), 2)})
+    for loser in sacks_losers:
+        score_dict[loser].update({'sacks': 0})
+
+
+    d_td_diff = min(abs(v['def_special_teams_tds'] - stats['def_special_teams_tds']) for v in picks.values())
+    d_td_winners = [k for k, v in picks.items() if abs(v['def_special_teams_tds'] - stats['def_special_teams_tds']) == d_td_diff]
+    d_td_losers = [k for k, v in picks.items() if abs(v['def_special_teams_tds'] - stats['def_special_teams_tds']) != d_td_diff]
+    for winner in d_td_winners:
+        score_dict[winner].update({'def_special_teams_tds': round(1/len(d_td_winners), 2)})
+    for loser in d_td_losers:
+        score_dict[loser].update({'def_special_teams_tds': 0})
+
+
+    home_runner_diff = min(abs(v['home_runner'] - stats['home_runner']) for v in picks.values())
+    home_runner_winners = [k for k, v in picks.items() if abs(v['home_runner'] - stats['home_runner']) == home_runner_diff]
+    home_runner_losers = [k for k, v in picks.items() if abs(v['home_runner'] - stats['home_runner']) != home_runner_diff]
+    for winner in home_runner_winners:
+        score_dict[winner].update({'home_runner': round(1/len(home_runner_winners), 2)})
+    for loser in home_runner_losers:
+        score_dict[loser].update({'home_runner': 0})
+
+
+    home_receiver_diff = min(abs(v['home_receiver'] - stats['home_receiver']) for v in picks.values())
+    home_receiver_winners = [k for k, v in picks.items() if abs(v['home_receiver'] - stats['home_receiver']) == home_receiver_diff]
+    home_receiver_losers = [k for k, v in picks.items() if abs(v['home_receiver'] - stats['home_receiver']) != home_receiver_diff]
+    for winner in home_receiver_winners:
+        score_dict[winner].update({'home_receiver': round(1/len(home_runner_winners), 2)})
+    for loser in home_receiver_losers:
+        score_dict[loser].update({'home_receiver': 0})
+
+
+    home_passer_rating_diff = min(abs(v['home_passer_rating'] - stats['home_passer_rating']) for v in picks.values())
+    home_passer_rating_winners = [k for k, v in picks.items() if abs(v['home_passer_rating'] - stats['home_passer_rating']) == home_passer_rating_diff]
+    home_passer_rating_losers = [k for k, v in picks.items() if abs(v['home_passer_rating'] - stats['home_passer_rating']) != home_passer_rating_diff]
+    for winner in home_passer_rating_winners:
+        score_dict[winner].update({'home_passer_rating': round(1/len(home_passer_rating_winners), 2)})
+    for loser in home_passer_rating_losers:
+        score_dict[loser].update({'home_passer_rating': 0})
+
+    away_runner_diff = min(abs(v['away_runner'] - stats['away_runner']) for v in picks.values())
+    away_runner_winners = [k for k, v in picks.items() if abs(v['away_runner'] - stats['away_runner']) == away_runner_diff]
+    away_runner_losers = [k for k, v in picks.items() if abs(v['away_runner'] - stats['away_runner']) != away_runner_diff]
+    for winner in away_runner_winners:
+        score_dict[winner].update({'away_runner': round(1/len(away_runner_winners), 2)})
+    for loser in away_runner_losers:
+        score_dict[loser].update({'away_runner': 0})
+
+
+    away_receiver_diff = min(abs(v['away_receiver'] - stats['away_receiver']) for v in picks.values())
+    away_receiver_winners = [k for k, v in picks.items() if abs(v['away_receiver'] - stats['away_receiver']) == away_receiver_diff]
+    away_receiver_losers = [k for k, v in picks.items() if abs(v['away_receiver'] - stats['away_receiver']) != away_receiver_diff]
+    for winner in away_receiver_winners:
+        score_dict[winner].update({'away_receiver': round(1/len(away_receiver_winners), 2)})
+    for loser in away_receiver_losers:
+        score_dict[loser].update({'away_receiver': 0})
+
+
+    away_passer_rating_diff = min(abs(v['away_passer_rating'] - stats['away_passer_rating']) for v in picks.values())
+    away_passer_rating_winners = [k for k, v in picks.items() if abs(v['away_passer_rating'] - stats['away_passer_rating']) == away_passer_rating_diff]
+    away_passer_rating_losers = [k for k, v in picks.items() if abs(v['away_passer_rating'] - stats['away_passer_rating']) != away_passer_rating_diff]
+    for winner in away_passer_rating_winners:
+        score_dict[winner].update({'away_passer_rating': round(1/len(away_passer_rating_winners), 2)})
+    for loser in away_passer_rating_losers:
+        score_dict[loser].update({'away_passer_rating': 0})
+
     winning_team =  stats['winning_team']
+    winning_team_obj = Teams.objects.get(nfl_abbr=winning_team)
+    
     for player, p in picks.items():
-        print ('calc scorre for:', player)
-        if p['winning_team'] == winning_team:
-            winner = -100
-        elif p['winning_team'] != "No winner":
-            winner = 100
+        print ('WTWETWT', p['winning_team'], winning_team)
+        print (winning_team_obj.dog)
+        if p['winning_team'] == winning_team and winning_team == game.dog.nfl_abbr:
+            score_dict[player].update({'winning_team': 2})
+        elif p['winning_team'] == winning_team and winning_team == game.fav.nfl_abbr:
+            score_dict[player].update({'winning_team': 1})
         else:
-            winner = 0
-                
-        score_dict[player]= {
-                    'rushing_yards': round(abs(p['rushing_yards'] - stats['total_rushing_yards']) / 2, 2),
-                    'passing_yards': round(abs(p['passing_yards'] - stats['total_passing_yards']) / 3, 2),
-                    'total_points_scored': abs(p['total_points_scored'] - stats['total_points']) * 5,
-                    'points_on_fg': abs(p['points_on_fg'] - stats['points_on_fg']) * 5,
-                    'takeaways': abs(p['takeaways'] - stats['takeaways']) *50,
-                    'sacks': abs(p['sacks'] - stats['sacks']) *30,
-                    'def_special_teams_tds': abs(p['def_special_teams_tds'] - stats['def_special_teams_tds']) * 100,
-                    'home_runner': abs(p['home_runner'] - stats['home_runner']) *3,
-                    'home_receiver': abs(p['home_receiver'] - stats['home_receiver']) *3,
-                    #'home_passing': abs(p['home_passing'] - stats['home_passing']) *3,
-                    #'home_passer_rating': round(abs(p['home_passer_rating'] - stats['home_passer_rating']) *3,2), - CBS has the wrong rating 
-                    'home_passer_rating': round(abs(p['home_passer_rating'] - stats['home_passer_rating']) *3,2),
-                    'away_runner': abs(p['away_runner'] - stats['away_runner']) *3,
-                    'away_receiver': abs(p['away_receiver'] - stats['away_receiver']) *3,
-                    #'away_passing': round(abs(p['away_passing'] - stats['away_passing']) *3,2),
-                    'away_passer_rating': round(abs(p['away_passer_rating'] - stats['away_passer_rating']) *3,2),
-                    'winning_team': winner,
-                    
-                   }
-        print (score_dict[player].values())
+            score_dict[player].update({'winning_team': 0})
+
         total = round(sum(score_dict[player].values()),2)
 
         score_dict[player].update({'player_total': total})
 
+
+    
+    print (score_dict)
     return score_dict
+    
+
+
+                
+#        score_dict[player]= {
+#                     'total_points_scored': abs(p['total_points_scored'] - stats['total_points']) * 5,
+#                     'points_on_fg': abs(p['points_on_fg'] - stats['points_on_fg']) * 5,
+#                     'takeaways': abs(p['takeaways'] - stats['takeaways']) *50,
+#                     'sacks': abs(p['sacks'] - stats['sacks']) *30,
+#                     'def_special_teams_tds': abs(p['def_special_teams_tds'] - stats['def_special_teams_tds']) * 100,
+#                     'home_runner': abs(p['home_runner'] - stats['home_runner']) *3,
+#                     'home_receiver': abs(p['home_receiver'] - stats['home_receiver']) *3,
+#                     #'home_passing': abs(p['home_passing'] - stats['home_passing']) *3,
+#                     #'home_passer_rating': round(abs(p['home_passer_rating'] - stats['home_passer_rating']) *3,2), - CBS has the wrong rating 
+#                     'home_passer_rating': round(abs(p['home_passer_rating'] - stats['home_passer_rating']) *3,2),
+#                     'away_runner': abs(p['away_runner'] - stats['away_runner']) *3,
+#                     'away_receiver': abs(p['away_receiver'] - stats['away_receiver']) *3,
+#                     #'away_passing': round(abs(p['away_passing'] - stats['away_passing']) *3,2),
+#                     'away_passer_rating': round(abs(p['away_passer_rating'] - stats['away_passer_rating']) *3,2),
+#                     'winning_team': winner,
+                    
+#                    }
+#         print (score_dict[player].values())
+#         total = round(sum(score_dict[player].values()),2)
+
+#         score_dict[player].update({'player_total': total})
+
+#     return score_dict
+
+
+
+
+
+
+
+
+## commented to re-do as point per question.  keep just in case.
+# def calc_scores(picks, stats, game):
+#     '''takes 2 dictionaries and a game obj, returns a dictionany of scores'''
+#     print ('in clac')
+#     score_dict = {}
+#     winning_team =  stats['winning_team']
+#     for player, p in picks.items():
+#         print ('calc scorre for:', player)
+#         if p['winning_team'] == winning_team:
+#             winner = -100
+#         elif p['winning_team'] != "No winner":
+#             winner = 100
+#         else:
+#             winner = 0
+                
+#         score_dict[player]= {
+#                     'rushing_yards': round(abs(p['rushing_yards'] - stats['total_rushing_yards']) / 2, 2),
+#                     'passing_yards': round(abs(p['passing_yards'] - stats['total_passing_yards']) / 3, 2),
+#                     'total_points_scored': abs(p['total_points_scored'] - stats['total_points']) * 5,
+#                     'points_on_fg': abs(p['points_on_fg'] - stats['points_on_fg']) * 5,
+#                     'takeaways': abs(p['takeaways'] - stats['takeaways']) *50,
+#                     'sacks': abs(p['sacks'] - stats['sacks']) *30,
+#                     'def_special_teams_tds': abs(p['def_special_teams_tds'] - stats['def_special_teams_tds']) * 100,
+#                     'home_runner': abs(p['home_runner'] - stats['home_runner']) *3,
+#                     'home_receiver': abs(p['home_receiver'] - stats['home_receiver']) *3,
+#                     #'home_passing': abs(p['home_passing'] - stats['home_passing']) *3,
+#                     #'home_passer_rating': round(abs(p['home_passer_rating'] - stats['home_passer_rating']) *3,2), - CBS has the wrong rating 
+#                     'home_passer_rating': round(abs(p['home_passer_rating'] - stats['home_passer_rating']) *3,2),
+#                     'away_runner': abs(p['away_runner'] - stats['away_runner']) *3,
+#                     'away_receiver': abs(p['away_receiver'] - stats['away_receiver']) *3,
+#                     #'away_passing': round(abs(p['away_passing'] - stats['away_passing']) *3,2),
+#                     'away_passer_rating': round(abs(p['away_passer_rating'] - stats['away_passer_rating']) *3,2),
+#                     'winning_team': winner,
+                    
+#                    }
+#         print (score_dict[player].values())
+#         total = round(sum(score_dict[player].values()),2)
+
+#         score_dict[player].update({'player_total': total})
+
+#     return score_dict
 
 
 def calc_qb_ratings(stats):
     '''takes a dict, updates it and returns the updated dict'''
-    #qb_list = []
-    #qb_list.append(stats['home']['passing'])
-    #qb_list.append(stats['away']['passing'])
-    #print (qb_list)
+    #home_passing = stats['home']['passing']
+    print ('calc qb start')
+    #home_atts = max(qb['cp/att'].split('/')[1] for qb in stats['home']['passing'].values())
+    #print (home_atts)
+    #home_qb = [k for k,v in stats['home']['passing'].items() if v['cp/att'].split('/')[1]== home_atts]
+    #d = {home_qb[0]: stats['home']['passing'].get(home_qb[0])}
+    #print ('d', d)
+    #print (home_qb)
+    
+    
+    #return max(int(f['yards']) for f in self.stats.data['away']['receiving'].values())
+    #print ('home qb', home_qb)
 
     for team, data in stats.items():
-        print (team)
         if team in ['home', 'away']:
             for k, v in data['passing'].items():
+                print (k, v)
+            #max_atts = max(qb['cp/att'].split('/')[1] for qb in stats[team]['passing'].values())
+            #qb = [k for k,v in stats[team]['passing'].items() if v['cp/att'].split('/')[1]== max_atts]  #getting the data for the QB with most attempts
+            #if len(qb) > 1:
+            #    print ('passer rating calc issue, multiple with same # of attempts')
+            #k = qb[0]
+            #v = stats[team]['passing'].get(k)
                 comp = int(v['cp/att'].split('/')[0])
                 att = int(v['cp/att'].split('/')[1])
-                
-                rating_a = ((comp/att) - .3) * 5
-                rating_b = ((int(v['yards'])/att) -3) *.25
-                rating_c = (int(v['tds'])/att) *20
-                rating_d = 2.375 - ((int(v['ints'])/att) *25)
+                if att != 0:
+                    rating_a = ((comp/att) - .3) * 5
+                    rating_b = ((int(v['yards'])/att) -3) *.25
+                    rating_c = (int(v['tds'])/att) *20
+                    rating_d = 2.375 - ((int(v['ints'])/att) *25)
 
-                multiplier = 10 ** 1
-                
-                final_rating = ceil((((rating_a + rating_b + rating_c + rating_d) / 6) * 100) * multiplier) / multiplier
+                    multiplier = 10 ** 1
+                    final_rating = ceil((((rating_a + rating_b + rating_c + rating_d) / 6) * 100) * multiplier) / multiplier
 
-                print (k, final_rating)
+                    print (k, final_rating)
+                    stats[team]['passing'][k].update({'rating': final_rating})
 
-                stats[team]['passing'][k].update({'rating': final_rating})
-    
+                else:
+                    stats[team]['passing'][k].update({'rating': 0})
+            
+    #print (stats)
     return (stats)
+
+
+class PlayoffLogic(TemplateView):
+    template_name='fb_app/playoff_about.html'

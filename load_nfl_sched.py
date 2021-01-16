@@ -23,7 +23,7 @@ def load_sched(year):
     current_week = Week.objects.get(current=True)
     week_cnt = current_week.week + 1
     season = Season.objects.get(current=True)
-    while week_cnt < 19:
+    while week_cnt < 20:
             try:
                 week, created = Week.objects.get_or_create(season_model=season, week=week_cnt)
                 #week.season = season.season
@@ -58,12 +58,17 @@ def load_sched(year):
                 #g = driver.find_elements_by_class_name("nfl-c-matchup-strip__left-area")
                 main = driver.find_element_by_id("main-content")
                 for section in main.find_elements_by_class_name('nfl-o-matchup-group'):
-                    date_t = section.find_element_by_class_name('d3-o-section-title').text.split(',')[1]
-                    month = date_t.split(' ')[1]
-                    day = date_t.split(' ')[2].strip('TH').strip('ND').strip('ST').strip('RD')
+                    date_t = section.find_element_by_class_name('d3-o-section-title').text.split(',')[1].lstrip()
+                    month = date_t.split(' ')[0]
+                    day = date_t.split(' ')[1].strip('TH').strip('ND').strip('ST').strip('RD')
                     game_dow = section.find_element_by_class_name('d3-o-section-title').text.split(',')[0]
                     #fix the year for Jan games
-                    web_game_date = (str(month) + ' ' + str(day) + ', ' + str(season.season))
+                    print ('month', month, len(month))
+                    if month in ['JANUARY', 'FEBRUARY']:
+                        year = int(season.season) + 1
+                    else:
+                        year = season.season
+                    web_game_date = (str(month) + ' ' + str(day) + ', ' + str(year))
 
                     for game_info in section.find_elements_by_class_name('nfl-c-matchup-strip__left-area'):
                         teams = game_info.find_elements_by_class_name('nfl-c-matchup-strip__team-fullname')
@@ -110,6 +115,7 @@ def load_sched(year):
                         
                         game.game_time = web_time
                         game.day = game_dow
+                        game.qtr = 'pregame'
 
                         game.save()
 

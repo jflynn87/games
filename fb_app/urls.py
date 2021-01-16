@@ -36,5 +36,7 @@ urlpatterns = [
     path('playoff_entry/<int:pk>',views.UpdatePlayoffs.as_view(),name='playoff_entry'),
     path('playoff_score/',views.PlayoffScores.as_view(),name='playoff_score'),
     path('update_playoff_scores/',views.UpdatePlayoffScores.as_view(),name='update_playoff_scores'),
+    path('playoff_check_started/', views.PlayoffGameStarted.as_view()),
+    path('playoff_about/',views.PlayoffLogic.as_view(),name='playoff_about'),
 
     ]

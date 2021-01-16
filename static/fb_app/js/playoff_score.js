@@ -18,8 +18,8 @@ function update_scores() {
           $('#stat-tbl').append('<thead><th>Stat Category</th><th>Game Stats</th></thead>') 
           $('#stat-tbl').append(
             '<tr id=total_score style="font-weight:bold;">' + '<td>Total Points</td> <td></td>' +  
-            '<tr id=passing_yards>' + '<td>Total Passing Yards / 3</td> <td>' + data.response.stats.total_passing_yards  + '</td>' +
-            '<tr id=rushing_yards>' + '<td>Total Rushing Yards / 2 </td> <td>' + data.response.stats.total_rushing_yards  + '</td>' +
+            //'<tr id=passing_yards>' + '<td>Total Passing Yards / 3</td> <td>' + data.response.stats.total_passing_yards  + '</td>' +
+            //'<tr id=rushing_yards>' + '<td>Total Rushing Yards / 2 </td> <td>' + data.response.stats.total_rushing_yards  + '</td>' +
             '<tr id=total_points>' + '<td>Total Points * 5</td> <td>' + data.response.stats.total_points  + '</td>' +
             '<tr id=point_from_fg>' + '<td>Total Points from FG *5</td> <td>' + data.response.stats.points_on_fg  + '</td>' +
             '<tr id=takeaways>' + '<td>Total Takeaways * 50</td> <td>' + data.response.stats.takeaways  + '</td>' +
@@ -42,8 +42,8 @@ function update_scores() {
                 
                 //add picks to page
                 $('#total_score').append('<td></td>' )
-                $('#passing_yards').append('<td>' + p.passing_yards  + '</td>' )
-                $('#rushing_yards').append('<td>' + p.rushing_yards  + '</td>' )
+                //$('#passing_yards').append('<td>' + p.passing_yards  + '</td>' )
+                //$('#rushing_yards').append('<td>' + p.rushing_yards  + '</td>' )
                 $('#total_points').append('<td>' + p.total_points_scored  + '</td>')
                 $('#point_from_fg').append('<td>' + p.points_on_fg  + '</td>')
                 $('#takeaways').append('<td>' + p.takeaways  + '</td>')
@@ -61,8 +61,8 @@ function update_scores() {
 
                 //add scores to page - should this be in this loop?  prob ok
                 $('#total_score').append('<td>' + data.response.scores[player].player_total + '</td>' )
-                $('#passing_yards').append('<td>' + data.response.scores[player].passing_yards  + '</td>' )
-                $('#rushing_yards').append('<td>' + data.response.scores[player].rushing_yards  + '</td>' )
+                //$('#passing_yards').append('<td>' + data.response.scores[player].passing_yards  + '</td>' )
+                //$('#rushing_yards').append('<td>' + data.response.scores[player].rushing_yards  + '</td>' )
                 $('#total_points').append('<td>' + data.response.scores[player].total_points_scored  + '</td>')
                 $('#point_from_fg').append('<td>' + data.response.scores[player].points_on_fg  + '</td>')
                 $('#takeaways').append('<td>' + data.response.scores[player].takeaways  + '</td>')

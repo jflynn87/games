@@ -1,0 +1,32 @@
+{%extends "fb_app/base.html"%}
+
+{%load static%}
+{%load fb_extras%}
+
+{%block body_block%} 
+<div class="container">
+<h1>Super Bowl Game - How it works</h1>
+
+<h3>Basic Scoring</h3>
+<ul>
+<li>Each question is worth 1 point.</li>
+<li>The point is awarded to the entry that is closest to the actual result in the game.  The calculation is the absolute value, so for example a guess that is 3 yards under is the same as 3 yards over.</li>
+<li>In the event of a tie, the 1 point is divided among the tied players.  For example, if 2 players tie, each receive .5 points.  The results will be rounded to 2 decimal points.</li>
+</ul>
+
+<h3>Categories</h3>
+
+<ul>
+<li>Total Points Scored = sum of points for both teams</li>
+<li>Total Points from FG's = sum of field goals, for both teams.  Needs to be divisible by 3</li>
+<li>Takeaways = Sum of takeaways for both teams</li>
+<li>Sacks = Sum of sacks for both teams</li>
+<li>Defense/Special Teams TD's = sum of TD's scored by defense or Special Teams</li>
+<li>Top Rushers = The total rushing yards for the top rusher for each team.</li>
+<li>Top Receiver = The total receiving yards for the top receiver (can be any position, e.g. WR, RB, TE) for each team.</li>
+<li>Passer Rating = The <a href="https://en.wikipedia.org/wiki/Passer_rating#NFL_and_CFL_formula">passer rating</a> for the player with the most passing attempts for each team.  If multiple players have the same number of attempts, the top rating will be selected.  Valid values are 0 - 158.3</li>
+<li>Winner = Pick the favorite and they win 1 point.  Pick the underdog and they win, 2 points.  These points are not divided, so every correct pick will receive the full points.</li>
+</ul>
+</div>
+
+{%endblock%}

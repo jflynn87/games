@@ -29,22 +29,32 @@ import pytz
 from django.core import serializers
 #import docx2txt
 from math import ceil
+from fb_app import views
+from django.http import HttpRequest
 
 
 start = datetime.now()
 game= Games.objects.get(week__current=True, playoff_picks=True)
 web = scrape_cbs_playoff.ScrapeCBS()
+#d = web.get_data()
+#print (d)
 
-d = web.get_data()
-print (d)
-exit()
+
+
+
 #p_stats = PlayoffStats()
 #game = Games.objects.get(week__current=True, playoff_picks=True)
 #p_stats.game = game
 #p_stats.data = d
 #p_stats.save()
 #exit()
+r = HttpRequest.method="GET"
 
+#started = views.PlayoffGameStarted().get(r)
+scores = views.UpdatePlayoffScores().get(r)
+#print ('started', scores_._container)
+print (datetime.now() - start)
+exit()
 stats = PlayoffStats.objects.get(game=game)
 data = stats.data
 #print (data['home']['team_stats'])

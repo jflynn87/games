@@ -643,8 +643,8 @@ class PickPerformance(models.Model):
 class PlayoffPicks(models.Model):
     player = models.ForeignKey(Player, on_delete=models.CASCADE)
     game = models.ForeignKey(Games, on_delete=models.CASCADE)
-    rushing_yards = models.PositiveIntegerField()
-    passing_yards = models.PositiveIntegerField()
+    rushing_yards = models.PositiveIntegerField(null=True)
+    passing_yards = models.PositiveIntegerField(null=True)
     total_points_scored = models.PositiveIntegerField()
     points_on_fg = models.PositiveIntegerField()
     takeaways = models.PositiveIntegerField()

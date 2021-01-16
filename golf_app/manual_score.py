@@ -150,6 +150,7 @@ class Score(object):
         start =  datetime.now()
         #print (self.score_dict)
 
+        ## probably need to move this to later, seems to be causing race conditions with playoffs.
         if not self.tournament.complete:
             self.tournament.complete = self.tournament.tournament_complete(self.score_dict)
             self.tournament.save()
@@ -170,13 +171,15 @@ class Score(object):
 
         for p in Picks.objects.filter(playerName__tournament=self.tournament).values('playerName').distinct():
             pick_loop_start = datetime.now()
+            #print (p)
             pick = Picks.objects.filter(playerName__pk=p.get('playerName')).first()
             
             if ScoreDetails.objects.filter(pick=pick, today_score__in=self.not_playing_list).exists(): 
                 print ('skipping cut/wd/finished pick: ', pick.playerName)
                 continue
-
+            
             temp = [x for x in self.score_dict.values() if x['pga_num'] == pick.playerName.golfer.golfer_pga_num]
+            #print (temp)
             data = temp[0] 
             #print (data)
             if data == None:
@@ -264,6 +267,7 @@ class Score(object):
                         BonusDetails.objects.filter(user=winner.user, tournament=winner.playerName.tournament).update(winner_bonus=50 + (winner.playerName.group.number * 2))
                         
             if pick.playoff_loser():
+                print ('playoff', pick, pick.user)
                 for loser in Picks.objects.filter(playerName=pick.playerName):
                     if not PickMethod.objects.filter(user=loser.user, method=3, tournament=loser.playerName.tournament).exists():
                         BonusDetails.objects.filter(user=loser.user, tournament=loser.playerName.tournament).update(playoff_bonus= 25)

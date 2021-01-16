@@ -28,17 +28,26 @@ import json
 from golf_app import views, manual_score, populateField, withdraw, scrape_scores_picks, utils, scrape_cbs_golf, scrape_masters
 from unidecode import unidecode
 from django.core import serializers
-from golf_app.utils import formatRank
+from golf_app.utils import formatRank, format_name
 
 start = datetime.now()
 #s = Season.objects.get(current=True)
-
 t = Tournament.objects.get(current=True)
-for sd in ScoreDetails.objects.filter(pick__playerName__tournament=t):
-    sd.today_score = None
-    sd.save()
+web = scrape_cbs_golf.ScrapeCBS().get_data()
+#print (web)
 
-#print (s.get_total_points())
+for g, data in web.items():
+    try:
+        golfer = Golfer.objects.get(golfer_name=g)
+        golfer.cbs_number = data['cbs_player_num']
+        golfer.save()
+    except Exception as e:
+        print (g, utils.fix_name(g, web), e)
+
+
+print (datetime.now() - start)
+
+
 exit()
 
 
