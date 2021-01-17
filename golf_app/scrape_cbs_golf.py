@@ -67,9 +67,6 @@ class ScrapeCBS(object):
                     total_strokes = nums[5].text
                     thru = ' '
                     today = ' '
-
-                            #score_dict[player_name] = {'pos': pos, 'to_par': to_par, 'r1': r1, 'r2': r2, 'r3': r3, 'r4': r4,  'total_strokes': total_strokes}
-                        #elif len(nums) == 7:
                 else:
                     thru = nums[1].text
                     today = nums[2].text

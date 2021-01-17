@@ -873,7 +873,7 @@ class UpdatePlayoffScores(APIView):
 
                 }
 
-            # print ('pre calc', picks)
+            #print ('pre calc XXXX', stat_data)
             #print ('pre calc stats', stat_data)
             scores = calc_scores(picks, stat_data, game)
 
@@ -1094,8 +1094,6 @@ def calc_scores(picks, stats, game):
 
             total = round(sum(score_dict[player].values()),2)
             score_dict[player].update({'player_total': total})
-
-
     
     print (score_dict)
     return score_dict

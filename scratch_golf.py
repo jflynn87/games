@@ -34,7 +34,7 @@ start = datetime.now()
 #s = Season.objects.get(current=True)
 t = Tournament.objects.get(current=True)
 web = scrape_cbs_golf.ScrapeCBS().get_data()
-#print (web)
+print (web)
 
 for g, data in web.items():
     try:

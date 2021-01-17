@@ -109,7 +109,8 @@ class ScrapeCBS(object):
 ## scores
             stat_dict['home']['team_stats'].update({'score': soup.find('div', {'class': 'hud-table-cell team-score-container home'}).text.strip()})
             stat_dict['away']['team_stats'].update({'score': soup.find('div', {'class': 'hud-table-cell team-score-container away'}).text.strip()})
-            stat_dict['qtr'] = soup.find('div', {'class': 'final-text'}).text
+            #stat_dict['qtr'] = soup.find('div', {'class': 'final-text'}).text
+            stat_dict['qtr'] = soup.find('div', {'class': 'quarter'}).text
             
 ## end scores
 

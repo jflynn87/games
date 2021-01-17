@@ -282,10 +282,11 @@ class Stats(object):
             print ('no override winning team')
             home_score = self.stats.data['home']['team_stats']['score']
             away_score = self.stats.data['away']['team_stats']['score']
-            if home_score > away_score:
+            
+            if int(home_score) > int(away_score):
                 print ('home team wins')
                 return self.stats.data['home']['team']
-            elif away_score > home_score:
+            elif int(away_score) > (home_score):
                 print ('away team wins')
                 return self.stats.data['away']['team']
             else:
