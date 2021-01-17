@@ -279,7 +279,7 @@ class Stats(object):
             print (self.stats.winning_team)
             return self.stats.winning_team
         else:
-            print ('no override')
+            print ('no override winning team')
             home_score = self.stats.data['home']['team_stats']['score']
             away_score = self.stats.data['away']['team_stats']['score']
             if home_score > away_score:
@@ -290,11 +290,11 @@ class Stats(object):
                 return self.stats.data['away']['team']
             else:
                 print ('no winner')
-                return 'No winner'
+                return 'no winner'
 
 
     def teams(self):
-        print ('teams sect', self.stats.data['home']['team'])
+        #print ('teams sect', self.stats.data['home']['team'])
         return {'home': self.stats.data['home']['team'],
                 'away': self.stats.data['away']['team']
                         }

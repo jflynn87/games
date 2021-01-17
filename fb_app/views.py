@@ -5,7 +5,7 @@ from fb_app.models import Games, Week, Picks, Player, League, Teams, WeekScore, 
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth import authenticate, login, logout
-from django.http import HttpResponseRedirect, HttpResponse, JsonResponse
+from django.http import HttpResponseRedirect, HttpResponse, JsonResponse, HttpRequest
 from django.urls import reverse, reverse_lazy
 #from fb_app.forms import UserForm, CreatePicksForm#, PickFormSet, NoPickFormSet
 from fb_app.forms import CreatePicksForm, CreatePlayoffsForm
@@ -888,7 +888,43 @@ class UpdatePlayoffScores(APIView):
             #print (sorted_data)
         except Exception as e:
             print ('UpdatePlayoffScores error: ', e)
+            r = HttpRequest.method="GET"
+            #scores = views.UpdatePlayoffScores().get(r)
+            started = PlayoffGameStarted().get(r)
+            print ('started check', started)
             
+            if json.loads(started._container[0])['response']['game_started']:
+                for p in PlayoffPicks.objects.filter(game=game):
+                    picks[p.player.name.username]= {
+                        'rushing_yards': p.rushing_yards,
+                        'passing_yards': p.passing_yards,
+                        'total_points_scored': p.total_points_scored,
+                        'points_on_fg': p.points_on_fg,
+                        'takeaways': p.takeaways,
+                        'sacks': p.sacks,
+                        'def_special_teams_tds': p.def_special_teams_tds,
+                        'home_runner': p.home_runner,
+                        'home_receiver': p.home_receiver,
+                        'home_passing': p.home_passing,
+                        'home_passer_rating': p.home_passer_rating,
+                        'away_runner': p.away_runner,
+                        'away_receiver': p.away_receiver,
+                        'away_passing': p.away_passing,
+                        'away_passer_rating': p.away_passer_rating,
+                        'winning_team': p.winning_team.nfl_abbr
+
+                    }
+                    print ('formatting data ', p.winning_team.nfl_abbr)
+                data = {'response':
+                    {'picks': picks,
+                     'stats': None,
+                     'scores': None
+                    }}
+                
+                JsonResponse(data, status=200)
+            else:
+                print ('not started')
+
             return JsonResponse({'response': {'error': str(e)}}, status=400)
 
 class PlayoffGameStarted(APIView):
@@ -1036,21 +1072,28 @@ def calc_scores(picks, stats, game):
         score_dict[loser].update({'away_passer_rating': 0})
 
     winning_team =  stats['winning_team']
-    winning_team_obj = Teams.objects.get(nfl_abbr=winning_team)
-    
-    for player, p in picks.items():
-        print ('WTWETWT', p['winning_team'], winning_team)
-        print (winning_team_obj.dog)
-        if p['winning_team'] == winning_team and winning_team == game.dog.nfl_abbr:
-            score_dict[player].update({'winning_team': 2})
-        elif p['winning_team'] == winning_team and winning_team == game.fav.nfl_abbr:
-            score_dict[player].update({'winning_team': 1})
-        else:
+    print ('checking winner', stats['winning_team'])
+    if winning_team == 'no winner':
+        for player, p in picks.items():
             score_dict[player].update({'winning_team': 0})
+            total = round(sum(score_dict[player].values()),2)
+            score_dict[player].update({'player_total': total})
 
-        total = round(sum(score_dict[player].values()),2)
+    else:
+        winning_team_obj = Teams.objects.get(nfl_abbr=winning_team)
+        
+        for player, p in picks.items():
+            print ('WTWETWT', p['winning_team'], winning_team)
+            print (winning_team_obj.dog)
+            if p['winning_team'] == winning_team and winning_team == game.dog.nfl_abbr:
+                score_dict[player].update({'winning_team': 2})
+            elif p['winning_team'] == winning_team and winning_team == game.fav.nfl_abbr:
+                score_dict[player].update({'winning_team': 1})
+            else:
+                score_dict[player].update({'winning_team': 0})
 
-        score_dict[player].update({'player_total': total})
+            total = round(sum(score_dict[player].values()),2)
+            score_dict[player].update({'player_total': total})
 
 
     
