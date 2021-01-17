@@ -16,6 +16,7 @@
 
 <p hidden id='fav'>{{game.fav.nfl_abbr}}</p>
 <p hidden id='dog'>{{game.dog.nfl_abbr}}</p>
+<p hidden id='spread'>{{game.spread}}</p>
 <div class='card' style='width: 100%;'>
 <div class='card-body'>
 <h5 class='card-title'>How to Play</h5>
@@ -24,12 +25,74 @@
 <p>One point for the closest absolute number (over or under) to the actual stat for each category.</p>
 <p>Ties will result in a split of the point. </p>
 <p>Highest total score wins. Click <a href='/fb_app/playoff_about'>here</a> for more info.</p>
+
+<!-- Home Team -->
+
+<p  style='color:blue;' onclick="stats('{{game.home.nfl_abbr}}')">Click for {{game.home.long_name}} Stats (Reg Season) <i class="fas fa-plus-square"></i></p>  
+<table id='{{game.home.nfl_abbr}}_stats' class='table' style='display:none'>
+    <thead>
+        <tr>
+            <th colspan="4" style="text-align:center; background-color: aqua;">Offense</th>
+            <th colspan="3" style="text-align:center; background-color: aqua;">Defense</th>
+        </tr>
+        <th>yards</th>
+        <th>pass</th>
+        <th>rush</th>
+        <th>pts</th>
+        <th>sacks</th>
+        <th>int/fmbl</th>
+        <th>TD int/fmbl</th>
+    </thead>
+    <tbody>
+        <tr>
+            <td id='g_yards'></td>
+            <td id='g_pass'></td>
+            <td id='g_rush'></td>
+            <td id='g_points'></td>
+            <td id='sacks'></td>
+            <td id='int_fumble'></td>
+            <td id='d_tds'></td>
+        </tr>
+    </tbody>
+</table>
+
+<!-- AWAY Team -->
+
+<p  style='color:blue;' onclick="stats('{{game.away.nfl_abbr}}')">Click for {{game.away.long_name}} Stats (Reg Season)<i class="fas fa-plus-square"></i></p>  
+<table id='{{game.away.nfl_abbr}}_stats' class='table' style='display:none'>
+    <thead>
+        <tr>
+            <th colspan="4" style="text-align:center; background-color: aqua;">Offense</th>
+            <th colspan="3" style="text-align:center; background-color: aqua;">Defense</th>
+        </tr>
+        <th>yards</th>
+        <th>pass</th>
+        <th>rush</th>
+        <th>pts</th>
+        <th>sacks</th>
+        <th>int/fmbl</th>
+        <th>TD int/fmbl</th>
+    </thead>
+    <tbody>
+        <tr>
+            <td id='g_yards'></td>
+            <td id='g_pass'></td>
+            <td id='g_rush'></td>
+            <td id='g_points'></td>
+            <td id='sacks'></td>
+            <td id='int_fumble'></td>
+            <td id='d_tds'></td>
+        </tr>
+    </tbody>
+</table>
+
+</div>
 </div>  
 </div>
 </div>
 
 
-
+<div>
 <form  method="POST">
 {{form | bootstrap}}
 {%csrf_token%}
@@ -39,7 +102,10 @@
 </form>
 <a href="https://en.wikipedia.org/wiki/Passer_rating#NFL_and_CFL_formula">  <h3>*  Passer Rating - Click for logic, will be calculated for the player with the most passing attempts for the team.</h3></a>
 </div>
+
 <script>
+$(document).ready(function () {
+
     fetch("/fb_app/playoff_check_started/",
             {method: "GET",
             })
@@ -55,20 +121,48 @@
                 $('#submit_btn').html('Game Started')}
         })
 
+    })
 $(document).ready(function() {
-    console.log($('#id_winning_team_0').parent().html()) 
+    //console.log($('#id_winning_team_0').parent().html()) 
 
     if ($('#id_winning_team_0').parent().text().replace(/\s/g, '') == $("#dog").text()) {
         $('#id_winning_team_0').parent().html($('#id_winning_team_0').parent().html() + ": Underdog - 2 points") }
-    else {$('#id_winning_team_0').parent().html($('#id_winning_team_0').parent().html() + ": Favorite - 1 point")}
+    else {$('#id_winning_team_0').parent().html($('#id_winning_team_0').parent().html() + ": Favorite - 1 point" + '  (spread: ' + $('#spread').text() + ')')}
 
     if ($('#id_winning_team_1').parent().text().replace(/\s/g, '') == $("#dog").text()) {
         $('#id_winning_team_1').parent().html($('#id_winning_team_1').parent().html() + ": Underdog - 2 points") }
-    else {$('#id_winning_team_1').parent().html($('#id_winning_team_1').parent().html() + ": Favorite - 1 point")}
+    else {$('#id_winning_team_1').parent().html($('#id_winning_team_1').parent().html() + ": Favorite - 1 point" + '  (spread: ' + $('#spread').text() + ')')}
 
 }
     
 )
+function stats(team) {
+
+    //$('#' + team + '_stats table').remove()
+    if ($('#' + team + '_stats tbody #g_yards').text() == '') {
+    fetch("/fb_app/team_stats/" + team,
+            {method: "GET",
+            })
+        .then((response) =>  response.json())
+        .then((responseJSON) => {
+            data = responseJSON[team]
+            console.log(data)
+            $('#' + team + '_stats tbody #g_yards').text(data['yards_per_game'])
+            $('#' + team + '_stats tbody #g_pass').text(data['pass_yards_per_game'])
+            $('#' + team + '_stats tbody #g_rush').text(data['rush_yards_per_game'])
+            $('#' + team + '_stats tbody #g_points').text(data['points_per_game'])
+            $('#' + team + '_stats tbody #sacks').text(data['sacks'])
+            $('#' + team + '_stats tbody #int_fumble').text(data['ints'] + ' / ' + data['fumble_recovered'])
+            $('#' + team + '_stats tbody #d_tds').text(data['int_td'] + ' / ' + data['fumble_td'])
+            //$('#' + team + '_stats').toggle()    
+
+
+        })
+        
+    }
+    $('#' + team + '_stats').toggle()    
+}
+
 
 </script>
 

@@ -1,3 +1,5 @@
+import unidecode
+
 def format_score(score):
     '''takes in a sting and returns a string formatted for the right display or calc'''
     if score == None:

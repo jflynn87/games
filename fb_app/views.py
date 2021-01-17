@@ -968,6 +968,77 @@ class PlayoffGameStarted(APIView):
 
 
 
+class TeamStatsView(APIView):
+    '''takes a request and returns json'''
+    def get(self, request, nfl_abbr):
+        start = datetime.datetime.now()
+        print (nfl_abbr)
+        team = Teams.objects.get(nfl_abbr=nfl_abbr)
+        stats_dict = {}
+        html = urllib.request.urlopen("https://www.cbssports.com/nfl/stats/team/team/total/nfl/regular/")
+
+        soup = BeautifulSoup(html, 'html.parser')
+
+        teams = soup.find('div', {'id': 'TableBase'})
+        stats = teams.find_all('tr', {'class': 'TableBase-bodyTr'})
+
+        for data in stats:
+            row = data.find_all('td')
+            team = row[0].a['href'].split('/')[3]
+            if team == 'LAR':
+                team = "LA"
+            gp = row[1].text.strip()
+            yards = row[2].text.strip()
+            yards_per_game = row[3].text .strip()
+            pass_yards = row[4].text.strip()
+            pass_yards_per_game = row[5].text.strip()
+            rush_yards = row[6].text.strip()
+            rush_yards_per_game = row[7].text.strip()
+            points = row[8].text.strip()
+            points_per_game = row[9].text.strip()
+
+            stats_dict[team] = {
+                                    'gp': gp, 
+                                    'yards': yards,
+                                    'yards_per_game': yards_per_game,
+                                    'pass_yards': pass_yards,
+                                    'pass_yards_per_game': pass_yards_per_game,
+                                    'rush_yards': rush_yards,
+                                    'rush_yards_per_game': rush_yards_per_game,
+                                    'points': points,
+                                    'points_per_game': points_per_game,
+                            
+            }
+
+        html = urllib.request.urlopen("https://www.cbssports.com/nfl/stats/team/team/defense/nfl/regular/")  # defense
+        soup = BeautifulSoup(html, 'html.parser')
+
+        teams = soup.find('div', {'id': 'TableBase'})
+        stats = teams.find_all('tr', {'class': 'TableBase-bodyTr'})
+
+        for data in stats:
+            row = data.find_all('td')
+            team = row[0].a['href'].split('/')[3]
+            if team == 'LAR':
+                team = "LA"
+            stats_dict[team].update({
+                                    'solo tackles': row[2].text.strip(),
+                                    'assisted tackles': row[3].text.strip(),
+                                    'combined_tackles': row[4].text.strip(),
+                                    'ints': row[5].text.strip(),
+                                    'int_yards': row[6].text.strip(),
+                                    'int_td': row[7].text.strip(),
+                                    'fumble_forced': row[8].text.strip(),
+                                    'fumble_recovered': row[9].text.strip(),
+                                    'fumble_td': row[10].text.strip(),
+                                    'sacks': row[11].text.strip(),
+                                    'passed_defensed': row[12].text.strip(),
+            })
+
+        return JsonResponse(stats_dict, status=200)
+
+        
+
 ## helper functions
 
 def calc_scores(picks, stats, game):
@@ -1099,81 +1170,6 @@ def calc_scores(picks, stats, game):
     return score_dict
     
 
-
-                
-#        score_dict[player]= {
-#                     'total_points_scored': abs(p['total_points_scored'] - stats['total_points']) * 5,
-#                     'points_on_fg': abs(p['points_on_fg'] - stats['points_on_fg']) * 5,
-#                     'takeaways': abs(p['takeaways'] - stats['takeaways']) *50,
-#                     'sacks': abs(p['sacks'] - stats['sacks']) *30,
-#                     'def_special_teams_tds': abs(p['def_special_teams_tds'] - stats['def_special_teams_tds']) * 100,
-#                     'home_runner': abs(p['home_runner'] - stats['home_runner']) *3,
-#                     'home_receiver': abs(p['home_receiver'] - stats['home_receiver']) *3,
-#                     #'home_passing': abs(p['home_passing'] - stats['home_passing']) *3,
-#                     #'home_passer_rating': round(abs(p['home_passer_rating'] - stats['home_passer_rating']) *3,2), - CBS has the wrong rating 
-#                     'home_passer_rating': round(abs(p['home_passer_rating'] - stats['home_passer_rating']) *3,2),
-#                     'away_runner': abs(p['away_runner'] - stats['away_runner']) *3,
-#                     'away_receiver': abs(p['away_receiver'] - stats['away_receiver']) *3,
-#                     #'away_passing': round(abs(p['away_passing'] - stats['away_passing']) *3,2),
-#                     'away_passer_rating': round(abs(p['away_passer_rating'] - stats['away_passer_rating']) *3,2),
-#                     'winning_team': winner,
-                    
-#                    }
-#         print (score_dict[player].values())
-#         total = round(sum(score_dict[player].values()),2)
-
-#         score_dict[player].update({'player_total': total})
-
-#     return score_dict
-
-
-
-
-
-
-
-
-## commented to re-do as point per question.  keep just in case.
-# def calc_scores(picks, stats, game):
-#     '''takes 2 dictionaries and a game obj, returns a dictionany of scores'''
-#     print ('in clac')
-#     score_dict = {}
-#     winning_team =  stats['winning_team']
-#     for player, p in picks.items():
-#         print ('calc scorre for:', player)
-#         if p['winning_team'] == winning_team:
-#             winner = -100
-#         elif p['winning_team'] != "No winner":
-#             winner = 100
-#         else:
-#             winner = 0
-                
-#         score_dict[player]= {
-#                     'rushing_yards': round(abs(p['rushing_yards'] - stats['total_rushing_yards']) / 2, 2),
-#                     'passing_yards': round(abs(p['passing_yards'] - stats['total_passing_yards']) / 3, 2),
-#                     'total_points_scored': abs(p['total_points_scored'] - stats['total_points']) * 5,
-#                     'points_on_fg': abs(p['points_on_fg'] - stats['points_on_fg']) * 5,
-#                     'takeaways': abs(p['takeaways'] - stats['takeaways']) *50,
-#                     'sacks': abs(p['sacks'] - stats['sacks']) *30,
-#                     'def_special_teams_tds': abs(p['def_special_teams_tds'] - stats['def_special_teams_tds']) * 100,
-#                     'home_runner': abs(p['home_runner'] - stats['home_runner']) *3,
-#                     'home_receiver': abs(p['home_receiver'] - stats['home_receiver']) *3,
-#                     #'home_passing': abs(p['home_passing'] - stats['home_passing']) *3,
-#                     #'home_passer_rating': round(abs(p['home_passer_rating'] - stats['home_passer_rating']) *3,2), - CBS has the wrong rating 
-#                     'home_passer_rating': round(abs(p['home_passer_rating'] - stats['home_passer_rating']) *3,2),
-#                     'away_runner': abs(p['away_runner'] - stats['away_runner']) *3,
-#                     'away_receiver': abs(p['away_receiver'] - stats['away_receiver']) *3,
-#                     #'away_passing': round(abs(p['away_passing'] - stats['away_passing']) *3,2),
-#                     'away_passer_rating': round(abs(p['away_passer_rating'] - stats['away_passer_rating']) *3,2),
-#                     'winning_team': winner,
-                    
-#                    }
-#         print (score_dict[player].values())
-#         total = round(sum(score_dict[player].values()),2)
-
-#         score_dict[player].update({'player_total': total})
-
-#     return score_dict
 
 
 def calc_qb_ratings(stats):

@@ -34,6 +34,81 @@ from django.http import HttpRequest
 
 
 start = datetime.now()
+stats_dict = {}
+html = urllib.request.urlopen("https://www.cbssports.com/nfl/stats/team/team/total/nfl/regular/")
+
+soup = BeautifulSoup(html, 'html.parser')
+
+teams = soup.find('div', {'id': 'TableBase'})
+stats = teams.find_all('tr', {'class': 'TableBase-bodyTr'})
+
+for data in stats:
+    row = data.find_all('td')
+    team = row[0].a['href'].split('/')[3]
+    if team == 'LAR':
+        team = "LA"
+    gp = row[1].text.strip()
+    yards = row[2].text.strip()
+    yards_per_game = row[3].text .strip()
+    pass_yards = row[4].text.strip()
+    pass_yards_per_game = row[5].text.strip()
+    rush_yards = row[6].text.strip()
+    rush_yards_per_game = row[7].text.strip()
+    points = row[8].text.strip()
+    points_per_game = row[9].text.strip()
+
+    stats_dict[team] = {
+                            'gp': gp, 
+                            'yards': yards,
+                            'yards_per_game': yards_per_game,
+                            'pass_yards': pass_yards,
+                            'pass_yards_per_game': pass_yards_per_game,
+                            'rush_yards': rush_yards,
+                            'rush_yards_per_game': rush_yards_per_game,
+                            'points': points,
+                            'points_per_game': points_per_game,
+                    
+    }
+
+#print (stats_dict)
+print (datetime.now() - start)
+
+html = urllib.request.urlopen("https://www.cbssports.com/nfl/stats/team/team/defense/nfl/regular/")  # defense
+
+soup = BeautifulSoup(html, 'html.parser')
+
+teams = soup.find('div', {'id': 'TableBase'})
+stats = teams.find_all('tr', {'class': 'TableBase-bodyTr'})
+
+for data in stats:
+    row = data.find_all('td')
+    team = row[0].a['href'].split('/')[3]
+    if team == 'LAR':
+        team = "LA"
+    stats_dict[team].update({
+                             'solo tackles': row[2].text.strip(),
+                             'assisted tackles': row[3].text.strip(),
+                             'combined_tackles': row[4].text.strip(),
+                             'ints': row[5].text.strip(),
+                             'int_yards': row[6].text.strip(),
+                             'int_td': row[7].text.strip(),
+                             'fumble_forced': row[8].text.strip(),
+                             'fumble_recovered': row[9].text.strip(),
+                             'fumble_td': row[10].text.strip(),
+                             'sacks': row[11].text.strip(),
+                             'passed_defensed': row[12].text.strip(),
+
+
+    })
+
+print (stats_dict['MIA'])
+print (datetime.now() - start)
+exit()
+
+
+
+
+
 game= Games.objects.get(week__current=True, playoff_picks=True)
 web = scrape_cbs_playoff.ScrapeCBS()
 #d = web.get_data()
@@ -43,8 +118,8 @@ web = scrape_cbs_playoff.ScrapeCBS()
 
 
 #p_stats = PlayoffStats()
-game = Games.objects.get(week__current=True, playoff_picks=True)
-stats = PlayoffStats.objects.get(game=game)
+#game = Games.objects.get(week__current=True, playoff_picks=True)
+#stats = PlayoffStats.objects.get(game=game)
 #print (stats.data)
 for k, v in stats.data.items():
     print ('=====================')

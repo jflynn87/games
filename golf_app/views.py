@@ -354,7 +354,7 @@ class GetScores(APIView):
             pga_web = scrape_scores_picks.ScrapeScores(t)
             score_dict = pga_web.scrape()
 
-            #score_dict = scrape_cbs_golf.ScrapeCBS().get_data()
+             #score_dict = scrape_cbs_golf.ScrapeCBS().get_data()
 
 
             #score_dict = scrape_masters.ScrapeScores(t).scrape()
