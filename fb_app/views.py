@@ -968,7 +968,7 @@ class PlayoffGameStarted(APIView):
 
 
 
-class TeamStatsView(APIView):
+class TeamOffStatsView(APIView):
     '''takes a request and returns json'''
     def get(self, request, nfl_abbr):
         start = datetime.datetime.now()
@@ -1010,6 +1010,16 @@ class TeamStatsView(APIView):
                             
             }
 
+        return JsonResponse(stats_dict, status=200)
+
+class TeamDefStatsView(APIView):
+    '''takes a request and returns json'''
+    def get(self, request, nfl_abbr):
+        start = datetime.datetime.now()
+        print (nfl_abbr)
+        team = Teams.objects.get(nfl_abbr=nfl_abbr)
+        stats_dict = {}
+
         html = urllib.request.urlopen("https://www.cbssports.com/nfl/stats/team/team/defense/nfl/regular/")  # defense
         soup = BeautifulSoup(html, 'html.parser')
 
@@ -1021,7 +1031,7 @@ class TeamStatsView(APIView):
             team = row[0].a['href'].split('/')[3]
             if team == 'LAR':
                 team = "LA"
-            stats_dict[team].update({
+            stats_dict[team] = {
                                     'solo tackles': row[2].text.strip(),
                                     'assisted tackles': row[3].text.strip(),
                                     'combined_tackles': row[4].text.strip(),
@@ -1033,11 +1043,48 @@ class TeamStatsView(APIView):
                                     'fumble_td': row[10].text.strip(),
                                     'sacks': row[11].text.strip(),
                                     'passed_defensed': row[12].text.strip(),
-            })
+            }
 
         return JsonResponse(stats_dict, status=200)
 
-        
+
+class TeamOppStatsView(APIView):
+    '''takes a request and returns json'''
+    def get(self, request, nfl_abbr):
+        start = datetime.datetime.now()
+        print (nfl_abbr)
+        team = Teams.objects.get(nfl_abbr=nfl_abbr)
+        stats_dict = {}
+        html = urllib.request.urlopen("https://www.cbssports.com/nfl/stats/team/opponent/total/nfl/regular/")
+
+        soup = BeautifulSoup(html, 'html.parser')
+
+        teams = soup.find('div', {'id': 'TableBase'})
+        stats = teams.find_all('tr', {'class': 'TableBase-bodyTr'})
+
+        for data in stats:
+            row = data.find_all('td')
+            team = row[0].a['href'].split('/')[3]
+            if team == 'LAR':
+                team = "LA"
+            # gp = row[1].text.strip()
+            # yards = row[2].text.strip()
+            # yards_per_game = row[3].text .strip()
+            # pass_yards = row[4].text.strip()
+            # pass_yards_per_game = row[5].text.strip()
+            # rush_yards = row[6].text.strip()
+            # rush_yards_per_game = row[7].text.strip()
+            # points = row[8].text.strip()
+            #points_ = row[9].text.strip()
+            print (team, row[9].text.strip())
+            stats_dict[team] = {
+                                    'points_against': row[9].text.strip(), 
+            }
+
+        return JsonResponse(stats_dict, status=200)
+
+
+
 
 ## helper functions
 

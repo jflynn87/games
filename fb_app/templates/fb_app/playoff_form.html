@@ -33,7 +33,7 @@
     <thead>
         <tr>
             <th colspan="4" style="text-align:center; background-color: aqua;">Offense</th>
-            <th colspan="3" style="text-align:center; background-color: aqua;">Defense</th>
+            <th colspan="4" style="text-align:center; background-color: aqua;">Defense</th>
         </tr>
         <th>yards</th>
         <th>pass</th>
@@ -42,6 +42,7 @@
         <th>sacks</th>
         <th>int/fmbl</th>
         <th>TD int/fmbl</th>
+        <th>pts against</th>
     </thead>
     <tbody>
         <tr>
@@ -52,6 +53,7 @@
             <td id='sacks'></td>
             <td id='int_fumble'></td>
             <td id='d_tds'></td>
+            <td id='pts_against'></td>
         </tr>
     </tbody>
 </table>
@@ -63,7 +65,7 @@
     <thead>
         <tr>
             <th colspan="4" style="text-align:center; background-color: aqua;">Offense</th>
-            <th colspan="3" style="text-align:center; background-color: aqua;">Defense</th>
+            <th colspan="4" style="text-align:center; background-color: aqua;">Defense</th>
         </tr>
         <th>yards</th>
         <th>pass</th>
@@ -72,6 +74,7 @@
         <th>sacks</th>
         <th>int/fmbl</th>
         <th>TD int/fmbl</th>
+        <th>pts against</th>
     </thead>
     <tbody>
         <tr>
@@ -82,6 +85,7 @@
             <td id='sacks'></td>
             <td id='int_fumble'></td>
             <td id='d_tds'></td>
+            <td id='pts_against'></td>
         </tr>
     </tbody>
 </table>
@@ -137,10 +141,16 @@ $(document).ready(function() {
     
 )
 function stats(team) {
+    off_stats(team)
+    def_stats(team)
+    opp_stats(team)
+    $('#' + team + '_stats').toggle() 
 
-    //$('#' + team + '_stats table').remove()
+}
+
+function off_stats(team){
     if ($('#' + team + '_stats tbody #g_yards').text() == '') {
-    fetch("/fb_app/team_stats/" + team,
+    fetch("/fb_app/team_off_stats/" + team,
             {method: "GET",
             })
         .then((response) =>  response.json())
@@ -151,18 +161,43 @@ function stats(team) {
             $('#' + team + '_stats tbody #g_pass').text(data['pass_yards_per_game'])
             $('#' + team + '_stats tbody #g_rush').text(data['rush_yards_per_game'])
             $('#' + team + '_stats tbody #g_points').text(data['points_per_game'])
-            $('#' + team + '_stats tbody #sacks').text(data['sacks'])
-            $('#' + team + '_stats tbody #int_fumble').text(data['ints'] + ' / ' + data['fumble_recovered'])
-            $('#' + team + '_stats tbody #d_tds').text(data['int_td'] + ' / ' + data['fumble_td'])
-            //$('#' + team + '_stats').toggle()    
-
-
         })
         
     }
-    $('#' + team + '_stats').toggle()    
 }
 
+function def_stats(team){
+    if ($('#' + team + '_stats tbody #sacks').text() == '') {
+    fetch("/fb_app/team_def_stats/" + team,
+            {method: "GET",
+            })
+        .then((response) =>  response.json())
+        .then((responseJSON) => {
+            data = responseJSON[team]
+            console.log(data)
+            $('#' + team + '_stats tbody #sacks').text(data['sacks'])
+            $('#' + team + '_stats tbody #int_fumble').text(data['ints'] + ' / ' + data['fumble_recovered'])
+            $('#' + team + '_stats tbody #d_tds').text(data['int_td'] + ' / ' + data['fumble_td'])
+        })
+    
+}
+}
+
+function opp_stats(team){
+
+if ($('#' + team + '_stats tbody #sacks').text() == '') {
+fetch("/fb_app/team_opp_stats/" + team,
+        {method: "GET",
+        })
+    .then((response) =>  response.json())
+    .then((responseJSON) => {
+        data = responseJSON[team]
+        console.log(data)
+        $('#' + team + '_stats tbody #pts_against').text(data['points_against'])
+    })
+    
+}
+}
 
 </script>
 

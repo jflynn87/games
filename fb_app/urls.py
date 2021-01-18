@@ -38,6 +38,7 @@ urlpatterns = [
     path('update_playoff_scores/',views.UpdatePlayoffScores.as_view(),name='update_playoff_scores'),
     path('playoff_check_started/', views.PlayoffGameStarted.as_view()),
     path('playoff_about/',views.PlayoffLogic.as_view(),name='playoff_about'),
-    path('team_stats/<str:nfl_abbr>', views.TeamStatsView.as_view())
-
+    path('team_off_stats/<str:nfl_abbr>', views.TeamOffStatsView.as_view()),
+    path('team_def_stats/<str:nfl_abbr>', views.TeamDefStatsView.as_view()),
+    path('team_opp_stats/<str:nfl_abbr>', views.TeamOppStatsView.as_view()),
     ]
