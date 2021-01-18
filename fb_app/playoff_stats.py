@@ -288,7 +288,7 @@ class Stats(object):
             if int(home_score) > int(away_score):
                 print ('home team wins')
                 return self.stats.data['home']['team']
-            elif int(away_score) > (home_score):
+            elif int(away_score) > int(home_score):
                 print ('away team wins')
                 return self.stats.data['away']['team']
             else:
