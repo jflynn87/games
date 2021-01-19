@@ -16,8 +16,8 @@ class ScrapeCBS(object):
         try:
             score_dict = {}
 
-            html = urllib.request.urlopen("https://www.cbssports.com/golf/leaderboard/")
-            #html = urllib.request.urlopen("https://www.cbssports.com/golf/leaderboard/pga-tour/26496762/sentry-tournament-of-champions/")
+            #html = urllib.request.urlopen("https://www.cbssports.com/golf/leaderboard/")
+            html = urllib.request.urlopen("https://www.cbssports.com/golf/leaderboard/pga-tour/26496766/sony-open-in-hawaii/")
             soup = BeautifulSoup(html, 'html.parser')
             
             leaderboard = soup.find('div', {'id': 'TableGolfLeaderboard'})
@@ -39,13 +39,9 @@ class ScrapeCBS(object):
                 player_num = player.a['href'].split('/')[6]
                
                 to_par = r.find('td', {'class': 'GolfLeaderboardTable-bodyTd--toPar'}).text
-
-                #for line in pos_sect: 
-                #    if 'GolfLeaderboard-bodyTd--cutLine' in line['class']:
-                #        print ('cut line')
-                 #   else:
+                
                 nums = r.find_all('td', {'class': 'TableBase-bodyTd--number'})
-                #print ('nums', len(nums))
+                #print ('nums', len(nums), nums)
                 if len(nums)  == 6:  #when not playing so no "thru"
                             
                     r1 = nums[1].text
@@ -55,7 +51,17 @@ class ScrapeCBS(object):
                     total_strokes = nums[5].text
                     thru = ' '
                     today = ' '
-                else:
+                elif len(nums) == 7:  #when complete, no thru or today but with earnings
+                    #thru = nums[1].text
+                    #today = nums[2].text
+                    r1 = nums[2].text
+                    r2  = nums[3].text
+                    r3 = nums[4].text
+                    r4 =nums[5].text
+                    total_strokes = nums[6].text
+                    thru = 'F'
+                    today = ''
+                elif len(nums) == 8:
                     thru = nums[1].text
                     today = nums[2].text
                     r1 = nums[3].text
@@ -63,6 +69,9 @@ class ScrapeCBS(object):
                     r3 = nums[5].text
                     r4 =nums[6].text
                     total_strokes = nums[7].text
+                else:
+                    print ('scrape cbs leaderboard issue, nums len not 6, 7, 8.  it is" : ', len(nums), nums)
+
                             
                 score_dict[player_name] = {'rank': pos, 'total_score': to_par, 'thru': thru, 'round_score': today, 'r1': r1, 'r2':r2, 'r3': r3, 'r4': r4, 'total_strokes': total_strokes, 'change': ' ', 
                                                     'cbs_player_num': player_num

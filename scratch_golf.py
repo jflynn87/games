@@ -25,43 +25,20 @@ from urllib.request import Request, urlopen
 from selenium import webdriver
 import urllib
 import json
-from golf_app import views, manual_score, populateField, withdraw, scrape_scores_picks, utils, scrape_cbs_golf, scrape_masters
+from golf_app import views, manual_score, populateField, withdraw, scrape_scores_picks, utils, scrape_cbs_golf, scrape_masters, scrape_espn
 from unidecode import unidecode
 from django.core import serializers
 from golf_app.utils import formatRank, format_name, fix_name
 
 start = datetime.now()
 #s = Season.objects.get(current=True)
-#t = Tournament.objects.get(current=True)
+t = Tournament.objects.get(current=True)
 #web = scrape_cbs_golf.ScrapeCBS().get_data()
-web = scrape_cbs_golf.ScrapeCBS().get_players()
+web = scrape_espn.ScrapeESPN().get_espn_players()
+print (web)
+
+#web = populateField.get_espn_field(t)
 #print (web)
-
-for g in Golfer.objects.all():
-    name_l = g.golfer_name.split(' ')
-    format_name = name_l[1] + ', ' + name_l[0]
-    try:
-       fix_name(g.golfer_name, web)
-       cbs_num = web.get(format_name)
-       #if cbs_num == None:
-       #    print ('not found', g)
-       #else:
-       #    print ('ok', g, cbs_num)
-        #split_name = name.split(',')
-        #format_name = str(split_name[1].strip(' ')) + ' ' + str(split_name[0])
-        #print (format_name)        
-        
-    except Exception as e:
-        print (g, e)
-exit()
-for g, data in web.items():
-    try:
-        golfer = Golfer.objects.get(golfer_name=g)
-        golfer.cbs_number = data['cbs_player_num']
-        golfer.save()
-    except Exception as e:
-        print (g, utils.fix_name(g, web), e)
-
 
 print (datetime.now() - start)
 

@@ -30,26 +30,26 @@
 
 <p  style='color:blue;' onclick="stats('{{game.home.nfl_abbr}}')">Click for {{game.home.long_name}} Stats (Reg Season) <i class="fas fa-plus-square"></i></p>  
 <table id='{{game.home.nfl_abbr}}_stats' class='table' style='display:none'>
-    <thead>
+    <tbody>
         <tr>
-            <th colspan="4" style="text-align:center; background-color: aqua;">Offense</th>
-            <th colspan="4" style="text-align:center; background-color: aqua;">Defense</th>
-        </tr>
         <th>yards</th>
         <th>pass</th>
         <th>rush</th>
         <th>pts</th>
-        <th>sacks</th>
-        <th>int/fmbl</th>
-        <th>TD int/fmbl</th>
-        <th>pts against</th>
-    </thead>
-    <tbody>
+        </tr>
         <tr>
             <td id='g_yards'></td>
             <td id='g_pass'></td>
             <td id='g_rush'></td>
             <td id='g_points'></td>
+        </tr>
+        <tr>
+        <th>sacks</th>
+        <th>int/fmbl</th>
+        <th>TD int/fmbl</th>
+        <th>pts against</th>
+        </tr>
+        <tr>
             <td id='sacks'></td>
             <td id='int_fumble'></td>
             <td id='d_tds'></td>
@@ -62,26 +62,26 @@
 
 <p  style='color:blue;' onclick="stats('{{game.away.nfl_abbr}}')">Click for {{game.away.long_name}} Stats (Reg Season)<i class="fas fa-plus-square"></i></p>  
 <table id='{{game.away.nfl_abbr}}_stats' class='table' style='display:none'>
-    <thead>
-        <tr>
-            <th colspan="4" style="text-align:center; background-color: aqua;">Offense</th>
-            <th colspan="4" style="text-align:center; background-color: aqua;">Defense</th>
-        </tr>
-        <th>yards</th>
-        <th>pass</th>
-        <th>rush</th>
-        <th>pts</th>
-        <th>sacks</th>
-        <th>int/fmbl</th>
-        <th>TD int/fmbl</th>
-        <th>pts against</th>
-    </thead>
     <tbody>
+        <tr>
+            <th>yards</th>
+            <th>pass</th>
+            <th>rush</th>
+            <th>pts</th>
+        </tr>
         <tr>
             <td id='g_yards'></td>
             <td id='g_pass'></td>
             <td id='g_rush'></td>
             <td id='g_points'></td>
+        </tr>
+        <tr>
+            <th>sacks</th>
+            <th>int/fmbl</th>
+            <th>TD int/fmbl</th>
+            <th>pts against</th>
+        </tr>
+        <tr>
             <td id='sacks'></td>
             <td id='int_fumble'></td>
             <td id='d_tds'></td>

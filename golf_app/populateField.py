@@ -1,17 +1,13 @@
-#import os
-#os.environ.setdefault("DJANGO_SETTINGS_MODULE","golfProj.settings")
-
 from golf_app.models import (Picks, Field, Group, Tournament, TotalScore,
     ScoreDetails, Name, Season, User, BonusDetails, Golfer)
 import urllib3
 from django.core.exceptions import ObjectDoesNotExist
-from golf_app import calc_score
+from golf_app import scrape_cbs_golf, scrape_espn #calc_score, 
 from django.db import transaction
 import urllib
 from bs4 import BeautifulSoup
 import json
 import datetime
-#import string
 import unidecode 
 
 def clean_db():
@@ -24,25 +20,18 @@ def clean_db():
 def get_pga_worldrank():
     '''Goes to PGA web site takes no input, goes to web to get world golf rankings and returns a dictionary with player name as a string and key, ranking as a string in values'''
 
-    #from bs4 import BeautifulSoup
-    #import urllib.request
     print ('start pga.com worldrank lookup')
     html = urllib.request.urlopen("https://www.pgatour.com/stats/stat.186.html")
-    #html = request.get("https://www.pgatour.com/stats/stat.186.html")
     soup = BeautifulSoup(html, 'html.parser')
 
-
-    #rankslist = (soup.find("div", {'class': 'details section'}))
     rankslist = (soup.find("table", {'id': 'statsTable'}))
 
     ranks = {}
     for row in rankslist.find_all('tr')[1:]:
-        #print (row)
         try:
             player = (row.find('td', {'class': 'player-name'}).text).strip('\n')
             rank = row.find('td').text.strip('\n').strip(' ')
             last_week=  row.find('td', {'class': 'hidden-print hidden-small hidden-medium'}).text.strip('\n')
-            #ranks[player.capitalize()] = [int(rank), int(last_week), 0]
             try:
                 rank = int(rank)
             except Exception as e:
@@ -66,9 +55,6 @@ def get_pga_worldrank():
 def get_worldrank():
     '''Goes to OWGR web site takes no input, goes to web to get world golf rankings and returns a dictionary with player name as a string and key, ranking as a string in values'''
 
-    #from bs4 import BeautifulSoup
-    #import urllib.request
-
     print ('start owgr.com lookp')
 
     html = urllib.request.urlopen("http://www.owgr.com/ranking?pageNo=1&pageSize=All&country=All")
@@ -91,17 +77,14 @@ def get_worldrank():
                 i += 1
                 if i == 3:
                     break
-            #player = (row.find('td', {'class': 'name'}).text).replace('(Am)','').replace(' Jr','').replace('(am)','')
             player = (row.find('td', {'class': 'name'})).text.split('(')[0]
             
-            #ranks[player.title()] = rank_list
             ranks[player] = rank_list
         except Exception as e:
             print('exeption 1',row,e)
 
     print ('end owgr.com lookup')
     
-    #print (ranks.get('Mark anderson'))
     return ranks
 
 
@@ -123,7 +106,6 @@ def get_field(tournament_number):
     while start_date.weekday() != 3:
         start_date += datetime.timedelta(1)
     tourny.start_date = start_date
-    #tourny.start_date = data["Tournament"]["yyyy"] + '-' +data["Tournament"]["mm"] + '-' + data["Tournament"]["dd"]
     tourny.field_json_url = json_url
     tourny.score_json_url = 'https://statdata.pgatour.com/r/' + str(tournament_number) +'/' + str(season) + '/leaderboard-v2mini.json'
     tourny.pga_tournament_num = tournament_number
@@ -136,9 +118,6 @@ def get_field(tournament_number):
     tourny.saved_cut_round = 2
     tourny.save()
 
-    #Tournament.objects.get_or_create(season=season, name=tourny.name,start_date=tourny.start_date, field_json_url=tourny.field_json_url, score_json_url=tourny.score_json_url, current=True, complete=False)
-
-
     field_list = {}
 
 
@@ -146,8 +125,6 @@ def get_field(tournament_number):
         if 'Jr' in player["PlayerName"]:
             name = player["PlayerName"].split(' ')[2] + ' ' + player["PlayerName"].split(' ')[0] + ' ' +player["PlayerName"].split(' ')[1][:-1]
         else:    
-            #name = (' '.join(reversed(player["PlayerName"].split(', ')))).replace('Jr.','')
-            #name = (' '.join(reversed(player["PlayerName"].split(', '))).replace(' Jr.','').replace('(am)',''))
             name = (' '.join(reversed(player["PlayerName"].split(', '))).replace('(am)', '').replace('(a)', ''))
         playerID = player['TournamentPlayerId']
         try:
@@ -183,19 +160,10 @@ def configure_groups(field_list):
         group_size = len(field_list) - 50
         remainder = 0
 
-#        group_size = 15
-#        remainder = (len(field_list)-50) % group_size
-
-#        remaining_groups = (len(field_list)-(remainder+50))/group_size
-
-#        while group_cnt < remaining_groups + 5:
-#             groups[group_cnt] = group_size
-#             group_cnt += 1
     elif len(field_list) > 29 and len(field_list) < 65 :
         print ('bet 30 - 64, 10 groups')
         total_groups = 10
         group_size = int(len(field_list) / total_groups)
-        #total_groups = int(len(field_list)/group_size)
         remainder = len(field_list) % (total_groups*group_size)
         while group_cnt < total_groups:
             groups[group_cnt] = group_size
@@ -203,7 +171,6 @@ def configure_groups(field_list):
     else:
         #should only be here for fields less than 30 golfers
         print ('field less than 30')
-        #group_size = int(len(field_list)/10)
         group_size = 3
         remainder = len(field_list) % (group_size)     
         total_groups = (len(field_list)-(remainder))/group_size
@@ -212,7 +179,6 @@ def configure_groups(field_list):
             groups[group_cnt] = group_size
             group_cnt +=1
 
-    #for last group, same logig regardless of field size
     if remainder == 0:
         groups[group_cnt] = group_size
     else:
@@ -240,10 +206,10 @@ def create_groups(tournament_number):
             last_tournament.save()
             key = {}
             key['pk']=last_tournament.pk
-            try:
-                calc_score.calc_score(key)
-            except:
-                print ('error calc scores for last tournament', last_tournament)
+            #try:
+            #    calc_score.calc_score(key)
+            #except:
+            #    print ('error calc scores for last tournament', last_tournament)
 
         except ObjectDoesNotExist:
             print ('no current tournament')
@@ -333,10 +299,11 @@ def create_groups(tournament_number):
             else:
                 link = link + char
             golfer_dict[link[:5]]=link
-
+    espn_players = get_espn_players()
     for k, v in sorted(group_dict.items(), key=lambda x: x[1][0]):
         #print ('key/val: ', k, v)
-        map_link = get_flag(k, v)
+        map_link = get_flag(k, v, espn_players)
+        print (k, map_link)
         if player_cnt < groups.playerCnt:
           #print (k,v[0], str(groups.number), str(groups.playerCnt))
           #player_link = 'https://www.pgatour.com/players/player.' + str(v[1][1]) + '.' + k.split(' ')[0].lowercase() + '-' + k.split(' ')[1].lowercase() + '.html')
@@ -374,13 +341,24 @@ def create_groups(tournament_number):
 def get_pick_link(playerID):
     return "https://pga-tour-res.cloudinary.com/image/upload/c_fill,d_headshots_default.png,f_auto,g_face:center,h_85,q_auto,r_max,w_85/headshots_" + playerID + ".png"
 
-def get_flag(golfer, golfer_data):
+def get_flag(golfer, golfer_data, espn_data):
     #print ('get flag', golfer, golfer_data)
     golfer_obj, created = Golfer_obj = Golfer.objects.get_or_create(
     golfer_pga_num = golfer_data[1][1])
     if created:
         golfer_obj.golfer_name = golfer
         golfer_obj.save()
+
+    if golfer_obj.cbs_number in [' ', None]:
+        espn_number = get_espn_num(golfer, espn_data)
+        #print ('get flag espn num', golfer, espn_data)
+        #try:
+        if espn_number[1].get('espn_num'):
+            print ('inside if on espn num', espn_number[1])
+            golfer_obj.cbs_number = espn_number[1].get('espn_num')
+            print ('golfer_obj cbs number', golfer_obj.cbs_number)
+            golfer_obj.save()
+            
     #golfer_obj.save()
     ## add some code to deal with name changes
 
@@ -435,7 +413,7 @@ if __name__ == '__main__':
 
 def fix_name(player, owgr_rankings):
     print ('trying to fix name: ', player)
-    
+    print (owgr_rankings.get(player))
     if owgr_rankings.get(player) != None:
         return (owgr_rankings.get(player))
 
@@ -465,5 +443,23 @@ def fix_name(player, owgr_rankings):
     return None, [9999, 9999, 9999]
 
     
-    
+def get_espn_num(player, espn_data):
+    if espn_data.get(player):
+        print ('returning found: ', player, espn_data.get(player))
+        return player, espn_data.get(player)
+        #print ('found player: ', player)
+    else:
+        print ('not found, fixing: ', player)
+        fixed_data = fix_name(player, espn_data)
+        print ('returning fixed: ',  fixed_data)
+        if fixed_data[0] == None:
+            return (player, {})
+        else:
+            return player, fixed_data[1]
+        
+    return
 
+def get_espn_players():
+    espn_data = scrape_espn.ScrapeESPN().get_espn_players()
+    #print (espn_field)
+    return espn_data
