@@ -66,7 +66,8 @@ class ScrapeESPN(object):
             for row in players:
                 td = row.find_all('td')
                 try:
-                    player_dict[td[0].text]= {'espn_num': td[0].a['href'].split('/')[7]}
+                    name = (' '.join(reversed(td[0].text.split(', '))))
+                    player_dict[name]= {'espn_num': td[0].a['href'].split('/')[7]}
                 except Exception as e:
                     pass
                 #print (row.a)

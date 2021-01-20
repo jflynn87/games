@@ -431,7 +431,7 @@ class Golfer(models.Model):
     golfer_name = models.CharField(max_length=100)
     pic_link  = models.URLField(max_length=500, null=True, blank=True)
     flag_link = models.URLField(max_length=500, null=True, blank=True)
-    cbs_number = models.CharField(max_length=100, null=True, blank=True)
+    espn_number = models.CharField(max_length=100, null=True, blank=True)
 
     def __str__(self):
         return str(self.golfer_name) + ' : ' + str(self.golfer_pga_num)

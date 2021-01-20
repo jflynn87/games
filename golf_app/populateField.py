@@ -349,14 +349,14 @@ def get_flag(golfer, golfer_data, espn_data):
         golfer_obj.golfer_name = golfer
         golfer_obj.save()
 
-    if golfer_obj.cbs_number in [' ', None]:
+    if golfer_obj.espn_number in [' ', None]:
         espn_number = get_espn_num(golfer, espn_data)
         #print ('get flag espn num', golfer, espn_data)
         #try:
         if espn_number[1].get('espn_num'):
             print ('inside if on espn num', espn_number[1])
-            golfer_obj.cbs_number = espn_number[1].get('espn_num')
-            print ('golfer_obj cbs number', golfer_obj.cbs_number)
+            golfer_obj.espn_number = espn_number[1].get('espn_num')
+            print ('golfer_obj espn number', golfer_obj.espn_number)
             golfer_obj.save()
             
     #golfer_obj.save()

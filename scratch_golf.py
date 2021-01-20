@@ -32,10 +32,24 @@ from golf_app.utils import formatRank, format_name, fix_name
 
 start = datetime.now()
 #s = Season.objects.get(current=True)
-t = Tournament.objects.get(current=True)
+#t = Tournament.objects.get(current=True)
 #web = scrape_cbs_golf.ScrapeCBS().get_data()
-web = scrape_espn.ScrapeESPN().get_espn_players()
-print (web)
+#web = scrape_espn.ScrapeESPN().get_espn_players()
+#print (web)
+
+for f in Field.objects.filter(tournament__current=True):
+    #print (f)
+    try: 
+        g = Golfer.objects.get(golfer_name=f.playerName)
+        print (g.golfer_name, g.espn_number)
+    except Exception as e:
+        print ('EXCEPTION: ', f, e)
+
+print ('espn num count:', Golfer.objects.all().exclude(espn_number=None).count())
+print ('Amex field len: ', Field.objects.filter(tournament__current=True).count())
+
+
+    
 
 #web = populateField.get_espn_field(t)
 #print (web)

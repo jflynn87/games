@@ -113,13 +113,13 @@ class CreatePlayoffsForm(ModelForm):
 
     def clean_home_passer_rating(self):
         data = self.cleaned_data['home_passer_rating']
-        if not data < 158.33:
+        if not data > 0 and not data < 158.33:
             raise ValidationError("Rating must be between 0 - 158.33") 
         return data
 
     def clean_away_passer_rating(self):
         data = self.cleaned_data['away_passer_rating']
-        if not data < 158.33:
+        if not data >0 and data < 158.33:
             raise ValidationError("Rating must be between 0 - 158.33") 
         return data
 
