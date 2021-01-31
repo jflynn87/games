@@ -1,0 +1,24 @@
+.top_row {
+    border-top: solid;
+    border-right: solid;
+ 
+}
+
+.left_col {
+    border-left: solid;
+    border-right: solid;
+    text-align: center;
+}
+
+.mid_cell {
+    border-right: solid;
+    text-align: center; 
+}
+
+.actual_row {
+    background-color: lightblue;
+}
+
+.last_row {
+    border-bottom: solid;
+}

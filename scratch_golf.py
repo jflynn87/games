@@ -31,24 +31,94 @@ from django.core import serializers
 from golf_app.utils import formatRank, format_name, fix_name
 
 start = datetime.now()
+for sd in ScoreDetails.objects.filter(Q(pick__playerName__tournament__season__current=True) & (Q(thru="WD") | Q(toPar="WD"))):
+    print (sd.pick.playerName.tournament, sd.pick.playerName.tournament.saved_cut_num, sd, sd.pick.playerName.handicap())
+exit()
+
+
+
 #s = Season.objects.get(current=True)
-#t = Tournament.objects.get(current=True)
-#web = scrape_cbs_golf.ScrapeCBS().get_data()
-#web = scrape_espn.ScrapeESPN().get_espn_players()
+t = Tournament.objects.get(current=True)
+#print (Field.objects.filter(tournament=t, golfer__espn_number__isnull=True))
+g = scrape_espn.ScrapeESPN().get_data()
+#print (g)
+#print (len([v for k, v in g.items() if v.get('round_score') not in ['--', '-', None]]))
+#f = open('r2-inprog.json', 'w')
+#f.write(json.dumps(g))
+#f.close()
+#wd = withdraw.WDCheck().check_wd()
+#print (g.get('Patrick Reed'))
+
+exit()
+g = scrape_espn.ScrapeESPN().get_espn_players()
+#print (g)
+
+
+user=User.objects.get(username="Ryosuke")
+print (ScoreDetails.objects.filter(pick__playerName__tournament=t, user=user).aggregate(Sum('score')))
+bd = BonusDetails.objects.get(tournament=t, user=user)
+print (bd.best_in_group_bonus, bd.winner_bonus, bd.playoff_bonus)
+
+for bd in BonusDetails.objects.filter(tournament=t):
+    bd.winner_bonus = 0
+    bd.playoff_bonus = 0
+    bd.best_in_group_bonus = 0
+    bd.save()
+
+exit()
+
+
+# print (Field.objects.filter(tournament=t, golfer__espn_number__isnull=True).count())
+
+
+# for golfer in Field.objects.filter(tournament=t, golfer__espn_number__isnull=True):
+#     print (golfer.playerName,  utils.fix_name(golfer.playerName, g))
+#     try:
+#         num = utils.fix_name(golfer.playerName, g).get('espn_num')
+#     except Exception as e:
+#         num = utils.fix_name(golfer.playerName, g)[1].get('espn_num')
+    
+#     g_obj = Golfer.objects.get(golfer_pga_num=golfer.golfer.golfer_pga_num)
+#     g_obj.espn_number = num
+#     g_obj.save()
+
+#print (len(f.filter(golfer__espn_number__isnull=True)))
+exit()
+# pick = Picks.objects.get(playerName=f, user__pk=1)
+# sd = ScoreDetails.objects.get(pick=pick)
+# print ('pick_score: ', pick.score)
+# print (sd.score, 
+#     sd.toPar,
+#     sd.today_score,
+#     sd.thru,
+#     sd.sod_position,
+#     sd.gross_score)
+
+
+
+
+
+web = scrape_espn.ScrapeESPN().get_data()
+#score = manual_score.Score(web, t)
+#optimal = score.optimal_picks(6) 
+print (web)
+exit()
+#web = withdraw.WDCheck().check_wd()
 #print (web)
 
-for f in Field.objects.filter(tournament__current=True):
-    #print (f)
-    try: 
-        g = Golfer.objects.get(golfer_name=f.playerName)
-        print (g.golfer_name, g.espn_number)
-    except Exception as e:
-        print ('EXCEPTION: ', f, e)
+#for k, v in web.items():
+#     if k != 'info':
+        
+#         if Field.objects.filter(golfer__espn_number=v['pga_num']).exists():
+#             pass
+#         else:
+#             print ('in dict, nit field: ', k, v)
 
-print ('espn num count:', Golfer.objects.all().exclude(espn_number=None).count())
-print ('Amex field len: ', Field.objects.filter(tournament__current=True).count())
-
-
+# for f in Field.objects.filter(tournament__current=True):
+#     if f.golfer.espn_number in [v['pga_num'] for k, v in web.items() if v.get('pga_num') == f.golfer.espn_number]:
+#         pass
+#     else:
+#         print ('in field, not in dict: ', f)
     
 
 #web = populateField.get_espn_field(t)

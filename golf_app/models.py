@@ -86,11 +86,23 @@ class Tournament(models.Model):
             return True
 
         try:
-            scores = pga_score.PGAScore(self.pga_tournament_num)
-            if scores.round() > 1:
+            #scores = pga_score.PGAScore(self.pga_tournament_num)
+            scores = scrape_espn.ScrapeESPN().get_data()
+            if scores.get('info').get('round') == "Tournament Field":
+                return False
+            elif scores.get('info').get('round') == 1 and \
+                len([v for k, v in scores.items() if v.get('round_score') not in ['--', '-', None]]) == 0:
+                return False      
+            elif scores.get('info').get('round') == 1 and \
+                len([v for k, v in scores.items() if v.get('round_score') not in ['--', '-', None]]) > 0:
+                return True      
+            elif scores.round() > 1:
                 print ('******* round above 1')
                 print ('finishing started check', datetime.now())
                 return True
+            else:
+                print ('started check in model falling to else, check why')
+                return False
         except Exception as e:
             print ('started logic exception', e)
             print ('finishing started check', datetime.now())
@@ -223,6 +235,9 @@ class Tournament(models.Model):
             #score_dict = {k:v for k, v in sorted(sd.items(), key=lambda item: item[1].get('sort_rank'))}
             score_dict = sd
 
+        return score_dict.get('info').get('cut_num')
+        #don't need rest of funciton, use the above from espn score
+
         if not self.has_cut:
             return len([x for x in score_dict.values() if x['rank'] not in self.not_playing_list()]) + 1
 
@@ -264,10 +279,9 @@ class Tournament(models.Model):
             #    return len([x for x in score_dict.values() if x['rank'] not in self.not_playing_list()]) + wd + 1
 
     def get_round(self, sd=None):
-
+        #don't need, use the espn score dict from scrape
         if self.complete:
             return 4
-
 
         if sd == None:
            sd = ScoreDict.objects.get(tournament=self)
@@ -275,11 +289,15 @@ class Tournament(models.Model):
         else:
         #     #score_dict = {k:v for k, v in sorted(sd.items(), key=lambda item: item[1].get('sort_rank'))}
            score_dict = sd
+        
+        return score_dict.get('info').get('round')
+        #don't need the rest, use the dict from scrape espn.  
 
-        if len([x for x in score_dict.values() if x['r1'] == '--']) == len(score_dict):
+        print (score_dict.get('round'))
+        if len([x for x in score_dict.values() if x['r1'] in ['--', '-']]) == len(score_dict):
             return 0
 
-        if len([x for x in score_dict.values() if x['r1'] == '--' and x['rank'] not in self.not_playing_list()]) > 0:
+        if len([x for x in score_dict.values() if x['r1'] in ['--', '-'] and x['rank'] not in self.not_playing_list()]) > 0:
             return 1
         elif len([x for x in score_dict.values() if x['r2'] == '--' and x['rank'] not in self.not_playing_list()]) > 0:
             return 2
@@ -292,11 +310,6 @@ class Tournament(models.Model):
 
 
     def optimal_picks(self):
-        #sd = ScoreDict.objects.get(tournament=self)
-        #score_dict = sd.data
-        #cut_num = self.cut_num()
-        #cut_num = self.saved_cut_num
-        #print ('sd type', type(score_dict), len(score_dict))
         optimal_dict = {}
 
         for group in Group.objects.filter(tournament=self):
@@ -315,33 +328,6 @@ class Tournament(models.Model):
 
         return json.dumps(optimal_dict)
 
-##commented on 12/23 - delete if above works
-
-        # for group in Group.objects.filter(tournament=self):
-        #    group_cuts = 0
-        #    golfer_list = []
-        #    gm_start = datetime.now()
-        #    group_min = group.min_score(cut_num)
-        #    print ('group min duration: ', datetime.now() - gm_start)
-        #    #print ('group: ', group, 'min', group_min)
-
-        #    clean_dict = {key.replace('(a)', '').strip(): v for key, v in score_dict.items()}
-        #    #print (clean_dict)
-
-        #    for player in Field.objects.filter(tournament=self, group=group).exclude(withdrawn=True):
-        #        if player.playerName in clean_dict:  #needed to deal wiht WD's before start of tourn.
-        #             if (clean_dict[player.playerName]['rank'] not in  self.not_playing_list() and  \
-        #                int(utils.formatRank(clean_dict[player.playerName]['rank']) - player.handicap()) == group_min) or \
-        #                cut_num - player.handicap() == group_min:  
-        #                 golfer_list.append(player.playerName)
-        #             if clean_dict[player.playerName]['rank'] in self.not_playing_list():
-        #                 group_cuts += 1
-        #        else:
-        #             print (player, 'mot in dict')
-        #    #print (optimal_dict)
-        #    optimal_dict[group.number] = {'golfer': golfer_list, 'rank': group_min, 'cuts': group_cuts, 'total_golfers': group.playerCnt}
-        # print (optimal_dict)   
-        # return json.dumps(optimal_dict)
 
     def not_playing_list(self):
         return ['CUT', 'WD', 'DQ']
@@ -353,18 +339,21 @@ class Tournament(models.Model):
         else:
            score_dict = sd
 
-        #sd = ScoreDict.objects.get(tournament=self)
-        #score_dict = sd.sorted_dict()
-
-        for v in score_dict.values():
-            if (v['rank'] not in self.not_playing_list() and \
-                v['r4'] == "--") or v['rank']  == "T1":
-                return False
-
-        if self.get_round(sd) == 4: 
+        if sd.get('info').get('round') == 'Final':
             return True
         else:
             return False
+
+        #commented to use ESPN scores
+        # for v in score_dict.values():
+        #     if (v['rank'] not in self.not_playing_list() and \
+        #         v['r4'] == "--") or v['rank']  == "T1":
+        #         return False
+
+        # if self.get_round(sd) == 4: 
+        #     return True
+        # else:
+        #     return False
 
 
 class Group(models.Model):
@@ -391,33 +380,6 @@ class Group(models.Model):
         else:
             return score[1]
 
-## commented on 12/23/2021 - delete if other logic works
-
-
-        # print ('min score ', datetime.now(), self)
-        # score_dict = ScoreDict.objects.get(tournament=self.tournament)
-        # clean_dict = score_dict.clean_dict()
-        
-        # if cut_num == None:
-        #     #cut_num = self.tournament.cut_num()
-        #     cut_num = self.tournament.saved_cut_num
-        # not_playing_list = self.tournament.not_playing_list()
-        # min_score = 999  
-
-        # for score in Field.objects.filter(group=self).exclude(withdrawn=True):
-        #     start = datetime.now()
-        #     try:
-        #          if clean_dict.get(score.playerName).get('rank') in not_playing_list:
-        #             if cut_num - score.handicap() < min_score:
-        #                 min_score = cut_num - score.handicap()
-        #          elif utils.formatRank(clean_dict.get(score.playerName).get('rank')) - score.handicap() < min_score:
-        #             min_score = utils.formatRank(clean_dict.get(score.playerName).get('rank')) - score.handicap()
-        #     except Exception as e:
-        #         print (score.playerName, e, 'exclded from min score')
-        #    the next 2 lines are not tested       
-        #          num = [x for x in clean_dict.values() if x.get('pga_num') == score.golfer.golfer_pga_num]
-        #         print (score.playerName, score.golfer.golfer_pga_num, num)
-        # return min_score
 
     def num_of_picks(self):
         if self.tournament.last_group_multi_pick() and self.number == 6:
@@ -607,7 +569,7 @@ class ScoreDetails(models.Model):
     toPar = models.CharField(max_length=50, null=True)
     today_score = models.CharField(max_length = 50, null=True)
     thru = models.CharField(max_length=100, null=True)
-    sod_position = models.CharField(max_length=100, null=True)
+    sod_position = models.CharField(max_length=1000, null=True)
     gross_score = models.IntegerField(null=True)
 
     def __str__(self):

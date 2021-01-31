@@ -77,3 +77,7 @@ progress {
     height: 100em
 }
 
+.winner  {
+  background-color: red;
+}
+

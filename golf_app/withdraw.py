@@ -1,7 +1,7 @@
 from golf_app.models import Picks, Tournament, TotalScore, BonusDetails, ScoreDetails, PickMethod, \
     Group, Field
 from django.contrib.auth.models import User
-from golf_app import scrape_scores_picks
+from golf_app import scrape_scores_picks, scrape_espn
 
 
 class WDCheck(object):
@@ -12,31 +12,28 @@ class WDCheck(object):
         else:
             self.tournament = tournament
         if field == None:
-            self.field = scrape_scores_picks.ScrapeScores(self.tournament).scrape()
+            #self.field = scrape_scores_picks.ScrapeScores(self.tournament).scrape()
+            self.field = scrape_espn.ScrapeESPN().get_data()
         else:
             self.field = field
+
+        #print (self.field)
 
     def check_wd(self):
         results = {}
         wd_list = []
         good_list = []
 
-        clean_dict = {key.replace('(a)', '').strip() for key in self.field.keys()}
+        #clean_dict = {key.replace('(a)', '').strip() for key in self.field.keys()}
 
-        print (clean_dict)
+        print (self.field)
         for golfer in Field.objects.filter(tournament = self.tournament):
-            #if golfer.playerName in {key.split(', Jr.') for key in field.keys()}:
-            #if golfer.playerName in self.field.keys():
-            if golfer.playerName in clean_dict:
+            #if golfer.playerName in clean_dict:
+            if [v for v in self.field.values() if v.get('pga_num') == golfer.golfer.espn_number]:
                 good_list.append(golfer.playerName)
-            #elif: for k in self.fields.keys():
-            #    if golfer_playerName in k.strip('(a)').lstrip().rstrip():
-            #        good_list.append(golfer.playerName)
             else:
                 print ('missed look up', golfer.playerName, self.field.get(golfer.playerName))
                 wd_list.append(golfer.playerName)
-                #golfer.withdrawn = True
-                #golfer.save()
         results['wd_list'] = wd_list
         results['good_list'] = good_list
 

@@ -876,7 +876,9 @@ class UpdatePlayoffScores(APIView):
             #print ('pre calc XXXX', stat_data)
             #print ('pre calc stats', stat_data)
             scores = calc_scores(picks, stat_data, game)
-
+            #sorted_picks = sorted(k, x in picks.items(), key=lambda k, x: scores.get(x).get('player_total'), reverse=True)
+            #sorted_pair_list = sorted(dic.items(), key=lambda x: dict_key.get(x[0]))
+            #print (sorted_picks)
             data = {'response':
                     {'picks': picks,
                      'stats': stat_data,
@@ -1213,8 +1215,11 @@ def calc_scores(picks, stats, game):
             total = round(sum(score_dict[player].values()),2)
             score_dict[player].update({'player_total': total})
     
+    sorted_score_dict = sorted(score_dict.items(), key=lambda v:v[1]['player_total'], reverse=True)
     print (score_dict)
-    return score_dict
+    print (dict(sorted_score_dict))
+    
+    return dict(sorted_score_dict)
     
 
 

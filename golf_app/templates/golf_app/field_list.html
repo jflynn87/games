@@ -17,6 +17,8 @@
 </label>
 
 <div id='prior-results'></div>
+
+
 <p hidden id='tournament_key'>{{tournament.pk}}</p>
 
 <!-- <script type="text/babel" src="{%static 'test-app/src/prior_result.js'%}"></script> -->
@@ -24,8 +26,14 @@
 {% regroup field_list by group as ordered_field_list %}
 
     <div id='main' style='display:none'>
-        
-        <h4 id="t-name">{{tournament.name}}</h4>
+      
+
+      <h4 id="t-name">{{tournament.name}}</h4>
+      <div id=withdraw></div>
+      <script type="text/babel" src="{%static 'test_app/src/withdraw.js'%}"></script>
+      <div id='espn_missing'></div>
+      <script type="text/babel" src="{%static 'test_app/src/check_espn_num.js'%}"></script>
+
 
         {%if not tournament.started or tournament.late_picks%}
         <p>Please make 1 pick for each group below</p>

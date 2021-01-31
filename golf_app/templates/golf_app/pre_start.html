@@ -5,6 +5,7 @@
 {%load static%}
 
 <div id='status'></div>
+<div id='withdraw'></div>
 
 
 <h2>{{tournament.name}} Picks Status</h2>
@@ -37,6 +38,7 @@
   
 
 <script type="text/babel" src="{%static 'test_app/src/started.js'%}"></script>
+<script type="text/babel" src="{%static 'test_app/src/withdraw.js'%}"></script>
 <p hidden id="tournament_key">{{tournament.pk}}</p>
 
 
