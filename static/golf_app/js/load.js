@@ -1,4 +1,5 @@
 let filler = /[\s\.\,\']/g;
+let not_playing = ['CUT', 'WD', 'DQ']
 $(document).ready(function() {
     $('#det-list').attr('class', 'spinner')
     $('#totals-table').hide()
@@ -143,7 +144,6 @@ function build_score_tbl(data) {
 
   var leaders = $.parseJSON((data['leaders']))
   
-  
   if (t_data[0]['fields']['complete']) {
     $('#cut_line').text('Tournament Complete')  
                                         }
@@ -219,7 +219,8 @@ function get_picks(info, optimal_data, total_data) {
                                             delay:{"show":400,"hide":800}, "title": 'gross score: ' + $(this)[0]['gross_score']
                                             }) 
      
-      if ($(this)[0]['today_score'] == 'CUT') {$('#' + p + stats[index]['pga_num']).addClass('cut')}
+      if (not_playing.indexOf($(this)[0]['today_score']) != -1) {$('#' + p + stats[index]['pga_num']).addClass('cut')}                                            
+      //if ($(this)[0]['today_score'] in ['CUT', 'WD', 'DQ']) {$('#' + p + stats[index]['pga_num']).addClass('cut')}
     
     //use 0 of the index to strip the extra chars in multi pick groups.  Need to fix for tournaments with 10 groups.
     //console.log($(this)[0]['pick'], optimal_data[index], info[10])
@@ -368,8 +369,8 @@ function update_picks(info, optimal_data, total_data) {
       $('#tt-' + pick + '[data-toggle="tooltip"]').tooltip({trigger:"hover",
                                             delay:{"show":400,"hide":800}, "title": 'gross score: ' + $(this)[0]['gross_score']
                                             }) 
-      
-      if ($(this)[0]['today_score'] == 'CUT') {$('#' + p + $(this)[0]['pga_num']).addClass('cut')}
+      if (not_playing.indexOf($(this)[0]['today_score']) != -1) {$('#' + p + stats[index]['pga_num']).addClass('cut')}                                            
+      //if ($(this)[0]['today_score'] == 'CUT') {$('#' + p + $(this)[0]['pga_num']).addClass('cut')}
     
     //use 0 of the index to strip the extra chars in multi pick groups.  Need to fix for tournaments with 10 groups.
     //console.log($(this)[0]['pick'], optimal_data[index], info[10])

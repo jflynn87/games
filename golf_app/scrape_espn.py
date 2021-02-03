@@ -136,8 +136,11 @@ class ScrapeESPN(object):
             #print (score_dict['Sungjae Im'])
             #print (score_dict['Patrick Reed'])
             #print ([v for v in score_dict.values() if v.get('rank') == '-'])
+            print ('info before cut num calc: ', score_dict.get('info'))
             
-            if self.tournament.has_cut:
+            if score_dict.get('info').get('round') == 'Tournament Field':
+                cut_num = 65
+            elif self.tournament.has_cut:
                 post_cut_wd = len([v for k,v in score_dict.items() if k!= 'info' and v.get('total_score') in self.tournament.not_playing_list() and \
                     v.get('r3') != '--'])
                 #if score_dict.get('info').get('cut_line') == None:
@@ -148,6 +151,7 @@ class ScrapeESPN(object):
                     
                     cut_num = len([v for (k,v) in score_dict.items() if k != 'info' and v.get('total_score') not in self.tournament.not_playing_list()]) \
                         + post_cut_wd +1
+                
                 else:
                     print ('no cuts in leaderboadr, in else')
                     cut_num = min(utils.formatRank(x.get('rank')) for k, x in score_dict.items() if k != 'info' and int(utils.formatRank(x.get('rank'))) > self.tournament.saved_cut_num) 

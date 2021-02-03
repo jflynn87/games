@@ -30,18 +30,56 @@ from unidecode import unidecode
 from django.core import serializers
 from golf_app.utils import formatRank, format_name, fix_name
 
-start = datetime.now()
-for sd in ScoreDetails.objects.filter(Q(pick__playerName__tournament__season__current=True) & (Q(thru="WD") | Q(toPar="WD"))):
-    print (sd.pick.playerName.tournament, sd.pick.playerName.tournament.saved_cut_num, sd, sd.pick.playerName.handicap())
-exit()
+d = {}
+season = Season.objects.get(current=True)
+for u in season.get_users():
+    user = User.objects.get(pk=u.get('user'))
+    d[user.username] = {'f5_wins': 0,
+                        't_wins': 0,
+                        'f5_total': 0,
+                        't_total':0}
 
+#print (d)
+
+first_5 = ScoreDetails.objects.filter(pick__playerName__tournament__season__current=True, pick__playerName__group__number__lt=6) \
+            .values('pick__playerName__tournament__name', 'user__username').annotate(Sum('score'))
+total = ScoreDetails.objects.filter(pick__playerName__tournament__season__current=True) \
+            .values('pick__playerName__tournament__name', 'user__username').annotate(Sum('score'))
+#print (first_5)
+#print (total)
+    
+#    t = total.filter(pick__playerName__tournament__name=s.get('pick__playerName__tournament__name'), user__username=s.get('user__username'))
+    #print (t)
+for t in Tournament.objects.filter(season__current=True):
+    #print (t)
+    f_5 = first_5.filter(pick__playerName__tournament__name=t.name).order_by('score__sum').first()
+    f5_w = f_5.get('user__username')
+    tot = total.filter(pick__playerName__tournament__name=t.name).order_by('score__sum').first()
+    t_w = tot.get('user__username')
+
+    d[f5_w]['f5_wins'] = d[f5_w]['f5_wins'] + 1
+    d[t_w]['t_wins'] = d[t_w]['t_wins'] + 1
+
+    for s in first_5.filter(pick__playerName__tournament__name=t.name):
+        d[s['user__username']]['f5_total'] = d[s['user__username']]['f5_total'] + s.get('score__sum')
+
+    for s in total.filter(pick__playerName__tournament__name=t.name):
+        d[s['user__username']]['t_total'] = d[s['user__username']]['t_total'] + s.get('score__sum')
+
+
+sd = dict(sorted(d.items(), key=lambda item:int(item[1]['f5_total'])))
+
+for k,v in sd.items():
+    print (k, v)
+
+exit()
 
 
 #s = Season.objects.get(current=True)
 t = Tournament.objects.get(current=True)
 #print (Field.objects.filter(tournament=t, golfer__espn_number__isnull=True))
 g = scrape_espn.ScrapeESPN().get_data()
-#print (g)
+print (g)
 #print (len([v for k, v in g.items() if v.get('round_score') not in ['--', '-', None]]))
 #f = open('r2-inprog.json', 'w')
 #f.write(json.dumps(g))

@@ -488,6 +488,7 @@ class NewScoresView(LoginRequiredMixin,ListView):
 
     def get_context_data(self, **kwargs):
         context = super(NewScoresView, self).get_context_data(**kwargs)
+        start = datetime.datetime.now()
         if self.kwargs.get('pk') != None:
             print (self.kwargs)
             tournament = Tournament.objects.get(pk=self.kwargs.get('pk'))
@@ -514,25 +515,20 @@ class NewScoresView(LoginRequiredMixin,ListView):
                print ('picks not complete')
                tournament.missing_picks()
 
-        try:
-            json_url = tournament.score_json_url
-            with urllib.request.urlopen(json_url) as field_json_url:
-                    data = json.loads(field_json_url.read().decode())
-            print ('pga json availablE!')
-        except Exception as e:
-            print ('cant open pga score file', e)
+        #score_dict = scrape_espn.ScrapeESPN().get_data()
 
-            context.update({'scores':TotalScore.objects.filter(tournament=tournament).order_by('score'),
-                            'detail_list':None,
-                            'leader_list':None,
-                            'cut_data':None,
-                            'lookup_errors': None,
-                            'tournament': tournament,
-                            'thru_list': [],
-                            'groups': Group.objects.filter(tournament=tournament)
-                                        })
-
-            return context        
+        context.update({'scores':TotalScore.objects.filter(tournament=tournament).order_by('score'),
+                        'detail_list':None,
+                        'leader_list':None,
+                        'cut_data':None,
+                        'lookup_errors': None,
+                        'tournament': tournament,
+                        'thru_list': [],
+                        'groups': Group.objects.filter(tournament=tournament),
+                        #'score_dict': score_dict,
+                                    })
+        print ('scores context duration', datetime.datetime.now() -start)
+        return context        
 
 
 #from golf_app import manual_score
