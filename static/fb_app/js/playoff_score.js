@@ -81,7 +81,7 @@ function update_scores() {
                                             '<td>' + p.away_receiver + '</td>' + 
                                             format_score(data.response.scores[player].away_receiver) + 
                                             '<td>' + p.away_passer_rating + '</td>' + 
-                                            format_score(data.response.scores[player].home_receiver)   
+                                            format_score(data.response.scores[player].away_passer_rating)   
                                             
                 )
                  }
