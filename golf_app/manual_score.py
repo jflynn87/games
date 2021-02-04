@@ -237,14 +237,14 @@ class Score(object):
                                             )
 
             #if pick.is_winner():
-            if self.score_dict.get('info').get('complete') and pick.score == 1:
+            if self.score_dict.get('info').get('complete') and sd.score == 1:
                 print ('winner: ', pick)
                 for winner in Picks.objects.filter(playerName=pick.playerName):
                     if not PickMethod.objects.filter(user=winner.user, method=3, tournament=winner.playerName.tournament).exists():
                         BonusDetails.objects.filter(user=winner.user, tournament=winner.playerName.tournament).update(winner_bonus=50 + (winner.playerName.group.number * 2))
                         
             #if pick.playoff_loser():
-            if self.score_dict.get('info').get('complete') and self.score_dict.get('info').get('playoff') and utils.formatRank(pick.score) == 2:
+            if self.score_dict.get('info').get('complete') and self.score_dict.get('info').get('playoff') and utils.formatRank(sd.score) == 2:
                 print ('playoff', pick, pick.user)
                 for loser in Picks.objects.filter(playerName=pick.playerName):
                     if not PickMethod.objects.filter(user=loser.user, method=3, tournament=loser.playerName.tournament).exists():
@@ -259,6 +259,8 @@ class Score(object):
                           bd = BonusDetails.objects.get(user=best.user, tournament=best.playerName.tournament)
                           bd.best_in_group_bonus = bd.best_in_group_bonus + 10
                           bd.save()
+            #print (self.score_dict.get('info'))
+            if self.score_dict.get('info').get('complete'): ('print true lookup works')
             print ('pick loop: ', pick.playerName, ' ', Picks.objects.filter(playerName__pk=p.get('playerName')).count(), ' ', datetime.now() - pick_loop_start)
         ## end of bulk update section
         if self.score_dict.get('info').get('complete') == True:
@@ -308,7 +310,7 @@ class Score(object):
             gross_score = picks.aggregate(Sum('score'))
             handicap = picks.aggregate(Sum('playerName__handi'))
             net_score = gross_score.get('score__sum') - handicap.get('playerName__handi__sum')
-            cuts = ScoreDetails.objects.filter(pick__playerName__tournament=self.tournament, pick__user=user, toPar__in=self.not_playing_list).count()
+            cuts = ScoreDetails.objects.filter(pick__playerName__tournament=self.tournament, pick__user=user, today_score__in=self.not_playing_list).count()
             print ('player/score : ', player, gross_score, handicap, cuts) 
             ts, created = TotalScore.objects.get_or_create(user=user, tournament=self.tournament)
             ts.score = net_score

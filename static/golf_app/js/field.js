@@ -139,6 +139,7 @@ function get_info(info) {
 }
 
 function check_complete(info) {
+  console.log(info)
   $('#pick-status').append('<table id=status-tbl class=table small> </table>')
   $('#status-tbl').append('<tr id=picks-row> <td> Groups: </td> </tr>')
   $.each(info,  function(group, picks) {
@@ -150,7 +151,10 @@ function check_complete(info) {
  })
  $('#status-tbl').append('<tr id=actual-row> <td> Total Picks: </td> </tr>')
  $.each(info,  function(group, picks) {
+   //console.log('a ', group, picks, count_actual(group, picks))
+   if (group != "complete") {
     $('#actual-row').append('<td id=actual-group'+ group + '>' + count_actual(group, picks) + '</td>')
+   }
 })
 var total = 0
 $("#actual-row").each(function () {
@@ -160,11 +164,13 @@ $("#actual-row").each(function () {
       }
 
       total += parseInt(($(this).text()))
+
       $('#actual-grouptotal').text(total)
 
       if (total == parseInt(info['total'])) {
         $('#sub_button').removeAttr('disabled').attr('class', 'btn btn-primary');
         $('#actual-grouptotal').css('background-color', '')  
+        $('#required-groupcomplete').text('True')
       }
       else 
       {$('#sub_button').prop('disabled', true).attr('class', 'btn btn-secondary');
@@ -179,6 +185,6 @@ function count_actual(group, picks) {
       var selected = $('input[name=group-' + group + ']:checked').length
       }
   else {var selected = $('input[name=multi-group-' + group + ']:checked').length } 
-  
+
   return selected
 }

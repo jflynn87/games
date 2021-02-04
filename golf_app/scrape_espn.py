@@ -18,8 +18,8 @@ class ScrapeESPN(object):
         try:
             score_dict = {}
 
-            html = urllib.request.urlopen("https://www.espn.com/golf/leaderboard")
-            #html = urllib.request.urlopen('https://www.espn.com/golf/leaderboard?tournamentId=401243401')
+            #html = urllib.request.urlopen("https://www.espn.com/golf/leaderboard")
+            html = urllib.request.urlopen('https://www.espn.com/golf/leaderboard?tournamentId=401242998')
             soup = BeautifulSoup(html, 'html.parser')
             
             leaderboard = soup.find_all('tbody', {'class': 'Table__TBODY'})
