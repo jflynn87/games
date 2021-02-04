@@ -24,11 +24,7 @@ class WDCheck(object):
         wd_list = []
         good_list = []
 
-        #clean_dict = {key.replace('(a)', '').strip() for key in self.field.keys()}
-
-        print (self.field)
         for golfer in Field.objects.filter(tournament = self.tournament):
-            #if golfer.playerName in clean_dict:
             if [v for v in self.field.values() if v.get('pga_num') == golfer.golfer.espn_number]:
                 good_list.append(golfer.playerName)
             else:

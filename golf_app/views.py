@@ -651,9 +651,9 @@ class GetInfo(APIView):
                 total_picks += g.num_of_picks()
             info_dict['total'] = total_picks
 
-            info_dict['complete'] = t.complete
+            #info_dict['complete'] = t.complete
 
-            print ('info dict', info_dict)
+            print ('info dict class', info_dict)
             return Response(json.dumps(info_dict), 200)
         except Exception as e:
             print ('exception', e)
@@ -671,7 +671,7 @@ def get_info(t):
         info_dict['total'] = total_picks
 
         info_dict['complete'] = t.complete
-        print ('info dict', info_dict)
+        print ('info dict function', info_dict)
         return info_dict
     except Exception as e:
         print ('exception', e)
