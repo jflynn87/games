@@ -30,6 +30,13 @@ from unidecode import unidecode
 from django.core import serializers
 from golf_app.utils import formatRank, format_name, fix_name
 
+
+t = Tournament.objects.get(current=True)
+#print (Field.objects.filter(tournament=t, golfer__espn_number__isnull=True))
+g = scrape_espn.ScrapeESPN().get_data()
+print (g.get('Webb Simpson'))
+exit()
+
 d = {}
 season = Season.objects.get(current=True)
 for u in season.get_users():

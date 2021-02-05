@@ -164,11 +164,32 @@ class Score(object):
                 #print ('temp', temp)
                 data = temp[0] 
                 #print ('data', data)
+                
                 if sd.today_score in self.not_playing_list and self.score_dict.get('info').get('round') > 2: 
                     print ('skipping cut/wd/finished pick: ', pick.playerName, datetime.now() - pick_loop_start)
+                    self.best_in_group(pick, optimal_picks)
+                #     if pick.playerName.golfer.espn_number in optimal_picks.get(str(pick.playerName.group.number)).get('golfer').keys():
+                #         for best in Picks.objects.filter(playerName__golfer__espn_number=pick.playerName.golfer.espn_number):
+                #             if not PickMethod.objects.filter(user=best.user, method=3, tournament=best.playerName.tournament).exists() \
+                #             and not pick.is_winner() \
+                #             and not pick.playoff_loser() \
+                #             and best.playerName.group.playerCnt > 4:
+                #                 bd = BonusDetails.objects.get(user=best.user, tournament=best.playerName.tournament)
+                #                 bd.best_in_group_bonus = bd.best_in_group_bonus + 10
+                #                 bd.save()
                     continue
                 elif sd.gross_score == utils.formatRank(data.get('rank')) and sd.thru == data.get('thru') and sd.toPar == data.get('total_score'):
                     print ('skipping no change', pick.playerName, datetime.now() - pick_loop_start)
+                    self.best_in_group(pick, optimal_picks)
+                    # if pick.playerName.golfer.espn_number in optimal_picks.get(str(pick.playerName.group.number)).get('golfer').keys():
+                    #     for best in Picks.objects.filter(playerName__golfer__espn_number=pick.playerName.golfer.espn_number):
+                    #         if not PickMethod.objects.filter(user=best.user, method=3, tournament=best.playerName.tournament).exists() \
+                    #         and not pick.is_winner() \
+                    #         and not pick.playoff_loser() \
+                    #         and best.playerName.group.playerCnt > 4:
+                    #             bd = BonusDetails.objects.get(user=best.user, tournament=best.playerName.tournament)
+                    #             bd.best_in_group_bonus = bd.best_in_group_bonus + 10
+                    #             bd.save()
                     continue
                 
                 #print ('thru skip checks')
@@ -437,3 +458,16 @@ class Score(object):
         print ('best: ', best_list, best_score, cuts)
         return best_list, best_score, cuts
 
+
+    def best_in_group(self, pick, optimal_picks):
+        '''takes a pick object and optimal_picks dict, updates bd and returns nothing'''
+        if pick.playerName.golfer.espn_number in optimal_picks.get(str(pick.playerName.group.number)).get('golfer').keys():
+            for best in Picks.objects.filter(playerName__golfer__espn_number=pick.playerName.golfer.espn_number):
+                if not PickMethod.objects.filter(user=best.user, method=3, tournament=best.playerName.tournament).exists() \
+                    and not pick.is_winner() \
+                    and not pick.playoff_loser() \
+                    and best.playerName.group.playerCnt > 4:
+                        bd = BonusDetails.objects.get(user=best.user, tournament=best.playerName.tournament)
+                        bd.best_in_group_bonus = bd.best_in_group_bonus + 10
+                        bd.save()
+        return 
