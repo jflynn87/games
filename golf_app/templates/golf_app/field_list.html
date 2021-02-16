@@ -8,6 +8,7 @@
 
 
 <script type="text/javascript" src="{%static 'golf_app/js/field.js'%}"></script>
+<script type="text/javascript" src="{%static 'golf_app/js/get_prior_result.js'%}"></script>
 
 <link rel="stylesheet" href='{%static "golf_app/css/load.css"%}'>
 <div class='load'>
@@ -42,15 +43,17 @@
           <input type="text" name="random" value="random" hidden>
           <p>or click for random picks  <input type="submit" class="btn btn-primary" value="Random"> </p>
         </form>
-        <span style="float: right;  ">
-          <a href="#" id="download">
-          <i class="fas fa-file-download" title="Download CSV" data-toggle="tooltip"> Download Data</i></a></span>
-  
+        
+            <span style="float: right;" >
+               <a href="#" id="download" >
+               <i class="fas fa-file-download" title="Download CSV" data-toggle="tooltip"> Download Data</i></a></span>
+        
         {%else%}
         <p> <span style="text-align:left;">Tournament Started - too late to make picks</span>
-        <span style="float: right;  ">
-        <a href="#" id="download">
-        <i class="fas fa-file-download" title="Download CSV" data-toggle="tooltip"> Download Data</i></a></span></p>
+        
+            <span style="float: right;  ">  
+            <a href="#" id="download">
+            <i class="fas fa-file-download" title="Download CSV" data-toggle="tooltip"> Download Data</i></a></span></p>
         {%endif%}
         
         {% if error_message %}
@@ -72,9 +75,10 @@
           </th>
         {% for player in group.list%}
         <tbody>
-            <tr id='player{{player.playerID}}'>
-              <td hidden id='playerID'>{{player.playerID}}</td>
+              <tr id='player{{player.golfer.espn_number}}'>
+              <td hidden id='playerID'>{{player.golfer.espn_number}}</td>
               <td></td>
+ 
               {%if player.withdrawn%}
                 <td style="text-decoration: line-through;"> {{player.playerName}} {%if player.partner%} &  {{player.partner}} {%endif%}  </td>
               {%else%}
@@ -102,7 +106,8 @@
               <td class="small"> <p>cur: {{player.currentWGR}} </p>
                    <p> prior: {{player.sow_WGR}} </p>
                    <p> soy: {{player.soy_WGR}} </p>
-                   <p id='prior{{player.playerID}}'> prior: {{player.prior_year_finish}}</p>
+                   <p id='prior{{player.golfer.espn_number}}'>loading...</p>
+                   <p id='recent{{player.golfer.espn_number}}'>loading...</p>
                    <p> <a href="#" data-toggle="tooltip" title="Deducted from score"><i class="fa fa-info-circle"></i> handicap: {{player.handicap}} </a> </p>
               </td>
               {%endif%} 

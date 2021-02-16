@@ -29,12 +29,88 @@ from golf_app import views, manual_score, populateField, withdraw, scrape_scores
 from unidecode import unidecode
 from django.core import serializers
 from golf_app.utils import formatRank, format_name, fix_name
+from golf_app import golf_serializers
 
 
+start = datetime.now()
 t = Tournament.objects.get(current=True)
+web = scrape_espn.ScrapeESPN(t).get_data()
+
+exit()
+#for f in Field.objects.filter(tournament=t):
+#    data = golf_serializers.FieldSerializer(f).data
+#for g in Group.objects.filter(tournament=t):
+#    g_start = datetime.now()
+data = json.dumps(golf_serializers.NewFieldSerializer(Field.objects.filter(tournament=t, playerName="Paul Casey"),  many=True).data)
+#print (g, datetime.now() - g_start)
+#data = golf_serializers.FieldSerializer(Field.objects.filter(tournament=t), many=True).data
+#j_data = json.dumps(data)
+print (data)
+print (data.get('recent'))
+print (datetime.now() - start)
+exit()
+
+
+
+pga_list = []
+espn_list = []
+
+for g in Golfer.objects.all():
+    if g.espn_number:
+        espn_list.append(g.espn_number)
+    if g.golfer_pga_num:
+        pga_list.append(g.golfer_pga_num)
+
+for n in espn_list:
+    if n in pga_list:
+        print('espn: ', Golfer.objects.get(espn_number=n))
+        print('pga: ', Golfer.objects.get(golfer_pga_num=n))
+
+for m in pga_list:
+    if m in espn_list:
+        print('espn: ', Golfer.objects.get(espn_number=m))
+        print('pga: ', Golfer.objects.get(golfer_pga_num=m))
+        
+exit()
+
+start = datetime.now()
+#cur_t = Tournament.objects.get(current=True)
+print (Tournament.objects.all().order_by('-pk')[1:5])
+for t in Tournament.objects.all().order_by('-pk')[1:5]:
+    if Field.objects.filter(tournament=t, playerName="Phil Mickelson").exists():
+        f = Field.objects.get(tournament=t, playerName="Phil Mickelson")
+        sd = ScoreDict.objects.get(tournament=t)
+        x = [v.get('rank') for k, v in sd.data.items() if k !='info' and v.get('pga_num') in [f.golfer.espn_number, f.golfer.golfer_pga_num]]
+        print (t, f, x)
+    else:
+        print (t, 'dnp')
+
+exit()
+
+
+
+for f in Field.objects.filter(tournament=t, playerName="Phil Mickelson"):
+    print (f, f.prior_year_finish())
+
+print (datetime.now() - start)
+
+exit()
+
+last_yr = Tournament.objects.get(pga_tournament_num='005', season__season='2020')
+sd = ScoreDict.objects.get(tournament=last_yr)
+print (sd.data.get('Phil Mickelson  (PB'))
+exit()
+
+
+
+u = User.objects.get(pk=1)
+print (u)
 #print (Field.objects.filter(tournament=t, golfer__espn_number__isnull=True))
 g = scrape_espn.ScrapeESPN().get_data()
-print (g.get('Webb Simpson'))
+scores = manual_score.Score(g, t).update_scores_player(u)
+print (datetime.now() - start)
+for sd in ScoreDetails.objects.filter(pick__playerName__tournament=t, user=u):
+    print (sd.pick.playerName, sd.score)
 exit()
 
 d = {}

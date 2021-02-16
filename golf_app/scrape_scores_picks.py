@@ -64,6 +64,7 @@ class ScrapeScores(object):
         soup = BeautifulSoup(driver.page_source, 'html.parser')
         print ('driver after soup: ', datetime.now() - start)
         table = (soup.find("div", {'id':'stroke-play-container'}))
+        print ('tble len; ', len(table.find_all("tbody tr", {'class': 'line-row'})))
         print ('driver after table: ', datetime.now() - start)
         t = self.tournament
         t_ok = False
@@ -120,6 +121,7 @@ class ScrapeScores(object):
                     #sd.pick_data = score_dict
                 else:  #doing for "all" or None 
                     for row in table.find_all("tr", {'class': 'line-row'}):
+                        print(row)
                         ele_class = row['class'][1].split('-')[2]
                         data = self.get_data(row)
                         try:
@@ -128,9 +130,9 @@ class ScrapeScores(object):
                             field.save()
                         except Exception as e:
                             print ('field lookup issue in scrape', ' pga_num: ', ele_class, data[0], e)
-                            field.handi = 0
+                            #field.handi = 0
                         data[1].update({'pga_num': ele_class,
-                                        'handicap': field.handi
+                                        'handicap': 'not found'
                                         })
                         score_dict[data[0]] =  data[1]
                     sd.data = score_dict

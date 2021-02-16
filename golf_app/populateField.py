@@ -1,5 +1,5 @@
 from golf_app.models import (Picks, Field, Group, Tournament, TotalScore,
-    ScoreDetails, Name, Season, User, BonusDetails, Golfer)
+    ScoreDetails, Name, Season, User, BonusDetails, Golfer, ScoreDict)
 import urllib3
 from django.core.exceptions import ObjectDoesNotExist
 from golf_app import scrape_cbs_golf, scrape_espn #calc_score, 
@@ -117,6 +117,12 @@ def get_field(tournament_number):
     tourny.saved_round = 1
     tourny.saved_cut_round = 2
     tourny.save()
+
+    sd = ScoreDict ()
+    sd.tournament = tourny
+    sd.data = {}
+    sd.pick_data = {}
+    sd.save()
 
     field_list = {}
 
@@ -327,16 +333,13 @@ def create_groups(tournament_number):
           if Field.objects.filter(tournament=tournament).count() < len(field):
              groups = Group.objects.get(tournament=tournament,number=group_num)
 
+    for f in Field.objects.filter(tournament=tournament):
+        f.prior_year = f.prior_year_finish()
+        f.recent = f.recent_results()
+        f.save()
+
+
     print ('saved field objects')
-    # fix the hard coded tournament, change to identify users who are in the golf game
-    # users = TotalScore.objects.filter(tournament__pga_tournament_num="014")
-    # for user in users:
-    #     bd = BonusDetails()
-    #     bd.user = user.user
-    #     bd.tournament = tournament
-    #     bd.cut_bonus = 0
-    #     bd.winner_bonus = 0
-    #     bd.save()
 
 def get_pick_link(playerID):
     return "https://pga-tour-res.cloudinary.com/image/upload/c_fill,d_headshots_default.png,f_auto,g_face:center,h_85,q_auto,r_max,w_85/headshots_" + playerID + ".png"

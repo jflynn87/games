@@ -12,7 +12,6 @@ $(document).ready(function() {
         type: "GET",
         url: "/golf_app/ajax/get_picks/",
         dataType: 'json',
-        //context: document.body
         success: function (json) {
           var i;
           var data = $.parseJSON(json)
@@ -28,26 +27,27 @@ $(document).ready(function() {
           console.log(json);
         }
       })
-    
-    },
+     },
     failure: function(json) {
       console.log('get info fail');
       console.log(json);
     }
   })
- 
-
-})
+ })
   
 $(document).on("click", "#download", function() {
   console.log('clicked download')
           
           let csv = "data:text/csv;charset=utf-8," 
-
-          
-          
           csv +=  'Golfer' + ',' + 'Group Number' + ',' + 'currentWGR' + ',' + 'sow_WGR' + 
-          ',' + 'soy_WGR' + ',' + 'prior year finish' + ',' + 'handicap' + ',' + 'Google Search' + '\n'
+          ',' + 'soy_WGR' + ',' + 'prior year finish' + ',' + 'handicap' + 
+          ',' + $('#t_1').text() + 
+          ',' + $('#t_2').text() + 
+          ',' + $('#t_3').text() + 
+          ',' + $('#t_4').text() + 
+          ',' + 'Google Search' + '\n'
+
+
          
           $.ajax({
             type: "GET",
@@ -55,40 +55,27 @@ $(document).on("click", "#download", function() {
             dataType: 'json',
             data: {'tournament' : $('#tournament_key').text()},
             success: function (json) {
-              golfers = $.parseJSON(json)
+                golfers = $.parseJSON(json)
+                //console.log(json)
 
+                $.each(golfers, function(i, golfer) {
+                if (!golfer['fields']['withdrawn']){
+//                  group_pk = golfer['fields']['group']
+//                  group_num = golfer.group  
 
-              fetch("/golf_app/get_group_num/",
-                  {method: "POST",
-                  headers: {
-                    'Accept': 'application/json',
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': $.cookie('csrftoken')
-                          },
-                   body: JSON.stringify({'tournament_key': $('#tournament_key').text()})
-                  })
-              .then((response) =>  response.json())
-              .then((responseJSON) => {
-              //groups = response.json()
-                groups = $.parseJSON(responseJSON)[0]
-
-
-                $.each(golfers, function(i) {
-                if (!golfers[i]['fields']['withdrawn']){
-                  group_pk = golfers[i]['fields']['group']
-                  group_num = groups[group_pk]  
-
-                  csv += golfers[i]['fields']['playerName'].replace(',', '') + ',' +
-                  group_num + ',' +
-                  golfers[i]['fields']['currentWGR']  + ',' +
-                  golfers[i]['fields']['sow_WGR'] + ',' +
-                  golfers[i]['fields']['soy_WGR'] + ',' +
-                  $('#prior' + golfers[i]['fields']['playerID']).text().replace('prior: ', '').trim() + ',' + 
-                  golfers[i]['fields']['handi'] + ',' +  
+                  csv += golfer['fields']['playerName'].replace(',', '') + ',' +
+                  golfer.fields.group + ',' +
+                  golfer['fields']['currentWGR']  + ',' +
+                  golfer['fields']['sow_WGR'] + ',' +
+                  golfer['fields']['soy_WGR'] + ',' +
+                  $('#prior' + golfer['fields']['golfer']).text().replace('prior: ', '').trim() + ',' + 
+                  golfer['fields']['handi'] + ',' +  
+                  $('#recent' + golfer['fields']['golfer']).text().replace('recent form: ', '').trim() + ',' + 
                    '=HYPERLINK("https://www.google.com/search?q=' + golfers[i]['fields']['playerName'].replace('  ', '%20').replace(',', '') + '")' 
                   csv += '\n'
           
-            }})
+                }
+              })
       
           var encodedUri = encodeURI(csv);
           var link = document.createElement("a");
@@ -97,15 +84,15 @@ $(document).on("click", "#download", function() {
           document.body.appendChild(link); // Required for FF
           link.click();
  
-        })
-       
-      },
+          }
+         
+      ,
       failure: function(json) {
         console.log('get csv data fail');
         console.log(json);
         alert('sorry, download failed.  please tell John')
       }
-    })
+          })
       
       })  
       

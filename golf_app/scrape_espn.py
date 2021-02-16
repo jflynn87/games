@@ -8,8 +8,16 @@ from golf_app.models import Tournament, Field, Golfer
 
 class ScrapeESPN(object):
 
-    def __init__(self):
-        self.tournament = Tournament.objects.get(current=True)
+    def __init__(self, tournament=None, url=None):
+        if not tournament:
+            self.tournament = Tournament.objects.get(current=True)
+        else:
+            self.tournament=tournament
+        
+        if not url:
+            self.url = "https://www.espn.com/golf/leaderboard"
+        else:
+            self.url = url
 
 
     def get_data(self):
@@ -18,13 +26,21 @@ class ScrapeESPN(object):
         try:
             score_dict = {}
 
-            html = urllib.request.urlopen("https://www.espn.com/golf/leaderboard")
-            #html = urllib.request.urlopen('https://www.espn.com/golf/leaderboard?tournamentId=401242998')
+            #html = urllib.request.urlopen("https://www.espn.com/golf/leaderboard")
+            html = urllib.request.urlopen(self.url)
             soup = BeautifulSoup(html, 'html.parser')
             
             leaderboard = soup.find_all('tbody', {'class': 'Table__TBODY'})
             
             status = soup.find('div', {'class', 'status'}).span.text
+            t_name = soup.find('h1', {'class', 'Leaderboard__Event__Title'}).text
+
+            if t_name != self.tournament.name and not self.tournament.ignore_name_mismatch:
+                print ('t name mismatch', t_name, self.tournament.name)
+                return {}
+
+
+            print ('espn T Name: ', t_name)
             print ('status: ', status)
 
             try:
@@ -131,12 +147,13 @@ class ScrapeESPN(object):
                     f = Field.objects.get(golfer__espn_number=score_dict[row.a.text]['pga_num'], tournament=self.tournament)
                     score_dict[row.a.text].update({'handicap': f.handicap(),
                                                    'group': f.group.number})                           
-            start = datetime.now()
+            
 
             #print (score_dict['Sungjae Im'])
             #print (score_dict['Patrick Reed'])
             #print ([v for v in score_dict.values() if v.get('rank') == '-'])
             print ('info before cut num calc: ', score_dict.get('info'))
+            cut_calc_start = datetime.now()
             try:
                 if score_dict.get('info').get('round') == 'Tournament Field':
                     cut_num = 65
@@ -155,11 +172,9 @@ class ScrapeESPN(object):
                     else:
                         print ('no cuts in leaderboadr, in else')
                         cut_num = min(utils.formatRank(x.get('rank')) for k, x in score_dict.items() if k != 'info' and int(utils.formatRank(x.get('rank'))) > self.tournament.saved_cut_num) 
-                        cut_line = [v.get('total_score') for k, v in score_dict.items() if k != 'info' and cut_num == int(utils.formatRank(v.get('rank')))][0]
-                        score_dict['info'].update({'cut_line': 'Projected Cut Line: ' + cut_line})
-                #else:
-                    #   print ('cut line')
-                    #   cut_num = len([v for k, v in score_dict.items() if k != 'info' and v.get('total_score') not in self.tournament.not_playing_list()]) + post_cut_wd +1
+                        if score_dict.get('cut_line') == None:
+                            cut_line = max(int(v.get('total_score')) for k, v in score_dict.items() if k != 'info' and int(utils.formatRank(v.get('rank'))) < cut_num)
+                            score_dict['info'].update({'cut_line': 'Projected Cut Line: ' + str(cut_line)})
             
                 else:
                     cut_num = len([v for k, v in score_dict.items() if k != 'info' and v.get('total_score') not in self.tournament.not_playing_list()]) +1
@@ -171,10 +186,11 @@ class ScrapeESPN(object):
                 cut_num = self.tournament.saved_cut_num
 
             
+            
             if score_dict.get('info').get('cut_line') == None:
                 score_dict['info'].update({'cut_line': 'no cut line'}) 
 
-            print ('cut_num_duration: ', datetime.now() - start)
+            print ('cut num duration: ', datetime.now() - cut_calc_start)
             print ('info: ', score_dict['info'])
 
 

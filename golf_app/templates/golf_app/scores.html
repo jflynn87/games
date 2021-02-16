@@ -5,10 +5,12 @@
 
 
 {%block body_block%}
-<!-- <meta http-equiv="refresh" content="120" > -->
-<!-- <script type="text/javascript" src="{%static 'golf_app/js/pace.js'%}"></script> -->
-<!-- <script type="text/javascript" src="{%static 'golf_app/js/scores.js'%}"></script> -->
-<script type="text/javascript" src="{%static 'golf_app/js/load.js'%}"></script>
+
+{%if '/golf_app/new_scores/' in request.path%}
+  <script type="text/javascript" src="{%static 'golf_app/js/load.js'%}"></script> 
+{%else%}
+  <script type="text/javascript" src="{%static 'golf_app/js/load_by_player.js'%}"></script> 
+{%endif%}
 
 <link rel="stylesheet" href={%static 'golf_app/css/scores.css' %}>
 <link href="https://fonts.googleapis.com/css?family=Anton&display=swap" rel="stylesheet">
@@ -64,7 +66,7 @@
 
 <tbody id='totals'>
 {%for player in scores%}
-  <tr id='totals{{player.user}}'>
+  <tr id='totals{{player.user.username}}'>
     <td id='player'> <p> {{player.user}} {%if player.auto_pick%} - missed pick deadline (no bonuses) {%endif%} </p> 
     <p> {{player.score}} /  {{player.cut_count}}</p>
     </td>

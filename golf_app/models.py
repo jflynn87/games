@@ -61,6 +61,7 @@ class Tournament(models.Model):
     saved_cut_num = models.IntegerField(null=True)
     saved_round = models.IntegerField(null=True)
     saved_cut_round = models.IntegerField(null=True)
+    ignore_name_mismatch = models.BooleanField(default=False)
 
 
     #def get_queryset(self):t
@@ -86,6 +87,7 @@ class Tournament(models.Model):
             return True
 
         try:
+            from golf_app import scrape_espn
             #scores = pga_score.PGAScore(self.pga_tournament_num)
             scores = scrape_espn.ScrapeESPN().get_data()
             if scores.get('info').get('round') == "Tournament Field":
@@ -96,7 +98,7 @@ class Tournament(models.Model):
             elif scores.get('info').get('round') == 1 and \
                 len([v for k, v in scores.items() if v.get('round_score') not in ['--', '-', None]]) > 0:
                 return True      
-            elif scores.round() > 1:
+            elif int(scores.get('info').get('round')) > 1:
                 print ('******* round above 1')
                 print ('finishing started check', datetime.now())
                 return True
@@ -387,6 +389,9 @@ class Group(models.Model):
         else:
             return 1
 
+    def natural_key(self):
+        return self.number
+
 
 class Golfer(models.Model):
     golfer_pga_num = models.CharField(max_length=100)
@@ -413,6 +418,9 @@ class Golfer(models.Model):
             name = str(self.golfer_pga_num) + '.' + self.pga_web_name_format()
         return 'https://www.pgatour.com/players/player.' + unidecode(name) + '.html'
 
+    def natural_key(self):
+        return self.espn_number
+
 
 class Field(models.Model):
 
@@ -432,6 +440,8 @@ class Field(models.Model):
     golfer = models.ForeignKey(Golfer, on_delete=models.CASCADE, null=True)
     rank = models.CharField(max_length=50, null=True)
     handi = models.IntegerField(null=True)
+    prior_year = models.CharField(max_length=100, null=True)
+    recent = models.JSONField(null=True)
 
     class Meta:
         ordering = ['group', 'currentWGR']
@@ -457,18 +467,10 @@ class Field(models.Model):
         sd = ScoreDict.objects.get(tournament=t)
 
         try:
-            return sd.data.get(self.playerName).get('rank')
+            return [v.get('rank') for k, v in sd.data.items() if k !='info' and v.get('pga_num') in [self.golfer.espn_number, self.golfer.golfer_pga_num]][0]
         except Exception as e:
+            #print ('prior_year_exception', self, e)
             return 'n/a'
-        #@s = ScoreDetails.objects.filter(pick__playerName__tournament=t, pick__playerName__playerName=self).first()
-   
-        #if s == None:
-        #    return 'n/a'
-        #elif s.today_score == "cut":
-        #elif s == "cut":
-        #    return s
-        #else:
-        #    return s
 
     def handicap(self):
         if round(self.currentWGR*.01) < (Field.objects.filter(tournament=self.tournament).count() * .13):
@@ -489,6 +491,26 @@ class Field(models.Model):
         else:
             return int(self.rank)
 
+    def recent_results(self):
+        data = {}
+        start = datetime.now()
+        try:
+            for t in Tournament.objects.all().order_by('-pk')[1:5]:
+                sd = ScoreDict.objects.get(tournament=t)
+                if Field.objects.filter(tournament=t, golfer__espn_number=self.golfer.espn_number).exclude(withdrawn=True).exists():
+                    f = Field.objects.get(tournament=t, golfer__espn_number=self.golfer.espn_number)
+                    x = [v.get('rank') for k, v in sd.data.items() if k !='info' and v.get('pga_num') in [self.golfer.espn_number, self.golfer.golfer_pga_num]]
+                    if len(x) > 0:
+                        data.update({t.name: x[0]})
+                    else:
+                        data.update({t.name: 'DNP'})    
+                else:
+                    data.update({t.name: 'DNP'})
+
+        except Exception as e:
+            print ('recent results exception', e)
+        #print ('recent results: ', datetime.now() - start)
+        return data
 
 
 class PGAWebScores(models.Model):

@@ -32,6 +32,8 @@ def formatRank(rank, tournament=None):
        return int(rank)
     elif rank[0] == 'T':
        return int(rank[1:])
+    #elif rank == "E":
+    #    return 0
     else:
        return rank
 
@@ -47,15 +49,22 @@ def format_name(name):
 def fix_name(player, owgr_rankings):
     '''takes a string and a dict and returns a dict?'''
     print ('trying to fix name: ', player)
-    
+        
     if owgr_rankings.get(player) != None:
-        return (owgr_rankings.get(player))
+        print ('name dict match: ', owgr_rankings.get(player))
+        return (player, owgr_rankings.get(player))
 
     print (player.replace(',', '').split(' '))
+    
     for k, v in owgr_rankings.items():
         owgr_name = k.replace(',', '').split(' ')
+        if '(' in owgr_name[len(owgr_name)-1] and owgr_name[len(owgr_name)-2] == '':
+            del owgr_name[len(owgr_name)-1]
+            del owgr_name[len(owgr_name)-1]
+            if owgr_rankings == player.replace(',', '').split(' '):
+                return k, v
+        
         pga_name = player.replace(',', '').split(' ')
-        #print (owgr_name, pga_name)
         
         if unidecode.unidecode(owgr_name[len(owgr_name)-1]) == unidecode.unidecode(pga_name[len(pga_name)-1]) \
            and k[0:1] == player[0:1]:
@@ -73,5 +82,8 @@ def fix_name(player, owgr_rankings):
             and unidecode.unidecode(owgr_name[len(owgr_name)-1]) == unidecode.unidecode(pga_name[0]):
             print ('names reversed', player)
             return k, v
+        
+        
+
     print ('didnt find match', pga_name)
     return None, [9999, 9999, 9999]

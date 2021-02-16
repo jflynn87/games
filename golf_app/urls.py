@@ -27,6 +27,12 @@ urlpatterns= [
     path('golf_withdraw/', views.Withdraw.as_view()),
     path('get_picks/<int:pk>/<str:username>', views.ScoreGetPicks.as_view(),name='get_picks'),
     path('check_espn_nums/', views.ValidateESPN.as_view()),
+    path('scores_by_player/', views.ScoresByPlayerView.as_view(), name='scores_by_player'),
+    path('api_player_score/', views.ScoresByPlayerAPI.as_view(), name='api_player_score'),
+    path('get_espn_score_dict/<int:pk>/', views.ESPNScoreDict.as_view(), name='get_espn_score_dict'),
+    #path('get_prior_result/<int:pk>/<str:group>', views.PriorResultAPI.as_view(), name='get_prior_result'),
+    path('get_prior_result/', views.PriorResultAPI.as_view(), name='get_prior_result'),
+    path('recent_form/<str:player_num>/', views.RecentFormAPI.as_view(), name='recent_form'),
 
     
 
