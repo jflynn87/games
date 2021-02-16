@@ -501,11 +501,11 @@ class Field(models.Model):
                     f = Field.objects.get(tournament=t, golfer__espn_number=self.golfer.espn_number)
                     x = [v.get('rank') for k, v in sd.data.items() if k !='info' and v.get('pga_num') in [self.golfer.espn_number, self.golfer.golfer_pga_num]]
                     if len(x) > 0:
-                        data.update({t.name: x[0]})
+                        data.update({t.pk:{'name': t.name, 'rank': x[0]}})
                     else:
-                        data.update({t.name: 'DNP'})    
+                        data.update({t.pk:{'name': t.name, 'rank': 'DNP'}})    
                 else:
-                    data.update({t.name: 'DNP'})
+                    data.update({t.pk:{'name': t.name, 'rank': 'DNP'}})
 
         except Exception as e:
             print ('recent results exception', e)

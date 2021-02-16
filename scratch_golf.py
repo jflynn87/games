@@ -34,8 +34,9 @@ from golf_app import golf_serializers
 
 start = datetime.now()
 t = Tournament.objects.get(current=True)
-web = scrape_espn.ScrapeESPN(t).get_data()
-
+f = Field.objects.get(tournament=t, playerName="Dustin Johnson")
+print ('function: ', f.recent_results())
+print ('db: ', f.recent)
 exit()
 #for f in Field.objects.filter(tournament=t):
 #    data = golf_serializers.FieldSerializer(f).data

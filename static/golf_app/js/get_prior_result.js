@@ -35,17 +35,16 @@ function update_stats(golfer_list, table) {
        .then((responseJSON) => {
              data = responseJSON
              if (table.id == 'tbl-group-1') {
-               $('#main').append('<p id=t_1 hidden>' + Object.keys(data[0].recent)[0])
-               $('#main').append('<p id=t_2 hidden>' + Object.keys(data[0].recent)[1])
-               $('#main').append('<p id=t_3 hidden>' + Object.keys(data[0].recent)[2])
-               $('#main').append('<p id=t_4 hidden>' + Object.keys(data[0].recent)[3])
-              }
+               $.each(Object.values(data[0].recent), function(i, recent) {
+               $('#main').append('<p id=t_' + i + ' hidden>' + recent.name)
+              })
+            }
              last_year(data)
              recent(data)
-             console.log('done: ', table.id, new Date())
-    })
+             //console.log('done: ', table.id, new Date())
+    
+})
 }
-
 
 function last_year(data) {
         $.each(data, function(key, stats) {
@@ -54,12 +53,16 @@ function last_year(data) {
 }
 
 function recent(data) {
+  
     $.each(data, function(i, stats) {
-      var items = ''
-      $.each(stats.recent, function(t, rank){items += t + ': ' + rank + '\n'})
-          $('#recent' + stats.golfer.espn_number).html('<p> recent form: ' + Object.values(stats.recent) + '<span > <a id=tt-recent' + stats.golfer.espn_number + 
+        ranks = ''
+        $.each(stats.recent, function(i, rank){ranks += rank.rank + ', '})
+        var items = ''
+        $.each(stats.recent, function(i, rank){items += rank.name + ': ' + rank.rank + '\n'})
+        
+        $('#recent' + stats.golfer.espn_number).html('<p> recent form: ' + ranks + '<span > <a id=tt-recent' + stats.golfer.espn_number + 
             ' href="#" data-toggle="tooltip" html="true" > <i class="fa fa-info-circle"></i> </a> </span> </p>')
-          $('#tt-recent' + stats.golfer.espn_number + '[data-toggle="tooltip"]').tooltip({trigger:"hover",
+        $('#tt-recent' + stats.golfer.espn_number + '[data-toggle="tooltip"]').tooltip({trigger:"hover",
              delay:{"show":400,"hide":800}, "title": items
     })
       }) 
