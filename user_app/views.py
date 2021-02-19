@@ -73,6 +73,7 @@ def index(request):
             'game': game,
             'picks': picks,
             'sb_user_list': sb_user_list,
+            't': Tournament.objects.get(current=True)
                 })
 
 

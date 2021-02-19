@@ -682,6 +682,7 @@ class ScoreDict(models.Model):
     data = models.JSONField(null=True)
     pick_data = models.JSONField(null=True)
     cbs_data = models.JSONField(null=True)
+    updated = models.DateTimeField(auto_now=True)
 
 
 

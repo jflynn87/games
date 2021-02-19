@@ -202,7 +202,7 @@ class Score(object):
 
                 #this doesn't work, only creates one SD record rater than all
                 #sd, sd_created = ScoreDetails.objects.get_or_create(user=pick.user, pick=pick)
-                
+                print ('CC')
                 sd.score=score - pick.playerName.handicap()
                 #sd.score=pick.score - pick.playerName.handicap()
                 
@@ -280,7 +280,8 @@ class Score(object):
     def pick_bonuses(self, sd, pick, optimal_picks):
         winner = False 
         playoff_loser = False
-        if self.score_dict.get('info').get('complete') and sd.score == 1:
+        #if self.score_dict.get('info').get('complete') and sd.score == 1:
+        if self.score_dict.get('info').get('complete') and sd.gross_score == 1:
             print ('winner: ', pick)
             for winner in Picks.objects.filter(playerName=pick.playerName):
                 if not PickMethod.objects.filter(user=winner.user, method=3, tournament=winner.playerName.tournament).exists():
@@ -288,7 +289,8 @@ class Score(object):
                     winner = True
 
                         
-        if self.score_dict.get('info').get('complete') and self.score_dict.get('info').get('playoff') and utils.formatRank(sd.score) == 2:
+        #if self.score_dict.get('info').get('complete') and self.score_dict.get('info').get('playoff') and utils.formatRank(sd.score) == 2:
+        if self.score_dict.get('info').get('complete') and self.score_dict.get('info').get('playoff') and utils.formatRank(sd.gross_score) == 2:
             print ('playoff', pick, pick.user)
             for loser in Picks.objects.filter(playerName=pick.playerName):
                 if not PickMethod.objects.filter(user=loser.user, method=3, tournament=loser.playerName.tournament).exists():
@@ -442,7 +444,10 @@ class Score(object):
 
     def get_wd_score(self, pick):
         d = [v for v in self.score_dict.values() if v.get('pga_num') == pick.playerName.golfer.espn_number]
-        score = d[0]
+        if len(d) > 0:
+            score = d[0]
+        else:
+            return self.tournament.saved_cut_num
         print ('wd lookup', score)
 
         if not self.tournament.has_cut:
@@ -514,34 +519,36 @@ class Score(object):
                                                 'cuts': opt[2],
                                                 'total_golfers': g.playerCnt
                 } 
-
+    
         print ('after optimal', datetime.now() - start)
+        #print (optimal_picks)
+        #curr_round = self.tournament.saved_round
         curr_round = self.score_dict.get('info').get('round')
+        print ('after round', datetime.now() - start)
 
-        BonusDetails.objects.filter(tournament=self.tournament, user=user).update(best_in_group_bonus=0)
-        #print ('starting pick loop time to here', datetime.now() - start)
+        BonusDetails.objects.filter(tournament=self.tournament).update(best_in_group_bonus=0)
+        print ('starting pick loop time to here', datetime.now() - start)
         loop_start = datetime.now()
 
-        for pick in Picks.objects.filter(playerName__tournament=self.tournament, user=user):
+        for p in Picks.objects.filter(playerName__tournament=self.tournament).values('playerName').distinct():
             pick_loop_start = datetime.now()
             #print (p)
-            #pick = Picks.objects.filter(playerName__pk=p.get('playerName')).first()
-            sd, sd_created = ScoreDetails.objects.get_or_create(user=user, pick=pick)
+            pick = Picks.objects.filter(playerName__pk=p.get('playerName')).first()
+            sd, sd_created = ScoreDetails.objects.get_or_create(user=pick.user, pick=pick)
+
             try:
                 temp = [x for x in self.score_dict.values() if x.get('pga_num') == pick.playerName.golfer.espn_number]
-                #print ('temp', temp)
                 data = temp[0] 
-                #print ('data', data)
                 
-                if ScoreDetails.objects.filter(pick__playerName__tournament=self.tournament, \
-                     pick__playerName__golfer__espn_number=pick.playerName.golfer.espn_number, user=user) \
+                if ScoreDetails.objects.filter(pick__playerName__tournament=self.tournament, pick__playerName__golfer__espn_number=pick.playerName.golfer.espn_number) \
                         .exclude(gross_score=utils.formatRank(data.get('rank')), thru=data.get('thru'), toPar=data.get('total_score')).count() == 0 \
                         or (sd.today_score in self.not_playing_list and self.score_dict.get('info').get('round') > self.tournament.saved_cut_round): 
-                            #print ('skipping no change', pick.playerName, datetime.now() - pick_loop_start)
-                            self.best_in_group(pick, optimal_picks)
+                            print ('skipping no change', pick.playerName, datetime.now() - pick_loop_start)
+                            if self.score_dict.get('info').get('complete'):
+                                self.pick_bonuses(sd, pick, optimal_picks)
                             continue
-
-                #print ('thru skip checks')
+                
+                print ('thru skip checks')
                 if data.get('rank') == "CUT":
                     score = cut_num
                 elif data.get('rank') == "WD":
@@ -552,10 +559,11 @@ class Score(object):
                     else:
                         score = utils.formatRank(data.get('rank')) 
 
-                Picks.objects.filter(playerName__tournament=self.tournament, playerName=pick.playerName, user=user).update(score=score)
-                sd.score=score - pick.playerName.handicap()
-                sd.gross_score = score
+                Picks.objects.filter(playerName__tournament=self.tournament, playerName=pick.playerName).update(score=score)
 
+                sd.score=score - pick.playerName.handicap()
+                
+                sd.gross_score = pick.score
                 if data.get('rank') == "CUT" or \
                     data.get('rank') == "WD" and curr_round < 3:
                     sd.today_score  = "CUT"
@@ -569,7 +577,7 @@ class Score(object):
                 sd.toPar = data.get('total_score')
                 sd.sod_position = data.get('change')
 
-                ScoreDetails.objects.filter(user=user, pick__playerName__tournament=self.tournament, pick__playerName=pick.playerName).update(
+                ScoreDetails.objects.filter(pick__playerName__tournament=self.tournament, pick__playerName=pick.playerName).update(
                                             score=sd.score,
                                             gross_score=score,
                                             today_score=sd.today_score,
@@ -579,54 +587,33 @@ class Score(object):
                                         )
 
             except Exception as e:
-                #### fix this, doesn't work.
                 print ('withdraw?', pick, e)
                 pick.score  = cut_num
-                #pick.save()
-                Picks.objects.filter(user=user, playerName__tournament=self.tournament, playerName=pick.playerName).update(score=cut_num - pick.playerName.handicap())
+                Picks.objects.filter(playerName__tournament=self.tournament, playerName=pick.playerName).update(score=cut_num - pick.playerName.handicap())
                 sd.score=pick.score - pick.playerName.handicap() 
                 sd.gross_score = self.get_wd_score(pick)
                 sd.today_score = "WD"
                 sd.thru = "WD"
                 sd.toPar = "WD"
-                #sd.save()   comment for bulk update
-                ScoreDetails.objects.filter(user=user, pick__playerName__tournament=self.tournament, pick__playerName=pick.playerName).update(
+                ScoreDetails.objects.filter(pick__playerName__tournament=self.tournament, pick__playerName=pick.playerName).update(
                                             score=cut_num - pick.playerName.handicap(),
                                             gross_score=sd.gross_score,
                                             today_score=sd.today_score,
                                             thru=sd.thru,
                                             toPar=sd.toPar
                                             )
-
-            #update bnuses for all picks, not just user
-            if self.score_dict.get('info').get('complete') and sd.score == 1:
-                print ('winner: ', pick)
-                for winner in Picks.objects.filter(playerName=pick.playerName):
-                    if not PickMethod.objects.filter(user=winner.user, method=3, tournament=winner.playerName.tournament).exists():
-                        BonusDetails.objects.filter(user=winner.user, tournament=winner.playerName.tournament).update(winner_bonus=50 + (winner.playerName.group.number * 2))
-                        
-            if self.score_dict.get('info').get('complete') and self.score_dict.get('info').get('playoff') and utils.formatRank(sd.score) == 2:
-                print ('playoff', pick, pick.user)
-                for loser in Picks.objects.filter(playerName=pick.playerName):
-                    if not PickMethod.objects.filter(user=loser.user, method=3, tournament=loser.playerName.tournament).exists():
-                        BonusDetails.objects.filter(user=loser.user, tournament=loser.playerName.tournament).update(playoff_bonus= 25)
-            
-            self.best_in_group(pick, optimal_picks)
-
-            #if self.score_dict.get('info').get('complete'): ('print true lookup works')
-            print ('pick loop: ', pick.playerName, ' ', datetime.now() - pick_loop_start)
-        ## end of pick update section
-
+            self.pick_bonuses(sd, pick, optimal_picks)
+            print ('pick loop: ', pick.playerName, ' ', Picks.objects.filter(playerName__pk=p.get('playerName')).count(), ' ', datetime.now() - pick_loop_start)
+        ## end of bulk update section
         if self.score_dict.get('info').get('complete') == True:
             self.tournament.complete = True
 
         self.tournament.score_update_time = datetime.now(tz=timezone.utc)  
         self.tournament.save()
             
-
         print ('score loop duration', datetime.now() - loop_start)
         print ('update_scores duration', datetime.now() - start)
-        return #ScoreDetails.objects.filter(user=user, pick__playerName__tournament=self.tournament)
+        return
 
 
     @transaction.atomic

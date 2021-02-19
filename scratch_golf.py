@@ -30,13 +30,26 @@ from unidecode import unidecode
 from django.core import serializers
 from golf_app.utils import formatRank, format_name, fix_name
 from golf_app import golf_serializers
+import pytz
 
 
 start = datetime.now()
 t = Tournament.objects.get(current=True)
-f = Field.objects.get(tournament=t, playerName="Dustin Johnson")
-print ('function: ', f.recent_results())
-print ('db: ', f.recent)
+sd = ScoreDict.objects.get(tournament=t)
+utc = pytz.UTC
+print (sd.updated)
+print (sd.updated + timedelta(minutes=1))
+print (datetime.utcnow().replace(tzinfo=pytz.utc))
+
+check = (sd.updated + timedelta(minutes = 1)) 
+if check < datetime.utcnow().replace(tzinfo=pytz.utc):
+    print ('less')
+else:
+    print ('more')
+
+web = scrape_espn.ScrapeESPN().get_data()
+print (web)
+
 exit()
 #for f in Field.objects.filter(tournament=t):
 #    data = golf_serializers.FieldSerializer(f).data

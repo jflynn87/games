@@ -53,7 +53,7 @@ const e = React.createElement;
             placeholder))
           }
           else  {
-            //console.log('in else')
+            console.log('data', data)
             console.log(data.wd_list, Object.keys(data.wd_list).length)
             if ((Object.keys(data.wd_list).length == 0)) {
               return (React.createElement(
@@ -63,7 +63,7 @@ const e = React.createElement;
                 ))
             }
             else {
-                var wds = data['wd_list']
+                var wds = data
                 
             }
             return (React.createElement(
@@ -71,7 +71,9 @@ const e = React.createElement;
               {className: 'bg-warning'},
               //key: 'items'},
               'Withdraws: ',
-               wds.map(wd => <li>{wd}</li>)))
+               wds.wd_list.map(wd => <li>{wd}</li>)
+               //wds.wd_picks.foreach(pick, player => <li>{pick}{player}</li>)
+               )) 
                  
             }}
             }

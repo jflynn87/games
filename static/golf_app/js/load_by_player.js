@@ -29,22 +29,17 @@ $(document).ready(function() {
    } )
     
                         })
-         
-   
 })
 
 function score_by_player(data){
-  let pk_list = [Object.keys(data.users)]
-  console.log('pks', pk_list)
-
-  let requests = pk_list[0].map(pk => get_player_score(pk))
-  Promise.all(requests)
-  //return (requests))
-    }
+//  let pk_list = [Object.keys(data.users)]
+    let pk_list = [[1, 2]]
+  let requests = pk_list[0].map(pk => get_player_score(data, pk))
+  return Promise.all(requests)
+  }
 
 function get_player_score(data, pk) {
-      console.log('pk: ', pk)
-      new Promise (function (resolve, reject) {
+      return new Promise (function (resolve, reject) {
       fetch("/golf_app/api_player_score/",
       {method: "POST",
       headers: {
@@ -62,34 +57,26 @@ function get_player_score(data, pk) {
              picks = responseJSON
              
              update_score_tbl(data, picks)
-             response()
+             resolve()
                               })
-      resolve() })
+      //resolve(pk) 
+    })
                            
      }
   
 
 
 function build_score_tbl(data) {
-  console.log('build table')
-  //console.log(data['optimal_picks'])
   $('#det-list').empty()
   $('#det-list').append('<table class="table">' + '</table>')
   
-  //console.log(info)
   
-  //var total_data = $.parseJSON(picks['totals'])
   var optimal_data = data['optimal_picks']
   var scores = data['score_dict']
   var season_totals = data['season_totals']
   var info = data['info']
   var t_data = $.parseJSON(data['t_data'])
-
-  //console.log(t_data[0]['fields']['saved_round'])
-  //console.log('T info: ', t_data[0])
-  //$.each(total_data, function(p, total) {console.log(p, total)})
-  //console.log(data)
-
+  
   $('#det-list table').append('<thead style="background-color:lightblue">' + '<tr>' + '<th> Tournament Scores  </th>' + 
     '<th>' + '</th>' + '<th>' + '<a href="#"> <button> return to top</button> </a>' + '</th>' +  '<th>' + '</th>' + '<th>' + '</th>' + '<th>' + '</th>' +
     '<th>' + '</th>' + '<th>' + '</th>' + '<th>' + '</th>' + '<th>' + '</th>' + 
@@ -244,7 +231,7 @@ function get_picks(info, optimal_data, total_data) {
 
 
 function update_score_tbl(data, picks) {
-  console.log('updting score tbl', picks)
+  //console.log('updting score tbl', picks)
   $('#det-list').empty()
   $('#det-list').append('<table class="table">' + '</table>')
   

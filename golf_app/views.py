@@ -820,6 +820,9 @@ class Withdraw(APIView):
             
             wds = withdraw.WDCheck().check_wd()
             print ('wds', wds['wd_list'])
+            wd_picks = withdraw.WDCheck().check_wd_picks()
+            wds.update({'wd_picks': wd_picks})
+            print (wds)
 
         except Exception as e:
             print ('error: ', e)
@@ -940,7 +943,7 @@ class ESPNScoreDict(APIView):
 class ScoresByPlayerAPI(APIView):
     def post(self, request):
         try:
-            #print ('request.POST.data: ', request.data.get('user_pk'))
+            print ('request.POST.data: ', request.data )
             data = {}
             u = User.objects.get(pk=request.data.get('user_pk'))
             t = Tournament.objects.get(pk=request.data.get('tournament_key'))

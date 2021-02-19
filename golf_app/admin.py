@@ -38,8 +38,12 @@ class PGAWebScoresAdmin(admin.ModelAdmin):
     list_filter = ['tournament']
 
 class ScoreDictAdmin(admin.ModelAdmin):
-    list_display = ['tournament']
+    list_display = ['tournament', 'get_season']
     list_filter = ['tournament']
+    readonly_fields = ('updated',)
+
+    def get_season(self, obj):
+        return obj.tournament.season.season
 
 
 class UserProfileAdmin(admin.ModelAdmin):

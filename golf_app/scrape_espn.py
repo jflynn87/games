@@ -1,9 +1,10 @@
-from datetime import datetime
+from datetime import datetime, timedelta
+import pytz
 import urllib
 import json
 from bs4 import BeautifulSoup
 from golf_app import utils
-from golf_app.models import Tournament, Field, Golfer
+from golf_app.models import Tournament, Field, Golfer, ScoreDict
 
 
 class ScrapeESPN(object):
@@ -16,13 +17,19 @@ class ScrapeESPN(object):
         
         if not url:
             self.url = "https://www.espn.com/golf/leaderboard"
+            #self.url = 'https://www.espn.com/golf/leaderboard?tournamentId=401243000'
         else:
             self.url = url
 
 
     def get_data(self):
         print ('scraping golf espn com')
-
+        
+        sd, created = ScoreDict.objects.get_or_create(tournament=self.tournament)
+        if (sd.updated + timedelta(minutes = 1)) > datetime.utcnow().replace(tzinfo=pytz.utc):
+            print ('returning saved score dict ', sd.updated, sd.updated + timedelta(minutes = 1), datetime.utcnow().replace(tzinfo=pytz.utc))
+            return sd.data
+ 
         try:
             score_dict = {}
 
@@ -184,6 +191,7 @@ class ScrapeESPN(object):
             except Exception as e:
                 print ('cut nun calc issue: ', e)
                 cut_num = self.tournament.saved_cut_num
+                score_dict['info'].update({'cut_num': cut_num})
 
             
             
@@ -192,8 +200,9 @@ class ScrapeESPN(object):
 
             print ('cut num duration: ', datetime.now() - cut_calc_start)
             print ('info: ', score_dict['info'])
-
-
+            
+            sd.data = score_dict
+            sd.save()
             return score_dict
 
 
