@@ -180,7 +180,7 @@ class ScrapeESPN(object):
                         print ('no cuts in leaderboadr, in else')
                         cut_num = min(utils.formatRank(x.get('rank')) for k, x in score_dict.items() if k != 'info' and int(utils.formatRank(x.get('rank'))) > self.tournament.saved_cut_num) 
                         if score_dict.get('cut_line') == None:
-                            cut_line = max(int(v.get('total_score')) for k, v in score_dict.items() if k != 'info' and int(utils.formatRank(v.get('rank'))) < cut_num)
+                            cut_line = max(int(utils.score_as_int(v.get('total_score'))) for k, v in score_dict.items() if k != 'info' and int(utils.formatRank(v.get('rank'))) < cut_num)
                             score_dict['info'].update({'cut_line': 'Projected Cut Line: ' + str(cut_line)})
             
                 else:

@@ -11,6 +11,16 @@ def format_score(score):
     else:
         return score
 
+def score_as_int(score):
+    if score is int:
+        return score
+    elif score == "E":
+        return 0
+    else:
+        print ('uitils score as int unknownn value: ', score)
+        return score
+
+
 
 def formatRank(rank, tournament=None):
     from golf_app.models import Tournament

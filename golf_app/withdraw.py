@@ -48,7 +48,7 @@ class WDCheck(object):
         
         if Picks.objects.filter(playerName__playerName__in=self.check_wd()['wd_list'], playerName__tournament=self.tournament).exists():
             for pick in Picks.objects.filter(playerName__playerName__in=self.check_wd()['wd_list'], playerName__tournament=self.tournament):
-                print(wd_picks, pick, pick.user.username)
+                #print(wd_picks, pick, pick.user.username)
                 try:
                     wd_picks.get(pick.playerName.playerName).append(pick.user.username)
                 except Exception as e:

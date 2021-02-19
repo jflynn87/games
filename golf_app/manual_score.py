@@ -173,8 +173,8 @@ class Score(object):
                         .exclude(gross_score=utils.formatRank(data.get('rank')), thru=data.get('thru'), toPar=data.get('total_score')).count() == 0 \
                         or (sd.today_score in self.not_playing_list and self.score_dict.get('info').get('round') > self.tournament.saved_cut_round): 
                             print ('skipping no change', pick.playerName, datetime.now() - pick_loop_start)
-                            if self.score_dict.get('info').get('complete'):
-                                self.pick_bonuses(sd, pick, optimal_picks)
+                            #if self.score_dict.get('info').get('complete'):
+                            self.pick_bonuses(sd, pick, optimal_picks)
                             continue
 
                 # if sd.today_score in self.not_playing_list and self.score_dict.get('info').get('round') > 2: 
@@ -202,7 +202,7 @@ class Score(object):
 
                 #this doesn't work, only creates one SD record rater than all
                 #sd, sd_created = ScoreDetails.objects.get_or_create(user=pick.user, pick=pick)
-                print ('CC')
+                
                 sd.score=score - pick.playerName.handicap()
                 #sd.score=pick.score - pick.playerName.handicap()
                 
@@ -446,8 +446,11 @@ class Score(object):
         d = [v for v in self.score_dict.values() if v.get('pga_num') == pick.playerName.golfer.espn_number]
         if len(d) > 0:
             score = d[0]
-        else:
+        elif len(d) == 0 and self.score_dict.get('info').get('cut_num') != None:
+            return self.score_dict.get('info').get('cut_num')
+        elif len(d) ==0:
             return self.tournament.saved_cut_num
+        
         print ('wd lookup', score)
 
         if not self.tournament.has_cut:
