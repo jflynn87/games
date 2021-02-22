@@ -5,7 +5,7 @@ def format_score(score):
     if score == None:
         return "not started"
     if score == 0:
-        return 'even'
+        return 'E'
     elif score > 0:
         return ('+' + str(score))
     else:

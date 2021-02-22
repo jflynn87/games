@@ -60,6 +60,10 @@ class ScrapeESPN(object):
                                         'complete': True,
                                         'round_status': status}
                     
+                elif status == "Playoff - Play Complete":
+                    score_dict['info'] = {'round': 4,
+                                        'complete': False,
+                                        'round_status': status}
                 else:
                     score_dict['info'] = {'round': status,
                                         'complete': False,
@@ -181,7 +185,7 @@ class ScrapeESPN(object):
                         cut_num = min(utils.formatRank(x.get('rank')) for k, x in score_dict.items() if k != 'info' and int(utils.formatRank(x.get('rank'))) > self.tournament.saved_cut_num) 
                         if score_dict.get('cut_line') == None:
                             cut_line = max(int(utils.score_as_int(v.get('total_score'))) for k, v in score_dict.items() if k != 'info' and int(utils.formatRank(v.get('rank'))) < cut_num)
-                            score_dict['info'].update({'cut_line': 'Projected Cut Line: ' + str(cut_line)})
+                            score_dict['info'].update({'cut_line': 'Projected Cut Line: ' + str(utils.format_score(cut_line))})
             
                 else:
                     cut_num = len([v for k, v in score_dict.items() if k != 'info' and v.get('total_score') not in self.tournament.not_playing_list()]) +1

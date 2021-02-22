@@ -25,7 +25,7 @@ from urllib.request import Request, urlopen
 from selenium import webdriver
 import urllib
 import json
-from golf_app import views, manual_score, populateField, withdraw, scrape_scores_picks, utils, scrape_cbs_golf, scrape_masters, scrape_espn
+from golf_app import views, manual_score, populateField, withdraw, scrape_scores_picks, utils, scrape_cbs_golf, scrape_masters, scrape_espn, update_favs
 from unidecode import unidecode
 from django.core import serializers
 from golf_app.utils import formatRank, format_name, fix_name
@@ -34,28 +34,16 @@ import pytz
 
 
 start = datetime.now()
-t = Tournament.objects.get(current=True)
-sd = ScoreDict.objects.get(tournament=t)
-utc = pytz.UTC
-print (sd.updated)
-print (sd.updated + timedelta(minutes=1))
-print (datetime.utcnow().replace(tzinfo=pytz.utc))
-
-check = (sd.updated + timedelta(minutes = 1)) 
-if check < datetime.utcnow().replace(tzinfo=pytz.utc):
-    print ('less')
-else:
-    print ('more')
-
+#avs = update_favs.UpdateFavs().scrape() 
 web = scrape_espn.ScrapeESPN().get_data()
-print (web)
+print (web['info'])
 
 exit()
 #for f in Field.objects.filter(tournament=t):
 #    data = golf_serializers.FieldSerializer(f).data
 #for g in Group.objects.filter(tournament=t):
 #    g_start = datetime.now()
-data = json.dumps(golf_serializers.NewFieldSerializer(Field.objects.filter(tournament=t, playerName="Paul Casey"),  many=True).data)
+#data = json.dumps(golf_serializers.NewFieldSerializer(Field.objects.filter(tournament=t, playerName="Paul Casey"),  many=True).data)
 #print (g, datetime.now() - g_start)
 #data = golf_serializers.FieldSerializer(Field.objects.filter(tournament=t), many=True).data
 #j_data = json.dumps(data)

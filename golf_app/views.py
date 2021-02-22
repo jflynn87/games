@@ -365,18 +365,7 @@ class GetScores(APIView):
 
         if t.current and not t.complete:
             print ('scraping')
-    
-
-            #pga_web = scrape_scores_picks.ScrapeScores(t)
-            #score_dict = pga_web.scrape()
-
             score_dict = scrape_espn.ScrapeESPN().get_data()
-
-
-            #score_dict = scrape_masters.ScrapeScores(t).scrape()
-            
-            #print (score_dict)
-    
         else:
             print ('not scraping')
             try:
@@ -384,7 +373,7 @@ class GetScores(APIView):
             except Exception as e:
                 score_dict = {}
                 #score_dict = get_score_dict(t)
-                print ('using old score dict method', t, e)
+                print ('error using old score dict method', t, e)
             
         
         scores = manual_score.Score(score_dict, t, 'json')
@@ -469,21 +458,28 @@ class GetDBScores(APIView):
 
         try:
             display_data = json.loads(sd.pick_data)
-                
-            return Response(({'picks': display_data.get('display_data').get('picks'),
-                            'totals': display_data.get('display_data').get('totals'),
-                            'leaders': display_data.get('display_data').get('leaders'),
-                            'cut_line': display_data.get('display_data').get('cut_line'),
-                            'optimal': display_data.get('display_data').get('optimal'), 
-                            'scores': display_data.get('display_data').get('scores'),
-                            'season_totals': display_data.get('display_data').get('season_totals'),
-                            'info': json.dumps(info),
-                            't_data': display_data.get('display_data').get('t_data'),
-                            'round_status': display_data.get('display_data').get('round_status')
-            }), 200)
+            print ('display_data len: ', len(display_data))
+
+            if len(display_data) > 0:    
+                return Response(({'picks': display_data.get('display_data').get('picks'),
+                                'totals': display_data.get('display_data').get('totals'),
+                                'leaders': display_data.get('display_data').get('leaders'),
+                                'cut_line': display_data.get('display_data').get('cut_line'),
+                                'optimal': display_data.get('display_data').get('optimal'), 
+                                'scores': display_data.get('display_data').get('scores'),
+                                'season_totals': display_data.get('display_data').get('season_totals'),
+                                'info': json.dumps(info),
+                                't_data': display_data.get('display_data').get('t_data'),
+                                'round_status': display_data.get('display_data').get('round_status')
+                }), 200)
+            else:
+                print ('switch to get scores')
+                print (self.request.GET)
+                GetScores(self.request.GET, num)
         except Exception as e:
-            print ('old logic')
-            return Response({}, 200)
+            print ('old logic', e)
+            GetScores().get(self.request)
+            #return Response({}, 200)
 
 class NewScoresView(LoginRequiredMixin,ListView):
     login_url = 'login'

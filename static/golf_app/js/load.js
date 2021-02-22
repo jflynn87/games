@@ -20,7 +20,8 @@ $(document).ready(function() {
           build_score_tbl(json)
          
         console.log('first load duration: ', start, new Date()) 
-      }},
+                                    }
+        },
       failure: function(json) {
         console.log('fail');
         console.log(json);
