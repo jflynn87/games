@@ -64,6 +64,11 @@ def index(request):
         except Exception as e:
             picks = None
 
+        try:
+            t = Tournament.objects.get(current=True)
+        except Exception as e:
+            t = None
+
         sb_user_list = ['john', 'jcarl62', 'BigDipper', 'shishmeister', 'JoeLong', 'Laroqm']
         print ('game', game)
         print ('picks', picks)
@@ -73,7 +78,7 @@ def index(request):
             'game': game,
             'picks': picks,
             'sb_user_list': sb_user_list,
-            't': Tournament.objects.get(current=True)
+            't': t,
                 })
 
 

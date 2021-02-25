@@ -1,7 +1,7 @@
 let filler = /[\s\.\,\']/g;
 let not_playing = ['CUT', 'WD', 'DQ']
 $(document).ready(function() {
-    $('#det-list').attr('class', 'spinner')
+    //$('#det-list').attr('class', 'spinner')
     $('#totals-table').hide()
     start = new Date() 
     console.log(start.toLocaleString())
@@ -25,6 +25,7 @@ $(document).ready(function() {
       failure: function(json) {
         console.log('fail');
         console.log(json);
+        $('#det-list').attr('class', 'none')
       }
     })
 })
@@ -52,6 +53,7 @@ $.ajax({
   failure: function(json_update) {
     console.log('fail');
     console.log(json_update);
+    $('#det-list').attr('class', 'none')
   }
 })
 

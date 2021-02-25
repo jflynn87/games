@@ -31,10 +31,10 @@ from django.core import serializers
 from golf_app.utils import formatRank, format_name, fix_name
 
 
-t= Tournament.objects.get(pga_tournament_num='007', season__season='2020')
+t= Tournament.objects.get(pga_tournament_num='473', season__season='2020')
 print (Field.objects.filter(tournament=t).count())
 
-web = scrape_espn.ScrapeESPN(t, 'https://www.espn.com/golf/leaderboard?tournamentId=401155423').get_data()
+web = scrape_espn.ScrapeESPN(t, 'https://www.espn.com/golf/leaderboard?tournamentId=401155424').get_data()
 #print (web)
 
 sd, created = ScoreDict.objects.get_or_create(tournament=t)

@@ -31,19 +31,30 @@ from django.core import serializers
 from golf_app.utils import formatRank, format_name, fix_name
 from golf_app import golf_serializers
 import pytz
+import collections
 
 
 start = datetime.now()
+web = scrape_espn.ScrapeESPN(None, None, True).get_data()
+print (web)
+exit()
 #avs = update_favs.UpdateFavs().scrape() 
-web = scrape_espn.ScrapeESPN().get_data()
-print (web['info'])
+t = Tournament.objects.get(current=True)
 
+f = Field.objects.get(tournament=t, playerName="Dustin Johnson")
+print (f.recent)
+print ('-----')
+print (collections.OrderedDict(sorted(f.recent_results().items(), reverse=True)))
+print ('-----')
+#m = sorted(sd.values(), key = lambda data: (sum(formatRank(data['rank']), data['handicap'])))
+data = json.dumps(golf_serializers.NewFieldSerializer(Field.objects.filter(tournament=t, playerName="Dustin Johnson"),  many=True).data)
+print (data)
 exit()
 #for f in Field.objects.filter(tournament=t):
 #    data = golf_serializers.FieldSerializer(f).data
 #for g in Group.objects.filter(tournament=t):
 #    g_start = datetime.now()
-#data = json.dumps(golf_serializers.NewFieldSerializer(Field.objects.filter(tournament=t, playerName="Paul Casey"),  many=True).data)
+
 #print (g, datetime.now() - g_start)
 #data = golf_serializers.FieldSerializer(Field.objects.filter(tournament=t), many=True).data
 #j_data = json.dumps(data)

@@ -986,7 +986,7 @@ class RecentFormAPI(APIView):
             data[player_num]['recent'] = {}
             
             #result_list = []
-            for t in Tournament.objects.all().order_by('-pk')[1:5]:
+            for t in reversed(Tournament.objects.all().order_by('-pk')[1:5]):
                 if Field.objects.filter(tournament=t, golfer__espn_number=player_num).exists():
                     f = Field.objects.get(tournament=t, golfer__espn_number=player_num)
                     sd = ScoreDict.objects.get(tournament=t)

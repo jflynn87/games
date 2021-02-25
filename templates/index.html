@@ -5,8 +5,9 @@
 
 {% block body_block %}
 <link rel="stylesheet" href={%static "fb_app/css/my_style.css" %}>
+{%if not t.complete%}
 <script type="text/javascript" src="{%static 'golf_app/js/get_espn_data.js'%}"></script>
-
+{%endif%}
 <div class="container-fluid"> 
   
 <div class=row>

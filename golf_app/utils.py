@@ -17,7 +17,7 @@ def score_as_int(score):
     elif score == "E":
         return 0
     else:
-        print ('uitils score as int unknownn value: ', score)
+        #print ('uitils score as int unknownn value: ', score)
         return score
 
 
@@ -52,13 +52,13 @@ def format_name(name):
     if len(name.split(' ')) == 2:
         return name
     else:
-        print (name.split(' '))
+        #print (name.split(' '))
         return (name.strip(', Jr.').strip(',Jr ').strip('(a)').strip(',').strip('Jr.').strip('.'))
 
 
 def fix_name(player, owgr_rankings):
     '''takes a string and a dict and returns a dict?'''
-    print ('trying to fix name: ', player)
+    #print ('trying to fix name: ', player)
         
     if owgr_rankings.get(player) != None:
         print ('name dict match: ', owgr_rankings.get(player))
@@ -95,5 +95,5 @@ def fix_name(player, owgr_rankings):
         
         
 
-    print ('didnt find match', pga_name)
+    print ('didnt find match', player)
     return None, [9999, 9999, 9999]

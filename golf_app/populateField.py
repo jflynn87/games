@@ -2,13 +2,15 @@ from golf_app.models import (Picks, Field, Group, Tournament, TotalScore,
     ScoreDetails, Name, Season, User, BonusDetails, Golfer, ScoreDict)
 import urllib3
 from django.core.exceptions import ObjectDoesNotExist
-from golf_app import scrape_cbs_golf, scrape_espn #calc_score, 
+from golf_app import scrape_cbs_golf, scrape_espn, utils
 from django.db import transaction
 import urllib
 from bs4 import BeautifulSoup
 import json
 import datetime
 import unidecode 
+import collections
+
 
 def clean_db():
     print ('in clean db')
@@ -226,11 +228,12 @@ def create_groups(tournament_number):
     field = get_field(tournament_number)
     OWGR_rankings =  get_worldrank()
     #OWGR_rankings = {}
+   
     print ('a')
-    try:
-        PGA_rankings = get_pga_worldrank()
-    except Exception as e:
-        print ('pga wgr failed: ', e)
+    #try:
+    #    PGA_rankings = get_pga_worldrank()
+    #except Exception as e:
+    #    print ('pga wgr failed: ', e)
     print ('b')
     configure_groups(field)
     print ('c')
@@ -258,13 +261,13 @@ def create_groups(tournament_number):
             rank = OWGR_rankings[player]
         except Exception:
             try:
-                lookup = fix_name(player, OWGR_rankings)
+                lookup = utils.fix_name(player, OWGR_rankings)
                 print ('not in owgr', player, lookup)
                 name_issues.append((player, lookup))
                 rank = lookup[1]
                 #rank = PGA_rankings[player]
-            except Exception:
-                print ('no rank found',player)
+            except Exception as e:
+                print ('no rank found', player, e)
                 rank = [9999, 9999, 9999]
 
         if name_switch:
@@ -279,8 +282,8 @@ def create_groups(tournament_number):
     group_num = 1
 
     groups = Group.objects.get(tournament=tournament, number=group_num)
-    print (name_issues)
-    print ('group_dict before field save', group_dict)
+    print ('name issues: ', name_issues)
+    #print ('group_dict before field save', group_dict)
 
     #create dict of player links for picture lookup
     #import urllib
@@ -309,7 +312,7 @@ def create_groups(tournament_number):
     for k, v in sorted(group_dict.items(), key=lambda x: x[1][0]):
         #print ('key/val: ', k, v)
         map_link = get_flag(k, v, espn_players)
-        print (k, map_link)
+        #print (k, map_link)
         if player_cnt < groups.playerCnt:
           #print (k,v[0], str(groups.number), str(groups.playerCnt))
           #player_link = 'https://www.pgatour.com/players/player.' + str(v[1][1]) + '.' + k.split(' ')[0].lowercase() + '-' + k.split(' ')[1].lowercase() + '.html')
@@ -335,7 +338,8 @@ def create_groups(tournament_number):
 
     for f in Field.objects.filter(tournament=tournament):
         f.prior_year = f.prior_year_finish()
-        f.recent = f.recent_results()
+        recent = collections.OrderedDict(sorted(f.recent_results().items(), reverse=True))
+        f.recent = recent 
         f.save()
 
 
@@ -354,11 +358,11 @@ def get_flag(golfer, golfer_data, espn_data):
 
     if golfer_obj.espn_number in [' ', None]:
         espn_number = get_espn_num(golfer, espn_data)
-        #print ('get flag espn num', golfer, espn_data)
+        print ('get flag espn num', golfer)
         #try:
-        if espn_number[1].get('espn_num'):
+        if espn_number[1].get('pga_num'):
             print ('inside if on espn num', espn_number[1])
-            golfer_obj.espn_number = espn_number[1].get('espn_num')
+            golfer_obj.espn_number = espn_number[1].get('pga_num')
             print ('golfer_obj espn number', golfer_obj.espn_number)
             golfer_obj.save()
             
@@ -414,36 +418,36 @@ if __name__ == '__main__':
     print ("Populating Complete!")
 
 
-def fix_name(player, owgr_rankings):
-    print ('trying to fix name: ', player)
-    print (owgr_rankings.get(player))
-    if owgr_rankings.get(player) != None:
-        return (owgr_rankings.get(player))
+# def fix_name(player, owgr_rankings):
+#     print ('trying to fix name: ', player)
+#     print (owgr_rankings.get(player))
+#     if owgr_rankings.get(player) != None:
+#         return (owgr_rankings.get(player))
 
-    print (player.replace(',', '').split(' '))
-    for k, v in owgr_rankings.items():
-        owgr_name = k.replace(',', '').split(' ')
-        pga_name = player.replace(',', '').split(' ')
-        #print (owgr_name, pga_name)
+#     print (player.replace(',', '').split(' '))
+#     for k, v in owgr_rankings.items():
+#         owgr_name = k.replace(',', '').split(' ')
+#         pga_name = player.replace(',', '').split(' ')
+#         #print (owgr_name, pga_name)
         
-        if unidecode.unidecode(owgr_name[len(owgr_name)-1]) == unidecode.unidecode(pga_name[len(pga_name)-1]) \
-           and k[0:1] == player[0:1]:
-            print ('last name, first initial match', player)
-            return k, v
-        elif unidecode.unidecode(owgr_name[len(owgr_name)-2]) == unidecode.unidecode(pga_name[len(pga_name)-1]) \
-            and k[0:1] == player[0:1]:
-            print ('last name, first initial match, cut owgr suffix', player)
-            return k, v
-        elif len(owgr_name) == 3 and len(pga_name) == 3 and unidecode.unidecode(owgr_name[len(owgr_name)-2]) == unidecode.unidecode(pga_name[len(pga_name)-2]) \
-            and unidecode.unidecode(owgr_name[0]) == unidecode.unidecode(pga_name[0]):
-            print ('last name, first name, cut both suffix', player)
-            return k, v
-        elif unidecode.unidecode(owgr_name[0]) == unidecode.unidecode(pga_name[len(pga_name)-1]) \
-            and unidecode.unidecode(owgr_name[len(owgr_name)-1]) == unidecode.unidecode(pga_name[0]):
-            print ('names reversed', player)
-            return k, v
-    print ('didnt find match', pga_name)
-    return None, [9999, 9999, 9999]
+#         if unidecode.unidecode(owgr_name[len(owgr_name)-1]) == unidecode.unidecode(pga_name[len(pga_name)-1]) \
+#            and k[0:1] == player[0:1]:
+#             print ('last name, first initial match', player)
+#             return k, v
+#         elif unidecode.unidecode(owgr_name[len(owgr_name)-2]) == unidecode.unidecode(pga_name[len(pga_name)-1]) \
+#             and k[0:1] == player[0:1]:
+#             print ('last name, first initial match, cut owgr suffix', player)
+#             return k, v
+#         elif len(owgr_name) == 3 and len(pga_name) == 3 and unidecode.unidecode(owgr_name[len(owgr_name)-2]) == unidecode.unidecode(pga_name[len(pga_name)-2]) \
+#             and unidecode.unidecode(owgr_name[0]) == unidecode.unidecode(pga_name[0]):
+#             print ('last name, first name, cut both suffix', player)
+#             return k, v
+#         elif unidecode.unidecode(owgr_name[0]) == unidecode.unidecode(pga_name[len(pga_name)-1]) \
+#             and unidecode.unidecode(owgr_name[len(owgr_name)-1]) == unidecode.unidecode(pga_name[0]):
+#             print ('names reversed', player)
+#             return k, v
+#     print ('didnt find match', pga_name)
+#     return None, [9999, 9999, 9999]
 
     
 def get_espn_num(player, espn_data):
@@ -453,7 +457,7 @@ def get_espn_num(player, espn_data):
         #print ('found player: ', player)
     else:
         print ('not found, fixing: ', player)
-        fixed_data = fix_name(player, espn_data)
+        fixed_data = utils.fix_name(player, espn_data)
         print ('returning fixed: ',  fixed_data)
         if fixed_data[0] == None:
             return (player, {})
@@ -463,6 +467,7 @@ def get_espn_num(player, espn_data):
     return
 
 def get_espn_players():
-    espn_data = scrape_espn.ScrapeESPN().get_espn_players()
+    #espn_data = scrape_espn.ScrapeESPN().get_espn_players()
+    espn_data = scrape_espn.ScrapeESPN(None, None, True).get_data()
     #print (espn_field)
     return espn_data

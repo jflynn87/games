@@ -55,7 +55,8 @@ function last_year(data) {
 function recent(data) {
   
     $.each(data, function(i, stats) {
-        ranks = ''
+      //console.log(Object.keys(stats.recent).reduce())  
+      ranks = ''
         $.each(stats.recent, function(i, rank){ranks += rank.rank + ', '})
         var items = ''
         $.each(stats.recent, function(i, rank){items += rank.name + ': ' + rank.rank + '\n'})

@@ -495,7 +495,9 @@ class Field(models.Model):
         data = {}
         start = datetime.now()
         try:
-            for t in Tournament.objects.all().order_by('-pk')[1:5]:
+            #for t in Tournament.objects.all().order_by('-pk')[1:5]):
+            for t in Tournament.objects.all().order_by('pk').reverse()[1:5]:
+                #print (t.season, t)
                 sd = ScoreDict.objects.get(tournament=t)
                 if Field.objects.filter(tournament=t, golfer__espn_number=self.golfer.espn_number).exclude(withdrawn=True).exists():
                     f = Field.objects.get(tournament=t, golfer__espn_number=self.golfer.espn_number)

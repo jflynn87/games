@@ -9,7 +9,7 @@ from golf_app.models import Tournament, Field, Golfer, ScoreDict
 
 class ScrapeESPN(object):
 
-    def __init__(self, tournament=None, url=None):
+    def __init__(self, tournament=None, url=None, ignore_name_mismatch=False):
         if not tournament:
             self.tournament = Tournament.objects.get(current=True)
         else:
@@ -21,12 +21,13 @@ class ScrapeESPN(object):
         else:
             self.url = url
 
+        self.ignore_name_mismatch = ignore_name_mismatch
 
     def get_data(self):
         print ('scraping golf espn com')
         
         sd, created = ScoreDict.objects.get_or_create(tournament=self.tournament)
-        if (sd.updated + timedelta(minutes = 1)) > datetime.utcnow().replace(tzinfo=pytz.utc):
+        if not created and (sd.updated + timedelta(minutes = 1)) > datetime.utcnow().replace(tzinfo=pytz.utc):
             print ('returning saved score dict ', sd.updated, sd.updated + timedelta(minutes = 1), datetime.utcnow().replace(tzinfo=pytz.utc))
             return sd.data
  
@@ -38,11 +39,11 @@ class ScrapeESPN(object):
             soup = BeautifulSoup(html, 'html.parser')
             
             leaderboard = soup.find_all('tbody', {'class': 'Table__TBODY'})
-            
+
             status = soup.find('div', {'class', 'status'}).span.text
             t_name = soup.find('h1', {'class', 'Leaderboard__Event__Title'}).text
-
-            if t_name != self.tournament.name and not self.tournament.ignore_name_mismatch:
+            print (self.ignore_name_mismatch)
+            if t_name != self.tournament.name and not self.tournament.ignore_name_mismatch and not self.ignore_name_mismatch:
                 print ('t name mismatch', t_name, self.tournament.name)
                 return {}
 
@@ -64,6 +65,10 @@ class ScrapeESPN(object):
                     score_dict['info'] = {'round': 4,
                                         'complete': False,
                                         'round_status': status}
+                elif status == "Tournament Field":
+                    score_dict['info'] = {'round': 1,
+                                        'complete': False,
+                                        'round_status': "Not Started"}
                 else:
                     score_dict['info'] = {'round': status,
                                         'complete': False,
@@ -205,7 +210,7 @@ class ScrapeESPN(object):
             print ('cut num duration: ', datetime.now() - cut_calc_start)
             print ('info: ', score_dict['info'])
             
-            sd.data = score_dict
+            sd.data = json.dumps(score_dict)
             sd.save()
             return score_dict
 
@@ -221,6 +226,7 @@ class ScrapeESPN(object):
             player_dict = {}
 
             html = urllib.request.urlopen("http://www.espn.com/golf/players")
+            #html = urllib.request.urlopen(self.url)
             soup = BeautifulSoup(html, 'html.parser')
             
             player_table = soup.find('div', {'id': 'my-players-table'})
