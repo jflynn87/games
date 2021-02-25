@@ -171,7 +171,7 @@ class ScrapeESPN(object):
             print ('info before cut num calc: ', score_dict.get('info'))
             cut_calc_start = datetime.now()
             try:
-                if score_dict.get('info').get('round') == 'Tournament Field':
+                if score_dict.get('info').get('round_status') == 'Not Started' and score_dict.get('info').get('round') == 1:
                     cut_num = 65
                 elif self.tournament.has_cut:
                     post_cut_wd = len([v for k,v in score_dict.items() if k!= 'info' and v.get('total_score') in self.tournament.not_playing_list() and \
@@ -210,7 +210,7 @@ class ScrapeESPN(object):
             print ('cut num duration: ', datetime.now() - cut_calc_start)
             print ('info: ', score_dict['info'])
             
-            sd.data = json.dumps(score_dict)
+            sd.data = score_dict
             sd.save()
             return score_dict
 

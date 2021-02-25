@@ -398,17 +398,12 @@ class GetScores(APIView):
         
         ts = scores.total_scores()
         picks_ret = datetime.datetime.now()
-        #d = scores.get_picks_by_user() 
         d = {'msg': 'no data'}
         print ('get picks duration:: ', datetime.datetime.now()- picks_ret)
-        
 
         leaders = scores.get_leader()
-        #optimal = t.optimal_picks()
-        #optimal = scores.optimal_picks()
         totals = Season.objects.get(season=t.season).get_total_points()
         t_data = serializers.serialize("json", [t, ])
-        #print ('T DATA: ', t_data)
         display_dict = {}
         display_dict['display_data'] = {'picks': d,
                           'totals': ts,
@@ -568,11 +563,14 @@ class CheckStarted(APIView):
                 #pga_web = scrape_scores_picks.ScrapeScores(t)
                 #score_dict = pga_web.scrape()
                 score_dict = scrape_espn.ScrapeESPN().get_data()
+                print ('score dict started check: ', score_dict.get('info'))
                 score = manual_score.Score(score_dict, t)
                 #round = t.get_round()
                 t_round = score_dict.get('info').get('round')
    
-                if t_round != None and t_round != 'Tournament Field' and t_round > 0:
+                #if t_round != None and t_round != 'Tournament Field' and t_round > 0:
+                if t_round != None and (t_round != 1 and score_dict.get('round_status') != "Not Started"):
+                    print ('started updating scores')
                     score.update_scores() 
                 if t.started():
                     t_status['status'] = 'Started - refresh to see picks'
