@@ -1,4 +1,5 @@
 import unidecode
+from datetime import datetime
 
 def format_score(score):
     '''takes in a sting and returns a string formatted for the right display or calc'''
@@ -25,6 +26,7 @@ def score_as_int(score):
 def formatRank(rank, tournament=None):
     from golf_app.models import Tournament
     '''takes in a sting and returns a string formatted for the right display or calc.  '''
+    
     t = Tournament.objects.get(current=True)
     
     #if rank in t.not_playing_list():
@@ -59,7 +61,7 @@ def format_name(name):
 def fix_name(player, owgr_rankings):
     '''takes a string and a dict and returns a dict?'''
     #print ('trying to fix name: ', player)
-        
+    #print (player, ' :  ', owgr_rankings)    
     if owgr_rankings.get(player) != None:
         print ('name dict match: ', owgr_rankings.get(player))
         return (player, owgr_rankings.get(player))
@@ -97,3 +99,22 @@ def fix_name(player, owgr_rankings):
 
     print ('didnt find match', player)
     return None, [9999, 9999, 9999]
+
+
+def check_t_names(espn_t, t):
+    '''Takes a string and a tournament object and returns a bool'''
+    
+    start = datetime.now()
+    espn_name = espn_t.split(' ')
+    pga_name = t.name.split(' ')
+    #print ('espn name: ', espn_name)
+    #print ('pga name: ', pga_name)
+    matches = len([x for x in pga_name if x in espn_name])
+    if matches < len(pga_name)/2:
+        #print ('t name mismatch', espn_t, t.name)
+        #print ('time to t name mismatch: ', datetime.now() - start)
+        return False
+    else:
+        #print ('time to t name match: ', datetime.now() - start)
+        return True
+

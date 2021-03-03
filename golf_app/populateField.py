@@ -120,11 +120,11 @@ def get_field(tournament_number):
     tourny.saved_cut_round = 2
     tourny.save()
 
-    sd = ScoreDict ()
-    sd.tournament = tourny
-    sd.data = {}
-    sd.pick_data = {}
-    sd.save()
+    #sd = ScoreDict ()
+    #sd.tournament = tourny
+    #sd.data = {}
+    #sd.pick_data = {}
+    #sd.save()
 
     field_list = {}
 
@@ -309,6 +309,7 @@ def create_groups(tournament_number):
                 link = link + char
             golfer_dict[link[:5]]=link
     espn_players = get_espn_players()
+    print ('xxxxxxx', espn_players)
     for k, v in sorted(group_dict.items(), key=lambda x: x[1][0]):
         #print ('key/val: ', k, v)
         map_link = get_flag(k, v, espn_players)

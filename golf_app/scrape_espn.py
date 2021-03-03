@@ -28,7 +28,7 @@ class ScrapeESPN(object):
         
         sd, created = ScoreDict.objects.get_or_create(tournament=self.tournament)
         if not created and (sd.updated + timedelta(minutes = 1)) > datetime.utcnow().replace(tzinfo=pytz.utc):
-            print ('returning saved score dict ', sd.updated, sd.updated + timedelta(minutes = 1), datetime.utcnow().replace(tzinfo=pytz.utc))
+            print ('returning saved score dict ', 'sd saved time: ', sd.updated, 'current time: ', datetime.utcnow().replace(tzinfo=pytz.utc))
             return sd.data
  
         try:
@@ -42,10 +42,12 @@ class ScrapeESPN(object):
 
             status = soup.find('div', {'class', 'status'}).span.text
             t_name = soup.find('h1', {'class', 'Leaderboard__Event__Title'}).text
-            print (self.ignore_name_mismatch)
+            start = datetime.now()
+            print ('start: ', start)
             if t_name != self.tournament.name and not self.tournament.ignore_name_mismatch and not self.ignore_name_mismatch:
-                print ('t name mismatch', t_name, self.tournament.name)
-                return {}
+                match = utils.check_t_names(t_name, self.tournament)
+                if not match:
+                    return {}
 
 
             print ('espn T Name: ', t_name)
@@ -70,7 +72,7 @@ class ScrapeESPN(object):
                                         'complete': False,
                                         'round_status': "Not Started"}
                 else:
-                    score_dict['info'] = {'round': status,
+                    score_dict['info'] = {'round': 0,
                                         'complete': False,
                                         'round_status': status}
             
@@ -171,7 +173,7 @@ class ScrapeESPN(object):
             print ('info before cut num calc: ', score_dict.get('info'))
             cut_calc_start = datetime.now()
             try:
-                if score_dict.get('info').get('round_status') == 'Not Started' and score_dict.get('info').get('round') == 1:
+                if score_dict.get('info').get('round_status') == 'Not Started' and score_dict.get('info').get('round') == 1 and self.tournament.has_cut:
                     cut_num = 65
                 elif self.tournament.has_cut:
                     post_cut_wd = len([v for k,v in score_dict.items() if k!= 'info' and v.get('total_score') in self.tournament.not_playing_list() and \
@@ -262,3 +264,27 @@ class ScrapeESPN(object):
             print ('issue scraping espn', e)
             return {}   
         
+    def get_t_num(self):
+        
+        start = datetime.now()
+
+        html = urllib.request.urlopen('https://www.espn.com/golf/schedule/_/season/2021')
+        soup = BeautifulSoup(html, 'html.parser')
+        rows = soup.find_all('tr', {'class': 'Table__TR'})
+        for row in rows:
+            try:
+                if row.find('div', {'class': 'eventAndLocation__innerCell'}):
+                    n = row.find('p').text
+                    match = utils.check_t_names(n, self.tournament)
+                    if match:
+                        if row.find('a'):
+                            print ('t match hyper link: ', row.find('a')['href'])
+                            print ('t name match duration: ', datetime.now() - start)
+                            return (row.find('a')['href'].split('=')[1])
+                        else:
+                            print ('t name no match duration: ', datetime.now() - start)
+                            print ('no link available')
+            except Exception as e:
+                print ('ESPN get_t_num error: ', e)
+                #print (row)
+

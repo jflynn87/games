@@ -35,6 +35,17 @@ import collections
 
 
 start = datetime.now()
+#print (scrape_espn.ScrapeESPN(None, None, True).get_data())
+Tournament.objects.get(current=True).delete()
+populateField.create_groups('009')
+#names = scrape_espn.ScrapeESPN().get_t_num()
+
+#print (names)
+#print (scrape_espn.ScrapeESPN(None, None, True).get_data())
+
+
+exit()
+
 web = scrape_espn.ScrapeESPN(None, None, True).get_data()
 print (web)
 exit()

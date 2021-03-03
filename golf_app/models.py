@@ -62,6 +62,7 @@ class Tournament(models.Model):
     saved_round = models.IntegerField(null=True)
     saved_cut_round = models.IntegerField(null=True)
     ignore_name_mismatch = models.BooleanField(default=False)
+    espn_t_num = models.CharField(max_length=100, null=True, blank=True)
 
 
     #def get_queryset(self):t
