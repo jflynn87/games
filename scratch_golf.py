@@ -35,14 +35,18 @@ import collections
 
 
 start = datetime.now()
-#print (scrape_espn.ScrapeESPN(None, None, True).get_data())
-Tournament.objects.get(current=True).delete()
-populateField.create_groups('009')
-#names = scrape_espn.ScrapeESPN().get_t_num()
 
+#print (scrape_espn.ScrapeESPN(None, None, True).get_data())
+t = Tournament.objects.get(current=True)
+f = Field.objects.get(tournament=t, playerName='Victor Perez')
+Picks.objects.filter(playerName__tournament=t, playerName__playerName='Louis Oosthuizen').update(playerName=f)
+#print (t.started())
+#names = scrape_espn.ScrapeESPN().get_t_num(Season.objects.get(season='2020'))
 #print (names)
-#print (scrape_espn.ScrapeESPN(None, None, True).get_data())
-
+#sd  = scrape_espn.ScrapeESPN(None, None, True).get_data()
+#f = open('just_started', 'w')
+#f.write(json.dumps(sd))
+#f.close()
 
 exit()
 

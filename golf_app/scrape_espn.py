@@ -76,6 +76,7 @@ class ScrapeESPN(object):
                                         'complete': False,
                                         'round_status': status}
             
+            score_dict['info'].update({'source': 'espn'})
             playoff_sect = soup.find('div', {'class': 'leaderboard__playoff--table'})
             if playoff_sect == None:
                 playoff = False
@@ -174,7 +175,7 @@ class ScrapeESPN(object):
             cut_calc_start = datetime.now()
             try:
                 if score_dict.get('info').get('round_status') == 'Not Started' and score_dict.get('info').get('round') == 1 and self.tournament.has_cut:
-                    cut_num = 65
+                    cut_num = self.tournament.saved_cut_num
                 elif self.tournament.has_cut:
                     post_cut_wd = len([v for k,v in score_dict.items() if k!= 'info' and v.get('total_score') in self.tournament.not_playing_list() and \
                         v.get('r3') != '--'])
@@ -182,7 +183,7 @@ class ScrapeESPN(object):
                         #print ('no cut line exists')
                         #print (len([v for (k,v) in score_dict.items() if k != 'info' and v.get('total_score') == "CUT"]))
                     if len([v for (k,v) in score_dict.items() if k != 'info' and v.get('total_score') == "CUT"]) != 0:
-                        print ('cuts exists. inside if')
+                        print ('cuts exists, inside if')
                         
                         cut_num = len([v for (k,v) in score_dict.items() if k != 'info' and v.get('total_score') not in self.tournament.not_playing_list()]) \
                             + post_cut_wd +1
@@ -190,8 +191,11 @@ class ScrapeESPN(object):
                     else:
                         print ('no cuts in leaderboadr, in else')
                         cut_num = min(utils.formatRank(x.get('rank')) for k, x in score_dict.items() if k != 'info' and int(utils.formatRank(x.get('rank'))) > self.tournament.saved_cut_num) 
+                        print (cut_num)
                         if score_dict.get('cut_line') == None:
-                            cut_line = max(int(utils.score_as_int(v.get('total_score'))) for k, v in score_dict.items() if k != 'info' and int(utils.formatRank(v.get('rank'))) < cut_num)
+                            cut_line = max(int(utils.score_as_int(v.get('total_score'))) for k, v in score_dict.items() if k != 'info' and int(utils.formatRank(v.get('rank'))) < cut_num and \
+                                v.get('total_score') not in self.tournament.not_playing_list())
+                            print ('2 ', cut_line)
                             score_dict['info'].update({'cut_line': 'Projected Cut Line: ' + str(utils.format_score(cut_line))})
             
                 else:
@@ -264,27 +268,35 @@ class ScrapeESPN(object):
             print ('issue scraping espn', e)
             return {}   
         
-    def get_t_num(self):
-        
-        start = datetime.now()
+    def get_t_num(self, season=None):
+        '''takes either a season object or none.  returns a string '''
+        if season:
+            html = urllib.request.urlopen('https://www.espn.com/golf/schedule/_/season/' + season.season)
+            soup = BeautifulSoup(html, 'html.parser')
+            rows = soup.find_all('tr', {'class': 'Table__TR'})
+            for row in rows:
+                try:
+                    if row.find('div', {'class': 'eventAndLocation__innerCell'}):
+                        n = row.find('p').text
+                        match = utils.check_t_names(n, self.tournament)
+                        if match:
+                            if row.find('a'):
+                                print ('t match hyper link: ', row.find('a')['href'])
+                                return (row.find('a')['href'].split('=')[1])
+                            else:
+                                print ('no link available')
+                except Exception as e:
+                    print ('ESPN get_t_num error: ', e)
+                    print (row)
+                    return ('error' + str(e))
 
-        html = urllib.request.urlopen('https://www.espn.com/golf/schedule/_/season/2021')
-        soup = BeautifulSoup(html, 'html.parser')
-        rows = soup.find_all('tr', {'class': 'Table__TR'})
-        for row in rows:
-            try:
-                if row.find('div', {'class': 'eventAndLocation__innerCell'}):
-                    n = row.find('p').text
-                    match = utils.check_t_names(n, self.tournament)
-                    if match:
-                        if row.find('a'):
-                            print ('t match hyper link: ', row.find('a')['href'])
-                            print ('t name match duration: ', datetime.now() - start)
-                            return (row.find('a')['href'].split('=')[1])
-                        else:
-                            print ('t name no match duration: ', datetime.now() - start)
-                            print ('no link available')
-            except Exception as e:
-                print ('ESPN get_t_num error: ', e)
-                #print (row)
+        else:
+            html = urllib.request.urlopen(self.url)
+            soup = BeautifulSoup(html, 'html.parser')
+            t = soup.find('select', {'class': 'dropdown__select'})
+            print (t.find('option').get('data-url').split('/')[5])
+            return t.find('option').get('data-url').split('/')[5]
+
+        return ('no link available')
+
 

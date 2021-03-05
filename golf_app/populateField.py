@@ -118,6 +118,7 @@ def get_field(tournament_number):
     tourny.saved_cut_num = 65
     tourny.saved_round = 1
     tourny.saved_cut_round = 2
+    tourny.espn_t_num = scrape_espn.ScrapeESPN().get_t_num()
     tourny.save()
 
     #sd = ScoreDict ()
@@ -239,6 +240,8 @@ def create_groups(tournament_number):
     print ('c')
     tournament = Tournament.objects.get(current=True, season=season)
     print ('d')
+
+    prior_year_sd(tournament)
 
     print (len(field))
 
@@ -418,38 +421,6 @@ if __name__ == '__main__':
 
     print ("Populating Complete!")
 
-
-# def fix_name(player, owgr_rankings):
-#     print ('trying to fix name: ', player)
-#     print (owgr_rankings.get(player))
-#     if owgr_rankings.get(player) != None:
-#         return (owgr_rankings.get(player))
-
-#     print (player.replace(',', '').split(' '))
-#     for k, v in owgr_rankings.items():
-#         owgr_name = k.replace(',', '').split(' ')
-#         pga_name = player.replace(',', '').split(' ')
-#         #print (owgr_name, pga_name)
-        
-#         if unidecode.unidecode(owgr_name[len(owgr_name)-1]) == unidecode.unidecode(pga_name[len(pga_name)-1]) \
-#            and k[0:1] == player[0:1]:
-#             print ('last name, first initial match', player)
-#             return k, v
-#         elif unidecode.unidecode(owgr_name[len(owgr_name)-2]) == unidecode.unidecode(pga_name[len(pga_name)-1]) \
-#             and k[0:1] == player[0:1]:
-#             print ('last name, first initial match, cut owgr suffix', player)
-#             return k, v
-#         elif len(owgr_name) == 3 and len(pga_name) == 3 and unidecode.unidecode(owgr_name[len(owgr_name)-2]) == unidecode.unidecode(pga_name[len(pga_name)-2]) \
-#             and unidecode.unidecode(owgr_name[0]) == unidecode.unidecode(pga_name[0]):
-#             print ('last name, first name, cut both suffix', player)
-#             return k, v
-#         elif unidecode.unidecode(owgr_name[0]) == unidecode.unidecode(pga_name[len(pga_name)-1]) \
-#             and unidecode.unidecode(owgr_name[len(owgr_name)-1]) == unidecode.unidecode(pga_name[0]):
-#             print ('names reversed', player)
-#             return k, v
-#     print ('didnt find match', pga_name)
-#     return None, [9999, 9999, 9999]
-
     
 def get_espn_num(player, espn_data):
     if espn_data.get(player):
@@ -472,3 +443,15 @@ def get_espn_players():
     espn_data = scrape_espn.ScrapeESPN(None, None, True).get_data()
     #print (espn_field)
     return espn_data
+
+def prior_year_sd(t):
+    '''takes a tournament and returns nothing'''
+    prior_season = Season.objects.get(season=t.season.season-1)
+    try:
+        if Tournament.objects.get(pga_tournament_num=t.pga_tournament_num, season=prior_season).exists():
+            sd = ScoreDict.objects.get(tournament=Tournament.objects.get(pga_tournament_num=t.pga_tournament_num, season=prior_season))
+            if len(sd.data) == 0:
+                espn_t_num = scrape_espn.ScrapeESPN().get_t_num(prior_season)
+    except Exception as e:
+        print ('prior year exemption')
+        

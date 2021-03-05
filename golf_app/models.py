@@ -91,7 +91,7 @@ class Tournament(models.Model):
             from golf_app import scrape_espn
             #scores = pga_score.PGAScore(self.pga_tournament_num)
             scores = scrape_espn.ScrapeESPN().get_data()
-            print ('started check info', scores.get('info').get('round'), scores.get('info').get('round_status'))
+            print ('started check info', scores.get('info'))
             if scores.get('info').get('round') == "1" and scores.get('info').get('round_status') == 'Not Started':
                 return False
             elif scores.get('info').get('round') == 1 and \
