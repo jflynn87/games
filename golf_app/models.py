@@ -466,9 +466,10 @@ class Field(models.Model):
             last_season = str(int(self.tournament.season.season)-2)
             t = Tournament.objects.get(pga_tournament_num=self.tournament.pga_tournament_num, season__season=last_season)
         
-        sd = ScoreDict.objects.get(tournament=t)
+        #sd = ScoreDict.objects.get(tournament=t)
 
         try:
+            sd = ScoreDict.objects.get(tournament=t)
             return [v.get('rank') for k, v in sd.data.items() if k !='info' and v.get('pga_num') in [self.golfer.espn_number, self.golfer.golfer_pga_num]][0]
         except Exception as e:
             #print ('prior_year_exception', self, e)

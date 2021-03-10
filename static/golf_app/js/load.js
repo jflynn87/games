@@ -372,13 +372,15 @@ function update_picks(info, optimal_data, total_data) {
       $('#tt-' + pick + '[data-toggle="tooltip"]').tooltip({trigger:"hover",
                                             delay:{"show":400,"hide":800}, "title": 'gross score: ' + $(this)[0]['gross_score']
                                             }) 
+
+      $('#' + p + $(this)[0]['pga_num']).removeClass()
       if (not_playing.indexOf($(this)[0]['today_score']) != -1) {$('#' + p + stats[index]['pga_num']).addClass('cut')}                                            
       //if ($(this)[0]['today_score'] == 'CUT') {$('#' + p + $(this)[0]['pga_num']).addClass('cut')}
     
     //use 0 of the index to strip the extra chars in multi pick groups.  Need to fix for tournaments with 10 groups.
     //console.log($(this)[0]['pick'], optimal_data[index], info[10])
-    
-    $(this)[0]['pga_num'].replace(filler, '').toggleClass()
+
+
     if (info[10] == 1) {if ($.inArray($(this)[0]['pga_num'], Object.keys(optimal_data[index]['golfer'])) !== -1) {$('#' + p + $(this)[0]['pga_num'].replace(filler, '')).addClass('best')} }
     else {
     if ($.inArray($(this)[0]['pga_num'], Object.keys(optimal_data[index[0]]['golfer'])) !== -1) {$('#' + p + $(this)[0]['pga_num'].replace(filler, '')).addClass('best')} 

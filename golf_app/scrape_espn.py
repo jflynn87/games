@@ -9,7 +9,7 @@ from golf_app.models import Tournament, Field, Golfer, ScoreDict
 
 class ScrapeESPN(object):
 
-    def __init__(self, tournament=None, url=None, ignore_name_mismatch=False):
+    def __init__(self, tournament=None, url=None, setup=False, ignore_name_mismatch=False):
         if not tournament:
             self.tournament = Tournament.objects.get(current=True)
         else:
@@ -23,11 +23,15 @@ class ScrapeESPN(object):
 
         self.ignore_name_mismatch = ignore_name_mismatch
 
+        self.setup = setup
+
     def get_data(self):
         print ('scraping golf espn com')
         
         sd, created = ScoreDict.objects.get_or_create(tournament=self.tournament)
-        if not created and (sd.updated + timedelta(minutes = 1)) > datetime.utcnow().replace(tzinfo=pytz.utc):
+        if self.setup:
+            print ('set up mode, scraping')
+        elif not created and (sd.updated + timedelta(minutes = 1)) > datetime.utcnow().replace(tzinfo=pytz.utc):
             print ('returning saved score dict ', 'sd saved time: ', sd.updated, 'current time: ', datetime.utcnow().replace(tzinfo=pytz.utc))
             return sd.data
  

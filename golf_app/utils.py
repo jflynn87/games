@@ -103,12 +103,10 @@ def fix_name(player, owgr_rankings):
 
 def check_t_names(espn_t, t):
     '''Takes a string and a tournament object and returns a bool'''
-    
-    start = datetime.now()
-    espn_name = espn_t.split(' ')
-    pga_name = t.name.split(' ')
-    #print ('espn name: ', espn_name)
-    #print ('pga name: ', pga_name)
+    espn_name = espn_t.lower().split(' ')
+    pga_name = t.name.lower().split(' ')
+    print ('espn name: ', espn_name)
+    print ('pga name: ', pga_name)
     matches = len([x for x in pga_name if x in espn_name])
     if matches < len(pga_name)/2:
         #print ('t name mismatch', espn_t, t.name)

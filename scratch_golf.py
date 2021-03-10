@@ -38,8 +38,11 @@ start = datetime.now()
 
 #print (scrape_espn.ScrapeESPN(None, None, True).get_data())
 t = Tournament.objects.get(current=True)
-f = Field.objects.get(tournament=t, playerName='Victor Perez')
-Picks.objects.filter(playerName__tournament=t, playerName__playerName='Louis Oosthuizen').update(playerName=f)
+sd = populateField.prior_year_sd(t)
+print ({k:v for k,v in sd.items() if v.get('rank') == str(1)})
+
+#f = Field.objects.get(tournament=t, playerName='Justin Rose')
+#Picks.objects.filter(playerName__tournament=t, playerName__playerName='Victor Perez').update(playerName=f)
 #print (t.started())
 #names = scrape_espn.ScrapeESPN().get_t_num(Season.objects.get(season='2020'))
 #print (names)
@@ -47,6 +50,7 @@ Picks.objects.filter(playerName__tournament=t, playerName__playerName='Louis Oos
 #f = open('just_started', 'w')
 #f.write(json.dumps(sd))
 #f.close()
+print (datetime.now() - start)
 
 exit()
 

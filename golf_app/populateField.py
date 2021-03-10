@@ -49,7 +49,7 @@ def get_pga_worldrank():
 
     print ('end pga.com worldrank lookup')
     #print ('pga ranks', ranks)
-    print ('pga ranks', ranks.get('Adam scott'))
+    
     return ranks
 
 
@@ -118,7 +118,7 @@ def get_field(tournament_number):
     tourny.saved_cut_num = 65
     tourny.saved_round = 1
     tourny.saved_cut_round = 2
-    tourny.espn_t_num = scrape_espn.ScrapeESPN().get_t_num()
+    tourny.espn_t_num = scrape_espn.ScrapeESPN(tourny).get_t_num()
     tourny.save()
 
     #sd = ScoreDict ()
@@ -249,7 +249,7 @@ def create_groups(tournament_number):
     name_switch = False
     name_issues = []
     for player in field:
-        print (player)
+        #print (player)
         if Name.objects.filter(PGA_name=player).exists():
             name_switch = True
             name = Name.objects.get(PGA_name=player)
@@ -362,7 +362,7 @@ def get_flag(golfer, golfer_data, espn_data):
 
     if golfer_obj.espn_number in [' ', None]:
         espn_number = get_espn_num(golfer, espn_data)
-        print ('get flag espn num', golfer)
+        #print ('get flag espn num', golfer)
         #try:
         if espn_number[1].get('pga_num'):
             print ('inside if on espn num', espn_number[1])
@@ -440,18 +440,31 @@ def get_espn_num(player, espn_data):
 
 def get_espn_players():
     #espn_data = scrape_espn.ScrapeESPN().get_espn_players()
-    espn_data = scrape_espn.ScrapeESPN(None, None, True).get_data()
-    #print (espn_field)
+    espn_data = scrape_espn.ScrapeESPN(None, None, True, True).get_data()
     return espn_data
 
 def prior_year_sd(t):
     '''takes a tournament and returns nothing'''
-    prior_season = Season.objects.get(season=t.season.season-1)
     try:
-        if Tournament.objects.get(pga_tournament_num=t.pga_tournament_num, season=prior_season).exists():
-            sd = ScoreDict.objects.get(tournament=Tournament.objects.get(pga_tournament_num=t.pga_tournament_num, season=prior_season))
-            if len(sd.data) == 0:
-                espn_t_num = scrape_espn.ScrapeESPN().get_t_num(prior_season)
+        prior_season = Season.objects.get(season=int(t.season.season)-1)
+        prior_t = Tournament.objects.get(pga_tournament_num=t.pga_tournament_num, season=prior_season)
     except Exception as e:
-        print ('prior year exemption')
-        
+        print ('no prior tournament, getting 2 years ago', e)
+        try:
+            prior_season = Season.objects.get(season=int(t.season.season)-2)
+            prior_t = Tournament.objects.get(pga_tournament_num=t.pga_tournament_num, season=prior_season)
+        except Exception as f:
+            print ('no prior 2 years ago, returning nothing', f)
+            return {}
+
+    print ('proir T: ', prior_t, prior_t.season)
+    sd, created = ScoreDict.objects.get_or_create(tournament=prior_t)
+    if (not created and (not sd.data or len(sd.data) == 0)) or created:
+        espn_t_num = scrape_espn.ScrapeESPN().get_t_num(prior_season)
+        url = "https://www.espn.com/golf/leaderboard?tournamentId=" + espn_t_num
+        score_dict = scrape_espn.ScrapeESPN(prior_t,url, True, True).get_data()
+        sd.data = score_dict
+        sd.save()
+    return sd.data
+                
+
