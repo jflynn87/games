@@ -128,12 +128,6 @@ class Score(object):
         if self.tournament.complete:
             return
 
-
-        #move this to the end and use the indicator in the score_dict
-        #if not self.tournament.complete and self.score_dict.get('info').get('round')  == 'Final':
-            #self.tournament.complete = True
-            #self.tournament.save()
-
         cut_num = self.score_dict.get('info').get('cut_num')
         print ('after cut num', datetime.now() - start)
         if optimal_picks == None:
@@ -172,13 +166,13 @@ class Score(object):
                 if ScoreDetails.objects.filter(pick__playerName__tournament=self.tournament, pick__playerName__golfer__espn_number=pick.playerName.golfer.espn_number) \
                         .exclude(gross_score=utils.formatRank(data.get('rank')), thru=data.get('thru'), toPar=data.get('total_score')).count() == 0:
                             print ('skipping no change', pick.playerName, datetime.now() - pick_loop_start)
-                            self.pick_bonuses(sd, pick, optimal_picks)
+                            self.pick_bonuses(sd, pick, optimal_picks, data)
                             continue
                
                 print ('thru skip checks')
                 if data.get('rank') == "CUT":
                     score = cut_num
-                elif data.get('rank') == "WD":
+                elif data.get('rank') in ["WD", "DQ"]:
                     #score = cut_num
                     score = self.get_wd_score(pick) 
                 else:
@@ -528,7 +522,7 @@ class Score(object):
                         or (sd.today_score in self.not_playing_list and self.score_dict.get('info').get('round') > self.tournament.saved_cut_round): 
                             print ('skipping no change', pick.playerName, datetime.now() - pick_loop_start)
                             if self.score_dict.get('info').get('complete'):
-                                self.pick_bonuses(sd, pick, optimal_picks)
+                                self.pick_bonuses(sd, pick, optimal_picks, data)
                             continue
                 
                 print ('thru skip checks')
@@ -585,7 +579,7 @@ class Score(object):
                                             thru=sd.thru,
                                             toPar=sd.toPar
                                             )
-            self.pick_bonuses(sd, pick, optimal_picks)
+            self.pick_bonuses(sd, pick, optimal_picks,data)
             print ('pick loop: ', pick.playerName, ' ', Picks.objects.filter(playerName__pk=p.get('playerName')).count(), ' ', datetime.now() - pick_loop_start)
         ## end of bulk update section
         if self.score_dict.get('info').get('complete') == True:

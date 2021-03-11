@@ -17,7 +17,6 @@ class ScrapeESPN(object):
         
         if not url:
             self.url = "https://www.espn.com/golf/leaderboard"
-            #self.url = 'https://www.espn.com/golf/leaderboard?tournamentId=401243000'
         else:
             self.url = url
 
@@ -38,7 +37,6 @@ class ScrapeESPN(object):
         try:
             score_dict = {}
 
-            #html = urllib.request.urlopen("https://www.espn.com/golf/leaderboard")
             html = urllib.request.urlopen(self.url)
             soup = BeautifulSoup(html, 'html.parser')
             
@@ -47,7 +45,7 @@ class ScrapeESPN(object):
             status = soup.find('div', {'class', 'status'}).span.text
             t_name = soup.find('h1', {'class', 'Leaderboard__Event__Title'}).text
             start = datetime.now()
-            print ('start: ', start)
+            
             if t_name != self.tournament.name and not self.tournament.ignore_name_mismatch and not self.ignore_name_mismatch:
                 match = utils.check_t_names(t_name, self.tournament)
                 if not match:
@@ -222,6 +220,7 @@ class ScrapeESPN(object):
             
             sd.data = score_dict
             sd.save()
+            print ('espn scrape duration: ', datetime.now() - start)
             return score_dict
 
 
@@ -230,13 +229,13 @@ class ScrapeESPN(object):
             return {}   
 
     def get_espn_players(self):
+        '''note that some espn numbers are out of date on this link'''
         print ('scraping golf espn players')
 
         try:
             player_dict = {}
 
             html = urllib.request.urlopen("http://www.espn.com/golf/players")
-            #html = urllib.request.urlopen(self.url)
             soup = BeautifulSoup(html, 'html.parser')
             
             player_table = soup.find('div', {'id': 'my-players-table'})
@@ -249,22 +248,7 @@ class ScrapeESPN(object):
                     player_dict[name]= {'espn_num': td[0].a['href'].split('/')[7]}
                 except Exception as e:
                     pass
-                #print (row.a)
-                #score_dict[row.a.text] = {
-                #                    'espn_num': row.a['href'].split('/')[7],
-                #                    'pos': td[0].text,
-                #                    'score': td[2].text,
-                #                    'r1': td[3].text,
-                #                    'r2': td[4].text,
-                #                    'r3': td[5].text,
-                #                    'r4': td[6].text,
-                #                    'tot': td[7].text,
-                #}
-                
 
-                            
-#                score_dict[player_name] = {'rank': pos, 'total_score': to_par, 'thru': thru, 'round_score': today, 'r1': r1, 'r2':r2, 'r3': r3, 'r4': r4, 'total_strokes': total_strokes, 'change': ' ', 
-#                                                    'cbs_player_num': player_num
             return player_dict
 
 

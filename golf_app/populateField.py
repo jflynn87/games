@@ -439,7 +439,6 @@ def get_espn_num(player, espn_data):
     return
 
 def get_espn_players():
-    #espn_data = scrape_espn.ScrapeESPN().get_espn_players()
     espn_data = scrape_espn.ScrapeESPN(None, None, True, True).get_data()
     return espn_data
 

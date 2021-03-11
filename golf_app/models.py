@@ -73,6 +73,7 @@ class Tournament(models.Model):
 
     def started(self):
         print ('starting started check', datetime.now())
+        start = datetime.now()
         if self.set_started:
             print ('overrode to started')
             return True
@@ -84,25 +85,27 @@ class Tournament(models.Model):
                     Q(thru=None) | Q(thru__in=["not started", " ", "", '--']) | \
                     Q(today_score='WD')).exclude(gross_score=self.saved_cut_num).exists():
             print (self, 'tournament started based on picks lookup')
-            print ('finishing started check', datetime.now())
+            print ('finishing started check A: ', datetime.now() - start)
             return True
 
         try:
             from golf_app import scrape_espn
-            #scores = pga_score.PGAScore(self.pga_tournament_num)
             scores = scrape_espn.ScrapeESPN().get_data()
             print ('started check info', scores.get('info'))
             if scores.get('info').get('round') == "1" and scores.get('info').get('round_status') == 'Not Started':
+                print ('finishing started check B: ', datetime.now() - start)
                 return False
             elif scores.get('info').get('round') == 1 and \
                 len([v for k, v in scores.items() if v.get('round_score') not in ['--', '-', None]]) == 0:
+                print ('finishing started check C: ', datetime.now() - start)
                 return False      
             elif scores.get('info').get('round') == 1 and \
                 len([v for k, v in scores.items() if v.get('round_score') not in ['--', '-', None]]) > 0:
+                print ('finishing started check D: ', datetime.now() - start)
                 return True      
             elif int(scores.get('info').get('round')) > 1:
                 print ('******* round above 1')
-                print ('finishing started check', datetime.now())
+                print ('finishing started check E: ', datetime.now()- start)
                 return True
             else:
                 print ('started check in model falling to else, check why')

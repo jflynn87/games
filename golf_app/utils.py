@@ -25,17 +25,13 @@ def score_as_int(score):
 
 def formatRank(rank, tournament=None):
     from golf_app.models import Tournament
-    '''takes in a sting and returns a string formatted for the right display or calc.  '''
+    '''takes in a sting and returns an int'''
     
     t = Tournament.objects.get(current=True)
     
-    #if rank in t.not_playing_list():
-    #    return 999
-    #print (type(rank), rank)
     if type(rank) is int:
         return rank
     elif rank in  ['', '--', '-', None] or rank in t.not_playing_list():
-       #return 999
        if t == None:
            return 999
        else:
@@ -94,8 +90,6 @@ def fix_name(player, owgr_rankings):
             and unidecode.unidecode(owgr_name[len(owgr_name)-1]) == unidecode.unidecode(pga_name[0]):
             print ('names reversed', player)
             return k, v
-        
-        
 
     print ('didnt find match', player)
     return None, [9999, 9999, 9999]
@@ -109,10 +103,7 @@ def check_t_names(espn_t, t):
     print ('pga name: ', pga_name)
     matches = len([x for x in pga_name if x in espn_name])
     if matches < len(pga_name)/2:
-        #print ('t name mismatch', espn_t, t.name)
-        #print ('time to t name mismatch: ', datetime.now() - start)
         return False
     else:
-        #print ('time to t name match: ', datetime.now() - start)
         return True
 
