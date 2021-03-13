@@ -216,7 +216,7 @@ function get_picks(info, optimal_data, total_data) {
       $('#totals' + p ).append('<td id=' + p + stats[index]['pga_num'] +  '>' + '<span class=watermark>' + 
     '<p>' + p.substring(0, 4)  + ' : ' + index +  '</p>'  + '</span>' + '<p>' +  $(this)[0]['pick']  + '</p>' + '<p>' + $(this)[0]['score'] +
     '<span > <a id=tt-' + pick + ' href="#" data-toggle="tooltip" > <i class="fa fa-info-circle"></i> </a> </span>' +
-     '</p>' +  toPar +  '   ' +  format_move($(this)[0]['sod_position']) +  $(this)[0]['sod_position'].replace(filler, '') + '</p>' +  '</td>')
+     '</p>' +  toPar + ' (' + $(this)[0]['thru'] + ')' +  '   ' +  format_move($(this)[0]['sod_position']) +  $(this)[0]['sod_position'].replace(filler, '') + '</p>' +  '</td>')
      //console.log($('#tt-' + $(this)[0]['pick'].replace(/ +?/g, '').replace(/\./g,'') + '[data-toggle="tooltip"]'))
       $('#tt-' + pick + '[data-toggle="tooltip"]').tooltip({trigger:"hover",
                                             delay:{"show":400,"hide":800}, "title": 'gross score: ' + $(this)[0]['gross_score']
@@ -364,10 +364,10 @@ function update_picks(info, optimal_data, total_data) {
         toPar = "E"
       }
       else {toPar = $(this)[0]['toPar']} 
-
+      
       $('#' + player + stats[index]['pga_num'] ).html('<span class=watermark> <p>' + p.substring(0, 4)  + ' : ' + index +  '</p>'  + '</span>' + '<p>' +  $(this)[0]['pick']  + '</p>' + '<p>' + $(this)[0]['score'] +
     '<span > <a id=tt-' + pick + ' href="#" data-toggle="tooltip" > <i class="fa fa-info-circle"></i> </a> </span>' +
-     '</p>' +  toPar +  '   ' +  format_move($(this)[0]['sod_position']) +  $(this)[0]['sod_position'].replace(filler, '') + '</p>' )
+     '</p>' +  toPar + ' (' + $(this)[0]['thru'] + ')' +  '   ' +  format_move($(this)[0]['sod_position']) +  $(this)[0]['sod_position'].replace(filler, '') + '</p>' )
      //console.log($('#tt-' + $(this)[0]['pick'].replace(/ +?/g, '').replace(/\./g,'') + '[data-toggle="tooltip"]'))
       $('#tt-' + pick + '[data-toggle="tooltip"]').tooltip({trigger:"hover",
                                             delay:{"show":400,"hide":800}, "title": 'gross score: ' + $(this)[0]['gross_score']

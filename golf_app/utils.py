@@ -17,9 +17,11 @@ def score_as_int(score):
         return score
     elif score == "E":
         return 0
-    else:
-        #print ('uitils score as int unknownn value: ', score)
+    elif len(score) > 1 and score[0] in ['+', '-']:
         return score
+    else:
+        print ('uitils score as int cant resolve ', score)
+        return 999
 
 
 

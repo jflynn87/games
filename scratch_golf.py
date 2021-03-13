@@ -38,8 +38,8 @@ start = datetime.now()
 
 #print (scrape_espn.ScrapeESPN(None, None, True).get_data())
 t = Tournament.objects.get(current=True)
-sd = populateField.prior_year_sd(t)
-print ({k:v for k,v in sd.items() if v.get('rank') == str(1)})
+#sd = populateField.prior_year_sd(t)
+#print ({k:v for k,v in sd.items() if v.get('rank') == str(1)})
 
 #f = Field.objects.get(tournament=t, playerName='Justin Rose')
 #Picks.objects.filter(playerName__tournament=t, playerName__playerName='Victor Perez').update(playerName=f)
@@ -50,12 +50,18 @@ print ({k:v for k,v in sd.items() if v.get('rank') == str(1)})
 #f = open('just_started', 'w')
 #f.write(json.dumps(sd))
 #f.close()
-print (datetime.now() - start)
 
-exit()
+web = scrape_espn.ScrapeESPN(None, None, True, False).get_data()
+scores = manual_score.Score(web, t)
+#print (web)
+for g in Group.objects.filter(tournament=t):
+    print ('grp ', g.number, ' ', scores.worst_picks(g.number))
 
-web = scrape_espn.ScrapeESPN(None, None, True).get_data()
-print (web)
+print ('By score:')
+for g in Group.objects.filter(tournament=t):
+    print ('grp ', g.number, ' ', scores.worst_picks_score(g.number))
+
+
 exit()
 #avs = update_favs.UpdateFavs().scrape() 
 t = Tournament.objects.get(current=True)

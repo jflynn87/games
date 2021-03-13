@@ -455,6 +455,27 @@ class Score(object):
         return best_list, best_score, cuts
 
 
+    def worst_picks(self, group):
+        '''takes an int group number, returns the worsr pick data as a tuple, including a dict of player name and numbers'''
+        print ('worst picks calc: ', group)
+        worst_score = max(utils.formatRank(x.get('rank')) - x.get('handicap') for k, x in self.score_dict.items() if k != 'info' and x.get('group') == group) 
+        worst_list = {v['pga_num']:k for (k,v) in self.score_dict.items() if v.get('group') == group and utils.formatRank(v.get('rank')) - v.get('handicap') == worst_score}
+        #cuts = len([v for v in self.score_dict.values() if v.get('group') == group and v.get('rank') in self.not_playing_list])
+        print ('worst: ', worst_list, worst_score)
+        return worst_list, worst_score
+
+
+    def worst_picks_score(self, group):
+        '''takes an int group number, returns the worsr pick data as a tuple, including a dict of player name and numbers'''
+        print ('worst picks calc: ', group)
+        worst_score = max(int(utils.score_as_int(x.get('total_score'))) for k, x in self.score_dict.items() if k != 'info' and x.get('group') == group)
+            
+        worst_list = {v['pga_num']:k for (k,v) in self.score_dict.items() if v.get('group') == group and int(utils.score_as_int(v.get('total_score'))) == worst_score}
+        #cuts = len([v for v in self.score_dict.values() if v.get('group') == group and v.get('rank') in self.not_playing_list])
+        print ('worst: ', worst_list, worst_score)
+        return worst_list, worst_score
+
+
     def best_in_group(self, pick, optimal_picks):
         '''takes a pick object and optimal_picks dict, updates bd and returns nothing'''
         start = datetime.now()

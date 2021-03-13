@@ -195,6 +195,7 @@ class ScrapeESPN(object):
                         cut_num = min(utils.formatRank(x.get('rank')) for k, x in score_dict.items() if k != 'info' and int(utils.formatRank(x.get('rank'))) > self.tournament.saved_cut_num) 
                         print (cut_num)
                         if score_dict.get('cut_line') == None:
+                            print ('in cut line none')
                             cut_line = max(int(utils.score_as_int(v.get('total_score'))) for k, v in score_dict.items() if k != 'info' and int(utils.formatRank(v.get('rank'))) < cut_num and \
                                 v.get('total_score') not in self.tournament.not_playing_list())
                             print ('2 ', cut_line)
