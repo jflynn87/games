@@ -240,7 +240,7 @@ class Score(object):
         if self.score_dict.get('info').get('complete') == True:
             self.tournament.complete = True
 
-        self.tournament.score_update_time = datetime.now(tz=timezone.utc)  
+        self.tournament.score_update_time = datetime.now(tz=timezone.utc) 
         self.tournament.save()
             
         print ('score loop duration', datetime.now() - loop_start)
@@ -468,9 +468,14 @@ class Score(object):
     def worst_picks_score(self, group):
         '''takes an int group number, returns the worsr pick data as a tuple, including a dict of player name and numbers'''
         print ('worst picks calc: ', group)
-        worst_score = max(int(utils.score_as_int(x.get('total_score'))) for k, x in self.score_dict.items() if k != 'info' and x.get('group') == group)
+        dnp = ['-', '--']
+        pre_cut_wd = {v['pga_num']:k for k, v in self.score_dict.items() if k != 'info' and v.get('group') == group and v.get('total_score') in ['WD', 'DQ'] and v.get('r3') in dnp}
+        print ('pre cut', pre_cut_wd)
+        if pre_cut_wd:
+            return pre_cut_wd, None
+        worst_score = max(x.get('tot_strokes') for k, x in self.score_dict.items() if k != 'info' and x.get('group') == group and x.get('total_score') in self.tournament.not_playing_list())
             
-        worst_list = {v['pga_num']:k for (k,v) in self.score_dict.items() if v.get('group') == group and int(utils.score_as_int(v.get('total_score'))) == worst_score}
+        worst_list = {v['pga_num']:k for (k,v) in self.score_dict.items() if v.get('group') == group and v.get('tot_strokes') == worst_score}
         #cuts = len([v for v in self.score_dict.values() if v.get('group') == group and v.get('rank') in self.not_playing_list])
         print ('worst: ', worst_list, worst_score)
         return worst_list, worst_score

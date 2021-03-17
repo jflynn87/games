@@ -12,13 +12,20 @@ def format_score(score):
     else:
         return score
 
-def score_as_int(score):
+def score_as_int(score, t=None, sd=None):
+    '''takes a string or int and optional tournament object and score dict.  returns an int.  Returns 999 if any issues'''
     if score is int:
         return score
     elif score == "E":
         return 0
     elif len(score) > 1 and score[0] in ['+', '-']:
         return score
+    elif t and score in t.not_playing_list():
+        try:
+            return int(sd.get('info').get('cut_num'))
+        except Exception as e:
+            print ('score as int sd lookup exception', t, sd, e)
+            return 999
     else:
         print ('uitils score as int cant resolve ', score)
         return 999
@@ -104,8 +111,11 @@ def check_t_names(espn_t, t):
     print ('espn name: ', espn_name)
     print ('pga name: ', pga_name)
     matches = len([x for x in pga_name if x in espn_name])
-    if matches < len(pga_name)/2:
-        return False
-    else:
+    if len(pga_name) < 4 and espn_name == pga_name:
         return True
+    elif len(pga_name) > 3 and matches > len(pga_name)/2:
+        return True
+    else:
+        #return True
+        return False
 

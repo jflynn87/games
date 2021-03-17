@@ -3,7 +3,7 @@ from django.views.generic import View, TemplateView, ListView, DetailView, Creat
 from golf_app.models import Field, Tournament, Picks, Group, TotalScore, ScoreDetails, \
            mpScores, BonusDetails, PickMethod, PGAWebScores, ScoreDict, UserProfile, \
            Season
-from golf_app.forms import  CreateManualScoresForm
+from golf_app.forms import  CreateManualScoresForm, UpdateFieldForm
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponseRedirect, HttpResponse, Http404
 from django.contrib.auth import authenticate, login, logout
@@ -494,8 +494,8 @@ class NewScoresView(LoginRequiredMixin,ListView):
            user_dict = {}
            for user in Picks.objects.filter(playerName__tournament=tournament).values('user__username').annotate(Count('playerName')):
                user_dict[user.get('user__username')]=user.get('playerName__count')
-               if tournament.pga_tournament_num == '470': #special logic for match player
-                  scores = (None, None, None, None,None)
+               #if tournament.pga_tournament_num == '470': #special logic for match player
+               #   scores = (None, None, None, None,None)
                #else:  scores=calc_score.calc_score(self.kwargs, request)
            self.template_name = 'golf_app/pre_start.html'
 
@@ -1002,3 +1002,32 @@ class RecentFormAPI(APIView):
                 
         #return JsonResponse(data, status=200)
         return JsonResponse(data, status=200)
+
+class UpdateFieldView(LoginRequiredMixin,TemplateView):
+    login_url = 'login'
+    template_name = 'golf_app/update_field.html'
+    #queryset = Field.objects.filter(tournament=Tournament.objects.get(current=True)) 
+
+    def get_context_data(self, **kwargs):
+        context = super(UpdateFieldView, self).get_context_data(**kwargs)
+        t = Tournament.objects.get(current=True)
+        form = UpdateFieldForm(t)
+        context.update({
+            't': t,
+           # 'groups': Group.objects.filter(tournament=t),
+            'field': Field.objects.filter(tournament=t).order_by('group__number'),
+            'form': form,
+        })
+        return context
+
+    #def post(self, request):
+    #    print ('inside post add logic')
+
+
+class RecentFormAPI(APIView):
+    pass
+    # def get(self, request, t):
+    #     try:
+    #         data = {}
+
+            

@@ -37,7 +37,40 @@ import collections
 start = datetime.now()
 
 #print (scrape_espn.ScrapeESPN(None, None, True).get_data())
+#t = Tournament.objects.get(pk=24) #Match Play
 t = Tournament.objects.get(current=True)
+p_sd = populateField.prior_year_sd(t)
+four =  {k:4 for k,v in p_sd.items() if v.get('rank') in [4, '4', 'T4']}
+print (four)
+exit()
+
+print (Field.objects.filter(tournament=t).count())    
+print (Group.objects.filter(tournament=t).count())
+
+for g in Group.objects.filter(tournament=t):
+    print ('Group: ', g.number)
+    for f in Field.objects.filter(group=g):
+        print (f, f.currentWGR)
+
+
+#for sd in ScoreDetails.objects.filter(pick__playerName__tournament=t).order_by('score'):
+#    print (sd)
+
+
+url = 'https://www.espn.com/golf/leaderboard?tournamentId=401056524'
+html = urllib.request.urlopen(url)
+soup = BeautifulSoup(html, 'html.parser')
+            
+leaderboard = soup.find('div', {'class': 'MatchPlay__Group'})
+groups = leaderboard.find_all('div', {'class': 'MatchPlay__Match'})
+#for g in groups:
+#    print (g)
+
+
+
+
+exit()
+
 #sd = populateField.prior_year_sd(t)
 #print ({k:v for k,v in sd.items() if v.get('rank') == str(1)})
 
@@ -51,11 +84,16 @@ t = Tournament.objects.get(current=True)
 #f.write(json.dumps(sd))
 #f.close()
 
-web = scrape_espn.ScrapeESPN(None, None, True, False).get_data()
-scores = manual_score.Score(web, t)
+#web = scrape_espn.ScrapeESPN(None, None, True, False).get_data()
+#scores = manual_score.Score(web, t)
+
+#sd = ScoreDict.objects.get(tournament=t)
+#scores = manual_score.Score(sd.data, t)
+
 #print (web)
-for g in Group.objects.filter(tournament=t):
-    print ('grp ', g.number, ' ', scores.worst_picks(g.number))
+# 
+# #for g in Group.objects.filter(tournament=t):
+#    print ('grp ', g.number, ' ', scores.worst_picks(g.number))
 
 print ('By score:')
 for g in Group.objects.filter(tournament=t):

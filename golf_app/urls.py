@@ -33,6 +33,7 @@ urlpatterns= [
     #path('get_prior_result/<int:pk>/<str:group>', views.PriorResultAPI.as_view(), name='get_prior_result'),
     path('get_prior_result/', views.PriorResultAPI.as_view(), name='get_prior_result'),
     path('recent_form/<str:player_num>/', views.RecentFormAPI.as_view(), name='recent_form'),
+    path('update_field/', views.UpdateFieldView.as_view(), name='update_field'),
 
     
 

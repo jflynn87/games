@@ -15,6 +15,17 @@ class CreateManualScoresForm(forms.ModelForm):
         model = Picks
         fields = ('playerName', 'score',)
 
+class UpdateFieldForm(forms.ModelForm):
+    def __init__(self, t, *args, **kwargs):
+        super(UpdateFieldForm, self).__init__(*args, **kwargs)
+        self.fields['group'].queryset = Group.objects.filter(tournament=t)
+        self.fields['group'].label = ''
+
+    class Meta:
+        model = Field    
+        fields = ('group', )
+
+UpdateFieldFormSet = modelformset_factory(Field, form=UpdateFieldForm)
 
 #class SinglePickGroupForm(forms.ModelForm):
 
