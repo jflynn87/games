@@ -37,11 +37,63 @@ import collections
 start = datetime.now()
 
 #print (scrape_espn.ScrapeESPN(None, None, True).get_data())
-#t = Tournament.objects.get(pk=24) #Match Play
-t = Tournament.objects.get(current=True)
-p_sd = populateField.prior_year_sd(t)
-four =  {k:4 for k,v in p_sd.items() if v.get('rank') in [4, '4', 'T4']}
-print (four)
+t = Tournament.objects.get(pk=24) #Match Play
+#t = Tournament.objects.get(current=True)
+#web = scrape_scores_picks.ScrapeScores(t, 'https://www.pgatour.com/competition/2019/wgc-dell-technologies-match-play/group-stage.html').mp_brackets()
+#print (web)
+
+sd = ScoreDict.objects.get(tournament=t)
+#sd.cbs_data = web
+#sd.save()
+bracket = sd.cbs_data
+#print (bracket.items())
+for f in Field.objects.filter(tournament=t):
+    #k = f.playerName.rstrip()
+    for k, v in bracket.items():
+        if k.split(' ')[1] == f.playerName.split(' ')[1]:
+            print (k, v)
+#print (populateField.get_field("470"))
+exit()
+
+
+
+sd = {}
+golfers = {}
+pick_per = ScoreDetails.objects.filter(pick__playerName__tournament=t).values('pick__playerName', 'score').annotate(Count('pick__playerName'))
+for g in Golfer.objects.all():
+    golfers[g.golfer_name] = {'espn_num': g.espn_number}
+
+#print ({k:v for k,v in golfers.items() if k.startswith('O')})
+for p in pick_per:
+    #print (Field.objects.get(pk=p.get('pick__playerName')), p.get('score'))
+    f = Field.objects.get(pk=p.get('pick__playerName'))
+    num = utils.fix_name(f.playerName.rstrip(), golfers)
+    try:
+        espn = num[1].get('espn_num')
+        score = p.get('score')
+    except Exception as e:
+        espn = ''
+        score = ''
+    
+    sd.update({f.playerName: {
+        'pga_num': espn,
+        'rank': score
+    }})
+
+print (sd)
+sd_o = ScoreDict()
+sd_o.tournament = t
+sd_o.data = sd
+sd_o.save()
+
+exit()
+
+
+
+scores = ScoreDict.objects.get(tournament=t)
+print (scores.data)
+c = len([v for k, v in scores.data.items() if v.get('round_score') not in ['--', '-', None]])
+print (c)
 exit()
 
 print (Field.objects.filter(tournament=t).count())    

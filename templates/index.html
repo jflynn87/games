@@ -96,6 +96,7 @@
       <a href="{% url 'golf_app:setup' %}"> <button class="btn btn-primary">Golf Setup</button></a>
       <a href="{% url 'port_app:add_position' %}"> <button class="btn btn-primary">Portfolio</button></a>
       <a href="{% url 'admin:index' %}"> <button class="btn btn-primary">Admin</button></a>
+      <a href="{% url 'golf_app:update_field'%}"> <button class="btn btn-primary">Update Field</button></a>
       
     {%endif%}
     <p hidden id='username'>{{request.user.username}}</p>

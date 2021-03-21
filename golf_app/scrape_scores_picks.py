@@ -202,6 +202,54 @@ class ScrapeScores(object):
             return (n, {'rank': rank, 'change': c, \
                 'thru': thru, 'round_score': round_score, 'total_score': total_score , 'r1': round_list[0], 'r2': round_list[1], 'r3': round_list[2], 'r4': round_list[3]})
 
-        
+    def mp_brackets(self):
+        try:
+            start = datetime.now()
+            bracket_dict = {}
+            options = ChromeOptions()
+            options.add_argument("--headless")
+            options.add_argument("--disable-gpu")
+
+            driver = Chrome(options=options)
+
+            print ('driver pre url: ', datetime.now() - start)
+            driver.get(self.url)
+            print ('driver after url: ', datetime.now() - start)
+
+            soup = BeautifulSoup(driver.page_source, 'html.parser')
+            print ('MP driver after soup: ', datetime.now() - start)
+            first_group = (soup.find("div", {'id':'firstGroupContainer'}))
+            other_groups = (soup.find("div", {'id':'fromSecondToTheLastGroupContainer'}))
+
+            g_num = first_group.find('div', {'class': 'group-section-title'})
+            print (g_num.text)
+            
+            golfer_rows = first_group.find_all('tr', {'class': 't-row'})
+            golfer_list = []
+            for r in golfer_rows[1:]:
+                #golfer_list.append(r.find('span', {'class': 'name'}).text)
+                #print (r.find('span', {'class': 'name'}).text)
+                bracket_dict[r.find('span', {'class': 'name'}).text] = g_num.text
+
+            for g in other_groups.find_all('div', {'class': 'group-stage-section'}):
+                g_num = g.find('div', {'class': 'group-section-title'})
+                print (g_num.text)
+                #golfer_list = []
+                golfer_rows = g.find_all('tr', {'class': 't-row'})
+            
+                for r in golfer_rows[1:]:
+                    #golfer_list.append(r.find('span', {'class': 'name'}).text)
+                    #print (r.find('span', {'class': 'name'}).text)
+                    bracket_dict[r.find('span', {'class': 'name'}).text] = g_num.text
+            
+            return bracket_dict
+
+        except Exception as e:
+            print ('scrape scores MP Field: ', e)
+            return {}
+
+        finally:
+            driver.quit()
 
 
+       

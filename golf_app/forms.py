@@ -1,13 +1,14 @@
 from django import forms
 from django.forms import ModelForm
 from django.contrib.auth.models import User
-from golf_app.models import  Field, Picks, Group
+from golf_app.models import  Field, Picks, Group, Tournament
 from django.db.models import Max
 from django.forms.models import modelformset_factory
 #from django_select2 import *
 #from django_select2.forms import ModelSelect2Widget
 from django.forms.formsets import BaseFormSet
 from golf_app import manual_score
+#from extra_views import ModelFormSetView
 
 class CreateManualScoresForm(forms.ModelForm):
 
@@ -15,17 +16,22 @@ class CreateManualScoresForm(forms.ModelForm):
         model = Picks
         fields = ('playerName', 'score',)
 
-class UpdateFieldForm(forms.ModelForm):
-    def __init__(self, t, *args, **kwargs):
-        super(UpdateFieldForm, self).__init__(*args, **kwargs)
+class FieldForm(forms.ModelForm):
+
+    def __init__(self, *args, **kwargs):
+        t = Tournament.objects.get(current=True)
+        super(FieldForm, self).__init__(*args, **kwargs)
         self.fields['group'].queryset = Group.objects.filter(tournament=t)
         self.fields['group'].label = ''
+        self.fields['playerName'].label = ''
+        self.fields['playerName'].disabled = True
+        
 
     class Meta:
         model = Field    
-        fields = ('group', )
+        fields = ['playerName', 'group',]
 
-UpdateFieldFormSet = modelformset_factory(Field, form=UpdateFieldForm)
+FieldFormSet = modelformset_factory(Field, form=FieldForm, min_num=1, max_num=156, extra=0)
 
 #class SinglePickGroupForm(forms.ModelForm):
 

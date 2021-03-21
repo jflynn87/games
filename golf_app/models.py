@@ -92,9 +92,12 @@ class Tournament(models.Model):
             from golf_app import scrape_espn
             scores = scrape_espn.ScrapeESPN().get_data()
             print ('started check info', scores.get('info'))
-            if scores.get('info').get('round') == "1" and scores.get('info').get('round_status') == 'Not Started':
+            if scores.get('info').get('round') == 1 and scores.get('info').get('round_status') == 'Not Started':
                 print ('finishing started check B: ', datetime.now() - start)
                 return False
+            elif scores.get('info').get('round') == 1 and scores.get('info').get('round_status') in ['Round 1 - Play Complete', 'Round 1 - In Progress']:
+                print ('started based on Round 1 text')
+                return True
             elif scores.get('info').get('round') == 1 and \
                 len([v for k, v in scores.items() if v.get('round_score') not in ['--', '-', None]]) == 0:
                 print ('finishing started check C: ', datetime.now() - start)

@@ -1,11 +1,12 @@
 {%extends 'golf_app/golf_app_base.html'%}
 {%load golf_extras%}
 {%load static%}
+
 {%block body_block%}
+
 <script type="text/javascript" src="{%static 'golf_app/js/update_field.js'%}"></script>
 
 <h3>Tournament:  {{t.name}}</h3>
-<br>
 <p id='t_key' hidden>{{t.pk}}</p>
   
 <div class='container'>
@@ -16,27 +17,45 @@
    </div>
 {%endif%}
 
+{%if formset.errors%}
+{%for dict in formset.errors%}
+{%for error in dict_values%}
+{{error}}
+{%endfor%}
+{%endfor%}
+{%endif%}
 
-<form action="post">
+
+<form method="post">
     {%csrf_token%}
-    <table class='table' id='field-tbl'>
+    <table class='table' id='field_table'>
         <thead>
-        <th>Golfer</th>
-        <th>Group</th>
-
-    </thead>
+            <th>Golfer</th>
+            <th>Group</th>
+        </thead>    
         <tbody>
-        {%for f in field%}
-        <tr id='{{f.pk}}'>
-            <td>{{f.playerName}}</td>
-            <td>{{form.group}}</td>
-
+            {{formset.management_form}}
+            {%for form in formset.forms%}
+            {%for hidden in form.hidden_fields%}
+            {{hidden}}
+            {%endfor%}
+            <tr> 
                 
-        </tr>
-        {%endfor%}
-    </tbody>
+                <td>{{form.playerName}}</td>
+                <td>{{form.group}}</td>  
+                    </tr>
+            {%endfor%}
+            <!-- {%for f in field%}
+            <tr>
+                <td>{{f.playerName}}</td>
+                <td id='{{f.pk}}'>{{form.group}}</td>
+                <td hidden>{{f.pk}}</td>
+            </tr>
+            {%endfor%} -->
+        
+        </tbody>
     </table>
-    <button type='submit'>Submit</button>
+    <button type="submit" class="btn btn-primary">Submit Chgs</button>
 </form>
     
 

@@ -1,9 +1,10 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.views.generic import View, TemplateView, ListView, DetailView, CreateView, UpdateView, FormView
+from extra_views import ModelFormSetView
 from golf_app.models import Field, Tournament, Picks, Group, TotalScore, ScoreDetails, \
            mpScores, BonusDetails, PickMethod, PGAWebScores, ScoreDict, UserProfile, \
            Season
-from golf_app.forms import  CreateManualScoresForm, UpdateFieldForm
+from golf_app.forms import  CreateManualScoresForm, FieldForm, FieldFormSet
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponseRedirect, HttpResponse, Http404
 from django.contrib.auth import authenticate, login, logout
@@ -13,7 +14,8 @@ from django.urls import reverse, reverse_lazy
 from django.contrib.auth.models import User
 import datetime
 from golf_app import populateField, calc_score, optimal_picks,\
-     manual_score, scrape_scores_picks, scrape_cbs_golf, scrape_masters, withdraw, scrape_espn
+     manual_score, scrape_scores_picks, scrape_cbs_golf, scrape_masters, withdraw, scrape_espn, \
+     populateMPField
 from django.utils import timezone
 from django.core.exceptions import ObjectDoesNotExist
 from django.db.models import Min, Q, Count, Sum, Max
@@ -313,6 +315,9 @@ def setup(request):
     if request.method == "POST":
         url_number = request.POST.get('tournament_number')
         print (url_number, type(url_number))
+        if url_number == '470':  #Match Play special logic
+            populateMPField.create_groups(url_number)
+            return HttpResponseRedirect(reverse('golf_app:field'))
         try:
             if Tournament.objects.filter(pga_tournament_num=str(url_number), season__current=True).exists():
                 error_msg = ("tournament already exists" + str(url_number))
@@ -1003,31 +1008,55 @@ class RecentFormAPI(APIView):
         #return JsonResponse(data, status=200)
         return JsonResponse(data, status=200)
 
-class UpdateFieldView(LoginRequiredMixin,TemplateView):
-    login_url = 'login'
-    template_name = 'golf_app/update_field.html'
-    #queryset = Field.objects.filter(tournament=Tournament.objects.get(current=True)) 
+#class UpdateFieldView(FormView):
+class UpdateFieldView(LoginRequiredMixin, TemplateView):
+    login_url = '/login'
+    template_name='golf_app/update_field.html'
 
     def get_context_data(self, **kwargs):
         context = super(UpdateFieldView, self).get_context_data(**kwargs)
         t = Tournament.objects.get(current=True)
-        form = UpdateFieldForm(t)
         context.update({
             't': t,
-           # 'groups': Group.objects.filter(tournament=t),
-            'field': Field.objects.filter(tournament=t).order_by('group__number'),
-            'form': form,
+            'field': Field.objects.filter(tournament=t).order_by('group', 'currentWGR'),
+            #'form': FieldForm(),
+            'formset': FieldFormSet(queryset=Field.objects.filter(tournament=t))
+
         })
         return context
 
-    #def post(self, request):
-    #    print ('inside post add logic')
+    def post(self, request):
+        #print (request.POST)
+        formset = FieldFormSet(request.POST)
+        print (formset)
+        if not formset.is_valid():
+                return HttpResponse({
+                    #'t': t,
+                    #'field': Field.objects.filter(tournament=t).order_by('group', 'currentWGR'),
+                    #'form': FieldForm(),
+                    'formset': formset
 
+                })
 
-class RecentFormAPI(APIView):
+        for f in formset:
+            if f.is_valid():
+                if f.has_changed():
+                    print('changed', f)
+                    f.save() 
+
+        return redirect('golf_app:update_field')
+    
+
+class GetGroupAPI(APIView):
     pass
-    # def get(self, request, t):
-    #     try:
-    #         data = {}
+    def get(self, request, pk):
+        try:
+           data = {}
+           field = Field.objects.get(pk=pk)
+           data = {'field': field.pk, 'group': field.group.pk}
+           return JsonResponse(data, status=200)
+        except Exception as e:
+            print ('Get group API failed: ', e)
+            return JsonResponse({'key': 'error'}, status=401)
 
             

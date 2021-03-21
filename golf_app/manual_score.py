@@ -52,6 +52,8 @@ class Score(object):
 
         self.not_playing_list = ['CUT', 'WD', 'DQ']
 
+        self.cut_indicators = ['--', '-', '_']
+
 
     def get_picks_by_user(self, user):
         '''takes a user object and returns that user's picks in a dict'''
@@ -172,8 +174,8 @@ class Score(object):
                 print ('thru skip checks')
                 if data.get('rank') == "CUT":
                     score = cut_num
-                elif data.get('rank') in ["WD", "DQ"]:
-                    #score = cut_num
+                elif data.get('rank') in ["WD", "DQ"] or (data.get('rank') in self.cut_indicators and data.get('total_score') in ['WD', 'DQ']):
+                    print ('WD/DQ: ', pick, data)
                     score = self.get_wd_score(pick) 
                 else:
                     if int(utils.formatRank(data.get('rank'))) > cut_num:
@@ -418,12 +420,14 @@ class Score(object):
 
     def get_wd_score(self, pick):
         d = [v for v in self.score_dict.values() if v.get('pga_num') == pick.playerName.golfer.espn_number]
+        print ('calc WD score: ', d)
         if len(d) > 0:
             score = d[0]
         elif len(d) == 0 and self.score_dict.get('info').get('cut_num') != None:
             return self.score_dict.get('info').get('cut_num')
         elif len(d) ==0:
-            return self.tournament.saved_cut_num
+            #return self.tournament.saved_cut_num
+            return self.score_dict.get('info').get('cut_num')
         
         print ('wd lookup', score)
 
@@ -435,13 +439,15 @@ class Score(object):
         if score.get('r1') in cut_indicators or score.get('r2') in cut_indicators or score.get('r3') in cut_indicators:
                 print ('didnt get to r3')
                 #return self.tournament.cut_num()
-                return self.tournament.saved_cut_num
+                #return self.tournament.saved_cut_num
+                return self.score_dict.get('info').get('cut_num')
         elif score.get('r3') not in cut_indicators and self.tournament.get_cut_round() < 3:
                 return len([x for (k,x) in self.score_dict.items() if k != 'info' and x['rank'] not in self.not_playing_list]) + 1
         # fix this if, retrun cut num?
         elif score.get('r4') in cut_indicators and self.tournament.get_cut_round() < 4:
             #return self.tournament.cut_num()
-            return self.tournament.saved_cut_num
+            #return self.tournament.saved_cut_num
+            return self.score_dict.get('info').get('cut_num')
         else:
             return len([x for x in self.score_dict.values() if x['rank'] not in self.not_playing_list]) + 1
 
