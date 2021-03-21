@@ -23,7 +23,7 @@ django-cors-middleware==1.5.0
 django-extra-views==0.13.0
 django-mathfilters==0.4.0
 django-select2==6.3.1
-djangorestframework==3.11.0
+djangorestframework==3.11.2
 docx2txt==0.8
 EasyProcess==0.2.9
 future==0.18.2
