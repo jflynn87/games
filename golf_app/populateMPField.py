@@ -63,7 +63,7 @@ def create_groups(tournament_number):
     tournament = Tournament.objects.get(current=True, season=season)
     print ('d')
 
-    bracket = scrape_scores_picks.ScrapeScores(tournament, 'https://www.pgatour.com/competition/2019/wgc-dell-technologies-match-play/group-stage.html').mp_brackets()
+    bracket = scrape_scores_picks.ScrapeScores(tournament, 'https://www.pgatour.com/competition/2021/wgc-dell-technologies-match-play/group-stage.html').mp_brackets()
     #prior_year_sd(tournament)
 
     #print (len(field))
@@ -136,25 +136,37 @@ def create_groups(tournament_number):
             golfer_dict[link[:5]]=link
     espn_players = get_espn_players()
     print ('xxxxxxx', espn_players)
-    for k, v in sorted(group_dict.items(), key=lambda x: x[1][0]):
+    #for k, v in sorted(group_dict.items(), key=lambda x: x[1][0]):
         #print ('key/val: ', k, v)
-        map_link = get_flag(k, v, espn_players)
+        #map_link = get_flag(k, v, espn_players)
         #print (k, map_link)
-        print (k)
-        for golfer, group in bracket.items():
-            print (golfer.split(' ')[1], len(golfer.split(' ')[1]),  k.split(' ')[1].rstrip(), len(k.split(' ')[1].rstrip()))
-            if golfer.split(' ')[1] == k.split(' ')[1].rstrip():
-                print ('MAtch', golfer.split(' ')[1], len(golfer.split(' ')[1]),  k.split(' ')[1].rstrip(), len(k.split(' ')[1].rstrip()))
-                g = group.split(' ')[1]
-                break
+        #print (k)
+    for golfer, group in bracket.items():
+            #print (golfer.split(' ')[1], len(golfer.split(' ')[1]),  k.split(' ')[1].rstrip(), len(k.split(' ')[1].rstrip()))
+        #print (golfer, group, group_dict.get(golfer))
+        #map_link = get_flag(golfer, group_dict.get(golfer), espn_players)
+            #if golfer.split(' ')[1] == k.split(' ')[1].rstrip():
+            #    print ('MAtch', golfer.split(' ')[1], len(golfer.split(' ')[1]),  k.split(' ')[1].rstrip(), len(k.split(' ')[1].rstrip()))
+        g = group.split(' ')[1]
+         #       break
 
-        print ('group: ', k, group)
+        #print ('group: ', k, group)
+        print ('1 ', golfer)
+        golfer_n = golfer.split('(')[0].rstrip()
+
+        ranks = utils.fix_name(golfer_n, OWGR_rankings)
+        print ('2', golfer, golfer_n, ranks)
+        
+        golfer_obj, created = Golfer.objects.get_or_create(golfer_name=golfer_n)
+        flag = get_flag(golfer_n, golfer_n, espn_players)
+        pic = get_pick_link(golfer_obj.golfer_pga_num)
         g_obj = Group.objects.get(tournament=tournament, number=g)
-        Field.objects.get_or_create(tournament=tournament, playerName=k, \
-             currentWGR=v[0][0], sow_WGR=v[0][1], soy_WGR=v[0][2], \
-             group=g_obj, alternate=v[1][0], \
-             playerID=v[1][1], pic_link= get_pick_link(v[1][1]), \
-             map_link= map_link, golfer=Golfer.objects.get(golfer_pga_num=v[1][1]), handi=calc_handi(v[0][0], len(field)))
+        Field.objects.get_or_create(tournament=tournament, playerName=golfer_n, \
+             currentWGR=ranks[1][0], sow_WGR=ranks[1][1], soy_WGR=ranks[1][2], \
+             group=g_obj, alternate=None, \
+             playerID=None, pic_link= pic, \
+             map_link= flag, golfer=golfer_obj, handi=0)
+
 
     #print ('checking issue field count', Field.objects.filter(tournament=tournament).count(), 'field len: ', len(field), group_num )
     #if Field.objects.filter(tournament=tournament).count() < len(field):
@@ -171,7 +183,7 @@ def get_pick_link(playerID):
 def get_flag(golfer, golfer_data, espn_data):
     #print ('get flag', golfer, golfer_data)
     golfer_obj, created = Golfer_obj = Golfer.objects.get_or_create(
-    golfer_pga_num = golfer_data[1][1])
+    golfer_name = golfer_data)
     if created:
         golfer_obj.golfer_name = golfer
         golfer_obj.save()

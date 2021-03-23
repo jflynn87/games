@@ -1,6 +1,6 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.views.generic import View, TemplateView, ListView, DetailView, CreateView, UpdateView, FormView
-from extra_views import ModelFormSetView
+#from extra_views import ModelFormSetView
 from golf_app.models import Field, Tournament, Picks, Group, TotalScore, ScoreDetails, \
            mpScores, BonusDetails, PickMethod, PGAWebScores, ScoreDict, UserProfile, \
            Season

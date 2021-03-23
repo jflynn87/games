@@ -30,8 +30,11 @@
       
 
       <h4 id="t-name">{{tournament.name}}</h4>
-       <div id=withdraw></div>
-      <script type="text/babel" src="{%static 'test_app/src/withdraw.js'%}"></script> 
+      
+      <div id=withdraw></div>
+      {%if tournament.pga_tournament_num != "470"%}
+      <script type="text/babel" src="{%static 'test_app/src/withdraw.js'%}"></script>
+      {%endif%} 
       <div id='espn_missing'></div>
       <script type="text/babel" src="{%static 'test_app/src/check_espn_num.js'%}"></script> 
 
