@@ -1,14 +1,15 @@
 import urllib3
-from golf_app.models import Field, Tournament, Picks, Group, TotalScore, ScoreDetails, BonusDetails, mpScores
+from golf_app.models import Field, Tournament, Picks, Group, TotalScore, ScoreDetails, BonusDetails, mpScores, PickMethod
 from django.contrib.auth.models import User
 from django.shortcuts import render, get_object_or_404, redirect
 from django.core.exceptions import ObjectDoesNotExist
 from django.db.models import Count, Sum, Q
-import datetime
+from datetime import datetime
 from django.db import transaction
 import urllib
 import json
 from golf_app.templatetags import golf_extras
+from golf_app import utils
 
 @transaction.atomic
 def mp_calc_scores(tournament, request=None):
@@ -249,3 +250,89 @@ def mp_calc_scores(tournament, request=None):
 
 
     return
+
+
+def espn_calc(sd):
+    
+    t = Tournament.objects.get(pga_tournament_num='470', season__current=True)
+    for p in Picks.objects.filter(Q(playerName__tournament=t) & (Q(score__isnull=True) |  Q(score=0))).values('playerName').distinct():
+        print ('calc mp score loop', p)
+        pick_loop_start = datetime.now()
+        print (p)
+        pick = Picks.objects.filter(playerName__pk=p.get('playerName')).first()
+        #print ('ccc', pick.playerName.playerName)
+        d = utils.fix_name(pick.playerName.playerName, sd)
+        print ('mp scores pick lookup: ', p, d)
+        if d:
+            score = 0
+        else:
+            score = 1
+        Picks.objects.filter(playerName__tournament=t, playerName=pick.playerName).update(score=score)
+
+        ScoreDetails.objects.filter(pick__playerName__tournament=t, pick__playerName=pick.playerName).update(
+                                            score=score,
+                                            gross_score=score,
+                                            today_score=None,
+                                            thru=None,
+                                            toPar=None,
+                                            sod_position=None
+                                        )
+
+
+    return
+
+def total_scores():
+    start = datetime.now()
+    t = Tournament.objects.get(pga_tournament_num='470', season__current=True)
+    TotalScore.objects.filter(tournament=t).delete()
+    ts_dict = {}
+
+    for player in t.season.get_users():
+        ts_loop_start = datetime.now()
+        user = User.objects.get(pk=player.get('user'))
+        picks = Picks.objects.filter(playerName__tournament=t, user=user)
+        gross_score = picks.aggregate(Sum('score'))
+        #handicap = picks.aggregate(Sum('playerName__handi'))
+        #net_score = gross_score.get('score__sum') - handicap.get('playerName__handi__sum')
+        net_score = gross_score.get('score__sum')
+        cuts = ScoreDetails.objects.filter(pick__playerName__tournament=t, pick__user=user, today_score__in=t.not_playing_list()).count()
+        print ('player/score : ', player, gross_score, cuts) 
+        ts, created = TotalScore.objects.get_or_create(user=user, tournament=t)
+        ts.score = net_score
+        ts.cut_count = cuts
+
+        ts.save()
+
+        if PickMethod.objects.filter(tournament=t, user=user, method='3').exists():
+            message = "- missed pick deadline (no bonuses)"
+        else:
+            message = ''
+
+
+        ts_dict[ts.user.username] = {'total_score': ts.score, 'cuts': ts.cut_count, 'msg': message}
+        print ('ts loop duration', datetime.now() - ts_loop_start)
+    # if self.tournament.complete:
+    #     if self.tournament.major: 
+    #         winning_score = TotalScore.objects.filter(tournament=self.tournament).aggregate(Min('score'))
+    #         print (winning_score)
+    #         winner = TotalScore.objects.filter(tournament=self.tournament, score=winning_score.get('score__min'))
+    #         print ('major', winner)
+    #         for w in winner:
+    #             if not PickMethod.objects.filter(tournament=self.tournament, user=w.user, method=3).exists():
+    #                 bd, created = BonusDetails.objects.get_or_create(user=w.user, tournament=self.tournament)
+    #                 bd.major_bonus = 100/self.tournament.num_of_winners()
+    #                 w.score -= bd.major_bonus
+    #                 bd.save()
+    #                 w.save()
+    
+    # for ts in TotalScore.objects.filter(tournament=self.tournament):
+    #     bd = BonusDetails.objects.get(tournament=ts.tournament, user=ts.user)
+    #     ts_dict[ts.user.username].update({'total_score': ts.score, 'winner_bonus': bd.winner_bonus, 'major_bonus': bd.major_bonus, 'cut_bonus': bd.cut_bonus,
+    #         'best_in_group': bd.best_in_group_bonus, 'playoff_bonus': bd.playoff_bonus, 'handicap': ts.total_handicap()})
+
+    
+    sorted_ts_dict = sorted(ts_dict.items(), key=lambda v: v[1].get('total_score'))
+    print (ts_dict)
+    print ('total_scores duration', datetime.now() - start)
+    return json.dumps(dict(sorted_ts_dict))
+

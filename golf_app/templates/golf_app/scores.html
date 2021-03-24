@@ -7,7 +7,11 @@
 {%block body_block%}
 
 {%if '/golf_app/new_scores/' in request.path%}
-  <script type="text/javascript" src="{%static 'golf_app/js/load.js'%}"></script> 
+  {%if tournament.pga_tournament_num == '470'%}
+  <script type="text/javascript" src="{%static 'golf_app/js/mp_load.js'%}"></script> 
+  {%else%}
+  <script type="text/javascript" src="{%static 'golf_app/js/load.js'%}"></script>
+  {%endif%} 
 {%else%}
   <script type="text/javascript" src="{%static 'golf_app/js/load_by_player.js'%}"></script> 
 {%endif%}

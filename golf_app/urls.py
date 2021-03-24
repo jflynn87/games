@@ -35,6 +35,7 @@ urlpatterns= [
     path('recent_form/<str:player_num>/', views.RecentFormAPI.as_view(), name='recent_form'),
     path('update_field/', views.UpdateFieldView.as_view(), name='update_field'),
     path('get_group/<int:pk>/', views.GetGroupAPI.as_view(), name='get_group'),
+    path('mp_scores/', views.MPScoresAPI.as_view(), name='mp_scores'),
 
     
 

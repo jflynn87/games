@@ -15,7 +15,7 @@ from django.contrib.auth.models import User
 import datetime
 from golf_app import populateField, calc_score, optimal_picks,\
      manual_score, scrape_scores_picks, scrape_cbs_golf, scrape_masters, withdraw, scrape_espn, \
-     populateMPField
+     populateMPField, mp_calc_scores
 from django.utils import timezone
 from django.core.exceptions import ObjectDoesNotExist
 from django.db.models import Min, Q, Count, Sum, Max
@@ -370,7 +370,10 @@ class GetScores(APIView):
 
         if t.current and not t.complete:
             print ('scraping')
-            score_dict = scrape_espn.ScrapeESPN().get_data()
+            if t.pga_tournament_num == '470':
+                return HttpResponse('Wrong link, use MP link')
+            else:
+                score_dict = scrape_espn.ScrapeESPN().get_data()
         else:
             print ('not scraping')
             try:
@@ -478,7 +481,8 @@ class GetDBScores(APIView):
                 GetScores(self.request.GET, num)
         except Exception as e:
             print ('old logic', e)
-            GetScores().get(self.request)
+            return (redirect('golf_app:get_scores'), num)
+            #GetScores().get(self.request)
             #return Response({}, 200)
 
 class NewScoresView(LoginRequiredMixin,ListView):
@@ -1060,3 +1064,32 @@ class GetGroupAPI(APIView):
             return JsonResponse({'key': 'error'}, status=401)
 
             
+class MPScoresAPI(APIView):
+
+    def get(self, request):
+        #t_key = request.data.get('tournament')
+        pk =self.request.GET.get('tournament')
+        t = Tournament.objects.get(pk=pk)
+        score_dict = scrape_espn.ScrapeESPN().get_mp_data()
+        print (score_dict)
+        scores = mp_calc_scores.espn_calc(score_dict)
+        ts = mp_calc_scores.total_scores()
+        info = get_info(t)
+        totals = Season.objects.get(season=t.season).get_total_points()
+        print ('calc scores complete MP')
+
+        return Response(({'picks':  {'msg': 'no data'},
+                                'totals': ts,
+                                'leaders':  {'msg': 'no data'},
+                                'cut_line':  {'msg': 'no data'},
+                                'optimal': None,
+                                'scores': json.dumps(score_dict),
+                                'season_totals': totals,
+                                'info': json.dumps(info),
+                                't_data': serializers.serialize("json", [t])
+                }), 200)
+
+
+
+
+

@@ -4,7 +4,7 @@
 {%load golf_extras%}
 
 
-<h2>{{tournament.name}}</h2>
+<h2>{{t.name}}</h2>
 <h4>Totals</h4>
 <table class="table">
   <thead>
@@ -13,7 +13,7 @@
     
   </thead>
   <tbody>
-    {%for score in total_score%}
+    {%for score in ts%}
     <tr>
       <td>{{score.user}}</td>
       <td>{{score.score}}     </td>
@@ -36,7 +36,7 @@
     <th>Score</th>
   </thead>
     <tbody>
-{%for sd in score_details%}
+{%for sd in scores%}
     <tr>
       <td>{{sd.pick.user}}</td>
       <td>{{sd.pick.playerName}}</td>

@@ -289,3 +289,54 @@ class ScrapeESPN(object):
         return ('no link available')
 
 
+
+    def get_mp_data(self):
+        print ('scraping golf espn com match play')
+        
+        sd, created = ScoreDict.objects.get_or_create(tournament=self.tournament)
+        if self.setup:
+            print ('set up mode, scraping')
+        elif not created and (sd.updated + timedelta(minutes = 1)) > datetime.utcnow().replace(tzinfo=pytz.utc):
+            print ('returning saved score dict ', 'sd saved time: ', sd.updated, 'current time: ', datetime.utcnow().replace(tzinfo=pytz.utc))
+            return sd.data
+ 
+        try:
+            score_dict = {}
+
+            html = urllib.request.urlopen(self.url)
+            soup = BeautifulSoup(html, 'html.parser')
+            
+            leaderboard = soup.find_all('div', {'class': 'MatchPlay__Match'})
+            start = datetime.now()
+            status = soup.find('li', {'class': 'tabs__list__item tabs__list__item--active'}).text
+            day = status.find('data-track-name')
+            print ('day', [item["data-track-name"] for item in soup.find_all() if "data-track-name" in item.attrs])
+            score_dict['info'] = {'source': 'espn', 
+                                'status': status}
+            
+            for row in leaderboard:
+                for p in row.find_all('div', {'class': 'ScoreCell__TeamName ScoreCell__TeamName--displayName truncate db'}):
+                    score_dict[p.text] = {'rank': 0, 'change': '', 'handicap': 0, 'sod_position': ''}
+                    #score_dict[row.a.text] = {
+                    #                    'pga_num': row.a['href'].split('/')[7],
+                    #                    'rank': td[0].text,
+                    #                    'change': '',
+                    #                    'round_score': td[3].text,
+                    #                    'total_score': td[2].text,
+                    #                    'thru': td[4].text,
+                    #                    'r1': td[5].text,
+                    #                    'r2': td[6].text,
+                    #                    'r3': td[7].text,
+                    #                    'r4': td[8].text,  
+                    #                    'tot_strokes': td[9].text,
+                    #}
+                #if len(td) > 1 and Field.objects.filter(golfer__espn_number=score_dict[row.a.text]['pga_num'], tournament=self.tournament).exists():
+                #    f = Field.objects.get(golfer__espn_number=score_dict[row.a.text]['pga_num'], tournament=self.tournament)
+                #    score_dict[row.a.text].update({'handicap': f.handicap(),
+                                         #          'group': f.group.number})                           
+            
+            return score_dict
+
+        except Exception as e:
+            print ('issue scraping espn MP', e)
+            return {}   
