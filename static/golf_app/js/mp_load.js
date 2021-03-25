@@ -162,7 +162,31 @@ function build_score_tbl(data) {
   $('#totals-table').show()
 
   get_picks(info, optimal_data, total_data)
+  get_records()
 
+}
+
+function get_records() {
+  fetch("/golf_app/get_mp_records/" + $('#tournament_key').text(),
+  {method: "GET",
+   })
+  .then((response) => response.json())
+  .then((responseJSON) => {
+    record_data = responseJSON
+    console.log(record_data)
+    $('#totals-table tbody tr').each(function() {
+      var player = $(this)[0].id.replace('totals', '')
+      $(this).find('td').each (function(i, data) {
+        if (i >1) {
+          pick_id = data.id.replace(player, '')
+          console.log(pick_id)
+          record = record_data[pick_id]
+          $(this).append('<p> Pos: ' + record['pos'] + ' </p> <p> W: ' + record['won'] + '</p> <p> L: ' + record['lost'] + '</p>' +
+          '<p> H: ' + record['tie'] + '</p> <p> Tot: ' + record['total'] + '</p>')  
+        }
+    })
+})
+})
 }
 
 function format_leaders(leaders) {
@@ -215,7 +239,7 @@ function get_picks(info, optimal_data, total_data) {
       }
       else {toPar = $(this)[0]['toPar']} 
     
-      $('#totals' + p ).append('<td id=' + p + stats[index]['pga_num'] +  '>' + '<span class=watermark>' + 
+      $('#totals' + p ).append('<td id=' + p + stats[index]['pga_num'] + '>' + '<span class=watermark>' + 
     '<p>' + p.substring(0, 4)  + ' : ' + index +  '</p>'  + '</span>' + '<p>' +  $(this)[0]['pick']  + '</p>' + '<p>' + $(this)[0]['score'] +
     '<span > <a id=tt-' + pick + ' href="#" data-toggle="tooltip" > <i class="fa fa-info-circle"></i> </a> </span>' //+
     // '</p>' +  toPar + ' (' + $(this)[0]['thru'] + ')' +  '   ' +  format_move($(this)[0]['sod_position']) +   '</p>' +  '</td>')
@@ -236,6 +260,7 @@ function get_picks(info, optimal_data, total_data) {
     //else {
     //if ($.inArray($(this)[0]['pga_num'], Object.keys(optimal_data[index[0]]['golfer'])) !== -1) {$('#' + p + $(this)[0]['pga_num'].replace(filler, '')).addClass('best')} 
     //}
+  
   })}) 
 })
 })

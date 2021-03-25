@@ -310,13 +310,13 @@ class ScrapeESPN(object):
             start = datetime.now()
             status = soup.find('li', {'class': 'tabs__list__item tabs__list__item--active'}).text
             day = status.find('data-track-name')
-            print ('day', [item["data-track-name"] for item in soup.find_all() if "data-track-name" in item.attrs])
+            print ('day', soup.find('li', {'class': 'tabs__list__item tabs__list__item--active'}))
             score_dict['info'] = {'source': 'espn', 
                                 'status': status}
             
             for row in leaderboard:
                 for p in row.find_all('div', {'class': 'ScoreCell__TeamName ScoreCell__TeamName--displayName truncate db'}):
-                    score_dict[p.text] = {'rank': 0, 'change': '', 'handicap': 0, 'sod_position': ''}
+                    score_dict[p.text.lstrip('(a) ')] = {'rank': 0, 'change': '', 'handicap': 0, 'sod_position': ''}
                     #score_dict[row.a.text] = {
                     #                    'pga_num': row.a['href'].split('/')[7],
                     #                    'rank': td[0].text,

@@ -1090,6 +1090,19 @@ class MPScoresAPI(APIView):
                 }), 200)
 
 
+class MPRecordsAPI(APIView):
+    
+    def get(self, request, pk):
+        try:
+           data = {}
+           #pk = request.GET.get('pk')
+           t = Tournament.objects.get(pk=pk)
+           #t = Tournament.objects.get(season__current=True, pga_tournament_num='470')
+           data = scrape_scores_picks.ScrapeScores(t, 'https://www.pgatour.com/competition/' + str(t.season.season) + '/wgc-dell-technologies-match-play/group-stage.html').mp_brackets()
+           return JsonResponse(data, status=200)
+        except Exception as e:
+            print ('Get group API failed: ', e)
+            return JsonResponse({'key': 'error'}, status=401)
 
 
 

@@ -40,8 +40,8 @@ start = datetime.now()
 #t = Tournament.objects.get(pk=24) #Match Play
 
 t = Tournament.objects.get(current=True)
-#web = scrape_scores_picks.ScrapeScores(t, 'https://www.pgatour.com/competition/2019/wgc-dell-technologies-match-play/group-stage.html').mp_brackets()
-web = scrape_espn.ScrapeESPN().get_mp_data()
+web = scrape_scores_picks.ScrapeScores(t, 'https://www.pgatour.com/competition/2021/wgc-dell-technologies-match-play/group-stage.html').mp_brackets()
+#web = scrape_espn.ScrapeESPN().get_mp_data()
 print (web)
 print (len(web))
 exit()

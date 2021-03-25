@@ -254,6 +254,18 @@ def mp_calc_scores(tournament, request=None):
 
 def espn_calc(sd):
     
+    if len(sd) == 65:
+        round = 1
+    elif len(sd) == 17:
+        round = 2
+    elif len(sd) == 9:
+        round = 3
+    elif len(sd) == 5:
+        round = 4
+    else:
+        print ('MP calc scores score dict len not expected: ', len(sd))
+        return 
+    
     t = Tournament.objects.get(pga_tournament_num='470', season__current=True)
     for p in Picks.objects.filter(Q(playerName__tournament=t) & (Q(score__isnull=True) |  Q(score=0))).values('playerName').distinct():
         print ('calc mp score loop', p)
@@ -265,8 +277,12 @@ def espn_calc(sd):
         print ('mp scores pick lookup: ', p, d)
         if d:
             score = 0
-        else:
-            score = 1
+        elif round in [1, 2]:
+            score = 17
+        elif round == 3:
+            score = 9
+        elif round == 4:
+            score = 5
         Picks.objects.filter(playerName__tournament=t, playerName=pick.playerName).update(score=score)
 
         ScoreDetails.objects.filter(pick__playerName__tournament=t, pick__playerName=pick.playerName).update(
