@@ -275,7 +275,7 @@ def espn_calc(sd):
         #print ('ccc', pick.playerName.playerName)
         d = utils.fix_name(pick.playerName.playerName, sd)
         print ('mp scores pick lookup: ', p, d)
-        if d:
+        if d[1] != [9999, 9999, 9999]:
             score = 0
         elif round in [1, 2]:
             score = 17

@@ -202,6 +202,118 @@ class ScrapeScores(object):
             return (n, {'rank': rank, 'change': c, \
                 'thru': thru, 'round_score': round_score, 'total_score': total_score , 'r1': round_list[0], 'r2': round_list[1], 'r3': round_list[2], 'r4': round_list[3]})
 
+    def mp_final_16(self):
+        try:
+            start = datetime.now()
+            bracket_dict = {}
+            options = ChromeOptions()
+            options.add_argument("--headless")
+            options.add_argument("--disable-gpu")
+
+            driver = Chrome(options=options)
+
+            print ('driver pre url: ', datetime.now() - start)
+            driver.get(self.url)
+            print ('driver after url: ', datetime.now() - start)
+
+            soup = BeautifulSoup(driver.page_source, 'html.parser')
+            print ('MP driver after soup: ', datetime.now() - start)
+            leaderboard = soup.find('div', {'class': 'tab-knock out'})
+            print ('after LB ', type(leaderboard), len(leaderboard))
+            for round in leaderboard.find_all('div', {'class': 'live-scoring-data-container'}):
+                round_title = round.find('div', {'class', 'header'}).text
+                print (round_title)
+                bracket_dict[round_title] = {}
+                data = round.find('table', {'class': 'data-table'})
+                matches = {}
+                for i, match in enumerate(data.find_all('tr', {'class', 'data-table-row'}), start=1):
+                    golfer1 = match.find('li', {'class': 'col-1'}).text
+                    print (self.tournament, self.tournament.season)
+                    print ('g1', golfer1.split('(')[0].rstrip(), len(golfer1.split('(')[0].rstrip()))
+
+                    g1_field = Field.objects.get(tournament=self.tournament, playerName=golfer1.split('(')[0].rstrip())
+                    test = Field.objects.get(tournament=self.tournament, playerName='Matt Kuchar')
+                    print ('test',test)
+                    print (g1_field.golfer)
+                    golfer2 = match.find('td', {'class': 'col4'}).text
+                    print ('g2', golfer2.split('(')[0].rstrip())
+                    g2_field = Field.objects.get(tournament=self.tournament, playerName=golfer2.split('(')[0])
+                    print (g2_field)
+                    if 'wins' in golfer1:
+                        winner = golfer1
+                    elif 'wins' in golfer2:
+                        winner = golfer2
+                    else:
+                        winner = 'none'
+                    bracket_dict[round_title]['match' + str(i)] = {'g1': golfer1,
+                                                                 'g1_espn_num': g1_field.golfer.espn_number,
+                                                                 'g2': golfer2,
+                                                                 'g2_espn_num': g2_field.golfer.espn_number,
+                                                                  'winner': winner}
+                    
+
+            # first_group = (soup.find("div", {'id':'firstGroupContainer'}))
+            # other_groups = (soup.find("div", {'id':'fromSecondToTheLastGroupContainer'}))
+
+            # g_num = first_group.find('div', {'class': 'group-section-title'})
+            # print (g_num.text)
+            
+            # golfer_rows = first_group.find_all('tr', {'class': 't-row'})
+            # golfer_list = []
+            # for r in golfer_rows[1:]:
+            #     #golfer_list.append(r.find('span', {'class': 'name'}).text)
+            #     #print (r.find('span', {'class': 'name'}).text)
+            #     won = r.find('td', {'class': 't-cell won score'}).text.lstrip('\n').rstrip('\n')
+            #     lost = r.find('td', {'class': 't-cell lost score'}).text.lstrip('\n').rstrip('\n')
+            #     tie = r.find('td', {'class': 't-cell halved score'}).text.lstrip('\n').rstrip('\n')
+            #     total = r.find('td', {'class': 't-cell points score'}).text.lstrip('\n').rstrip('\n')
+            #     pos = r.find('td', {'class': 't-cell position'}).text.lstrip('\n').rstrip('\n')
+            #     field = Field.objects.get(tournament=self.tournament, playerName=r.find('span', {'class': 'name'}).text.split('(')[0].rstrip())
+
+            #     #bracket_dict[r.find('span', {'class': 'name'}).text.split('(')[0].rstrip()] = {'group': g_num.text,
+            #     bracket_dict[field.golfer.espn_number] = {'group': g_num.text,
+            #                                                                 'pos': pos,
+            #                                                                 'won': won,
+            #                                                                 'lost': lost,
+            #                                                                 'tie': tie,
+            #                                                                 'total': total,
+            #                                                                 'golfer': r.find('span', {'class': 'name'}).text.split('(')[0].rstrip(),
+            #                                                                 'espn_num': field.golfer.espn_number}
+
+            # for g in other_groups.find_all('div', {'class': 'group-stage-section'}):
+            #     g_num = g.find('div', {'class': 'group-section-title'})
+            #     print (g_num.text)
+            #     #golfer_list = []
+            #     golfer_rows = g.find_all('tr', {'class': 't-row'})
+            
+            #     for r in golfer_rows[1:]:
+            #         #golfer_list.append(r.find('span', {'class': 'name'}).text)
+            #         #print (r.find('span', {'class': 'name'}).text)
+            #         won = r.find('td', {'class': 't-cell won score'}).text.lstrip('\n').rstrip('\n')
+            #         lost = r.find('td', {'class': 't-cell lost score'}).text.lstrip('\n').rstrip('\n')
+            #         tie = r.find('td', {'class': 't-cell halved score'}).text.lstrip('\n').rstrip('\n')
+            #         total = r.find('td', {'class': 't-cell points score'}).text.lstrip('\n').rstrip('\n')
+            #         pos = r.find('td', {'class': 't-cell position'}).text.lstrip('\n').rstrip('\n')
+            #         field = Field.objects.get(tournament=self.tournament, playerName=r.find('span', {'class': 'name'}).text.split('(')[0].rstrip())
+            #         #bracket_dict[r.find('span', {'class': 'name'}).text.split('(')[0].rstrip()] = {'group': g_num.text,
+            #         bracket_dict[field.golfer.espn_number] = {'group': g_num.text,
+            #                                                                 'pos': pos,
+            #                                                                 'won': won,
+            #                                                                 'lost': lost,
+            #                                                                 'tie': tie,
+            #                                                                 'total': total,
+            #                                                                 'golfer': r.find('span', {'class': 'name'}).text.split('(')[0].rstrip(),
+            #                                                                 'espn_num': field.golfer.espn_number}
+            
+            return bracket_dict
+
+        except Exception as e:
+            print ('scrape scores MP Field: ', e)
+            return {}
+
+        finally:
+            driver.quit()
+
     def mp_brackets(self):
         try:
             start = datetime.now()
