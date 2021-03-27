@@ -254,7 +254,7 @@ def mp_calc_scores(tournament, request=None):
 
 def espn_calc(sd):
     
-    if len(sd) == 65:
+    if len(sd) == 64:
         round = 1
     elif len(sd) == 17:
         round = 2
@@ -267,22 +267,27 @@ def espn_calc(sd):
         return 
     
     t = Tournament.objects.get(pga_tournament_num='470', season__current=True)
-    for p in Picks.objects.filter(Q(playerName__tournament=t) & (Q(score__isnull=True) |  Q(score=0))).values('playerName').distinct():
+    #for p in Picks.objects.filter(Q(playerName__tournament=t) & (Q(score__isnull=True) |  Q(score=0))).values('playerName').distinct():
+    for p in Picks.objects.filter(playerName__tournament=t).values('playerName').distinct():
         print ('calc mp score loop', p)
         pick_loop_start = datetime.now()
         print (p)
         pick = Picks.objects.filter(playerName__pk=p.get('playerName')).first()
         #print ('ccc', pick.playerName.playerName)
-        d = utils.fix_name(pick.playerName.playerName, sd)
-        print ('mp scores pick lookup: ', p, d)
-        if d[1] != [9999, 9999, 9999]:
+        #d = utils.fix_name(pick.playerName.playerName, sd)
+        #print ('mp scores pick lookup: ', p, d)
+        if sd.get(pick.playerName.golfer.espn_number).get('pos') == "1":
             score = 0
-        elif round in [1, 2]:
+        else:
             score = 17
-        elif round == 3:
-            score = 9
-        elif round == 4:
-            score = 5
+        # if d[1] != [9999, 9999, 9999]:
+        #     score = 0
+        # elif round in [1, 2]:
+        #     score = 17
+        # elif round == 3:
+        #     score = 9
+        # elif round == 4:
+        #     score = 5
         Picks.objects.filter(playerName__tournament=t, playerName=pick.playerName).update(score=score)
 
         ScoreDetails.objects.filter(pick__playerName__tournament=t, pick__playerName=pick.playerName).update(

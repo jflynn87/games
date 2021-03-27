@@ -1067,10 +1067,12 @@ class GetGroupAPI(APIView):
 class MPScoresAPI(APIView):
 
     def get(self, request):
+        print ('MP API ')
         #t_key = request.data.get('tournament')
         pk =self.request.GET.get('tournament')
         t = Tournament.objects.get(pk=pk)
-        score_dict = scrape_espn.ScrapeESPN().get_mp_data()
+        #score_dict = scrape_espn.ScrapeESPN().get_mp_data()
+        score_dict = scrape_scores_picks.ScrapeScores(t, 'https://www.pgatour.com/competition/2021/wgc-dell-technologies-match-play/group-stage.html').mp_brackets()
         print (score_dict)
         scores = mp_calc_scores.espn_calc(score_dict)
         ts = mp_calc_scores.total_scores()

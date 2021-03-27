@@ -37,11 +37,11 @@ import collections
 start = datetime.now()
 
 #print (scrape_espn.ScrapeESPN(None, None, True).get_data())
-t = Tournament.objects.get(pk=24) #Match Play
+#t = Tournament.objects.get(pk=24) #Match Play
 
-#t = Tournament.objects.get(current=True)
-#web = scrape_scores_picks.ScrapeScores(t, 'https://www.pgatour.com/competition/2021/wgc-dell-technologies-match-play/group-stage.html').mp_brackets()
-web = scrape_scores_picks.ScrapeScores(t, 'https://www.pgatour.com/competition/2019/wgc-dell-technologies-match-play/leaderboard.html').mp_final_16()
+t = Tournament.objects.get(current=True)
+web = scrape_scores_picks.ScrapeScores(t, 'https://www.pgatour.com/competition/2021/wgc-dell-technologies-match-play/group-stage.html').mp_brackets()
+#web = scrape_scores_picks.ScrapeScores(t, 'https://www.pgatour.com/competition/2021/wgc-dell-technologies-match-play/leaderboard.html').mp_final_16()
 #web = scrape_espn.ScrapeESPN().get_mp_data()
 print (web)
 print (len(web))

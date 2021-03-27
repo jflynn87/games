@@ -98,7 +98,7 @@ function build_score_tbl(data) {
     if (player != 'info'){
     $('#det-list table').append('<tr    class="small">' +
     '<td>' + data['rank']+ '</td>' +
-    '<td>' + format_move(data['change']) + data['change'].replace(filler, '') + '</td>' +
+    //'<td>' + format_move(data['change']) + data['change'].replace(filler, '') + '</td>' +
     '<td>' + player.bold() + '</td>' +
     '<td>' + data['total_score']+ '</td>' +
     '<td>' + data['thru']+ '</td>' +
@@ -179,7 +179,7 @@ function get_records() {
       $(this).find('td').each (function(i, data) {
         if (i >1) {
           pick_id = data.id.replace(player, '')
-          console.log(pick_id)
+          //console.log(pick_id)
           record = record_data[pick_id]
           $(this).append('<p> Pos: ' + record['pos'] + ' </p> <p> W: ' + record['won'] + '</p> <p> L: ' + record['lost'] + '</p>' +
           '<p> H: ' + record['tie'] + '</p> <p> Tot: ' + record['total'] + '</p>')  
