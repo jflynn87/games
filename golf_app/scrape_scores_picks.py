@@ -216,8 +216,10 @@ class ScrapeScores(object):
             driver.get(self.url)
             print ('driver after url: ', datetime.now() - start)
 
+            
             soup = BeautifulSoup(driver.page_source, 'html.parser')
             print ('MP driver after soup: ', datetime.now() - start)
+            
             leaderboard = soup.find('div', {'class': 'tab-knock out'})
             print ('after LB ', type(leaderboard), len(leaderboard))
             for round in leaderboard.find_all('div', {'class': 'live-scoring-data-container'}):
@@ -228,28 +230,29 @@ class ScrapeScores(object):
                 matches = {}
                 for i, match in enumerate(data.find_all('tr', {'class', 'data-table-row'}), start=1):
                     golfer1 = match.find('li', {'class': 'col-1'}).text
-                    print (self.tournament, self.tournament.season)
+                    #print (self.tournament, self.tournament.season)
                     print ('g1', golfer1.split('(')[0].rstrip(), len(golfer1.split('(')[0].rstrip()))
 
                     g1_field = Field.objects.get(tournament=self.tournament, playerName=golfer1.split('(')[0].rstrip())
-                    test = Field.objects.get(tournament=self.tournament, playerName='Matt Kuchar')
-                    print ('test',test)
-                    print (g1_field.golfer)
                     golfer2 = match.find('td', {'class': 'col4'}).text
                     print ('g2', golfer2.split('(')[0].rstrip())
                     g2_field = Field.objects.get(tournament=self.tournament, playerName=golfer2.split('(')[0])
-                    print (g2_field)
-                    if 'wins' in golfer1:
+                    if match.find('td', {'class': 'col2'}).find('span', {'class': 'icon-flag win'}):
                         winner = golfer1
-                    elif 'wins' in golfer2:
+                        loset = golfer2
+                    elif match.find('td', {'class': 'col4'}).find('span', {'class': 'icon-flag win'}):
                         winner = golfer2
+                        loser = golfer1
                     else:
-                        winner = 'none'
-                    bracket_dict[round_title]['match' + str(i)] = {'g1': golfer1,
-                                                                 'g1_espn_num': g1_field.golfer.espn_number,
-                                                                 'g2': golfer2,
-                                                                 'g2_espn_num': g2_field.golfer.espn_number,
-                                                                  'winner': winner}
+                        print ('no winner', golfer1, golfer2)
+                        winner = ''
+                        loser = ''
+                    bracket_dict[round_title]['match' + str(i)] = {'g1': golfer1.split('(')[0].rstrip(),
+                                                                 #'g1_espn_num': g1_field.golfer.espn_number,
+                                                                 'g2': golfer2.split('(')[0].rstrip(),
+                                                                 #'g2_espn_num': g2_field.golfer.espn_number,
+                                                                  'winner': winner.split('(')[0].rstrip(), 
+                                                                  'loser': loser.split('(')[0].rstrip()}
                     
 
             # first_group = (soup.find("div", {'id':'firstGroupContainer'}))

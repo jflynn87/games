@@ -1072,7 +1072,12 @@ class MPScoresAPI(APIView):
         pk =self.request.GET.get('tournament')
         t = Tournament.objects.get(pk=pk)
         #score_dict = scrape_espn.ScrapeESPN().get_mp_data()
-        score_dict = scrape_scores_picks.ScrapeScores(t, 'https://www.pgatour.com/competition/2021/wgc-dell-technologies-match-play/group-stage.html').mp_brackets()
+        if t.saved_round == 1:
+            print ('MP round 1 scraping group sect')
+            score_dict = scrape_scores_picks.ScrapeScores(t, 'https://www.pgatour.com/competition/2021/wgc-dell-technologies-match-play/group-stage.html').mp_brackets()
+        else:
+            print ('MP round 2 scraping group sect')
+            score_dict = scrape_scores_picks.ScrapeScores(t, 'https://www.pgatour.com/competition/2021/wgc-dell-technologies-match-play/leaderboard.html').mp_final_16()
         print (score_dict)
         scores = mp_calc_scores.espn_calc(score_dict)
         ts = mp_calc_scores.total_scores()

@@ -267,30 +267,24 @@ def espn_calc(sd):
         return 
     
     t = Tournament.objects.get(pga_tournament_num='470', season__current=True)
-    #for p in Picks.objects.filter(Q(playerName__tournament=t) & (Q(score__isnull=True) |  Q(score=0))).values('playerName').distinct():
-    for p in Picks.objects.filter(playerName__tournament=t).values('playerName').distinct():
-        print ('calc mp score loop', p)
-        pick_loop_start = datetime.now()
-        print (p)
-        pick = Picks.objects.filter(playerName__pk=p.get('playerName')).first()
-        #print ('ccc', pick.playerName.playerName)
-        #d = utils.fix_name(pick.playerName.playerName, sd)
-        #print ('mp scores pick lookup: ', p, d)
-        if sd.get(pick.playerName.golfer.espn_number).get('pos') == "1":
-            score = 0
-        else:
-            score = 17
-        # if d[1] != [9999, 9999, 9999]:
-        #     score = 0
-        # elif round in [1, 2]:
-        #     score = 17
-        # elif round == 3:
-        #     score = 9
-        # elif round == 4:
-        #     score = 5
-        Picks.objects.filter(playerName__tournament=t, playerName=pick.playerName).update(score=score)
+    if t.saved_round == 1:
+        for p in Picks.objects.filter(Q(playerName__tournament=t) & (Q(score__isnull=True) |  Q(score=0))).values('playerName').distinct():
+        #for p in Picks.objects.filter(playerName__tournament=t).values('playerName').distinct():
+            print ('calc mp score loop', p)
+            pick_loop_start = datetime.now()
+            print (p)
+            pick = Picks.objects.filter(playerName__pk=p.get('playerName')).first()
+            #print ('ccc', pick.playerName.playerName)
+            #d = utils.fix_name(pick.playerName.playerName, sd)
+            #print ('mp scores pick lookup: ', p, d)
+            print ('round: ', t.saved_round)
+            if sd.get(pick.playerName.golfer.espn_number).get('pos') in ["1", "T1"]:
+                score = 0
+            else:
+                score = 17
+            Picks.objects.filter(playerName__tournament=t, playerName=pick.playerName).update(score=score)
 
-        ScoreDetails.objects.filter(pick__playerName__tournament=t, pick__playerName=pick.playerName).update(
+            ScoreDetails.objects.filter(pick__playerName__tournament=t, pick__playerName=pick.playerName).update(
                                             score=score,
                                             gross_score=score,
                                             today_score=None,
@@ -298,7 +292,56 @@ def espn_calc(sd):
                                             toPar=None,
                                             sod_position=None
                                         )
+    else:
+        for round, matches in sd.items():
+            for match in matches:
+                if Picks.objects.filter(tournament=t, playerName=match.get('loser').exists()):
+                    if round == 'Round of 16':
+                        score = 9
+                    elif round == 'Quaterfinals':
+                        score = 5
+                    elif round == '3rd Place':
+                        score = 4 
+                    elif round == 'Finals':
+                        score = 2
+                    Picks.objects.filter(playerName__tournament=t, playerName=match.get('loser')).update(score=score)
 
+                    ScoreDetails.objects.filter(pick__playerName__tournament=t, pick__playerName=match.get('loser')).update(
+                                            score=score,
+                                            gross_score=score,
+                                            today_score=None,
+                                            thru=None,
+                                            toPar=None,
+                                            sod_position=None
+                                        )
+            if round == 'Finals':
+                 if Picks.objects.filter(tournament=t, playerName=match.get('winner').exists()):
+                
+                    Picks.objects.filter(playerName__tournament=t, playerName=match.get('winner')).update(score=1)
+
+                    ScoreDetails.objects.filter(pick__playerName__tournament=t, pick__playerName=match.get('winner')).update(
+                                            score=1,
+                                            gross_score=1,
+                                            today_score=None,
+                                            thru=None,
+                                            toPar=None,
+                                            sod_position=None
+                                        )
+
+            if round == '3rd Place':
+                if  Picks.objects.filter(tournament=t, playerName=match.get('winner').exists()):
+                    Picks.objects.filter(playerName__tournament=t, playerName=match.get('winner')).update(score=3)
+
+                    ScoreDetails.objects.filter(pick__playerName__tournament=t, pick__playerName=match.get('winner')).update(
+                                            score=3,
+                                            gross_score=3,
+                                            today_score=None,
+                                            thru=None,
+                                            toPar=None,
+                                            sod_position=None
+                                        )
+
+                
 
     return
 
