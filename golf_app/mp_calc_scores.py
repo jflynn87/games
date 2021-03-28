@@ -319,8 +319,8 @@ def espn_calc(sd):
                                                 sod_position=None
                                             )
                 if round == 'Finals':
-                    if Picks.objects.filter(playerName__tournament=t, playerName=match.get('winner')).exists():
-                        pick = Picks.objects.filter(playerName__tournament=t, playerName=match.get('winner')).first()
+                    if Picks.objects.filter(playerName__tournament=t, playerName__playerName=match.get('winner')).exists():
+                        pick = Picks.objects.filter(playerName__tournament=t, playerName__playerName=match.get('winner')).first()
                     
                         Picks.objects.filter(playerName__tournament=t, playerName=pick.playerName).update(score=1)
 
@@ -334,8 +334,8 @@ def espn_calc(sd):
                                             )
 
                 if round == '3rd Place':
-                    if  Picks.objects.filter(playerName__tournament=t, playerName=match.get('winner')).exists():
-                        pick = Picks.objects.filter(playerName__tournament=t, playerName=match.get('winner')).first()
+                    if  Picks.objects.filter(playerName__tournament=t, playerName__playerName=match.get('winner')).exists():
+                        pick = Picks.objects.filter(playerName__tournament=t, playerName__playerName=match.get('winner')).first()
                         Picks.objects.filter(playerName__tournament=t, playerName=pick.playerName).update(score=3)
 
                         ScoreDetails.objects.filter(pick__playerName__tournament=t, pick__playerName=pick.playerName).update(
