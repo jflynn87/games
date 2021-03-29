@@ -78,38 +78,38 @@ function build_score_tbl(data) {
   //console.log('T info: ', t_data[0])
 //  console.log('totals', total_data)
 
-  $('#det-list table').append('<thead style="background-color:lightblue">' + '<tr>' + '<th> Tournament Scores  </th>' + 
-    '<th>' + '</th>' + '<th>' + '<a href="#"> <button> return to top</button> </a>' + '</th>' +  '<th>' + '</th>' + '<th>' + '</th>' + '<th>' + '</th>' +
-    '<th>' + '</th>' + '<th>' + '</th>' + '<th>' + '</th>' + '<th>' + '</th>' + 
-    '</thead>' +
-    '<thead>' + 
-    '<th>' + 'Position' + '</th>' +
-    '<th>' + 'Change' + '</th>' +
-    '<th>' + 'Golfer' + '</th>' +
-    '<th>' + 'Total' + '</th>' +
-    '<th>' + 'Thru' + '</th>' +
-    '<th>' + 'Round' + '</th>' +
-    '<th>' + 'R1' + '</th>' +
-    '<th>' + 'R2' + '</th>' +
-    '<th>' + 'R3' + '</th>' +
-    '<th>' + 'R4' + '</th>' +
-    '</thead>')
-  $.each(scores, function(player, data) {
-    if (player != 'info'){
-    $('#det-list table').append('<tr    class="small">' +
-    '<td>' + data['rank']+ '</td>' +
-    //'<td>' + format_move(data['change']) + data['change'].replace(filler, '') + '</td>' +
-    '<td>' + player.bold() + '</td>' +
-    '<td>' + data['total_score']+ '</td>' +
-    '<td>' + data['thru']+ '</td>' +
-    '<td>' + data['round_score']+ '</td>' +
-    '<td>' + data['r1']+ '</td>' +
-    '<td>' + data['r2']+ '</td>' +
-    '<td>' + data['r3']+ '</td>' +
-    '<td>' + data['r4']+ '</td>' +
-    '</tr>')
-  }}
-  )
+  // $('#det-list table').append('<thead style="background-color:lightblue">' + '<tr>' + '<th> Tournament Scores  </th>' + 
+  //   '<th>' + '</th>' + '<th>' + '<a href="#"> <button> return to top</button> </a>' + '</th>' +  '<th>' + '</th>' + '<th>' + '</th>' + '<th>' + '</th>' +
+  //   '<th>' + '</th>' + '<th>' + '</th>' + '<th>' + '</th>' + '<th>' + '</th>' + 
+  //   '</thead>' +
+  //   '<thead>' + 
+  //   '<th>' + 'Position' + '</th>' +
+  //   '<th>' + 'Change' + '</th>' +
+  //   '<th>' + 'Golfer' + '</th>' +
+  //   '<th>' + 'Total' + '</th>' +
+  //   '<th>' + 'Thru' + '</th>' +
+  //   '<th>' + 'Round' + '</th>' +
+  //   '<th>' + 'R1' + '</th>' +
+  //   '<th>' + 'R2' + '</th>' +
+  //   '<th>' + 'R3' + '</th>' +
+  //   '<th>' + 'R4' + '</th>' +
+  //   '</thead>')
+  // $.each(scores, function(player, data) {
+  //   if (player != 'info'){
+  //   $('#det-list table').append('<tr    class="small">' +
+  //   '<td>' + data['rank']+ '</td>' +
+  //   //'<td>' + format_move(data['change']) + data['change'].replace(filler, '') + '</td>' +
+  //   '<td>' + player.bold() + '</td>' +
+  //   '<td>' + data['total_score']+ '</td>' +
+  //   '<td>' + data['thru']+ '</td>' +
+  //   '<td>' + data['round_score']+ '</td>' +
+  //   '<td>' + data['r1']+ '</td>' +
+  //   '<td>' + data['r2']+ '</td>' +
+  //   '<td>' + data['r3']+ '</td>' +
+  //   '<td>' + data['r4']+ '</td>' +
+  //   '</tr>')
+  // }}
+  // )
 
 
   $('#det-list').attr('class', 'none')
@@ -134,29 +134,6 @@ function build_score_tbl(data) {
     }
       
   })
-
-
-//  $('#totals').append('<tr id=optimalpicks class=small> <td> <p> Best Picks </p> </td> <td> </td> </tr>')
-//  $.each(optimal_data, function(group, data) {
-    
- //   $('#optimalpicks').append('<td id=optimal_' + group + ' colspan=' + info[group] + ' style=text-align:center;> <p>' + Object.values(data["golfer"]) + '</p> <p>' + data['rank'] + '</td>')
- // })
-
- // $('#totals').append('<tr id=cuts class=small> <td> <p> Cuts </p> </td> <td> </td> </tr>')
- // $.each(optimal_data, function(group, data) {
- //   $('#cuts').append('<td id=cuts_' + group + ' colspan=' + info[group] + ' style=text-align:center;> <p>' + data["cuts"] + ' / ' + data['total_golfers'] + '</td>')
- // })
-
-//  var leaders = $.parseJSON((data['leaders']))
-  
-//  if (t_data[0]['fields']['complete']) {
-//    $('#cut_line').text('Tournament Complete')  
-                                        //}
-//  else {
-    //$('#cut_line').text('Round ' + t_data[0]['fields']['saved_round'] +  ', '  + data['cut_line']) 
-//    $('#cut_line').text(data['round_status'] +  ', '  + data['cut_line']) 
-//       }
-//  $('#leader').text(format_leaders(leaders))     
 
   $('#picks-tbl').show()
   $('#totals-table').show()
@@ -242,24 +219,13 @@ function get_picks(info, optimal_data, total_data) {
       $('#totals' + p ).append('<td id=' + p + stats[index]['pga_num'] + '>' + '<span class=watermark>' + 
     '<p>' + p.substring(0, 4)  + ' : ' + index +  '</p>'  + '</span>' + '<p>' +  $(this)[0]['pick']  + '</p>' + '<p>' + $(this)[0]['score'] +
     '<span > <a id=tt-' + pick + ' href="#" data-toggle="tooltip" > <i class="fa fa-info-circle"></i> </a> </span>' //+
-    // '</p>' +  toPar + ' (' + $(this)[0]['thru'] + ')' +  '   ' +  format_move($(this)[0]['sod_position']) +   '</p>' +  '</td>')
-     //console.log($('#tt-' + $(this)[0]['pick'].replace(/ +?/g, '').replace(/\./g,'') + '[data-toggle="tooltip"]'))
       )
       $('#tt-' + pick + '[data-toggle="tooltip"]').tooltip({trigger:"hover",
                                             delay:{"show":400,"hide":800}, "title": 'gross score: ' + $(this)[0]['gross_score']
                                             }) 
      
-      if ($(this)[0]['score'] > 1)  {$('#' + p + stats[index]['pga_num']).addClass('cut')}
-     // if (not_playing.indexOf($(this)[0]['today_score']) != -1) {$('#' + p + stats[index]['pga_num']).addClass('cut')}                                            
-      //if ($(this)[0]['today_score'] in ['CUT', 'WD', 'DQ']) {$('#' + p + stats[index]['pga_num']).addClass('cut')}
-    
-    //use 0 of the index to strip the extra chars in multi pick groups.  Need to fix for tournaments with 10 groups.
-    //console.log($(this)[0]['pick'], optimal_data[index], info[10])
-    
-    //if (info[10] == 1) {if ($.inArray($(this)[0]['pga_num'], Object.keys(optimal_data[index]['golfer'])) !== -1) {$('#' + p + $(this)[0]['pga_num'].replace(filler, '')).addClass('best')} }
-    //else {
-    //if ($.inArray($(this)[0]['pga_num'], Object.keys(optimal_data[index[0]]['golfer'])) !== -1) {$('#' + p + $(this)[0]['pga_num'].replace(filler, '')).addClass('best')} 
-    //}
+      if ($(this)[0]['score'] > 2)  {$('#' + p + stats[index]['pga_num']).addClass('cut')}
+      if ($(this)[0]['score'] == 1)  {$('#' + p + stats[index]['pga_num']).addClass('best')}
   
   })}) 
 })

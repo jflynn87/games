@@ -3,7 +3,7 @@ from golf_app.models import Field, Tournament, Picks, Group, TotalScore, ScoreDe
 from django.contrib.auth.models import User
 from django.shortcuts import render, get_object_or_404, redirect
 from django.core.exceptions import ObjectDoesNotExist
-from django.db.models import Count, Sum, Q
+from django.db.models import Count, Sum, Q, Min 
 from datetime import datetime
 from django.db import transaction
 import urllib
@@ -320,6 +320,12 @@ def espn_calc(sd):
                             if not PickMethod.objects.filter(user=winner.user, method=3, tournament=winner.playerName.tournament).exists():
                                 BonusDetails.objects.filter(user=winner.user, tournament=winner.playerName.tournament).update(winner_bonus=50)
 
+                        for loser in Picks.objects.filter(playerName__tournament=t, playerName__playerName=match.get('loser')):
+                            if not PickMethod.objects.filter(user=loser.user, method=3, tournament=loser.playerName.tournament).exists():
+                                BonusDetails.objects.filter(user=loser.user, tournament=loser.playerName.tournament).update(playoff_bonus=25)
+
+
+
                 if round == '3rd Place':
                     if  Picks.objects.filter(playerName__tournament=t, playerName__playerName=match.get('winner')).exists():
                         pick = Picks.objects.filter(playerName__tournament=t, playerName__playerName=match.get('winner')).first()
@@ -334,10 +340,10 @@ def espn_calc(sd):
                                                 sod_position=None
                                             )
 
-                        for winner in Picks.objects.filter(playerName__tournament=t, playerName__playerName=match.get('winner')):
-                            if not PickMethod.objects.filter(user=winner.user, method=3, tournament=winner.playerName.tournament).exists():
-                                BonusDetails.objects.filter(user=winner.user, tournament=winner.playerName.tournament).update(playoff_bonus=25)
-
+                if sd.get('Finals') and sd.get('Finals').get('match1').get('winner') and sd.get('3rd Place').get('match1').get('winner') and \
+                    sd.get('Finals') and sd.get('Finals').get('match1').get('winner') != '' and sd.get('3rd Place').get('match1').get('winner') != '':
+                    t.complete = True
+                    t.save()
 
                 
 
@@ -373,33 +379,31 @@ def total_scores():
         ts_dict[ts.user.username] = {'total_score': ts.score, 'cuts': ts.cut_count, 'msg': message}
         print ('ts loop duration', datetime.now() - ts_loop_start)
 
-        if BonusDetails.objects.filter(tournament=t, winner_bonus__gt=0)
-
-for ts in TotalScore.objects.filter(tournament=self.tournament):
-            bd = BonusDetails.objects.get(tournament=ts.tournament, user=ts.user)
-            ts_dict[ts.user.username].update({'total_score': ts.score, 'winner_bonus': bd.winner_bonus, 'major_bonus': bd.major_bonus, 'cut_bonus': bd.cut_bonus,
-             'best_in_group': bd.best_in_group_bonus, 'playoff_bonus': bd.playoff_bonus, 'handicap': ts.total_handicap()})
 
 
-    # if self.tournament.complete:
-    #     if self.tournament.major: 
-    #         winning_score = TotalScore.objects.filter(tournament=self.tournament).aggregate(Min('score'))
-    #         print (winning_score)
-    #         winner = TotalScore.objects.filter(tournament=self.tournament, score=winning_score.get('score__min'))
-    #         print ('major', winner)
-    #         for w in winner:
-    #             if not PickMethod.objects.filter(tournament=self.tournament, user=w.user, method=3).exists():
-    #                 bd, created = BonusDetails.objects.get_or_create(user=w.user, tournament=self.tournament)
-    #                 bd.major_bonus = 100/self.tournament.num_of_winners()
-    #                 w.score -= bd.major_bonus
-    #                 bd.save()
-    #                 w.save()
+    if t.complete and t.major: 
+        winning_score = TotalScore.objects.filter(tournament=t).aggregate(Min('score'))
+        print ('MP winning score: ', winning_score)
+        winner = TotalScore.objects.filter(tournament=t, score=winning_score.get('score__min'))
+        print ('major', winner)
+        for w in winner:
+            if not PickMethod.objects.filter(tournament=t, user=w.user, method=3).exists():
+                bd, created = BonusDetails.objects.get_or_create(user=w.user, tournament=t)
+                bd.major_bonus = 100/t.num_of_winners()
+                w.score -= bd.major_bonus
+                #w.score -= bd.winner_bonus
+                #w.score -= bd.playoff_bonus
+                bd.save()
+                w.save()
     
-    # for ts in TotalScore.objects.filter(tournament=self.tournament):
-    #     bd = BonusDetails.objects.get(tournament=ts.tournament, user=ts.user)
-    #     ts_dict[ts.user.username].update({'total_score': ts.score, 'winner_bonus': bd.winner_bonus, 'major_bonus': bd.major_bonus, 'cut_bonus': bd.cut_bonus,
-    #         'best_in_group': bd.best_in_group_bonus, 'playoff_bonus': bd.playoff_bonus, 'handicap': ts.total_handicap()})
-
+    for ts in TotalScore.objects.filter(tournament=t):
+        bd = BonusDetails.objects.get(tournament=ts.tournament, user=ts.user)
+        ts.score -= bd.winner_bonus
+        ts.score -= bd.playoff_bonus
+        ts.save()
+        ts_dict[ts.user.username].update({'total_score': ts.score, 'winner_bonus': bd.winner_bonus, 'major_bonus': bd.major_bonus, 'cut_bonus': bd.cut_bonus,
+        'best_in_group': bd.best_in_group_bonus, 'playoff_bonus': bd.playoff_bonus, 'handicap': ts.total_handicap()})
+    
     
     sorted_ts_dict = sorted(ts_dict.items(), key=lambda v: v[1].get('total_score'))
     print (ts_dict)

@@ -1072,7 +1072,10 @@ class MPScoresAPI(APIView):
         pk =self.request.GET.get('tournament')
         t = Tournament.objects.get(pk=pk)
         #score_dict = scrape_espn.ScrapeESPN().get_mp_data()
-        if t.saved_round == 1:
+        if t.complete:
+            sd = ScoreDict.objects.get(tournament=t)
+            score_dict = sd.data
+        elif t.saved_round == 1:
             print ('MP round 1 scraping group sect')
             score_dict = scrape_scores_picks.ScrapeScores(t, 'https://www.pgatour.com/competition/2021/wgc-dell-technologies-match-play/group-stage.html').mp_brackets()
         else:
@@ -1084,6 +1087,7 @@ class MPScoresAPI(APIView):
         info = get_info(t)
         totals = Season.objects.get(season=t.season).get_total_points()
         print ('calc scores complete MP')
+        ScoreDict.objects.filter(tournament=t).update(data=score_dict)
 
         return Response(({'picks':  {'msg': 'no data'},
                                 'totals': ts,
