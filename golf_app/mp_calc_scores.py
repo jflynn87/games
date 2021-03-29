@@ -254,29 +254,13 @@ def mp_calc_scores(tournament, request=None):
 
 def espn_calc(sd):
     
-    # if len(sd) == 64:
-    #     round = 1
-    # elif len(sd) == 17:
-    #     round = 2
-    # elif len(sd) == 9:
-    #     round = 3
-    # elif len(sd) == 5:
-    #     round = 4
-    # else:
-    #     print ('MP calc scores score dict len not expected: ', len(sd))
-    #     return 
-    
     t = Tournament.objects.get(pga_tournament_num='470', season__current=True)
     if t.saved_round == 1:
         for p in Picks.objects.filter(Q(playerName__tournament=t) & (Q(score__isnull=True) |  Q(score=0))).values('playerName').distinct():
-        #for p in Picks.objects.filter(playerName__tournament=t).values('playerName').distinct():
             print ('calc mp score loop', p)
             pick_loop_start = datetime.now()
             print (p)
             pick = Picks.objects.filter(playerName__pk=p.get('playerName')).first()
-            #print ('ccc', pick.playerName.playerName)
-            #d = utils.fix_name(pick.playerName.playerName, sd)
-            #print ('mp scores pick lookup: ', p, d)
             print ('round: ', t.saved_round)
             if sd.get(pick.playerName.golfer.espn_number).get('pos') in ["1", "T1"]:
                 score = 0
@@ -308,8 +292,8 @@ def espn_calc(sd):
                             score = 4 
                         elif round == 'Finals':
                             score = 2
-                        Picks.objects.filter(playerName__tournament=t, playerName=pick.playerName).update(score=score)
 
+                        Picks.objects.filter(playerName__tournament=t, playerName=pick.playerName).update(score=score)
                         ScoreDetails.objects.filter(pick__playerName__tournament=t, pick__playerName=pick.playerName).update(
                                                 score=score,
                                                 gross_score=score,
@@ -332,6 +316,9 @@ def espn_calc(sd):
                                                 toPar=None,
                                                 sod_position=None
                                             )
+                        for winner in Picks.objects.filter(playerName__tournament=t, playerName__playerName=match.get('winner')):
+                            if not PickMethod.objects.filter(user=winner.user, method=3, tournament=winner.playerName.tournament).exists():
+                                BonusDetails.objects.filter(user=winner.user, tournament=winner.playerName.tournament).update(winner_bonus=50)
 
                 if round == '3rd Place':
                     if  Picks.objects.filter(playerName__tournament=t, playerName__playerName=match.get('winner')).exists():
@@ -346,6 +333,11 @@ def espn_calc(sd):
                                                 toPar=None,
                                                 sod_position=None
                                             )
+
+                        for winner in Picks.objects.filter(playerName__tournament=t, playerName__playerName=match.get('winner')):
+                            if not PickMethod.objects.filter(user=winner.user, method=3, tournament=winner.playerName.tournament).exists():
+                                BonusDetails.objects.filter(user=winner.user, tournament=winner.playerName.tournament).update(playoff_bonus=25)
+
 
                 
 
@@ -378,9 +370,17 @@ def total_scores():
         else:
             message = ''
 
-
         ts_dict[ts.user.username] = {'total_score': ts.score, 'cuts': ts.cut_count, 'msg': message}
         print ('ts loop duration', datetime.now() - ts_loop_start)
+
+        if BonusDetails.objects.filter(tournament=t, winner_bonus__gt=0)
+
+for ts in TotalScore.objects.filter(tournament=self.tournament):
+            bd = BonusDetails.objects.get(tournament=ts.tournament, user=ts.user)
+            ts_dict[ts.user.username].update({'total_score': ts.score, 'winner_bonus': bd.winner_bonus, 'major_bonus': bd.major_bonus, 'cut_bonus': bd.cut_bonus,
+             'best_in_group': bd.best_in_group_bonus, 'playoff_bonus': bd.playoff_bonus, 'handicap': ts.total_handicap()})
+
+
     # if self.tournament.complete:
     #     if self.tournament.major: 
     #         winning_score = TotalScore.objects.filter(tournament=self.tournament).aggregate(Min('score'))
