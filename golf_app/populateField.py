@@ -2,7 +2,7 @@ from golf_app.models import (Picks, Field, Group, Tournament, TotalScore,
     ScoreDetails, Name, Season, User, BonusDetails, Golfer, ScoreDict)
 import urllib3
 from django.core.exceptions import ObjectDoesNotExist
-from golf_app import scrape_cbs_golf, scrape_espn, utils
+from golf_app import scrape_cbs_golf, scrape_espn, utils, scrape_scores_picks
 from django.db import transaction
 import urllib
 from bs4 import BeautifulSoup
@@ -127,30 +127,34 @@ def get_field(tournament_number):
     #sd.pick_data = {}
     #sd.save()
 
-    field_list = {}
+    #field_list = {}
+
+    #espn_field_dict = scrape_espn.ScrapeESPN().get_field()
+    field_dict = scrape_scores_picks.ScrapeScores().get_field()
+ 
+    
+    ## Keep in case PGA starts providing JSon data again
+    # for player in data["Tournament"]["Players"][0:]:
+    #     if 'Jr' in player["PlayerName"]:
+    #         name = player["PlayerName"].split(' ')[2] + ' ' + player["PlayerName"].split(' ')[0] + ' ' +player["PlayerName"].split(' ')[1][:-1]
+    #     else:    
+    #         name = (' '.join(reversed(player["PlayerName"].split(', '))).replace('(am)', '').replace('(a)', ''))
+    #     playerID = player['TournamentPlayerId']
+    #     try:
+    #         if player["isAlternate"] == "Yes":
+    #             #exclude alternates from the field
+    #             alternate = True
+    #         else:
+    #             alternate = False
+    #             field_list[name] = alternate, playerID
+    #     except IndexError:
+    #         alternate = False
+    #         print (player + 'alternate lookup failed')
 
 
-    for player in data["Tournament"]["Players"][0:]:
-        if 'Jr' in player["PlayerName"]:
-            name = player["PlayerName"].split(' ')[2] + ' ' + player["PlayerName"].split(' ')[0] + ' ' +player["PlayerName"].split(' ')[1][:-1]
-        else:    
-            name = (' '.join(reversed(player["PlayerName"].split(', '))).replace('(am)', '').replace('(a)', ''))
-        playerID = player['TournamentPlayerId']
-        try:
-            if player["isAlternate"] == "Yes":
-                #exclude alternates from the field
-                alternate = True
-            else:
-                alternate = False
-                field_list[name] = alternate, playerID
-        except IndexError:
-            alternate = False
-            print (player + 'alternate lookup failed')
 
-
-
-    print (field_list)
-    return field_list
+    print (field_dict)
+    return field_dict
 
 
 def configure_groups(field_list):
@@ -249,12 +253,12 @@ def create_groups(tournament_number):
     name_issues = []
     for player in field:
         #print (player)
-        if Name.objects.filter(PGA_name=player).exists():
-            name_switch = True
-            name = Name.objects.get(PGA_name=player)
-            player = name.OWGR_name
-            print ('owgr player', player)
-            print ('pga player', name)
+        #if Name.objects.filter(PGA_name=player).exists():
+        #    name_switch = True
+        #    name = Name.objects.get(PGA_name=player)
+        #    player = name.OWGR_name
+        #    print ('owgr player', player)
+        #    print ('pga player', name)
 
         # fix this to get 0 index of ranking list
         try:
@@ -264,7 +268,7 @@ def create_groups(tournament_number):
         except Exception:
             try:
                 lookup = utils.fix_name(player, OWGR_rankings)
-                print ('not in owgr', player, lookup)
+                print ('resolved by utils name_fix', player, lookup)
                 name_issues.append((player, lookup))
                 rank = lookup[1]
                 #rank = PGA_rankings[player]
@@ -272,10 +276,10 @@ def create_groups(tournament_number):
                 print ('no rank found', player, e)
                 rank = [9999, 9999, 9999]
 
-        if name_switch:
-            print ('name switch', player, name)
-            player = name.PGA_name
-            name_switch = False
+        #if name_switch:
+        #    print ('name switch', player, name)
+        #    player = name.PGA_name
+        #    name_switch = False
 
         group_dict[player] = [rank, field.get(player)]
  
@@ -457,8 +461,11 @@ def prior_year_sd(t):
 
     print ('proir T: ', prior_t, prior_t.season)
     sd, created = ScoreDict.objects.get_or_create(tournament=prior_t)
-    pga_nums = [v.get('pga_num') for (k,v) in sd.data.items() if k != 'info' and v.get('pga_num')] 
-    print ('prior SD # of pga nums: ', len(pga_nums))
+    if not created:
+        pga_nums = [v.get('pga_num') for (k,v) in sd.data.items() if k != 'info' and v.get('pga_num')] 
+        print ('prior SD # of pga nums: ', len(pga_nums))
+    else:
+        print ('created score dict')
 
     if (not created and (not sd.data or len(sd.data) == 0 or len(pga_nums) == 0)) or created:
         print ('updating prior SD', prior_t)

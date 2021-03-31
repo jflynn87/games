@@ -340,3 +340,26 @@ class ScrapeESPN(object):
         except Exception as e:
             print ('issue scraping espn MP', e)
             return {}   
+
+    def get_field(self):
+        
+        field_dict = {}
+        html = urllib.request.urlopen(self.url)
+        soup = BeautifulSoup(html, 'html.parser')
+            
+        leaderboard = soup.find('div', {'class': 'competitors'})
+        table = leaderboard.find('tbody', {'class': 'Table__TBODY'})
+
+        #print (leaderboard)
+        for row in table.find_all('tr', {'class', 'Table__TR'}):
+            #print (row)
+            field_dict[row.a.text] = get_espn_num(row.a['href'])
+        
+        return field_dict
+
+
+def get_espn_num(row):
+    '''takes a sting formatted as an a tag href and returns a string'''
+    #return row.a['href'].split('/')[7]
+    return row.split('/')[7]
+

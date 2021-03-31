@@ -71,8 +71,16 @@ def fix_name(player, owgr_rankings):
         print ('name dict match: ', owgr_rankings.get(player))
         return (player, owgr_rankings.get(player))
 
-    print (player.replace(',', '').split(' '))
+    if owgr_rankings.get(unidecode.unidecode(player)):
+        print ('unidecoded name dict match: ', player, owgr_rankings.get(unidecode.unidecode(player)))
+        return (player, owgr_rankings.get(unidecode.unidecode(player)))
+
+    #print (player.replace(',', '').split(' '))
     
+    pga_name = player.replace(' (a)', '').replace(',', '').split(' ')
+    print ('input name: ', player)
+    print ('pga name for compare: ', pga_name)
+
     for k, v in owgr_rankings.items():
         owgr_name = k.replace(',', '').split(' ')
         if '(' in owgr_name[len(owgr_name)-1] and owgr_name[len(owgr_name)-2] == '':
@@ -80,8 +88,6 @@ def fix_name(player, owgr_rankings):
             del owgr_name[len(owgr_name)-1]
             if owgr_rankings == player.replace(',', '').split(' '):
                 return k, v
-        
-        pga_name = player.replace(',', '').split(' ')
         
         if unidecode.unidecode(owgr_name[len(owgr_name)-1]) == unidecode.unidecode(pga_name[len(pga_name)-1]) \
            and k[0:1] == player[0:1]:
@@ -99,6 +105,13 @@ def fix_name(player, owgr_rankings):
             and unidecode.unidecode(owgr_name[len(owgr_name)-1]) == unidecode.unidecode(pga_name[0]):
             print ('names reversed', player)
             return k, v
+
+    s_name = [v for k, v in owgr_rankings.items() if k.split('(')[0] == player.split('(')[0]]
+    if len(s_name) ==1:
+        print ('split from ( match: ', player, s_name[0])
+        return (player, s_name[0])
+
+    
 
     print ('didnt find match', player)
     return None, [9999, 9999, 9999]
@@ -119,3 +132,24 @@ def check_t_names(espn_t, t):
         #return True
         return False
 
+def reverse_names(name):
+    #print (name, len(name.rstrip(' ').split(' ')), name.rstrip(' ').split(' '))
+    work_list = name.rstrip(' ').split(' ')
+    #print (work_list)
+    names = list(filter(None, work_list))
+    print(names)
+    ret_val = ''
+    for n in names:
+        if len(ret_val) > 0:
+            ret_val += ' '
+        ret_val += n
+    print (ret_val)
+    return ret_val
+
+    #if len(names) == 2:
+    #    return names[0] + ' ' + names[1]
+    #elif len(names) == 3:
+    #    return names[0] + ' ' + names[1] + ' ' + names[2]
+    #else:
+    #    print ('unexpected name: ', name)
+    #    return names[len(names)-1] + ' ' + names[0] 

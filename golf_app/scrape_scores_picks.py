@@ -14,16 +14,18 @@ from selenium.webdriver.common.by import By
 import json
 from golf_app import utils
 from bs4 import BeautifulSoup
+import time
 
 
 
 class ScrapeScores(object):
 
-    def __init__(self, tournament, url=None, mode=None):
+    def __init__(self, tournament=None, url=None, mode=None):
+        print (url)
         self.tournament = tournament
-        if url != None:
+        if url:
             self.url = url
-        elif self.tournament.current:
+        elif tournament == None or self.tournament.current:
             self.url = "https://www.pgatour.com/leaderboard.html"
             #self.url = "https://www.pgatour.com/competition/2021/mayakoba-golf-classic/leaderboard.html"
         else:
@@ -60,7 +62,7 @@ class ScrapeScores(object):
         print ('driver pre url: ', datetime.now() - start)
         driver.get(self.url)
         print ('driver after url: ', datetime.now() - start)
-
+        
         soup = BeautifulSoup(driver.page_source, 'html.parser')
         print ('driver after soup: ', datetime.now() - start)
         table = (soup.find("div", {'id':'stroke-play-container'}))
@@ -342,6 +344,50 @@ class ScrapeScores(object):
 
         finally:
             driver.quit()
+
+    def get_field(self):
+        try:
+            start = datetime.now()
+            field_dict = {}
+            options = ChromeOptions()
+            options.add_argument("--headless")
+            options.add_argument("--disable-gpu")
+            options.add_argument('--ignore-certificate-errors')
+            options.add_argument("--window-size=1920x1080")
+            #options.add_argument('--no-sandbox')
+
+            driver = Chrome(options=options)
+
+            print ('driver pre url: ', datetime.now() - start)
+            driver.get(self.url)
+            print ('driver after url: ', datetime.now() - start)
+            
+            try:
+                data = WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.XPATH, '//*[@id="stroke-play-container"]/div/div[1]/div[4]/table'))) 
+            except Exception as r:
+                print ('wait exept', r)
+            
+            #print (data)
+            soup = BeautifulSoup(driver.page_source, 'html.parser')
+            lb =  soup.find('div', {'id': 'stroke-play-container'})
+            tables = lb.find_all('table', {'class': 'leaderboard-table'})
+            for t in tables:
+                for row in t.find_all('tr', {'class': 'line-row'}):
+                    name = row.find('div', {'class': 'player-name-col'}).text
+                    
+                    pga_num = row.attrs['class'][1].split('-')[2]
+                    #print (name, pga_num)
+                    field_dict[utils.reverse_names(name)] = (False, pga_num)
+
+            return field_dict
+
+        except Exception as e:
+            print ('scrape field issue: ', e)
+            return {}
+
+        finally:
+            driver.quit()
+
 
 
        

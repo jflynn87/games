@@ -36,8 +36,51 @@ import collections
 
 start = datetime.now()
 
+web = scrape_scores_picks.ScrapeScores().get_field()
+print (web)
+# golfer_dict = {}
+
+# for g in Golfer.objects.all():
+#     golfer_dict[g.golfer_name] = {'pga_num': g.golfer_pga_num,
+#                                 'espn_num': g.espn_number}
+# print (golfer_dict)
+# web = scrape_espn.ScrapeESPN().get_field()
+# for k, v in web.items():
+#     if Golfer.objects.filter(golfer_name=k).exists():
+#         pass
+#     else:
+#         fixed_name = utils.fix_name(k, golfer_dict)
+#         print ('fixed name', k, fixed_name)
+        
+
+
+exit()
+
 #print (scrape_espn.ScrapeESPN(None, None, True).get_data())
 #t = Tournament.objects.get(pk=24) #Match Play
+
+#owgr = populateField.get_worldrank()
+
+# with open("owgr.json") as json_file:
+#     owgr = json.load(json_file)
+
+# player = "Freddie Jacobson"
+
+# owgr_d = dict(owgr)
+# s_name = [v for k,v in owgr_d.items() if k.split('(')[0] == player.split('(')[0]]
+# if len(s_name) ==1:
+#         print ('split from ( match: ', player, s_name[0])
+        
+
+# exit()
+
+
+name = utils.fix_name(player, dict(owgr))
+print ('owgr: ', {k:v for k, v in owgr.items() if k==player})
+print (name)
+
+
+exit()
 
 t = Tournament.objects.get(current=True)
 #web = scrape_scores_picks.ScrapeScores(t, 'https://www.pgatour.com/competition/2021/wgc-dell-technologies-match-play/group-stage.html').mp_brackets()

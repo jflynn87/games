@@ -28,7 +28,7 @@ class WDCheck(object):
             if [v for v in self.field.values() if v.get('pga_num') == golfer.golfer.espn_number]:
                 good_list.append(golfer.playerName)
             else:
-                print ('missed look up', golfer.playerName, self.field.get(golfer.playerName))
+               # print ('missed look up', golfer.playerName, self.field.get(golfer.playerName))
                 wd_list.append(golfer.playerName)
         results['wd_list'] = wd_list
         results['good_list'] = good_list
