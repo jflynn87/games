@@ -93,6 +93,11 @@ def fix_name(player, owgr_rankings):
            and k[0:1] == player[0:1]:
             print ('last name, first initial match', player)
             return k, v
+        elif len(owgr_name) == 3 and len(pga_name) == 3 and owgr_name[0] == pga_name[0] \
+            and owgr_name[2] == pga_name[2] and owgr_name[1][0] == pga_name[1][0]:
+                print ('last name, first name match, middle first intial match', player)
+                return k, v
+       
         elif unidecode.unidecode(owgr_name[len(owgr_name)-2]) == unidecode.unidecode(pga_name[len(pga_name)-1]) \
             and k[0:1] == player[0:1]:
             print ('last name, first initial match, cut owgr suffix', player)
@@ -124,7 +129,12 @@ def check_t_names(espn_t, t):
     print ('espn name: ', espn_name)
     print ('pga name: ', pga_name)
     matches = len([x for x in pga_name if x in espn_name])
+    print ('matches: ', matches == len(espn_name) -1, espn_name[1], type(espn_name[1]))
     if len(pga_name) < 4 and espn_name == pga_name:
+        return True
+    #added below for masters, could be better
+    elif espn_name[0] == '2021' and matches == len(espn_name) -1:
+        print ('returning true match by removing year from espn')
         return True
     elif len(pga_name) > 3 and matches > len(pga_name)/2:
         return True

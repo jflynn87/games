@@ -458,9 +458,6 @@ class Field(models.Model):
     def __str__(self):
         return  self.playerName
 
-    #def get_absolute_url(self):
-    #    return reverse("golf_app:show_picks",kwargs={'pk':self.pk})
-
     def formatted_name(self):
         return self.playerName.replace(' Jr.','').replace('(am)','')
 
@@ -469,14 +466,27 @@ class Field(models.Model):
             last_season = str(int(self.tournament.season.season)-1)
             t = Tournament.objects.get(pga_tournament_num=self.tournament.pga_tournament_num, season__season=last_season)
         except Exception as e:
-            last_season = str(int(self.tournament.season.season)-2)
-            t = Tournament.objects.get(pga_tournament_num=self.tournament.pga_tournament_num, season__season=last_season)
+            try:
+                last_season = str(int(self.tournament.season.season)-2)
+                t = Tournament.objects.get(pga_tournament_num=self.tournament.pga_tournament_num, season__season=last_season)
+            except Exception as e1:
+                try: 
+                    if self.tournament.pga_tournament_num == '536':
+                        #hard coded for masters 2021 
+                        t = Tournament.objects.get(pga_tournament_num='014', season__season='2021')
+                except Exception as e2:
+                    print ('cant find prior tournament ', e1)
+                    return 'n/a'
+        
         
         #sd = ScoreDict.objects.get(tournament=t)
 
         try:
             sd = ScoreDict.objects.get(tournament=t)
-            return [v.get('rank') for k, v in sd.data.items() if k !='info' and v.get('pga_num') in [self.golfer.espn_number, self.golfer.golfer_pga_num]][0]
+            if t.pga_tournament_num != "470":
+                return [v.get('rank') for k, v in sd.data.items() if k !='info' and v.get('pga_num') in [self.golfer.espn_number, self.golfer.golfer_pga_num]][0]
+            else:
+                return str(self.get_mp_result())
         except Exception as e:
             #print ('prior_year_exception', self, e)
             return 'n/a'
@@ -506,22 +516,44 @@ class Field(models.Model):
         try:
             #for t in Tournament.objects.all().order_by('-pk')[1:5]):
             for t in Tournament.objects.all().order_by('pk').reverse()[1:5]:
-                #print (t.season, t)
-                sd = ScoreDict.objects.get(tournament=t)
                 if Field.objects.filter(tournament=t, golfer__espn_number=self.golfer.espn_number).exclude(withdrawn=True).exists():
+                    print (Field.objects.get(tournament=t, golfer__espn_number=self.golfer.espn_number))
+                    sd = ScoreDict.objects.get(tournament=t)
                     f = Field.objects.get(tournament=t, golfer__espn_number=self.golfer.espn_number)
-                    x = [v.get('rank') for k, v in sd.data.items() if k !='info' and v.get('pga_num') in [self.golfer.espn_number, self.golfer.golfer_pga_num]]
-                    if len(x) > 0:
-                        data.update({t.pk:{'name': t.name, 'rank': x[0]}})
+                    if t.pga_tournament_num != '470':
+                        x = [v.get('rank') for k, v in sd.data.items() if k !='info' and v.get('pga_num') in [self.golfer.espn_number, self.golfer.golfer_pga_num]]
+                        if len(x) > 0:
+                            data.update({t.pk:{'name': t.name, 'rank': x[0]}})
+                        else:
+                            data.update({t.pk:{'name': t.name, 'rank': 'DNP'}})    
                     else:
-                        data.update({t.pk:{'name': t.name, 'rank': 'DNP'}})    
+                        data.update({t.pk: {'name': t.name, 'rank': 'MP ' + str(self.get_mp_result(t))}})
                 else:
                     data.update({t.pk:{'name': t.name, 'rank': 'DNP'}})
+                
 
         except Exception as e:
             print ('recent results exception', e)
         #print ('recent results: ', datetime.now() - start)
         return data
+
+    def get_mp_result(self, t):
+        
+        sd = ScoreDict.objects.get(tournament=t)
+        if {k:v for k, v in sd.data.items() if k == 'Finals' and {num:match for num, match in v.items() if match.get('winner') == self.playerName}}:
+            return 1 
+        elif {k:v for k, v in sd.data.items() if k == 'Finals' and {num:match for num, match in v.items() if match.get('loser') == self.playerName}}:
+            return 2
+        elif {k:v for k, v in sd.data.items() if k == '3rd Place' and {num:match for num, match in v.items() if match.get('winner') == self.playerName}}:
+            return 3
+        elif {k:v for k, v in sd.data.items() if k == '3rd Place' and {num:match for num, match in v.items() if match.get('loser') == self.playerName}}:
+            return 4
+        elif {k:v for k, v in sd.data.items() if k == 'Quaterfinals' and {num:match for num, match in v.items() if match.get('loser') == self.playerName}}:
+            return 5
+        elif {k:v for k, v in sd.data.items() if k == 'Round of 16' and {num:match for num, match in v.items() if match.get('loser') == self.playerName}}:
+            return 9
+        else:
+            return 17
 
 
 class PGAWebScores(models.Model):
@@ -729,3 +761,5 @@ class ScoreDict(models.Model):
 class UserProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     email_picks = models.BooleanField(default=False)
+
+

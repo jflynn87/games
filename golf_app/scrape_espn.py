@@ -243,12 +243,17 @@ class ScrapeESPN(object):
             players = player_table.find_all('tr')
             
             for row in players:
-                td = row.find_all('td')
-                try:
-                    name = (' '.join(reversed(td[0].text.split(', '))))
-                    player_dict[name]= {'espn_num': td[0].a['href'].split('/')[7]}
-                except Exception as e:
-                    pass
+                exclude_class = ['stathead', 'colhead']
+                #print ('my set: ', set(row['class']).intersection(exclude_class))
+                if row.has_attr('class') and not bool(set(row['class']).intersection(exclude_class)):
+                    td = row.find_all('td')
+                    try:
+                        name = (' '.join(reversed(td[0].text.split(', '))))
+                        #player_dict[name]= {'espn_num': td[0].a['href'].split('/')[7]}
+                        player_dict[name] = {'espn_num': get_espn_num(td[0].a['href']),
+                                            'detail_link': td[0].a['href']}
+                    except Exception as e:
+                        print ('scrape espn players execption: ', e, row)
 
             return player_dict
 
@@ -290,56 +295,56 @@ class ScrapeESPN(object):
 
 
 
-    def get_mp_data(self):
-        print ('scraping golf espn com match play')
+    # def get_mp_data(self):
+    #     print ('scraping golf espn com match play')
         
-        sd, created = ScoreDict.objects.get_or_create(tournament=self.tournament)
-        if self.setup:
-            print ('set up mode, scraping')
-        elif not created and (sd.updated + timedelta(minutes = 1)) > datetime.utcnow().replace(tzinfo=pytz.utc):
-            print ('returning saved score dict ', 'sd saved time: ', sd.updated, 'current time: ', datetime.utcnow().replace(tzinfo=pytz.utc))
-            return sd.data
+    #     sd, created = ScoreDict.objects.get_or_create(tournament=self.tournament)
+    #     if self.setup:
+    #         print ('set up mode, scraping')
+    #     elif not created and (sd.updated + timedelta(minutes = 1)) > datetime.utcnow().replace(tzinfo=pytz.utc):
+    #         print ('returning saved score dict ', 'sd saved time: ', sd.updated, 'current time: ', datetime.utcnow().replace(tzinfo=pytz.utc))
+    #         return sd.data
  
-        try:
-            score_dict = {}
+    #     try:
+    #         score_dict = {}
 
-            html = urllib.request.urlopen(self.url)
-            soup = BeautifulSoup(html, 'html.parser')
+    #         html = urllib.request.urlopen(self.url)
+    #         soup = BeautifulSoup(html, 'html.parser')
             
-            leaderboard = soup.find_all('div', {'class': 'MatchPlay__Match'})
-            start = datetime.now()
-            status = soup.find('li', {'class': 'tabs__list__item tabs__list__item--active'}).text
-            day = status.find('data-track-name')
-            print ('day', soup.find('li', {'class': 'tabs__list__item tabs__list__item--active'}))
-            score_dict['info'] = {'source': 'espn', 
-                                'status': status}
+    #         leaderboard = soup.find_all('div', {'class': 'MatchPlay__Match'})
+    #         start = datetime.now()
+    #         status = soup.find('li', {'class': 'tabs__list__item tabs__list__item--active'}).text
+    #         day = status.find('data-track-name')
+    #         print ('day', soup.find('li', {'class': 'tabs__list__item tabs__list__item--active'}))
+    #         score_dict['info'] = {'source': 'espn', 
+    #                             'status': status}
             
-            for row in leaderboard:
-                for p in row.find_all('div', {'class': 'ScoreCell__TeamName ScoreCell__TeamName--displayName truncate db'}):
-                    score_dict[p.text.lstrip('(a) ')] = {'rank': 0, 'change': '', 'handicap': 0, 'sod_position': ''}
-                    #score_dict[row.a.text] = {
-                    #                    'pga_num': row.a['href'].split('/')[7],
-                    #                    'rank': td[0].text,
-                    #                    'change': '',
-                    #                    'round_score': td[3].text,
-                    #                    'total_score': td[2].text,
-                    #                    'thru': td[4].text,
-                    #                    'r1': td[5].text,
-                    #                    'r2': td[6].text,
-                    #                    'r3': td[7].text,
-                    #                    'r4': td[8].text,  
-                    #                    'tot_strokes': td[9].text,
-                    #}
-                #if len(td) > 1 and Field.objects.filter(golfer__espn_number=score_dict[row.a.text]['pga_num'], tournament=self.tournament).exists():
-                #    f = Field.objects.get(golfer__espn_number=score_dict[row.a.text]['pga_num'], tournament=self.tournament)
-                #    score_dict[row.a.text].update({'handicap': f.handicap(),
-                                         #          'group': f.group.number})                           
+    #         for row in leaderboard:
+    #             for p in row.find_all('div', {'class': 'ScoreCell__TeamName ScoreCell__TeamName--displayName truncate db'}):
+    #                 score_dict[p.text.lstrip('(a) ')] = {'rank': 0, 'change': '', 'handicap': 0, 'sod_position': ''}
+    #                 #score_dict[row.a.text] = {
+    #                 #                    'pga_num': row.a['href'].split('/')[7],
+    #                 #                    'rank': td[0].text,
+    #                 #                    'change': '',
+    #                 #                    'round_score': td[3].text,
+    #                 #                    'total_score': td[2].text,
+    #                 #                    'thru': td[4].text,
+    #                 #                    'r1': td[5].text,
+    #                 #                    'r2': td[6].text,
+    #                 #                    'r3': td[7].text,
+    #                 #                    'r4': td[8].text,  
+    #                 #                    'tot_strokes': td[9].text,
+    #                 #}
+    #             #if len(td) > 1 and Field.objects.filter(golfer__espn_number=score_dict[row.a.text]['pga_num'], tournament=self.tournament).exists():
+    #             #    f = Field.objects.get(golfer__espn_number=score_dict[row.a.text]['pga_num'], tournament=self.tournament)
+    #             #    score_dict[row.a.text].update({'handicap': f.handicap(),
+    #                                      #          'group': f.group.number})                           
             
-            return score_dict
+    #         return score_dict
 
-        except Exception as e:
-            print ('issue scraping espn MP', e)
-            return {}   
+    #     except Exception as e:
+    #         print ('issue scraping espn MP', e)
+    #         return {}   
 
     def get_field(self):
         
@@ -349,11 +354,23 @@ class ScrapeESPN(object):
             
         leaderboard = soup.find('div', {'class': 'competitors'})
         table = leaderboard.find('tbody', {'class': 'Table__TBODY'})
+        player_dict = self.get_espn_players()
 
         #print (leaderboard)
         for row in table.find_all('tr', {'class', 'Table__TR'}):
             #print (row)
-            field_dict[row.a.text] = get_espn_num(row.a['href'])
+            try:
+                espn_num = get_espn_num(row.a['href'])
+                detail = [v.get('detail_link') for k,v in player_dict.items() if v.get('espn_num') ==  espn_num]
+                if len(detail) == 1:
+                    d = detail[0]
+                else:
+                    d = ''
+                field_dict[row.a.text] = {'espn_num': espn_num,
+                                          'detail_link': d}
+
+            except Exception as e:
+                print ('get espn field row logic exception: ', e, row)
         
         return field_dict
 

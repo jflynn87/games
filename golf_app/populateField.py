@@ -5,6 +5,7 @@ from django.core.exceptions import ObjectDoesNotExist
 from golf_app import scrape_cbs_golf, scrape_espn, utils, scrape_scores_picks
 from django.db import transaction
 import urllib
+from urllib.request import Request, urlopen
 from bs4 import BeautifulSoup
 import json
 import datetime
@@ -12,11 +13,11 @@ import unidecode
 import collections
 
 
-def clean_db():
-    print ('in clean db')
-    from golf_app.management.commands.clear_models import Command
+# def clean_db():
+#     print ('in clean db')
+#     from golf_app.management.commands.clear_models import Command
 
-    Command()
+#     Command()
 
 
 def get_pga_worldrank():
@@ -95,13 +96,25 @@ def get_field(tournament_number):
 
     season = Season.objects.get(current=True)
     print ('getting field')
-    json_url = 'https://statdata.pgatour.com/r/' + str(tournament_number) +'/field.json'
+    #json_url = 'https://statdata.pgatour.com/r/' + str(tournament_number) +'/field.json'
+    json_url = 'https://statdata-api-prod.pgatour.com/api/clientfile/Field?T_CODE=r&T_NUM=' + str(tournament_number) +  '&YEAR=' + str(season) + '&format=json'
     print (json_url)
-    with urllib.request.urlopen(json_url) as field_json_url:
-        data = json.loads(field_json_url.read().decode())
+    #with urllib.request.urlopen(json_url) as field_json_url:
+    #    data = json.loads(field_json_url.read().decode())
 
-    tourny = Tournament()
+    req = Request(json_url, headers={'User-Agent': 'Mozilla/5.0'})
+    data = json.loads(urlopen(req).read())
+
+    
+    #if data["Tournament"]["TournamentName"][1:4] != str(season):
+    print (data["Tournament"]["T_ID"][1:5], str(season))
+    if data["Tournament"]["T_ID"][1:5] != str(season):
+        print ('check field, looks bad!')
+        raise LookupError('Tournament season mismatch: ', data["Tournament"]["T_ID"]) 
+
+    tourny = Tournament()    
     tourny.name = data["Tournament"]["TournamentName"]
+
     tourny.season = season
     start_date = datetime.date.today()
     print (start_date)
@@ -110,6 +123,7 @@ def get_field(tournament_number):
     tourny.start_date = start_date
     tourny.field_json_url = json_url
     tourny.score_json_url = 'https://statdata.pgatour.com/r/' + str(tournament_number) +'/' + str(season) + '/leaderboard-v2mini.json'
+    
     tourny.pga_tournament_num = tournament_number
     tourny.current=True
     tourny.complete=False
@@ -129,27 +143,27 @@ def get_field(tournament_number):
 
     #field_list = {}
 
-    #espn_field_dict = scrape_espn.ScrapeESPN().get_field()
-    field_dict = scrape_scores_picks.ScrapeScores().get_field()
+    ## use PGA website if api fails, add that logic
+    #field_dict = scrape_scores_picks.ScrapeScores().get_field()
  
+    field_dict = {}
     
-    ## Keep in case PGA starts providing JSon data again
-    # for player in data["Tournament"]["Players"][0:]:
-    #     if 'Jr' in player["PlayerName"]:
-    #         name = player["PlayerName"].split(' ')[2] + ' ' + player["PlayerName"].split(' ')[0] + ' ' +player["PlayerName"].split(' ')[1][:-1]
-    #     else:    
-    #         name = (' '.join(reversed(player["PlayerName"].split(', '))).replace('(am)', '').replace('(a)', ''))
-    #     playerID = player['TournamentPlayerId']
-    #     try:
-    #         if player["isAlternate"] == "Yes":
-    #             #exclude alternates from the field
-    #             alternate = True
-    #         else:
-    #             alternate = False
-    #             field_list[name] = alternate, playerID
-    #     except IndexError:
-    #         alternate = False
-    #         print (player + 'alternate lookup failed')
+    for player in data["Tournament"]["Players"][0:]:
+        if 'Jr' in player["PlayerName"]:
+            name = player["PlayerName"].split(' ')[2] + ' ' + player["PlayerName"].split(' ')[0] + ' ' +player["PlayerName"].split(' ')[1][:-1]
+        else:    
+            name = (' '.join(reversed(player["PlayerName"].split(', '))).replace('(am)', '').replace('(a)', ''))
+        playerID = player['TournamentPlayerId']
+        try:
+            if player["isAlternate"] == "Yes":
+                #exclude alternates from the field
+                alternate = True
+            else:
+                alternate = False
+                field_dict[name] = alternate, playerID
+        except IndexError:
+            alternate = False
+            print (player + 'alternate lookup failed')
 
 
 

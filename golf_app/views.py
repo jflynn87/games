@@ -141,27 +141,6 @@ def email_picks(tournament, user):
     
     return
 
-# commented 8/30/2020 use model.py - delete after some testing
-# def save_picks(user, tournament, pick_list):
-#     '''takes user obj, tournament obj and pick list and saves picks as well as sets up score detail and Bonus
-#     details for the tournament'''
-
-#     for picks in pick_list:
-#         pick = Picks()
-#         pick.user = user
-#         pick.playerName = Field.objects.get(playerName=picks, tournament=tournament)
-#         pick.save()
-#         sd = ScoreDetails()
-#         sd.user = user
-#         sd.pick = pick
-#         sd.save()
-
-#     bd, created = BonusDetails.objects.get_or_create(tournament = tournament, \
-#     user = user, winner_bonus = 0, cut_bonus = 0)
-#     bd.save()
-
-#     return
-
 
 class ScoreGetPicks(APIView):
     

@@ -9,6 +9,7 @@
 
 <script type="text/javascript" src="{%static 'golf_app/js/field.js'%}"></script>
 <script type="text/javascript" src="{%static 'golf_app/js/get_prior_result.js'%}"></script>
+<script type="text/javascript" src="{%static 'golf_app/js/load_player_data.js'%}"></script>
 
 <link rel="stylesheet" href='{%static "golf_app/css/load.css"%}'>
 <div class='load'>
@@ -30,7 +31,12 @@
       
 
       <h4 id="t-name">{{tournament.name}}</h4>
-      
+<!--       <div id='test-container'>
+        <div id='test-body'></div>
+      <div id='test-footer'>  <p>x</p>
+       </div>
+      </div>
+ -->      
       <div id=withdraw></div>
       {%if tournament.pga_tournament_num != "470"%}
       <script type="text/babel" src="{%static 'test_app/src/withdraw.js'%}"></script>

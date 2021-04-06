@@ -81,3 +81,19 @@ progress {
   background-color: red;
 }
 
+.player-background {
+  color: red;
+  background-repeat: no-repeat, repeat;
+  background-color: cyan;  
+  /*background-image: "C:\Users\jflyn\pythonProjects\games\gamesProj\static\img\IMG_4425.jpg", "C:\Users\jflyn\pythonProjects\games\gamesProj\static\img\Masters-leaderboard.gif";
+  background-image: url("/static/img/bigstock-Golf-ball-on-green-turf-banner-93044627.jpg"), url("/static/img/Masters-leaderboard.gif");
+  background-blend-mode: lighten;*/
+
+}
+
+.player-footer {
+  background-repeat: no-repeat, repeat;
+ background-image: url("/static/img/bigstock-Golf-ball-on-green-turf-banner-93044627.jpg");
+
+
+}
