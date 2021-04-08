@@ -452,7 +452,7 @@ class Field(models.Model):
     recent = models.JSONField(null=True)
 
     class Meta:
-        ordering = ['group', 'currentWGR']
+        ordering = ['-tournament', 'group', 'currentWGR']
         
 
     def __str__(self):
@@ -516,8 +516,7 @@ class Field(models.Model):
         try:
             #for t in Tournament.objects.all().order_by('-pk')[1:5]):
             for t in Tournament.objects.all().order_by('pk').reverse()[1:5]:
-                if Field.objects.filter(tournament=t, golfer__espn_number=self.golfer.espn_number).exclude(withdrawn=True).exists():
-                    print (Field.objects.get(tournament=t, golfer__espn_number=self.golfer.espn_number))
+                if Field.objects.filter(tournament=t, golfer__espn_number=self.golfer.espn_number).exclude(withdrawn=True).exclude(golfer__espn_number__isnull=True).exists():
                     sd = ScoreDict.objects.get(tournament=t)
                     f = Field.objects.get(tournament=t, golfer__espn_number=self.golfer.espn_number)
                     if t.pga_tournament_num != '470':

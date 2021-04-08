@@ -35,13 +35,19 @@ import collections
 
 
 start = datetime.now()
-g = Golfer.objects.get(golfer_name='Ian Woosnam')
-print (g.espn_number)
+#g = Golfer.objects.get(golfer_name='Tony Finau')
+#print (g.espn_number)
 t = Tournament.objects.get(current=True)
-print (t)
-f = Field.objects.get(playerName='Ian Woosnam', tournament=t)
-print (f.recent_results())
-
+web = scrape_espn.ScrapeESPN().get_data()
+print (web)
+print (web['info'])
+#f = Field.objects.get(playerName='Tony Finau', tournament=t)
+#print (f.recent_results())
+exit()
+name = "José María Olazábal"
+with open('owgr.json') as json_file:  owgr = json.loads(json_file.read())
+print (type(owgr))
+fixed = utils.fix_name(name, owgr)
 
 exit()
 tournament_number = '536'

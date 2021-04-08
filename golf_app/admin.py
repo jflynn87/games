@@ -14,6 +14,7 @@ class FieldAdmin(admin.ModelAdmin):
     list_display = ['tournament', 'playerName']
     list_filter = ['tournament',]
 
+
 class PicksAdmin(admin.ModelAdmin):
     list_display = ['user', 'playerName']
     list_filter = ['playerName__tournament', 'user' ]

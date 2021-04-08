@@ -82,7 +82,9 @@ def fix_name(player, owgr_rankings):
     print ('pga name for compare: ', pga_name)
 
     for k, v in owgr_rankings.items():
-        owgr_name = k.replace(',', '').split(' ')
+        
+        owgr_name = k.replace(',', '').split(' ').remove(' ')
+        print (owgr_name)
         if '(' in owgr_name[len(owgr_name)-1] and owgr_name[len(owgr_name)-2] == '':
             del owgr_name[len(owgr_name)-1]
             del owgr_name[len(owgr_name)-1]
@@ -93,12 +95,12 @@ def fix_name(player, owgr_rankings):
            and k[0:1] == player[0:1]:
             print ('last name, first initial match', player)
             return k, v
-        elif len(owgr_name) == 3 and len(pga_name) == 3 and owgr_name[0] == pga_name[0] \
-            and owgr_name[2] == pga_name[2] and owgr_name[1][0] == pga_name[1][0]:
+        elif len(owgr_name) == 3 and len(pga_name) == 3 and unidecode.unidecode(owgr_name[0]) == unidecode.unidecode(pga_name[0]) \
+            and unidecode.unidecode(owgr_name[2]) == unidecode.unidecode(pga_name[2]) and owgr_name[1][0] == pga_name[1][0]:
                 print ('last name, first name match, middle first intial match', player)
                 return k, v
        
-        elif unidecode.unidecode(owgr_name[len(owgr_name)-2]) == unidecode.unidecode(pga_name[len(pga_name)-1]) \
+        elif len(owgr_name[3]) < 4 and unidecode.unidecode(owgr_name[len(owgr_name)-2]) == unidecode.unidecode(pga_name[len(pga_name)-1]) \
             and k[0:1] == player[0:1]:
             print ('last name, first initial match, cut owgr suffix', player)
             return k, v

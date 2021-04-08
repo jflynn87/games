@@ -53,7 +53,7 @@ class ScrapeESPN(object):
 
 
             print ('espn T Name: ', t_name)
-            print ('status: ', status)
+            print ('status: ', status, status[0:5])
 
             try:
                 score_dict['info'] = {'round': int(status.split(' ')[1]),
@@ -73,6 +73,24 @@ class ScrapeESPN(object):
                     score_dict['info'] = {'round': 1,
                                         'complete': False,
                                         'round_status': "Not Started"}
+                elif status[0:5] == "First":
+                     score_dict['info'] = {'round': 1,
+                                        'complete': False,
+                                        'round_status': status}
+                elif status[0:5] == "Secon":
+                     score_dict['info'] = {'round': 2,
+                                        'complete': False,
+                                        'round_status': status}
+                elif status[0:5] == "Third":
+                     score_dict['info'] = {'round': 3,
+                                        'complete': False,
+                                        'round_status': status}
+                elif status[0:5] == "Fourt":
+                     score_dict['info'] = {'round': 4,
+                                        'complete': False,
+                                        'round_status': status}
+    
+
                 else:
                     score_dict['info'] = {'round': 0,
                                         'complete': False,
