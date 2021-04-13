@@ -15,7 +15,7 @@ from django.contrib.auth.models import User
 import datetime
 from golf_app import populateField, calc_score, optimal_picks,\
      manual_score, scrape_scores_picks, scrape_cbs_golf, scrape_masters, withdraw, scrape_espn, \
-     populateMPField, mp_calc_scores
+     populateMPField, mp_calc_scores, golf_serializers
 from django.utils import timezone
 from django.core.exceptions import ObjectDoesNotExist
 from django.db.models import Min, Q, Count, Sum, Max
@@ -32,7 +32,8 @@ from rest_framework.response import Response
 from django.core.mail import send_mail
 import time
 from django.core import serializers
-from golf_app import golf_serializers
+#from golf_app import golf_serializers
+from collections import OrderedDict
 
 
 class FieldListView(LoginRequiredMixin,TemplateView):
@@ -397,7 +398,7 @@ class GetScores(APIView):
                           'leaders': leaders,
                           'cut_line': score_dict.get('info').get('cut_line'),
                           'optimal': json.dumps(optimal_picks),
-                          'scores': json.dumps(score_dict),
+                          'scores': json.dumps(OrderedDict(score_dict)),
                           'season_totals': totals,
                           't_data': t_data,
                           'round_status': score_dict.get('info').get('round_status')}
@@ -415,7 +416,7 @@ class GetScores(APIView):
                           'leaders': leaders,
                           'cut_line': score_dict.get('info').get('cut_line'),
                           'optimal': json.dumps(optimal_picks),
-                          'scores': json.dumps(score_dict),
+                          'scores': json.dumps(OrderedDict(score_dict)),
                           'season_totals': totals,
                           'info': json.dumps(info),
                           't_data': t_data,

@@ -1,4 +1,4 @@
-import unidecode
+from unidecode import unidecode as decode
 from datetime import datetime
 
 def format_score(score):
@@ -65,58 +65,79 @@ def format_name(name):
 
 def fix_name(player, owgr_rankings):
     '''takes a string and a dict and returns a dict?'''
-    #print ('trying to fix name: ', player)
-    #print (player, ' :  ', owgr_rankings)    
-    if owgr_rankings.get(player) != None:
-        print ('name dict match: ', owgr_rankings.get(player))
-        return (player, owgr_rankings.get(player))
 
-    if owgr_rankings.get(unidecode.unidecode(player)):
-        print ('unidecoded name dict match: ', player, owgr_rankings.get(unidecode.unidecode(player)))
-        return (player, owgr_rankings.get(unidecode.unidecode(player)))
-
-    #print (player.replace(',', '').split(' '))
+    from golf_app.models import Name
+    #need to import here to avoid cicular import error
     
-    pga_name = player.replace(' (a)', '').replace(',', '').split(' ')
-    print ('input name: ', player)
-    print ('pga name for compare: ', pga_name)
+    if owgr_rankings.get(player.replace('.', '').replace('-', '')) != None:
+        #print ('returning match', owgr_rankings.get(player.replace('.', '').replace('-', '')))
+        return (player, owgr_rankings.get(player.replace('.', '').replace('-', '')))
 
-    for k, v in owgr_rankings.items():
+    if owgr_rankings.get(decode(player)):
+        print ('unidecoded name dict match: ', player, owgr_rankings.get(decode(player)))
+        return (player, owgr_rankings.get(decode(player)))
+
+    if Name.objects.filter(PGA_name=player).exists():
+        name = Name.objects.get(PGA_name=player)
+        if owgr_rankings.get(name.OWGR_name):
+            print ('returning based on name table lookup: ', player, owgr_rankings.get(name.OWGR_name))
+            return (player, owgr_rankings.get(name.OWGR_name))
+
+    last = player.split(' ')
+    
+    if last[len(last)-1] in ['Jr', 'Jr.', '(a)'] or last[len(last)-1].isupper():
+        last_name = last[len(player.split(' ')) - 2]
+    else:
+        last_name = last[len(last)-1]
+    
+    possible_matches = {k:v for k,v in owgr_rankings.items() if decode(last_name.strip(',')) in decode(k)}
+    print ('player: ', player)
+    #print ('possible name mathces: ', player, possible_matches)
+
+    pga_name = player.replace(' (a)', '').replace(',', '').replace('.', '').replace('-', '').split(' ')
+
+    #for k, v in owgr_rankings.items():
+    for k, v in possible_matches.items():
         
-        owgr_name = k.replace(',', '').split(' ').remove(' ')
-        print (owgr_name)
-        if '(' in owgr_name[len(owgr_name)-1] and owgr_name[len(owgr_name)-2] == '':
-            del owgr_name[len(owgr_name)-1]
-            del owgr_name[len(owgr_name)-1]
-            if owgr_rankings == player.replace(',', '').split(' '):
+        owgr_name = k.replace(',', '').split(' ')
+        print (pga_name, owgr_name)
+        if owgr_name == pga_name:
+            print ('names equal after strip spec chars', player, owgr_name)
+            return player, v
+
+        if len(owgr_name) == 3 and len(pga_name) == 3 and decode(owgr_name[0]) == decode(pga_name[0]) \
+            and decode(owgr_name[2].replace('.', '')) == decode(pga_name[2].replace('.', '')) and owgr_name[1][0] == pga_name[1][0]:
+                print ('last name, first name match, middle first intial match', player, owgr_name)
                 return k, v
-        
-        if unidecode.unidecode(owgr_name[len(owgr_name)-1]) == unidecode.unidecode(pga_name[len(pga_name)-1]) \
-           and k[0:1] == player[0:1]:
-            print ('last name, first initial match', player)
-            return k, v
-        elif len(owgr_name) == 3 and len(pga_name) == 3 and unidecode.unidecode(owgr_name[0]) == unidecode.unidecode(pga_name[0]) \
-            and unidecode.unidecode(owgr_name[2]) == unidecode.unidecode(pga_name[2]) and owgr_name[1][0] == pga_name[1][0]:
-                print ('last name, first name match, middle first intial match', player)
-                return k, v
-       
-        elif len(owgr_name[3]) < 4 and unidecode.unidecode(owgr_name[len(owgr_name)-2]) == unidecode.unidecode(pga_name[len(pga_name)-1]) \
+        #elif len(owgr_name) - 1 == len(pga_name) or len(owgr_name) == len(pga_name) - 1 \
+        #    and (owgr_name[0] == pga_name[0] \
+        #    and decode(owgr_name[len(owgr_name) -1]) == decode(pga_name[len(pga_name) -1])):
+        #    print ('strip middle stuff, first and last match', pga_name, owgr_name)
+        #    return k, v
+
+
+        elif decode(owgr_name[len(owgr_name)-2]) == decode(pga_name[len(pga_name)-1]) \
             and k[0:1] == player[0:1]:
-            print ('last name, first initial match, cut owgr suffix', player)
+            print ('last name, first initial match, cut owgr suffix', player, owgr_name)
             return k, v
-        elif len(owgr_name) == 3 and len(pga_name) == 3 and unidecode.unidecode(owgr_name[len(owgr_name)-2]) == unidecode.unidecode(pga_name[len(pga_name)-2]) \
-            and unidecode.unidecode(owgr_name[0]) == unidecode.unidecode(pga_name[0]):
-            print ('last name, first name, cut both suffix', player)
+        #elif len(owgr_name) == 3 and len(pga_name) == 3 and unidecode.unidecode(owgr_name[len(owgr_name)-2]) == unidecode.unidecode(pga_name[len(pga_name)-2]) \
+        #    and unidecode.unidecode(owgr_name[0]) == unidecode.unidecode(pga_name[0]):
+        #    print ('last name, first name, cut both suffix', player)
+        #    return k, v
+        elif decode(owgr_name[0].replace('-', '')) == decode(pga_name[len(pga_name)-1].replace('-', '')) \
+            and decode(owgr_name[len(owgr_name)-1].replace('-', '')) == decode(pga_name[0].replace('-', '')):
+            print ('names reversed', player, owgr_name)
             return k, v
-        elif unidecode.unidecode(owgr_name[0]) == unidecode.unidecode(pga_name[len(pga_name)-1]) \
-            and unidecode.unidecode(owgr_name[len(owgr_name)-1]) == unidecode.unidecode(pga_name[0]):
-            print ('names reversed', player)
+        elif decode(owgr_name[len(owgr_name)-1]) == decode(pga_name[len(pga_name)-1]) \
+           and k[0:2] == player[0:2]:
+            print ('last name, first two letter match', player, owgr_name)
             return k, v
 
-    s_name = [v for k, v in owgr_rankings.items() if k.split('(')[0] == player.split('(')[0]]
-    if len(s_name) ==1:
-        print ('split from ( match: ', player, s_name[0])
-        return (player, s_name[0])
+
+    # s_name = [v for k, v in owgr_rankings.items() if k.split('(')[0] == player.split('(')[0]]
+    # if len(s_name) ==1:
+    #     print ('split from ( match: ', player, s_name[0])
+    #     return (player, s_name[0])
 
     
 

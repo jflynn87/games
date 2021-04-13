@@ -72,6 +72,7 @@ function build_score_tbl(data) {
   var info = $.parseJSON(data['info'])
   var t_data = $.parseJSON(data['t_data'])
 
+  console.log(scores)
   //console.log(t_data[0]['fields']['saved_round'])
   //console.log('T info: ', t_data[0])
 //  console.log('totals', total_data)

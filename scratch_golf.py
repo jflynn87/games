@@ -31,26 +31,44 @@ from django.core import serializers
 from golf_app.utils import formatRank, format_name, fix_name
 from golf_app import golf_serializers
 import pytz
-import collections
+from collections import OrderedDict
 
 
 start = datetime.now()
-#g = Golfer.objects.get(golfer_name='Tony Finau')
-#print (g.espn_number)
-t = Tournament.objects.get(current=True)
-web = scrape_espn.ScrapeESPN().get_data()
-print (web)
-print (web['info'])
-#f = Field.objects.get(playerName='Tony Finau', tournament=t)
-#print (f.recent_results())
-exit()
-name = "José María Olazábal"
+
 with open('owgr.json') as json_file:  owgr = json.loads(json_file.read())
-print (type(owgr))
-fixed = utils.fix_name(name, owgr)
+
+#json_url = 'https://statdata-api-prod.pgatour.com/api/clientfile/Field?T_CODE=r&T_NUM=012&YEAR=2021&format=json'
+#print (json_url)
+#with urllib.request.urlopen(json_url) as field_json_url:
+#    data = json.loads(field_json_url.read().decode())
+
+#req = Request(json_url, headers={'User-Agent': 'Mozilla/5.0'})
+#data = json.loads(urlopen(req).read())
+for p in Golfer.objects.all():
+    #print (player)
+    
+    fix = utils.fix_name( p.golfer_name, owgr)
+    #name = (' '.join(reversed(player["PlayerName"].rsplit(', ', 1))))
+exit()
+
+#for g in Golfer.objects.all():
+#    last = g.golfer_name.split(' ')
+    
+#    if last[len(last)-1] in ['Jr', 'Jr.', '(a)'] or last[len(last)-1].isupper():
+#        name = last[len(g.golfer_name.split(' ')) - 2]
+#    else:
+#        name = last[len(last)-1]
+#    print (name)
+#    print ({k:v for k,v in owgr.items() if name in k})
+
+#    fixed = utils.fix_name(name, owgr)
+exit()
+name = 'Zach Johnson'
+print ({k:v for k,v in owgr.items() if name.split(' ')[len(name.split(' ')) - 1] in k})
 
 exit()
-tournament_number = '536'
+tournament_number = '012'
 season = Season.objects.get(current=True)
 
 json_url = 'https://statdata-api-prod.pgatour.com/api/clientfile/Field?T_CODE=r&T_NUM=' + str(tournament_number) +  '&YEAR=' + str(season) + '&format=json'
@@ -61,12 +79,15 @@ print (json_url)
 req = Request(json_url, headers={'User-Agent': 'Mozilla/5.0'})
 data = json.loads(urlopen(req).read())
 
-if data["Tournament"]["T_ID"][1:5] != str(season):
-    print ('check field, looks bad!')
+#if data["Tournament"]["T_ID"][1:5] != str(season):
+#    print ('check field, looks bad!')
 
 
-for player in data['Tournament']['Players']:
-    print (player.get('PlayerName'), player.get('TournamentPlayerId'))
+#for player in data['Tournament']['Players']:
+#for player in ['Ted Potter, Jr.', ]:
+#    name = (' '.join(reversed(player["PlayerName"].rsplit(', ', 1))))
+#    print (player.get('PlayerName'), player.get('TournamentPlayerId'), utils.fix_name(name, owgr))
+print (utils.fix_name('Ted Potter, Jr.', owgr))
 
 
 exit()

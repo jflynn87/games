@@ -149,10 +149,11 @@ def get_field(tournament_number):
     field_dict = {}
     
     for player in data["Tournament"]["Players"][0:]:
-        if 'Jr' in player["PlayerName"]:
-            name = player["PlayerName"].split(' ')[2] + ' ' + player["PlayerName"].split(' ')[0] + ' ' +player["PlayerName"].split(' ')[1][:-1]
-        else:    
-            name = (' '.join(reversed(player["PlayerName"].split(', '))).replace('(am)', '').replace('(a)', ''))
+        #if 'Jr' in player["PlayerName"]:
+        #    name = player["PlayerName"].split(' ')[2] + ' ' + player["PlayerName"].split(' ')[0] + ' ' +player["PlayerName"].split(' ')[1][:-1]
+        #else:    
+        #    name = (' '.join(reversed(player["PlayerName"].split(', '))).replace('(am)', '').replace('(a)', ''))
+        name = (' '.join(reversed(player["PlayerName"].rsplit(', ', 1))))
         playerID = player['TournamentPlayerId']
         try:
             if player["isAlternate"] == "Yes":

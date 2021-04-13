@@ -85,7 +85,7 @@ class ScrapeESPN(object):
                      score_dict['info'] = {'round': 3,
                                         'complete': False,
                                         'round_status': status}
-                elif status[0:5] == "Fourt":
+                elif status[0:5] == "Final Round":
                      score_dict['info'] = {'round': 4,
                                         'complete': False,
                                         'round_status': status}
