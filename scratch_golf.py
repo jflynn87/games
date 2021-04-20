@@ -36,7 +36,41 @@ from collections import OrderedDict
 
 start = datetime.now()
 
-with open('owgr.json') as json_file:  owgr = json.loads(json_file.read())
+season = Season.objects.get(current=True)
+
+labels = []
+data = []
+diff_dict= {}
+
+
+for user in season.get_users():
+    u = User.objects.get(pk=user.get('user'))
+    diff_dict[u.username] = []
+
+print (diff_dict)
+for t in Tournament.objects.filter(season__pk=season.pk):
+    labels.append(t.name)
+    totals = json.loads(t.season.get_total_points(t))
+    #print (totals, type(totals))
+    
+    for user, stats in totals.items():
+        #print (user, stats)
+        l = diff_dict[user]
+        l.append(stats['diff'])
+        diff_dict[user] = l
+        
+
+
+    print (diff_dict)
+#ts  = TotalScore.objects.filter(tournament__season__current=True)
+#for score in ts:
+#    print (score.tournament, score.user, score.score)                                                                                                                  
+exit()
+for u in season.get_users():
+    user = User.objects.get(pk=u.get('user'))
+    
+
+#with open('owgr.json') as json_file:  owgr = json.loads(json_file.read())
 
 #json_url = 'https://statdata-api-prod.pgatour.com/api/clientfile/Field?T_CODE=r&T_NUM=012&YEAR=2021&format=json'
 #print (json_url)

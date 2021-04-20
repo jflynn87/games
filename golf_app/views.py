@@ -269,6 +269,7 @@ class SeasonTotalView(ListView):
         'second_half_list': total_second_half_score_list,
         'prize_list': winner_dict,
         'second_half_rank_list': second_half_rank_list,
+        'season': Season.objects.get(current=True),
 
         })
         return context
@@ -1096,4 +1097,37 @@ class MPRecordsAPI(APIView):
             return JsonResponse({'key': 'error'}, status=401)
 
 
+class TrendDataAPI(APIView):
+    
+    def get(self, request, season_pk):
+        try:
+            labels = []
+            data = []
+            diff_dict= {}
+            
+            season = Season.objects.get(pk=season_pk)
+
+            for user in season.get_users():
+                u = User.objects.get(pk=user.get('user'))
+                diff_dict[u.username] = []
+
+            for t in Tournament.objects.filter(season__pk=season.pk):
+                labels.append(t.name)
+                totals = json.loads(t.season.get_total_points(t))
+                #print (totals, type(totals))
+                
+                for user, stats in totals.items():
+                    #print (user, stats)
+                    l = diff_dict[user]
+                    l.append(stats['diff'])
+                    diff_dict[user] = l
+
+
+            print (diff_dict)
+            #data = data_dict
+
+            return JsonResponse(data={'labels': labels, 'data': diff_dict}, status=200)
+        except Exception as e:
+            print ('Trend Data API failed: ', e)
+            return JsonResponse({'key': 'Trend data error'}, status=401)
 

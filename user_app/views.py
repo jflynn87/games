@@ -1,6 +1,6 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.views.generic import View, TemplateView, ListView, DetailView, CreateView, UpdateView, FormView
-from golf_app.models import Tournament  
+from golf_app.models import Tournament, Season  
 from fb_app.models import Week, Games, PlayoffPicks 
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponseRedirect, HttpResponse
@@ -74,11 +74,12 @@ def index(request):
         print ('picks', picks)
         return render(request, 'index.html', {
             'fb_week': week,
-            'sb_users': User.objects.filter(username__in=['john', 'jcarl62']),
+            #'sb_users': User.objects.filter(username__in=['john', 'jcarl62']),
             'game': game,
             'picks': picks,
             'sb_user_list': sb_user_list,
             't': t,
+
                 })
 
 

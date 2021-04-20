@@ -37,6 +37,7 @@ urlpatterns= [
     path('get_group/<int:pk>/', views.GetGroupAPI.as_view(), name='get_group'),
     path('mp_scores/', views.MPScoresAPI.as_view(), name='mp_scores'),
     path('get_mp_records/<int:pk>', views.MPRecordsAPI.as_view(), name='get_mp_record'),
+    path('total_score_chart_api/<int:season_pk>', views.TrendDataAPI.as_view(), name='total_score_chart_api'),
 
     
 

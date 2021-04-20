@@ -27,16 +27,36 @@ class Season(models.Model):
         users = TotalScore.objects.filter(tournament=first_t).values('user')
         return users
 
-    def get_total_points(self):
+    def get_total_points(self, tournament=None):
+        '''takes a season and optional tournament object and returns a json response'''
         score_dict = {}
         sorted_dict = {}
-        for user in self.get_users():
-            u = User.objects.get(pk=user.get('user'))
-            score_dict[u.username] = TotalScore.objects.filter(tournament__season=self, user=u).aggregate(Sum('score'))
-        min_score = min(score_dict.items(), key=lambda v: v[1].get('score__sum'))[1].get('score__sum')
-        for i, (user, data) in enumerate(sorted(score_dict.items(), key=lambda v: v[1].get('score__sum'))):
-            sorted_dict[user] = {'total': data.get('score__sum'), 'diff':  int(min_score) - int(data.get('score__sum')), 'rank': i+1}
-        return json.dumps(sorted_dict)
+        if not tournament:
+            for user in self.get_users():
+                u = User.objects.get(pk=user.get('user'))
+                score_dict[u.username] = TotalScore.objects.filter(tournament__season=self, user=u).aggregate(Sum('score'))
+            min_score = min(score_dict.items(), key=lambda v: v[1].get('score__sum'))[1].get('score__sum')
+            for i, (user, data) in enumerate(sorted(score_dict.items(), key=lambda v: v[1].get('score__sum'))):
+                sorted_dict[user] = {'total': data.get('score__sum'), 'diff':  int(min_score) - int(data.get('score__sum')), 'rank': i+1}
+            return json.dumps(sorted_dict)
+        else:
+            #first_t = Tournament.objects.filter(season=self).first()
+            #print (first_t)
+            #if tournament != first_t:
+            for user in self.get_users():
+                u = User.objects.get(pk=user.get('user'))
+                score_dict[u.username] = TotalScore.objects.filter(tournament__season=self, user=u, tournament__pk__lte=tournament.pk).aggregate(Sum('score'))
+            min_score = min(score_dict.items(), key=lambda v: v[1].get('score__sum'))[1].get('score__sum')
+            for i, (user, data) in enumerate(sorted(score_dict.items(), key=lambda v: v[1].get('score__sum'))):
+                sorted_dict[user] = {'total': data.get('score__sum'), 'diff':  int(min_score) - int(data.get('score__sum')), 'rank': i+1}
+            return json.dumps(sorted_dict)
+            #else:
+            #    for user in self.get_users():
+            #        u = User.objects.get(pk=user.get('user'))
+            #        score_dict[u.username] = {'total': 0, 'diff': 0, 'rank': 1}
+
+            #    return json.dumps(score_dict)
+
 
 
 class Tournament(models.Model):
