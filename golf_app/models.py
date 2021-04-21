@@ -462,6 +462,8 @@ class Field(models.Model):
     withdrawn = models.BooleanField(default=False)
     partner = models.CharField(max_length=100, null=True, blank=True)
     teamID = models.CharField(max_length=30, null=True, blank=True)
+    partner_golfer = models.ForeignKey(Golfer, on_delete=models.CASCADE, null=True, related_name='partner_golfer')
+    partner_owgr = models.IntegerField(unique=False, null=True)
     playerID = models.CharField(max_length=100, null=True)
     map_link = models.URLField(null=True)
     pic_link = models.URLField(null=True)
@@ -574,6 +576,8 @@ class Field(models.Model):
         else:
             return 17
 
+    def p1_owgr(self):
+        return self.currentWGR - self.partner_owgr
 
 class PGAWebScores(models.Model):
     tournament= models.ForeignKey(Tournament, on_delete=models.CASCADE)

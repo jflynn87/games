@@ -56,6 +56,7 @@ def partner(partner):
     name = (regex.sub('', partner))
     return (name)
 
+
 #
 # @register.filter
 # def get_pic(playerID):

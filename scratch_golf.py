@@ -32,39 +32,16 @@ from golf_app.utils import formatRank, format_name, fix_name
 from golf_app import golf_serializers
 import pytz
 from collections import OrderedDict
+import setup_zurich
 
 
 start = datetime.now()
 
-season = Season.objects.get(current=True)
+Tournament.objects.filter(current=True).delete()
 
-labels = []
-data = []
-diff_dict= {}
+setup_zurich.test()
 
 
-for user in season.get_users():
-    u = User.objects.get(pk=user.get('user'))
-    diff_dict[u.username] = []
-
-print (diff_dict)
-for t in Tournament.objects.filter(season__pk=season.pk):
-    labels.append(t.name)
-    totals = json.loads(t.season.get_total_points(t))
-    #print (totals, type(totals))
-    
-    for user, stats in totals.items():
-        #print (user, stats)
-        l = diff_dict[user]
-        l.append(stats['diff'])
-        diff_dict[user] = l
-        
-
-
-    print (diff_dict)
-#ts  = TotalScore.objects.filter(tournament__season__current=True)
-#for score in ts:
-#    print (score.tournament, score.user, score.score)                                                                                                                  
 exit()
 for u in season.get_users():
     user = User.objects.get(pk=u.get('user'))
