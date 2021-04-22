@@ -39,6 +39,119 @@ class ScrapeScores(object):
             self.mode = 'all'
 
 
+    def scrape_zurich(self):
+        start = datetime.now()
+        score_dict = {}
+        options = ChromeOptions()
+        options.add_argument("--headless")
+        options.add_argument("--disable-gpu")
+        options.add_argument('--ignore-certificate-errors')
+        options.add_argument("--window-size=1920,1080")
+
+        driver = Chrome(options=options)
+        print ('driver pre url: ', datetime.now() - start)
+        driver.get(self.url)
+        print ('driver after url: ', datetime.now() - start)
+        
+        soup = BeautifulSoup(driver.page_source, 'html.parser')
+        print ('driver after soup: ', datetime.now() - start)
+        #table = (soup.find("div", {'id':'team-play-container'}))
+        table = (soup.find("div", {'class':'team-play-leaderboard'}))
+        print ('tble len; ', len(table), len(table.find_all("tbody tr", {'class': 'line-row'})))
+        print ('driver after table: ', datetime.now() - start)
+        t = self.tournament
+        t_ok = False
+
+        print ('driver initialized: ', datetime.now() - start)
+        try:
+            title = soup.find('h1', {'class', 'name'})
+            name = title.text
+
+            if t.name == name.lstrip().rstrip():
+               t_ok = True
+            elif t.name == name.replace(' - Leaderboard', '').lstrip().rstrip():
+                t_ok = True
+            else: 
+                print ('scrape name issue', 'db: ', t.name, 'scrape: ', name)
+        
+            if t_ok:
+                try:
+                    cut_line = driver.find_elements_by_class_name("cut-line")
+                    for c in cut_line:
+                        cut_score  = c.text.rsplit(' ', 1)[1]
+                        #print ('full cutt text: ', c.text, 'cut score: ', c.text.rsplit(' ', 1)[1])
+                        if "Projected" in c.text:
+                            t.cut_score = "Projected cut score: " + c.text.rsplit(' ', 1)[1]
+                            t.save()
+                        else:
+                            t.cut_score = "Cut Score: " + c.text.rsplit(' ', 1)[1]
+                            t.save()
+                except Exception as e:
+                    print ('issue scraping cut-info class from pga leaderboard', e)
+                    
+
+                #find playoff data
+                playoff = driver.find_elements_by_class_name("playoff-module")
+                print (t.name, '-------playoff--------')
+                print ('length', len(playoff))
+                for p in playoff:
+                    print (p.text)
+                print (t.name, '-------end playoff------')
+
+                if len(playoff) > 0:
+                    t.playoff = True
+
+                #table = driver.find_element_by_id("stroke-play-container")
+                
+                sd, created = ScoreDict.objects.get_or_create(tournament=self.tournament)                
+                
+                if self.mode == 'picks':
+                    for pick in Picks.objects.filter(playerName__tournament=self.tournament).values('playerName__playerID').distinct():
+                        row =  table.find("tr", {'class': 'line-row-' + str(pick.get('playerName__playerID'))})
+                        data = get_data(self, row)
+                        data[1].update({'pga_num': pick.playerID})
+                        score_dict[data[0]] =  data[1]
+                    #sd.pick_data = score_dict
+                else:  #doing for "all" or None 
+                    for row in table.find_all("tr", {'class': 'line-row'}):
+                        print(row)
+                        ele_class = row['class'][1].split('-')[2]
+                        data = self.get_data(row)
+                        try:
+                            field = Field.objects.get(golfer__golfer_pga_num=ele_class, tournament=self.tournament)
+                            field.rank = data[1]['rank']
+                            field.save()
+                        except Exception as e:
+                            print ('field lookup issue in scrape', ' pga_num: ', ele_class, data[0], e)
+                            #field.handi = 0
+                        data[1].update({'pga_num': ele_class,
+                                        'handicap': 'not found'
+                                        })
+                        score_dict[data[0]] =  data[1]
+                    sd.data = score_dict
+                    print (len(sd.data))
+                
+                sd.save()
+                #print (score_dict)
+                #self.tournament.saved_cut_num = self.tournament.cut_num()
+                #self.tournament.saved_round = self.tournament.get_round()
+                #self.tournament.saved_cut_round = self.tournament.get_cut_round() 
+                #self.tournament.save()
+
+                return (score_dict)                
+            else:
+                print ('scrape scores t mismatch', t, name)
+                return {}
+        
+        except Exception as e:
+            print ('scrape scores failed: ', e)
+            return {}
+
+        finally:
+            driver.quit()
+
+
+    
     def scrape(self):
         start = datetime.now()
         # try:
@@ -56,6 +169,11 @@ class ScrapeScores(object):
         options = ChromeOptions()
         options.add_argument("--headless")
         options.add_argument("--disable-gpu")
+
+        options.add_argument('--ignore-certificate-errors')
+        options.add_argument("--window-size=1920,1080")
+        
+
 
         driver = Chrome(options=options)
 

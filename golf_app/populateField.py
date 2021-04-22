@@ -20,38 +20,39 @@ import collections
 #     Command()
 
 
-def get_pga_worldrank():
-    '''Goes to PGA web site takes no input, goes to web to get world golf rankings and returns a dictionary with player name as a string and key, ranking as a string in values'''
 
-    print ('start pga.com worldrank lookup')
-    html = urllib.request.urlopen("https://www.pgatour.com/stats/stat.186.html")
-    soup = BeautifulSoup(html, 'html.parser')
+# def get_pga_worldrank():
+#     '''Goes to PGA web site takes no input, goes to web to get world golf rankings and returns a dictionary with player name as a string and key, ranking as a string in values'''
 
-    rankslist = (soup.find("table", {'id': 'statsTable'}))
+#     print ('start pga.com worldrank lookup')
+#     html = urllib.request.urlopen("https://www.pgatour.com/stats/stat.186.html")
+#     soup = BeautifulSoup(html, 'html.parser')
 
-    ranks = {}
-    for row in rankslist.find_all('tr')[1:]:
-        try:
-            player = (row.find('td', {'class': 'player-name'}).text).strip('\n')
-            rank = row.find('td').text.strip('\n').strip(' ')
-            last_week=  row.find('td', {'class': 'hidden-print hidden-small hidden-medium'}).text.strip('\n')
-            try:
-                rank = int(rank)
-            except Exception as e:
-                rank = 9999
-            try:
-                last_week = int(last_week)
-            except Exception as e:
-                last_week = 0
+#     rankslist = (soup.find("table", {'id': 'statsTable'}))
 
-            ranks[player] = [int(rank), int(last_week), 0]
-        except Exception as e:
-            print('exception 2', e)
+#     ranks = {}
+#     for row in rankslist.find_all('tr')[1:]:
+#         try:
+#             player = (row.find('td', {'class': 'player-name'}).text).strip('\n')
+#             rank = row.find('td').text.strip('\n').strip(' ')
+#             last_week=  row.find('td', {'class': 'hidden-print hidden-small hidden-medium'}).text.strip('\n')
+#             try:
+#                 rank = int(rank)
+#             except Exception as e:
+#                 rank = 9999
+#             try:
+#                 last_week = int(last_week)
+#             except Exception as e:
+#                 last_week = 0
 
-    print ('end pga.com worldrank lookup')
-    #print ('pga ranks', ranks)
+#             ranks[player] = [int(rank), int(last_week), 0]
+#         except Exception as e:
+#             print('exception 2', e)
+
+#     print ('end pga.com worldrank lookup')
+#     #print ('pga ranks', ranks)
     
-    return ranks
+#     return ranks
 
 
 
@@ -90,10 +91,7 @@ def get_worldrank():
     
     return ranks
 
-
-def get_field(tournament_number):
-    '''takes a tournament number, goes to web to get field and returns a list with player names'''
-
+def setup_t(tournament_number):
     season = Season.objects.get(current=True)
     print ('getting field')
     #json_url = 'https://statdata.pgatour.com/r/' + str(tournament_number) +'/field.json'
@@ -135,24 +133,64 @@ def get_field(tournament_number):
     tourny.espn_t_num = scrape_espn.ScrapeESPN(tourny).get_t_num()
     tourny.save()
 
-    #sd = ScoreDict ()
-    #sd.tournament = tourny
-    #sd.data = {}
-    #sd.pick_data = {}
-    #sd.save()
+    return tourny
 
-    #field_list = {}
+def get_field(t):
+    '''takes a tournament number, goes to web to get field and returns a list with player names'''
+
+    # season = Season.objects.get(current=True)
+    # print ('getting field')
+    # json_url = 'https://statdata-api-prod.pgatour.com/api/clientfile/Field?T_CODE=r&T_NUM=' + str(tournament_number) +  '&YEAR=' + str(season) + '&format=json'
+    # print (json_url)
+
+    # req = Request(json_url, headers={'User-Agent': 'Mozilla/5.0'})
+    # data = json.loads(urlopen(req).read())
+
+    # print (data["Tournament"]["T_ID"][1:5], str(season))
+    # if data["Tournament"]["T_ID"][1:5] != str(season):
+    #     print ('check field, looks bad!')
+    #     raise LookupError('Tournament season mismatch: ', data["Tournament"]["T_ID"]) 
+
+    # tourny = Tournament()    
+    # tourny.name = data["Tournament"]["TournamentName"]
+
+    # tourny.season = season
+    # start_date = datetime.date.today()
+    # print (start_date)
+    # while start_date.weekday() != 3:
+    #     start_date += datetime.timedelta(1)
+    # tourny.start_date = start_date
+    # tourny.field_json_url = json_url
+    # tourny.score_json_url = 'https://statdata.pgatour.com/r/' + str(tournament_number) +'/' + str(season) + '/leaderboard-v2mini.json'
+    
+    # tourny.pga_tournament_num = tournament_number
+    # tourny.current=True
+    # tourny.complete=False
+    # tourny.score_update_time = datetime.datetime.now()
+    # tourny.cut_score = "no cut info"
+    # tourny.saved_cut_num = 65
+    # tourny.saved_round = 1
+    # tourny.saved_cut_round = 2
+    # tourny.espn_t_num = scrape_espn.ScrapeESPN(tourny).get_t_num()
+    # tourny.save()
 
     ## use PGA website if api fails, add that logic
     #field_dict = scrape_scores_picks.ScrapeScores().get_field()
+
+    #season = t.season.season
+
+    json_url = 'https://statdata-api-prod.pgatour.com/api/clientfile/Field?T_CODE=r&T_NUM=' + str(t.pga_tournament_num) +  '&YEAR=' + str(t.season.season) + '&format=json'
+    print (json_url)
+    #with urllib.request.urlopen(json_url) as field_json_url:
+    #    data = json.loads(field_json_url.read().decode())
+
+    req = Request(json_url, headers={'User-Agent': 'Mozilla/5.0'})
+    data = json.loads(urlopen(req).read())
+
  
     field_dict = {}
     
     for player in data["Tournament"]["Players"][0:]:
-        #if 'Jr' in player["PlayerName"]:
-        #    name = player["PlayerName"].split(' ')[2] + ' ' + player["PlayerName"].split(' ')[0] + ' ' +player["PlayerName"].split(' ')[1][:-1]
-        #else:    
-        #    name = (' '.join(reversed(player["PlayerName"].split(', '))).replace('(am)', '').replace('(a)', ''))
         name = (' '.join(reversed(player["PlayerName"].rsplit(', ', 1))))
         playerID = player['TournamentPlayerId']
         try:
@@ -165,8 +203,6 @@ def get_field(tournament_number):
         except IndexError:
             alternate = False
             print (player + 'alternate lookup failed')
-
-
 
     print (field_dict)
     return field_dict
@@ -233,10 +269,6 @@ def create_groups(tournament_number):
             last_tournament.save()
             key = {}
             key['pk']=last_tournament.pk
-            #try:
-            #    calc_score.calc_score(key)
-            #except:
-            #    print ('error calc scores for last tournament', last_tournament)
 
         except ObjectDoesNotExist:
             print ('no current tournament')
@@ -244,125 +276,85 @@ def create_groups(tournament_number):
         print ('setting up first tournament of season')
 
     print ('going to get_field')
-    field = get_field(tournament_number)
+    tournament = setup_t(tournament_number)
+    field = get_field(tournament)
     OWGR_rankings =  get_worldrank()
     #OWGR_rankings = {}
    
-    print ('a')
-    #try:
-    #    PGA_rankings = get_pga_worldrank()
-    #except Exception as e:
-    #    print ('pga wgr failed: ', e)
-    print ('b')
-    configure_groups(field)
-    print ('c')
-    tournament = Tournament.objects.get(current=True, season=season)
-    print ('d')
+    if tournament.pga_tournament_num not in ['470', '018']:  #Match Play and Zurich (team event)  
+        configure_groups(field)
+        prior_year_sd(tournament)
+        print (len(field))
 
-    prior_year_sd(tournament)
-
-    print (len(field))
-
-    group_dict = {}
-    name_switch = False
-    name_issues = []
-    for player in field:
-        #print (player)
-        #if Name.objects.filter(PGA_name=player).exists():
-        #    name_switch = True
-        #    name = Name.objects.get(PGA_name=player)
-        #    player = name.OWGR_name
-        #    print ('owgr player', player)
-        #    print ('pga player', name)
-
-        # fix this to get 0 index of ranking list
-        try:
-            #rank = OWGR_rankings[player.capitalize()][0]
-            #rank = OWGR_rankings[player.capitalize()]
-            rank = OWGR_rankings[player]
-        except Exception:
+        group_dict = {}
+        name_switch = False
+        name_issues = []
+        for player in field:
             try:
-                lookup = utils.fix_name(player, OWGR_rankings)
-                print ('resolved by utils name_fix', player, lookup)
-                name_issues.append((player, lookup))
-                rank = lookup[1]
-                #rank = PGA_rankings[player]
-            except Exception as e:
-                print ('no rank found', player, e)
-                rank = [9999, 9999, 9999]
+                rank = OWGR_rankings[player]
+            except Exception:
+                try:
+                    lookup = utils.fix_name(player, OWGR_rankings)
+                    print ('resolved by utils name_fix', player, lookup)
+                    name_issues.append((player, lookup))
+                    rank = lookup[1]
+                    #rank = PGA_rankings[player]
+                except Exception as e:
+                    print ('no rank found', player, e)
+                    rank = [9999, 9999, 9999]
 
-        #if name_switch:
-        #    print ('name switch', player, name)
-        #    player = name.PGA_name
-        #    name_switch = False
-
-        group_dict[player] = [rank, field.get(player)]
+            group_dict[player] = [rank, field.get(player)]
  
 
-    player_cnt = 1
-    group_num = 1
+        player_cnt = 1
+        group_num = 1
 
-    groups = Group.objects.get(tournament=tournament, number=group_num)
-    print ('name issues: ', name_issues)
-    #print ('group_dict before field save', group_dict)
+        groups = Group.objects.get(tournament=tournament, number=group_num)
+        print ('name issues: ', name_issues)
 
-    #create dict of player links for picture lookup
-    #import urllib
-
-    json_url = 'https://www.pgatour.com/players.html'
-    html = urllib.request.urlopen("https://www.pgatour.com/players.html")
-    soup = BeautifulSoup(html, 'html.parser')
+        json_url = 'https://www.pgatour.com/players.html'
+        html = urllib.request.urlopen("https://www.pgatour.com/players.html")
+        soup = BeautifulSoup(html, 'html.parser')
 
 
-    #players =  (soup.find("div", {'class': 'directory-item'}).find_all('option'))
-    players =  soup.find("div", {'class': 'overview'})
-    golfer_dict = {}
-    #print (players)
-    #print (players.find_all('a', {'class': 'directory-item'}))
-    for p in players.find_all('span', {'class': 'player-flag'}):
-        #print ('players', p)
-        link = ''
-        p_text = str(p)[47:]
-        for char in p_text:
-            if char == '"':
-                break
-            else:
-                link = link + char
-            golfer_dict[link[:5]]=link
-    espn_players = get_espn_players()
-    print ('xxxxxxx', espn_players)
-    for k, v in sorted(group_dict.items(), key=lambda x: x[1][0]):
-        #print ('key/val: ', k, v)
-        map_link = get_flag(k, v, espn_players)
-        #print (k, map_link)
-        if player_cnt < groups.playerCnt:
-          #print (k,v[0], str(groups.number), str(groups.playerCnt))
-          #player_link = 'https://www.pgatour.com/players/player.' + str(v[1][1]) + '.' + k.split(' ')[0].lowercase() + '-' + k.split(' ')[1].lowercase() + '.html')
-          Field.objects.get_or_create(tournament=tournament, playerName=k, \
-             #currentWGR=v[0][0], sow_WGR=v[0][1], soy_WGR=v[0][2], group=groups, alternate=v[1][0], \
-             currentWGR=v[0][0], sow_WGR=v[0][1], soy_WGR=v[0][2], \
-             group=groups, alternate=v[1][0], \
-             playerID=v[1][1], pic_link= get_pick_link(v[1][1]), \
-             map_link= map_link, golfer=Golfer.objects.get(golfer_pga_num=v[1][1]), handi=calc_handi(v[0][0], len(field)))
-          player_cnt +=1
-        elif player_cnt == groups.playerCnt:
-          #print (k,v[0], str(groups.number), str(groups.playerCnt))
-          Field.objects.get_or_create(tournament=tournament, playerName=k, \
-             #currentWGR=v[0][0], sow_WGR=v[0][1], soy_WGR=v[0][2], group=groups, alternate=v[1][0], \
-             currentWGR=v[0][0], sow_WGR=v[0][1], soy_WGR=v[0][2], \
-             group=groups, alternate=v[1][0], \
-             playerID=v[1][1], pic_link= get_pick_link(v[1][1]), \
-             map_link= map_link, golfer=Golfer.objects.get(golfer_pga_num=v[1][1]), handi=calc_handi(v[0][0], len(field)))
-          group_num +=1
-          player_cnt = 1
-          if Field.objects.filter(tournament=tournament).count() < len(field):
-             groups = Group.objects.get(tournament=tournament,number=group_num)
+        players =  soup.find("div", {'class': 'overview'})
+        golfer_dict = {}
+        for p in players.find_all('span', {'class': 'player-flag'}):
+            link = ''
+            p_text = str(p)[47:]
+            for char in p_text:
+                if char == '"':
+                    break
+                else:
+                    link = link + char
+                golfer_dict[link[:5]]=link
+        espn_players = get_espn_players()
+        print ('xxxxxxx', espn_players)
+        for k, v in sorted(group_dict.items(), key=lambda x: x[1][0]):
+            map_link = get_flag(k, v, espn_players)
+            if player_cnt < groups.playerCnt:
+                Field.objects.get_or_create(tournament=tournament, playerName=k, \
+                    currentWGR=v[0][0], sow_WGR=v[0][1], soy_WGR=v[0][2], \
+                    group=groups, alternate=v[1][0], \
+                    playerID=v[1][1], pic_link= get_pick_link(v[1][1]), \
+                    map_link= map_link, golfer=Golfer.objects.get(golfer_pga_num=v[1][1]), handi=calc_handi(v[0][0], len(field)))
+                player_cnt +=1
+            elif player_cnt == groups.playerCnt:
+                Field.objects.get_or_create(tournament=tournament, playerName=k, \
+                    currentWGR=v[0][0], sow_WGR=v[0][1], soy_WGR=v[0][2], \
+                    group=groups, alternate=v[1][0], \
+                    playerID=v[1][1], pic_link= get_pick_link(v[1][1]), \
+                    map_link= map_link, golfer=Golfer.objects.get(golfer_pga_num=v[1][1]), handi=calc_handi(v[0][0], len(field)))
+                group_num +=1
+                player_cnt = 1
+            if Field.objects.filter(tournament=tournament).count() < len(field):
+                groups = Group.objects.get(tournament=tournament,number=group_num)
 
-    for f in Field.objects.filter(tournament=tournament):
-        f.prior_year = f.prior_year_finish()
-        recent = collections.OrderedDict(sorted(f.recent_results().items(), reverse=True))
-        f.recent = recent 
-        f.save()
+        for f in Field.objects.filter(tournament=tournament):
+            f.prior_year = f.prior_year_finish()
+            recent = collections.OrderedDict(sorted(f.recent_results().items(), reverse=True))
+            f.recent = recent 
+            f.save()
 
 
     print ('saved field objects')

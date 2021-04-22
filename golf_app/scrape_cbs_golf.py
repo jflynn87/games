@@ -2,7 +2,8 @@ import datetime
 import urllib
 import json
 from bs4 import BeautifulSoup
-
+from golf_app.models import Field
+from unidecode import unidecode
 
 
 class ScrapeCBS(object):
@@ -16,8 +17,10 @@ class ScrapeCBS(object):
         try:
             score_dict = {}
 
-            #html = urllib.request.urlopen("https://www.cbssports.com/golf/leaderboard/")
-            html = urllib.request.urlopen("https://www.cbssports.com/golf/leaderboard/pga-tour/26496766/sony-open-in-hawaii/")
+            html = urllib.request.urlopen("https://www.cbssports.com/golf/leaderboard/")
+            #html = urllib.request.urlopen("https://www.cbssports.com/golf/leaderboard/pga-tour/26496856/zurich-classic-of-new-orleans/")
+            #html = urllib.request.urlopen("https://www.cbssports.com/golf/leaderboard/pga-tour/18271952/zurich-classic-of-new-orleans/")
+            #html = urllib.request.urlopen("https://www.cbssports.com/golf/leaderboard/pga-tour/26496766/sony-open-in-hawaii/")
             soup = BeautifulSoup(html, 'html.parser')
             
             leaderboard = soup.find('div', {'id': 'TableGolfLeaderboard'})
@@ -26,6 +29,8 @@ class ScrapeCBS(object):
             if leaderboard == None:
                 return {}
 
+
+            score_dict['info'] = {'source': 'cbs', 'cut_num': 36}
             rows = leaderboard.find_all('tr', {'class': 'TableBase-bodyTr'})
 
             print ('cbs rows length: ', len(rows))
@@ -72,9 +77,24 @@ class ScrapeCBS(object):
                 else:
                     print ('scrape cbs leaderboard issue, nums len not 6, 7, 8.  it is" : ', len(nums), nums)
 
-                            
+                try:
+                    f = Field.objects.get(tournament__current=True, playerName=player_name)
+                    pga_num = f.golfer.espn_number
+                    group = f.group.number
+                except Exception as e:
+                    print ('get pga_num except trying for loop', e)
+                    for f in Field.objects.filter(tournament__current=True):
+                        if unidecode(player_name) == unidecode(f.playerName):
+                            pga_num = f.golfer.espn_number
+                            group = f.group.number
+                        else:
+                            print (player_name, 'cbs scrap cant find player in field')
+                            pga_num = '999999'
+                            group = 99
+                
+
                 score_dict[player_name] = {'rank': pos, 'total_score': to_par, 'thru': thru, 'round_score': today, 'r1': r1, 'r2':r2, 'r3': r3, 'r4': r4, 'total_strokes': total_strokes, 'change': ' ', 
-                                                    'cbs_player_num': player_num
+                                                    'cbs_player_num': player_num, 'pga_num': pga_num, 'handicap': int(0), 'group': group
                         }
 
             #print ('score dict from CBS', score_dict)

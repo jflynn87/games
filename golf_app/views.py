@@ -353,6 +353,8 @@ class GetScores(APIView):
             print ('scraping')
             if t.pga_tournament_num == '470':
                 return HttpResponse('Wrong link, use MP link')
+            elif t.pga_tournament_num == '018':
+                score_dict = scrape_cbs_golf.ScrapeCBS().get_data()
             else:
                 score_dict = scrape_espn.ScrapeESPN().get_data()
         else:

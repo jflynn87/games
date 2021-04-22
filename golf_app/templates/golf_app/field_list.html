@@ -99,22 +99,20 @@
                   {%endif%}
                 </p>
               </td>
-             
               <td>
                  <p>
                    <span><p> <img src="{{player.golfer.pic_link}}" alt=""> {{player.playerName}}({{player.p1_owgr}})
-                     <img src="{{player.golfer.flag_link}}" alt=""> </p>
-                      <p> <a href="https://www.google.com/search?q={{player.playerName}}" target="_blank">Google</a> / 
-                      <a href="{{player.golfer.golfer_link}}" target="_blank">PGA</a>  </p> 
+                   <img src="{{player.golfer.flag_link}}" alt=""> </p>
+                   <p> <a href="https://www.google.com/search?q={{player.playerName}}" target="_blank">Google</a> / 
+                   <a href="{{player.golfer.golfer_link}}" target="_blank">PGA</a>  </p> 
+                 </p>
+                 {%if player.partner%}  
+                 <p>
+                   <img src="{{player.partner_golfer.pic_link}}" alt=""> {{player.partner}} ({{player.partner_owgr}}) 
+                   <img src="{{player.partner_golfer.flag_link}}" alt="">
+                   <p> <a href="https://www.google.com/search?q={{player.partner}}" target="_blank">Google</a> /
+                   <a href="{{player.partner_golfer.golfer_link}}" target="_blank">PGA</a></span>{%endif%} </p>  
                   </p>
-                     {%if player.partner%}  
-                  <p>
-                      <p>
-                           <img src="{{player.partner_golfer.pic_link}}" alt=""> {{player.partner}} ({{player.partner_owgr}}) 
-                           <img src="{{player.partner_golfer.flag_link}}" alt="">
-                           <p> <a href="https://www.google.com/search?q={{player.partner}}" target="_blank">Google</a> /
-                           <a href="{{player.partner_golfer.golfer_link}}" target="_blank">PGA</a></span>{%endif%} </p>  
-                          </p>
                  <p> </p></td>
                  <td > <p>Team OWGR: {{player.currentWGR}} </p>
                  <!-- <p> prior: {{player.sow_WGR}} </p>

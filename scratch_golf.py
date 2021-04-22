@@ -32,66 +32,18 @@ from golf_app.utils import formatRank, format_name, fix_name
 from golf_app import golf_serializers
 import pytz
 from collections import OrderedDict
-import setup_zurich
 
+#print (Tournament.objects.get(current=True))
+#print (Field.objects.filter(tournament__current=True).count())
+for f in Field.objects.filter(tournament__current=True):
+    f.handi = 0
+    f.save()
 
-start = datetime.now()
-
-Tournament.objects.filter(current=True).delete()
-
-setup_zurich.test()
-
-
-exit()
-for u in season.get_users():
-    user = User.objects.get(pk=u.get('user'))
     
-
-#with open('owgr.json') as json_file:  owgr = json.loads(json_file.read())
-
-#json_url = 'https://statdata-api-prod.pgatour.com/api/clientfile/Field?T_CODE=r&T_NUM=012&YEAR=2021&format=json'
-#print (json_url)
-#with urllib.request.urlopen(json_url) as field_json_url:
-#    data = json.loads(field_json_url.read().decode())
-
-#req = Request(json_url, headers={'User-Agent': 'Mozilla/5.0'})
-#data = json.loads(urlopen(req).read())
-for p in Golfer.objects.all():
-    #print (player)
-    
-    fix = utils.fix_name( p.golfer_name, owgr)
-    #name = (' '.join(reversed(player["PlayerName"].rsplit(', ', 1))))
 exit()
 
-#for g in Golfer.objects.all():
-#    last = g.golfer_name.split(' ')
-    
-#    if last[len(last)-1] in ['Jr', 'Jr.', '(a)'] or last[len(last)-1].isupper():
-#        name = last[len(g.golfer_name.split(' ')) - 2]
-#    else:
-#        name = last[len(last)-1]
-#    print (name)
-#    print ({k:v for k,v in owgr.items() if name in k})
 
-#    fixed = utils.fix_name(name, owgr)
-exit()
-name = 'Zach Johnson'
-print ({k:v for k,v in owgr.items() if name.split(' ')[len(name.split(' ')) - 1] in k})
 
-exit()
-tournament_number = '012'
-season = Season.objects.get(current=True)
-
-json_url = 'https://statdata-api-prod.pgatour.com/api/clientfile/Field?T_CODE=r&T_NUM=' + str(tournament_number) +  '&YEAR=' + str(season) + '&format=json'
-print (json_url)
-#with urllib.request.urlopen(json_url) as field_json_url:
-#    data = json.loads(field_json_url.read().decode())
-
-req = Request(json_url, headers={'User-Agent': 'Mozilla/5.0'})
-data = json.loads(urlopen(req).read())
-
-#if data["Tournament"]["T_ID"][1:5] != str(season):
-#    print ('check field, looks bad!')
 
 
 #for player in data['Tournament']['Players']:
