@@ -514,6 +514,8 @@ class Field(models.Model):
             return 'n/a'
 
     def handicap(self):
+        if self.tournament.pga_tournament_num == '018': #Zurich
+            return 0
         if round(self.currentWGR*.01) < (Field.objects.filter(tournament=self.tournament).count() * .13):
             return int(round(self.currentWGR*.01))
         return round(Field.objects.filter(tournament=self.tournament).count() * .13)
