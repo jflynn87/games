@@ -1,14 +1,16 @@
 {%extends 'golf_app/golf_app_base.html'%}
 {%load golf_extras%}
-{%block body_block%}
 {%load static%}
+{%block body_block%}
+</div>
+<div>
 <script type="text/javascript" src="{%static 'golf_app/js/total_score_chart.js'%}"></script> 
 
 <p id='season_id' hidden>{{season.pk}}</p>
 <p id='user' hidden>{{request.user.username}}</p>
 <div>
   <h4 id='chart_status_msg' class='status'>Loading Chart ...</h4>
-  <canvas id='trend_chart'></canvas>
+  <canvas id='trend_chart' class='chart-style'></canvas>
 </div>
 
 <div>

@@ -118,6 +118,12 @@ body {
 
 }
 
+.chart-style {
+  height: auto;
+  width: auto;
+  padding-right: 10%;
+}
+
 
 @media only screen and (max-width: 1199px) {
 .card {

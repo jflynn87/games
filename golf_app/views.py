@@ -1114,7 +1114,7 @@ class TrendDataAPI(APIView):
                 diff_dict[u.username] = []
 
             for t in Tournament.objects.filter(season__pk=season.pk):
-                labels.append(t.name)
+                labels.append(t.name[0:5])
                 totals = json.loads(t.season.get_total_points(t))
                 #print (totals, type(totals))
                 

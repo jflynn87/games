@@ -140,6 +140,7 @@
   background-color: lightgray;
 }
 
+
 @media only screen and (max-width: 600px) {
 td .watermark {
   font-family: 'Raleway Dots';

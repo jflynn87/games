@@ -61,6 +61,8 @@ class ScrapeCBS(object):
             for r  in rows:
                 this_loop_start = datetime.now()
                 #print (r)
+                if r.text == 'projected cut':
+                    continue
                 pos_sect = r.find_all('td', {'class': "TableBase-bodyTd"})
                 #print (pos_sect)
                 pos =  pos_sect[1].text
