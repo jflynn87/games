@@ -1,13 +1,14 @@
-import datetime
+from datetime import datetime
 import urllib
 import json
 from bs4 import BeautifulSoup
-from golf_app.models import Field
+from golf_app.models import Field, Picks
 from unidecode import unidecode
+from golf_app import score_dict_common
 
 
 class ScrapeCBS(object):
-
+    '''only works for partner events'''
     #def __init__(self):
 
 
@@ -20,21 +21,45 @@ class ScrapeCBS(object):
             html = urllib.request.urlopen("https://www.cbssports.com/golf/leaderboard/")
             #html = urllib.request.urlopen("https://www.cbssports.com/golf/leaderboard/pga-tour/26496856/zurich-classic-of-new-orleans/")
             #html = urllib.request.urlopen("https://www.cbssports.com/golf/leaderboard/pga-tour/18271952/zurich-classic-of-new-orleans/")
-            #html = urllib.request.urlopen("https://www.cbssports.com/golf/leaderboard/pga-tour/26496766/sony-open-in-hawaii/")
+            
             soup = BeautifulSoup(html, 'html.parser')
             
             leaderboard = soup.find('div', {'id': 'TableGolfLeaderboard'})
             
-            #print (leaderboard)
             if leaderboard == None:
                 return {}
 
+            r = soup.find('span', {'id': 'hudRound'})['data-roundnumber']
+            status = soup.find('span', {'id': 'hudRound'})['data-roundstatus']
+            try:
+                if round != 4:
+                    score_dict['info'] = {'round': int(r),
+                                        'complete': False,
+                                        'round_status': 'Round ' + str(r)  + ': ' + str(status)}
+                else:
+                    if status == "Final":
+                        score_dict['info'] = {'round': 4,
+                                            'complete': True,
+                                            'round_status': status}
+                    else:
+                        score_dict['info'] = {'round': int(r),
+                        'complete': False,
+                        'round_status': 'Round ' + str(r)  + str(status)}
+            except Exception as e:
+                print ('cbs scrape round/status execeptin', e)
+                score_dict['info'] = {}
+            
+            
+            score_dict['info'].update({'source': 'cbs'})
+            score_dict['info'].update({'playoff': False})
 
-            score_dict['info'] = {'source': 'cbs', 'cut_num': 36}
+
             rows = leaderboard.find_all('tr', {'class': 'TableBase-bodyTr'})
 
             print ('cbs rows length: ', len(rows))
+            loop_start = datetime.now()
             for r  in rows:
+                this_loop_start = datetime.now()
                 #print (r)
                 pos_sect = r.find_all('td', {'class': "TableBase-bodyTd"})
                 #print (pos_sect)
@@ -76,28 +101,23 @@ class ScrapeCBS(object):
                     total_strokes = nums[7].text
                 else:
                     print ('scrape cbs leaderboard issue, nums len not 6, 7, 8.  it is" : ', len(nums), nums)
-
-                try:
-                    f = Field.objects.get(tournament__current=True, playerName=player_name)
-                    pga_num = f.golfer.espn_number
-                    group = f.group.number
-                except Exception as e:
-                    print ('get pga_num except trying for loop', e)
-                    for f in Field.objects.filter(tournament__current=True):
-                        if unidecode(player_name) == unidecode(f.playerName):
-                            pga_num = f.golfer.espn_number
-                            group = f.group.number
-                        else:
-                            print (player_name, 'cbs scrap cant find player in field')
-                            pga_num = '999999'
-                            group = 99
                 
+                
+                group = 99
+                pga_num = 0
+
 
                 score_dict[player_name] = {'rank': pos, 'total_score': to_par, 'thru': thru, 'round_score': today, 'r1': r1, 'r2':r2, 'r3': r3, 'r4': r4, 'total_strokes': total_strokes, 'change': ' ', 
                                                     'cbs_player_num': player_num, 'pga_num': pga_num, 'handicap': int(0), 'group': group
                         }
+            print ('cbs scrape loop duration: ', datetime.now() - loop_start)
+            
+            for f in Field.objects.filter(tournament__current=True):
+                score_dict.get(unidecode(f.playerName)).update({'group': f.group.number,
+                                                                'pga_num': f.golfer.espn_number})
 
-            #print ('score dict from CBS', score_dict)
+            cuts = score_dict_common.ScoreDictCommon(score_dict).cut_data()
+            score_dict.update({'info': cuts})
             return score_dict
 
 

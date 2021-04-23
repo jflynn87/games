@@ -90,26 +90,29 @@ class Score(object):
                            x += 1
 
               
-               
-               det_picks[pick.user.username][g]=\
-                        {
-                        'pick': pick.pick.playerName.playerName,
-                        'pga_num': pick.pick.playerName.golfer.espn_number,
-                        'score': pick.score,
-                        'toPar': pick.toPar,
-                        'today_score': pick.today_score,
-                        'thru': pick.thru,
-                        'sod_position': pick.sod_position,
-                        'winner': winner,
-                        'gross_score': pick.gross_score
-                        }
+               if pick.pick.playerName.partner:
+                    player_name = pick.pick.playerName.playerName + ' ' + pick.pick.playerName.partner
+               else:
+                    player_name = pick.pick.playerName.playerName
 
+               det_picks[pick.user.username][g]=\
+                                {
+                                'pick': player_name,
+                                'pga_num': pick.pick.playerName.golfer.espn_number,
+                                'score': pick.score,
+                                'toPar': pick.toPar,
+                                'today_score': pick.today_score,
+                                'thru': pick.thru,
+                                'sod_position': pick.sod_position,
+                                'winner': winner,
+                                'gross_score': pick.gross_score
+                                }
 
             else:
                 #det_picks[pick.pick.user.username].append(pick)
                 det_picks[pick.user].append(pick)
 
-        #print ('get picks result', det_picks)
+        print ('get picks result', det_picks)
 
         if self.format == 'json':
             #make json in the view so deleted the json.dumps
