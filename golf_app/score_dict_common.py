@@ -25,11 +25,18 @@ class ScoreDictCommon(object):
             elif self.tournament.has_cut:
                 post_cut_wd = len([v for k,v in self.score_dict.items() if k!= 'info' and v.get('total_score') in self.tournament.not_playing_list() and \
                     v.get('r3') != '--'])
-                if len([v for (k,v) in self.score_dict.items() if k != 'info' and v.get('total_score') == "CUT"]) != 0:
+                #if len([v for (k,v) in self.score_dict.items() if k != 'info' and v.get('total_score') == "CUT"]) != 0:
+                if len([v for (k,v) in self.score_dict.items() if k != 'info' and v.get('rank') == "CUT"]) != 0: #changed for cbs
                     print ('cuts exists, inside if')
                     
-                    cut_num = len([v for (k,v) in self.score_dict.items() if k != 'info' and v.get('total_score') not in self.tournament.not_playing_list()]) \
-                        + post_cut_wd +1
+                    #changed to rank from total score for cbs
+                    cut_num = len([v for (k,v) in self.score_dict.items() if k != 'info' and v.get('rank') not in self.tournament.not_playing_list()]) \
+                        + post_cut_wd +1 
+                    if self.tournament.pga_tournament_num == '018':
+                        cut_num = int(((cut_num-1)/2) + 1)
+                    print ('caclulated cut num', cut_num)
+                    if not self.score_dict.get('info').get('cut_line'):
+                        self.score_dict['info'].update({'cut_line': 'Projected Cut Line: ' + str(utils.format_score(cut_line))})
                 
                 else:
                     print ('no cuts in leaderboadr, in else')

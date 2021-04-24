@@ -39,13 +39,13 @@ from collections import OrderedDict
 start = datetime.now()
 web = scrape_cbs_golf.ScrapeCBS().get_data()
 #print (web)
-t = Tournament.objects.get(current=True)
-f_start  = datetime.now()
+#t = Tournament.objects.get(current=True)
+#f_start  = datetime.now()
 #for pick in Picks.objects.filter(playerName__tournament=t):
     #print (pick)
 #    web.get(unidecode(pick.playerName.playerName)).update({'group': pick.playerName.group.number})
     #print (web.get(pick.playerName.playerName))
-print ('duration: ', datetime.now() - start)
+#print ('duration: ', datetime.now() - start)
 print (web['info'])
 exit()
 

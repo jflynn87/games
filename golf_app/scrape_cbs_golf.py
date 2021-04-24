@@ -56,12 +56,18 @@ class ScrapeCBS(object):
 
             rows = leaderboard.find_all('tr', {'class': 'TableBase-bodyTr'})
 
+            cut_line = leaderboard.find('td', {'class': "TableBase-bodyTd GolfLeaderboard-bodyTd--cutLine"})
+            
+            #print ('scrape cut line: ', cut_line)
+            if cut_line: 
+                score_dict['info'].update({'cut_line': cut_line.text})
+
             print ('cbs rows length: ', len(rows))
             loop_start = datetime.now()
             for r  in rows:
                 this_loop_start = datetime.now()
                 #print (r)
-                if r.text == 'projected cut':
+                if 'cut' in r.text:
                     continue
                 pos_sect = r.find_all('td', {'class': "TableBase-bodyTd"})
                 #print (pos_sect)
