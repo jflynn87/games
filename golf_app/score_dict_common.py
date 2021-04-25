@@ -36,7 +36,9 @@ class ScoreDictCommon(object):
                         cut_num = int(((cut_num-1)/2) + 1)
                     print ('caclulated cut num', cut_num)
                     if not self.score_dict.get('info').get('cut_line'):
-                        self.score_dict['info'].update({'cut_line': 'Projected Cut Line: ' + str(utils.format_score(cut_line))})
+                        #this will be the wrong number, fix at some point
+                        cut_line = min(int(utils.score_as_int(v.get('total_score'))) for k, v in self.score_dict.items() if k != 'info' and v.get('rank') == "CUT") -1
+                        self.score_dict['info'].update({'cut_line': 'XProjected Cut Line: ' + str(utils.format_score(cut_line))})
                 
                 else:
                     print ('no cuts in leaderboadr, in else')

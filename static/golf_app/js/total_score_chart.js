@@ -37,7 +37,21 @@ $(document).ready(function () {
                                 text: 'Trend Analysis - click name to toggle inclusion in chart'
                             }
                         },
-            
+                    scales: {
+                        yAxes: [{
+                            display: true,
+                            position: 'right',
+                            ticks: {
+                                beginAtZero: true
+                            }
+                        },
+                    {       display: true,
+                        position: 'left',
+                        ticks: {
+                            beginAtZero: true
+                        }
+                 }]
+                    }
                     }
                 }
 
