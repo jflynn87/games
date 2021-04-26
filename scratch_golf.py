@@ -37,8 +37,13 @@ from collections import OrderedDict
 #print (Field.objects.filter(tournament__current=True).count())
 
 start = datetime.now()
-web = scrape_cbs_golf.ScrapeCBS().get_data()
-#print (web)
+cbs_web = scrape_cbs_golf.ScrapeCBS().get_data()
+pga_web = scrape_scores_picks.ScrapeScores().scrape_zurich()
+#print (pga_web)
+print ('PGA: ', pga_web['info'])
+print ('PGA: ', pga_web['Cameron Smith'])
+print ('CBS: ', cbs_web['info'])
+print ('CBS: ', cbs_web['Cameron Smith'])
 #t = Tournament.objects.get(current=True)
 #f_start  = datetime.now()
 #for pick in Picks.objects.filter(playerName__tournament=t):
@@ -46,7 +51,7 @@ web = scrape_cbs_golf.ScrapeCBS().get_data()
 #    web.get(unidecode(pick.playerName.playerName)).update({'group': pick.playerName.group.number})
     #print (web.get(pick.playerName.playerName))
 #print ('duration: ', datetime.now() - start)
-print (web['info'])
+#print (web['info'])
 exit()
 
 

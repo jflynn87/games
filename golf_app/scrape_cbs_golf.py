@@ -4,7 +4,7 @@ import json
 from bs4 import BeautifulSoup
 from golf_app.models import Field, Picks
 from unidecode import unidecode
-from golf_app import score_dict_common
+from golf_app import score_dict_common, scrape_scores_picks
 
 
 class ScrapeCBS(object):
@@ -18,8 +18,8 @@ class ScrapeCBS(object):
         try:
             score_dict = {}
 
-            html = urllib.request.urlopen("https://www.cbssports.com/golf/leaderboard/")
-            #html = urllib.request.urlopen("https://www.cbssports.com/golf/leaderboard/pga-tour/26496856/zurich-classic-of-new-orleans/")
+            #html = urllib.request.urlopen("https://www.cbssports.com/golf/leaderboard/")
+            html = urllib.request.urlopen("https://www.cbssports.com/golf/leaderboard/pga-tour/26496856/zurich-classic-of-new-orleans/")
             #html = urllib.request.urlopen("https://www.cbssports.com/golf/leaderboard/pga-tour/18271952/zurich-classic-of-new-orleans/")
             
             soup = BeautifulSoup(html, 'html.parser')
@@ -31,16 +31,27 @@ class ScrapeCBS(object):
 
             r = soup.find('span', {'id': 'hudRound'})['data-roundnumber']
             status = soup.find('span', {'id': 'hudRound'})['data-roundstatus']
+            print ('STATUS: ', status, len(status), type(r))
             try:
-                if round != 4:
+                if r != '4':
                     score_dict['info'] = {'round': int(r),
                                         'complete': False,
                                         'round_status': 'Round ' + str(r)  + ': ' + str(status)}
                 else:
-                    if status == "Final":
-                        score_dict['info'] = {'round': 4,
+                    if status == "Complete":
+                        #score_dict['info'] = {'round': 4,
+                        #                    'complete': True,
+                        #                    'round_status': status,}
+                        print ('Tournament complete, going to PGA for final results')
+                        sd = scrape_scores_picks.ScrapeScores().scrape_zurich() 
+                        cut_data = score_dict_common.ScoreDictCommon(sd).cut_data()
+                        score_dict.update(sd)
+                        score_dict['info'].update({'round': 4,
                                             'complete': True,
-                                            'round_status': status}
+                                            'round_status': status,})
+                        score_dict.update({'info': cut_data})
+                        print ('returning score dict::  ', score_dict.get('info'))                                            
+                        return score_dict
                     else:
                         score_dict['info'] = {'round': int(r),
                         'complete': False,

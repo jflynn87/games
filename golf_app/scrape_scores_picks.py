@@ -1,4 +1,4 @@
-from golf_app.models import Picks, ScoreDict, Field, Golfer
+from golf_app.models import Picks, ScoreDict, Field, Golfer, Tournament
 #from django.contrib.auth.models import User
 from datetime import datetime, timedelta
 
@@ -22,7 +22,11 @@ class ScrapeScores(object):
 
     def __init__(self, tournament=None, url=None, mode=None):
         print (url)
-        self.tournament = tournament
+        if tournament:
+            self.tournament = tournament
+        else:
+            self.tournament = Tournament.objects.get(current=True)
+
         if url:
             self.url = url
         elif tournament == None or self.tournament.current:
@@ -41,7 +45,7 @@ class ScrapeScores(object):
 
     def scrape_zurich(self):
         start = datetime.now()
-        score_dict = {}
+        score_dict = {'info': {'source': 'PGA'}}
         options = ChromeOptions()
         options.add_argument("--headless")
         options.add_argument("--disable-gpu")
@@ -56,16 +60,18 @@ class ScrapeScores(object):
         soup = BeautifulSoup(driver.page_source, 'html.parser')
         print ('driver after soup: ', datetime.now() - start)
         #table = (soup.find("div", {'id':'team-play-container'}))
-        table = (soup.find("div", {'class':'team-play-leaderboard'}))
-        print ('tble len; ', len(table), len(table.find_all("tbody tr", {'class': 'line-row'})))
+        table = (soup.find("div", {'id':'team-play-container'}))
+        print ('tble len; ', len(table))
         print ('driver after table: ', datetime.now() - start)
         t = self.tournament
         t_ok = False
 
         print ('driver initialized: ', datetime.now() - start)
         try:
+            
             title = soup.find('h1', {'class', 'name'})
-            name = title.text
+            name = title.text.lstrip().rstrip()
+            print ('t name', name)
 
             if t.name == name.lstrip().rstrip():
                t_ok = True
@@ -100,6 +106,9 @@ class ScrapeScores(object):
 
                 if len(playoff) > 0:
                     t.playoff = True
+                    score_dict['info'].update({'playoff': True})
+                else:
+                    score_dict['info'].update({'playoff': False})
 
                 #table = driver.find_element_by_id("stroke-play-container")
                 
@@ -114,31 +123,73 @@ class ScrapeScores(object):
                     #sd.pick_data = score_dict
                 else:  #doing for "all" or None 
                     for row in table.find_all("tr", {'class': 'line-row'}):
-                        print(row)
+                        #print(row)
                         ele_class = row['class'][1].split('-')[2]
-                        data = self.get_data(row)
-                        try:
-                            field = Field.objects.get(golfer__golfer_pga_num=ele_class, tournament=self.tournament)
-                            field.rank = data[1]['rank']
-                            field.save()
-                        except Exception as e:
-                            print ('field lookup issue in scrape', ' pga_num: ', ele_class, data[0], e)
-                            #field.handi = 0
-                        data[1].update({'pga_num': ele_class,
-                                        'handicap': 'not found'
-                                        })
-                        score_dict[data[0]] =  data[1]
-                    sd.data = score_dict
-                    print (len(sd.data))
+                        #print (ele_class)
+                        if self.tournament.pga_tournament_num == '018':
+                            for p in row.find_all('div', {'class': 'player-name-col'}):
+                                #print (p.text)                            
+                                player_name = p.text
+                                if row.find('td', {'class': 'status'}):
+                                    rank = row.find('td', {'class': 'status'}).text
+                                    movement = ''
+                                else:
+                                    rank = row.find('div', {'class': 'position'}).text
+                                    movement = str(row.find('div', {'class': 'position-movement'}))
+                                to_par = row.find('td', {'class': 'total'}).text
+                                thru = row.find('div', {'class': 'thru'}).text
+                                today = row.find('div', {'class': 'round'}).text
+                                for i, r in enumerate(row.find_all('td', {'class': 'round-x'})):
+                                    if i == 0:
+                                        r1 = r.text
+                                    elif i ==1:
+                                        r2 = r.text
+                                    elif i == 2:
+                                        r3 = r.text
+                                    elif i ==3:
+                                        r4 = r.text
+                                total_strokes = row.find('td', {'class': 'strokes'}).text
+                                
+                                if Field.objects.filter(tournament=self.tournament, playerName=player_name).exists():
+                                    f = Field.objects.get(tournament=self.tournament, playerName=player_name)
+                                    pga_num = f.golfer.espn_number
+                                elif Field.objects.filter(tournament=self.tournament, partner=player_name).exists():
+                                    f = Field.objects.get(tournament=self.tournament, partner=player_name)
+                                    pga_num = f.partner_golfer.espn_number
+                                else:
+                                    print ('XXXXXXfield lookup issue: ', player_name)
+                                    break
+                            
+                    
+                                score_dict[player_name] = {'rank': rank, 'total_score': to_par, 'thru': thru, 'round_score': today, 'r1': r1, 'r2':r2, 'r3': r3, 'r4': r4, 'total_strokes': total_strokes, 'change': movement, 
+                                                    'pga_num': pga_num, 'handicap': int(0), 'group': f.group.number}
+                                #print ('PGA scrape dict: ', score_dict)
+
+                        else:
+                            return {'error': 'Only for Zurich, t_num 018'}
+                        # try:
+                        #     field = Field.objects.get(golfer__golfer_pga_num=ele_class, tournament=self.tournament)
+                        #     field.rank = data[1]['rank']
+                        #     field.save()
+                        # except Exception as e:
+                        #     print ('field lookup issue in scrape', ' pga_num: ', ele_class, data[0], e)
+                        #     #field.handi = 0
+                        # data[1].update({'pga_num': ele_class,
+                        #                 'handicap': 'not found'
+                        #                 })
+                        # score_dict[data[0]] =  data[1]
+                    #print (score_dict)
+                    #sd.data = score_dict
+                    #print (len(sd.data))
                 
-                sd.save()
+                #sd.save()
                 #print (score_dict)
                 #self.tournament.saved_cut_num = self.tournament.cut_num()
                 #self.tournament.saved_round = self.tournament.get_round()
                 #self.tournament.saved_cut_round = self.tournament.get_cut_round() 
                 #self.tournament.save()
-
-                return (score_dict)                
+                print ('PGA scrape retunrin score dict len: ', len(score_dict))
+                return score_dict                
             else:
                 print ('scrape scores t mismatch', t, name)
                 return {}

@@ -28,9 +28,9 @@ $(document).ready(function () {
         datasets: ds,
     }
 
-    const config = {type: 'line', 
-                    data,
-                    options: {
+    var options = {//type: 'line', 
+                    //data,
+                    //options: {
                         plugins: {
                             title: {
                                 display: true,
@@ -47,18 +47,21 @@ $(document).ready(function () {
                         },
                     {       display: true,
                         position: 'left',
-                        ticks: {
+                        ticks: {  
                             beginAtZero: true
                         }
                  }]
                     }
-                    }
+                    //}
                 }
 
 
 
     var myChart = new Chart(ctx, 
-        config
+    {type: 'line',
+data: data,
+options: options}
+        //options
 
     )
     $('#chart_status_msg').hide()
