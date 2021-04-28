@@ -32,18 +32,44 @@ from golf_app.utils import formatRank, format_name, fix_name
 from golf_app import golf_serializers
 import pytz
 from collections import OrderedDict
-
+import math
 #print (Tournament.objects.get(current=True))
 #print (Field.objects.filter(tournament__current=True).count())
 
 start = datetime.now()
-cbs_web = scrape_cbs_golf.ScrapeCBS().get_data()
-pga_web = scrape_scores_picks.ScrapeScores().scrape_zurich()
+labels = []
+data = []
+diff_dict= {}
+
+season = Season.objects.get(current=True)
+
+for user in season.get_users():
+    u = User.objects.get(pk=user.get('user'))
+    diff_dict[u.username] = []
+
+for t in Tournament.objects.filter(season__pk=season.pk):
+    labels.append(t.name[0:5])
+    totals = json.loads(t.season.get_total_points(t))
+    #print (totals, type(totals))
+    
+    for user, stats in totals.items():
+        #print (user, stats)
+        l = diff_dict[user]
+        l.append(stats['diff'])
+        diff_dict[user] = l
+
+diff_dict['min_scale'] = min([min(v) for v in diff_dict.values()])
+print (int(math.ceil(diff_dict['min_scale'] / -200.0) * -200.0))
+exit()
+
+
+#cbs_web = scrape_cbs_golf.ScrapeCBS().get_data()
+#pga_web = scrape_scores_picks.ScrapeScores().scrape_zurich()
 #print (pga_web)
-print ('PGA: ', pga_web['info'])
-print ('PGA: ', pga_web['Cameron Smith'])
-print ('CBS: ', cbs_web['info'])
-print ('CBS: ', cbs_web['Cameron Smith'])
+#print ('PGA: ', pga_web['info'])
+#print ('PGA: ', pga_web['Cameron Smith'])
+#print ('CBS: ', cbs_web['info'])
+#print ('CBS: ', cbs_web['Cameron Smith'])
 #t = Tournament.objects.get(current=True)
 #f_start  = datetime.now()
 #for pick in Picks.objects.filter(playerName__tournament=t):

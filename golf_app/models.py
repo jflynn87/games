@@ -551,6 +551,14 @@ class Field(models.Model):
                             data.update({t.pk:{'name': t.name, 'rank': 'DNP'}})    
                     else:
                         data.update({t.pk: {'name': t.name, 'rank': 'MP ' + str(self.get_mp_result(t))}})
+                elif Field.objects.filter(tournament=t, partner_golfer__espn_number=self.golfer.espn_number).exclude(withdrawn=True).exclude(partner_golfer__espn_number__isnull=True).exists():
+                    sd = ScoreDict.objects.get(tournament=t)
+                    f = Field.objects.get(tournament=t, partner_golfer__espn_number=self.golfer.espn_number)
+                    x = [v.get('rank') for k, v in sd.data.items() if k !='info' and v.get('pga_num') in [self.golfer.espn_number, self.golfer.golfer_pga_num]]
+                    if len(x) > 0:
+                        data.update({t.pk:{'name': t.name, 'rank': x[0]}})
+                    else:
+                        data.update({t.pk:{'name': t.name, 'rank': 'DNP'}})    
                 else:
                     data.update({t.pk:{'name': t.name, 'rank': 'DNP'}})
                 

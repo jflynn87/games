@@ -1101,10 +1101,11 @@ class MPRecordsAPI(APIView):
 
 class TrendDataAPI(APIView):
     
-    def get(self, request, season_pk):
+    def get(self, request, season_pk, num_of_t):
+        print (season_pk, num_of_t)
         try:
             labels = []
-            data = []
+            #data = []
             diff_dict= {}
             
             season = Season.objects.get(pk=season_pk)
@@ -1113,10 +1114,14 @@ class TrendDataAPI(APIView):
                 u = User.objects.get(pk=user.get('user'))
                 diff_dict[u.username] = []
 
-            for t in Tournament.objects.filter(season__pk=season.pk):
-                labels.append(t.name[0:5])
+            if num_of_t == "all":
+                t_qs = Tournament.objects.filter(season__pk=season.pk).order_by('pk')
+            else:
+                t_qs = reversed(Tournament.objects.filter(season__pk=season.pk).order_by('-pk')[:int(num_of_t)])
+
+            for t in t_qs:
+                labels.append(t.name[0:8])
                 totals = json.loads(t.season.get_total_points(t))
-                #print (totals, type(totals))
                 
                 for user, stats in totals.items():
                     #print (user, stats)
@@ -1124,11 +1129,9 @@ class TrendDataAPI(APIView):
                     l.append(stats['diff'])
                     diff_dict[user] = l
 
+            #diff_dict['min_scale'] = min([min(v) for v in diff_dict.values()])
 
-            print (diff_dict)
-            #data = data_dict
-
-            return JsonResponse(data={'labels': labels, 'data': diff_dict}, status=200)
+            return JsonResponse(data={'labels': labels, 'data': diff_dict, 'min_scale': min([min(v) for v in diff_dict.values()])}, status=200)
         except Exception as e:
             print ('Trend Data API failed: ', e)
             return JsonResponse({'key': 'Trend data error'}, status=401)

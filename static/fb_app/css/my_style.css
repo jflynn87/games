@@ -119,9 +119,9 @@ body {
 }
 
 .chart-style {
-  height: auto;
-  width: auto;
-  padding-right: 10%;
+  min-height: 250px;
+/*  width: auto;
+  padding-right: 10%; */
 }
 
 

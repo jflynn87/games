@@ -2,7 +2,7 @@ from golf_app.models import (Picks, Field, Group, Tournament, TotalScore,
     ScoreDetails, Name, Season, User, BonusDetails, Golfer, ScoreDict)
 import urllib3
 from django.core.exceptions import ObjectDoesNotExist
-from golf_app import scrape_cbs_golf, scrape_espn, utils, scrape_scores_picks
+from golf_app import scrape_cbs_golf, scrape_espn, utils, scrape_scores_picks, populateMPField, populateZurichField
 from django.db import transaction
 import urllib
 from urllib.request import Request, urlopen
@@ -355,7 +355,12 @@ def create_groups(tournament_number):
             recent = collections.OrderedDict(sorted(f.recent_results().items(), reverse=True))
             f.recent = recent 
             f.save()
-
+    ## test these, changes needed to make them work.  refactor to just get field from these functions and to create in standard funcitons
+    elif tournament.pga_tournament_num == '018':
+        field = populateZurichField.get_field()
+    elif tournament.pga_tournament_num == '470':
+        pass
+        #field = populateMPField.
 
     print ('saved field objects')
 

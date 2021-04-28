@@ -8,11 +8,18 @@
 
 <p id='season_id' hidden>{{season.pk}}</p>
 <p id='user' hidden>{{request.user.username}}</p>
-<div>
+<div id='chart'>
+  <label for="show_T">Tournaments in Chart </label>
+  <select class=form-select name="show_t" id="show_t" onchange="draw_chart()">
+    <option value="all">All</option>
+    <option value="5">Last 5</option>
+    <option value="10">Last 10</option>
+  </select>
+  <div id='chart-sect' class="table-responsive">
   <h4 id='chart_status_msg' class='status'>Loading Chart ...</h4>
   <canvas id='trend_chart' class='chart-style'></canvas>
 </div>
-
+</div>
 <div>
   <br>
   <h3>Totals and Tournament Results</h3>

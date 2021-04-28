@@ -1,6 +1,3 @@
-import django
-django.setup()
-
 from golf_app.models import BonusDetails, Tournament, Field, Picks, Group, TotalScore, ScoreDetails, Season, Golfer
 #from datetime import datetime, timedelta
 import datetime
@@ -146,5 +143,3 @@ def get_field():
                 count = 0
 
 
-
-test()
