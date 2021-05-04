@@ -499,9 +499,6 @@ class Field(models.Model):
                 except Exception as e2:
                     print ('cant find prior tournament ', e1)
                     return 'n/a'
-        
-        
-        #sd = ScoreDict.objects.get(tournament=t)
 
         try:
             sd = ScoreDict.objects.get(tournament=t)

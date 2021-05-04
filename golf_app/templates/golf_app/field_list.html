@@ -115,11 +115,6 @@
                   </p>
                  <p> </p></td>
                  <td > <p>Team OWGR: {{player.currentWGR}} </p>
-                 <!-- <p> prior: {{player.sow_WGR}} </p>
-                 <p> soy: {{player.soy_WGR}} </p>
-                 <p id='prior{{player.golfer.espn_number}}'>loading...</p>
-                 <p id='recent{{player.golfer.espn_number}}'>loading...</p>
-                 <p> <a href="#" data-toggle="tooltip" title="Deducted from score"><i class="fa fa-info-circle"></i> handicap: {{player.handicap}} </a> </p> -->
             </td>
 
               {%else%}
@@ -142,10 +137,10 @@
                   </p>
 
                   <p>
-                   <img src="{{player.pic_link}}" alt=""> 
+                   <img src="{{player.golfer.pic_link}}" alt=""> 
                   </p>
                 </td>
-                  <td> <p> {{player.playerName}} <img src="{{player.map_link}}" alt="">{%if player.partner%} &  {{player.partner}} {%endif%} </p>  
+                  <td> <p> {{player.playerName}} <img height='25' src="{{player.golfer.flag_link}}" alt="">{%if player.partner%} &  {{player.partner}} {%endif%} </p>  
                    <p><a href="https://www.google.com/search?q={{player.playerName}}" target="_blank">Google</a> / <a href="{{player.golfer.golfer_link}}" target="_blank">PGA</a> </p> </td>
               <td class="small"> <p>cur: {{player.currentWGR}} </p>
                    <p> prior: {{player.sow_WGR}} </p>

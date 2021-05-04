@@ -33,33 +33,44 @@ from golf_app import golf_serializers
 import pytz
 from collections import OrderedDict
 import math
-#print (Tournament.objects.get(current=True))
-#print (Field.objects.filter(tournament__current=True).count())
 
 start = datetime.now()
-labels = []
-data = []
-diff_dict= {}
 
-season = Season.objects.get(current=True)
+#with open('owgr.json') as f:
+#  owgr = json.load(f)
+for sd in ScoreDict.objects.all():
+    #print (sd.tournament)
+    solo_2 = {k:v for k,v in sd.data.items() if v.get('rank') =='2'}
+    solo_3 = {k:v for k,v in sd.data.items() if v.get('rank') =='3'}
+    if len(solo_2) > 0 and len(solo_3) > 0:
+        print (sd.tournament, sd.tournament.season)
+        print (solo_2)
+        print (solo_3)
+        print ('-----------------------')
+exit()
+sds = ScoreDetails.objects.filter(pick__playerName__tournament=t)
+print (sd)
 
-for user in season.get_users():
-    u = User.objects.get(pk=user.get('user'))
-    diff_dict[u.username] = []
+exit()
+for t in Tournament.objects.all():
+    sd = ScoreDetails.objects.filter(pick__playerName__tournament=t).values('user').annotate('score')
+    print (sd)
+    if len(sd) < 0:
+        print (sd)
 
-for t in Tournament.objects.filter(season__pk=season.pk):
-    labels.append(t.name[0:5])
-    totals = json.loads(t.season.get_total_points(t))
-    #print (totals, type(totals))
-    
-    for user, stats in totals.items():
-        #print (user, stats)
-        l = diff_dict[user]
-        l.append(stats['diff'])
-        diff_dict[user] = l
-
-diff_dict['min_scale'] = min([min(v) for v in diff_dict.values()])
-print (int(math.ceil(diff_dict['min_scale'] / -200.0) * -200.0))
+exit()
+t = Tournament.objects.get(current=True)
+with open('owgr.json') as f:
+  owgr = json.load(f)
+#owgr = populateField.get_worldrank()
+#owgr = {}
+field  = populateField.get_field(t, owgr)
+sorted_field = {k:v for k,v in sorted(field.items(), key=lambda item: item[1].get('curr_owgr'))}
+print (sorted_field)
+exit()
+#print (Field.objects.filter(tournament__current=True).count())
+f = Field.objects.get(tournament=t, playerName__startswith="By")
+print (f, f.recent_results())
 exit()
 
 

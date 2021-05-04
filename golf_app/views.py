@@ -296,9 +296,9 @@ def setup(request):
     if request.method == "POST":
         url_number = request.POST.get('tournament_number')
         print (url_number, type(url_number))
-        if url_number == '470':  #Match Play special logic
-            populateMPField.create_groups(url_number)
-            return HttpResponseRedirect(reverse('golf_app:field'))
+        #if url_number == '470':  #Match Play special logic
+        #    populateMPField.create_groups(url_number)
+        #    return HttpResponseRedirect(reverse('golf_app:field'))
         try:
             if Tournament.objects.filter(pga_tournament_num=str(url_number), season__current=True).exists():
                 error_msg = ("tournament already exists" + str(url_number))
@@ -308,7 +308,7 @@ def setup(request):
                 populateField.create_groups(url_number)
                 return HttpResponseRedirect(reverse('golf_app:field'))
         except ObjectDoesNotExist:
-            print ('creating field')
+            print ('obj does not exist exept - creating field')
             populateField.create_groups(url_number)
             return HttpResponseRedirect(reverse('golf_app:field'))
         except Exception as e:
