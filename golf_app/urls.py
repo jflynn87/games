@@ -1,6 +1,7 @@
 from django.conf.urls import url
-from django.urls import path
+from django.urls import path, include
 from golf_app import views
+from rest_framework import routers
 
 #Template tagging
 app_name = 'golf_app'
@@ -30,7 +31,6 @@ urlpatterns= [
     path('scores_by_player/', views.ScoresByPlayerView.as_view(), name='scores_by_player'),
     path('api_player_score/', views.ScoresByPlayerAPI.as_view(), name='api_player_score'),
     path('get_espn_score_dict/<int:pk>/', views.ESPNScoreDict.as_view(), name='get_espn_score_dict'),
-    #path('get_prior_result/<int:pk>/<str:group>', views.PriorResultAPI.as_view(), name='get_prior_result'),
     path('get_prior_result/', views.PriorResultAPI.as_view(), name='get_prior_result'),
     path('recent_form/<str:player_num>/', views.RecentFormAPI.as_view(), name='recent_form'),
     path('update_field/', views.UpdateFieldView.as_view(), name='update_field'),

@@ -4,7 +4,7 @@ $(document).ready(function() {
     //$('#det-list').attr('class', 'spinner')
     $('#totals-table').hide()
     start = new Date() 
-    console.log(start.toLocaleString())
+    console.log('start time: ', start.toLocaleString())
     $('#local').text.toLocaleString()
     $('#status').append(start.toLocaleString())
 
@@ -161,6 +161,7 @@ function build_score_tbl(data) {
   $('#totals-table').show()
 
   get_picks(info, optimal_data, total_data)
+  
 
 }
 
@@ -201,41 +202,39 @@ function get_picks(info, optimal_data, total_data) {
   })
 .then((response) => response.json())
 .then((responseJSON) => {
-  picks_data = responseJSON
-  //console.log(picks_data)
-  $.each(picks_data, function (p, stats) {
+  score_detail = responseJSON
+  $.each(score_detail, function (index, stats) {
     let filler = /[\s\.\,\']/g;
-    $('#loading_' + p).remove()
-    $.each(stats, function(index) {
-      var pick = $(this)[0]['pick'].replace(filler, '')
-     
-      if ($(this)[0]['toPar'] == 0) {
+    $('#loading_' + player).remove()
+      var pick = stats.pick.playerName.playerName.replace(filler, '')
+
+      if (stats.toPar == 0) {
         toPar = "E"
       }
-      else {toPar = $(this)[0]['toPar']} 
+      else {toPar = stats.toPar} 
     
-      $('#totals' + p ).append('<td id=' + p + stats[index]['pga_num'] +  '>' + '<span class=watermark>' + 
-    '<p>' + p.substring(0, 4)  + ' : ' + index +  '</p>'  + '</span>' + '<p>' +  $(this)[0]['pick']  + '</p>' + '<p>' + $(this)[0]['score'] +
-    '<span > <a id=tt-' + pick + ' href="#" data-toggle="tooltip" > <i class="fa fa-info-circle"></i> </a> </span>' +
-     '</p>' +  toPar + ' (' + $(this)[0]['thru'] + ')' +  '   ' +  format_move($(this)[0]['sod_position']) +  $(this)[0]['sod_position'].replace(filler, '') + '</p>' +  '</td>')
+      $('#totals' + player).append('<td id=' + player + stats.pick.playerName.golfer.espn_number +  '>' + '<span class=watermark>' + 
+       '<p>' + player.substring(0, 4)  + ' : ' + stats.pick.playerName.group.number +  '</p>'  + '</span>' + '<p>' +  stats.pick.playerName.playerName  + '</p>' + '<p>' + stats.score +
+        '<span > <a id=tt-' + pick + ' data-toggle="tooltip" > <i class="fa fa-info-circle" style="color:blue;"></i> </a> </span>' +
+     '</p>' +  toPar + ' (' + stats.thru + ')' +  '   ' +  format_move(stats.sod_position) +  stats.sod_position.replace(filler, '') + '</p>' +  '</td>')
      //console.log($('#tt-' + $(this)[0]['pick'].replace(/ +?/g, '').replace(/\./g,'') + '[data-toggle="tooltip"]'))
       $('#tt-' + pick + '[data-toggle="tooltip"]').tooltip({trigger:"hover",
-                                            delay:{"show":400,"hide":800}, "title": 'gross score: ' + $(this)[0]['gross_score']
+                                            delay:{"show":400,"hide":800}, "title": 'gross score: ' + stats.gross_score
                                             }) 
      
-      if (not_playing.indexOf($(this)[0]['today_score']) != -1) {$('#' + p + stats[index]['pga_num']).addClass('cut')}                                            
+      if (not_playing.indexOf(stats.today_score) != -1) {$('#' + player + stats.pick.playerName.golfer.espn_number).addClass('cut')}                                            
       //if ($(this)[0]['today_score'] in ['CUT', 'WD', 'DQ']) {$('#' + p + stats[index]['pga_num']).addClass('cut')}
     
     //use 0 of the index to strip the extra chars in multi pick groups.  Need to fix for tournaments with 10 groups.
     //console.log($(this)[0]['pick'], optimal_data[index], info[10])
-    
-    if (info[10] == 1) {if ($.inArray($(this)[0]['pga_num'], Object.keys(optimal_data[index]['golfer'])) !== -1) {$('#' + p + $(this)[0]['pga_num'].replace(filler, '')).addClass('best')} }
+
+    if (info[10] == 1) {if ($.inArray(stats.pick.playerName.golfer.espn_number, Object.keys(optimal_data[stats.pick.playerName.group.number]['golfer'])) !== -1) {$('#' + player + stats.pick.playerName.golfer.espn_number).addClass('best')} }
     else {
-    if ($.inArray($(this)[0]['pga_num'], Object.keys(optimal_data[index[0]]['golfer'])) !== -1) {$('#' + p + $(this)[0]['pga_num'].replace(filler, '')).addClass('best')} 
+    if ($.inArray(stats.pick.playerName.golfer.espn_number, Object.keys(optimal_data[stats.pick.playerName.group.number]['golfer'])) !== -1) {$('#' + player + stats.pick.playerName.golfer.espn_number).addClass('best')} 
     }
   })}) 
 })
-})
+
 } 
 
 
@@ -345,6 +344,7 @@ function update_score_tbl(data) {
 
 function update_picks(info, optimal_data, total_data) {
 
+  
   $.each(total_data, function(player, data) { 
 
   fetch("/golf_app/get_picks/" + $('#tournament_key').text() + '/' + player,
@@ -352,8 +352,44 @@ function update_picks(info, optimal_data, total_data) {
   })
 .then((response) => response.json())
 .then((responseJSON) => {
-  picks_data = responseJSON
-  //console.log(picks_data)
+  score_detail = responseJSON
+  $.each(score_detail, function (index, stats) {
+    let filler = /[\s\.\,\']/g;
+    //$('#loading_' + player).remove()
+      var pick = stats.pick.playerName.playerName.replace(filler, '')
+
+      if (stats.toPar == 0) {
+        toPar = "E"
+      }
+      else {toPar = stats.toPar} 
+    
+      $('#' + player + stats.pick.playerName.golfer.espn_number).html('<span class=watermark>' + 
+       '<p>' + player.substring(0, 4)  + ' : ' + stats.pick.playerName.group.number +  '</p>'  + '</span>' + '<p>' +  stats.pick.playerName.playerName  + '</p>' + '<p>' + stats.score +
+        '<span > <a id=tt-' + pick + ' data-toggle="tooltip" > <i class="fa fa-info-circle" style="color:blue;"></i> </a> </span>' +
+     '</p>' +  toPar + ' (' + stats.thru + ')' +  '   ' +  format_move(stats.sod_position) +  stats.sod_position.replace(filler, '') + '</p>' +  '</td>')
+     //console.log($('#tt-' + $(this)[0]['pick'].replace(/ +?/g, '').replace(/\./g,'') + '[data-toggle="tooltip"]'))
+      $('#tt-' + pick + '[data-toggle="tooltip"]').tooltip({trigger:"hover",
+                                            delay:{"show":400,"hide":800}, "title": 'gross score: ' + stats.gross_score
+                                            }) 
+     
+      $('#' + player + stats.pick.playerName.golfer.espn_number).removeClass()
+      if (not_playing.indexOf(stats.today_score) != -1) {$('#' + player + stats.pick.playerName.golfer.espn_number).addClass('cut')}                                            
+      //if ($(this)[0]['today_score'] in ['CUT', 'WD', 'DQ']) {$('#' + p + stats[index]['pga_num']).addClass('cut')}
+    
+    //use 0 of the index to strip the extra chars in multi pick groups.  Need to fix for tournaments with 10 groups.
+    //console.log($(this)[0]['pick'], optimal_data[index], info[10])
+    
+    if (info[10] == 1) {if ($.inArray(stats.pick.playerName.golfer.espn_number, Object.keys(optimal_data[stats.pick.playerName.group.number]['golfer'])) !== -1) {$('#' + player + stats.pick.playerName.golfer.espn_number).addClass('best')} }
+    else {
+    if ($.inArray(stats.pick.playerName.golfer.espn_number, Object.keys(optimal_data[stats.pick.playerName.group.number]['golfer'])) !== -1) {$('#' + player + stats.pick.playerName.golfer.espn_number).addClass('best')} 
+    }
+  })}) 
+})
+
+ 
+
+  /*picks_data = responseJSON
+  console.log('pick data: ', picks_data)
   
   $.each(picks_data, function (p, stats) {
     let filler = /[\s\.\,\']/g;
@@ -367,7 +403,7 @@ function update_picks(info, optimal_data, total_data) {
       else {toPar = $(this)[0]['toPar']} 
       
       $('#' + player + stats[index]['pga_num'] ).html('<span class=watermark> <p>' + p.substring(0, 4)  + ' : ' + index +  '</p>'  + '</span>' + '<p>' +  $(this)[0]['pick']  + '</p>' + '<p>' + $(this)[0]['score'] +
-    '<span > <a id=tt-' + pick + ' href="#" data-toggle="tooltip" > <i class="fa fa-info-circle"></i> </a> </span>' +
+    '<span > <a id=tt-' + pick + ' data-toggle="tooltip" > <i class="fa fa-info-circle"></i> </a> </span>' +
      '</p>' +  toPar + ' (' + $(this)[0]['thru'] + ')' +  '   ' +  format_move($(this)[0]['sod_position']) +  $(this)[0]['sod_position'].replace(filler, '') + '</p>' )
      //console.log($('#tt-' + $(this)[0]['pick'].replace(/ +?/g, '').replace(/\./g,'') + '[data-toggle="tooltip"]'))
       $('#tt-' + pick + '[data-toggle="tooltip"]').tooltip({trigger:"hover",
@@ -387,13 +423,13 @@ function update_picks(info, optimal_data, total_data) {
     if ($.inArray($(this)[0]['pga_num'], Object.keys(optimal_data[index[0]]['golfer'])) !== -1) {$('#' + p + $(this)[0]['pga_num'].replace(filler, '')).addClass('best')} 
     }
   })}) 
-})
+})*/
 
-})
+
 sort_table(info)
-if (info['complete'] == true) {
-     console.log($('#totals-table').children()[1])
-    $('#ts_BigDippoer').html($('#ts_BigDipper').html () + '<i class="fas fa-trophy"></i>')}
+// if (info['complete'] == true) {
+//      console.log($('#totals-table').children()[1])
+//     $('#ts_BigDippoer').html($('#ts_BigDipper').html () + '<i class="fas fa-trophy"></i>')}
 
 } 
 
@@ -429,4 +465,3 @@ while(switching) {
 //    console.log($('#totals-table tr:first'))
  //  $('#totals-table tr:first-child td').add('<i class="fas fa-trophy"></i>')}
 }
-

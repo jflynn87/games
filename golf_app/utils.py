@@ -1,6 +1,7 @@
 from unidecode import unidecode as decode
 from datetime import datetime
 
+
 def format_score(score):
     '''takes in a sting and returns a string formatted for the right display or calc'''
     if score == None:
@@ -35,7 +36,7 @@ def score_as_int(score, t=None, sd=None):
 def formatRank(rank, tournament=None):
     from golf_app.models import Tournament
     '''takes in a sting and returns an int'''
-    
+
     t = Tournament.objects.get(current=True)
     
     if type(rank) is int:
@@ -186,3 +187,14 @@ def reverse_names(name):
     #else:
     #    print ('unexpected name: ', name)
     #    return names[len(names)-1] + ' ' + names[0] 
+
+
+def save_access_log(request, screen):
+    '''takes a request and a string saves an object and returns nothing'''
+    from golf_app.models import AccessLog
+    if request.user.is_authenticated:
+        log = AccessLog()
+        log.user = request.user
+        log.page = screen
+        log.save()
+    return

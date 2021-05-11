@@ -11,6 +11,7 @@ from django.urls import reverse, reverse_lazy
 from django.contrib.auth.models import User
 from django.contrib.auth.forms import UserCreationForm
 from user_app.forms import UserCreateForm
+from golf_app import utils
 
 
 class SignUp(CreateView):
@@ -45,6 +46,9 @@ class SignUp(CreateView):
 
 
 def index(request):
+
+        if request.user.is_authenticated:
+            utils.save_access_log(request, 'home page')
 
         week = Week.objects.get(current=True)
         try:

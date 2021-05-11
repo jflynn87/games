@@ -3,7 +3,7 @@ from django.views.generic import View, TemplateView, ListView, DetailView, Creat
 #from extra_views import ModelFormSetView
 from golf_app.models import Field, Tournament, Picks, Group, TotalScore, ScoreDetails, \
            mpScores, BonusDetails, PickMethod, PGAWebScores, ScoreDict, UserProfile, \
-           Season
+           Season, AccessLog
 from golf_app.forms import  CreateManualScoresForm, FieldForm, FieldFormSet
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponseRedirect, HttpResponse, Http404
@@ -15,7 +15,7 @@ from django.contrib.auth.models import User
 import datetime
 from golf_app import populateField, calc_score, optimal_picks,\
      manual_score, scrape_scores_picks, scrape_cbs_golf, scrape_masters, withdraw, scrape_espn, \
-     populateMPField, mp_calc_scores, golf_serializers
+     populateMPField, mp_calc_scores, golf_serializers, utils
 from django.utils import timezone
 from django.core.exceptions import ObjectDoesNotExist
 from django.db.models import Min, Q, Count, Sum, Max
@@ -27,8 +27,9 @@ from django.db import transaction
 import urllib.request
 from selenium.webdriver import Chrome
 import csv
-from rest_framework.views import APIView
+from rest_framework.views import APIView 
 from rest_framework.response import Response
+from rest_framework.generics import ListAPIView
 from django.core.mail import send_mail
 import time
 from django.core import serializers
@@ -143,20 +144,15 @@ def email_picks(tournament, user):
     return
 
 
-class ScoreGetPicks(APIView):
-    
-    def get(self, request, pk, username):
-        try: 
-            t = Tournament.objects.get(pk=pk)
-            user = User.objects.get(username=username)
-            scores = manual_score.Score(None, t, 'json')
-            picks = scores.get_picks_by_user(user)
-            
-            return JsonResponse(picks, status=200)
-        except Exception as e:
-            print ('Get Picks API exception', e)
-            return Response(json.dumps({'status': str(e)}), 500)
-            
+class ScoreGetPicks(ListAPIView):
+    serializer_class = golf_serializers.ScoreDetailsSerializer
+
+    def get_queryset(self, *args, **kwargs):
+        t = Tournament.objects.get(pk=self.kwargs.get('pk'))
+        u = User.objects.get(username=self.kwargs.get('username'))
+        queryset = ScoreDetails.objects.filter(pick__playerName__tournament=t, user=u)
+        return queryset
+           
 
 class GetPicks(APIView):
     
@@ -192,6 +188,7 @@ class SeasonTotalView(ListView):
     model=Tournament
 
     def get_context_data(self, **kwargs):
+        utils.save_access_log(self.request, 'total scores')
         display_dict = {}
         user_list = []
         winner_dict = {}
@@ -365,8 +362,23 @@ class GetScores(APIView):
                 score_dict = {}
                 #score_dict = get_score_dict(t)
                 print ('error using old score dict method', t, e)
-            
-        
+        # try:            
+        #     if not score_dict.get('info').get('dict_status') == 'updated':
+        #         print ('no change in scores, returning from DB')
+        #         display_data = json.loads(sd.pick_data)
+        #         return Response(({'picks': display_data.get('display_data').get('picks'),
+        #                         'totals': display_data.get('display_data').get('totals'),
+        #                         'leaders': display_data.get('display_data').get('leaders'),
+        #                         'cut_line': display_data.get('display_data').get('cut_line'),
+        #                         'optimal': display_data.get('display_data').get('optimal'), 
+        #                         'scores': display_data.get('display_data').get('scores'),
+        #                         'season_totals': display_data.get('display_data').get('season_totals'),
+        #                         'info': json.dumps(info),
+        #                         't_data': serializers.serialize("json", [t])
+        #         }), 200)
+        # except Exception as e:
+        #     print ('cant restore from display dict, recalc scores')
+
         scores = manual_score.Score(score_dict, t, 'json')
         # change so this isn't executed when complete, add function to get total scores without updating
         #print (len(score_dict))
@@ -439,12 +451,9 @@ class GetDBScores(APIView):
             sd.save()
         info = get_info(t)
         t_data = serializers.serialize("json", [t, ])
-        #print ('T DATA: ', type(t_data), t_data)
-
 
         try:
             display_data = json.loads(sd.pick_data)
-            print ('display_data len: ', len(display_data))
 
             if len(display_data) > 0:    
                 return Response(({'picks': display_data.get('display_data').get('picks'),
@@ -476,6 +485,9 @@ class NewScoresView(LoginRequiredMixin,ListView):
     def get_context_data(self, **kwargs):
         context = super(NewScoresView, self).get_context_data(**kwargs)
         start = datetime.datetime.now()
+        if self.request.user.is_authenticated:
+            utils.save_access_log(self.request, 'current week scores')
+
         if self.kwargs.get('pk') != None:
             print (self.kwargs)
             tournament = Tournament.objects.get(pk=self.kwargs.get('pk'))
@@ -1136,3 +1148,4 @@ class TrendDataAPI(APIView):
             print ('Trend Data API failed: ', e)
             return JsonResponse({'key': 'Trend data error'}, status=401)
 
+        

@@ -61,8 +61,8 @@ function recent(data) {
         var items = ''
         $.each(stats.recent, function(i, rank){items += rank.name + ': ' + rank.rank + '\n'})
         
-        $('#recent' + stats.golfer.espn_number).html('<p> recent form: ' + ranks + '<span > <a id=tt-recent' + stats.golfer.espn_number + 
-            ' href="#" data-toggle="tooltip" html="true" > <i class="fa fa-info-circle"></i> </a> </span> </p>')
+        $('#recent' + stats.golfer.espn_number).html('<p style="color:blue"> recent form: ' + ranks + '<span> <a id=tt-recent' + stats.golfer.espn_number + 
+            ' data-toggle="tooltip" html="true" > <i class="fa fa-info-circle" style="color:blue"></i> </a> </span> </p>')
         $('#tt-recent' + stats.golfer.espn_number + '[data-toggle="tooltip"]').tooltip({trigger:"hover",
              delay:{"show":400,"hide":800}, "title": items
     })

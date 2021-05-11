@@ -10,7 +10,19 @@ $(document).ready(function() {
     })
   .then((response) => response.json())
   .then((responseJSON) => {
-    console.log(responseJSON)
-    console.log(start, new Date())
+    console.log('updating scores')
+    $.ajax({
+      type: "GET",
+      url: "/golf_app/get_scores/",
+      data: {'tournament' : $('#tournament_key').text()},
+      dataType: 'json',
+      success: function (json_update) {
+        console.log('updated scores', typeof(json_update), $.isEmptyObject(json_update))
+        
+          
+    //console.log(responseJSON)
+    //console.log(start, new Date())
+      }
+    })
   })
 })

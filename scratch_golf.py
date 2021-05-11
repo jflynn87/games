@@ -34,8 +34,74 @@ import pytz
 from collections import OrderedDict
 import math
 
+#for t in Tournament.objects.filter(season__current=True):
+#    print (t, len(Picks.objects.filter(playerName__tournament=t).values('playerName').distinct()))
+#exit()
 start = datetime.now()
+t = Tournament.objects.get(current=True)
+sd = ScoreDict.objects.get(tournament=t)
+s = json.dumps(sd.data)
+print (hash(s))
 
+
+#sd = ScoreDetails.objects.filter(pick__playerName__tournament=t)
+#print (sd.values_list('pick__playerName__golfer__espn_number', flat=True).distinct(), len(sd.values_list('pick__playerName__golfer__espn_number', flat=True).distinct()))
+
+exit()
+for sd in ScoreDetails.objects.filter(pick__playerName__tournament=t, user__username__startswith="shi"):
+    print (sd, sd.sod_position)
+exit()
+sd =ScoreDict.objects.get(tournament=t)
+web = scrape_espn.ScrapeESPN().get_data()
+print ('---------------')
+print (sd.data.get('info'))
+print (web.get('info'))
+
+start_1 = datetime.now()
+print ('1', {k:v for k,v in sd.data.items() if k != 'info'} == \
+    {k:v for k,v in web.items() if k != 'info'})
+print ('dur 1:', datetime.now() - start_1)
+start_2 = datetime.now()
+print ('2', {k:v for k,v in sd.data.get('info').items() if k != 'dict_status'} == \
+    {k:v for k,v in web.get('info').items() if k != 'dict_status'})
+print ('dur 2:', datetime.now() - start_2)
+#print (sd.data == web)
+#print (sd.data.get('info'))
+#print (web.get('info'))
+#print ({k:v for k,v in sd.data.items() if v != v.get('dict_status')})
+#sorted_score_dict = {k:v for k, v in sorted(sd.data.items(), if k != 'info' key=lambda item: item[1].get(utils.formatRank(item[1].get('rank'))))}
+#print (sorted_score_dict)
+
+
+
+
+exit()
+
+
+#for user in user_pks:
+#    u = User.objects.get(pk=user.get('user'))
+#    picks = manual_score.Score(None, t, 'json').get_picks_by_user(u)
+#    print (u, picks)
+
+print ('loop dur: ', datetime.now() - start)
+
+serialize_start = datetime.now()
+#models = [*ScoreDetails.objects.filter(pick__playerName__tournament=t), *Picks.objects.filter(playerName__tournament=t)]
+#data = serializers.serialize('json', models)
+data = golf_serializers.ScoreDetailsSerializer('json', ScoreDetails.objects.filter(pick__playerName__tournament=t), many=True)
+print (type(data.data))
+#for d in data.initial_data:
+#    print(type(d))
+#    print (d)
+print ('serialize dur: ', datetime.now() - serialize_start)
+exit()
+
+
+
+web1 =  scrape_scores_picks.ScrapeScores(t, 'https://www.pgatour.com/competition/2021/wgc-dell-technologies-match-play/group-stage.html').mp_brackets() 
+web = scrape_scores_picks.ScrapeScores(t, 'https://www.pgatour.com/competition/2021/wgc-dell-technologies-match-play/leaderboard.html').mp_final_16()
+print (web1)
+exit()
 #with open('owgr.json') as f:
 #  owgr = json.load(f)
 for sd in ScoreDict.objects.all():
@@ -65,7 +131,7 @@ with open('owgr.json') as f:
 #owgr = populateField.get_worldrank()
 #owgr = {}
 field  = populateField.get_field(t, owgr)
-sorted_field = {k:v for k,v in sorted(field.items(), key=lambda item: item[1].get('curr_owgr'))}
+sorted_field = {k:v for k,v in sorted(field.items(), key=lambda item:item[1].get('curr_owgr'))}
 print (sorted_field)
 exit()
 #print (Field.objects.filter(tournament__current=True).count())

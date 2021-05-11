@@ -13,6 +13,8 @@ import random
 from unidecode import unidecode
 from django.utils import timezone
 from django.db.models import Q
+from golf_app import golf_serializers
+from django.http import JsonResponse
 
 class Score(object):
     
@@ -57,6 +59,8 @@ class Score(object):
 
     def get_picks_by_user(self, user):
         '''takes a user object and returns that user's picks in a dict'''
+        # replace with serialied sd object 5/7/2021
+
         det_picks = {}
         sd = ScoreDetails.objects.filter(pick__playerName__tournament=self.tournament, pick__user=user).order_by('pick__playerName__group')
         #print ('get pick by use sd', sd)
@@ -112,7 +116,7 @@ class Score(object):
                 #det_picks[pick.pick.user.username].append(pick)
                 det_picks[pick.user].append(pick)
 
-        print ('get picks result', det_picks)
+        #print ('get picks result', det_picks)
 
         if self.format == 'json':
             #make json in the view so deleted the json.dumps
@@ -229,12 +233,14 @@ class Score(object):
                 sd.today_score = "WD"
                 sd.thru = "WD"
                 sd.toPar = "WD"
+                sd.sod_position = '-'
                 #sd.save()   comment for bulk update
                 ScoreDetails.objects.filter(pick__playerName__tournament=self.tournament, pick__playerName=pick.playerName).update(
                                             score=cut_num - pick.playerName.handicap(),
                                             gross_score=sd.gross_score,
                                             today_score=sd.today_score,
                                             thru=sd.thru,
+                                            sod_position=sd.sod_position,
                                             toPar=sd.toPar
                                             )
                 data = {}

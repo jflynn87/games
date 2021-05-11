@@ -5,6 +5,7 @@ import json
 from bs4 import BeautifulSoup
 from golf_app import utils
 from golf_app.models import Tournament, Field, Golfer, ScoreDict
+from collections import OrderedDict
 
 
 class ScrapeESPN(object):
@@ -25,6 +26,7 @@ class ScrapeESPN(object):
         self.setup = setup
 
     def get_data(self):
+        start = datetime.now()
         print ('scraping golf espn com')
         
         sd, created = ScoreDict.objects.get_or_create(tournament=self.tournament)
@@ -32,7 +34,8 @@ class ScrapeESPN(object):
             print ('set up mode, scraping')
         elif not created and (sd.updated + timedelta(minutes = 1)) > datetime.utcnow().replace(tzinfo=pytz.utc):
             print ('returning saved score dict ', 'sd saved time: ', sd.updated, 'current time: ', datetime.utcnow().replace(tzinfo=pytz.utc))
-            return sd.data
+            sd.data.get('info').update({'dict_status': 'from_db'})
+            return OrderedDict(sd.data)
  
         try:
             score_dict = {}
@@ -191,7 +194,7 @@ class ScrapeESPN(object):
             #print (score_dict['Sungjae Im'])
             #print (score_dict['Patrick Reed'])
             #print ([v for v in score_dict.values() if v.get('rank') == '-'])
-            print ('info before cut num calc: ', score_dict.get('info'))
+            print ('info before cut num calc: ', score_dict.get('info'), 'scrape duration: ', datetime.now() - start)
             cut_calc_start = datetime.now()
             try:
                 if score_dict.get('info').get('round_status') == 'Not Started' and score_dict.get('info').get('round') == 1 and self.tournament.has_cut:
@@ -237,10 +240,18 @@ class ScrapeESPN(object):
             print ('cut num duration: ', datetime.now() - cut_calc_start)
             print ('info: ', score_dict['info'])
             
-            sd.data = score_dict
+            # if {k:v for k,v in sd.data.items() if k != 'info'} == \
+            #    {k:v for k,v in score_dict.items() if k != 'info'}  and \
+            #    {k:v for k,v in sd.data.get('info').items() if k != 'dict_status'} == \
+            #    {k:v for k,v in score_dict.get('info').items() if k != 'dict_status'}:
+            #     score_dict.get('info').update({'dict_status': 'no change'})
+            # else:
+            #     score_dict.get('info').update({'dict_status': 'updated'})
+
+            sd.data = OrderedDict(score_dict)
             sd.save()
             print ('espn scrape duration: ', datetime.now() - start)
-            return score_dict
+            return OrderedDict(score_dict)
 
 
         except Exception as e:

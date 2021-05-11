@@ -499,11 +499,21 @@ class Field(models.Model):
                 except Exception as e2:
                     print ('cant find prior tournament ', e1)
                     return 'n/a'
-
+        print (t, t.season)
         try:
             sd = ScoreDict.objects.get(tournament=t)
             if t.pga_tournament_num != "470":
-                return [v.get('rank') for k, v in sd.data.items() if k !='info' and v.get('pga_num') in [self.golfer.espn_number, self.golfer.golfer_pga_num]][0]
+                rank = [v.get('rank') for k, v in sd.data.items() if k !='info' and v.get('pga_num') in [self.golfer.espn_number, self.golfer.golfer_pga_num]]
+                print (rank)
+                if rank[0] != '-':
+                    return rank[0]
+                else:
+                    mdf = [v for k, v in sd.data.items() if k !='info' and v.get('pga_num') in [self.golfer.espn_number, self.golfer.golfer_pga_num]]
+                    if mdf[0].get('r4') == '--' and int(mdf[0].get('r3')) > 0:
+                        return "MDF"
+                    else:
+                        return rank[0]
+
             else:
                 return str(self.get_mp_result())
         except Exception as e:
@@ -791,5 +801,13 @@ class ScoreDict(models.Model):
 class UserProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     email_picks = models.BooleanField(default=False)
+
+class AccessLog(models.Model):
+    user = models.ForeignKey(User, null=True, blank=True, on_delete=models.SET_NULL)
+    page = models.CharField(max_length=100, null=True, blank=True)
+    updated = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return str(self.user.username) + '  ' + str(self.page)
 
 
