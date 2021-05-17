@@ -30,11 +30,11 @@ from unidecode import unidecode
 from django.core import serializers
 from golf_app.utils import formatRank, format_name, fix_name
 
-
-t= Tournament.objects.get(pga_tournament_num='009', season__season='2020')
+#safeway
+t= Tournament.objects.get(pga_tournament_num='464', season__season='2021')
 print (Field.objects.filter(tournament=t).count())
 
-web = scrape_espn.ScrapeESPN(t, 'https://www.espn.com/golf/leaderboard?tournamentId=401155427').get_data()
+web = scrape_espn.ScrapeESPN(t, 'https://www.espn.com/golf/leaderboard?tournamentId=401219793').get_data()
 #print (web)
 
 sd, created = ScoreDict.objects.get_or_create(tournament=t)
@@ -42,6 +42,27 @@ sd, created = ScoreDict.objects.get_or_create(tournament=t)
 #sd.tournament = t
 sd.data = web
 sd.save()
+t.espn_t_num = 401219793
+t.save()
+
+#US Open
+t= Tournament.objects.get(pga_tournament_num='026', season__season='2021')
+print (Field.objects.filter(tournament=t).count())
+
+web = scrape_espn.ScrapeESPN(t, 'https://www.espn.com/golf/leaderboard?tournamentId=401219333').get_data()
+#print (web)
+
+sd, created = ScoreDict.objects.get_or_create(tournament=t)
+
+#sd.tournament = t
+sd.data = web
+sd.save()
+t.espn_t_num = 401219333
+t.save()
+
+
+
+
 
 
 exit()

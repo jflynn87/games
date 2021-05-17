@@ -404,6 +404,19 @@ class ScrapeESPN(object):
         return field_dict
 
 
+    def status_check(self):
+        start = datetime.now()
+        html = urllib.request.urlopen(self.url)
+        soup = BeautifulSoup(html, 'html.parser')
+        
+        status = soup.find('div', {'class', 'status'}).span.text
+        print ('start status check dur: ', datetime.now() - start, status)
+        
+        return status
+
+        
+
+
 def get_espn_num(row):
     '''takes a sting formatted as an a tag href and returns a string'''
     #return row.a['href'].split('/')[7]

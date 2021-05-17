@@ -92,7 +92,6 @@ class Tournament(models.Model):
         return self.name
 
     def started(self):
-        print ('starting started check', datetime.now())
         start = datetime.now()
         if self.set_started:
             print ('overrode to started')
@@ -105,11 +104,17 @@ class Tournament(models.Model):
                     Q(thru=None) | Q(thru__in=["not started", " ", "", '--']) | \
                     Q(today_score='WD')).exclude(gross_score=self.saved_cut_num).exists():
             print (self, 'tournament started based on picks lookup')
-            print ('finishing started check A: ', datetime.now() - start)
+            print ('started check dur: ', datetime.now() - start)
             return True
 
         try:
             from golf_app import scrape_espn
+            #scores = scrape_espn.ScrapeESPN().get_data()
+            status = scrape_espn.ScrapeESPN().status_check()
+            if status == 'Tournament Field':
+                print ('not started based on tournamanet field in status')
+                print ('started check dur: ', datetime.now() - start)
+                return False
             scores = scrape_espn.ScrapeESPN().get_data()
             print ('started check info', scores.get('info'))
             if scores.get('info').get('round') == 1 and scores.get('info').get('round_status') == 'Not Started':
@@ -117,14 +122,17 @@ class Tournament(models.Model):
                 return False
             elif scores.get('info').get('round') == 1 and scores.get('info').get('round_status') in ['Round 1 - Play Complete', 'Round 1 - In Progress']:
                 print ('started based on Round 1 text')
+                print ('started check dur: ', datetime.now() - start)
                 return True
             elif scores.get('info').get('round') == 1 and \
                 len([v for k, v in scores.items() if v.get('round_score') not in ['--', '-', None]]) == 0:
-                print ('finishing started check C: ', datetime.now() - start)
+                print ('finishing started check false based on scores in score dict')
+                print ('started check dur: ', datetime.now() - start)
                 return False      
             elif scores.get('info').get('round') == 1 and \
                 len([v for k, v in scores.items() if v.get('round_score') not in ['--', '-', None]]) > 0:
-                print ('finishing started check D: ', datetime.now() - start)
+                print ('finishing started check - true based on scores on leaderboard: ')
+                print ('started check dur: ', datetime.now() - start)
                 return True      
             elif int(scores.get('info').get('round')) > 1:
                 print ('******* round above 1')
@@ -137,8 +145,9 @@ class Tournament(models.Model):
             print ('started logic exception', e)
             print ('finishing started check', datetime.now())
             return False
-        print ('finishing started check', datetime.now())
+        
         return False
+        
         
     def winning_picks(self, user):
         winning_score= TotalScore.objects.filter(tournament=self).aggregate(Min('score'))
@@ -365,9 +374,9 @@ class Tournament(models.Model):
     def tournament_complete(self, sd=None):
         if sd == None:
            sd = ScoreDict.objects.get(tournament=self)
-           score_dict = sd.sorted_dict()
-        else:
-           score_dict = sd
+           #score_dict = sd.sorted_dict()
+        #else:
+           #score_dict = sd
 
         if sd.get('info').get('round') == 'Final':
             return True
@@ -446,8 +455,73 @@ class Golfer(models.Model):
             name = str(self.golfer_pga_num) + '.' + self.pga_web_name_format()
         return 'https://www.pgatour.com/players/player.' + unidecode(name) + '.html'
 
+    def espn_link(self):
+        if not self.espn_number:
+            return None
+        name = ''
+        name_list = self.golfer_name.split(' ')
+        for word in name_list:
+            if name != '':
+                name = name + '-' + word 
+            else:
+                name = word
+
+        return 'https://www.espn.com/golf/player/_/id/' + self.espn_number +'/' + name.lstrip().lower().replace(',','').replace('.', '')
+        
+
     def natural_key(self):
         return self.espn_number
+
+    def summary_stats(self, season):
+        '''takes a golfer object and season object, returns a dict'''
+        #start = datetime.now()
+        d = {'played': 0,
+            'won': 0,
+            'top10': 0,
+            'bet11_29': 0,
+            'bet30_49': 0,
+            'over50': 0,
+            'cuts': 0
+            }
+        played = 0
+        
+        fields = Field.objects.filter((Q(golfer=self) | Q(partner_golfer=self)), tournament__season=season).exclude(tournament__current=True).values_list('tournament__pk',flat=True).order_by('tournament__pk')
+        t_list = Tournament.objects.filter(pk__in=fields)
+        
+        #for sd in ScoreDict.objects.filter(tournament__season=season).exclude(tournament__current=True):
+        for sd in ScoreDict.objects.filter(tournament__pk__in=t_list):
+            #print (sd.tournament)
+            x = [v.get('rank') for k, v in sd.data.items() if k !='info' and v.get('pga_num') in [self.espn_number, self.golfer_pga_num]]
+            if not x:
+                continue
+            elif x[0] in sd.tournament.not_playing_list():
+                played += 1
+                t = d.get('cuts') + 1
+                d.update({'cuts':  t})
+            elif utils.formatRank(x[0]) == 1:
+                played += 1
+                t = d.get('won') + 1
+                d.update({'won':  t})
+            elif utils.formatRank(x[0]) < 11:
+                played += 1
+                t = d.get('top10') + 1
+                d.update({'top10':  t})
+            elif utils.formatRank(x[0]) < 30:
+                played += 1
+                t = d.get('bet11_29') + 1
+                d.update({'bet11_29':  t})
+            elif utils.formatRank(x[0]) < 50:
+                played += 1
+                t = d.get('bet30_49') + 1
+                d.update({'bet30_49':  t})
+            elif utils.formatRank(x[0]) > 50:
+                played += 1
+                t = d.get('over50') + 1
+                d.update({'over50':  t})
+            #print (d)
+        d.update({'played': played})
+        #print (self, d, datetime.now() - start)
+        return d
 
 
 class Field(models.Model):
@@ -472,6 +546,7 @@ class Field(models.Model):
     handi = models.IntegerField(null=True)
     prior_year = models.CharField(max_length=100, null=True)
     recent = models.JSONField(null=True)
+    season_stats = models.JSONField(null=True)
 
     class Meta:
         ordering = ['-tournament', 'group', 'currentWGR']
@@ -499,12 +574,12 @@ class Field(models.Model):
                 except Exception as e2:
                     print ('cant find prior tournament ', e1)
                     return 'n/a'
-        print (t, t.season)
+        #print (t, t.season)
         try:
             sd = ScoreDict.objects.get(tournament=t)
             if t.pga_tournament_num != "470":
                 rank = [v.get('rank') for k, v in sd.data.items() if k !='info' and v.get('pga_num') in [self.golfer.espn_number, self.golfer.golfer_pga_num]]
-                print (rank)
+                #print (rank)
                 if rank[0] != '-':
                     return rank[0]
                 else:
@@ -595,6 +670,7 @@ class Field(models.Model):
 
     def p1_owgr(self):
         return self.currentWGR - self.partner_owgr
+
 
 class PGAWebScores(models.Model):
     tournament= models.ForeignKey(Tournament, on_delete=models.CASCADE)

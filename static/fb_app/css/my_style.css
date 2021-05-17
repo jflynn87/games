@@ -125,6 +125,21 @@ body {
 }
 
 
+.top_row {
+ /* border-top: dotted;
+  border-color: black;
+  border-radius: 1px;  */
+  background-color: lightgreen;
+
+  
+}
+
+.group_header {
+  background-color: darkgray;
+  color: white;
+}
+
+
 @media only screen and (max-width: 1199px) {
 .card {
   width: 30em;
@@ -134,4 +149,19 @@ body {
   width: 30em;
 }
 
+}
+
+.field_stats_display {
+  position: relative;
+  /*bottom: 0;
+  right: 0;*/
+}
+
+@media only screen and (min-width: 1199px) {
+
+.field_stats_display {
+  position: fixed;
+  bottom: 0;
+  right: 0;
+}
 }

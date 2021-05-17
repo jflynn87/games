@@ -1,3 +1,4 @@
+
 import os
 os.environ.setdefault("DJANGO_SETTINGS_MODULE","gamesProj.settings")
 
@@ -5,7 +6,7 @@ import django
 django.setup()
 from golf_app.models import Tournament, TotalScore, ScoreDetails, Picks, PickMethod, BonusDetails, Season, Golfer, Group, Field, ScoreDict
 from django.contrib.auth.models import User
-from datetime import datetime, timedelta
+from datetime import date, datetime, timedelta
 import sqlite3
 from django.db.models import Min, Q, Count, Sum, Max
 from django.db.models.functions import ExtractWeek, ExtractYear
@@ -34,14 +35,21 @@ import pytz
 from collections import OrderedDict
 import math
 
-#for t in Tournament.objects.filter(season__current=True):
-#    print (t, len(Picks.objects.filter(playerName__tournament=t).values('playerName').distinct()))
-#exit()
 start = datetime.now()
 t = Tournament.objects.get(current=True)
-sd = ScoreDict.objects.get(tournament=t)
-s = json.dumps(sd.data)
-print (hash(s))
+g = Golfer.objects.get(golfer_name='Ryan Palmer')
+print (g.summary_stats(t.season))
+exit()
+for f in Field.objects.filter(tournament=t):
+    loop_start = datetime.now()
+    print (f.golfer.summary_stats(t.season))
+    print (f, datetime.now() - loop_start)
+
+print (datetime.now() - start)
+exit()
+print (web)
+
+web1 = scrape_espn.ScrapeESPN(None, None, False, True).get_data()
 
 
 #sd = ScoreDetails.objects.filter(pick__playerName__tournament=t)

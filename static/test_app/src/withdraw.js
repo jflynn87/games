@@ -71,8 +71,9 @@ const e = React.createElement;
               {className: 'bg-warning'},
               //key: 'items'},
               'Withdraws: ',
-               wds.wd_list.map(wd => <li>{wd}</li>)
-               //wds.wd_picks.foreach(pick, player => <li>{pick}{player}</li>)
+               wds.wd_list.map(wd => <li>{wd}</li>),
+               //'Picks:',
+               //wds.wd_picks.forEach(data => <li>{data[0]}{data[1]}</li>)
                )) 
                  
             }}

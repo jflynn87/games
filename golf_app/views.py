@@ -1,9 +1,10 @@
+from django.db.models.query_utils import RegisterLookupMixin
 from django.shortcuts import render, get_object_or_404, redirect
 from django.views.generic import View, TemplateView, ListView, DetailView, CreateView, UpdateView, FormView
 #from extra_views import ModelFormSetView
 from golf_app.models import Field, Tournament, Picks, Group, TotalScore, ScoreDetails, \
            mpScores, BonusDetails, PickMethod, PGAWebScores, ScoreDict, UserProfile, \
-           Season, AccessLog
+           Season, AccessLog, Golfer
 from golf_app.forms import  CreateManualScoresForm, FieldForm, FieldFormSet
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponseRedirect, HttpResponse, Http404
@@ -46,35 +47,35 @@ class FieldListView(LoginRequiredMixin,TemplateView):
     def get_context_data(self,**kwargs):
         context = super(FieldListView, self).get_context_data(**kwargs)
         tournament = Tournament.objects.get(current=True)
-        print (tournament.started())
-        #check for withdrawls and create msg if there is any
-        try:
-            score_file = calc_score.getRanks({'pk': tournament.pk})
-            wd_list = []
-            print ('score file', score_file[0])
-            if score_file[0] == "score lookup fail":
-                wd_list = []
-                error_message = ''
-            else:
-                for golfer in Field.objects.filter(tournament=tournament):
-                    if golfer.playerName not in score_file[0]:
-                        print ('debug')
-                        wd_list.append(golfer.playerName)
-                        #print ('wd list', wd_list)
-                if len(wd_list) > 0:
-                    error_message = 'The following golfers have withdrawn:' + str(wd_list)
-                    for wd in wd_list:
-                        Field.objects.filter(tournament=tournament, playerName=wd).update(withdrawn=True)
-                else:
-                    error_message = None
-        except Exception as e:
-            print ('score file lookup issue', e)
-            error_message = None
+        # print (tournament.started())
+        # #check for withdrawls and create msg if there is any
+        # try:
+        #     score_file = calc_score.getRanks({'pk': tournament.pk})
+        #     wd_list = []
+        #     print ('score file', score_file[0])
+        #     if score_file[0] == "score lookup fail":
+        #         wd_list = []
+        #         error_message = ''
+        #     else:
+        #         for golfer in Field.objects.filter(tournament=tournament):
+        #             if golfer.playerName not in score_file[0]:
+        #                 print ('debug')
+        #                 wd_list.append(golfer.playerName)
+        #                 #print ('wd list', wd_list)
+        #         if len(wd_list) > 0:
+        #             error_message = 'The following golfers have withdrawn:' + str(wd_list)
+        #             for wd in wd_list:
+        #                 Field.objects.filter(tournament=tournament, playerName=wd).update(withdrawn=True)
+        #         else:
+        #             error_message = None
+        # except Exception as e:
+        #     print ('score file lookup issue', e)
+        #     error_message = None
 
         context.update({
         'field_list': Field.objects.filter(tournament=Tournament.objects.get(current=True)),
         'tournament': tournament,
-        'error_message': error_message
+        #'error_message': error_message
         })
         return context
 
@@ -157,11 +158,13 @@ class ScoreGetPicks(ListAPIView):
 class GetPicks(APIView):
     
     def get(self, num):
+        start = datetime.datetime.now()
         try: 
             pick_list = []
             for pick in Picks.objects.filter(user__username=self.request.user, playerName__tournament__current=True):
                 pick_list.append(pick.playerName.pk)
-            print ('getting picks API response', self.request.user, json.dumps(pick_list))
+            print ('getting picks API response', self.request.user, json.dumps(pick_list), datetime.datetime.now() - start)
+
             return Response(json.dumps(pick_list), 200)
         except Exception as e:
             print ('Get Picks API exception', e)
@@ -555,52 +558,58 @@ class CheckStarted(APIView):
         try:
             t_status  = {}
             key = request.data['key']
-            print ('post', key)
-
             t = Tournament.objects.get(pk=key)
 
             if t.set_notstarted:
                return Response(json.dumps({'status': 'Overrode to not started'}), 200)
 
-
-            if not t.started():
-                #pga_web = scrape_scores_picks.ScrapeScores(t)
-                #score_dict = pga_web.scrape()
+            if t.started():
                 score_dict = scrape_espn.ScrapeESPN().get_data()
-                print ('score dict started check: ', score_dict.get('info'))
                 score = manual_score.Score(score_dict, t)
+                t_status['status'] = 'Started - refresh to see picks'
+            else:
+                 t_status['status'] = 'Not Started'
+
+            # if not t.started():
+            #     #score_dict = scrape_espn.ScrapeESPN().get_data()
+            #     status = scrape_espn.ScrapeESPN().status_check()
+            #     if status == "Tournament Field":
+            #         t_status['status'] = 'Not Started'
+            #     #print ('score dict started check: ', score_dict.get('info'))
+            #     else:
+            #         score_dict = scrape_espn.ScrapeESPN().get_data()
+            #         score = manual_score.Score(score_dict, t)
+            #         t_status['status'] = 'Started - refresh to see picks'
                 #round = t.get_round()
-                t_round = score_dict.get('info').get('round')
+                    #t_round = score_dict.get('info').get('round')
+
    
                 #if t_round != None and t_round != 'Tournament Field' and t_round > 0:
-                if t_round != None and (t_round != 1 and score_dict.get('round_status') != "Not Started"):
-                    print ('started updating scores')
-                    score.update_scores() 
-                if t.started():
-                    t_status['status'] = 'Started - refresh to see picks'
-                else:
-                    t_status['status'] = 'Not Started'
+                #if t_round != None and (t_round != 1 and score_dict.get('round_status') != "Not Started"):
+                #    print ('started updating scores')
+                #    score.update_scores() 
+                #if t.started():
+                #    t_status['status'] = 'Started - refresh to see picks'
+                #else:
+                #    t_status['status'] = 'Not Started'
                 #t_status['status'] = tourn.started()
-                print ('responding', t_status)
+                #print ('responding', t_status)
             return Response(json.dumps(t_status), 200)
         except Exception as e:
             print ('error', e)
             return Response(json.dumps({'status': str(e)}), 500)
 
-    def get(self, t_pk):
-        print ('1', t_pk.GET)
-        
-
-        
-        try:
-            t = Tournament.objects.get(pk=self.request.GET.get('t_pk'))
-            if not t.started():
-                pga_web = scrape_scores.ScrapeScores(t)
-                score_dict = pga_web.scrape()
-            print (t.started())
-            return Response(t.started, 200)
-        except Exception as e:
-            return Response(e, 500)
+    # def get(self, t_pk):
+       
+    #     try:
+    #         t = Tournament.objects.get(pk=self.request.GET.get('t_pk'))
+    #         if not t.started():
+    #             pga_web = scrape_scores.ScrapeScores(t)
+    #             score_dict = pga_web.scrape()
+    #         print (t.started())
+    #         return Response(t.started, 200)
+    #     except Exception as e:
+    #         return Response(e, 500)
 
             
 # class PriorResult(APIView):
@@ -899,6 +908,7 @@ class ScoresByPlayerView(LoginRequiredMixin,TemplateView):
 
 class ESPNScoreDict(APIView):
     def get(self, request, pk):
+        return JsonResponse(scrape_espn.ScrapeESPN().get_data(), status=200)
         try:
             data = {}
             data['users'] = {}
@@ -964,6 +974,7 @@ class ScoresByPlayerAPI(APIView):
 class PriorResultAPI(APIView):
     def post(self, request):
         start = datetime.datetime.now()
+        #print ('PROIR RESULT api DATA: ', request.data)
         try:
             #g_num = group.split('-')[2]
             t= Tournament.objects.get(pk=request.data.get('tournament_key'))
@@ -976,7 +987,7 @@ class PriorResultAPI(APIView):
             data = json.dumps({'msg': str(e)})
                 
         #return JsonResponse(data, status=200)
-        print ('prior result duration: ', request.data.get('golfer_list'), datetime.datetime.now() - start)
+        print ('prior result duration: ', datetime.datetime.now() - start)
         return JsonResponse(data, status=200, safe=False)
 
 
@@ -1149,3 +1160,19 @@ class TrendDataAPI(APIView):
             return JsonResponse({'key': 'Trend data error'}, status=401)
 
         
+class SeasonStats(APIView):
+    def post(self, request):
+        start = datetime.datetime.now()
+        try:
+            data = {}
+            #print ('DATA ', request.data)
+            t= Tournament.objects.get(pk=request.data.get('tournament_key'))
+            for espn_num in request.data.get('golfer_list'):
+                g = Golfer.objects.get(espn_number=espn_num)
+                data.update({g.espn_number: g.summary_stats(t.season)})
+            print ('season stats api duration: ', datetime.datetime. now() - start)
+            return JsonResponse(data, status=200)
+        except Exception as e:
+            print ('season stats exception: ', e)
+            return JsonResponse({'msg': e})
+

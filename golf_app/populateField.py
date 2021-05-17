@@ -300,7 +300,7 @@ def create_field(field, tournament):
             group_num += 1
             player_cnt = 1
 
-    #need to do this after full field is saved for tha calcs to work.  No h/c in MP
+    #need to do this after full field is saved for the calcs to work.  No h/c in MP
 
     for f in Field.objects.filter(tournament=tournament):
         if tournament.pga_tournament_num not in ['470', '018']:
@@ -310,7 +310,8 @@ def create_field(field, tournament):
 
         f.prior_year = f.prior_year_finish()
         recent = OrderedDict(sorted(f.recent_results().items(), reverse=True))
-        f.recent = recent 
+        f.recent = recent
+        f.season_stats = f.golfer.summary_stats(tournament.season) 
         f.save()
 
     print ('saved field objects')

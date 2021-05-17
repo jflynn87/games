@@ -1,6 +1,6 @@
 //get existing picks on update
 $(document).ready(function() {
-  $('#main').hide()
+  //$('#main').hide()
   $.ajax({
     type: "GET",
     url: "/golf_app/get_info/",
@@ -18,8 +18,8 @@ $(document).ready(function() {
           for (i = 0; i < data.length; ++i) {
               $('#' + data[i]).attr('checked', 'checked');
             }
-            $('#pulse').hide()
-            $('#main').show()
+           // $('#pulse').hide()
+           // $('#main').show()
             get_info(info)
         },
         failure: function(json) {
@@ -126,7 +126,7 @@ function get_info(info) {
 }
 
 function check_complete(info) {
-  console.log(info)
+  //console.log(info)
   $('#pick-status').append('<table id=status-tbl class=table small> </table>')
   $('#status-tbl').append('<tr id=picks-row> <td> Groups: </td> </tr>')
   $.each(info,  function(group, picks) {
@@ -175,3 +175,35 @@ function count_actual(group, picks) {
 
   return selected
 }
+
+
+//there should be a cleaner way to do these next 2 functions.
+$('#stats-dtl-toggle').on('click', function() {
+  
+  if ($('#stats-dtl-toggle').text().includes('Hide')) {
+  $('#stats-dtl-toggle').html('<h4> Show Stats <i class="fa fa-plus-circle" style="color:lightblue;"></i> </h4>')
+  $('#bottom #stats-dtl-toggle').html('<h4> Show Stats <i class="fa fa-plus-circle" style="color:lightblue;"></i> </h4>')
+  $('.stats-row').attr('hidden', '')
+  }
+ else if ($('#stats-dtl-toggle').text().includes('Show')) {
+    $('#stats-dtl-toggle').html('<h4> Hide Stats <i class="fa fa-minus-circle" style="color:lightblue;"></i> </h4>')
+    $('#bottom #stats-dtl-toggle').html('<h4> Hide Stats <i class="fa fa-minus-circle" style="color:lightblue;"></i> </h4>')
+    $('.stats-row').removeAttr('hidden')
+    }
+    
+})
+
+$('#bottom #stats-dtl-toggle').on('click', function() {
+
+  if ($('#bottom #stats-dtl-toggle').text().includes('Hide')) {
+  $('#bottom #stats-dtl-toggle').html('<h4> Show Stats <i class="fa fa-plus-circle" style="color:lightblue;"></i> </h4>')
+  $('#stats-dtl-toggle').html('<h4> Show Stats <i class="fa fa-plus-circle" style="color:lightblue;"></i> </h4>')
+  $('.stats-row').attr('hidden', '')
+  }
+ else if ($('#bottom #stats-dtl-toggle').text().includes('Show')) {
+    $('#bottom #stats-dtl-toggle').html('<h4> Hide Stats <i class="fa fa-minus-circle" style="color:lightblue;"></i> </h4>')
+    $('#stats-dtl-toggle').html('<h4> Hide Stats <i class="fa fa-minus-circle" style="color:lightblue;"></i> </h4>')
+    $('.stats-row').removeAttr('hidden')
+    }
+    
+})
