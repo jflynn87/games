@@ -11,11 +11,11 @@
 <script type="text/javascript" src="{%static 'golf_app/js/get_prior_result.js'%}"></script> 
 <script type="text/javascript" src="{%static 'golf_app/js/load_player_data.js'%}"></script> 
 <link rel="stylesheet" href='{%static "golf_app/css/load.css"%}'>
-<!-- <div class='load'>
+<div class='load'>
 <label class="pulse" id='pulse'>
     <progress class="pulse-progress"></progress>
     しばらくお待ちください。
-</label> -->
+</label> 
 
 <!-- <div id='prior-results'></div> -->
 
@@ -23,8 +23,8 @@
 <p hidden id='tournament_key'>{{tournament.pk}}</p>
 
 {% regroup field_list by group as ordered_field_list %}
-  <!-- <div id='main' style='display:none'> -->
-  <div id='main'>
+  <div id='main' style='display:none'>
+  <!-- <div id='main'> -->
 
       <h4 id="t-name">{{tournament.name}}</h4>
 

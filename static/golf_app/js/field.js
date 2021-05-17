@@ -18,8 +18,8 @@ $(document).ready(function() {
           for (i = 0; i < data.length; ++i) {
               $('#' + data[i]).attr('checked', 'checked');
             }
-           // $('#pulse').hide()
-           // $('#main').show()
+            $('#pulse').hide()
+            $('#main').show()
             get_info(info)
         },
         failure: function(json) {
