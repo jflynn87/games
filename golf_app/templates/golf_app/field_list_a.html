@@ -1,0 +1,84 @@
+{% extends "golf_app/golf_app_base.html" %}
+{%load static%}
+{%load golf_extras%}
+{% block body_block %}
+
+<!-- <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+<script src="https://code.jquery.com/jquery-3.3.1.min.js" integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=" crossorigin="anonymous"></script> -->
+
+
+<script type="text/javascript" src="{%static 'golf_app/js/field_sect.js'%}"></script> 
+<link rel="stylesheet" href='{%static "golf_app/css/load.css"%}'>
+<div class='load'>
+<!-- <label class="pulse" id='pulse'>
+    <progress class="pulse-progress"></progress>
+    しばらくお待ちください。
+</label>   -->
+
+<!-- <div id='prior-results'></div> -->
+
+
+<p hidden id='tournament_key'>{{tournament.pk}}</p>
+
+
+  <!-- <div id='main' style='display:none'> -->
+  <!-- <div id='main'> -->
+
+      <h4 id="t-name">{{tournament.name}}</h4>
+
+      <div id=withdraw></div>
+      {%if tournament.pga_tournament_num != "470" and tournament.pga_tournament_num != "018"%}
+        <script type="text/babel" src="{%static 'test_app/src/withdraw.js'%}"></script> 
+      {%endif%} 
+
+      <div id='espn_missing'></div>
+      <script type="text/babel" src="{%static 'test_app/src/check_espn_num.js'%}"></script> 
+<!-- 
+      {%if not tournament.started or tournament.late_picks%}
+        <p>Please make 1 pick for each group below</p>
+
+        <form name="random" method="post">
+          {%csrf_token%}
+          <input type="text" name="random" value="random" hidden>
+          <p>or click for random picks  <input type="submit" class="btn btn-primary" value="Random"> </p>
+        </form>
+        
+        <span style="float: right;" >
+          <a href="#" id="download" >
+          <i class="fas fa-file-download" title="Download CSV" data-toggle="tooltip"> Download Data</i>
+          </a>
+        </span>
+      {%else%}
+        <p>
+          <span style="text-align:left;">Tournament Started - too late to make picks</span>
+          <span style="float: right;  ">  
+            <a href="#" id="download">
+            <i class="fas fa-file-download" title="Download CSV" data-toggle="tooltip"> Download Data</i>
+            </a>
+          </span>
+        </p>
+        {%endif%} -->
+        
+        <!-- <div class="alert alert-danger"></div> -->
+        <h2 id='error_msg'></h2>
+        <!-- </div> -->
+
+
+<div id='groups_div' hidden>
+    <ul id=groups_list>
+    {%for g in groups%}
+    <li>{{g.number}}</li>
+    {%endfor%}
+    </ul>
+
+</div>
+<div id='top_sect'></div>
+      <!-- Start of Picks Area -->
+<div id='field_sect'>
+<!-- <div id='bottom_sect'></div> -->
+</div>
+
+
+<!-- <script type="text/javascript" src="{%static 'golf_app/js/field.js'%}"></script> -->
+
+{%endblock%}

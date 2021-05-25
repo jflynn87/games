@@ -1,4 +1,3 @@
-
 import os
 os.environ.setdefault("DJANGO_SETTINGS_MODULE","gamesProj.settings")
 
@@ -34,8 +33,29 @@ from golf_app import golf_serializers
 import pytz
 from collections import OrderedDict
 import math
+import scipy.stats as ss
 
 start = datetime.now()
+pick_list = [16581, 16591, 16610, 16618, 16630, 16700, 16696, 16675, 16645, 16650]
+
+
+
+
+for t in Tournament.objects.filter(season=season):
+    ts = list(TotalScore.objects.filter(tournament=t).order_by('user__pk').values_list('score', flat=True))
+    ranks = ss.rankdata(ts, method='min')
+    for i, (k,v) in enumerate(d.items()):
+        print (d[i])
+    #print (t, ts)
+    #print (ranks)
+    
+    
+
+print (d)
+exit()
+g = Group.objects.filter(tournament=tournament).aggregate(Max('number'))
+print (g)
+exit()
 t = Tournament.objects.get(current=True)
 g = Golfer.objects.get(golfer_name='Ryan Palmer')
 print (g.summary_stats(t.season))

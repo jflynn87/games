@@ -1,5 +1,5 @@
 from django.db import models 
-from django.contrib.auth.models import User
+from django.contrib.auth.models import Group, User
 from django.conf import settings
 from django.db.models import Min, Q, Count, Sum, Max
 from datetime import datetime
@@ -394,6 +394,11 @@ class Tournament(models.Model):
         # else:
         #     return False
 
+    def total_required_picks(self):
+        tot = 0
+        for g in Group.objects.filter(tournament=self):
+            tot += g.num_of_picks()
+        return tot
 
 class Group(models.Model):
     tournament= models.ForeignKey(Tournament, on_delete=models.CASCADE)
@@ -811,8 +816,8 @@ class TotalScore(models.Model):
             handi = handi + pick.playerName.handicap() 
         return handi
 
-
-
+    def rank(self):
+        pass
 
 
 class mpScores(models.Model):

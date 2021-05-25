@@ -23,14 +23,20 @@ class FieldSerializer(serializers.ModelSerializer):
 class NewFieldSerializer(serializers.ModelSerializer):
 
     #recent = serializers.SerializerMethodField('get_recent')
+    espn_link = serializers.SerializerMethodField('get_espn_link')
+    pga_link = serializers.SerializerMethodField('get_pga_link')
 
     class Meta:
         model = Field
         fields = '__all__'
         depth = 1
 
-    #def get_recent(self, field):
-    #    return json.dumps(field.recent)
+    def get_espn_link(self, field):
+        return field.golfer.espn_link()
+
+    def get_pga_link(self, field):
+        return field.golfer.golfer_link()
+
 
 class ScoreDetailsSerializer(serializers.ModelSerializer):
     class Meta:

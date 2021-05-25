@@ -216,7 +216,9 @@ function get_picks(info, optimal_data, total_data) {
       $('#totals' + player).append('<td id=' + player + stats.pick.playerName.golfer.espn_number +  '>' + '<span class=watermark>' + 
        '<p>' + player.substring(0, 4)  + ' : ' + stats.pick.playerName.group.number +  '</p>'  + '</span>' + '<p>' +  stats.pick.playerName.playerName  + '</p>' + '<p>' + stats.score +
         '<span > <a id=tt-' + pick + ' data-toggle="tooltip" > <i class="fa fa-info-circle" style="color:blue;"></i> </a> </span>' +
-     '</p>' +  toPar + ' (' + stats.thru + ')' +  '   ' +  format_move(stats.sod_position) +  stats.sod_position.replace(filler, '') + '</p>' +  '</td>')
+     '</p>' +  toPar + ' (' + stats.thru + ')' +  '   ' +
+       format_move(stats.sod_position) +  stats.sod_position.replace(filler, '') +
+        '</p>' +  '</td>')
      //console.log($('#tt-' + $(this)[0]['pick'].replace(/ +?/g, '').replace(/\./g,'') + '[data-toggle="tooltip"]'))
       $('#tt-' + pick + '[data-toggle="tooltip"]').tooltip({trigger:"hover",
                                             delay:{"show":400,"hide":800}, "title": 'gross score: ' + stats.gross_score

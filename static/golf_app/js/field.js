@@ -1,13 +1,15 @@
+console.log('field js loaded')
 //get existing picks on update
 $(document).ready(function() {
+  console.log('field js executing')
   //$('#main').hide()
-  $.ajax({
-    type: "GET",
-    url: "/golf_app/get_info/",
-    dataType: 'json',
-    data: {'tournament' : $('#tournament_key').text()},
-    success: function (json) {
-      info = $.parseJSON((json))
+  // $.ajax({
+  //   type: "GET",
+  //   url: "/golf_app/get_info/",
+  //   dataType: 'json',
+  //   data: {'tournament' : $('#tournament_key').text()},
+  //   success: function (json) {
+  //     info = $.parseJSON((json))
       $.ajax({
         type: "GET",
         url: "/golf_app/ajax/get_picks/",
@@ -17,6 +19,7 @@ $(document).ready(function() {
           var data = $.parseJSON(json)
           for (i = 0; i < data.length; ++i) {
               $('#' + data[i]).attr('checked', 'checked');
+
             }
             $('#pulse').hide()
             $('#main').show()
@@ -26,13 +29,15 @@ $(document).ready(function() {
           console.log('fail');
           console.log(json);
         }
+      
       })
-     },
-    failure: function(json) {
-      console.log('get info fail');
-      console.log(json);
-    }
-  })
+ //    },
+ //   failure: function(json) {
+ //     console.log('get info fail');
+ //     console.log(json);
+ //   }
+
+  //)
  })
   
 $(document).on("click", "#download", function() {
@@ -102,25 +107,39 @@ $(function () {
                                         delay:{"show":400,"hide":800}})})
 
 
-$(document).ready(function () {
-var limit = 5;
-$('input.my-checkbox').on('change', function(evt) {
-   if($("input[name='multi-group-6']:checked").length > limit) {
-       this.checked = false;
-       alert (limit.toString() + ' picks already selected.  Deselect a pick first to change your picks')
-   }
-   get_info(info)
-})
-});
+// $(document).ready(function () {
+// var limit = 5;
+// $('input.my-checkbox').on('change', function(evt) {
+//    if($("input[name='multi-group-6']:checked").length > limit) {
+//        this.checked = false;
+//        alert (limit.toString() + ' picks already selected.  Deselect a pick first to change your picks')
+//    }
+//    get_info(info)
+// })
+// });
 
-$(document).ready(function () {
-$('input.my-radio').on('change', function(evt) {
-  $('#pick-status').empty()
-  get_info(info)
-})
-})
+// $(document).ready(function () {
+//  $('input.my-radio').on('change', function(evt) {
+//    console.log('caught clck')
+//    $('#pick-status').empty()
+//    get_info(info)
+//  })
+//  })
 
-function get_info(info) {
+function get_info(info, ele) {
+    if (ele) {
+      group = ele.name.split('-')[1]
+      picks = info[ele.name.split('-')[1]]
+      
+      if($("#tbl-group-" + group + ' input:checked').length > parseInt(picks)) {
+        ele.checked = false;
+        alert (picks.toString() + ' picks already selected.  Deselect a pick first to change your picks')
+                  }
+    //else {
+    //  $('#pick-status').empty()
+    //  check_complete(info)
+ // }
+}
   $('#pick-status').empty()
   check_complete(info)
 }
@@ -168,11 +187,11 @@ $("#actual-row").each(function () {
 }
 
 function count_actual(group, picks) {
-  if (picks == 1) {
+  //if (picks == 1) {
       var selected = $('input[name=group-' + group + ']:checked').length
-      }
-  else {var selected = $('input[name=multi-group-' + group + ']:checked').length } 
-
+      //}
+  //else {var selected = $('input[name=multi-group-' + group + ']:checked').length } 
+  //console.log(group, picks, selected)
   return selected
 }
 

@@ -126,6 +126,115 @@ class FieldListView(LoginRequiredMixin,TemplateView):
 
         return redirect('golf_app:picks_list')
 
+class NewFieldListView(LoginRequiredMixin,TemplateView):
+    login_url = 'login'
+    template_name = 'golf_app/field_list_a.html'
+    model = Field
+    #redirect_field_name = 'next'
+
+    def get_context_data(self,**kwargs):
+        context = super(NewFieldListView, self).get_context_data(**kwargs)
+        tournament = Tournament.objects.get(current=True)
+        # print (tournament.started())
+        # #check for withdrawls and create msg if there is any
+        # try:
+        #     score_file = calc_score.getRanks({'pk': tournament.pk})
+        #     wd_list = []
+        #     print ('score file', score_file[0])
+        #     if score_file[0] == "score lookup fail":
+        #         wd_list = []
+        #         error_message = ''
+        #     else:
+        #         for golfer in Field.objects.filter(tournament=tournament):
+        #             if golfer.playerName not in score_file[0]:
+        #                 print ('debug')
+        #                 wd_list.append(golfer.playerName)
+        #                 #print ('wd list', wd_list)
+        #         if len(wd_list) > 0:
+        #             error_message = 'The following golfers have withdrawn:' + str(wd_list)
+        #             for wd in wd_list:
+        #                 Field.objects.filter(tournament=tournament, playerName=wd).update(withdrawn=True)
+        #         else:
+        #             error_message = None
+        # except Exception as e:
+        #     print ('score file lookup issue', e)
+        #     error_message = None
+
+        context.update({
+        #'field_list': Field.objects.filter(tournament=Tournament.objects.get(current=True)),
+        'tournament': tournament,
+        'groups': Group.objects.filter(tournament=tournament)
+        #'error_message': error_message
+        })
+        return context
+
+    @transaction.atomic
+    def post(self, request):
+
+        print ('request data ', self.request.POST)  #this is it
+        data = json.loads(self.request.body)
+        print (data, type(data))
+        pick_list = data.get('pick_list')
+        print ('pick_list', pick_list)
+        tournament = Tournament.objects.get(current=True)
+        #groups = Group.objects.filter(tournament=tournament)
+        user = User.objects.get(username=request.user)
+
+        if 'random' not in pick_list:
+            if len(pick_list) != tournament.total_required_picks():
+                print ('total picks match: ', len(pick_list), tournament.total_required_picks())
+                msg = 'Something went wrong, wrong number of picks.  Expected: ' + str(tournament.total_required_picks()) + ' received: ' + str(len(pick_list)) + ' Please try again'
+                response = {'status': 0, 'message': msg} 
+                return HttpResponse(json.dumps(response), content_type='application/json')
+
+            for group in Group.objects.filter(tournament=tournament):
+                count = Field.objects.filter(group=group, pk__in=pick_list).count()
+                if count == group.num_of_picks():
+                    print ('group ok: ', group, ' : count: ', count)
+                else:
+                    print ('group ERROR: ', group, ' : count: ', count)
+                    msg = 'Pick error: Group - ' + str(group.number) + ' expected' + str(group.num_of_picks()) + ' picks.  Actual Picks: ' + str(count)
+                    response = {'status': 0, 'message': msg} 
+                    return HttpResponse(json.dumps(response), content_type='application/json')
+
+        print ('user', user)
+        print ('started', tournament.started())
+
+        if tournament.started() and tournament.late_picks is False:
+            print ('picks too late', user, datetime.datetime.now())
+            print (timezone.now())
+            msg = 'Too late for picks, tournament started'
+            response = {'status': 0, 'message': msg} 
+            return HttpResponse(json.dumps(response), content_type='application/json')
+
+        
+        if Picks.objects.filter(playerName__tournament=tournament, user=user).count()>0:
+            Picks.objects.filter(playerName__tournament=tournament, user=user).delete()
+            ScoreDetails.objects.filter(pick__playerName__tournament=tournament, user=user).delete()
+
+        if 'random' in pick_list:
+            picks = tournament.create_picks(user, 'random')    
+            print ('random picks submitted', user, datetime.datetime.now(), picks)
+        else:
+            field_list = []
+            for id in pick_list:
+                field_list.append(Field.objects.get(pk=id))                    
+            tournament.save_picks(field_list, user, 'self')
+
+        print ('user submitting picks', datetime.datetime.now(), request.user, Picks.objects.filter(playerName__tournament=tournament, user=user))
+    
+        if UserProfile.objects.filter(user=user).exists():
+            profile = UserProfile.objects.get(user=user)
+            if profile.email_picks:
+                email_picks(tournament, user)
+
+        #return redirect('golf_app:picks_list')
+        msg = 'Picks Submitted'
+        response = {'status': 1, 'message': msg, 'url': '/golf_app/picks_list'} 
+        return HttpResponse(json.dumps(response), content_type='application/json')
+
+
+
 
 def email_picks(tournament, user):
 
@@ -561,14 +670,20 @@ class CheckStarted(APIView):
             t = Tournament.objects.get(pk=key)
 
             if t.set_notstarted:
-               return Response(json.dumps({'status': 'Overrode to not started'}), 200)
-
-            if t.started():
-                score_dict = scrape_espn.ScrapeESPN().get_data()
-                score = manual_score.Score(score_dict, t)
+               t_status['status'] = 'Overrode to not started'
+               t_status['started'] = False
+               t_status['late_picks'] = t.late_picks
+                #return Response(json.dumps({'status': 'Overrode to not started'}), 200)
+            elif t.started():
+                #score_dict = scrape_espn.ScrapeESPN().get_data()
+                #score = manual_score.Score(score_dict, t)
                 t_status['status'] = 'Started - refresh to see picks'
+                t_status['started'] = True
+                t_status['late_picks'] = t.late_picks
             else:
                  t_status['status'] = 'Not Started'
+                 t_status['started'] = False
+                 t_status['late_picks'] = t.late_picks
 
             # if not t.started():
             #     #score_dict = scrape_espn.ScrapeESPN().get_data()
@@ -661,6 +776,7 @@ class GetInfo(APIView):
                 info_dict[g.number] = g.num_of_picks()
                 total_picks += g.num_of_picks()
             info_dict['total'] = total_picks
+            #info_dict['started'] = t.started()
 
             #info_dict['complete'] = t.complete
 
@@ -978,8 +1094,11 @@ class PriorResultAPI(APIView):
         try:
             #g_num = group.split('-')[2]
             t= Tournament.objects.get(pk=request.data.get('tournament_key'))
-
-            data = golf_serializers.NewFieldSerializer(Field.objects.filter(tournament=t, golfer__espn_number__in=request.data.get('golfer_list')), many=True).data
+            
+            if len(request.data.get('golfer_list')) == 0:
+                data= golf_serializers.NewFieldSerializer(Field.objects.filter(tournament=t, group__number=request.data.get('group')), many=True).data
+            else:
+                data = golf_serializers.NewFieldSerializer(Field.objects.filter(tournament=t, golfer__espn_number__in=request.data.get('golfer_list')), many=True).data
             #data = serializers.serialize("json", Field.objects.filter(tournament=t, golfer__espn_number__in=request.data.get('golfer_list')), use_natural_foreign_keys=True)
             #print(data)
         except Exception as e:
@@ -1174,5 +1293,22 @@ class SeasonStats(APIView):
             return JsonResponse(data, status=200)
         except Exception as e:
             print ('season stats exception: ', e)
+            return JsonResponse({'msg': e})
+
+
+class GetGolferLinks(APIView):
+    def get(self, request, pk):
+        start = datetime.datetime.now()
+        
+        try:
+            data = {}
+            #print ('DATA ', request.data)
+            g = Golfer.objects.get(pk=pk)
+            data.update({'pga_link': g.golfer_link(),
+                        'espn_link': g.espn_link()})
+            
+            return JsonResponse(data, status=200)
+        except Exception as e:
+            print ('get golfer link exception: ', e)
             return JsonResponse({'msg': e})
 

@@ -45,9 +45,11 @@ function update_stats(golfer_list, table) {
                $('#main').append('<p id=t_' + i + ' hidden>' + recent.name)
               })
             }
+             picture(data)
              last_year(data)
              recent(data)
              season(data)
+             handicap(data)
              //console.log('done: ', table.id, new Date())
     
 })
@@ -91,6 +93,24 @@ function season(data) {
 
 })
 }
+
+function picture(data) {
+  $.each(data, function(i, field) {
+    
+    $('#pic_' + field.golfer.espn_number).attr('src', field.golfer.pic_link)
+    $('#flag_' + field.golfer.espn_number).attr('src', field.golfer.flag_link)
+  })
+}
+
+
+function handicap(data) {
+  $.each(data, function(key, stats) {
+  //$('#prior' + stats.golfer.espn_number).text('prior: ' + stats.prior_year)
+  $('#handicap' + stats.golfer.espn_number).text(stats.handi)
+})
+}
+
+
 // function season(golfer_list) {
 //   //console.log('season stats list: ', golfer_list)
 //   fetch("/golf_app/season_stats/",

@@ -151,12 +151,15 @@ body {
 
 }
 
-.field_stats_display {
+
+/* .field_stats_display { */
+form #bottom_sect {
   position: relative;
-  /*bottom: 0;
-  right: 0;*/
+  bottom: 0;
+  right: 0;
 }
 
+/*big scree */
 @media only screen and (min-width: 1199px) {
 
 .field_stats_display {
