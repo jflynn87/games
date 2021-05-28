@@ -1,8 +1,10 @@
 from django.db import models 
 from django.contrib.auth.models import Group, User
 from django.conf import settings
-from django.db.models import Min, Q, Count, Sum, Max
+from django.db.models import Min, Q, Count, Sum, Max, fields
 from datetime import datetime
+
+from scipy.stats.stats import mode
 from golf_app import utils
 from django.db import transaction
 from unidecode import unidecode
@@ -83,6 +85,7 @@ class Tournament(models.Model):
     saved_cut_round = models.IntegerField(null=True)
     ignore_name_mismatch = models.BooleanField(default=False)
     espn_t_num = models.CharField(max_length=100, null=True, blank=True)
+    auction = models.BooleanField(default=False)
 
 
     #def get_queryset(self):t
@@ -892,3 +895,11 @@ class AccessLog(models.Model):
         return str(self.user.username) + '  ' + str(self.page)
 
 
+class AuctionPick(models.Model):
+    playerName = models.ForeignKey(Field, on_delete=models.CASCADE)
+    user = models.ForeignKey(User, null=True, blank=True, on_delete=models.SET_NULL)
+    bid = models.CharField(max_length=100, null=True, blank=True)
+    score = models.PositiveBigIntegerField(default=0)
+
+    def __str__(self):
+        return str(self.user.username) + ' - ' + str(self.playerName.playerName)

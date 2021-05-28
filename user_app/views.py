@@ -74,6 +74,7 @@ def index(request):
             t = None
 
         sb_user_list = ['john', 'jcarl62', 'BigDipper', 'shishmeister', 'JoeLong', 'Laroqm']
+        golf_auction_user_list = ['john', 'jcarl62', 'ryosuke']
         print ('game', game)
         print ('picks', picks)
         return render(request, 'index.html', {
@@ -82,6 +83,7 @@ def index(request):
             'game': game,
             'picks': picks,
             'sb_user_list': sb_user_list,
+            'golf_auction_user_list': golf_auction_user_list,
             't': t,
 
                 })

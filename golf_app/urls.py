@@ -41,6 +41,8 @@ urlpatterns= [
     path('season_stats/', views.SeasonStats.as_view(), name='season_stats'),
     path('new_field_list/', views.NewFieldListView.as_view(), name='new_field_list'),
     path('get_golfer_links/<int:pk>', views.GetGolferLinks.as_view(), name='get_golfer_links'),
+    path('auction_picks/', views.AuctionPickCreateView.as_view(), name='auction_picks'),
+    path('auction_scores/', views.AuctionScores.as_view(), name='auction_scores'),
     
     
 

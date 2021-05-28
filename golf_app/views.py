@@ -4,8 +4,8 @@ from django.views.generic import View, TemplateView, ListView, DetailView, Creat
 #from extra_views import ModelFormSetView
 from golf_app.models import Field, Tournament, Picks, Group, TotalScore, ScoreDetails, \
            mpScores, BonusDetails, PickMethod, PGAWebScores, ScoreDict, UserProfile, \
-           Season, AccessLog, Golfer
-from golf_app.forms import  CreateManualScoresForm, FieldForm, FieldFormSet
+           Season, AccessLog, Golfer, AuctionPick
+from golf_app.forms import  CreateManualScoresForm, FieldForm, FieldFormSet, AuctionPicksFormSet
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponseRedirect, HttpResponse, Http404
 from django.contrib.auth import authenticate, login, logout
@@ -1090,12 +1090,14 @@ class ScoresByPlayerAPI(APIView):
 class PriorResultAPI(APIView):
     def post(self, request):
         start = datetime.datetime.now()
-        #print ('PROIR RESULT api DATA: ', request.data)
+        print ('PROIR RESULT api DATA: ', request.data)
         try:
             #g_num = group.split('-')[2]
             t= Tournament.objects.get(pk=request.data.get('tournament_key'))
             
-            if len(request.data.get('golfer_list')) == 0:
+            if request.data.get('group') == 'all':
+                data= golf_serializers.NewFieldSerializer(Field.objects.filter(tournament=t), many=True).data
+            elif len(request.data.get('golfer_list')) == 0:
                 data= golf_serializers.NewFieldSerializer(Field.objects.filter(tournament=t, group__number=request.data.get('group')), many=True).data
             else:
                 data = golf_serializers.NewFieldSerializer(Field.objects.filter(tournament=t, golfer__espn_number__in=request.data.get('golfer_list')), many=True).data
@@ -1312,3 +1314,112 @@ class GetGolferLinks(APIView):
             print ('get golfer link exception: ', e)
             return JsonResponse({'msg': e})
 
+
+class AuctionPickCreateView(LoginRequiredMixin,TemplateView):
+     login_url = 'login'
+     template_name = 'golf_app/auctionpick_form.html'
+     
+
+     def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context.update({
+             't': Tournament.objects.get(current=True),
+         })
+
+        return context
+
+     @transaction.atomic
+     def post(self, request):
+
+        data = json.loads(self.request.body)
+        print (data, type(data))
+        pick_list = data.get('pick_list')
+        print ('pick_list', pick_list)
+        tournament = Tournament.objects.get(current=True)
+        #groups = Group.objects.filter(tournament=tournament)
+        user = User.objects.get(username=request.user)
+
+        if 'random' not in pick_list:
+            if len(pick_list) != tournament.total_required_picks():
+                print ('total picks match: ', len(pick_list), tournament.total_required_picks())
+                msg = 'Something went wrong, wrong number of picks.  Expected: ' + str(tournament.total_required_picks()) + ' received: ' + str(len(pick_list)) + ' Please try again'
+                response = {'status': 0, 'message': msg} 
+                return HttpResponse(json.dumps(response), content_type='application/json')
+
+            for group in Group.objects.filter(tournament=tournament):
+                count = Field.objects.filter(group=group, pk__in=pick_list).count()
+                if count == group.num_of_picks():
+                    print ('group ok: ', group, ' : count: ', count)
+                else:
+                    print ('group ERROR: ', group, ' : count: ', count)
+                    msg = 'Pick error: Group - ' + str(group.number) + ' expected' + str(group.num_of_picks()) + ' picks.  Actual Picks: ' + str(count)
+                    response = {'status': 0, 'message': msg} 
+                    return HttpResponse(json.dumps(response), content_type='application/json')
+
+        print ('user', user)
+        print ('started', tournament.started())
+
+        if tournament.started() and tournament.late_picks is False:
+            print ('picks too late', user, datetime.datetime.now())
+            print (timezone.now())
+            msg = 'Too late for picks, tournament started'
+            response = {'status': 0, 'message': msg} 
+            return HttpResponse(json.dumps(response), content_type='application/json')
+
+        
+        if Picks.objects.filter(playerName__tournament=tournament, user=user).count()>0:
+            Picks.objects.filter(playerName__tournament=tournament, user=user).delete()
+            ScoreDetails.objects.filter(pick__playerName__tournament=tournament, user=user).delete()
+
+        if 'random' in pick_list:
+            picks = tournament.create_picks(user, 'random')    
+            print ('random picks submitted', user, datetime.datetime.now(), picks)
+        else:
+            field_list = []
+            for id in pick_list:
+                field_list.append(Field.objects.get(pk=id))                    
+            tournament.save_picks(field_list, user, 'self')
+
+        print ('user submitting picks', datetime.datetime.now(), request.user, Picks.objects.filter(playerName__tournament=tournament, user=user))
+    
+        if UserProfile.objects.filter(user=user).exists():
+            profile = UserProfile.objects.get(user=user)
+            if profile.email_picks:
+                email_picks(tournament, user)
+
+        #return redirect('golf_app:picks_list')
+        msg = 'Picks Submitted'
+        response = {'status': 1, 'message': msg, 'url': '/golf_app/picks_list'} 
+        return HttpResponse(json.dumps(response), content_type='application/json')
+
+
+class AuctionScores(APIView):
+    def get(self, request):
+        totals = {}
+        try:
+            start = datetime.datetime.now()
+            score_dict = scrape_espn.ScrapeESPN().get_data()
+            
+            t = Tournament.objects.get(current=True)
+            for u in User.objects.filter(username__in=['john', 'jcarl62', 'ryosuke']):
+                totals[u.username] = {'total': 0}
+            for pick in AuctionPick.objects.filter(playerName__tournament=t):
+                sd = [v for v in score_dict.values() if v.get('pga_num') == pick.playerName.golfer.espn_number]
+                print (pick, utils.formatRank(sd[0].get('rank')))
+                if int(utils.formatRank(sd[0].get('rank'))) > score_dict.get('info').get('cut_num'):
+                    total = totals[pick.user.username].get('total') + int(score_dict.get('info').get('cut_num'))
+                    rank = rank = (score_dict.get('info').get('cut_num'))
+                else:
+                    total = totals[pick.user.username].get('total') + int(utils.formatRank(sd[0].get('rank')))
+                    rank = utils.formatRank(sd[0].get('rank'))
+                totals[pick.user.username].update({pick.playerName.playerName : rank,
+                                                    'total': total
+                                                    })
+        except Exception as e:
+            totals['mag'] = {'error': e}
+
+        print (totals)
+        return JsonResponse(totals, status=200)
+
+
+        

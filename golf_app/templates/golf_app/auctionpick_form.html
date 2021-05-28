@@ -1,0 +1,16 @@
+{% extends "golf_app/golf_app_base.html" %}
+{%load static%}
+{%load bootstrap%}
+{%load golf_extras%}
+
+{% block body_block %}
+<!-- <script type="text/javascript" src="{%static 'golf_app/js/auction_picks.js'%}"></script>  -->
+<script type="text/javascript" src="{%static 'golf_app/js/auction_score.js'%}"></script> 
+<div id=status class=status>Loading Scores....</div>
+<h1>Auction Scores - {{t.name}}</h1>
+<p id='tournament_key' hidden>{{t.pk}}</p>
+<div id='picks_sect'></div>
+
+<!-- <button id='submit_button' type="submit" class="btn btn-secondary" disabled>Submit</button>
+</form> -->
+{%endblock%}

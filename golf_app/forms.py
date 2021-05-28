@@ -1,7 +1,7 @@
 from django import forms
 from django.forms import ModelForm
 from django.contrib.auth.models import User
-from golf_app.models import  Field, Picks, Group, Tournament
+from golf_app.models import  Field, Picks, Group, Tournament, AuctionPick
 from django.db.models import Max
 from django.forms.models import modelformset_factory
 #from django_select2 import *
@@ -32,6 +32,24 @@ class FieldForm(forms.ModelForm):
         fields = ['playerName', 'group',]
 
 FieldFormSet = modelformset_factory(Field, form=FieldForm, min_num=1, max_num=156, extra=0)
+
+
+class AuctionPickForm(forms.ModelForm):
+
+    def __init__(self, *args, **kwargs):
+        super(AuctionPickForm, self).__init__(*args, **kwargs)
+        self.fields['playerName'].queryset = Field.objects.filter(tournament__current=True)
+        self.fields['user'].queryset = User.objects.filter(username__in=['john', 'jcarl62', 'ryosuke'])
+
+
+    class Meta:
+        model = AuctionPick
+        fields = '__all__'
+
+
+
+AuctionPicksFormSet = modelformset_factory(AuctionPick, form=AuctionPickForm, min_num=3, max_num=3, extra=0)
+
 
 #class SinglePickGroupForm(forms.ModelForm):
 

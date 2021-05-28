@@ -3,7 +3,7 @@ os.environ.setdefault("DJANGO_SETTINGS_MODULE","gamesProj.settings")
 
 import django
 django.setup()
-from golf_app.models import Tournament, TotalScore, ScoreDetails, Picks, PickMethod, BonusDetails, Season, Golfer, Group, Field, ScoreDict
+from golf_app.models import Tournament, TotalScore, ScoreDetails, Picks, PickMethod, BonusDetails, Season, Golfer, Group, Field, ScoreDict, AuctionPick
 from django.contrib.auth.models import User
 from datetime import date, datetime, timedelta
 import sqlite3
@@ -34,11 +34,64 @@ import pytz
 from collections import OrderedDict
 import math
 import scipy.stats as ss
+import csv
+
 
 start = datetime.now()
-pick_list = [16581, 16591, 16610, 16618, 16630, 16700, 16696, 16675, 16645, 16650]
+score_dict = scrape_espn.ScrapeESPN().get_data()
+totals = {}
+t = Tournament.objects.get(current=True)
+for u in User.objects.filter(username__in=['john', 'jcarl62', 'ryosuke']):
+    totals[u.username] = {'total': 0}
+for pick in AuctionPick.objects.filter(playerName__tournament=t):
+    sd = [v for v in score_dict.values() if v.get('pga_num') == pick.playerName.golfer.espn_number]
+    print (pick, utils.formatRank(sd[0].get('rank')))
+    if int(utils.formatRank(sd[0].get('rank'))) > score_dict.get('info').get('cut_num'):
+        total = totals[pick.user.username].get('total') + int(score_dict.get('info').get('cut_num'))
+        rank = rank = (score_dict.get('info').get('cut_num'))
+    else:
+        total = totals[pick.user.username].get('total') + int(utils.formatRank(sd[0].get('rank')))
+        rank = utils.formatRank(sd[0].get('rank'))
+    totals[pick.user.username].update({pick.playerName.playerName : rank,
+                                        'total': total
+                                         })
 
 
+
+for k, v in sorted(totals.items(), key= lambda v:v[1].get('total')):
+    print (k, v)
+print (datetime.now() - start)
+exit()
+
+start = datetime.now()
+
+with open('joe.csv', 'w', newline='') as f:
+    # create the csv writer
+    writer = csv.writer(f)
+
+    header = ['Tournament', 'Group', 'Golfer', 'Current OWGR', 'Last Week OWGR', 'End of last year OWGR', 'Recent Tournament 1', 'Recent Toounament 1 result' \
+                , 'Recent Tournament 2', 'Recent Toounament 2 result'
+                , 'Recent Tournament 3', 'Recent Toounament 3 result'
+                , 'Recent Tournament 4', 'Recent Toounament 4 result'
+                ]
+    writer.writerow(header)
+
+    for t in Tournament.objects.filter(season__current=True).order_by('-pk')[:3]:
+        for f in Field.objects.filter(tournament=t):
+            line = []
+            line.append(t.name)
+            line.append(f.group.number)
+            line.append(f.playerName)
+            line.append(f.currentWGR)
+            line.append(f.sow_WGR)
+            line.append(f.soy_WGR)
+            for k, v in f.recent.items():
+                line.append(v.get('name'))
+                line.append(v.get('rank'))
+            print (line)
+            writer.writerow(line)
+
+exit()
 
 
 for t in Tournament.objects.filter(season=season):
