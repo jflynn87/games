@@ -4,11 +4,21 @@
 {%load golf_extras%}
 
 {% block body_block %}
-<!-- <script type="text/javascript" src="{%static 'golf_app/js/auction_picks.js'%}"></script>  -->
+{%if not t.auction%}
+<h2>No auction this week</h2>
+{%else%}
+{%if not t.started or t.late_picks%}
+<script type="text/javascript" src="{%static 'golf_app/js/auction_picks.js'%}"></script>
+{%endif%}
+{%if t.started%}
 <script type="text/javascript" src="{%static 'golf_app/js/auction_score.js'%}"></script> 
+{%endif%}
+{%endif%}
+
 <div id=status class=status>Loading Scores....</div>
 <h1>Auction Scores - {{t.name}}</h1>
 <p id='tournament_key' hidden>{{t.pk}}</p>
+<div id='make_picks'></div>
 <div id='picks_sect'></div>
 
 <!-- <button id='submit_button' type="submit" class="btn btn-secondary" disabled>Submit</button>

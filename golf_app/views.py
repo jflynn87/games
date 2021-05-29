@@ -1412,7 +1412,7 @@ class AuctionScores(APIView):
                 else:
                     total = totals[pick.user.username].get('total') + int(utils.formatRank(sd[0].get('rank')))
                     rank = utils.formatRank(sd[0].get('rank'))
-                totals[pick.user.username].update({pick.playerName.playerName : rank,
+                totals[pick.user.username].update({pick.playerName.playerName : (rank, sd[0].get('total_score')),
                                                     'total': total
                                                     })
         except Exception as e:

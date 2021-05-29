@@ -248,6 +248,7 @@ class Score(object):
             self.pick_bonuses(sd, pick, optimal_picks, data)
             print ('pick loop: ', pick.playerName, ' ', Picks.objects.filter(playerName__pk=p.get('playerName')).count(), ' ', datetime.now() - pick_loop_start)
         ## end of bulk update section
+
         if self.score_dict.get('info').get('complete') == True:
             self.tournament.complete = True
 
@@ -341,6 +342,16 @@ class Score(object):
             #ts.save()
 
             bd = BonusDetails.objects.get(tournament=self.tournament, user=user)
+
+            if cuts == 0 and len([v for (k,v) in self.score_dict.items() if k != 'info' and v.get('total_score') == "CUT"]) != 0:
+                print (player, 'no cut bonus')
+                post_cut_wd = len([v for k,v in self.score_dict.items() if k!= 'info' and v.get('total_score') in self.tournament.not_playing_list() and \
+                    v.get('r3') != '--'])
+
+                bd.cut_bonus = (len(self.score_dict) -1) - (len([k for k,v in self.score_dict.items() if k != 'info' and v.get('rank') not in self.tournament.not_playing_list()]) + post_cut_wd)
+                print (bd.cut_bonus)
+                bd.save()
+
             ts.score -= bd.cut_bonus
             ts.score -= bd.best_in_group_bonus
             if self.tournament.complete: 
@@ -349,7 +360,7 @@ class Score(object):
                 #ts.score -= bd.best_in_group_bonus
                 ts.score -= bd.playoff_bonus
                 #ts.save()
-
+            
             ts.save()
 
             if PickMethod.objects.filter(tournament=self.tournament, user=user, method='3').exists():

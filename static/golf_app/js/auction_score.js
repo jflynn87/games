@@ -29,13 +29,11 @@ $(document).ready(function () {
             '<tr>' +
                 '<td>' + player + '</td>' +
                 '<td id=' + player + 'total_score_cell class=total_score>' + data.total + '</td>' +
-                '<td>' + picks[0] + ' - ' + data[picks[0]] +'</td>' +
-                '<td>' + picks[1] + ' - ' + data[picks[1]] +'</td>' +
-                '<td>' + picks[2] + ' - ' + data[picks[2]] +'</td>' +
-                '<td>' + picks[3] + ' - ' + data[picks[3]] +'</td>' +
-                '<td>' + picks[4] + ' - ' + data[picks[4]] +'</td>' +
-                '<td></td>' +
-                '<td></td>' +
+                '<td> <p class=small>' + picks[0] + '</p> <p class=small>rank: ' + data[picks[0]][0] +' score: ' + data[picks[0]][1] + '</p></td>' +
+                '<td> <p class=small>' + picks[1] + '</p> <p class=small>rank: ' + data[picks[1]][0] +' score: ' + data[picks[1]][1] + '</p></td>' +
+                '<td> <p class=small>' + picks[2] + '</p> <p class=small>rank: ' + data[picks[2]][0] +' score: ' + data[picks[2]][1] + '</p></td>' +
+                '<td> <p class=small>' + picks[3] + '</p> <p class=small>rank: ' + data[picks[3]][0] +' score: ' + data[picks[3]][1] + '</p></td>' +
+                '<td> <p class=small>' + picks[4] + '</p> <p class=small>rank: ' + data[picks[4]][0] +' score: ' + data[picks[4]][1] + '</p></td>' +
             '</tr>'
         )
 
@@ -48,9 +46,9 @@ $(document).ready(function () {
 
 $(document).ready(function() {
     $('#picks_sect').append(
-        '<table id=score_table class=table>' +
+        '<table id=score_table class="table table-bordered border-primary">' +
         '<thead style=background-color:lightblue;> <th> Player </th>' +
-        '<th> Score 1</th>' +
+        '<th> Score</th>' +
         '<th> Pick 1</th>' +
         '<th> Pick 2</th>' +
         '<th> Pick 3</th>' +
@@ -66,13 +64,13 @@ $(document).ready(function() {
 function sort_table(info) {
 var table, rows, swtiching, i, x, y, shouldSwitch;
 table = $('#score_table')[0]
-console.log(table)
+//console.log(table)
 switching = true;
 
 while(switching) {
   switching = false;
   rows = table.rows;
-  console.log(rows.length)
+  //console.log(rows.length)
 
   for (i=1; i < (rows.length - 1); i++) {
   //for (i=1; i < (rows.length); i++) {

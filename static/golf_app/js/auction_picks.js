@@ -1,4 +1,5 @@
 $(document).ready(function () {
+    console.log('picks loaded')
     fetch("/golf_app/get_prior_result/",         
     {method: "POST",
     headers: {
@@ -15,6 +16,9 @@ $(document).ready(function () {
     field = responseJSON
     console.log(field)
     players = ['john', 'jcarl62', 'ryosuke']
+    $('#make_picks').append('<form id=pick_form> </form>')
+    var options = []
     
+    //var golfers = '<select>'
     })
 })

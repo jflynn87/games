@@ -139,6 +139,13 @@ body {
   color: white;
 }
 
+.total_score {
+  background-color: lightcoral;
+  font-weight: bold;
+  color: white;
+}
+
+
 
 @media only screen and (max-width: 1199px) {
 .card {
