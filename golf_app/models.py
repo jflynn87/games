@@ -478,7 +478,7 @@ class Golfer(models.Model):
         
 
     def natural_key(self):
-        return self.espn_number
+        return self.golfer_pga_num
 
     def summary_stats(self, season):
         '''takes a golfer object and season object, returns a dict'''

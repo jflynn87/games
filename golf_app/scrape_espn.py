@@ -32,10 +32,15 @@ class ScrapeESPN(object):
         sd, created = ScoreDict.objects.get_or_create(tournament=self.tournament)
         if self.setup:
             print ('set up mode, scraping')
+        elif self.tournament.complete:
+            print ('T Complete returning saved score dict ', 'sd saved time: ', sd.updated, 'current time: ', datetime.utcnow().replace(tzinfo=pytz.utc))
+            sd.data.get('info').update({'dict_status': 'from_db'})
+            return OrderedDict(sd.data)
         elif not created and (sd.updated + timedelta(minutes = 1)) > datetime.utcnow().replace(tzinfo=pytz.utc):
             print ('returning saved score dict ', 'sd saved time: ', sd.updated, 'current time: ', datetime.utcnow().replace(tzinfo=pytz.utc))
             sd.data.get('info').update({'dict_status': 'from_db'})
             return OrderedDict(sd.data)
+        
  
         try:
             score_dict = {}

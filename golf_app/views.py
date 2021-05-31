@@ -881,6 +881,7 @@ class GetFieldCSV(APIView):
             data = serializers.serialize('json', Field.objects.filter(tournament=t),  use_natural_foreign_keys=True)
             #data = golf_serializers.FieldSerializer(Field.objects.filter(tournament=t), many=True).data
             #return JsonResponse(data, 200)
+            print (data)
             return Response(data, 200)
         except Exception as e:
             print ('exception', e)
@@ -1403,20 +1404,26 @@ class AuctionScores(APIView):
             t = Tournament.objects.get(current=True)
             for u in User.objects.filter(username__in=['john', 'jcarl62', 'ryosuke']):
                 totals[u.username] = {'total': 0}
-            for pick in AuctionPick.objects.filter(playerName__tournament=t):
+            for i, pick in enumerate(AuctionPick.objects.filter(playerName__tournament=t)):
                 sd = [v for v in score_dict.values() if v.get('pga_num') == pick.playerName.golfer.espn_number]
-                print (pick, utils.formatRank(sd[0].get('rank')))
-                if int(utils.formatRank(sd[0].get('rank'))) > score_dict.get('info').get('cut_num'):
+                print (pick, sd[0].get('rank'))
+                
+                if int(utils.formatRank(sd[0].get('rank'))) > score_dict.get('info').get('cut_num') or sd[0].get('rank') in t.not_playing_list():
                     total = totals[pick.user.username].get('total') + int(score_dict.get('info').get('cut_num'))
                     rank = rank = (score_dict.get('info').get('cut_num'))
                 else:
                     total = totals[pick.user.username].get('total') + int(utils.formatRank(sd[0].get('rank')))
                     rank = utils.formatRank(sd[0].get('rank'))
-                totals[pick.user.username].update({pick.playerName.playerName : (rank, sd[0].get('total_score')),
-                                                    'total': total
+                
+                totals[pick.user.username].update({pick.playerName.playerName: 
+                                                   {'rank': rank,
+                                                   'score': sd[0].get('total_score')}
+                                                    #'total': total
                                                     })
+                totals[pick.user.username].update({'total': total})
+
         except Exception as e:
-            totals['mag'] = {'error': e}
+            totals['msg'] = {'error': e}
 
         print (totals)
         return JsonResponse(totals, status=200)

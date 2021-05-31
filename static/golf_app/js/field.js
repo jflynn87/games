@@ -44,13 +44,13 @@ $(document).on("click", "#download", function() {
   console.log('clicked download')
           
           let csv = "data:text/csv;charset=utf-8," 
-          csv +=  'Golfer' + ',' + 'Group Number' + ',' + 'currentWGR' + ',' + 'sow_WGR' + 
-          ',' + 'soy_WGR' + ',' + 'prior year finish' + ',' + 'handicap' + 
-          ',' + $('#t_1').text() + 
-          ',' + $('#t_2').text() + 
-          ',' + $('#t_3').text() + 
-          ',' + $('#t_4').text() + 
-          ',' + 'Google Search' + '\n'
+//          csv +=  'Golfer' + ',' + 'PGA ID' + ',' + 'Group Number' + ',' + 'currentWGR' + ',' + 'sow_WGR' + 
+//          ',' + 'soy_WGR' + ',' + 'prior year finish' + ',' + 'handicap' + 
+//          ',' + $('#t_1').text() + 
+//          ',' + $('#t_2').text() + 
+//          ',' + $('#t_3').text() + 
+//          ',' + $('#t_4').text() + 
+//         ',' + 'Google Search' + '\n'
 
 
          
@@ -61,21 +61,58 @@ $(document).on("click", "#download", function() {
             data: {'tournament' : $('#tournament_key').text()},
             success: function (json) {
                 golfers = $.parseJSON(json)
-                //console.log(json)
+                //console.log('A', golfers[0].fields.recent)
+                let tournaments = []
+                $.each(golfers[0].fields.recent, function(key, info) {
+                  console.log(key, info)
+                  tournaments.push(info.name)
+                })
+                console.log('tournaments: ', tournaments)
 
+                csv +=  'Golfer' + ',' + 'PGA ID' + ',' + 'Group Number' + ',' + 'currentWGR' + ',' + 'sow_WGR' + 
+                ',' + 'soy_WGR' + ',' + 'prior year finish' + ',' + 'handicap' + 
+                ',' + tournaments[0] + 
+                ',' + tournaments[1] + 
+                ',' + tournaments[2] + 
+                ',' + tournaments[3] + 
+                ',' + 'Season Played' + 
+                ',' + 'Season Won' + 
+                ',' + 'Season 2-10' + 
+                ',' + 'Season 11-29' + 
+                ',' + 'Season 30 - 49' + 
+                ',' + 'Season > 50' + 
+                ',' + 'Season Cut' + 
+                ',' + 'Google Search' + '\n'
+      
                 $.each(golfers, function(i, golfer) {
                 if (!golfer['fields']['withdrawn']){
-//                  group_pk = golfer['fields']['group']
-//                  group_num = golfer.group  
-
+                  let recent = []
+                  $.each(golfer.fields.recent, function(key, result) {
+                    //console.log('recent data: ', key, result)
+                    recent.push(result.rank)
+                  })
+                  
+                  
                   csv += golfer['fields']['playerName'].replace(',', '') + ',' +
+                  golfer.fields.golfer + ',' +
                   golfer.fields.group + ',' +
                   golfer['fields']['currentWGR']  + ',' +
                   golfer['fields']['sow_WGR'] + ',' +
                   golfer['fields']['soy_WGR'] + ',' +
                   $('#prior' + golfer['fields']['golfer']).text().replace('prior: ', '').trim() + ',' + 
                   golfer['fields']['handi'] + ',' +  
-                  $('#recent' + golfer['fields']['golfer']).text().replace('recent form: ', '').trim() + ',' + 
+                  recent[0] + ',' +
+                  recent[1] + ',' +
+                  recent[2] + ',' +
+                  recent[3] + ',' +
+                  golfer.fields.season_stats.played + ',' +
+                  golfer.fields.season_stats.won + ',' +
+                  golfer.fields.season_stats.top10 + ',' +
+                  golfer.fields.season_stats.bet11_29 + ',' +
+                  golfer.fields.season_stats.bet30_49 + ',' +
+                  golfer.fields.season_stats.over50 + ',' +
+                  golfer.fields.season_stats.cuts + ',' +
+
                    '=HYPERLINK("https://www.google.com/search?q=' + golfers[i]['fields']['playerName'].replace('  ', '%20').replace(',', '') + '")' 
                   csv += '\n'
           

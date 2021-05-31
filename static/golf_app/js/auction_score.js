@@ -14,28 +14,49 @@ $(document).ready(function () {
     .then((responseJSON) => {
     scores = responseJSON
     console.log(scores)
+    var not_playing = ['CUT', 'WD', 'DQ']
     $.each(scores, function(player, data){
-        picks = []
-        $.each(Object.keys(data), function(i, golfer) {
-            console.log(golfer)
-            if (golfer != 'total') {
-                picks.push(golfer)
-            }
+        // picks = []
+        // $.each(Object.keys(data), function(i, golfer) {
+        //     console.log(golfer)
+        //     if (golfer != 'total') {
+        //         picks.push(golfer)
+        //     }
                     
-        })
+        // })
 
-        console.log(picks)
+        //console.log(picks)
         $('#score_table').append(
-            '<tr>' +
-                '<td>' + player + '</td>' +
-                '<td id=' + player + 'total_score_cell class=total_score>' + data.total + '</td>' +
-                '<td> <p class=small>' + picks[0] + '</p> <p class=small>rank: ' + data[picks[0]][0] +' score: ' + data[picks[0]][1] + '</p></td>' +
-                '<td> <p class=small>' + picks[1] + '</p> <p class=small>rank: ' + data[picks[1]][0] +' score: ' + data[picks[1]][1] + '</p></td>' +
-                '<td> <p class=small>' + picks[2] + '</p> <p class=small>rank: ' + data[picks[2]][0] +' score: ' + data[picks[2]][1] + '</p></td>' +
-                '<td> <p class=small>' + picks[3] + '</p> <p class=small>rank: ' + data[picks[3]][0] +' score: ' + data[picks[3]][1] + '</p></td>' +
-                '<td> <p class=small>' + picks[4] + '</p> <p class=small>rank: ' + data[picks[4]][0] +' score: ' + data[picks[4]][1] + '</p></td>' +
-            '</tr>'
-        )
+          '<tr id=' + player + '_row>' +
+             '<td>' + player + '</td>' +
+             '<td id=' + player + 'total_score_cell class=total_score>' + data.total + '</td> </tr>')
+
+       $.each(data, function(pick, stats) {
+
+            if (pick != 'total') {
+              //console.log(stats.rank, not_playing.indexOf(stats.rank))
+              if (not_playing.indexOf(stats.score) != -1) {c = 'cut'}
+              else {c = ''}
+            $('#' + player + '_row').append(
+              '<td class=' + c + '> <p class=small>' + pick + '</p> <p class=small>rank: ' + stats.rank +' score: ' + stats.score + '</p></td>' 
+            )
+            
+        }
+        })
+        // $('#score_table').append(
+        //      '<tr id=' + player + '_row>' +
+        //         '<td>' + player + '</td>' +
+        //         '<td id=' + player + 'total_score_cell class=total_score>' + data.total + '</td>' +
+        //         '<td> <p class=small>' + picks[0] + '</p> <p class=small>rank: ' + data[picks[0]][0] +' score: ' + data[picks[0]][1] + '</p></td>' +
+        //         '<td> <p class=small>' + picks[1] + '</p> <p class=small>rank: ' + data[picks[1]][0] +' score: ' + data[picks[1]][1] + '</p></td>' +
+        //         '<td> <p class=small>' + picks[2] + '</p> <p class=small>rank: ' + data[picks[2]][0] +' score: ' + data[picks[2]][1] + '</p></td>' +
+        //         '<td> <p class=small>' + picks[3] + '</p> <p class=small>rank: ' + data[picks[3]][0] +' score: ' + data[picks[3]][1] + '</p></td>' +
+        //         '<td> <p class=small>' + picks[4] + '</p> <p class=small>rank: ' + data[picks[4]][0] +' score: ' + data[picks[4]][1] + '</p></td>' +
+        //     '</tr>'
+        // )
+
+          
+        
 
     })
     sort_table()
