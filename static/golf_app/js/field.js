@@ -99,7 +99,8 @@ $(document).on("click", "#download", function() {
                   golfer['fields']['currentWGR']  + ',' +
                   golfer['fields']['sow_WGR'] + ',' +
                   golfer['fields']['soy_WGR'] + ',' +
-                  $('#prior' + golfer['fields']['golfer']).text().replace('prior: ', '').trim() + ',' + 
+                  //$('#prior' + golfer['fields']['golfer']).text().replace('prior: ', '').trim() + ',' + 
+                  golfer.fields.prior_year + ',' +
                   golfer['fields']['handi'] + ',' +  
                   recent[0] + ',' +
                   recent[1] + ',' +
