@@ -156,10 +156,16 @@ body {
   width: 30em;
 }
 
+form #sub_button {
+  position: fixed;
+  bottom: 0;
+  right: 0
+}
+
 }
 
 
-/* .field_stats_display { */
+/* all screens */
 form #bottom_sect {
   position: relative;
   bottom: 0;

@@ -1,6 +1,6 @@
 from rest_framework import serializers
 import json
-from golf_app.models import Field, ScoreDetails
+from golf_app.models import Field, ScoreDetails, Golfer
 
 class FieldSerializer(serializers.ModelSerializer):
 
@@ -43,3 +43,14 @@ class ScoreDetailsSerializer(serializers.ModelSerializer):
         model = ScoreDetails
         fields = '__all__'
         depth = 3
+
+class GolferSerializer(serializers.ModelSerializer):
+   # season_results = serializers.SerializerMethodField('get_season_results')
+
+    class Meta:
+        model = Golfer
+        fields = '__all__'
+        depth = 1
+    
+    #def get_season_results(self, golfer):
+    #    return golfer.get_season_results()

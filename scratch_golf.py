@@ -38,6 +38,30 @@ import csv
 
 
 start = datetime.now()
+#print (Field.objects.filter(tournament__current=True).count())
+#t_keys = list(Tournament.objects.filter(season__current=True).values_list('pk', flat=True))
+#g = Golfer.objects.get(golfer_name='Justin Thomas')
+#print (t_keys)
+#for g in Golfer.objects.all():
+#    g.results =  g.get_season_results()
+#    g.save()
+
+#data = g.get_season_results()
+#print (data)
+#print (164 in data.keys())
+#print (127 in data.keys())
+
+data = golf_serializers.GolferSerializer(Golfer.objects.all(), many=True)
+#print (data.data)
+#for g in data.data:
+#    print (g)
+
+print (datetime.now() - start)
+exit()
+
+
+
+
 score_dict = scrape_espn.ScrapeESPN().get_data()
 totals = {}
 t = Tournament.objects.get(current=True)

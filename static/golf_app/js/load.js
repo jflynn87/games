@@ -118,9 +118,9 @@ function build_score_tbl(data) {
   $('#multi-col').attr('colspan', col_num_picks).attr('style', 'text-align:center;')
 
   $.each(total_data, function(p, total) {
-    $('#totals').append('<tr id=totals' + p + ' class=small> <span>' + '<td id=ts_' + p + '>'+  p  + ' (' + season_totals[p]['diff'] +')'  + '</p>' + '<p>' +  total['total_score'] + ' / ' + total['cuts']  + '</td>'  + '</tr>')
+    $('#totals').append('<tr id=totals' + p + ' class=small> <span>' + '<td id=ts_' + p + ' class=total_score>'+  p  + ' (' + season_totals[p]['diff'] +')'  + '</p>' + '<p>' +  total['total_score'] + ' / ' + total['cuts']  + '</td>'  + '</tr>')
     var bonus = ''
-     if (total['msg']) {$('#totals' + p).append('<td id=msg_' + p + '><p> h/c: ' + total['handicap'] + '</p>' + total["msg"] + '</td>' +
+     if (total['msg']) {$('#totals' + p).append('<td class=total_score id=msg_' + p + '><p> h/c: ' + total['handicap'] + '</p>' + total["msg"] + '</td>' +
                                                 '<td id=loading_' + p + '>Loading....</td>') }
     else {
       if (total['winner_bonus'] >0) {bonus = bonus + '<p> Winner: -' + total['winner_bonus'] +  '</p>'}
@@ -128,12 +128,13 @@ function build_score_tbl(data) {
       if (total['major_bonus'] > 0) {bonus = bonus + '<p> Major: -' + total['major_bonus'] +  '</p>'}
       if (total['cut_bonus'] > 0) {bonus = bonus + '<p> No Cut: -' + total['cut_bonus'] +  '</p>'}
       if (total['playoff_bonus'] > 0) {bonus = bonus + '<p> Playoff: -' + total['playoff_bonus'] +  '</p>'}
-      $('#totals' + p).append('<td id=msg_' + p + '><span class=bonus> <p> h/c: ' + total['handicap'] + '</p>' + bonus + '</span></td>' +
+      //$('#totals' + p).append('<td id=msg_' + p + '><span class=bonus> <p> h/c: ' + total['handicap'] + '</p>' + bonus + '</span></td>' +
+      $('#totals' + p).append('<td class=total_score id=msg_' + p + '><span>  <p> h/c: ' + total['handicap'] + '</p>' + bonus + '</span></td>' +
                               '<td id=loading_' + p + '>Loading....</td> </span> </tr>')  
     }
       
   })
-
+ 
 
   $('#totals').append('<tr id=optimalpicks class=small> <td> <p> Best Picks </p> </td> <td> </td> </tr>')
   $.each(optimal_data, function(group, data) {
@@ -160,7 +161,7 @@ function build_score_tbl(data) {
   $('#picks-tbl').show()
   $('#totals-table').show()
 
-  get_picks(info, optimal_data, total_data)
+  get_picks(info, optimal_data)
   
 
 }
@@ -193,17 +194,21 @@ function format_move(score) {
 }
 
 
-function get_picks(info, optimal_data, total_data) {
+function get_picks(info, optimal_data) {
 
-  $.each(total_data, function(player, data) { 
+  //$.each(total_data, function(player, data) { 
 
-  fetch("/golf_app/get_picks/" + $('#tournament_key').text() + '/' + player,
+  //fetch("/golf_app/get_picks/" + $('#tournament_key').text() + '/' + player,
+  fetch("/golf_app/get_picks/" + $('#tournament_key').text() + '/' + 'all',
+  
   {method: "GET",
   })
 .then((response) => response.json())
 .then((responseJSON) => {
   score_detail = responseJSON
+  //$.each(total_data, function(player, data) { 
   $.each(score_detail, function (index, stats) {
+    let player = stats.user.username
     let filler = /[\s\.\,\']/g;
     $('#loading_' + player).remove()
       var pick = stats.pick.playerName.playerName.replace(filler, '')
@@ -235,7 +240,7 @@ function get_picks(info, optimal_data, total_data) {
     if ($.inArray(stats.pick.playerName.golfer.espn_number, Object.keys(optimal_data[stats.pick.playerName.group.number]['golfer'])) !== -1) {$('#' + player + stats.pick.playerName.golfer.espn_number).addClass('best')} 
     }
   })}) 
-})
+//})
 
 } 
 
@@ -245,18 +250,12 @@ function update_score_tbl(data) {
   $('#det-list').empty()
   $('#det-list').append('<table class="table">' + '</table>')
   
-  //console.log(info)
-  //var picks_data = $.parseJSON((data['picks']))
   var total_data = $.parseJSON((data['totals']))
   var optimal_data = $.parseJSON((data['optimal']))
   var scores = $.parseJSON((data['scores']))
   var season_totals = $.parseJSON(data['season_totals'])
   var info = $.parseJSON(data['info'])
   var t_data = $.parseJSON(data['t_data'])
-
-  //console.log(t_data[0]['fields']['saved_round'])
-  //console.log('update info: ', info)
-//  console.log('totals', total_data)
 
   $('#det-list table').append('<thead style="background-color:lightblue">' + '<tr>' + '<th> Tournament Scores  </th>' + 
     '<th>' + '</th>' + '<th>' + '<a href="#"> <button> return to top</button> </a>' + '</th>' +  '<th>' + '</th>' + '<th>' + '</th>' + '<th>' + '</th>' +
@@ -309,7 +308,8 @@ function update_score_tbl(data) {
       if (total['major_bonus'] > 0) {bonus = bonus + '<p> Major: -' + total['major_bonus'] +  '</p>'}
       if (total['cut_bonus'] > 0) {bonus = bonus + '<p> No Cut: -' + total['cut_bonus'] +  '</p>'}
       if (total['playoff_bonus'] > 0) {bonus = bonus + '<p> Playoff: -' + total['playoff_bonus'] +  '</p>'}
-      $('#msg_' + p).html('<span class=bonus> <p> h/c: ' + total['handicap'] + '</p>' + bonus + '</span>')  
+      //$('#msg_' + p).html('<span class=bonus> <p> h/c: ' + total['handicap'] + '</p>' + bonus + '</span>')  
+      $('#msg_' + p).html('<span> <p> h/c: ' + total['handicap'] + '</p>' + bonus + '</span>')  
     }
   })
 
@@ -339,23 +339,25 @@ function update_score_tbl(data) {
   $('#picks-tbl').show()
   $('#totals-table').show()
 
-  update_picks(info, optimal_data, total_data)
+  update_picks(info, optimal_data)
 
 
 }
 
-function update_picks(info, optimal_data, total_data) {
+function update_picks(info, optimal_data) {
 
   
-  $.each(total_data, function(player, data) { 
+  //$.each(total_data, function(player, data) { 
 
-  fetch("/golf_app/get_picks/" + $('#tournament_key').text() + '/' + player,
+  //fetch("/golf_app/get_picks/" + $('#tournament_key').text() + '/' + player,
+  fetch("/golf_app/get_picks/" + $('#tournament_key').text() + '/' + 'all',
   {method: "GET",
   })
 .then((response) => response.json())
 .then((responseJSON) => {
   score_detail = responseJSON
   $.each(score_detail, function (index, stats) {
+    let player = stats.user.username
     let filler = /[\s\.\,\']/g;
     //$('#loading_' + player).remove()
       var pick = stats.pick.playerName.playerName.replace(filler, '')
@@ -385,53 +387,11 @@ function update_picks(info, optimal_data, total_data) {
     else {
     if ($.inArray(stats.pick.playerName.golfer.espn_number, Object.keys(optimal_data[stats.pick.playerName.group.number]['golfer'])) !== -1) {$('#' + player + stats.pick.playerName.golfer.espn_number).addClass('best')} 
     }
-  })}) 
+  })
+//}) 
 })
 
- 
-
-  /*picks_data = responseJSON
-  console.log('pick data: ', picks_data)
-  
-  $.each(picks_data, function (p, stats) {
-    let filler = /[\s\.\,\']/g;
-    $('#loading_' + p).remove()
-    $.each(stats, function(index) {
-      var pick = $(this)[0]['pick'].replace(filler, '')
-     
-      if ($(this)[0]['toPar'] == 0) {
-        toPar = "E"
-      }
-      else {toPar = $(this)[0]['toPar']} 
-      
-      $('#' + player + stats[index]['pga_num'] ).html('<span class=watermark> <p>' + p.substring(0, 4)  + ' : ' + index +  '</p>'  + '</span>' + '<p>' +  $(this)[0]['pick']  + '</p>' + '<p>' + $(this)[0]['score'] +
-    '<span > <a id=tt-' + pick + ' data-toggle="tooltip" > <i class="fa fa-info-circle"></i> </a> </span>' +
-     '</p>' +  toPar + ' (' + $(this)[0]['thru'] + ')' +  '   ' +  format_move($(this)[0]['sod_position']) +  $(this)[0]['sod_position'].replace(filler, '') + '</p>' )
-     //console.log($('#tt-' + $(this)[0]['pick'].replace(/ +?/g, '').replace(/\./g,'') + '[data-toggle="tooltip"]'))
-      $('#tt-' + pick + '[data-toggle="tooltip"]').tooltip({trigger:"hover",
-                                            delay:{"show":400,"hide":800}, "title": 'gross score: ' + $(this)[0]['gross_score']
-                                            }) 
-
-      $('#' + p + $(this)[0]['pga_num']).removeClass()
-      if (not_playing.indexOf($(this)[0]['today_score']) != -1) {$('#' + p + stats[index]['pga_num']).addClass('cut')}                                            
-      //if ($(this)[0]['today_score'] == 'CUT') {$('#' + p + $(this)[0]['pga_num']).addClass('cut')}
-    
-    //use 0 of the index to strip the extra chars in multi pick groups.  Need to fix for tournaments with 10 groups.
-    //console.log($(this)[0]['pick'], optimal_data[index], info[10])
-
-
-    if (info[10] == 1) {if ($.inArray($(this)[0]['pga_num'], Object.keys(optimal_data[index]['golfer'])) !== -1) {$('#' + p + $(this)[0]['pga_num'].replace(filler, '')).addClass('best')} }
-    else {
-    if ($.inArray($(this)[0]['pga_num'], Object.keys(optimal_data[index[0]]['golfer'])) !== -1) {$('#' + p + $(this)[0]['pga_num'].replace(filler, '')).addClass('best')} 
-    }
-  })}) 
-})*/
-
-
-sort_table(info)
-// if (info['complete'] == true) {
-//      console.log($('#totals-table').children()[1])
-//     $('#ts_BigDippoer').html($('#ts_BigDipper').html () + '<i class="fas fa-trophy"></i>')}
+ sort_table(info)
 
 } 
 
@@ -463,7 +423,4 @@ while(switching) {
       switching = true;
     }
   }
-//  if (info['complete'] == true) {
-//    console.log($('#totals-table tr:first'))
- //  $('#totals-table tr:first-child td').add('<i class="fas fa-trophy"></i>')}
 }

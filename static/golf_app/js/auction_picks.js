@@ -17,6 +17,12 @@ $(document).ready(function () {
     console.log(field)
     players = ['john', 'jcarl62', 'ryosuke']
     $('#make_picks').append('<form id=pick_form> </form>')
+    sel_list = []
+    
+    $.each(field, function(i, f) {
+        console.log(f.playerName)
+        $('#make_picks form').append('<li>' + f.playerName + '</li>')
+    })
     var options = []
     
     //var golfers = '<select>'

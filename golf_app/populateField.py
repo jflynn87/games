@@ -314,6 +314,11 @@ def create_field(field, tournament):
         f.season_stats = f.golfer.summary_stats(tournament.season) 
         f.save()
 
+    for g in Golfer.objects.all():
+        g.results = g.get_season_results()
+        g.save()
+
+
     print ('saved field objects')
 
 def get_golfer(player, pga_num, espn_data):
@@ -325,8 +330,9 @@ def get_golfer(player, pga_num, espn_data):
         golfer.flag_link = get_flag(pga_num, player)
     if golfer.espn_number in [' ', None]:
         golfer.espn_number = get_espn_num(player, espn_data)
-    golfer.save()
 
+    golfer.save() 
+    
     return golfer
 
      

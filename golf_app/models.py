@@ -444,6 +444,8 @@ class Golfer(models.Model):
     pic_link  = models.URLField(max_length=500, null=True, blank=True)
     flag_link = models.URLField(max_length=500, null=True, blank=True)
     espn_number = models.CharField(max_length=100, null=True, blank=True)
+    results = models.JSONField(null=True, blank=True)
+
 
     def __str__(self):
         return str(self.golfer_name) + ' : ' + str(self.golfer_pga_num)
@@ -457,6 +459,7 @@ class Golfer(models.Model):
 
 
     def golfer_link(self):
+        
         if  self.golfer_name[1]=='.' and self.golfer_name[3] =='.':
             name = str(self.golfer_pga_num) + '.' + self.pga_web_name_format()
         else:
@@ -498,7 +501,6 @@ class Golfer(models.Model):
         
         #for sd in ScoreDict.objects.filter(tournament__season=season).exclude(tournament__current=True):
         for sd in ScoreDict.objects.filter(tournament__pk__in=t_list):
-            #print (sd.tournament)
             x = [v.get('rank') for k, v in sd.data.items() if k !='info' and v.get('pga_num') in [self.espn_number, self.golfer_pga_num]]
             if not x:
                 continue
@@ -530,6 +532,39 @@ class Golfer(models.Model):
         d.update({'played': played})
         #print (self, d, datetime.now() - start)
         return d
+
+    def get_season_results(self, season=None):
+        '''takes a golfer and an optional season object, returns a dict with only the updated data'''
+        if not season:
+            season = Season.objects.get(current=True)
+        
+        #if not t:
+        #    t = Tournament.objects.get(current=True)
+
+        data = {}
+
+        if self.results:
+            tournaments = Tournament.objects.filter(season=season).exclude(pk__in=list(self.results.keys())).exclude(current=True)
+        else:
+            tournaments = Tournament.objects.filter(season=season).exclude(current=True)
+            self.results = {}
+        
+        for t in tournaments:
+            sd = ScoreDict.objects.get(tournament=t)
+            score = [v for k, v in sd.data.items() if k != 'info' and v.get('pga_num') == self.espn_number] 
+            if score:
+                rank = score[0].get('rank')
+            else:
+                rank = 'n/a'
+            data.update({t.pk: {'rank': rank,
+                                't_name': t.name,
+                                'season': t.season.season
+            }})
+
+        self.results.update(data)
+        self.save()
+
+        return data
 
 
 class Field(models.Model):

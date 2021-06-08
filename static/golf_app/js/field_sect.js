@@ -46,13 +46,12 @@ $(document).ready(function () {
 })
 
 function build_field(g, info) {
-    console.log(info)
     return new Promise (function (resolve, reject) {
         
         //Intro section
 
         $('#field_sect #pick_form').append('<table id=tbl-group-' + g + ' class=table> \
-                                <thead class=group_header> <th> Group: ' + g + '</th> </thead>' +
+                                <thead class=total_score> <th> Group: ' + g + '</th> </thead>' +
                             '</table>')
 
         //picks tables/groups
@@ -70,6 +69,7 @@ function build_field(g, info) {
         .then((response) => response.json())
         .then((responseJSON) => {
             data = responseJSON
+            console.log('data', data)
             $.each(data, function(i, field) {
                 
                 picks = info[field.group.number]
@@ -198,6 +198,13 @@ function buildHeader() {
         '</a>' +
         '</span>')
 
+    // $('#top_sect').append('<span style="float: right;" >' + 
+    //     '<a href="#" id="download_excel" >' +
+    //     '<i class="fas fa-file-download" title="Download Excel" data-toggle="tooltip"> Download Excel</i>' +
+    //     '</a>' +
+    //     '</span>')
+
+
     $('#top_sect').append('<br> <div id=stats-dtl-toggle>' + 
         '<h5>Hide Stats <i class="fa fa-minus-circle show" style="color:lightblue"></i></h5>' +
         '<br></div>')
@@ -221,11 +228,7 @@ function buildHeader() {
 
 
 function create_post() {
-    $('#sub_button').prop('disabled', 'true')
-    $('#random_btn').prop('disabled', 'true')
-    $('#top_sect').append('<p class=status style="text-align:center;"> Submitting picks, one moment....')
-    $('#bottom').append('<p class=status style="text-align:center;"> Submitting picks, one moment....')
-    
+    toggle_submitting()    
     checked = $('input:checked')
     //console.log(checked)
     pick_list = []
@@ -261,11 +264,7 @@ function create_post() {
 }
 
 function create_post_random() {
-    $('#sub_button').prop('disabled', 'true')
-    $('#random_btn').prop('disabled', 'true')
-    $('#top_sect').append('<p class=status style="text-align:center;"> Submitting picks, one moment....')
-    $('#bottom').append('<p class=status style="text-align:center;"> Submitting picks, one moment....')
-    
+    toggle_submitting()
     pick_list = []
     pick_list.push('random', )
     console.log('pick list', pick_list)
@@ -294,4 +293,14 @@ function create_post_random() {
      console.log(d)
 
  })
+}
+
+function toggle_submitting() {
+    $('#sub_button').prop('disabled', 'true')
+    $('#sub_button').prop('value', 'Submitting....')
+    $('#random_btn').prop('disabled', 'true')
+    $('#random_btn').prop('value', 'Submitting....')
+    $('#top_sect').append('<p class=status style="text-align:center;"> Submitting picks, one moment....')
+    $('#bottom').append('<p class=status style="text-align:center;"> Submitting picks, one moment....')
+
 }

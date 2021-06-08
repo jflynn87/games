@@ -28,7 +28,7 @@
         <a href="{% url 'golf_app:about'%}"> <button class="btn btn-primary">About</button></a>
         <br>
         <br>
-        {%if user.username in golf_auction_user_list%}
+        {%if user.username in golf_auction_user_list and t.auction%}
         <a href="{% url 'golf_app:auction_picks'%}"> <button class="btn btn-primary">Auction Scores</button></a>
         {%endif%}
       </div>

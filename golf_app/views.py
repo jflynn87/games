@@ -258,9 +258,18 @@ class ScoreGetPicks(ListAPIView):
     serializer_class = golf_serializers.ScoreDetailsSerializer
 
     def get_queryset(self, *args, **kwargs):
-        t = Tournament.objects.get(pk=self.kwargs.get('pk'))
-        u = User.objects.get(username=self.kwargs.get('username'))
-        queryset = ScoreDetails.objects.filter(pick__playerName__tournament=t, user=u)
+        start = datetime.datetime.now()
+        if self.kwargs.get('username') == 'all':
+            t = Tournament.objects.get(pk=self.kwargs.get('pk'))
+            #u = User.objects.get(username=self.kwargs.get('username'))
+            #queryset = ScoreDetails.objects.filter(pick__playerName__tournament=t, user=u)
+            queryset = ScoreDetails.objects.filter(pick__playerName__tournament=t)
+        else:
+            t = Tournament.objects.get(pk=self.kwargs.get('pk'))
+            u = User.objects.get(username=self.kwargs.get('username'))
+            queryset = ScoreDetails.objects.filter(pick__playerName__tournament=t, user=u)
+
+        print ('return serialized piks: ', datetime.datetime.now() - start)
         return queryset
            
 
@@ -415,11 +424,11 @@ def setup(request):
             else:
                 print ('creating field A')
                 populateField.create_groups(url_number)
-                return HttpResponseRedirect(reverse('golf_app:field'))
+                return HttpResponseRedirect(reverse('golf_app:new_field_list'))
         except ObjectDoesNotExist:
             print ('obj does not exist exept - creating field')
             populateField.create_groups(url_number)
-            return HttpResponseRedirect(reverse('golf_app:field'))
+            return HttpResponseRedirect(reverse('golf_app:new_field_list'))
         except Exception as e:
             print ('error', e)
             error_msg = (e)
@@ -1429,4 +1438,17 @@ class AuctionScores(APIView):
         return JsonResponse(totals, status=200)
 
 
+class GetGolfers(APIView):
+    def get(self, request):
+        start = datetime.datetime.now()
         
+        try:
+            golfers = golf_serializers.GolferSerializer(Golfer.objects.all(), many=True)
+            
+            #print ('DATA ', request.data)
+            
+            return Response(golfers.data, status=200)
+        except Exception as e:
+            print ('get golfers data exception: ', e)
+            return JsonResponse({'msg': e})
+
