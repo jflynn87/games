@@ -291,7 +291,7 @@ $.each(golfers, function(i, results) {
   var t_data = Object.values(results.results)
   t_results = []
   $.each(t_data, function(i, data) {
-    console.log(results.golfer_name, data)
+     console.log(results.golfer_name, data)
     if (data) {
       t = data.t_name
       r = data.rank

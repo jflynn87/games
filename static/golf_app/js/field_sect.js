@@ -198,12 +198,11 @@ function buildHeader() {
         '</a>' +
         '</span>')
 
-    // $('#top_sect').append('<span style="float: right;" >' + 
-    //     '<a href="#" id="download_excel" >' +
-    //     '<i class="fas fa-file-download" title="Download Excel" data-toggle="tooltip"> Download Excel</i>' +
-    //     '</a>' +
-    //     '</span>')
-
+    //$('#top_sect').append('<span style="float: right;" >' + 
+    //    '<a href="#" id="download_excel" >' +
+    //    '<i class="fas fa-file-download" title="Download Excel" data-toggle="tooltip"> Download Excel</i>' +
+    //    '</a>' +
+    //    '</span>')
 
     $('#top_sect').append('<br> <div id=stats-dtl-toggle>' + 
         '<h5>Hide Stats <i class="fa fa-minus-circle show" style="color:lightblue"></i></h5>' +

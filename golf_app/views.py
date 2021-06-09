@@ -170,10 +170,9 @@ class NewFieldListView(LoginRequiredMixin,TemplateView):
 
     @transaction.atomic
     def post(self, request):
-
-        print ('request data ', self.request.POST)  #this is it
+        start = datetime.datetime.now()
         data = json.loads(self.request.body)
-        print (data, type(data))
+        print ('start of picks submit: ', request.user, data)
         pick_list = data.get('pick_list')
         print ('pick_list', pick_list)
         tournament = Tournament.objects.get(current=True)
@@ -222,6 +221,7 @@ class NewFieldListView(LoginRequiredMixin,TemplateView):
             tournament.save_picks(field_list, user, 'self')
 
         print ('user submitting picks', datetime.datetime.now(), request.user, Picks.objects.filter(playerName__tournament=tournament, user=user))
+        print ('submit picks duration: ',  datetime.datetime.now() - start)
     
         if UserProfile.objects.filter(user=user).exists():
             profile = UserProfile.objects.get(user=user)
