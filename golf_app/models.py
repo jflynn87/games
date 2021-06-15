@@ -533,7 +533,7 @@ class Golfer(models.Model):
         #print (self, d, datetime.now() - start)
         return d
 
-    def get_season_results(self, season=None):
+    def get_season_results(self, season=None, rerun=False):
         '''takes a golfer and an optional season object, returns a dict with only the updated data'''
         if not season:
             season = Season.objects.get(current=True)
@@ -541,14 +541,15 @@ class Golfer(models.Model):
         #if not t:
         #    t = Tournament.objects.get(current=True)
 
-        data = {}
-
-        if self.results:
+        #data = {}
+ 
+        if self.results and not rerun:
             tournaments = Tournament.objects.filter(season=season).exclude(pk__in=list(self.results.keys())).exclude(current=True)
         else:
             tournaments = Tournament.objects.filter(season=season).exclude(current=True)
             self.results = {}
         
+        #print (tournaments)
         for t in tournaments:
             sd = ScoreDict.objects.get(tournament=t)
             score = [v for k, v in sd.data.items() if k != 'info' and v.get('pga_num') == self.espn_number] 
@@ -556,15 +557,17 @@ class Golfer(models.Model):
                 rank = score[0].get('rank')
             else:
                 rank = 'n/a'
-            data.update({t.pk: {'rank': rank,
+            #data.update({t.pk: {'rank': rank,
+            self.results.update({t.pk: {'rank': rank,
                                 't_name': t.name,
                                 'season': t.season.season
             }})
-
-        self.results.update(data)
+            
+        #self.results.update(data)
         self.save()
+        #print (data)
 
-        return data
+        return self.results
 
 
 class Field(models.Model):
@@ -614,6 +617,10 @@ class Field(models.Model):
                     if self.tournament.pga_tournament_num == '536':
                         #hard coded for masters 2021 
                         t = Tournament.objects.get(pga_tournament_num='014', season__season='2021')
+                    elif self.tournament.pga_tournament_num == '535':
+                        #hard coded for US Openrs 2021 
+                        t = Tournament.objects.get(pga_tournament_num='026', season__season='2021')
+
                 except Exception as e2:
                     print ('cant find prior tournament ', e1)
                     return 'n/a'

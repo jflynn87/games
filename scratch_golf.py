@@ -3,7 +3,7 @@ os.environ.setdefault("DJANGO_SETTINGS_MODULE","gamesProj.settings")
 
 import django
 django.setup()
-from golf_app.models import Tournament, TotalScore, ScoreDetails, Picks, PickMethod, BonusDetails, Season, Golfer, Group, Field, ScoreDict, AuctionPick
+from golf_app.models import Tournament, TotalScore, ScoreDetails, Picks, PickMethod, BonusDetails, Season, Golfer, Group, Field, ScoreDict, AuctionPick, AccessLog
 from django.contrib.auth.models import User
 from datetime import date, datetime, timedelta
 import sqlite3
@@ -37,7 +37,58 @@ import scipy.stats as ss
 import csv
 
 
+for t in Tournament.objects.filter(season__current=True):
+    sd = ScoreDict.objects.get(tournament=t)
+    if not sd.data.get('info') and not ("Masters" in t.name or "Match Play" in t.name):
+        print ('NAME: ', t.name)
+        t_num = scrape_espn.ScrapeESPN(tournament=t).get_t_num(season=t.season)
+        #print (t, t_num)
+        # if (not created and (not sd.data or len(sd.data) == 0 or len(pga_nums) == 0)) or created:
+        # print ('updating prior SD', prior_t)
+        # espn_t_num = scrape_espn.ScrapeESPN().get_t_num(prior_season)
+        url = "https://www.espn.com/golf/leaderboard?tournamentId=" + t_num
+        score_dict = scrape_espn.ScrapeESPN(t,url, True, True).get_data()
+        sd.data = score_dict
+        sd.save()
+        t.espn_t_num = t_num
+        t.save()
+
+#Masters
+t = Tournament.objects.get(season__current=True, pga_tournament_num='014')
+t_num = '401219478'
+url = "https://www.espn.com/golf/leaderboard?tournamentId=" + t_num
+score_dict = scrape_espn.ScrapeESPN(t,url, True, True).get_data()
+sd.data = score_dict
+sd.save()
+t.espn_t_num = t_num
+t.save()
+
+#Zozo
+t = Tournament.objects.get(season__current=True, pga_tournament_num='527')
+t_num = '401219797'
+url = "https://www.espn.com/golf/leaderboard?tournamentId=" + t_num
+score_dict = scrape_espn.ScrapeESPN(t,url, True, True).get_data()
+sd.data = score_dict
+sd.save()
+t.espn_t_num = t_num
+t.save()
+
+
+
+
+exit()
+
+
 start = datetime.now()
+g = Golfer.objects.get(golfer_name="Justin Thomas")
+r= g.get_season_results(Season.objects.get(current=True), rerun=True)
+for k, v in r.items():
+    print (v)
+exit()
+
+#for a in AccessLog.objects.filter(user__username__startswith='j_b').order_by('updated'):
+#    print (a.updated, a.page)
+
 #print (Field.objects.filter(tournament__current=True).count())
 #t_keys = list(Tournament.objects.filter(season__current=True).values_list('pk', flat=True))
 #g = Golfer.objects.get(golfer_name='Justin Thomas')
@@ -51,7 +102,7 @@ start = datetime.now()
 #print (164 in data.keys())
 #print (127 in data.keys())
 
-data = golf_serializers.GolferSerializer(Golfer.objects.all(), many=True)
+#data = golf_serializers.GolferSerializer(Golfer.objects.all(), many=True)
 #print (data.data)
 #for g in data.data:
 #    print (g)

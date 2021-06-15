@@ -134,6 +134,7 @@ class NewFieldListView(LoginRequiredMixin,TemplateView):
 
     def get_context_data(self,**kwargs):
         context = super(NewFieldListView, self).get_context_data(**kwargs)
+        utils.save_access_log(self.request, 'picks')
         tournament = Tournament.objects.get(current=True)
         # print (tournament.started())
         # #check for withdrawls and create msg if there is any
@@ -1444,10 +1445,13 @@ class GetGolfers(APIView):
         
         try:
             golfers = golf_serializers.GolferSerializer(Golfer.objects.all(), many=True)
+            #golfers = golf_serializers.GolferSerializer(Golfer.objects.filter(golfer_name__in=['Justin Thomas', 'Jon Rahm']), many=True)
+            field = serializers.serialize('json', Field.objects.filter(tournament__current=True),  use_natural_foreign_keys=True)
             
             #print ('DATA ', request.data)
-            
-            return Response(golfers.data, status=200)
+            data = {'golfers': golfers.data,
+                    'field': field}
+            return Response(data, status=200)
         except Exception as e:
             print ('get golfers data exception: ', e)
             return JsonResponse({'msg': e})

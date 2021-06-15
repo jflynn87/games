@@ -213,12 +213,12 @@ $("#actual-row").each(function () {
       $('#actual-grouptotal').text(total)
 
       if (total == parseInt(info['total'])) {
-        $('#sub_button').removeAttr('disabled').attr('class', 'btn btn-primary');
+        $('#sub_button').removeAttr('disabled').attr('class', 'btn btn-primary').val('Submit Picks');
         $('#actual-grouptotal').css('background-color', '')  
         $('#required-groupcomplete').text('True')
       }
       else 
-      {$('#sub_button').prop('disabled', true).attr('class', 'btn btn-secondary');
+      {$('#sub_button').prop('disabled', true).attr('class', 'btn btn-secondary').val(total + ' of ' + info.total + ' picks');
       $('#actual-grouptotal').css('background-color', '#FFF300')}
       })
   
@@ -277,117 +277,181 @@ $(document).on("click", "#download_excel", function() {
     dataType: 'json',
     //data: {'tournament' : $('#tournament_key').text()},
     success: function (json) {
-        golfers = json
+        golfers = json.golfers
+        field = $.parseJSON(json.field)
         console.log('excel sect golfers ', golfers)
         var createXLSLFormatObj = [];
 
 /* XLS Head Columns */
-var xlsHeader = ["EmployeeID", "Full Name"];
+xlsHeader = []
+xlsHeader.push('Golfer Name', 'PGA Number')
+$.each(golfers[0].results, function(i, data) {
+      xlsHeader.push(data.t_name)
+
+})
 
 /* XLS Rows Data */
 xlsRows = []
+
 $.each(golfers, function(i, results) {
-  //console.log(results.golfer_name, Object.values(results.results))
+  var row = {}
   var t_data = Object.values(results.results)
-  t_results = []
-  $.each(t_data, function(i, data) {
-     console.log(results.golfer_name, data)
+  row['golfer'] = results.golfer_name;
+  row['pga_num'] = results.golfer_pga_num
+ 
+  $.each(t_data, function(idx, data) {
     if (data) {
-      t = data.t_name
-      r = data.rank
-      t_results.push({t: r})
-    //console.log(results.golfer_name, data.t_name, data.rank)
+      var t_name = data.t_name;
+      var r = data.rank;
+      //need idx as some tournaments happened 2 times in 2021, need unique key
+      row[t_name + idx] =r;
        }
     else {
-      //conssole.log(results.golfer_name,  'NO DATA')
-      t_results.push({'t_name': 'no data',
-                    'rank': 'n/a'})
+      conssole.log(results.golfer_name,  'NO DATA')
+      row['no data'] = 'no data';
+                    
 }
-  })
-  
-  xlsRows.push({'golfer': results.golfer_name,
-                'pga_num': results.golfer_pga_num,
-
-                 t_results: t_results  //fix this code probably above
-
-                //'data': Object.values(results.results.rank)
-              })
-  console.log('row: ', xlsRows)
-} )
-
-// var xlsRows = [{
-//         "EmployeeID": "EMP001",
-//         "FullName": "Jolly"
-//     },
-//     {
-//         "EmployeeID": "EMP002",
-//         "FullName": "Macias"
-//     },
-//     {
-//         "EmployeeID": "EMP003",
-//         "FullName": "Lucian"
-//     },
-//     {
-//         "EmployeeID": "EMP004",
-//         "FullName": "Blaze"
-//     },
-//     {
-//         "EmployeeID": "EMP005",
-//         "FullName": "Blossom"
-//     },
-//     {
-//         "EmployeeID": "EMP006",
-//         "FullName": "Kerry"
-//     },
-//     {
-//         "EmployeeID": "EMP007",
-//         "FullName": "Adele"
-//     },
-//     {
-//         "EmployeeID": "EMP008",
-//         "FullName": "Freaky"
-//     },
-//     {
-//         "EmployeeID": "EMP009",
-//         "FullName": "Brooke"
-//     },
-//     {
-//         "EmployeeID": "EMP010",
-//         "FullName": "FreakyJolly.Com"
-//     }
-// ];
-
+})
+xlsRows.push(row)
+})
 
 createXLSLFormatObj.push(xlsHeader);
+
 $.each(xlsRows, function(index, value) {
     var innerRowData = [];
-    //$("tbody").append('<tr><td>' + value.EmployeeID + '</td><td>' + value.FullName + '</td></tr>');
     $.each(value, function(ind, val) {
-        //console.log('row data ', val)
         innerRowData.push(val);
     });
     createXLSLFormatObj.push(innerRowData);
 });
 
-
 /* File Name */
-var filename = "FreakyJSON_To_XLS.xlsx";
-
+var filename = "golf game data " + $('#t-name').text() + '.xlsx';
 /* Sheet Name */
-var ws_name = "FreakySheet";
-
+var ws_name = "All Golfer Results";
 if (typeof console !== 'undefined') console.log(new Date());
 var wb = XLSX.utils.book_new(),
     ws = XLSX.utils.aoa_to_sheet(createXLSLFormatObj);
-
 /* Add worksheet to workbook */
 XLSX.utils.book_append_sheet(wb, ws, ws_name);
+
+var createXLSXFieldObj = [];
+ws2_name = "Current Week Field";
+field_header = ['Golfer',	'PGA ID',	'Group ID',	'currentWGR',	'sow_WGR',	'soy_WGR',	'prior year finish',	'handicap',	'Season Played',	'Season Won',	'Season 2-10',	'Season 11-29',	'Season 30 - 49',	'Season > 50',	'Season Cut']
+fieldRows = []
+$.each(field, function(i, golfer) {
+  row = {}
+  if (!golfer['fields']['withdrawn']){
+    row['golfer'] = golfer['fields']['playerName'].replace(',', '') 
+    row['pga_num'] = golfer.fields.golfer
+    row['group'] = golfer.fields.group
+    row['current_wgr'] = golfer['fields']['currentWGR']
+    row['sow_wgr'] = golfer['fields']['sow_WGR'] 
+    row['soy_wgr'] = golfer['fields']['soy_WGR']
+    row['prior_year'] = golfer.fields.prior_year
+    row['handi'] = golfer['fields']['handi']
+    row['played'] = golfer.fields.season_stats.played 
+    row['won'] = golfer.fields.season_stats.won
+    row['top10'] = golfer.fields.season_stats.top10
+    row['bet11_29'] = golfer.fields.season_stats.bet11_29
+    row['bet30_49'] = golfer.fields.season_stats.bet30_49
+    row['over50'] = golfer.fields.season_stats.over50
+    row['cuts'] = golfer.fields.season_stats.cuts
+    //row['google'] = golfer['fields']['playerName'].replace(',', '') 
+    //row['google'] = 
+    //    '=HYPERLINK("https://www.google.com/search?q=' + golfer['fields']['playerName'].replace('  ', '%20').replace(',', '') + '")' 
+         
+
+   fieldRows.push(row)
+   //console.log('fieldRow: ', typeof(fieldRows), fieldRows.length)
+  }
+  
+})
+
+createXLSXFieldObj.push(field_header)
+//createXLSXFieldObj.push(fieldRows);
+//console.log('golfer xcel:', createXLSLFormatObj)
+//console.log('excl obj: ', createXLSXFieldObj)
+
+$.each(fieldRows, function(index, value) {
+  //console.log('value: ', value)
+  var innerRowData = [];
+  //$("tbody").append('<tr><td>' + value.EmployeeID + '</td><td>' + value.FullName + '</td></tr>');
+  $.each(value, function(ind, val) {
+      //console.log('val data ', val)
+      innerRowData.push(val);
+  });
+  createXLSXFieldObj.push(innerRowData);
+});
+
+//.then((response) => response)
+//.then((response) => {
+
+
+//console.log('field: ', response, typeof(response))
+
+
+var field_ws = XLSX.utils.aoa_to_sheet(createXLSXFieldObj);
+
+console.log(field_ws)
+for (i=0; i < fieldRows.length; i++) {
+  
+  //link = '=HYPERLINK("https://www.google.com/search?q=' + fieldRows[i].golfer.replace('  ', '%20').replace(',', '') + ')"'
+  link = "https://www.google.com/", "Google"
+  field_ws[XLSX.utils.encode_cell({
+    c: 0,
+    r: i+1,
+    v: fieldRows[i].golfer
+  })] = {
+  //.l = { Target: 'www.google.com'};
+  // works -- f: '=HYPERLINK("http://www.google.com","Google")'}
+  f: '=HYPERLINK("http://www.google.com/search?q=' + fieldRows[i].golfer.replace('  ', '%20').replace(',', '') + '","' + fieldRows[i].golfer + '")'}
+}
+
+//console.log('field_ws', field_ws)
+XLSX.utils.book_append_sheet(wb, field_ws, ws2_name);
 
 /* Write workbook and Download */
 if (typeof console !== 'undefined') console.log(new Date());
 XLSX.writeFile(wb, filename);
 if (typeof console !== 'undefined') console.log(new Date());
 
-  }
-})
+  //})
+}
   })
+})
+// function formatFieldXLSData(field) {
+//   return new Promise (function (resolve, reject) {
+//   fieldRows = []
+//   $.each(field, function(i, golfer) {
+//     row = {}
+//     if (!golfer['fields']['withdrawn']){
+      
+      
+//       row['golfer'] = golfer['fields']['playerName'].replace(',', '') 
+//       row['pga_num'] = golfer.fields.golfer.golfer_pga_num
+//       row['group'] = golfer.fields.group
+//       row['current_wgr'] = golfer['fields']['currentWGR']
+//       row['sow_wgr'] = golfer['fields']['sow_WGR'] 
+//       row['soy_wgr'] = golfer['fields']['soy_WGR']
+//       row['prior_year'] = golfer.fields.prior_year
+//       row['handi'] = golfer['fields']['handi']
+//       row['played'] = golfer.fields.season_stats.played 
+//       row['won'] = golfer.fields.season_stats.won
+//       row['top10'] = golfer.fields.season_stats.top10
+//       row['bet11_29'] = golfer.fields.season_stats.bet11_29
+//       row['bet30_49'] = golfer.fields.season_stats.bet30_49
+//       row['over50'] = golfer.fields.season_stats.over50
+//       row['cuts'] = golfer.fields.season_stats.cuts
+//       row['google'] = 
+//        '=HYPERLINK("https://www.google.com/search?q=' + golfer['fields']['playerName'].replace('  ', '%20').replace(',', '') + '")' 
+      
+//       fieldRows.push(row)
+//     }
+//   })
+//   resolve(fieldRows)
+// }
+//   )
+
+  
+//}

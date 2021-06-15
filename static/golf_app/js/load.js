@@ -118,9 +118,10 @@ function build_score_tbl(data) {
   $('#multi-col').attr('colspan', col_num_picks).attr('style', 'text-align:center;')
 
   $.each(total_data, function(p, total) {
-    $('#totals').append('<tr id=totals' + p + ' class=small> <span>' + '<td id=ts_' + p + ' class=total_score>'+  p  + ' (' + season_totals[p]['diff'] +')'  + '</p>' + '<p>' +  total['total_score'] + ' / ' + total['cuts']  + '</td>'  + '</tr>')
+    //$('#totals').append('<tr id=totals' + p + ' class=small> <span>' + '<td id=ts_' + p + ' class=total_score>'+  p  + ' (' + season_totals[p]['diff'] +')'  + '</p>' + '<p>' +  total['total_score'] + ' / ' + total['cuts']  + '</td>'  + '</tr>')
+    $('#totals').append('<tr id=totals' + p + ' class=small> <span>' + '<td id=ts_' + p + ' style=font-weight:bold;>'+  p  + ' (' + season_totals[p]['diff'] +')'  + '</p>' + '<p>' +  total['total_score'] + ' / ' + total['cuts']  + '</td>'  + '</tr>')
     var bonus = ''
-     if (total['msg']) {$('#totals' + p).append('<td class=total_score id=msg_' + p + '><p> h/c: ' + total['handicap'] + '</p>' + total["msg"] + '</td>' +
+     if (total['msg']) {$('#totals' + p).append('<td id=msg_' + p + '><p> h/c: ' + total['handicap'] + '</p>' + total["msg"] + '</td>' +
                                                 '<td id=loading_' + p + '>Loading....</td>') }
     else {
       if (total['winner_bonus'] >0) {bonus = bonus + '<p> Winner: -' + total['winner_bonus'] +  '</p>'}
@@ -129,7 +130,7 @@ function build_score_tbl(data) {
       if (total['cut_bonus'] > 0) {bonus = bonus + '<p> No Cut: -' + total['cut_bonus'] +  '</p>'}
       if (total['playoff_bonus'] > 0) {bonus = bonus + '<p> Playoff: -' + total['playoff_bonus'] +  '</p>'}
       //$('#totals' + p).append('<td id=msg_' + p + '><span class=bonus> <p> h/c: ' + total['handicap'] + '</p>' + bonus + '</span></td>' +
-      $('#totals' + p).append('<td class=total_score id=msg_' + p + '><span>  <p> h/c: ' + total['handicap'] + '</p>' + bonus + '</span></td>' +
+      $('#totals' + p).append('<td id=msg_' + p + '><span>  <p> h/c: ' + total['handicap'] + '</p>' + bonus + '</span></td>' +
                               '<td id=loading_' + p + '>Loading....</td> </span> </tr>')  
     }
       
