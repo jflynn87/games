@@ -36,6 +36,33 @@ import math
 import scipy.stats as ss
 import csv
 
+start = datetime.now()
+
+AccessLog.objects.all().delete()
+
+exit()
+
+t = Tournament.objects.get(pga_tournament_num=538, season__current=True)
+sd = ScoreDict.objects.get(tournament=t)
+
+web = scrape_espn.ScrapeESPN(t, 'https://www.espn.com/golf/leaderboard?tournamentId=401317529', True, False).get_data()
+sd.data = web
+sd.save()
+
+
+for f in Field.objects.filter(tournament__current=True):
+    f.recent = f.recent_results()
+    f.prior_year = f.prior_year_finish()
+    f.save()
+
+print ('field done')
+
+for g in Golfer.objects.all():
+    g.get_season_results(rerun=True)
+
+print (datetime.now() - start)
+
+exit()
 
 for t in Tournament.objects.filter(season__current=True):
     sd = ScoreDict.objects.get(tournament=t)
@@ -49,10 +76,11 @@ for t in Tournament.objects.filter(season__current=True):
         url = "https://www.espn.com/golf/leaderboard?tournamentId=" + t_num
         score_dict = scrape_espn.ScrapeESPN(t,url, True, True).get_data()
         sd.data = score_dict
-        sd.save()
+        #sd.save()
         t.espn_t_num = t_num
-        t.save()
+        #t.save()
 
+exit()
 #Masters
 t = Tournament.objects.get(season__current=True, pga_tournament_num='014')
 t_num = '401219478'

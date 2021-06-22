@@ -191,10 +191,14 @@ def reverse_names(name):
 
 def save_access_log(request, screen):
     '''takes a request and a string saves an object and returns nothing'''
-    from golf_app.models import AccessLog
-    if request.user.is_authenticated:
-        log = AccessLog()
-        log.user = request.user
-        log.page = screen
-        log.save()
+    from golf_app.models import AccessLog, Tournament
+    try:
+        if request.user.is_authenticated:
+            log, created = AccessLog.objects.get_or_create(tournament=Tournament.objects.get(current=True), user=request.user, page=screen, device_type=request.user_agent)
+            #log.user = request.user
+            #log.page = screen
+            log.views += 1
+            log.save()
+    except Exception as e:
+        ptint ('save access log issue: ', e)
     return

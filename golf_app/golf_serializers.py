@@ -45,7 +45,7 @@ class ScoreDetailsSerializer(serializers.ModelSerializer):
         depth = 3
 
 class GolferSerializer(serializers.ModelSerializer):
-   # season_results = serializers.SerializerMethodField('get_season_results')
+    #season_results = serializers.SerializerMethodField('get_season_results')
 
     class Meta:
         model = Golfer
@@ -53,4 +53,4 @@ class GolferSerializer(serializers.ModelSerializer):
         depth = 1
     
     #def get_season_results(self, golfer):
-    #    return golfer.get_season_results()
+    #    return golfer.results.

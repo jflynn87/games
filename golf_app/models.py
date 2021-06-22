@@ -932,6 +932,9 @@ class AccessLog(models.Model):
     user = models.ForeignKey(User, null=True, blank=True, on_delete=models.SET_NULL)
     page = models.CharField(max_length=100, null=True, blank=True)
     updated = models.DateTimeField(auto_now=True)
+    tournament = models.ForeignKey(Tournament, blank=True, null=True, on_delete=models.CASCADE)
+    device_type = models.CharField(max_length=100, blank=True, null=True)
+    views = models.PositiveBigIntegerField(default=0, null=True)
 
     def __str__(self):
         return str(self.user.username) + '  ' + str(self.page)

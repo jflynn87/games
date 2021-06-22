@@ -46,10 +46,12 @@ class ScoreDictAdmin(admin.ModelAdmin):
     def get_season(self, obj):
         return obj.tournament.season.season
 
-
 class UserProfileAdmin(admin.ModelAdmin):
     list_display = ['user',]
-    
+
+class AccessLogAdmin(admin.ModelAdmin):
+    list_display = ['tournament', 'user', 'device_type', 'page', 'views']
+
 
 
 admin.site.register(Tournament)
@@ -67,5 +69,5 @@ admin.site.register(PGAWebScores, PGAWebScoresAdmin)
 admin.site.register(Golfer)
 admin.site.register(ScoreDict, ScoreDictAdmin)
 admin.site.register(UserProfile, UserProfileAdmin)
-admin.site.register(AccessLog)
+admin.site.register(AccessLog, AccessLogAdmin)
 admin.site.register(AuctionPick)

@@ -56,6 +56,7 @@ INSTALLED_APPS = [
     'django.contrib.humanize',
     'rest_framework',
     'corsheaders',
+    'django_user_agents',
     'fb_app',
     'golf_app',
     'run_app',
@@ -73,6 +74,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+     'django_user_agents.middleware.UserAgentMiddleware',
     
     
 
@@ -249,3 +251,14 @@ LOGOUT_REDIRECT_URL = "/"
 INTERNAL_IPS = ['127.0.0.1']
 
 DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'
+
+
+#added with device type but didn't work.  confirm if want to use
+# CACHES = {
+#     'default': {
+#         'BACKEND': 'django.core.cache.backends.memcached.MemcachedCache',
+#         'LOCATION': '127.0.0.1:11211',
+#     }
+# }
+
+# USER_AGENTS_CACHE = 'default'
