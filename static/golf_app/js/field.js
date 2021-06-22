@@ -295,10 +295,10 @@ $(document).on("click", "#download_excel", function() {
 
     $.each(golfers, function(i, results) {
       var row = {}
-      console.log(results.results)
-      let sorted_data = results.results.sort((a,b) => b.key() - a.key())
+      //console.log(results.results)
+      //let sorted_data = results.results.sort((a,b) => b.key() - a.key())
       
-      console.log('sorted ', sorted_data)
+      //console.log('sorted ', sorted_data)
       //let sortedInput = input.slice().sort((a, b) => b.id - a.id);
       var t_data = Object.values(results.results)
       row['pga_num'] = results.golfer_pga_num
