@@ -200,5 +200,5 @@ def save_access_log(request, screen):
             log.views += 1
             log.save()
     except Exception as e:
-        ptint ('save access log issue: ', e)
+        print ('save access log issue: ', e)
     return

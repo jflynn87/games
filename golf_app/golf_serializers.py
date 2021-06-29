@@ -35,7 +35,7 @@ class NewFieldSerializer(serializers.ModelSerializer):
         return field.golfer.espn_link()
 
     def get_pga_link(self, field):
-        return field.golfer.golfer_link()
+        return field.golfer.get_pga_player_link()
 
 
 class ScoreDetailsSerializer(serializers.ModelSerializer):

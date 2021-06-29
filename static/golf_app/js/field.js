@@ -277,30 +277,33 @@ $(document).on("click", "#download_excel", function() {
     dataType: 'json',
     //data: {'tournament' : $('#tournament_key').text()},
     success: function (json) {
-        console.log(json.golfers)
+        //console.log(json.golfers)
         golfers = json.golfers
         field = $.parseJSON(json.field)
         var createXLSLFormatObj = [];
 
+        //use order to sort from most recent tournament to first
+        order = Object.keys(golfers[0].results).sort(function(a,b) {return b - a})
+
     /* XLS Head Columns */
     xlsHeader = []
-    xlsHeader.push('Golfer Name', 'PGA Number')
-    $.each(golfers[0].results, function(i, data) {
-          xlsHeader.push(data.t_name)
-
-    })
+    xlsHeader.push('PGA ID', 'Golfer')
+    for (i=0; i < order.length; i++) {
+      xlsHeader.push(golfers[0].results[order[i]].t_name)
+    }
 
     /* XLS Rows Data */
     xlsRows = []
 
     $.each(golfers, function(i, results) {
       var row = {}
-      //console.log(results.results)
-      //let sorted_data = results.results.sort((a,b) => b.key() - a.key())
+      var t_data = []
       
-      //console.log('sorted ', sorted_data)
-      //let sortedInput = input.slice().sort((a, b) => b.id - a.id);
-      var t_data = Object.values(results.results)
+      for (j=0; j < order.length; j++) {
+        t_data.push({'t_name': results.results[order[j]].t_name,
+                    'rank': results.results[order[j]].rank})
+      }
+
       row['pga_num'] = results.golfer_pga_num
       row['golfer'] = results.golfer_name;
       
@@ -342,7 +345,7 @@ $(document).on("click", "#download_excel", function() {
 
     var createXLSXFieldObj = [];
     ws2_name = "Current Week Field";
-    field_header = ['PGA ID', 'Golfer',	'Group ID',	'currentWGR',	'sow_WGR',	'soy_WGR',	'prior year finish',	'handicap',	'Season Played',	'Season Won',	'Season 2-10',	'Season 11-29',	'Season 30 - 49',	'Season > 50',	'Season Cut']
+    field_header = ['PGA ID', 'Golfer',	'Group ID',	'currentWGR',	'sow_WGR',	'soy_WGR',	'prior year finish',	'handicap',	'Season Played',	'Season Won',	'Season 2-10',	'Season 11-29',	'Season 30 - 49',	'Season > 50',	'Season Cut', 'FedEx Rank', 'FedEx Points']
     fieldRows = []
     $.each(field, function(i, golfer) {
       row = {}
@@ -362,6 +365,9 @@ $(document).on("click", "#download_excel", function() {
         row['bet30_49'] = golfer.fields.season_stats.bet30_49
         row['over50'] = golfer.fields.season_stats.over50
         row['cuts'] = golfer.fields.season_stats.cuts
+        row['fedex_rank'] = golfer.fields.season_stats.fed_ex_rank
+        row['fedex_points'] = golfer.fields.season_stats.fed_ex_points
+
         //row['google'] = golfer['fields']['playerName'].replace(',', '') 
         //row['google'] = 
         //    '=HYPERLINK("https://www.google.com/search?q=' + golfer['fields']['playerName'].replace('  ', '%20').replace(',', '') + '")' 

@@ -35,10 +35,51 @@ from collections import OrderedDict
 import math
 import scipy.stats as ss
 import csv
+import random
+
+# groups = ['A', 'B', 'D']
+# shuffle = random.sample(groups, len(groups))
+# print (shuffle)
+# exit()
+
+#print (populateField.get_fedex_data())
+#exit()
+for f in Field.objects.filter(tournament__current=True):
+    print (f, f.season_stats)
+
+exit()
+
+fedex = populateField.get_fedex_data()
+for golfer, data  in fedex.items():
+       print (golfer, data)
+exit()
+
+g = Golfer.objects.get(golfer_name='Dustin Johnson')
+print (g.get_pga_player_link())
+print (g.get_fedex_stats())
+exit()
+
+flag = populateField.get_flag('45526', 'Abraham Ancer')
+print (flag)
+stats = populateField.get_fedex_stats('45526', 'Abraham Ancer')
+print (stats)
+
+exit()
+
+for g in Golfer.objects.filter(golfer_name='Antoine Rozner'):
+    for k, v in g.results.items():
+        print (k, v)
+#for g in Golfer.objects.all():
+    
+    #mp = g.results.get('153')
+    #if mp.get('rank') != 'n/a':
+    #    print (g, mp.get('rank'))
+        #print (k, r.get('t_name'), r.get('rank'))
+
+sd = ScoreDict.objects.get(tournament__pk=153)
+print (sd.data.get('Antoine Rozner'))
 
 start = datetime.now()
-
-AccessLog.objects.all().delete()
 
 exit()
 

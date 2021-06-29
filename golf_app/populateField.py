@@ -312,6 +312,16 @@ def create_field(field, tournament):
         recent = OrderedDict(sorted(f.recent_results().items(), reverse=True))
         f.recent = recent
         f.season_stats = f.golfer.summary_stats(tournament.season) 
+        #fed_ex = f.golfer.get_fedex_stats()
+        fed_ex = get_fedex_data()
+
+        print (fed_ex)
+        if fed_ex.get(f.playerName):
+           f.season_stats.update({'fed_ex_points': fed_ex.get(f.playerName).get('points'),
+                                  'fed_ex_rank': fed_ex.get(f.playerName).get('rank')})
+        else:
+           f.season_stats.update({'fed_ex_points': 'n/a',
+                                  'fed_ex_rank': 'n/a'})
         f.save()
 
     for g in Golfer.objects.all():
@@ -321,43 +331,99 @@ def create_field(field, tournament):
 
     print ('saved field objects')
 
+def get_fedex_data():
+    data = {}
+    try:
+        link = 'https://www.pgatour.com/fedexcup/official-standings.html'
+        fed_ex_html = urllib.request.urlopen(link)
+        fed_ex_soup = BeautifulSoup(fed_ex_html, 'html.parser')
+        rows = fed_ex_soup.find('table', {'class': 'table-fedexcup-standings'}).find_all('tr')
+        try:
+            for row in rows[1:]:
+                tds = row.find_all('td')
+                if not tds[0].get('class'):
+                #    print (tds[2].text.strip())
+                    data[tds[2].text.replace(u'\xa0', u' ')] = {'rank': tds[0].text, 
+                                         'last_week_rank': tds[1].text,
+                                        'points': tds[4].text.strip()}
+        except Exception as e:
+            print ('fedex mapping issue ', e)
+    except Exception as ex:
+        print ('fedex overall issue ', ex)
+
+    return data
+
 def get_golfer(player, pga_num, espn_data):
     '''takes a pga_num string, returns a golfer object.  creates golfer if it doesnt exist'''
     golfer, created = Golfer.objects.get_or_create(golfer_pga_num=pga_num)
     golfer.golfer_name = player
-    golfer.pic_link = get_pic_link(pga_num)
+    golfer.pic_link = golfer.get_pic_link()
     if golfer.flag_link in [' ', None]:
-        golfer.flag_link = get_flag(pga_num, player)
+        golfer.flag_link = golfer.get_flag()
     if golfer.espn_number in [' ', None]:
         golfer.espn_number = get_espn_num(player, espn_data)
+
+    #golfer.pic_link = get_pic_link(pga_num)
+    #if golfer.flag_link in [' ', None]:
+    #    golfer.flag_link = get_flag(pga_num, player)
+    #if golfer.espn_number in [' ', None]:
+    #    golfer.espn_number = get_espn_num(player, espn_data)
 
     golfer.save() 
     
     return golfer
 
-     
-def get_flag(pga_num, golfer):
+# def get_pga_player_link(pga_num, golfer):
+#     try:
+#         if golfer[1]=='.' and golfer[3] =='.':
+#             name = str(pga_num) + '.' + golfer[0].lower() + '-' + golfer[2].lower() + '--' + golfer.split(' ')[1].strip(', Jr.').lower()
+#         else:
+#             name = str(pga_num) + '.' + golfer.split(' ')[0].lower() + '-' + golfer.split(' ')[1].strip(', Jr.').lower()
 
-    try:
-        if golfer[1]=='.' and golfer[3] =='.':
-            name = str(pga_num) + '.' + golfer[0].lower() + '-' + golfer[2].lower() + '--' + golfer.split(' ')[1].strip(', Jr.').lower()
-        else:
-            name = str(pga_num) + '.' + golfer.split(' ')[0].lower() + '-' + golfer.split(' ')[1].strip(', Jr.').lower()
-
-        link = 'https://www.pgatour.com/players/player.' + unidecode.unidecode(name) + '.html'
-        player_html = urllib.request.urlopen(link)
-        player_soup = BeautifulSoup(player_html, 'html.parser')
-        country = (player_soup.find('div', {'class': 'country'}))
-        flag = country.find('img').get('src')
-
-        return  "https://www.pgatour.com" + flag
-    except Exception as e:
-        print ('Issue with PGA.com Flag lookup use espn?: ', golfer, e)
-        return None
+#         link = 'https://www.pgatour.com/players/player.' + unidecode.unidecode(name) + '.html'
+#         return link
+#     except Exception as e:
+#         print ('get pga player link exception', e)
+#         return None
 
 
-def get_pic_link(playerID):
-    return "https://pga-tour-res.cloudinary.com/image/upload/c_fill,d_headshots_default.png,f_auto,g_face:center,h_85,q_auto,r_max,w_85/headshots_" + playerID + ".png"
+
+# def get_flag(pga_num, golfer):
+
+#     try:
+#         #if golfer[1]=='.' and golfer[3] =='.':
+#         #    name = str(pga_num) + '.' + golfer[0].lower() + '-' + golfer[2].lower() + '--' + golfer.split(' ')[1].strip(', Jr.').lower()
+#         #else:
+#         #    name = str(pga_num) + '.' + golfer.split(' ')[0].lower() + '-' + golfer.split(' ')[1].strip(', Jr.').lower()
+
+#         #link = 'https://www.pgatour.com/players/player.' + unidecode.unidecode(name) + '.html'
+#         link = get_pga_player_link(pga_num, golfer)
+#         player_html = urllib.request.urlopen(link)
+#         player_soup = BeautifulSoup(player_html, 'html.parser')
+#         country = (player_soup.find('div', {'class': 'country'}))
+#         flag = country.find('img').get('src')
+
+#         return  "https://www.pgatour.com" + flag
+#     except Exception as e:
+#         print ('Issue with PGA.com Flag lookup use espn?: ', golfer, e)
+#         return None
+
+# def get_fedex_stats(pga_num, golfer):
+#     try:
+#         link = get_pga_player_link(pga_num, golfer)
+#         player_html = urllib.request.urlopen(link)
+#         player_soup = BeautifulSoup(player_html, 'html.parser')
+#         fedex_rank = player_soup.find('div', {'class': 'career-notes'}).find_all('div',{'class': 'value'})[0].text.lstrip().rstrip()
+#         fedex_points = player_soup.find('div', {'class': 'career-notes'}).find_all('div',{'class': 'value'})[1].text.lstrip().rstrip()
+
+#         return  {'rank': fedex_rank, 'points': fedex_points}
+#     except Exception as e:
+#         print ('Issue with get_fedex_stats: ', golfer, e)
+#         return {'rank': None, 'points': None}
+
+
+# def get_pic_link(playerID):
+#     return "https://pga-tour-res.cloudinary.com/image/upload/c_fill,d_headshots_default.png,f_auto,g_face:center,h_85,q_auto,r_max,w_85/headshots_" + playerID + ".png"
 
 
 # def calc_handi(owgr, field_cnt):

@@ -27,8 +27,9 @@ $(document).ready(function () {
                     '<div id=stats-dtl-toggle>' +
                         '<h5>Hide Stats <i class="fa fa-minus-circle show" style="color:lightblue"></i></h5>' +
                     '</div>' +
-            
+                    
                     '<div id=pick-status></div>' + 
+                    //'can i put something here?' +
                     '<input id=sub_button type="submit" class="btn btn-secondary" value="Submit Picks" disabled>' 
                     )
                     //trying to fix position small screen
@@ -97,13 +98,15 @@ function build_field(g, info) {
                                                           '<table id=stats' + field.golfer.espn_number +' class=table table-bordered table-sm>' +
                                                               '<tr style=background-color:lightblue;>' +
                                                                  '<th colspan=2>Current OWGR</th>' +
-                                                                 '<th colspan=2>Last Week OWGR</th>' +
-                                                                 '<th colspan=3>Last Season OWGR</th>' +
+                                                                 '<th colspan=1>Last Week OWGR</th>' +
+                                                                 '<th colspan=2>Last Season OWGR</th>' +
+                                                                 '<th colspan=2>FedEx Cup</th>' +
                                                               '</tr>' +
                                                               '<tr>' +
                                                                  '<td colspan=2>' + field.currentWGR + '</td>' + 
-                                                                 '<td colspan=2>' + field.sow_WGR + '</td>' +
-                                                                 '<td colspan=3>' + field.soy_WGR + '</td>' +
+                                                                 '<td colspan=1>' + field.sow_WGR + '</td>' +
+                                                                 '<td colspan=2>' + field.soy_WGR + '</td>' +
+                                                                 '<td colspan=2>rank: ' + field.season_stats.fed_ex_rank + '; points:' + field.season_stats.fed_ex_points + '</td>' +
                                                                '</tr>' +
                                                               '<tr style=background-color:lightblue;>' +
                                                                  '<th colspan=2>Handicap</th>' +

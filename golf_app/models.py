@@ -10,6 +10,10 @@ from django.db import transaction
 from unidecode import unidecode
 import json
 import random
+import urllib
+import unidecode 
+from collections import OrderedDict
+from bs4 import BeautifulSoup
 
 
 
@@ -568,6 +572,57 @@ class Golfer(models.Model):
         #print (data)
 
         return self.results
+
+    def get_pga_player_link(self):
+        try:
+            if self.golfer_name[1]=='.' and self.golfer_name[3] =='.':
+                name = str(self.golfer_pga_num) + '.' + self.golfer_name[0].lower() + '-' + self.golfer_name[2].lower() + '--' + self.golfer_name.split(' ')[1].replace(', Jr.', '').lower()
+            else:
+                name = str(self.golfer_pga_num) + '.' + self.golfer_name.split(' ')[0].lower() + '-' + self.golfer_name.split(' ')[1].replace(', Jr.', '').lower()
+            print ('name', name)
+            link = 'https://www.pgatour.com/players/player.' + unidecode.unidecode(name) + '.html'
+            return link
+        except Exception as e:
+            print ('get pga player link exception', e)
+            return None
+
+    def get_flag(self):
+
+        try:
+            #if golfer[1]=='.' and golfer[3] =='.':
+            #    name = str(pga_num) + '.' + golfer[0].lower() + '-' + golfer[2].lower() + '--' + golfer.split(' ')[1].strip(', Jr.').lower()
+            #else:
+            #    name = str(pga_num) + '.' + golfer.split(' ')[0].lower() + '-' + golfer.split(' ')[1].strip(', Jr.').lower()
+
+            #link = 'https://www.pgatour.com/players/player.' + unidecode.unidecode(name) + '.html'
+            #link = get_pga_player_link(pga_num, golfer)
+            player_html = urllib.request.urlopen(self.get_pga_player_link())
+            player_soup = BeautifulSoup(player_html, 'html.parser')
+            country = (player_soup.find('div', {'class': 'country'}))
+            flag = country.find('img').get('src')
+
+            return  "https://www.pgatour.com" + flag
+        except Exception as e:
+            print ('Issue with PGA.com Flag lookup use espn?: ', self.golfer_name, e)
+            return None
+
+    def get_fedex_stats(self):
+        #not reliable as pga site frequently fails to load player
+        try:
+            #link = get_pga_player_link(pga_num, golfer)
+            print (self.get_pga_player_link())
+            player_html = urllib.request.urlopen(self.get_pga_player_link())
+            player_soup = BeautifulSoup(player_html, 'html.parser')
+            fedex_rank = player_soup.find('div', {'class': 'career-notes'}).find_all('div',{'class': 'value'})[0].text.lstrip().rstrip()
+            fedex_points = player_soup.find('div', {'class': 'career-notes'}).find_all('div',{'class': 'value'})[1].text.lstrip().rstrip()
+
+            return  {'rank': fedex_rank, 'points': fedex_points}
+        except Exception as e:
+             print ('Issue with get_fedex_stats: ', self.golfer_name, e)
+             return {'rank': None, 'points': None}
+
+    def get_pic_link(self):
+        return "https://pga-tour-res.cloudinary.com/image/upload/c_fill,d_headshots_default.png,f_auto,g_face:center,h_85,q_auto,r_max,w_85/headshots_" + self.golfer_pga_num + ".png"
 
 
 class Field(models.Model):
