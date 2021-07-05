@@ -21,7 +21,7 @@ $(document).ready(function () {
                     $.getScript('/static/golf_app/js/field.js')
 
                     $('#field_sect form').append('<div id=bottom_sect class=field_stats_display></div>')
-    
+
                     $('#bottom_sect').append(
                     '<div id=bottom class=field_stats_display>' +
                     '<div id=stats-dtl-toggle>' +
@@ -29,7 +29,8 @@ $(document).ready(function () {
                     '</div>' +
                     
                     '<div id=pick-status></div>' + 
-                    //'can i put something here?' +
+                    '<div id=grp_6_buttons class=grp_6_buttons><button id=clear_6_button class="btn btn-primary">Clear G-6 picks</button>' + ' ' +
+                    '<button id=show_6_button class="btn btn-primary">My Picks G-6</button> </div>' +
                     '<input id=sub_button type="submit" class="btn btn-secondary" value="Submit Picks" disabled>' 
                     )
                     //trying to fix position small screen
@@ -38,6 +39,31 @@ $(document).ready(function () {
                         console.log("form submitted!")  
                         create_post();
                     });
+
+                    $('#clear_6_button').on('click', function(eve) {
+                        eve.preventDefault();
+                        console.log('clear group 6')
+                        //$('input[name=group-6' + ']:checked')
+                        //console.log($('input[name=group-6'))
+                        $('input[name=group-6').prop('checked', false)
+                        console.log('chk completete ', info)
+                        $('#pick-status').empty()
+                        check_complete(info)
+                    })
+
+                    $('#show_6_button').on('click', function(eve) {
+                        eve.preventDefault();
+                        if ($('#show_6_button').html() == 'All Group 6') {
+                            $('input[name=group-6' + ']').parent().prop('hidden', false)    
+                            $('#show_6_button').html('My Picks G-6')
+                        }
+                        else {
+                        $('input[name=group-6' + ']').parent().prop('hidden', true)
+                        $('input[name=group-6' + ']:checked').parent().prop('hidden', false)
+                        $('#show_6_button').html('All Group 6')
+                        }
+                    })
+
 
                     checkStarted()
                     $('input').prop('disabled', false)
@@ -81,7 +107,7 @@ function build_field(g, info) {
                 else 
                     {input_type = 'checkbox'   
                      input_class = 'my-checkbox'}
-                $('#tbl-group-' + field.group.number.toString()).append('<tr id=player' + field.golfer.espn_number + ' class=top_row>' +
+                $('#tbl-group-' + field.group.number.toString()).append('<div><tr id=player' + field.golfer.espn_number + ' class=top_row>' +
                                                             '<td id=playerInfo' + field.golfer.espn_number + '>' +
                                                                 '<input type="hidden" name="csrfmiddlewaretoken" value=' + $.cookie('csrftoken') +  '>' +
                                                                // '<input id=' + field.id +  ' type="radio" class="my-radio" name=group-' + field.group.number + ' value=' + field.id +  '>' +
@@ -131,7 +157,8 @@ function build_field(g, info) {
                                                               '</tr>' + 
                                                           '</table>' +
                                                         '</td>' +
-                                                        '</tr>'
+                                                        '</tr>' + 
+                                                        '</div>'
                                           
                                                            )
 

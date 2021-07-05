@@ -37,15 +37,50 @@ import scipy.stats as ss
 import csv
 import random
 
-# groups = ['A', 'B', 'D']
-# shuffle = random.sample(groups, len(groups))
-# print (shuffle)
-# exit()
 
-#print (populateField.get_fedex_data())
-#exit()
-for f in Field.objects.filter(tournament__current=True):
-    print (f, f.season_stats)
+
+start = datetime.now()
+
+for sd in ScoreDict.objects.filter(tournament__season__current=True):
+    if not sd.data.get('info'):
+        print ('no info ', sd.tournament)
+    elif sd.data.get('info').get('source') != 'espn':
+        print ('not espn ', sd.tournament)
+    #else:
+    #    print ('final ', sd.tournament)
+
+exit()
+
+sd = ScoreDict.objects.get(tournament__current=True)
+print (sd.sorted_dict())
+exit()
+for f in Field.objects.filter(playerName__in=["Scott Brown", "Mark Hubbard", "Rickie Fowler"], tournament__current=True):
+    print (f.playerName, f.playing(sd.data))
+print (datetime.now() - start)
+
+
+
+exit()
+t_diff = 0
+
+for t in Tournament.objects.filter(season__current=True):
+    ts = TotalScore.objects.filter(tournament=t).order_by('score')
+    if ts[1].score != ts[0].score:
+        diff = ts[1].score - ts[0].score 
+    else:
+        diff = ts[2].score - ts[0].score 
+    
+    t_diff += diff
+    if t.major:
+        t_diff -= 100
+
+print (t_diff, Tournament.objects.filter(season__current=True).count())
+print (t_diff/Tournament.objects.filter(season__current=True).count())
+exit()
+
+
+for a in AccessLog.objects.filter(page='picks'):
+    print (a, a.device_type)
 
 exit()
 

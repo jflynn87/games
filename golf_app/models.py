@@ -18,6 +18,7 @@ from bs4 import BeautifulSoup
 
 
 
+
 # Create your models here.
 
 class Season(models.Model):
@@ -288,7 +289,7 @@ class Tournament(models.Model):
             return len([x for x in score_dict.values() if x['rank'] not in self.not_playing_list()]) + 1
 
         #round = self.get_cut_round()
-        round = self.saved_cut_round
+        r = self.saved_cut_round
         
         #round = self.get_round()
         #after cut WD's
@@ -296,7 +297,7 @@ class Tournament(models.Model):
         #if self.tournament.current:  wd = len([x for x in self.score_dict.values() if x['rank'] == 'WD' and x['r'+str(round+1)] != '--']) 
         
         #just for wd after cut
-        wd = len([x for x in score_dict.values() if x['rank'] == 'WD' and x['r'+str(round+1)] != '--']) 
+        wd = len([x for x in score_dict.values() if x['rank'] == 'WD' and x['r'+str(r+1)] != '--']) 
         print ('wd: ', wd)        
 
         
@@ -324,35 +325,35 @@ class Tournament(models.Model):
             #else:
             #    return len([x for x in score_dict.values() if x['rank'] not in self.not_playing_list()]) + wd + 1
 
-    def get_round(self, sd=None):
-        #don't need, use the espn score dict from scrape
-        if self.complete:
-            return 4
+    # def get_round(self, sd=None):
+    #     #don't need, use the espn score dict from scrape
+    #     if self.complete:
+    #         return 4
 
-        if sd == None:
-           sd = ScoreDict.objects.get(tournament=self)
-           score_dict = sd.sorted_dict()
-        else:
-        #     #score_dict = {k:v for k, v in sorted(sd.items(), key=lambda item: item[1].get('sort_rank'))}
-           score_dict = sd
+    #     if sd == None:
+    #        sd = ScoreDict.objects.get(tournament=self)
+    #        score_dict = sd.sorted_dict()
+    #     else:
+    #     #     #score_dict = {k:v for k, v in sorted(sd.items(), key=lambda item: item[1].get('sort_rank'))}
+    #        score_dict = sd
         
-        return score_dict.get('info').get('round')
-        #don't need the rest, use the dict from scrape espn.  
+    #     return score_dict.get('info').get('round')
+    #     #don't need the rest, use the dict from scrape espn.  
 
-        print (score_dict.get('round'))
-        if len([x for x in score_dict.values() if x['r1'] in ['--', '-']]) == len(score_dict):
-            return 0
+    #     print (score_dict.get('round'))
+    #     if len([x for x in score_dict.values() if x['r1'] in ['--', '-']]) == len(score_dict):
+    #         return 0
 
-        if len([x for x in score_dict.values() if x['r1'] in ['--', '-'] and x['rank'] not in self.not_playing_list()]) > 0:
-            return 1
-        elif len([x for x in score_dict.values() if x['r2'] == '--' and x['rank'] not in self.not_playing_list()]) > 0:
-            return 2
-        elif len([x for x in score_dict.values() if x['r3'] == '--' and x['rank'] not in self.not_playing_list()]) > 0:
-            return 3
-        elif len([x for x in score_dict.values() if x['r4'] == '--' and x['rank'] not in self.not_playing_list()]) > 0:
-            return 4
-        else:
-            return 4
+    #     if len([x for x in score_dict.values() if x['r1'] in ['--', '-'] and x['rank'] not in self.not_playing_list()]) > 0:
+    #         return 1
+    #     elif len([x for x in score_dict.values() if x['r2'] == '--' and x['rank'] not in self.not_playing_list()]) > 0:
+    #         return 2
+    #     elif len([x for x in score_dict.values() if x['r3'] == '--' and x['rank'] not in self.not_playing_list()]) > 0:
+    #         return 3
+    #     elif len([x for x in score_dict.values() if x['r4'] == '--' and x['rank'] not in self.not_playing_list()]) > 0:
+    #         return 4
+    #     else:
+    #         return 4
 
 
     def optimal_picks(self):
@@ -376,7 +377,8 @@ class Tournament(models.Model):
 
 
     def not_playing_list(self):
-        return ['CUT', 'WD', 'DQ']
+        #ordered to appear correctly in leaderboard
+        return ['WD', 'DQ', 'CUT']
 
     def tournament_complete(self, sd=None):
         if sd == None:
@@ -579,7 +581,7 @@ class Golfer(models.Model):
                 name = str(self.golfer_pga_num) + '.' + self.golfer_name[0].lower() + '-' + self.golfer_name[2].lower() + '--' + self.golfer_name.split(' ')[1].replace(', Jr.', '').lower()
             else:
                 name = str(self.golfer_pga_num) + '.' + self.golfer_name.split(' ')[0].lower() + '-' + self.golfer_name.split(' ')[1].replace(', Jr.', '').lower()
-            print ('name', name)
+            #print ('name', name)
             link = 'https://www.pgatour.com/players/player.' + unidecode.unidecode(name) + '.html'
             return link
         except Exception as e:
@@ -775,6 +777,43 @@ class Field(models.Model):
 
     def p1_owgr(self):
         return self.currentWGR - self.partner_owgr
+
+    def started(self, score_dict=None):
+        from golf_app import scrape_espn
+
+        if not score_dict:
+           sd = scrape_espn.ScrapeESPN().get_data()
+        else:
+           sd = score_dict
+        
+
+        if sd.get('info').get('round') > 1:
+            return True
+        
+        if sd.get('info').get('round') == 1 and self.playing(sd):
+            return True
+        else:
+            return False
+        
+    def playing(self, score_dict=None):
+        from golf_app import scrape_espn
+
+        if not score_dict:
+           sd = scrape_espn.ScrapeESPN().get_data()
+        else:
+           sd = score_dict
+
+        data = str({v.get('thru') for k,v in sd.items() if v.get('pga_num') == self.golfer.espn_number})
+        
+        x = ['AM', 'PM']
+        for status in self.tournament.not_playing_list():
+            x.append(status)
+        #print (x) 
+        if any(c in data for c in x):
+            return False
+        return True
+
+
 
 
 class PGAWebScores(models.Model):

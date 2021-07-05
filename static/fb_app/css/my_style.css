@@ -161,6 +161,26 @@ form #sub_button {
   bottom: 0;
   right: 0
 }
+/* 
+#clear_6_button {
+  position: fixed;
+  bottom: 0;
+  right: 0;
+}
+#show_6_button {
+  position: fixed;
+  bottom: 0;
+  right: 30;  
+}
+ */
+
+.grp_6_buttons {
+  position: fixed;
+  bottom: 0;
+  left: 0%;
+
+}
+
 
 }
 
@@ -180,4 +200,25 @@ form #bottom_sect {
   bottom: 0;
   right: 0;
 }
+/* 
+#clear_6_button {
+  position: fixed;
+  bottom: 0;
+  left: 3%;
+}
+
+#show_6_button {
+  position: fixed;
+  bottom: 0;
+  left: 15%;
+}
+ */
+
+.grp_6_buttons {
+  position: fixed;
+  bottom: 0;
+  left: 15%;
+
+}
+
 }

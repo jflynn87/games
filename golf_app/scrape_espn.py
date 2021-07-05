@@ -35,11 +35,13 @@ class ScrapeESPN(object):
         elif self.tournament.complete:
             print ('T Complete returning saved score dict ', 'sd saved time: ', sd.updated, 'current time: ', datetime.utcnow().replace(tzinfo=pytz.utc))
             sd.data.get('info').update({'dict_status': 'from_db'})
-            return OrderedDict(sd.data)
+            #return OrderedDict(sd.data)
+            return sd.sorted_dict()
         elif not created and (sd.updated + timedelta(minutes = 1)) > datetime.utcnow().replace(tzinfo=pytz.utc):
             print ('returning saved score dict ', 'sd saved time: ', sd.updated, 'current time: ', datetime.utcnow().replace(tzinfo=pytz.utc))
             sd.data.get('info').update({'dict_status': 'from_db'})
-            return OrderedDict(sd.data)
+            #return OrderedDict(sd.data)
+            return sd.sorted_dict()
         
  
         try:
@@ -57,6 +59,7 @@ class ScrapeESPN(object):
             if t_name != self.tournament.name and not self.tournament.ignore_name_mismatch and not self.ignore_name_mismatch:
                 match = utils.check_t_names(t_name, self.tournament)
                 if not match:
+                    print ('tournament mismatch: espn name: ', t_name, 'DB name: ', self.tournament.name)
                     return {}
 
 
