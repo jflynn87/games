@@ -41,6 +41,17 @@ import random
 
 start = datetime.now()
 
+u_list = []
+season = Season.objects.get(current=True)
+
+for u in season.get_users():
+    user = User.objects.get(pk=u.get('user'))
+    u_list.append(user.email)
+
+print (u_list)
+print (os.environ.get("DEBUG"))
+
+exit()
 for sd in ScoreDict.objects.filter(tournament__season__current=True):
     if not sd.data.get('info'):
         print ('no info ', sd.tournament)

@@ -66,6 +66,14 @@ mail_content = mail_t + "\r" + mail_field + "\r" +mail_picks + "\r"+ mail_url + 
 for p, c in pick_status_dict.items():
     mail_content = mail_content + "\r" + p + ' pick count:  ' + c
 
-mail_recipients = ['jflynn87@hotmail.com']
+if os.environ.get("DEBUG") != "True":
+    mail_recipients = ['jflynn87@hotmail.com']
+else:
+    mail_recipients = []
+    s = Season.objects.get(current=True)
+    users = season.get_users()
+    for u in users:
+        u_obj = User.objects.get(pk=u.get('user'))
+        mail_recipients.append(u_obj.email)
 send_mail(mail_sub, mail_content, 'jflynn87g@gmail.com', mail_recipients)  #add fail silently
 
