@@ -10,7 +10,7 @@ SECRET_KEY = os.environ['SECRET_KEY']
 
 import django
 django.setup()
-from golf_app.models import Tournament, TotalScore, ScoreDetails, Field, Picks, PickMethod, BonusDetails
+from golf_app.models import Tournament, TotalScore, ScoreDetails, Field, Picks, PickMethod, BonusDetails, Season
 from django.contrib.auth.models import User
 from datetime import datetime, timedelta, timezone
 
@@ -66,7 +66,7 @@ mail_content = mail_t + "\r" + mail_field + "\r" +mail_picks + "\r"+ mail_url + 
 for p, c in pick_status_dict.items():
     mail_content = mail_content + "\r" + p + ' pick count:  ' + c
 
-if os.environ.get("DEBUG") != "True":
+if os.environ.get("DEBUG"):
     mail_recipients = ['jflynn87@hotmail.com']
 else:
     mail_recipients = []
