@@ -40,17 +40,18 @@ import random
 
 
 start = datetime.now()
+started = 0
+not_strart = 0
+sd = scrape_espn.ScrapeESPN().get_data()
+for f in Field.objects.filter(tournament__current=True):
+    if f.started(sd):
+        print (f)
+        started += 1
+    else:
+        not_strart += 1
 
-u_list = []
-season = Season.objects.get(current=True)
-
-for u in season.get_users():
-    user = User.objects.get(pk=u.get('user'))
-    u_list.append(user.email)
-
-print (u_list)
-print (os.environ.get("DEBUG"))
-
+print ('started: ', started)
+print ('not started: ', not_strart)
 exit()
 for sd in ScoreDict.objects.filter(tournament__season__current=True):
     if not sd.data.get('info'):

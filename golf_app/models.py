@@ -803,8 +803,11 @@ class Field(models.Model):
         else:
            sd = score_dict
 
+        if sd.get('info').get('round') == 1 and sd.get('info').get('round_status') == 'Not Started':
+            return False
+
         data = str({v.get('thru') for k,v in sd.items() if v.get('pga_num') == self.golfer.espn_number})
-        
+                
         x = ['AM', 'PM']
         for status in self.tournament.not_playing_list():
             x.append(status)

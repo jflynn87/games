@@ -42,7 +42,8 @@ def formatRank(rank, tournament=None):
     if type(rank) is int:
         return rank
     elif rank in  ['', '--', '-', None]:
-        return 999 - (len(t.not_playing_list()) +1)
+        return t.saved_cut_num
+        #return 999 - (len(t.not_playing_list()) +1)
     elif rank in t.not_playing_list():
         return 999 - t.not_playing_list().index(rank)
     elif rank[0] != 'T':

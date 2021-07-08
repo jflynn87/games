@@ -221,7 +221,8 @@ class ScrapeESPN(object):
                     
                     else:
                         print ('no cuts in leaderboadr, in else')
-                        cut_num = min(utils.formatRank(x.get('rank')) for k, x in score_dict.items() if k != 'info' and int(utils.formatRank(x.get('rank'))) > self.tournament.saved_cut_num) 
+                        cut_num = self.tournament.saved_cut_num
+                        #cut_num = min(utils.formatRank(x.get('rank')) for k, x in score_dict.items() if k != 'info' and int(utils.formatRank(x.get('rank'))) > self.tournament.saved_cut_num) 
                         print (cut_num)
                         if score_dict.get('cut_line') == None:
                             print ('in cut line none')

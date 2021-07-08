@@ -71,7 +71,7 @@ if os.environ.get("DEBUG"):
 else:
     mail_recipients = []
     s = Season.objects.get(current=True)
-    users = season.get_users()
+    users = s.get_users()
     for u in users:
         u_obj = User.objects.get(pk=u.get('user'))
         mail_recipients.append(u_obj.email)
