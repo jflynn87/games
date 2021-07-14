@@ -44,7 +44,7 @@ urlpatterns= [
     path('auction_picks/', views.AuctionPickCreateView.as_view(), name='auction_picks'),
     path('auction_scores/', views.AuctionScores.as_view(), name='auction_scores'),
     path('get_golfers/', views.GetGolfers.as_view(), name='get_golfers'),
-    
+    path('get_picks_summary/<int:pk>', views.PicksSummaryData.as_view(), name='get_picks_summary'),
     
 
     

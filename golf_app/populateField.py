@@ -315,7 +315,7 @@ def create_field(field, tournament):
         #fed_ex = f.golfer.get_fedex_stats()
         fed_ex = get_fedex_data()
 
-        print (fed_ex)
+       # print (fed_ex)#
         if fed_ex.get(f.playerName):
            f.season_stats.update({'fed_ex_points': fed_ex.get(f.playerName).get('points'),
                                   'fed_ex_rank': fed_ex.get(f.playerName).get('rank')})

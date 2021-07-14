@@ -119,7 +119,7 @@ function build_score_tbl(data) {
 
   $.each(total_data, function(p, total) {
     //$('#totals').append('<tr id=totals' + p + ' class=small> <span>' + '<td id=ts_' + p + ' class=total_score>'+  p  + ' (' + season_totals[p]['diff'] +')'  + '</p>' + '<p>' +  total['total_score'] + ' / ' + total['cuts']  + '</td>'  + '</tr>')
-    $('#totals').append('<tr id=totals' + p + ' class=small> <span>' + '<td id=ts_' + p + ' style=font-weight:bold;>'+  p  + ' (' + season_totals[p]['diff'] +')'  + '</p>' + '<p>' +  total['total_score'] + ' / ' + total['cuts']  + '</td>'  + '</tr>')
+    $('#totals').append('<tr id=totals' + p + ' class=small> <span>' + '<td id=ts_' + p + ' style=font-weight:bold;>'+  p  + ' (' + season_totals[p]['diff'] + ' / ' + season_totals[p]['points_behind_second'] +')'  + '</p>' + '<p>' +  total['total_score'] + ' / ' + total['cuts']  + '</td>'  + '</tr>')
     var bonus = ''
      if (total['msg']) {$('#totals' + p).append('<td id=msg_' + p + '><p> h/c: ' + total['handicap'] + '</p>' + total["msg"] + '</td>' +
                                                 '<td id=loading_' + p + '>Loading....</td>') }
@@ -299,7 +299,7 @@ function update_score_tbl(data) {
   $('#multi-col').attr('colspan', col_num_picks).attr('style', 'text-align:center;')
 
   $.each(total_data, function(p, total) {
-    $('#ts_' + p).html(p  + ' (' + season_totals[p]['diff'] +')'  + '</p>' + '<p>' +  total['total_score'] + ' / ' + total['cuts'])
+    $('#ts_' + p).html(p  + ' (' + season_totals[p]['diff'] + ' / ' + season_totals[p]['points_behind_second'] + ')'  + '</p>' + '<p>' +  total['total_score'] + ' / ' + total['cuts'])
     
     var bonus = ''
      if (total['msg']) {$('#msg_' + p).html('<p> h/c: ' + total['handicap'] + '</p> <td>' + total["msg"] + '</td>') }

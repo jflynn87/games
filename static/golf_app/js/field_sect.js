@@ -62,6 +62,7 @@ $(document).ready(function () {
                         $('input[name=group-6' + ']:checked').parent().prop('hidden', false)
                         $('#show_6_button').html('All Group 6')
                         }
+                        window.location.href = '#tbl-group-6'
                     })
 
 

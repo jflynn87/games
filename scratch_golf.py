@@ -40,18 +40,34 @@ import random
 
 
 start = datetime.now()
+
+season = Season.objects.get(current=True)
+t = Tournament.objects.get(current=True)
+print (season.get_total_points(t))
+exit()
+
+t = Tournament.objects.get(current=True)
+picks = Picks.objects.filter(playerName__tournament=t).values('playerName__playerName').annotate(count=Count('playerName')).order_by('-count')
+for p in picks:
+    print (p)
+print (Picks.objects.filter(playerName__tournament=t).aggregate(Count('playerName', distinct=True)))
+exit()
+
 started = 0
-not_strart = 0
+not_start = 0
 sd = scrape_espn.ScrapeESPN().get_data()
+#scores = ScoreDict.objects.get(tournament__current=True)
+#sd = scores.data
 for f in Field.objects.filter(tournament__current=True):
     if f.started(sd):
-        print (f)
+        #print (f)
         started += 1
     else:
-        not_strart += 1
+        print (f)
+        not_start += 1
 
 print ('started: ', started)
-print ('not started: ', not_strart)
+print ('not started: ', not_start)
 exit()
 for sd in ScoreDict.objects.filter(tournament__season__current=True):
     if not sd.data.get('info'):

@@ -43,28 +43,42 @@ class Season(models.Model):
                 u = User.objects.get(pk=user.get('user'))
                 score_dict[u.username] = TotalScore.objects.filter(tournament__season=self, user=u).aggregate(Sum('score'))
             min_score = min(score_dict.items(), key=lambda v: v[1].get('score__sum'))[1].get('score__sum')
+            second = sorted(score_dict.items(), key=lambda v: v[1].get('score__sum'))[1][1].get('score__sum')
+
             for i, (user, data) in enumerate(sorted(score_dict.items(), key=lambda v: v[1].get('score__sum'))):
-                sorted_dict[user] = {'total': data.get('score__sum'), 'diff':  int(min_score) - int(data.get('score__sum')), 'rank': i+1}
+                sorted_dict[user] = {'total': data.get('score__sum'), 'diff':  int(min_score) - int(data.get('score__sum')), 'rank': i+1, 
+                                    'points_behind_second': int(second) - int(data.get('score__sum'))}
+                                    
+            #second = [v.get('total') for k,v in scores.items() if v.get('rank') in [2, 3]]
+        #if len(second) > 0:
+        #    for player, info in scores.items():
+        #        data[player] = {'behind_second': second[0] - info.get('total')}
+            
+        #    'points_behind_second': behind_second.get(user).get('behind_second')}
             return json.dumps(sorted_dict)
         else:
-            #first_t = Tournament.objects.filter(season=self).first()
-            #print (first_t)
-            #if tournament != first_t:
             for user in self.get_users():
                 u = User.objects.get(pk=user.get('user'))
                 score_dict[u.username] = TotalScore.objects.filter(tournament__season=self, user=u, tournament__pk__lte=tournament.pk).aggregate(Sum('score'))
             min_score = min(score_dict.items(), key=lambda v: v[1].get('score__sum'))[1].get('score__sum')
+            second = sorted(score_dict.items(), key=lambda v: v[1].get('score__sum'))[1][1].get('score__sum')
             for i, (user, data) in enumerate(sorted(score_dict.items(), key=lambda v: v[1].get('score__sum'))):
-                sorted_dict[user] = {'total': data.get('score__sum'), 'diff':  int(min_score) - int(data.get('score__sum')), 'rank': i+1}
+                sorted_dict[user] = {'total': data.get('score__sum'), 'diff':  int(min_score) - int(data.get('score__sum')), 'rank': i+1,
+                                                    'points_behind_second': int(second) - int(data.get('score__sum'))}
             return json.dumps(sorted_dict)
-            #else:
-            #    for user in self.get_users():
-            #        u = User.objects.get(pk=user.get('user'))
-            #        score_dict[u.username] = {'total': 0, 'diff': 0, 'rank': 1}
 
-            #    return json.dumps(score_dict)
-
-
+    # def points_behind_second(self):
+    #     data = {}
+    #     scores = json.loads(self.get_total_points())
+        
+    #     second = [v.get('total') for k,v in scores.items() if v.get('rank') in [2, 3]]
+    #     if len(second) > 0:
+    #         for player, info in scores.items():
+    #             data[player] = {'behind_second': second[0] - info.get('total')}
+    #     else:
+    #         for player, info in scores.items():
+    #             data[player] = {'behind_second': 0}
+    #     return data
 
 class Tournament(models.Model):
     season = models.ForeignKey(Season, on_delete=models.CASCADE)
@@ -612,7 +626,7 @@ class Golfer(models.Model):
         #not reliable as pga site frequently fails to load player
         try:
             #link = get_pga_player_link(pga_num, golfer)
-            print (self.get_pga_player_link())
+            #print (self.get_pga_player_link())
             player_html = urllib.request.urlopen(self.get_pga_player_link())
             player_soup = BeautifulSoup(player_html, 'html.parser')
             fedex_rank = player_soup.find('div', {'class': 'career-notes'}).find_all('div',{'class': 'value'})[0].text.lstrip().rstrip()
@@ -806,8 +820,11 @@ class Field(models.Model):
         if sd.get('info').get('round') == 1 and sd.get('info').get('round_status') == 'Not Started':
             return False
 
-        data = str({v.get('thru') for k,v in sd.items() if v.get('pga_num') == self.golfer.espn_number})
-                
+        data = {v.get('thru') for k,v in sd.items() if v.get('pga_num') == self.golfer.espn_number}
+
+        if len(data) == 0:
+            return False
+
         x = ['AM', 'PM']
         for status in self.tournament.not_playing_list():
             x.append(status)

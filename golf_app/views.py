@@ -1456,3 +1456,21 @@ class GetGolfers(APIView):
             print ('get golfers data exception: ', e)
             return JsonResponse({'msg': e})
 
+
+class PicksSummaryData(APIView):
+    def get(self, request, pk):
+        data = {'total_picks': {},
+                'by_player': {}}
+        try:
+            #t= Tournament.objects.get(pk=request.data.get('tournament_key'))
+            t= Tournament.objects.get(pk=pk)
+            picks = Picks.objects.filter(playerName__tournament=t).values('playerName__playerName').annotate(count=Count('playerName')).order_by('-count')
+            for p in picks:
+                data.get('by_player').update({p.get('playerName__playerName'): p.get('count')})
+            data.get('total_picks').update(Picks.objects.filter(playerName__tournament=t).aggregate(Count('playerName', distinct=True)))
+            print ('picks API DATA: ', data)
+            return JsonResponse(data)
+        except Exception as e:
+            print ('get pick summary exception: ', e)
+            return JsonResponse({'msg': e})
+            

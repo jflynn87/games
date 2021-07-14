@@ -6,24 +6,19 @@ function update_lb() {
     .then((responseJSON) => {
           data = JSON.parse(responseJSON)
           console.log(data, data.length)
-          var golf_table = '<table class=mytable><thead><tr><th>Rank</th><th>Player</th><th>Behind</th><tr></thead>'
+          var golf_table = '<table class=mytable><thead><tr><th>Rank</th><th>Player</th><th>Behind 1st / 2nd</th><tr></thead>'
           var i = 0
-          //for (i; i < d.length; i++) {
             for (var d of data) {
                 if (d[0] == document.getElementById('username').innerText) {
-                    golf_table = golf_table += ('<tr class=highlight> <td>' + d[1]['rank'] + '</td> <td> ' + d[0] + '</td> <td>' + d[1]['diff'] + '</td>') + '</tr>'
+                    golf_table = golf_table += ('<tr class=highlight> <td>' + d[1]['rank'] + '</td> <td> ' + d[0] + '</td> <td>' + d[1]['diff'] + ' / ' + d[1]['points_behind_second'] + '</td>') + '</tr>'
                 }
                 else {
-                    golf_table = golf_table += ('<tr> <td>' + d[1]['rank'] + '</td> <td> ' + d[0] + '</td> <td>' + d[1]['diff'] + '</td>') + '</tr>'
+                    golf_table = golf_table += ('<tr> <td>' + d[1]['rank'] + '</td> <td> ' + d[0] + '</td> <td>' + d[1]['diff'] + ' / ' + d[1]['points_behind_second'] + '</td>') + '</tr>'
                 }
-              
-               
-            
             }
               golf_table + '</table>'
-              //ele.appendChild(text)
+
               document.getElementById('golf_lb_body').innerHTML = golf_table
           }
               )
-          
     }

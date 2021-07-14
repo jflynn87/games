@@ -15,7 +15,7 @@
 {%else%}
   <script type="text/javascript" src="{%static 'golf_app/js/load_by_player.js'%}"></script> 
 {%endif%}
-
+<script type="text/javascript" src="{%static 'golf_app/js/getPicksSummary.js'%}"></script> 
 <link rel="stylesheet" href={%static 'golf_app/css/scores.css' %}>
 <link href="https://fonts.googleapis.com/css?family=Anton&display=swap" rel="stylesheet">
 
@@ -45,6 +45,7 @@
 <p id='cut_line'></p>
 <p id='issues'></p>
 
+
 {%for status, score in cut_data.items%}
   {%if status == 'No cut this week'%}
     <p style="font-size:100%"> {{status}}</p>
@@ -53,7 +54,7 @@
   {%endif%}
 {%endfor%}
 <p></p>
-
+<div id='picks_info'></div>
 
 <table id='totals-table' class="table table-sm table-bordered">
   <!-- <thead class='thead-dark'> -->
