@@ -41,16 +41,22 @@ import random
 
 start = datetime.now()
 
-season = Season.objects.get(current=True)
-t = Tournament.objects.get(current=True)
-print (season.get_total_points(t))
-exit()
+#season = Season.objects.get(current=True)
+#t = Tournament.objects.get(current=True)
+#print (season.get_total_points(t))
+#exit()
 
-t = Tournament.objects.get(current=True)
-picks = Picks.objects.filter(playerName__tournament=t).values('playerName__playerName').annotate(count=Count('playerName')).order_by('-count')
-for p in picks:
-    print (p)
-print (Picks.objects.filter(playerName__tournament=t).aggregate(Count('playerName', distinct=True)))
+for t in Tournament.objects.filter(season__current=True):
+    #picks = Picks.objects.filter(playerName__tournament=t).values('playerName__playerName').annotate(count=Count('playerName')).order_by('-count')
+    #for p in picks:
+    #    print (p)
+    all_picks = Picks.objects.filter(playerName__tournament=t).aggregate(Count('playerName', distinct=True))
+    tot_picks = Picks.objects.filter(playerName__tournament=t).count()
+    g_5 = Picks.objects.filter(playerName__tournament=t, playerName__group__number=6).aggregate(Count('playerName', distinct=True))
+    tot_g5 = Picks.objects.filter(playerName__tournament=t, playerName__group__number=6).count()
+    print (t, all_picks, tot_picks, g_5, tot_g5)
+    #print (t, '  ', Picks.objects.filter(playerName__tournament=t).aggregate(Count('playerName', distinct=True)))
+    #print (t, '  ', Picks.objects.filter(playerName__tournament=t, playerName__group__number=6).aggregate(Count('playerName', distinct=True)))
 exit()
 
 started = 0
