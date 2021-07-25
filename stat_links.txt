@@ -1,0 +1,8 @@
+----+----------------+-----------------------------------------------+
+| id | name           | link                                          |
++----+----------------+-----------------------------------------------+
+|  1 | around_green   | https://www.pgatour.com/stats/stat.02569.html |
+|  2 | approach_green | https://www.pgatour.com/stats/stat.02568.html |
+|  3 | off_tee        | https://www.pgatour.com/stats/stat.02567.html |
+|  4 | putting        | https://www.pgatour.com/stats/stat.02564.html |
++----+----------------+-----------------------------------------------+

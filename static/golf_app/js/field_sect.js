@@ -29,10 +29,17 @@ $(document).ready(function () {
                     '</div>' +
                     
                     '<div id=pick-status></div>' + 
-                    '<div id=grp_6_buttons class=grp_6_buttons><button id=clear_6_button class="btn btn-primary">Clear G-6 picks</button>' + ' ' +
-                    '<button id=show_6_button class="btn btn-primary">My Picks G-6</button> </div>' +
+                    '<div id=grp_6_buttons class=grp_6_buttons>' + 
+                    '<p id=jump_to style="background-color:lightgray; color:white; font-weight:bold;"> Jump to: ' +
+                    '</p>' +
+                    
+                    '</div>' +
                     '<input id=sub_button type="submit" class="btn btn-secondary" value="Submit Picks" disabled>' 
                     )
+
+                    $.each(info, function(group, picks) {if (group != "total"){ $('#jump_to').append('<a href=#tbl-group-' + group + '>' + group + '</a>' + ' ')}}) 
+                    $('#grp_6_buttons').append('<button id=show_6_button class="btn btn-primary btn-group-sm">My G-6 Picks</button>')
+
                     //trying to fix position small screen
                     $('#pick_form').on('submit', function(event){
                         event.preventDefault();
@@ -40,27 +47,34 @@ $(document).ready(function () {
                         create_post();
                     });
 
-                    $('#clear_6_button').on('click', function(eve) {
+/*                     $('#clear_6_button').on('click', function(eve) {
                         eve.preventDefault();
                         console.log('clear group 6')
-                        //$('input[name=group-6' + ']:checked')
-                        //console.log($('input[name=group-6'))
-                        $('input[name=group-6').prop('checked', false)
+                        console.log('G1 top', $('#tbl-group-1')[0].offsetTop)
+                        console.log($(document).scrollTop() )
+
+                       // $('input[name=group-6').prop('checked', false)
                         console.log('chk completete ', info)
                         $('#pick-status').empty()
                         check_complete(info)
                     })
-
+ */
                     $('#show_6_button').on('click', function(eve) {
                         eve.preventDefault();
+                        selected = []
+                        $.each($('input[name=group-6' + ']:checked'), function(){selected.push($(this).parent().attr('id').replace('playerInfo', ''))})
+                        console.log(selected)
+                        
+                        table = $('#tbl-group-6')
+
                         if ($('#show_6_button').html() == 'All Group 6') {
-                            $('input[name=group-6' + ']').parent().prop('hidden', false)    
+                            $('input[name=group-6' + ']').parent().parent().parent().prop('hidden', false)    
                             $('#show_6_button').html('My Picks G-6')
                         }
                         else {
-                        $('input[name=group-6' + ']').parent().prop('hidden', true)
-                        $('input[name=group-6' + ']:checked').parent().prop('hidden', false)
-                        $('#show_6_button').html('All Group 6')
+                            $('input[name=group-6' + ']').parent().parent().parent().prop('hidden', true)
+                            $('input[name=group-6' + ']:checked').parent().parent().parent().prop('hidden', false)
+                            $('#show_6_button').html('All Group 6')
                         }
                         window.location.href = '#tbl-group-6'
                     })
@@ -108,8 +122,11 @@ function build_field(g, info) {
                 else 
                     {input_type = 'checkbox'   
                      input_class = 'my-checkbox'}
-                $('#tbl-group-' + field.group.number.toString()).append('<div><tr id=player' + field.golfer.espn_number + ' class=top_row>' +
-                                                            '<td id=playerInfo' + field.golfer.espn_number + '>' +
+                     $('#tbl-group-' + field.group.number.toString()).append('<table id=player-' + field.golfer.espn_number + '-div style="width:100%;"></table>')
+                     $('#player-' + field.golfer.espn_number + '-div').append('<tr id=player-' + field.golfer.espn_number + '-row class=top_row></tr>')    
+                //$('#tbl-group-' + field.group.number.toString()).append('<tr id=player' + field.golfer.espn_number + ' class=top_row>' + 
+                $('#player-' + field.golfer.espn_number + '-row').append(
+                                                                '<td id=playerInfo' + field.golfer.espn_number + '>' +
                                                                 '<input type="hidden" name="csrfmiddlewaretoken" value=' + $.cookie('csrftoken') +  '>' +
                                                                // '<input id=' + field.id +  ' type="radio" class="my-radio" name=group-' + field.group.number + ' value=' + field.id +  '>' +
                                                                '<input id=' + field.id +  ' type=' + input_type + ' class=' + input_class + ' name=group-' + field.group.number + ' value=' + field.id +  ' disabled>' +
@@ -118,35 +135,45 @@ function build_field(g, info) {
                                                                 '<a href="https://www.google.com/search?q=' + field.playerName + '" target="_blank" style="padding-left: 1em;">Google</a> / ' +
                                                                 '<a href=' + field.espn_link + ' target="_blank">ESPN</a> / ' +
                                                                 '<a href=' + field.pga_link + ' target="_blank">PGA</a>' +
-                                                            '</td>' + 
-                                                          '</tr>' + 
-                                                          '<tr class="small stats-row" >' +
+                                                            '</td>' ) 
+                                                          //'</tr>' ) 
+                $('#player-' + field.golfer.espn_number + '-div').append('<tr id=stats-row-' + field.golfer.espn_number + ' class="stats_row" >' +
                                                           '<td>' +
-                                                          '<table id=stats' + field.golfer.espn_number +' class=table table-bordered table-sm>' +
+                                                          '<table id=stats' + field.golfer.espn_number +' class="table stats-row">' +
                                                               '<tr style=background-color:lightblue;>' +
                                                                  '<th colspan=2>Current OWGR</th>' +
-                                                                 '<th colspan=1>Last Week OWGR</th>' +
+                                                                 '<th colspan=2>Last Week OWGR</th>' +
                                                                  '<th colspan=2>Last Season OWGR</th>' +
                                                                  '<th colspan=2>FedEx Cup</th>' +
                                                               '</tr>' +
                                                               '<tr>' +
                                                                  '<td colspan=2>' + field.currentWGR + '</td>' + 
-                                                                 '<td colspan=1>' + field.sow_WGR + '</td>' +
+                                                                 '<td colspan=2>' + field.sow_WGR + '</td>' +
                                                                  '<td colspan=2>' + field.soy_WGR + '</td>' +
                                                                  '<td colspan=2>rank: ' + field.season_stats.fed_ex_rank + '; points:' + field.season_stats.fed_ex_points + '</td>' +
                                                                '</tr>' +
-                                                              '<tr style=background-color:lightblue;>' +
+                                                              '<tr class=stats_row>' +
                                                                  '<th colspan=2>Handicap</th>' +
                                                                  '<th colspan=2>This event last year</th>' +
-                                                                 '<th colspan=3>Recent Form</th>' +
+                                                                 '<th colspan=4>Recent Form</th>' +
                                                               '</tr>' + 
                                                               '<tr>' +
                                                                  '<td colspan=2>' + field.handi + '</td>' +
                                                                  '<td colspan=2>' + field.prior_year + '</td>' +
                                                                  '<td colspan=3 id=recent' + field.golfer.espn_number + '> </td>' +
                                                               '</tr>' +
-                                                              '<tr style=background-color:lightblue;><th colspan=7>Season Stats</th></tr>' +
-                                                              '<tr><td>Played</td> <td>Won</td> <td>2-10</td> <td>11-29</td><td>30-49</td><td>> 50</td> <td>Cuts</td></tr>' +
+                                                              '<tr class=stats_row>' + 
+                                                                  '<th colspan=8>Season Stats</th>' +
+                                                              '</tr>' +
+                                                              '<tr>' + 
+                                                                    '<td>Played</td>' +
+                                                                    '<td>Won</td>' +  
+                                                                    '<td>2-10</td>' + 
+                                                                    '<td>11-29</td>' + 
+                                                                    '<td>30-49</td>' + 
+                                                                    '<td>> 50</td>' +
+                                                                    '<td>Cuts</td>' +
+                                                              '</tr>' +
                                                               '<tr>' +
                                                                     '<td>' + field.season_stats.played + '</td>' + 
                                                                     '<td>' + field.season_stats.won + '</td>' + 
@@ -155,14 +182,31 @@ function build_field(g, info) {
                                                                     '<td>' + field.season_stats.bet30_49 + '</td>' +
                                                                     '<td>' + field.season_stats.over50 + '</td>' +
                                                                     '<td>' + field.season_stats.cuts +  '</td>'  +
+                                                                    '<td></td>' + 
                                                               '</tr>' + 
+                                                            //   '<tr style=background-color:lightblue;><th colspan=8>Shots Gained Stats</th></tr>' +
+                                                            //   '<tr><td>Off Tee Rank</td> <td>Off Tee</td> <td>Approach Rank</td> <td>Approach</td><td>Around Green Rank</td><td>Around Green</td> <td>Putting Rank</td> <td>Putting</td></tr>' +
+                                                            //   '<tr>' +
+                                                                    
+                                                            //         '<td>' + (field.season_stats.off_tee.rank || 'n/a') + '</td>' + 
+                                                            //         '<td>' + field.season_stats.off_tee.average || 'n/a' + '</td>' + 
+                                                            //         '<td>' + field.season_stats.approach_green.rank + '</td>' + 
+                                                            //         '<td>' + field.season_stats.approach_green.average + '</td>' + 
+                                                            //         '<td>' + field.season_stats.around_green.rank + '</td>' + 
+                                                            //         '<td>' + field.season_stats.around_green.average + '</td>' + 
+                                                            //         '<td>' + field.season_stats.putting.rank + '</td>' + 
+                                                            //         '<td>' + field.season_stats.putting.average + '</td>') + 
+
+
+
+                                                        
+
+                                                            //   '</tr>' +
                                                           '</table>' +
                                                         '</td>' +
-                                                        '</tr>' + 
-                                                        '</div>'
-                                          
-                                                           )
-
+                                                        '</tr>' )
+                                                formatSG(field)
+                                                        
                                                 $('input#' + field.id).on('change', function(evt) {
                                                     $('#pick-status').empty()
                                                     get_info(info, this)
@@ -183,6 +227,29 @@ function build_field(g, info) {
                })    
                 })
                 }
+
+
+function formatSG(field) {
+    
+    $('#stats' + field.golfer.espn_number).append('<tr style=background-color:lightblue;><th colspan=8>Shots Gained Stats</th></tr>') 
+    try {
+        $('#stats' + field.golfer.espn_number).append('<tr><td>Off Tee Rank</td> <td>Off Tee</td> <td>Approach Rank</td> <td>Approach</td><td>Around Green Rank</td><td>Around Green</td> <td>Putting Rank</td> <td>Putting</td></tr>' +
+        '<tr>' +
+              
+              '<td>' + (field.season_stats.off_tee.rank || 'n/a') + '</td>' + 
+              '<td>' + field.season_stats.off_tee.average  + '</td>' + 
+              '<td>' + field.season_stats.approach_green.rank + '</td>' + 
+              '<td>' + field.season_stats.approach_green.average + '</td>' + 
+              '<td>' + field.season_stats.around_green.rank + '</td>' + 
+              '<td>' + field.season_stats.around_green.average + '</td>' + 
+              '<td>' + field.season_stats.putting.rank + '</td>' + 
+              '<td>' + field.season_stats.putting.average + '</td>' )
+                        }
+    catch (e)  {
+              $('#stats' + field.golfer.espn_number).append('<tr><td>No Stats Available</td>')
+                }
+
+    }
 
 
 

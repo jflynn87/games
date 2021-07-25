@@ -4,7 +4,7 @@ from django.contrib import admin
 
 from golf_app.models import Season, Tournament, Field, Picks, Group, TotalScore, \
                 ScoreDetails, Name, BonusDetails, mpScores, PickMethod, PGAWebScores, \
-                Golfer, ScoreDict, UserProfile, AccessLog, AuctionPick
+                Golfer, ScoreDict, UserProfile, AccessLog, AuctionPick, StatLinks
 
 class GroupAdmin(admin.ModelAdmin):
     list_display = ('tournament', 'number', 'playerCnt')
@@ -52,6 +52,8 @@ class UserProfileAdmin(admin.ModelAdmin):
 class AccessLogAdmin(admin.ModelAdmin):
     list_display = ['tournament', 'user', 'device_type', 'page', 'views']
 
+class StatLinksAdmin(admin.ModelAdmin):
+    list_display = ['name', 'link']
 
 
 admin.site.register(Tournament)
@@ -71,3 +73,5 @@ admin.site.register(ScoreDict, ScoreDictAdmin)
 admin.site.register(UserProfile, UserProfileAdmin)
 admin.site.register(AccessLog, AccessLogAdmin)
 admin.site.register(AuctionPick)
+admin.site.register(StatLinks, StatLinksAdmin)
+

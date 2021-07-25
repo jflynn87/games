@@ -185,7 +185,7 @@ function get_info(info, ele) {
 
 function check_complete(info) {
   //console.log(info)
-  $('#pick-status').append('<table id=status-tbl class=table small> </table>')
+  $('#pick-status').append('<table id=status-tbl class="table table-sm"> </table>')
   $('#status-tbl').append('<tr id=picks-row> <td> Groups: </td> </tr>')
   $.each(info,  function(group, picks) {
      $('#picks-row').append('<td id=status-group' + group + '> <a href=#tbl-group-' + group + '>' + group + '</a> </td>')
@@ -345,7 +345,9 @@ $(document).on("click", "#download_excel", function() {
 
     var createXLSXFieldObj = [];
     ws2_name = "Current Week Field";
-    field_header = ['PGA ID', 'Golfer',	'Group ID',	'currentWGR',	'sow_WGR',	'soy_WGR',	'prior year finish',	'handicap',	'Season Played',	'Season Won',	'Season 2-10',	'Season 11-29',	'Season 30 - 49',	'Season > 50',	'Season Cut', 'FedEx Rank', 'FedEx Points']
+    field_header = ['PGA ID', 'Golfer',	'Group ID',	'currentWGR',	'sow_WGR',	'soy_WGR',	'prior year finish',	'handicap',	
+     'Season Played',	'Season Won',	'Season 2-10',	'Season 11-29',	'Season 30 - 49',	'Season > 50',	'Season Cut', 'FedEx Rank',
+     'FedEx Points', 'SG Off Tee Rank', 'SG Off Tee']
     fieldRows = []
     $.each(field, function(i, golfer) {
       row = {}
@@ -367,6 +369,16 @@ $(document).on("click", "#download_excel", function() {
         row['cuts'] = golfer.fields.season_stats.cuts
         row['fedex_rank'] = golfer.fields.season_stats.fed_ex_rank
         row['fedex_points'] = golfer.fields.season_stats.fed_ex_points
+        try {
+          row['sg_off_tee_rank'] = golfer.fields.season_stats.off_tee.rank
+        }
+        catch (e) {row['sg_off_tee_rank'] = 'n/a'}
+        try {
+          row['sg_off_tee'] = golfer.fields.season_stats.off_tee.average
+        }
+        catch (e) {row['sg_off_tee'] = 'n/a'}
+
+
 
         //row['google'] = golfer['fields']['playerName'].replace(',', '') 
         //row['google'] = 

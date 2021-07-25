@@ -3,7 +3,7 @@ os.environ.setdefault("DJANGO_SETTINGS_MODULE","gamesProj.settings")
 
 import django
 django.setup()
-from golf_app.models import Tournament, TotalScore, ScoreDetails, Picks, PickMethod, BonusDetails, Season, Golfer, Group, Field, ScoreDict, AuctionPick, AccessLog
+from golf_app.models import Tournament, TotalScore, ScoreDetails, Picks, PickMethod, BonusDetails, Season, Golfer, Group, Field, ScoreDict, AuctionPick, AccessLog, StatLinks
 from django.contrib.auth.models import User
 from datetime import date, datetime, timedelta
 import sqlite3
@@ -40,6 +40,44 @@ import random
 
 
 start = datetime.now()
+
+f = Field.objects.get(playerName="Dustin Johnson", tournament__current=True)
+for k, v in f.season_stats.items():
+    print (k, v)
+
+# d = {}
+
+# for stat in StatLinks.objects.all():
+#     #url = 'https://www.pgatour.com/stats/stat.02569.html'
+
+    
+#     html = urllib.request.urlopen(stat.link)
+#     soup = BeautifulSoup(html, 'html.parser')
+            
+#     for row in soup.find('table', {'id': 'statsTable'}).find_all('tr')[1:]:
+#     #print (row)
+#     #print(row.find('td', {'class': 'player-name'}).text.strip())
+#         if d.get(row.find('td', {'class': 'player-name'}).text.strip()):
+#             d[row.find('td', {'class': 'player-name'}).text.strip()].update({stat.name: {
+#                                                                 'rank': row.find_all('td')[0].text.strip(),
+#                                                                 'rounds': row.find_all('td')[3].text,
+#                                                                 'average': row.find_all('td')[4].text,
+#                                                                 'total_sg': row.find_all('td')[5].text,
+#                                                                 'measured_rounds': row.find_all('td')[6].text}})
+#         else:
+#             d[row.find('td', {'class': 'player-name'}).text.strip()] = {'pga_num': row.get('id').strip('playerStatsRow')}
+#             d[row.find('td', {'class': 'player-name'}).text.strip()].update( 
+#                                                                 {stat.name: {'rank': row.find_all('td')[0].text.strip(),
+#                                                                 'rounds': row.find_all('td')[3].text,
+#                                                                 'average': row.find_all('td')[4].text,
+#                                                                 'total_sg': row.find_all('td')[5].text,
+#                                                                 'measured_rounds': row.find_all('td')[6].text}})
+
+
+# print (d['Kevin Na'], len(d))
+
+exit()
+
 
 #season = Season.objects.get(current=True)
 #t = Tournament.objects.get(current=True)

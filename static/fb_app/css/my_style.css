@@ -130,8 +130,20 @@ body {
   border-color: black;
   border-radius: 1px;  */
   background-color: lightgreen;
-
+  width: 100%;
   
+}
+
+.stats_row {
+  width: 100%;
+  column-span: 8;
+  background-color: lightblue;
+
+}
+
+.stat_table_category_header {
+  column-span: 8;
+  background-color: lightblue;
 }
 
 .group_header {

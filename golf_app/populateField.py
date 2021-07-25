@@ -1,5 +1,5 @@
 from golf_app.models import (Picks, Field, Group, Tournament, TotalScore,
-    ScoreDetails, Name, Season, User, BonusDetails, Golfer, ScoreDict)
+    ScoreDetails, Name, Season, User, BonusDetails, Golfer, ScoreDict, StatLinks)
 import urllib3
 from django.core.exceptions import ObjectDoesNotExist
 from golf_app import scrape_cbs_golf, scrape_espn, utils, scrape_scores_picks, populateMPField, populateZurichField
@@ -301,6 +301,8 @@ def create_field(field, tournament):
             player_cnt = 1
 
     #need to do this after full field is saved for the calcs to work.  No h/c in MP
+    fed_ex = get_fedex_data()
+    individual_stats = get_individual_stats()
 
     for f in Field.objects.filter(tournament=tournament):
         if tournament.pga_tournament_num not in ['470', '018']:
@@ -312,8 +314,6 @@ def create_field(field, tournament):
         recent = OrderedDict(sorted(f.recent_results().items(), reverse=True))
         f.recent = recent
         f.season_stats = f.golfer.summary_stats(tournament.season) 
-        #fed_ex = f.golfer.get_fedex_stats()
-        fed_ex = get_fedex_data()
 
        # print (fed_ex)#
         if fed_ex.get(f.playerName):
@@ -322,6 +322,13 @@ def create_field(field, tournament):
         else:
            f.season_stats.update({'fed_ex_points': 'n/a',
                                   'fed_ex_rank': 'n/a'})
+
+        if individual_stats.get(f.playerName):
+            player_s = individual_stats.get(f.playerName)
+            for k, v in player_s.items():
+                if k != 'pga_num':
+                    f.season_stats.update({k: v})
+        
         f.save()
 
     for g in Golfer.objects.all():
@@ -330,6 +337,41 @@ def create_field(field, tournament):
 
 
     print ('saved field objects')
+
+def get_individual_stats():
+    d = {}
+    try: 
+        for stat in StatLinks.objects.all():
+            html = urllib.request.urlopen(stat.link)
+            soup = BeautifulSoup(html, 'html.parser')
+                    
+            for row in soup.find('table', {'id': 'statsTable'}).find_all('tr')[1:]:
+                if d.get(row.find('td', {'class': 'player-name'}).text.strip()):
+                    d[row.find('td', {'class': 'player-name'}).text.strip()].update({stat.name: {
+                                                                        'rank': row.find_all('td')[0].text.strip(),
+                                                                        #'rounds': row.find_all('td')[3].text,
+                                                                        'average': row.find_all('td')[4].text,
+                                                                        'total_sg': row.find_all('td')[5].text,
+                                                                        #'measured_rounds': row.find_all('td')[6].text
+                                                                        }})
+                else:
+                    d[row.find('td', {'class': 'player-name'}).text.strip()] = {'pga_num': row.get('id').strip('playerStatsRow'),
+                                                                                'stats_rounds': row.find_all('td')[3].text,
+                                                                                'stats_measured_rounds': row.find_all('td')[6].text
+                                                                                }
+                    d[row.find('td', {'class': 'player-name'}).text.strip()].update( 
+                                                                        {stat.name: {'rank': row.find_all('td')[0].text.strip(),
+                                                                        #'rounds': row.find_all('td')[3].text,
+                                                                        'average': row.find_all('td')[4].text,
+                                                                        'total_sg': row.find_all('td')[5].text,
+                                                                        #'measured_rounds': row.find_all('td')[6].text
+                                                                        }})
+
+    except Exception as e:
+        print ('get_individual_stats exception ', e)
+
+    return d
+
 
 def get_fedex_data():
     data = {}
@@ -363,73 +405,9 @@ def get_golfer(player, pga_num, espn_data):
     if golfer.espn_number in [' ', None]:
         golfer.espn_number = get_espn_num(player, espn_data)
 
-    #golfer.pic_link = get_pic_link(pga_num)
-    #if golfer.flag_link in [' ', None]:
-    #    golfer.flag_link = get_flag(pga_num, player)
-    #if golfer.espn_number in [' ', None]:
-    #    golfer.espn_number = get_espn_num(player, espn_data)
-
     golfer.save() 
     
     return golfer
-
-# def get_pga_player_link(pga_num, golfer):
-#     try:
-#         if golfer[1]=='.' and golfer[3] =='.':
-#             name = str(pga_num) + '.' + golfer[0].lower() + '-' + golfer[2].lower() + '--' + golfer.split(' ')[1].strip(', Jr.').lower()
-#         else:
-#             name = str(pga_num) + '.' + golfer.split(' ')[0].lower() + '-' + golfer.split(' ')[1].strip(', Jr.').lower()
-
-#         link = 'https://www.pgatour.com/players/player.' + unidecode.unidecode(name) + '.html'
-#         return link
-#     except Exception as e:
-#         print ('get pga player link exception', e)
-#         return None
-
-
-
-# def get_flag(pga_num, golfer):
-
-#     try:
-#         #if golfer[1]=='.' and golfer[3] =='.':
-#         #    name = str(pga_num) + '.' + golfer[0].lower() + '-' + golfer[2].lower() + '--' + golfer.split(' ')[1].strip(', Jr.').lower()
-#         #else:
-#         #    name = str(pga_num) + '.' + golfer.split(' ')[0].lower() + '-' + golfer.split(' ')[1].strip(', Jr.').lower()
-
-#         #link = 'https://www.pgatour.com/players/player.' + unidecode.unidecode(name) + '.html'
-#         link = get_pga_player_link(pga_num, golfer)
-#         player_html = urllib.request.urlopen(link)
-#         player_soup = BeautifulSoup(player_html, 'html.parser')
-#         country = (player_soup.find('div', {'class': 'country'}))
-#         flag = country.find('img').get('src')
-
-#         return  "https://www.pgatour.com" + flag
-#     except Exception as e:
-#         print ('Issue with PGA.com Flag lookup use espn?: ', golfer, e)
-#         return None
-
-# def get_fedex_stats(pga_num, golfer):
-#     try:
-#         link = get_pga_player_link(pga_num, golfer)
-#         player_html = urllib.request.urlopen(link)
-#         player_soup = BeautifulSoup(player_html, 'html.parser')
-#         fedex_rank = player_soup.find('div', {'class': 'career-notes'}).find_all('div',{'class': 'value'})[0].text.lstrip().rstrip()
-#         fedex_points = player_soup.find('div', {'class': 'career-notes'}).find_all('div',{'class': 'value'})[1].text.lstrip().rstrip()
-
-#         return  {'rank': fedex_rank, 'points': fedex_points}
-#     except Exception as e:
-#         print ('Issue with get_fedex_stats: ', golfer, e)
-#         return {'rank': None, 'points': None}
-
-
-# def get_pic_link(playerID):
-#     return "https://pga-tour-res.cloudinary.com/image/upload/c_fill,d_headshots_default.png,f_auto,g_face:center,h_85,q_auto,r_max,w_85/headshots_" + playerID + ".png"
-
-
-# def calc_handi(owgr, field_cnt):
-#     if round(owgr*.01) < (field_cnt * .13):
-#         return int(round(owgr*.01))
-#     return round(field_cnt * .13)
 
 
 def get_espn_num(player, espn_data):
