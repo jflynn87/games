@@ -347,7 +347,8 @@ $(document).on("click", "#download_excel", function() {
     ws2_name = "Current Week Field";
     field_header = ['PGA ID', 'Golfer',	'Group ID',	'currentWGR',	'sow_WGR',	'soy_WGR',	'prior year finish',	'handicap',	
      'Season Played',	'Season Won',	'Season 2-10',	'Season 11-29',	'Season 30 - 49',	'Season > 50',	'Season Cut', 'FedEx Rank',
-     'FedEx Points', 'SG Off Tee Rank', 'SG Off Tee']
+     'FedEx Points', 'SG Off Tee Rank', 'SG Off Tee', 'SG Approach Rank', 'SG Approach', 'SG Around Green Rank', 
+     'SG Around Green', 'SG Putting Rank', 'SG Putting']
     fieldRows = []
     $.each(field, function(i, golfer) {
       row = {}
@@ -377,6 +378,32 @@ $(document).on("click", "#download_excel", function() {
           row['sg_off_tee'] = golfer.fields.season_stats.off_tee.average
         }
         catch (e) {row['sg_off_tee'] = 'n/a'}
+        try {
+          row['sg_approach_green_rank'] = golfer.fields.season_stats.approach_green.rank
+        }
+        catch (e) {row['sg_approach_green_rank'] = 'n/a'}
+        try {
+          row['sg_approach_green'] = golfer.fields.season_stats.approach_green.average
+        }
+        catch (e) {row['sg_approach_green'] = 'n/a'}
+        try {
+          row['sg_around_green_rank'] = golfer.fields.season_stats.around_green.rank
+        }
+        catch (e) {row['sg_around_green_rank'] = 'n/a'}
+        try {
+          row['sg_around_green'] = golfer.fields.season_stats.around_green.average
+        }
+        catch (e) {row['sg_around_green'] = 'n/a'}
+        try {
+          row['sg_putting_rank'] = golfer.fields.season_stats.putting.rank
+        }
+        catch (e) {row['sg_putting_rank'] = 'n/a'}
+        try {
+          row['sg_putting'] = golfer.fields.season_stats.putting.average
+        }
+        catch (e) {row['sg_putting'] = 'n/a'}
+
+
 
 
 
