@@ -1066,3 +1066,13 @@ class AuctionPick(models.Model):
 class StatLinks(models.Model):
     name = models.CharField(max_length=100)
     link = models.URLField()
+
+class CountryPicks(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    tournament = models.ForeignKey(Tournament, on_delete=models.CASCADE)
+    country = models.CharField(max_length=30)
+    gender = models.CharField(max_length=30)
+    score = models.PositiveBigIntegerField(default=0)
+
+    def __str__(self):
+        return str(self.user) + str(self.tournament) + str(self.country)

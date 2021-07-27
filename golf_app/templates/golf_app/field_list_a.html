@@ -24,7 +24,11 @@
 
 
 <p hidden id='tournament_key'>{{tournament.pk}}</p>
+<p hidden id='pga_t_num'>{{tournament.pga_tournament_num}}</p>
 
+{%if tournament.pga_tournament_num == '999'%}
+<script type="text/javascript" src="{%static 'golf_app/js/olympic_countries.js'%}"></script> 
+{%endif%}
 
   <!-- <div id='main' style='display:none'> -->
   <!-- <div id='main'> -->

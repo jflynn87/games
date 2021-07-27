@@ -12,6 +12,7 @@ $(document).ready(function () {
             $.each($('#groups_list li'), function(i, g) {
                 groups.push(g.innerText) })
                 var fn = function wrapper(g){ // sample async action
+    
                     return new Promise(resolve => resolve(build_field(g, info)));
                 };
 
@@ -91,7 +92,7 @@ function build_field(g, info) {
     return new Promise (function (resolve, reject) {
         
         //Intro section
-
+        
         $('#field_sect #pick_form').append('<table id=tbl-group-' + g + ' class=table> \
                                 <thead class=total_score> <th> Group: ' + g + '</th> </thead>' +
                             '</table>')
@@ -307,14 +308,31 @@ function buildHeader() {
         '<br></div>')
 
     $('#field_sect').append('<form id=pick_form method=post></form>')
-    
-    //$('#field_sect form').append('<div id=bottom_sect class=field_stats_display></div>')
-    
-    // $('#pick_form').on('submit', function(event){
-    //     event.preventDefault();
-    //     console.log("form submitted!")  
-    //     create_post();
-    // });
+
+    if ($('#pga_t_num').text() == 999) {
+        console.log('add countries here')
+        //$('#field_sect #pick_form').append('<div id=mens_countries></div>')
+        $('#field_sect #pick_form').append('<table id=mens_countries_picks' + " class=table> \
+                                        <thead class=total_score> <th> Men's Medal Countries" + '</th> </thead>' +
+                                        '</table>')
+        $('#mens_countries_picks').append('<tr><td>Pick 3 countries, -50 for gold, -35 for silver, -20 for bronze.  Add +5 for each golfer above 1 per country.</td></tr>')
+        
+        $('#field_sect #pick_form').append('<table id=womens_countries_picks' + " class=table> \
+                                        <thead class=total_score> <th> Women's Medal Countries" + '</th> </thead>' +
+                                        '</table>')
+        $('#womens_countries_picks').append('<tr><td>Pick 3 countries, -50 for gold, -35 for silver, -20 for bronze.  Add +5 for each golfer above 1 per country.</td></tr>')
+        
+        fetch("/golf_app/get_country_counts/",         
+        {method: "GET",
+        })
+    .then((response) => response.json())
+    .then((responseJSON) => {
+        data = responseJSON
+        console.log('countries: ', data)
+        formatMenMedals(data)
+        formatWomenMedals(data)
+    })
+    }
 
     $('#random_form').on('submit', function(event){
         event.preventDefault();
@@ -329,9 +347,14 @@ function create_post() {
     checked = $('input:checked')
     //console.log(checked)
     pick_list = []
+    men_countries = []
+    women_countries = []
+    men_countries.push($('#men_1_country').val(), $('#men_2_country').val(), $('#men_3_country').val())
+    women_countries.push($('#women_1_country').val(), $('#women_2_country').val(), $('#women_3_country').val())
     $.each(checked, function(i, pick){
         pick_list.push(pick.value)
     })
+
     console.log(pick_list)
     fetch("/golf_app/new_field_list/",         
     {method: "POST",
@@ -342,6 +365,8 @@ function create_post() {
              },
      body: JSON.stringify({'key': $('#tournament_key').text(),
                             'pick_list': pick_list, 
+                            'men_countries': men_countries,
+                            'women_countries': women_countries,
                              })
  })
     .then((response) => response.json())
@@ -399,5 +424,42 @@ function toggle_submitting() {
     $('#random_btn').prop('value', 'Submitting....')
     $('#top_sect').append('<p class=status style="text-align:center;"> Submitting picks, one moment....')
     $('#bottom').append('<p class=status style="text-align:center;"> Submitting picks, one moment....')
+
+}
+
+function formatMenMedals(data) {
+
+    $('#mens_countries_picks').append('<tr><td>Pick 1:  <select id=men_1_country> </select><td> </tr>')
+    $('#mens_countries_picks').append('<tr><td>Pick 2:  <select id=men_2_country> </select><td> </tr>')
+    $('#mens_countries_picks').append('<tr><td>Pick 3:  <select id=men_3_country> </select><td> </tr>')
+
+    
+    $('#mens_countries_picks').on('change', function(evt) {
+            $('#pick-status').empty()
+            get_info(info, null) })
+    
+    $.each(data.men, function(country, count) {
+        $('#men_1_country').append('<option value=' + country + '>' + country + ': ' + count + '</option>')
+        $('#men_2_country').append('<option value=' + country + '>' + country + ': ' + count + '</option>')
+        $('#men_3_country').append('<option value=' + country + '>' + country + ': ' + count + '</option>')
+        
+    })
+    }
+
+function formatWomenMedals(date) {
+    $('#womens_countries_picks').append('<tr><td>Pick 1:  <select id=women_1_country> </select><td> </tr>')
+    $('#womens_countries_picks').append('<tr><td>Pick 2:  <select id=women_2_country> </select><td> </tr>')
+    $('#womens_countries_picks').append('<tr><td>Pick 3:  <select id=women_3_country> </select><td> </tr>')
+
+    $('#womens_countries_picks').on('change', function(evt) {
+        $('#pick-status').empty()
+        get_info(info, null) })
+    
+    $.each(data.women, function(country, count) {
+        $('#women_1_country').append('<option value=' + country + '>' + country + ': ' + count + '</option>')
+        $('#women_2_country').append('<option value=' + country + '>' + country + ': ' + count + '</option>')
+        $('#women_3_country').append('<option value=' + country + '>' + country + ': ' + count + '</option>')
+        
+    })
 
 }

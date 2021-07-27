@@ -212,7 +212,21 @@ $("#actual-row").each(function () {
 
       $('#actual-grouptotal').text(total)
 
-      if (total == parseInt(info['total'])) {
+      var countries_ok = true
+      if ($('#pga_t_num').text() == '999') {
+        var picks = {}
+        console.log(countries_ok)
+        picks['m' + $('#men_1_country').val()] = true
+        picks['m' + $('#men_2_country').val()] = true
+        picks['m' + $('#men_3_country').val()] = true
+        picks['w' + $('#women_1_country').val()] = true
+        picks['w' + $('#women_2_country').val()] = true
+        picks['w' + $('#women_3_country').val()] = true
+        if (Object.keys(picks).length == 6) {countries_ok = true}
+        else {countries_ok = false}
+      }
+      console.log(Object.keys(picks).length, countries_ok)
+      if (total == parseInt(info['total']) && countries_ok == true) {
         $('#sub_button').removeAttr('disabled').attr('class', 'btn btn-primary').val('Submit Picks');
         $('#actual-grouptotal').css('background-color', '')  
         $('#required-groupcomplete').text('True')

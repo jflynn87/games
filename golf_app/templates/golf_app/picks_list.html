@@ -13,6 +13,12 @@
         <li>Group {{pick.playerName.group.number}}:    {{pick.playerName.playerName}}, OWGR: {{pick.playerName.currentWGR}},  Handicap: {{pick.playerName.handicap}}</li> 
 
         {%endfor%}
+
+        {%if tournament.pga_tournament_num == '999'%}
+        {%for c in country_list%}
+          <li>{{c.gender}}: {{c.country}} </li>
+        {%endfor%}
+        {%endif%}
       </ul>
 
 

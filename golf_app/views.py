@@ -2,9 +2,9 @@ from django.db.models.query_utils import RegisterLookupMixin
 from django.shortcuts import render, get_object_or_404, redirect
 from django.views.generic import View, TemplateView, ListView, DetailView, CreateView, UpdateView, FormView
 #from extra_views import ModelFormSetView
-from golf_app.models import Field, Tournament, Picks, Group, TotalScore, ScoreDetails, \
+from golf_app.models import CountryPicks, Field, Tournament, Picks, Group, TotalScore, ScoreDetails, \
            mpScores, BonusDetails, PickMethod, PGAWebScores, ScoreDict, UserProfile, \
-           Season, AccessLog, Golfer, AuctionPick
+           Season, AccessLog, Golfer, AuctionPick, CountryPicks
 from golf_app.forms import  CreateManualScoresForm, FieldForm, FieldFormSet, AuctionPicksFormSet
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponseRedirect, HttpResponse, Http404
@@ -142,30 +142,6 @@ class NewFieldListView(LoginRequiredMixin,TemplateView):
             if t.pga_tournament_num == '999':
                 tournament=Tournament.objects.get(season__current=True, pga_tournament_num='999')
             else: tournament = None
-        # print (tournament.started())
-        # #check for withdrawls and create msg if there is any
-        # try:
-        #     score_file = calc_score.getRanks({'pk': tournament.pk})
-        #     wd_list = []
-        #     print ('score file', score_file[0])
-        #     if score_file[0] == "score lookup fail":
-        #         wd_list = []
-        #         error_message = ''
-        #     else:
-        #         for golfer in Field.objects.filter(tournament=tournament):
-        #             if golfer.playerName not in score_file[0]:
-        #                 print ('debug')
-        #                 wd_list.append(golfer.playerName)
-        #                 #print ('wd list', wd_list)
-        #         if len(wd_list) > 0:
-        #             error_message = 'The following golfers have withdrawn:' + str(wd_list)
-        #             for wd in wd_list:
-        #                 Field.objects.filter(tournament=tournament, playerName=wd).update(withdrawn=True)
-        #         else:
-        #             error_message = None
-        # except Exception as e:
-        #     print ('score file lookup issue', e)
-        #     error_message = None
 
         context.update({
         #'field_list': Field.objects.filter(tournament=Tournament.objects.get(current=True)),
@@ -218,6 +194,9 @@ class NewFieldListView(LoginRequiredMixin,TemplateView):
             Picks.objects.filter(playerName__tournament=tournament, user=user).delete()
             ScoreDetails.objects.filter(pick__playerName__tournament=tournament, user=user).delete()
 
+        if CountryPicks.objects.filter(user=user, tournament=tournament).count() > 0:
+            CountryPicks.objects.filter(user=user, tournament=tournament).delete()
+
         if 'random' in pick_list:
             picks = tournament.create_picks(user, 'random')    
             print ('random picks submitted', user, datetime.datetime.now(), picks)
@@ -226,6 +205,23 @@ class NewFieldListView(LoginRequiredMixin,TemplateView):
             for id in pick_list:
                 field_list.append(Field.objects.get(pk=id))                    
             tournament.save_picks(field_list, user, 'self')
+        
+        if tournament.pga_tournament_num == '999':
+            for mens_pick in  data.get('men_countries'):
+                cp = CountryPicks()
+                cp.user = user
+                cp.tournament = tournament
+                cp.country = mens_pick
+                cp.gender = "men"
+                cp.save()
+
+            for womens_pick in  data.get('women_countries'):
+                cp = CountryPicks()
+                cp.user = user
+                cp.tournament = tournament
+                cp.country = womens_pick
+                cp.gender = 'woman'
+                cp.save()
 
         print ('user submitting picks', datetime.datetime.now(), request.user, Picks.objects.filter(playerName__tournament=tournament, user=user))
         print ('submit picks duration: ',  datetime.datetime.now() - start)
@@ -304,10 +300,16 @@ class PicksListView(LoginRequiredMixin,ListView):
 
     def get_context_data(self,**kwargs):
         context = super(PicksListView, self).get_context_data(**kwargs)
+        t = Tournament.objects.get(current=True)
+        if t.pga_tournament_num == '999':  
+            countries = CountryPicks.objects.filter(user=self.request.user, tournament=t)
+        else:
+            countries = None
         context.update({
         'tournament': Tournament.objects.get(current=True),
         'picks_list': Picks.objects.filter(playerName__tournament__current=True,user=self.request.user),
-        })
+        'country_list': countries
+            })
         return context
 
 
@@ -1480,3 +1482,26 @@ class PicksSummaryData(APIView):
             print ('get pick summary exception: ', e)
             return JsonResponse({'msg': e})
             
+class OlympicGolfersByCountry(APIView):
+    
+    def get(self, request):
+        try:
+            t = Tournament.objects.get(pga_tournament_num='999', season__current=True)
+            sex = 'men'
+            d = {'men': {}, 'women': {}}
+            for f in Field.objects.filter(tournament=t):
+                if f.playerName == "Nelly Korda":  #top ranked in 2021
+                    sex = 'women'
+                country = f.golfer.flag_link.split('/')[9][0:3].upper()
+                if country == "NIR":  #for Rory
+                    country = "IRL"
+                if d.get(sex).get(country):
+                    d.get(sex).update({country: d.get(sex).get(country) +  1})
+                else:
+                    d.get(sex).update({country: 1})
+            return JsonResponse(d)
+        except Exception as e:
+            print ('get olympic get players by country exception: ', e)
+            return JsonResponse({'msg': e})
+    
+
