@@ -135,7 +135,13 @@ class NewFieldListView(LoginRequiredMixin,TemplateView):
     def get_context_data(self,**kwargs):
         context = super(NewFieldListView, self).get_context_data(**kwargs)
         utils.save_access_log(self.request, 'picks')
-        tournament = Tournament.objects.get(current=True)
+        try:
+            tournament = Tournament.objects.get(current=True)
+        except Exception:
+            t = Tournament.objects.all().order_by('-pk').first()
+            if t.pga_tournament_num == '999':
+                tournament=Tournament.objects.get(season__current=True, pga_tournament_num='999')
+            else: tournament = None
         # print (tournament.started())
         # #check for withdrawls and create msg if there is any
         # try:

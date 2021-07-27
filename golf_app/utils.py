@@ -37,7 +37,10 @@ def formatRank(rank, tournament=None):
     from golf_app.models import Tournament
     '''takes in a sting and returns an int'''
 
-    t = Tournament.objects.get(current=True)
+    try:
+        t = Tournament.objects.get(current=True)
+    except Exception as e:
+        t = Tournament.objects.all().order_by('-pk').first()
     
     if type(rank) is int:
         return rank

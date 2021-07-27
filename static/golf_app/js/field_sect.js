@@ -130,7 +130,7 @@ function build_field(g, info) {
                                                                 '<input type="hidden" name="csrfmiddlewaretoken" value=' + $.cookie('csrftoken') +  '>' +
                                                                // '<input id=' + field.id +  ' type="radio" class="my-radio" name=group-' + field.group.number + ' value=' + field.id +  '>' +
                                                                '<input id=' + field.id +  ' type=' + input_type + ' class=' + input_class + ' name=group-' + field.group.number + ' value=' + field.id +  ' disabled>' +
-                                                                '<img src=' + field.golfer.pic_link + ' alt="">' + field.playerName + ' ' + 
+                                                                '<img src=' + field.golfer.pic_link + ' style="max-height:125px; alt="">' + field.playerName + ' ' + 
                                                                 '<img src=' + field.golfer.flag_link + ' alt="">' +
                                                                 '<a href="https://www.google.com/search?q=' + field.playerName + '" target="_blank" style="padding-left: 1em;">Google</a> / ' +
                                                                 '<a href=' + field.espn_link + ' target="_blank">ESPN</a> / ' +

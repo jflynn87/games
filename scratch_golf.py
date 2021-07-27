@@ -41,6 +41,96 @@ import random
 
 start = datetime.now()
 
+f = open('lpga_links.json',)
+print (type(f))
+lpga_data = json.load(f)
+
+for g in Golfer.objects.filter(golfer_pga_num=''):
+    print (g)
+    link = [v for k,v in lpga_data.items() if g.golfer_name == k.replace('\xa0', ' ')]
+
+    if len(link) == 1:
+        print (link)
+        pic_link = link[0].get('pic_link')
+        print (g, pic_link)
+        g.pic_link = pic_link
+        g.save()
+    else:
+        print (g, 'no pic')
+
+exit()
+
+req = Request("https://www.lpga.com/players", headers={'User-Agent': 'Mozilla/5.0'})
+html = urlopen(req).read()
+   
+soup = BeautifulSoup(html, 'html.parser')
+#print (soup)
+golfers = (soup.find("div", {'id': 'topMoneyListTable'}))
+d = {}
+
+for row in golfers.find_all('tr')[1:]:
+    try:
+        name = row.find_all('td')[1].text.strip()
+        lpga_link = str('https://lpga.com/') + row.find_all('td')[1].find('a')['href'].replace(' ', '%20')
+        
+        
+        dtl_req = Request(lpga_link, headers={'User-Agent': 'Mozilla/5.0'})
+        dtl_html = urlopen(dtl_req).read()
+    
+        dtl_soup = BeautifulSoup(dtl_html, 'html.parser')
+        #print (soup)
+        try:
+            pic = str('https://lpga.com') + dtl_soup.find("div", {'class': 'player-banner-gladiator'}).find('img')['src']
+        except Exception:
+            pic = ''
+            print ('no picture', name)
+        print (name, pic)
+        d[name] = {'link': str('https://www.lpga.com/') + str(lpga_link), 'pic_link': pic}
+    except Exception as e:
+        print (e)        
+with open('lpga_links.json', 'w') as convert_file:
+     convert_file.write(json.dumps(d))
+
+#with open('lpga_links.csv', 'w', newline='') as csvfile:
+#    csvwriter = csv.writer(csvfile, delimiter=',',
+#                            quotechar='|', quoting=csv.QUOTE_MINIMAL)
+#    for k, v in d.items():
+
+#        csvwriter.writerow([k, v.link, v.pic_link])
+
+#csvfile.close()
+
+
+exit()
+    
+
+#t = populateField.setup_t('999')
+t = Tournament.objects.get(pga_tournament_num='999')
+#print (scrape_espn.ScrapeESPN(tournament=t, url="https://www.espn.com/golf/leaderboard/_/tour/womens-olympics-golf", setup=True).get_data())
+
+for f in Field.objects.filter(tournament__pga_tournament_num='999').order_by('currentWGR'):
+    print (f, f.currentWGR)
+    print (f.golfer, f.golfer.espn_number)
+exit()
+print (Field.objects.filter(tournament__pga_tournament_num='999').count())
+
+for g in Group.objects.filter(tournament=t):
+    print (g, g.playerCnt)
+    print (Field.objects.filter(group=g).count())
+exit()
+#t = populateField.setup_t('999')
+#print (scrape_espn.ScrapeESPN(tournament=t, url='https://www.espn.com/golf/leaderboard?tournamentId=401285309', setup=True).get_data())
+print (scrape_espn.ScrapeESPN(tournament=t, url="https://www.espn.com/golf/leaderboard/_/tour/womens-olympics-golf", setup=True).get_data())
+#print (populateField.get_womans_rankings())
+#exit()
+#t = populateField.setup_t('999')
+t = Tournament.objects.get(pga_tournament_num=999)
+ranks = populateField.get_worldrank()
+field = populateField.get_field(t,ranks)
+#print (field, len(field))
+print (len(field))
+exit()
+
 f = Field.objects.get(playerName="Dustin Johnson", tournament__current=True)
 for k, v in f.season_stats.items():
     print (k, v)

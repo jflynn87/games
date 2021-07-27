@@ -13,7 +13,12 @@ class WDCheck(object):
             self.tournament = tournament
         if field == None:
             #self.field = scrape_scores_picks.ScrapeScores(self.tournament).scrape()
-            self.field = scrape_espn.ScrapeESPN().get_data()
+            if self.tournament.pga_tournament_num == '999':
+                mens_field = scrape_espn.ScrapeESPN(tournament=self.tournament, url='https://www.espn.com/golf/leaderboard?tournamentId=401285309', setup=True).get_data()    
+                womens_field = scrape_espn.ScrapeESPN(tournament=self.tournament, url="https://www.espn.com/golf/leaderboard/_/tour/womens-olympics-golf", setup=True).get_data()
+                self.field = {**mens_field, **womens_field}
+            else:
+                self.field = scrape_espn.ScrapeESPN().get_data()
         else:
             self.field = field
 

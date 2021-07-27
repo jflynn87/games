@@ -56,7 +56,7 @@ class ScrapeESPN(object):
             t_name = soup.find('h1', {'class', 'Leaderboard__Event__Title'}).text
             start = datetime.now()
             
-            if t_name != self.tournament.name and not self.tournament.ignore_name_mismatch and not self.ignore_name_mismatch:
+            if self.tournament.pga_tournament_num != '999' and t_name != self.tournament.name and not self.tournament.ignore_name_mismatch and not self.ignore_name_mismatch:
                 match = utils.check_t_names(t_name, self.tournament)
                 if not match:
                     print ('tournament mismatch: espn name: ', t_name, 'DB name: ', self.tournament.name)
@@ -134,7 +134,14 @@ class ScrapeESPN(object):
                         score_dict['info'].update({'cut_line': 'Cut Line: ' + td[0].text[-2:]})
 
                 elif len(row.find_all('td')) == 2:  # before start
-                    score_dict[row.a.text] =  {
+                    if self.tournament.pga_tournament_num == '999':
+                        score_dict[row.a.text] =  {
+                                                    'pga_num': row.a['href'].split('/')[7],
+                                                    'pos': td[1].text,
+                                                    'flag': td[0].img.get('src')
+                                                    }
+                    else:
+                        score_dict[row.a.text] =  {
                                                 'pga_num': row.a['href'].split('/')[7],
                                                 'pos': td[1].text,
                     }

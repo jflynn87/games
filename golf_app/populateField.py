@@ -12,6 +12,8 @@ import datetime
 import unidecode 
 #import collections
 from collections import OrderedDict
+import csv
+import string
 
 
 @transaction.atomic
@@ -21,7 +23,7 @@ def create_groups(tournament_number):
     print ('increate groups')
     season = Season.objects.get(current=True)
 
-    if Tournament.objects.filter(season=season).count() > 0:
+    if Tournament.objects.filter(season=season).count() > 0 and tournament_number != '999':  #skip for olympics
         try:
             last_tournament = Tournament.objects.get(current=True, complete=True, season=season)
             last_tournament.current = False
@@ -41,21 +43,53 @@ def create_groups(tournament_number):
     print ('field length: ', len(field))
     #OWGR_rankings = {}
    
-    if tournament.pga_tournament_num not in ['470', '018']:  #Match Play and Zurich (team event)  
+    if tournament.pga_tournament_num not in ['470', '018', '999']:  #Match Play and Zurich (team event)  
         groups = configure_groups(field, tournament)
         prior_year = prior_year_sd(tournament)  #diff sources for MP & Zurich so don't use this func for those events
     elif tournament.pga_tournament_num == '470':
         groups = configure_mp_groups(tournament) #confifure MP groups - 16 groups of 4 based on MP groupings
     elif tournament.pga_tournament_num == '018':
         groups = configure_zurich_groups(tournament)
+    elif tournament.pga_tournament_num == '999': # my code for olymics
+        groups = configure_groups(field, tournament)
     else:
         #shouldnt get here
         print ('populate field bad pga number')
         raise Exception ('Bad PGA tournament number: ', tournament.pga_tournament_num)
     
-
-    create_field(field, tournament)
+    if tournament.pga_tournament_num == '999':
+        create_olympic_field(field, tournament)
+    else:
+        create_field(field, tournament)
     return ({'msg: ', tournament.name, ' Field complete'})
+
+def get_womans_rankings():
+
+    #req = Request("https://www.lpga.com/players", headers={'User-Agent': 'Mozilla/5.0'})
+    #html = urlopen(req).read()
+   
+    #soup = BeautifulSoup(html, 'html.parser')
+    #print (soup)
+    #rankslist = (soup.find("div", {'id': 'topMoneyListTable'}))
+    #rankslist = (soup.find("table"))
+    #print (rankslist)
+    owgr_dict = {}
+
+    with open('rolexrankings_2021-07-19.csv', newline='') as csvfile:
+        data = csv.reader(csvfile, delimiter=',', quotechar='|')
+        next(data)
+        for row in data:
+            #print (row[0])
+            owgr_dict[string.capwords(row[2].lower())] = {'rank': row[0]}
+    #for row in rankslist.find_all('tr')[1:]:
+           #try:
+            #    player = row[0]
+            #    rank = row[1]
+            #    ranks[player] = rank
+           #except Exception as e:
+           #     print('exeption 1',row,e)
+    
+    return owgr_dict
 
 
 def get_worldrank():
@@ -97,41 +131,72 @@ def setup_t(tournament_number):
     '''takes a t number as a string, returns a tournament object'''
     season = Season.objects.get(current=True)
     print ('getting field')
-    
-    json_url = 'https://statdata-api-prod.pgatour.com/api/clientfile/Field?T_CODE=r&T_NUM=' + str(tournament_number) +  '&YEAR=' + str(season) + '&format=json'
-    print (json_url)
+    if tournament_number != '999': #olympics
+        json_url = 'https://statdata-api-prod.pgatour.com/api/clientfile/Field?T_CODE=r&T_NUM=' + str(tournament_number) +  '&YEAR=' + str(season) + '&format=json'
+        print (json_url)
 
-    req = Request(json_url, headers={'User-Agent': 'Mozilla/5.0'})
-    data = json.loads(urlopen(req).read())
-    
-    print (data["Tournament"]["T_ID"][1:5], str(season))
-    if data["Tournament"]["T_ID"][1:5] != str(season):
-        print ('check field, looks bad!')
-        raise LookupError('Tournament season mismatch: ', data["Tournament"]["T_ID"]) 
+        req = Request(json_url, headers={'User-Agent': 'Mozilla/5.0'})
+        data = json.loads(urlopen(req).read())
+        
+        print (data["Tournament"]["T_ID"][1:5], str(season))
+        if data["Tournament"]["T_ID"][1:5] != str(season):
+            print ('check field, looks bad!')
+            raise LookupError('Tournament season mismatch: ', data["Tournament"]["T_ID"]) 
 
-    tourny = Tournament()    
-    tourny.name = data["Tournament"]["TournamentName"]
+        tourny = Tournament()    
+        tourny.name = data["Tournament"]["TournamentName"]
 
-    tourny.season = season
-    start_date = datetime.date.today()
-    print (start_date)
-    while start_date.weekday() != 3:
-        start_date += datetime.timedelta(1)
-    tourny.start_date = start_date
-    tourny.field_json_url = json_url
-    tourny.score_json_url = 'https://statdata.pgatour.com/r/' + str(tournament_number) +'/' + str(season) + '/leaderboard-v2mini.json'
-    
-    tourny.pga_tournament_num = tournament_number
-    tourny.current=True
-    tourny.complete=False
-    tourny.score_update_time = datetime.datetime.now()
-    tourny.cut_score = "no cut info"
-    tourny.saved_cut_num = 65
-    tourny.saved_round = 1
-    tourny.saved_cut_round = 2
-    tourny.espn_t_num = scrape_espn.ScrapeESPN(tourny).get_t_num()
-    tourny.save()
+        tourny.season = season
+        start_date = datetime.date.today()
+        print (start_date)
+        while start_date.weekday() != 3:
+            start_date += datetime.timedelta(1)
+        tourny.start_date = start_date
+        tourny.field_json_url = json_url
+        tourny.score_json_url = 'https://statdata.pgatour.com/r/' + str(tournament_number) +'/' + str(season) + '/leaderboard-v2mini.json'
+        
+        tourny.pga_tournament_num = tournament_number
+        tourny.current=True
+        tourny.complete=False
+        tourny.score_update_time = datetime.datetime.now()
+        tourny.cut_score = "no cut info"
+        tourny.saved_cut_num = 65
+        tourny.saved_round = 1
+        tourny.saved_cut_round = 2
+        tourny.espn_t_num = scrape_espn.ScrapeESPN(tourny).get_t_num()
+        tourny.save()
+    else:
+        json_url = ''
+  
+        #req = Request(json_url, headers={'User-Agent': 'Mozilla/5.0'})
+        #data = json.loads(urlopen(req).read())
+        
+        #print (data["Tournament"]["T_ID"][1:5], str(season))
+        
+        tourny = Tournament()    
+        tourny.name = "Olympic Golf"
 
+        tourny.season = season
+        start_date = datetime.date.today()
+        
+        while start_date.weekday() != 3:
+            start_date += datetime.timedelta(1)
+        tourny.start_date = start_date
+        tourny.field_json_url = json_url
+        tourny.score_json_url = ''
+        
+        tourny.pga_tournament_num = tournament_number
+        tourny.current=True
+        tourny.complete=False
+        tourny.score_update_time = datetime.datetime.now()
+        tourny.cut_score = "no cut info"
+        tourny.saved_cut_num = 60
+        tourny.saved_round = 1
+        #tourny.saved_cut_round = 2 
+        tourny.has_cut = False
+        tourny.espn_t_num = '401285309'
+        tourny.save()
+        
     return tourny
 
 def get_field(t, owgr_rankings):
@@ -148,7 +213,31 @@ def get_field(t, owgr_rankings):
                                   'soy_owgr': ranks[1][2],
                                   'sow_owgr': ranks[1][1]
                                 }
+    elif t.pga_tournament_num == '999': #Olympics
+        mens_field = scrape_espn.ScrapeESPN(tournament=t, url='https://www.espn.com/golf/leaderboard?tournamentId=401285309', setup=True).get_data()    
+        womens_field = scrape_espn.ScrapeESPN(tournament=t, url="https://www.espn.com/golf/leaderboard/_/tour/womens-olympics-golf", setup=True).get_data()
         
+        for man, data in mens_field.items():
+            if man != 'info':
+                ranks = utils.fix_name(man, owgr_rankings)
+                field_dict[man] = {'espn_num': data.get('pga_num'),
+                                    'sex': 'dude',
+                                  'curr_owgr': ranks[1][0],
+                                  'soy_owgr': ranks[1][2],
+                                  'sow_owgr': ranks[1][1], 
+                                  'flag': data.get('flag')
+                                }
+        womens_ranks = get_womans_rankings()
+
+        for woman, stats in womens_field.items():
+            
+            if woman != 'info':
+                rank = utils.fix_name(woman, womens_ranks)
+                field_dict[woman] ={'espn_num': stats.get('pga_num'),
+                                    'sex': 'chick',
+                                    'curr_owgr': int(rank[1].get('rank')) + 1000,
+                                    'flag': stats.get('flag')}
+        #field_dict['info'] = mens_field.get('info')
     else:
         json_url = 'https://statdata-api-prod.pgatour.com/api/clientfile/Field?T_CODE=r&T_NUM=' + str(t.pga_tournament_num) +  '&YEAR=' + str(t.season.season) + '&format=json'
         print (json_url)
@@ -184,13 +273,21 @@ def configure_groups(field_list, tournament):
     if len(field_list) > 64:
         group_size = 10
 
-        while group_cnt <6:
-            groups[group_cnt] = group_size
-            group_cnt += 1
+        if tournament.pga_tournament_num == '999':
+            print ('setting up olympics')
+            group_size = 12
+            while group_cnt < 10:
+                groups[group_cnt] = group_size
+                group_cnt += 1
+            remainder = 0
+        else:
+            while group_cnt <6:
+                groups[group_cnt] = group_size
+                group_cnt += 1
 
-        #added to dict at end of funciton
-        group_size = len(field_list) - 50
-        remainder = 0
+            #added to dict at end of funciton
+            group_size = len(field_list) - 50
+            remainder = 0
 
     elif len(field_list) > 29 and len(field_list) < 65 :
         print ('bet 30 - 64, 10 groups')
@@ -337,6 +434,94 @@ def create_field(field, tournament):
 
 
     print ('saved field objects')
+
+
+def create_olympic_field(field, tournament):
+    '''takes a dict and tournament object, updates creates field database, returns a dict'''
+    sorted_field = {}
+    #espn_data = get_espn_players()
+    sorted_field = OrderedDict({k:v for k,v in sorted(field.items(), key=lambda item: int(item[1].get('curr_owgr')))})
+
+    player_cnt = 1
+    group_num = 1
+
+    for player, info in sorted_field.items():
+        print (player, info)
+        if info.get('espn_num') and Golfer.objects.filter(espn_number=info.get('espn_num')).exists():
+            golfer = Golfer.objects.get(espn_number=info.get('espn_num'))
+        elif Golfer.objects.filter(golfer_name=player).exists():
+            golfer = Golfer.objects.get(golfer_name=player)
+            golfer.espn_number = info.get('espn_num')
+            if not golfer.flag_link or golfer.flag_link == '':
+                golfer.flag_link = info.get('flag')
+            golfer.save()
+        else:
+            golfer = Golfer()
+            golfer.golfer_name=player
+            golfer.espn_number = info.get('espn_num')
+            golfer.flag_link = info.get('flag')
+            golfer.save()
+
+
+        #golfer = get_golfer(player, info.get('pga_num'), espn_data)
+        group = Group.objects.get(tournament=tournament, number=group_num)
+        #print (player, info)
+        f = Field()
+
+        f.tournament = tournament
+        f.playerName = player
+        f.alternate = False
+        #f.playerID = info.get('pga_num')
+        f.golfer = golfer
+        f.group = group
+        f.currentWGR = info.get('curr_owgr')
+
+        f.save()
+    
+        if player_cnt < group.playerCnt:
+            player_cnt += 1
+        elif player_cnt == group.playerCnt:
+            group_num += 1
+            player_cnt = 1
+
+    #need to do this after full field is saved for the calcs to work.  No h/c in MP
+    fed_ex = get_fedex_data()
+    individual_stats = get_individual_stats()
+
+    for f in Field.objects.filter(tournament=tournament):
+        if tournament.pga_tournament_num not in ['470', '018']:
+            f.handi = f.handicap()
+        else:
+            f.handi = 0
+
+        f.prior_year = f.prior_year_finish()
+        recent = OrderedDict(sorted(f.recent_results().items(), reverse=True))
+        f.recent = recent
+        f.season_stats = f.golfer.summary_stats(tournament.season) 
+
+       # print (fed_ex)#
+        if fed_ex.get(f.playerName):
+           f.season_stats.update({'fed_ex_points': fed_ex.get(f.playerName).get('points'),
+                                  'fed_ex_rank': fed_ex.get(f.playerName).get('rank')})
+        else:
+           f.season_stats.update({'fed_ex_points': 'n/a',
+                                  'fed_ex_rank': 'n/a'})
+
+        if individual_stats.get(f.playerName):
+            player_s = individual_stats.get(f.playerName)
+            for k, v in player_s.items():
+                if k != 'pga_num':
+                    f.season_stats.update({k: v})
+        
+        f.save()
+
+    for g in Golfer.objects.all():
+        g.results = g.get_season_results()
+        g.save()
+
+
+    print ('saved field objects')
+
 
 def get_individual_stats():
     d = {}
