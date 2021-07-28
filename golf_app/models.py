@@ -113,6 +113,9 @@ class Tournament(models.Model):
     def __str__(self):
         return self.name
 
+    def natural_key(self):
+        return self.name
+
     def started(self):
         start = datetime.now()
         if self.set_started:
@@ -297,77 +300,6 @@ class Tournament(models.Model):
             score_dict = sd
 
         return score_dict.get('info').get('cut_num')
-        #don't need rest of funciton, use the above from espn score
-
-        if not self.has_cut:
-            return len([x for x in score_dict.values() if x['rank'] not in self.not_playing_list()]) + 1
-
-        #round = self.get_cut_round()
-        r = self.saved_cut_round
-        
-        #round = self.get_round()
-        #after cut WD's
-        #commented for rerun, but do i need the if here?  should not get here normally for old tournament?
-        #if self.tournament.current:  wd = len([x for x in self.score_dict.values() if x['rank'] == 'WD' and x['r'+str(round+1)] != '--']) 
-        
-        #just for wd after cut
-        wd = len([x for x in score_dict.values() if x['rank'] == 'WD' and x['r'+str(r+1)] != '--']) 
-        print ('wd: ', wd)        
-
-        
-        if self.saved_round == 1:
-            return 66
-        elif self.saved_round <= self.saved_cut_round:
-            c_score =  (self.cut_score.split(' ')[len(self.cut_score.split(' '))-1])
-
-            if c_score in [None, 'info']:
-                #return len([x for x in score_dict.values() if x['rank'] not in self.not_playing_list()]) + 1 
-                return 66
-            if c_score == 'E':
-                c_score = 0
-            else:
-                c_score = int(c_score)
-
-            return len([x for x in score_dict.values() if int(x['total_score']) <= c_score and x['rank'] not in self.not_playing_list()]) + 1 
-        else:
-            #for v in score_dict.values():
-            #    if v['rank'] in self.not_playing_list():
-
-            return len([x for x in score_dict.values() if x['rank'] not in self.not_playing_list()]) + wd + 1
-            #if self.get_round() != 4 and len(score_dict.values()) >65:
-            #    return 66
-            #else:
-            #    return len([x for x in score_dict.values() if x['rank'] not in self.not_playing_list()]) + wd + 1
-
-    # def get_round(self, sd=None):
-    #     #don't need, use the espn score dict from scrape
-    #     if self.complete:
-    #         return 4
-
-    #     if sd == None:
-    #        sd = ScoreDict.objects.get(tournament=self)
-    #        score_dict = sd.sorted_dict()
-    #     else:
-    #     #     #score_dict = {k:v for k, v in sorted(sd.items(), key=lambda item: item[1].get('sort_rank'))}
-    #        score_dict = sd
-        
-    #     return score_dict.get('info').get('round')
-    #     #don't need the rest, use the dict from scrape espn.  
-
-    #     print (score_dict.get('round'))
-    #     if len([x for x in score_dict.values() if x['r1'] in ['--', '-']]) == len(score_dict):
-    #         return 0
-
-    #     if len([x for x in score_dict.values() if x['r1'] in ['--', '-'] and x['rank'] not in self.not_playing_list()]) > 0:
-    #         return 1
-    #     elif len([x for x in score_dict.values() if x['r2'] == '--' and x['rank'] not in self.not_playing_list()]) > 0:
-    #         return 2
-    #     elif len([x for x in score_dict.values() if x['r3'] == '--' and x['rank'] not in self.not_playing_list()]) > 0:
-    #         return 3
-    #     elif len([x for x in score_dict.values() if x['r4'] == '--' and x['rank'] not in self.not_playing_list()]) > 0:
-    #         return 4
-    #     else:
-    #         return 4
 
 
     def optimal_picks(self):
@@ -406,22 +338,33 @@ class Tournament(models.Model):
         else:
             return False
 
-        #commented to use ESPN scores
-        # for v in score_dict.values():
-        #     if (v['rank'] not in self.not_playing_list() and \
-        #         v['r4'] == "--") or v['rank']  == "T1":
-        #         return False
-
-        # if self.get_round(sd) == 4: 
-        #     return True
-        # else:
-        #     return False
 
     def total_required_picks(self):
         tot = 0
         for g in Group.objects.filter(tournament=self):
             tot += g.num_of_picks()
         return tot
+
+    def get_country_counts(self):
+        if self.pga_tournament_num == '999': #Olympics
+            t = Tournament.objects.get(pga_tournament_num='999')
+            sex = 'men'
+            d = {'men': {}, 'women': {}}
+            for f in Field.objects.filter(tournament=self):
+                if f.playerName == "Nelly Korda": sex = 'women'  # top ranked woman
+                country = f.golfer.flag_link.split('/')[9][0:3].upper()
+                if country == "NIR": #For Rory
+                    country = "IRL"
+                if d.get(sex).get(country):
+                    d.get(sex).update({country: d.get(sex).get(country) +  1})
+                else:
+                    d.get(sex).update({country: 1})
+                
+            return d
+        else:
+            return {'msg': 'only for olympics'}
+
+
 
 class Group(models.Model):
     tournament= models.ForeignKey(Tournament, on_delete=models.CASCADE)
@@ -832,8 +775,6 @@ class Field(models.Model):
         if any(c in data for c in x):
             return False
         return True
-
-
 
 
 class PGAWebScores(models.Model):

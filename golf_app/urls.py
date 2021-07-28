@@ -46,6 +46,9 @@ urlpatterns= [
     path('get_golfers/', views.GetGolfers.as_view(), name='get_golfers'),
     path('get_picks_summary/<int:pk>', views.PicksSummaryData.as_view(), name='get_picks_summary'),
     path('get_country_counts/', views.OlympicGolfersByCountry.as_view(), name='get_country_counts'),
+    path('get_country_picks/<int:pga_t_num>/<str:user>', views.GetCountryPicks.as_view(), name='get_country_picks'),
+    path('olympic_scores/', views.OlympicScoresView.as_view(), name='olympic_scores'),
+
 
     
 

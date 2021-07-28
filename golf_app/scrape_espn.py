@@ -138,7 +138,9 @@ class ScrapeESPN(object):
                         score_dict[row.a.text] =  {
                                                     'pga_num': row.a['href'].split('/')[7],
                                                     'pos': td[1].text,
-                                                    'flag': td[0].img.get('src')
+                                                    'flag': td[0].img.get('src'),
+                                                    'change': '',
+                                                    
                                                     }
                     else:
                         score_dict[row.a.text] =  {

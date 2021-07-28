@@ -14,14 +14,15 @@ $(document).ready(function() {
       data: {'tournament' : $('#tournament_key').text()},
       dataType: 'json',
       success: function (json) {
-       // console.log('DB load success');
-       // console.log(json, typeof(json))
+        console.log('DB loaded');
+        console.log(json, typeof(json))
         if (!$.isEmptyObject(json)) {
           build_score_tbl(json)
          
         console.log('first load duration: ', start, new Date()) 
                                     }
-        },
+        else {$('#det-list').append('<p>No Saved Scores, please wait</p>')}
+                                  },
       failure: function(json) {
         console.log('fail');
         console.log(json);
@@ -120,6 +121,7 @@ function build_score_tbl(data) {
   $.each(total_data, function(p, total) {
     //$('#totals').append('<tr id=totals' + p + ' class=small> <span>' + '<td id=ts_' + p + ' class=total_score>'+  p  + ' (' + season_totals[p]['diff'] +')'  + '</p>' + '<p>' +  total['total_score'] + ' / ' + total['cuts']  + '</td>'  + '</tr>')
     $('#totals').append('<tr id=totals' + p + ' class=small> <span>' + '<td id=ts_' + p + ' style=font-weight:bold;>'+  p  + ' (' + season_totals[p]['diff'] + ' / ' + season_totals[p]['points_behind_second'] +')'  + '</p>' + '<p>' +  total['total_score'] + ' / ' + total['cuts']  + '</td>'  + '</tr>')
+
     var bonus = ''
      if (total['msg']) {$('#totals' + p).append('<td id=msg_' + p + '><p> h/c: ' + total['handicap'] + '</p>' + total["msg"] + '</td>' +
                                                 '<td id=loading_' + p + '>Loading....</td>') }
@@ -134,8 +136,13 @@ function build_score_tbl(data) {
                               '<td id=loading_' + p + '>Loading....</td> </span> </tr>')  
     }
       
-  })
  
+ 
+  if ($('#pga_t_num').text() == '999') {
+    $('#totals' + p).append('<td id=totals' + p +  'men_countries></td>')
+    $('#totals' + p).append('<td id=totals' + p +  'women_countries></td>')
+  }
+})
 
   $('#totals').append('<tr id=optimalpicks class=small> <td> <p> Best Picks </p> </td> <td> </td> </tr>')
   $.each(optimal_data, function(group, data) {
@@ -208,7 +215,27 @@ function get_picks(info, optimal_data) {
 .then((responseJSON) => {
   score_detail = responseJSON
   //$.each(total_data, function(player, data) { 
+    if ($('#pga_t_num').text() == '999') {
+      fetch("/golf_app/get_country_picks/" + $('#pga_t_num').text() + '/all' ,
+      {method: "GET",
+      })
+      .then((response) => response.json())
+      .then((responseJSON) => {
+          country_detail = $.parseJSON(responseJSON)
+          console.log('countries', country_detail)
+          $.each(country_detail, function(i, data) {
+            console.log('country picks api call', data)
+            if (data.fields.gender == 'men') {
+            $('#totals' + data.fields.user + 'men_countries').append('<p>' + data.fields.country + '</p>') }
+            else {
+            $('#totals' + data.fields.user + 'women_countries').append('<p>' + data.fields.country + '</p>') }
+
+    })
+  })
+}
+
   $.each(score_detail, function (index, stats) {
+    //console.log('stats', stats, stats.sod_position)
     let player = stats.user.username
     let filler = /[\s\.\,\']/g;
     $('#loading_' + player).remove()
@@ -218,7 +245,7 @@ function get_picks(info, optimal_data) {
         toPar = "E"
       }
       else {toPar = stats.toPar} 
-    
+      
       $('#totals' + player).append('<td id=' + player + stats.pick.playerName.golfer.espn_number +  '>' + '<span class=watermark>' + 
        '<p>' + player.substring(0, 4)  + ' : ' + stats.pick.playerName.group.number +  '</p>'  + '</span>' + '<p>' +  stats.pick.playerName.playerName  + '</p>' + '<p>' + stats.score +
         '<span > <a id=tt-' + pick + ' data-toggle="tooltip" > <i class="fa fa-info-circle" style="color:blue;"></i> </a> </span>' +
@@ -424,4 +451,22 @@ while(switching) {
       switching = true;
     }
   }
+}
+
+function olympicCountryPicks(resolve) {
+  return new Promise (function (resolve, reject) {
+  fetch("/golf_app/get_country_picks/" + $('#pga_t_num').text() + '/all' ,
+  {method: "GET",
+  })
+.then((response) => response.json())
+.then((responseJSON) => {
+  score_detail = $.parseJSON(responseJSON)
+  console.log('country picks api call', score_detail)
+  $.each(score_detail, function(i, data) {
+    console.log(data.fields)
+    $('#totals' + data.fields.user).append('<td id=men_countries>Mens Picks</td>')
+    $('#totals' + data.fields.user).append('<td id=women_countries>Womens Picks</td>')
+  })
+})
+resolve()})
 }

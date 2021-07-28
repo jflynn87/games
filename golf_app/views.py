@@ -220,7 +220,7 @@ class NewFieldListView(LoginRequiredMixin,TemplateView):
                 cp.user = user
                 cp.tournament = tournament
                 cp.country = womens_pick
-                cp.gender = 'woman'
+                cp.gender = 'women'
                 cp.save()
 
         print ('user submitting picks', datetime.datetime.now(), request.user, Picks.objects.filter(playerName__tournament=tournament, user=user))
@@ -476,12 +476,16 @@ class GetScores(APIView):
             }), 200)
 
 
-        if t.current and not t.complete:
+        if t.current and not t.complete or t.pga_tournamant_num == '999':
             print ('scraping')
             if t.pga_tournament_num == '470':
                 return HttpResponse('Wrong link, use MP link')
             elif t.pga_tournament_num == '018':
                 score_dict = scrape_cbs_golf.ScrapeCBS().get_data()
+            elif t.pga_tournament_num == '999':
+                mens_field = scrape_espn.ScrapeESPN(tournament=t, url='https://www.espn.com/golf/leaderboard?tournamentId=401285309', setup=True).get_data()    
+                womens_field = scrape_espn.ScrapeESPN(tournament=t, url="https://www.espn.com/golf/leaderboard/_/tour/womens-olympics-golf", setup=True).get_data()
+                score_dict = {**mens_field, **womens_field}
             else:
                 score_dict = scrape_espn.ScrapeESPN().get_data()
         else:
@@ -511,9 +515,12 @@ class GetScores(APIView):
 
         scores = manual_score.Score(score_dict, t, 'json')
         # change so this isn't executed when complete, add function to get total scores without updating
-        #print (len(score_dict))
-        if len(score_dict) == 0:
-            print ('score_dict empty')
+        print ('XXXXXX', score_dict.get('info'))
+        if len(score_dict) == 0 or (score_dict.get('info').get('round') == 1 and score_dict.get('info').get('round_status') == 'Not Started'):
+            print ('score_dict empty', score_dict.get('info'))
+            for sd in ScoreDetails.objects.filter(pick__playerName__tournament=t):
+                sd.sod_position = ' '
+                sd.save()
             return Response(({}), 200)
         
         if t.current and len(score_dict) != 0:
@@ -583,7 +590,10 @@ class GetDBScores(APIView):
         t_data = serializers.serialize("json", [t, ])
 
         try:
-            display_data = json.loads(sd.pick_data)
+            if sd.pick_data:
+                display_data = json.loads(sd.pick_data)
+            else:
+                display_data = ''
 
             if len(display_data) > 0:    
                 return Response(({'picks': display_data.get('display_data').get('picks'),
@@ -598,9 +608,21 @@ class GetDBScores(APIView):
                                 'round_status': display_data.get('display_data').get('round_status')
                 }), 200)
             else:
-                print ('switch to get scores')
-                print (self.request.GET)
-                GetScores(self.request.GET, num)
+                print ('no db scores returnng empty dicts')
+                # return Response(({'picks': ' ',
+                #                 'totals': ' ',
+                #                 'leaders': ' ', 
+                #                 'cut_line': ' ',
+                #                 'optimal': ' ', 
+                #                 'scores': ' ',
+                #                 'season_totals': ' ',
+                #                 'info': json.dumps(info),
+                #                 't_data': ' ',
+                #                 'round_status': ' '
+                # }), 200)
+                return Response({})
+                
+               
         except Exception as e:
             print ('old logic', e)
             return (redirect('golf_app:get_scores'), num)
@@ -658,6 +680,61 @@ class NewScoresView(LoginRequiredMixin,ListView):
                                     })
         print ('scores context duration', datetime.datetime.now() -start)
         return context        
+
+
+class OlympicScoresView(LoginRequiredMixin,ListView):
+    login_url = 'login'
+    template_name = 'golf_app/olympic_scores.html'
+    queryset = Picks.objects.filter(playerName__tournament__pga_tournament_num='999', playerName__tournament__season__current=True) 
+
+    def get_context_data(self, **kwargs):
+        context = super(OlympicScoresView, self).get_context_data(**kwargs)
+        start = datetime.datetime.now()
+        if self.request.user.is_authenticated:
+            utils.save_access_log(self.request, 'olympic current week scores')
+
+#        if self.kwargs.get('pk') != None:
+#            print (self.kwargs)
+#            tournament = Tournament.objects.get(pk=self.kwargs.get('pk'))
+#        else:
+        tournament = Tournament.objects.get(pga_tournament_num='999', season__current=True)
+        
+        if not tournament.started():
+           user_dict = {}
+           for user in Picks.objects.filter(playerName__tournament=tournament).values('user__username').annotate(Count('playerName')):
+               user_dict[user.get('user__username')]=user.get('playerName__count')
+               #if tournament.pga_tournament_num == '470': #special logic for match player
+               #   scores = (None, None, None, None,None)
+               #else:  scores=calc_score.calc_score(self.kwargs, request)
+           self.template_name = 'golf_app/pre_start.html'
+
+           context.update({'user_dict': user_dict,
+                           'tournament': tournament,
+                          # 'lookup_errors': scores[4],
+                                                    })
+
+           return context
+        ## from here all logic should only happen if tournament has started
+        # comment out in hopes all submit
+        # if not tournament.picks_complete():
+        #       print ('picks not complete')
+        #       tournament.missing_picks()
+
+        #score_dict = scrape_espn.ScrapeESPN().get_data()
+
+        context.update({'scores':TotalScore.objects.filter(tournament=tournament).order_by('score'),
+                        'detail_list':None,
+                        'leader_list':None,
+                        'cut_data':None,
+                        'lookup_errors': None,
+                        'tournament': tournament,
+                        'thru_list': [],
+                        'groups': Group.objects.filter(tournament=tournament),
+                        #'score_dict': score_dict,
+                                    })
+        print ('scores context duration', datetime.datetime.now() -start)
+        return context        
+
 
 
 #from golf_app import manual_score
@@ -1487,21 +1564,36 @@ class OlympicGolfersByCountry(APIView):
     def get(self, request):
         try:
             t = Tournament.objects.get(pga_tournament_num='999', season__current=True)
-            sex = 'men'
-            d = {'men': {}, 'women': {}}
-            for f in Field.objects.filter(tournament=t):
-                if f.playerName == "Nelly Korda":  #top ranked in 2021
-                    sex = 'women'
-                country = f.golfer.flag_link.split('/')[9][0:3].upper()
-                if country == "NIR":  #for Rory
-                    country = "IRL"
-                if d.get(sex).get(country):
-                    d.get(sex).update({country: d.get(sex).get(country) +  1})
-                else:
-                    d.get(sex).update({country: 1})
+            d = t.get_country_counts()
+            # sex = 'men'
+            # d = {'men': {}, 'women': {}}
+            # for f in Field.objects.filter(tournament=t):
+            #     if f.playerName == "Nelly Korda":  #top ranked in 2021
+            #         sex = 'women'
+            #     country = f.golfer.flag_link.split('/')[9][0:3].upper()
+            #     if country == "NIR":  #for Rory
+            #         country = "IRL"
+            #     if d.get(sex).get(country):
+            #         d.get(sex).update({country: d.get(sex).get(country) +  1})
+            #     else:
+            #         d.get(sex).update({country: 1})
             return JsonResponse(d)
         except Exception as e:
             print ('get olympic get players by country exception: ', e)
             return JsonResponse({'msg': e})
     
 
+class GetCountryPicks(APIView):
+    def get(self,request, pga_t_num, user):
+        print ('GETCOUNTRY API request', self.request.user, pga_t_num)
+        t = Tournament.objects.get(pga_tournament_num=pga_t_num, season__current=True)
+        try:
+            if user == 'user':
+               data = serializers.serialize('json', CountryPicks.objects.filter(tournament=t, user=self.request.user),  use_natural_foreign_keys=True)
+            else:
+               data = serializers.serialize('json', CountryPicks.objects.filter(tournament=t),  use_natural_foreign_keys=True)
+        except Exception as e:
+            print ('GET country picks exception: ', e)
+            data = json.dumps({'msg': e})    
+            
+        return Response(data, status=200)

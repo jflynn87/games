@@ -41,22 +41,10 @@ import random
 
 start = datetime.now()
 t = Tournament.objects.get(pga_tournament_num='999')
-sex = 'men'
-d = {'men': {}, 'women': {}}
-for f in Field.objects.filter(tournament=t):
-    if f.playerName == "Nelly Korda": sex = 'women'
-    #if 'pgatour' in f.golfer.flag_link:
-    country = f.golfer.flag_link.split('/')[9][0:3].upper()
-    if country == "NIR":
-        country = "IRL"
-    #elif 'espncdn' in f.golfer.flag_link:
-    #    country = f.golfer.flag_link.split('/')[9][0:3]
-    if d.get(sex).get(country):
-        d.get(sex).update({country: d.get(sex).get(country) +  1})
-    else:
-        d.get(sex).update({country: 1})
-    
-print (d)
+mens_field = scrape_espn.ScrapeESPN(tournament=t, url='https://www.espn.com/golf/leaderboard?tournamentId=401285309', setup=True).get_data()    
+womens_field = scrape_espn.ScrapeESPN(tournament=t, url="https://www.espn.com/golf/leaderboard/_/tour/womens-olympics-golf", setup=True).get_data()
+score_dict = {**mens_field, **womens_field}
+print (score_dict)
 
 exit()
 

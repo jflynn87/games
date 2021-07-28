@@ -3,14 +3,6 @@ console.log('field js loaded')
 //get existing picks on update
 $(document).ready(function() {
   console.log('field js executing')
-  //$('#main').hide()
-  // $.ajax({
-  //   type: "GET",
-  //   url: "/golf_app/get_info/",
-  //   dataType: 'json',
-  //   data: {'tournament' : $('#tournament_key').text()},
-  //   success: function (json) {
-  //     info = $.parseJSON((json))
       $.ajax({
         type: "GET",
         url: "/golf_app/ajax/get_picks/",
@@ -32,13 +24,26 @@ $(document).ready(function() {
         }
       
       })
- //    },
- //   failure: function(json) {
- //     console.log('get info fail');
- //     console.log(json);
- //   }
+      if ($('#pga_t_num').text() == '999') {
+        fetch("/golf_app/get_country_picks/" + $('#pga_t_num').text() + '/user',         
+        {method: "GET",
+        })
+    .then((response) => response.json())
+    .then((responseJSON) => {
+        data = $.parseJSON(responseJSON)
+        //console.log('Country Picks responsn', data)
+        $.each(data, function(i, pick) {
+          //var pick_i = i
+          if (i == 3) {pick_i = 1}
+          else if (i == 4) {pick_i = 2}
+          else if (i == 5) {pick_i = 3}
+          else (pick_i = i +1)
+          console.log(i, pick_i)
+          $('#' + pick.fields.gender + '_' + pick_i + '_' + 'country').val(pick.fields.country);
+        })
 
-  //)
+      })
+    }
  })
   
 $(document).on("click", "#download", function() {
@@ -215,7 +220,7 @@ $("#actual-row").each(function () {
       var countries_ok = true
       if ($('#pga_t_num').text() == '999') {
         var picks = {}
-        console.log(countries_ok)
+        //console.log(countries_ok)
         picks['m' + $('#men_1_country').val()] = true
         picks['m' + $('#men_2_country').val()] = true
         picks['m' + $('#men_3_country').val()] = true
@@ -225,7 +230,7 @@ $("#actual-row").each(function () {
         if (Object.keys(picks).length == 6) {countries_ok = true}
         else {countries_ok = false}
       }
-      console.log(Object.keys(picks).length, countries_ok)
+      //console.log(Object.keys(picks).length, countries_ok)
       if (total == parseInt(info['total']) && countries_ok == true) {
         $('#sub_button').removeAttr('disabled').attr('class', 'btn btn-primary').val('Submit Picks');
         $('#actual-grouptotal').css('background-color', '')  
@@ -484,38 +489,3 @@ $(document).on("click", "#download_excel", function() {
     }
   })
 })
-// function formatFieldXLSData(field) {
-//   return new Promise (function (resolve, reject) {
-//   fieldRows = []
-//   $.each(field, function(i, golfer) {
-//     row = {}
-//     if (!golfer['fields']['withdrawn']){
-      
-      
-//       row['golfer'] = golfer['fields']['playerName'].replace(',', '') 
-//       row['pga_num'] = golfer.fields.golfer.golfer_pga_num
-//       row['group'] = golfer.fields.group
-//       row['current_wgr'] = golfer['fields']['currentWGR']
-//       row['sow_wgr'] = golfer['fields']['sow_WGR'] 
-//       row['soy_wgr'] = golfer['fields']['soy_WGR']
-//       row['prior_year'] = golfer.fields.prior_year
-//       row['handi'] = golfer['fields']['handi']
-//       row['played'] = golfer.fields.season_stats.played 
-//       row['won'] = golfer.fields.season_stats.won
-//       row['top10'] = golfer.fields.season_stats.top10
-//       row['bet11_29'] = golfer.fields.season_stats.bet11_29
-//       row['bet30_49'] = golfer.fields.season_stats.bet30_49
-//       row['over50'] = golfer.fields.season_stats.over50
-//       row['cuts'] = golfer.fields.season_stats.cuts
-//       row['google'] = 
-//        '=HYPERLINK("https://www.google.com/search?q=' + golfer['fields']['playerName'].replace('  ', '%20').replace(',', '') + '")' 
-      
-//       fieldRows.push(row)
-//     }
-//   })
-//   resolve(fieldRows)
-// }
-//   )
-
-  
-//}
