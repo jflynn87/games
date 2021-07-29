@@ -3,7 +3,7 @@ os.environ.setdefault("DJANGO_SETTINGS_MODULE","gamesProj.settings")
 
 import django
 django.setup()
-from golf_app.models import Tournament, TotalScore, ScoreDetails, Picks, PickMethod, BonusDetails, Season, Golfer, Group, Field, ScoreDict, AuctionPick, AccessLog, StatLinks
+from golf_app.models import Tournament, TotalScore, ScoreDetails, Picks, PickMethod, BonusDetails, Season, Golfer, Group, Field, ScoreDict, AuctionPick, AccessLog, StatLinks, CountryPicks
 from django.contrib.auth.models import User
 from datetime import date, datetime, timedelta
 import sqlite3
@@ -40,14 +40,17 @@ import random
 
 
 start = datetime.now()
+
 t = Tournament.objects.get(pga_tournament_num='999')
-mens_field = scrape_espn.ScrapeESPN(tournament=t, url='https://www.espn.com/golf/leaderboard?tournamentId=401285309', setup=True).get_data()    
-womens_field = scrape_espn.ScrapeESPN(tournament=t, url="https://www.espn.com/golf/leaderboard/_/tour/womens-olympics-golf", setup=True).get_data()
-score_dict = {**mens_field, **womens_field}
-score_dict.get('info') = mens_field.get('info')
-print (score_dict)
-print (score_dict.get('info'))
-print (mens_field.get('info'))
+data= golf_serializers.CountryPicks(CountryPicks.objects.filter(tournament=t), many=True).data
+print (data)
+#mens_field = scrape_espn.ScrapeESPN(tournament=t, url='https://www.espn.com/golf/leaderboard?tournamentId=401285309', setup=True).get_data()    
+#womens_field = scrape_espn.ScrapeESPN(tournament=t, url="https://www.espn.com/golf/leaderboard/_/tour/womens-olympics-golf", setup=True).get_data()
+#score_dict = {**mens_field, **womens_field}
+#score_dict.get('info') = mens_field.get('info')
+#print (score_dict)
+#print (score_dict.get('info'))
+#print (mens_field.get('info'))
 exit()
 
 f = open('lpga_links.json',)

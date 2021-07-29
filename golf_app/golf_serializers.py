@@ -1,6 +1,6 @@
 from rest_framework import serializers
 import json
-from golf_app.models import Field, ScoreDetails, Golfer
+from golf_app.models import Field, ScoreDetails, Golfer, CountryPicks
 
 class FieldSerializer(serializers.ModelSerializer):
 
@@ -54,3 +54,14 @@ class GolferSerializer(serializers.ModelSerializer):
     
     #def get_season_results(self, golfer):
     #    return golfer.results.
+
+class CountryPicks(serializers.ModelSerializer):
+    get_flag = serializers.SerializerMethodField('get_flag_link')
+
+    class Meta:
+        model = CountryPicks
+        fields = '__all__'
+        depth = 1   
+
+    def get_flag_link(self, countrypick):
+        return countrypick.get_flag()

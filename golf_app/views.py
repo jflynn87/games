@@ -1590,11 +1590,13 @@ class GetCountryPicks(APIView):
         t = Tournament.objects.get(pga_tournament_num=pga_t_num, season__current=True)
         try:
             if user == 'user':
-               data = serializers.serialize('json', CountryPicks.objects.filter(tournament=t, user=self.request.user),  use_natural_foreign_keys=True)
+               #data = serializers.serialize('json', CountryPicks.objects.filter(tournament=t, user=self.request.user),  use_natural_foreign_keys=True)
+               data= golf_serializers.CountryPicks(CountryPicks.objects.filter(tournament=t, user=self.request.user), many=True).data
             else:
-               data = serializers.serialize('json', CountryPicks.objects.filter(tournament=t),  use_natural_foreign_keys=True)
+               #data = serializers.serialize('json', CountryPicks.objects.filter(tournament=t),  use_natural_foreign_keys=True)
+               data= golf_serializers.CountryPicks(CountryPicks.objects.filter(tournament=t), many=True).data
         except Exception as e:
             print ('GET country picks exception: ', e)
             data = json.dumps({'msg': e})    
             
-        return Response(data, status=200)
+        return JsonResponse(data, status=200, safe=False)

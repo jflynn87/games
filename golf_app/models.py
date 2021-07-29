@@ -1,3 +1,4 @@
+from django.core.exceptions import ImproperlyConfigured
 from django.db import models 
 from django.contrib.auth.models import Group, User
 from django.conf import settings
@@ -419,8 +420,6 @@ class Golfer(models.Model):
         else:
             return self.golfer_name.split(' ')[0] + '-' + self.golfer_name.split(' ')[1]
 
-
-
     def golfer_link(self):
         
         if  self.golfer_name[1]=='.' and self.golfer_name[3] =='.':
@@ -583,6 +582,12 @@ class Golfer(models.Model):
     def get_pic_link(self):
         return "https://pga-tour-res.cloudinary.com/image/upload/c_fill,d_headshots_default.png,f_auto,g_face:center,h_85,q_auto,r_max,w_85/headshots_" + self.golfer_pga_num + ".png"
 
+
+    def country(self):
+        if self.flag_link.split('/')[9][0:3].upper() == "NIR":
+            return "IRL"
+        else:
+            return self.flag_link.split('/')[9][0:3].upper()
 
 class Field(models.Model):
 
@@ -837,6 +842,24 @@ class Picks(models.Model):
         else:
             return False
 
+    def gold_medal(self):
+        if self.playerName.tournament.pga_tournament_num == '999' and self.is_winner():
+            return True
+        else:
+            return False
+
+    def silver_medal(self):
+        if self.playerName.tournament.pga_tournament_num == '999' and ScoreDetails.objects.filter(pick=self, gross_score=2, pick__playerName__tournament__complete=True):
+            return True
+        else:
+            return False
+    
+    def bronze_medal(self):
+        if self.playerName.tournament.pga_tournament_num == '999' and ScoreDetails.objects.filter(pick=self, gross_score=2, pick__playerName__tournament__complete=True):
+            return True
+        else:
+            return False
+
 
 class PickMethod(models.Model):
     CHOICES = (('1', 'player'), ('2', 'random'), ('3', 'auto'))
@@ -1017,3 +1040,7 @@ class CountryPicks(models.Model):
 
     def __str__(self):
         return str(self.user) + str(self.tournament) + str(self.country)
+
+    def get_flag(self):
+        c = self.country.lower()
+        return "https://a.espncdn.com/combiner/i?img=/i/teamlogos/countries/500/" + c + ".png&w=40&h=40&scale=crop"

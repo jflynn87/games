@@ -221,14 +221,14 @@ function get_picks(info, optimal_data) {
       })
       .then((response) => response.json())
       .then((responseJSON) => {
-          country_detail = $.parseJSON(responseJSON)
-          console.log('countries', country_detail)
+          country_detail = responseJSON
+          //console.log('countries', country_detail)
           $.each(country_detail, function(i, data) {
-            console.log('country picks api call', data)
-            if (data.fields.gender == 'men') {
-            $('#totals' + data.fields.user + 'men_countries').append('<p>' + data.fields.country + '</p>') }
+           // console.log('country picks api call', data)
+            if (data.gender == 'men') {
+            $('#totals' + data.user.username + 'men_countries').append('<p><img src=' + data.get_flag + '</src></p>') }
             else {
-            $('#totals' + data.fields.user + 'women_countries').append('<p>' + data.fields.country + '</p>') }
+            $('#totals' + data.user.username + 'women_countries').append('<p><img src=' + data.get_flag + '</src></p>') }
 
     })
   })
@@ -247,7 +247,9 @@ function get_picks(info, optimal_data) {
       else {toPar = stats.toPar} 
       
       $('#totals' + player).append('<td id=' + player + stats.pick.playerName.golfer.espn_number +  '>' + '<span class=watermark>' + 
-       '<p>' + player.substring(0, 4)  + ' : ' + stats.pick.playerName.group.number +  '</p>'  + '</span>' + '<p>' +  stats.pick.playerName.playerName  + '</p>' + '<p>' + stats.score +
+       '<p>' + player.substring(0, 4)  + ' : ' + stats.pick.playerName.group.number +  '</p>'  +
+       '</span>' + '<p> <img src=' + stats.pick.playerName.golfer.pic_link + ' style="max-height:85px;">' + stats.pick.playerName.playerName + '</img> </p>' + 
+       '<p>' + '<img src=' + stats.pick.playerName.golfer.flag_link + ' style="max-height:25px;"></img>' +  stats.score +
         '<span > <a id=tt-' + pick + ' data-toggle="tooltip" > <i class="fa fa-info-circle" style="color:blue;"></i> </a> </span>' +
      '</p>' +  toPar + ' (' + stats.thru + ')' +  '   ' +
        format_move(stats.sod_position) +  stats.sod_position.replace(filler, '') +
@@ -396,7 +398,9 @@ function update_picks(info, optimal_data) {
       else {toPar = stats.toPar} 
     
       $('#' + player + stats.pick.playerName.golfer.espn_number).html('<span class=watermark>' + 
-       '<p>' + player.substring(0, 4)  + ' : ' + stats.pick.playerName.group.number +  '</p>'  + '</span>' + '<p>' +  stats.pick.playerName.playerName  + '</p>' + '<p>' + stats.score +
+       '<p>' + player.substring(0, 4)  + ' : ' + stats.pick.playerName.group.number +
+       '</p>'  + '</span>' + '<p>' +  '<img src=' + stats.pick.playerName.golfer.pic_link + ' style="max-height:85px;">' + stats.pick.playerName.playerName + '</img> </p>' + 
+       '<p> <img src=' + stats.pick.playerName.golfer.flag_link + ' style="max-height:25px;"></img>' +  stats.score +
         '<span > <a id=tt-' + pick + ' data-toggle="tooltip" > <i class="fa fa-info-circle" style="color:blue;"></i> </a> </span>' +
      '</p>' +  toPar + ' (' + stats.thru + ')' +  '   ' +  format_move(stats.sod_position) +  stats.sod_position.replace(filler, '') + '</p>' +  '</td>')
      //console.log($('#tt-' + $(this)[0]['pick'].replace(/ +?/g, '').replace(/\./g,'') + '[data-toggle="tooltip"]'))
@@ -461,9 +465,9 @@ function olympicCountryPicks(resolve) {
 .then((response) => response.json())
 .then((responseJSON) => {
   score_detail = $.parseJSON(responseJSON)
-  console.log('country picks api call', score_detail)
+  //console.log('country picks api call', score_detail)
   $.each(score_detail, function(i, data) {
-    console.log(data.fields)
+    //console.log(data.fields)
     $('#totals' + data.fields.user).append('<td id=men_countries>Mens Picks</td>')
     $('#totals' + data.fields.user).append('<td id=women_countries>Womens Picks</td>')
   })
