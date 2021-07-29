@@ -44,8 +44,10 @@ t = Tournament.objects.get(pga_tournament_num='999')
 mens_field = scrape_espn.ScrapeESPN(tournament=t, url='https://www.espn.com/golf/leaderboard?tournamentId=401285309', setup=True).get_data()    
 womens_field = scrape_espn.ScrapeESPN(tournament=t, url="https://www.espn.com/golf/leaderboard/_/tour/womens-olympics-golf", setup=True).get_data()
 score_dict = {**mens_field, **womens_field}
+score_dict.get('info') = mens_field.get('info')
 print (score_dict)
-
+print (score_dict.get('info'))
+print (mens_field.get('info'))
 exit()
 
 f = open('lpga_links.json',)

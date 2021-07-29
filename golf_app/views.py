@@ -515,8 +515,9 @@ class GetScores(APIView):
 
         scores = manual_score.Score(score_dict, t, 'json')
         # change so this isn't executed when complete, add function to get total scores without updating
-        print ('XXXXXX', score_dict.get('info'))
-        if len(score_dict) == 0 or (score_dict.get('info').get('round') == 1 and score_dict.get('info').get('round_status') == 'Not Started'):
+        print ('XXXXXX', score_dict.get('info'), t.started())
+        if len(score_dict) == 0: 
+            #(score_dict.get('info').get('round') == 1 and score_dict.get('info').get('round_status') == 'Not Started'):
             print ('score_dict empty', score_dict.get('info'))
             for sd in ScoreDetails.objects.filter(pick__playerName__tournament=t):
                 sd.sod_position = ' '
@@ -716,9 +717,9 @@ class OlympicScoresView(LoginRequiredMixin,ListView):
            return context
         ## from here all logic should only happen if tournament has started
         # comment out in hopes all submit
-        # if not tournament.picks_complete():
-        #       print ('picks not complete')
-        #       tournament.missing_picks()
+        if not tournament.picks_complete():
+              print ('picks not complete')
+              tournament.missing_picks()
 
         #score_dict = scrape_espn.ScrapeESPN().get_data()
 

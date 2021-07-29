@@ -334,6 +334,7 @@ class Score(object):
             handicap = picks.aggregate(Sum('playerName__handi'))
             print ('total score debug', gross_score, handicap)
             net_score = gross_score.get('score__sum') - handicap.get('playerName__handi__sum')
+            
             cuts = ScoreDetails.objects.filter(pick__playerName__tournament=self.tournament, pick__user=user, today_score__in=self.not_playing_list).count()
             print ('player/score : ', player, gross_score, handicap, cuts) 
             ts, created = TotalScore.objects.get_or_create(user=user, tournament=self.tournament)
