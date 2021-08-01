@@ -350,27 +350,30 @@ class Score(object):
     @transaction.atomic
     def total_scores(self):
         start = datetime.now()
-       
+        print ('calc total scores')
         ts_dict = {}
 
-        if not self.tournament.current:
-            for ts in TotalScore.objects.filter(tournament=self.tournament):
-                if PickMethod.objects.filter(tournament=self.tournament, user=ts.user, method='3').exists():
-                    message = "- missed pick deadline (no bonuses)"
-                else:
-                    message = ''
-                try:
-                    bd = BonusDetails.objects.get(user=ts.user, tournament=ts.tournament)    
-                except Exception:
-                    bd.winner_bonus = 0
-                    bd.major_bonus = 0
-                    bd.cut_bonus = 0
-                ts_dict[ts.user.username] = {'total_score': ts.score, 'cuts': ts.cut_count, \
-                    'msg': message, 'winner_bonus': bd.winner_bonus, 'major_bonus': bd.major_bonus, \
-                    'cut_bonus': bd.cut_bonus, 'playoff_bonus': bd.playoff_bonus, \
-                    'best_in_group': bd.best_in_group_bonus, 'handicap': ts.total_handicap()} 
-            sorted_ts_dict = sorted(ts_dict.items(), key=lambda v: v[1].get('total_score'))
-            return json.dumps(dict(sorted_ts_dict))
+        #comment this block out, don't call if complete       
+#        if (self.tournament.pga_tournament_num == '999' and self.tournament.complete) or (self.tournament.pga_tournament_num != '999' and not self.tournament.current):
+#        
+#            print ('not current logic')
+#            for ts in TotalScore.objects.filter(tournament=self.tournament):
+#                if PickMethod.objects.filter(tournament=self.tournament, user=ts.user, method='3').exists():
+#                    message = "- missed pick deadline (no bonuses)"
+#                else:
+#                    message = ''
+#                try:
+#                    bd = BonusDetails.objects.get(user=ts.user, tournament=ts.tournament)    
+#                except Exception:
+#                    bd.winner_bonus = 0
+#                    bd.major_bonus = 0
+#                    bd.cut_bonus = 0
+#                ts_dict[ts.user.username] = {'total_score': ts.score, 'cuts': ts.cut_count, \
+#                    'msg': message, 'winner_bonus': bd.winner_bonus, 'major_bonus': bd.major_bonus, \
+#                    'cut_bonus': bd.cut_bonus, 'playoff_bonus': bd.playoff_bonus, \
+#                    'best_in_group': bd.best_in_group_bonus, 'handicap': ts.total_handicap()} 
+#            sorted_ts_dict = sorted(ts_dict.items(), key=lambda v: v[1].get('total_score'))
+#            return json.dumps(dict(sorted_ts_dict))
        
         
         TotalScore.objects.filter(tournament=self.tournament).delete()
@@ -416,6 +419,7 @@ class Score(object):
                 if medal_total.get('score__sum'): #need to check for none since no picks for some
                     ts.score -= int(medal_total.get('score__sum'))
             
+            print ('saving TS ', ts.user, ts.score)
             ts.save()
 
             if PickMethod.objects.filter(tournament=self.tournament, user=user, method='3').exists():
@@ -426,6 +430,7 @@ class Score(object):
 
             ts_dict[ts.user.username] = {'total_score': ts.score, 'cuts': ts.cut_count, 'msg': message}
             print ('ts loop duration', datetime.now() - ts_loop_start)
+            print ('ts dict', ts_dict)
         if self.tournament.complete:
             if self.tournament.major: 
                 winning_score = TotalScore.objects.filter(tournament=self.tournament).aggregate(Min('score'))
