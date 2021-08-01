@@ -852,24 +852,6 @@ class Picks(models.Model):
         else:
             return False
 
-    def gold_medal(self):
-        if self.playerName.tournament.pga_tournament_num == '999' and self.is_winner():
-            return True
-        else:
-            return False
-
-    def silver_medal(self):
-        if self.playerName.tournament.pga_tournament_num == '999' and ScoreDetails.objects.filter(pick=self, gross_score=2, pick__playerName__tournament__complete=True):
-            return True
-        else:
-            return False
-    
-    def bronze_medal(self):
-        if self.playerName.tournament.pga_tournament_num == '999' and ScoreDetails.objects.filter(pick=self, gross_score=2, pick__playerName__tournament__complete=True):
-            return True
-        else:
-            return False
-
 
 class PickMethod(models.Model):
     CHOICES = (('1', 'player'), ('2', 'random'), ('3', 'auto'))
@@ -1055,4 +1037,3 @@ class CountryPicks(models.Model):
         c = self.country.lower()
         return "https://a.espncdn.com/combiner/i?img=/i/teamlogos/countries/500/" + c + ".png&w=40&h=40&scale=crop"
 
-    

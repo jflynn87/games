@@ -71,7 +71,7 @@ class ScrapeESPN(object):
                                     'complete': False,
                                     'round_status': status}
             except Exception as e:
-                if status == "Final":
+                if status in ["Final", "Medal Official"]:
                     score_dict['info'] = {'round': 4,
                                         'complete': True,
                                         'round_status': status}
@@ -108,6 +108,7 @@ class ScrapeESPN(object):
                                         'round_status': status}
             
             score_dict['info'].update({'source': 'espn'})
+            
             playoff_sect = soup.find('div', {'class': 'leaderboard__playoff--table'})
             if playoff_sect == None:
                 playoff = False
@@ -122,7 +123,7 @@ class ScrapeESPN(object):
                 table = leaderboard[0].find_all('tr')
                 
             
-            for row in table:
+            for i, row in enumerate(table):
                 td = row.find_all('td')
                 #print (row['class'], len(row.find_all('td')))
                 #print (row.a['href'].split('/'))
@@ -187,7 +188,30 @@ class ScrapeESPN(object):
                                         'tot_strokes': td[7].text,
                     }
                 
+                elif len(td) == 8 and score_dict.get('info').get('round') != 1 and self.tournament.pga_tournament_num == '999':  #olympics complete
+                    if i == 0:
+                        rank = 1
+                    elif i == 1:
+                        rank =2
+                    elif i == 2:
+                        rank = 3
+                    else:
+                        rank = td[0].text
 
+                    score_dict[row.a.text] = {
+                                        'pga_num': row.a['href'].split('/')[7],
+                                        #'rank': td[0].text,
+                                        'rank': rank, 
+                                        'change': '',
+                                        #'round_score': td[3].text,
+                                        'total_score': td[2].text,
+                                        'thru': "F",
+                                        'r1': td[3].text,
+                                        'r2': td[4].text,
+                                        'r3': td[5].text,
+                                        'r4': td[6].text,  
+                                        'tot_strokes': td[7].text,
+                    }
                 else: #round 1 make this fit that
                     score_dict[row.a.text] = {
                                         'pga_num': row.a['href'].split('/')[7],

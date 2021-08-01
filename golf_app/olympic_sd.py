@@ -43,6 +43,7 @@ class OlympicScores(object):
         score_dict = {}
         mens_field = self.get_mens_field()
         womens_field = self.get_womens_field()
+        print ('MENS INFO: ', mens_field.get('info'))
 
         mens_info = mens_field.get('info')
         womens_info = womens_field.get('info')
@@ -55,7 +56,7 @@ class OlympicScores(object):
                 score_dict['info']['mens_complete'] = mens_field.get('info').get('complete')
                 score_dict['info']['womens_complete'] = womens_field.get('info').get('complete')
         else:
-            score_dict['info']['round_status'] = mens_field.get('info').get('round_status') + " - Womens.  Men Complete"
+            score_dict['info']['round_status'] = womens_field.get('info').get('round_status') + " - Womens.  Men Complete"
             score_dict['info']['mens_complete'] = mens_field.get('info').get('complete')
             score_dict['info']['womens_complete'] = womens_field.get('info').get('complete')
 
