@@ -318,7 +318,7 @@ class Score(object):
                 golfer_c = pick.playerName.golfer.country()
                 c = CountryPicks.objects.get(user=pick.user, country=golfer_c, gender='men')
                 num_of_golfers = pick.playerName.tournament.individual_country_count(golfer_c, 'men')
-                c.score = 35 - (5* (num_of_golfers -1))
+                c.score = 20 - (5* (num_of_golfers -1))
                 print ('mens bronze', pick, c.score)
                 c.save()
         if self.score_dict.get('info').get('womens_complete'):
@@ -340,7 +340,7 @@ class Score(object):
                 golfer_c = pick.playerName.golfer.country()
                 c = CountryPicks.objects.get(user=pick.user, country=golfer_c, gender='men')
                 num_of_golfers = pick.playerName.tournament.individual_country_count(golfer_c, 'women')
-                c.score = 35 - (5* (num_of_golfers -1))
+                c.score = 20 - (5* (num_of_golfers -1))
                 print ('womens bronze', pick, c.score)
                 c.save()
 
