@@ -145,12 +145,16 @@ function build_score_tbl(data) {
 })
 
   $('#totals').append('<tr id=optimalpicks class=small> <td> <p> Best Picks </p> </td> <td> </td> </tr>')
+  if ($('#pga_t_num').text() == '999') {$('#optimalpicks').append('<td></td><td></td>')
+                                        $('#cuts').append('<td></td><td></td>')} 
   $.each(optimal_data, function(group, data) {
     
     $('#optimalpicks').append('<td id=optimal_' + group + ' colspan=' + info[group] + ' style=text-align:center;> <p>' + Object.values(data["golfer"]) + '</p> <p>' + data['rank'] + '</td>')
   })
 
   $('#totals').append('<tr id=cuts class=small> <td> <p> Cuts </p> </td> <td> </td> </tr>')
+  if ($('#pga_t_num').text() == '999') {$('#cuts').append('<td></td><td></td>')} 
+  
   $.each(optimal_data, function(group, data) {
     $('#cuts').append('<td id=cuts_' + group + ' colspan=' + info[group] + ' style=text-align:center;> <p>' + data["cuts"] + ' / ' + data['total_golfers'] + '</td>')
   })
@@ -344,6 +348,8 @@ function update_score_tbl(data) {
   })
 
   //$('#totals #optimalpicks').html('<tr id=optimalpicks class=small> <td> <p> Best Picks </p> </td> <td> </td> </tr>')
+  //if ($('#pga_t_num').text() == '999') {$('#optimalpicks').append('<td></td><td></td>')
+  //                                      $('#cuts').append('<td></td><td></td>')}
   $.each(optimal_data, function(group, data) {
     $('#optimal_' + group).html('<p>' + Object.values(data["golfer"]) + '</p> <p>' + data['rank'] + '</p>')
   })

@@ -14,9 +14,13 @@ from django.views.generic.base import TemplateResponseMixin
 from django.urls import reverse, reverse_lazy
 from django.contrib.auth.models import User
 import datetime
-from golf_app import populateField, calc_score, optimal_picks,\
-     manual_score, scrape_scores_picks, scrape_cbs_golf, scrape_masters, withdraw, scrape_espn, \
-     populateMPField, mp_calc_scores, golf_serializers, utils
+#from golf_app import populateField, calc_score, optimal_picks,\
+#     manual_score, scrape_scores_picks, scrape_cbs_golf, scrape_masters, withdraw, scrape_espn, \
+#     populateMPField, mp_calc_scores, golf_serializers, utils, olympic_sd
+from golf_app import populateField, manual_score, scrape_masters, withdraw, scrape_espn, \
+     populateMPField, mp_calc_scores, golf_serializers, utils, olympic_sd
+
+
 from django.utils import timezone
 from django.core.exceptions import ObjectDoesNotExist
 from django.db.models import Min, Q, Count, Sum, Max
@@ -476,16 +480,30 @@ class GetScores(APIView):
             }), 200)
 
 
-        if t.current and not t.complete or t.pga_tournamant_num == '999':
+        if (t.current and not t.complete) or t.pga_tournament_num == '999':
             print ('scraping')
-            if t.pga_tournament_num == '470':
+            if t.pga_tournament_num == '470': 
                 return HttpResponse('Wrong link, use MP link')
             elif t.pga_tournament_num == '018':
                 score_dict = scrape_cbs_golf.ScrapeCBS().get_data()
             elif t.pga_tournament_num == '999':
-                mens_field = scrape_espn.ScrapeESPN(tournament=t, url='https://www.espn.com/golf/leaderboard?tournamentId=401285309', setup=True).get_data()    
-                womens_field = scrape_espn.ScrapeESPN(tournament=t, url="https://www.espn.com/golf/leaderboard/_/tour/womens-olympics-golf", setup=True).get_data()
-                score_dict = {**mens_field, **womens_field}
+                score_dict = olympic_sd.OlympicScores().get_sd()
+                print ('Olympic score dict: ', score_dict)
+                # mens_field = scrape_espn.ScrapeESPN(tournament=t, url='https://www.espn.com/golf/leaderboard?tournamentId=401285309', setup=True).get_data() 
+                
+                # womens_field = scrape_espn.ScrapeESPN(tournament=t, url="https://www.espn.com/golf/leaderboard/_/tour/womens-olympics-golf", setup=True).get_data()
+                
+                # score_dict = {**mens_field, **womens_field}
+                # score_dict['info'].update({'mens_info': mens_field.get('info')})
+                # score_dict['info'].update({'womens_info': womens_field.get('info')})
+                # #assume mens starts first and womans second. 
+                # if not mens_field.get('info').get('complete'):
+                #     if mens_field.get('info').get('round') > 1:
+                #         info = mens_field.get('info')
+                #         score_dict['info'] = mens_field.get('info')
+                #         score_dict['info']['round_status'] = score_dict.get('info').get('round_status') + " - Mens"
+
+                
             else:
                 score_dict = scrape_espn.ScrapeESPN().get_data()
         else:
@@ -524,7 +542,7 @@ class GetScores(APIView):
                 sd.save()
             return Response(({}), 200)
         
-        if t.current and len(score_dict) != 0:
+        if (t.current and len(score_dict) != 0) or t.pga_tournament_num == '999':
             optimal_picks = {}
             for g in Group.objects.filter(tournament=t):
                 opt = scores.optimal_picks(g.number)

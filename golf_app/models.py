@@ -347,6 +347,7 @@ class Tournament(models.Model):
         return tot
 
     def get_country_counts(self):
+        '''retruns a dict of all the countries in the tournament'''
         if self.pga_tournament_num == '999': #Olympics
             t = Tournament.objects.get(pga_tournament_num='999')
             sex = 'men'
@@ -365,6 +366,15 @@ class Tournament(models.Model):
         else:
             return {'msg': 'only for olympics'}
 
+    def individual_country_count(self, country, gender):
+        '''takes a t obj and strings for country and gender, returns an int'''
+        all_countries = self.get_country_counts()
+        if all_countries.get(gender):
+            if all_countries.get(gender).get(country):
+                return all_countries.get(gender).get(country)
+        return 0
+            
+        
 
 
 class Group(models.Model):
@@ -1044,3 +1054,5 @@ class CountryPicks(models.Model):
     def get_flag(self):
         c = self.country.lower()
         return "https://a.espncdn.com/combiner/i?img=/i/teamlogos/countries/500/" + c + ".png&w=40&h=40&scale=crop"
+
+    

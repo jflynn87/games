@@ -25,7 +25,7 @@ from urllib.request import Request, urlopen
 from selenium import webdriver
 import urllib
 import json
-from golf_app import views, manual_score, populateField, withdraw, scrape_scores_picks, utils, scrape_cbs_golf, scrape_masters, scrape_espn, update_favs
+from golf_app import views, manual_score, populateField, withdraw, scrape_scores_picks, utils, scrape_cbs_golf, scrape_masters, scrape_espn, update_favs, olympic_sd
 from unidecode import unidecode
 from django.core import serializers
 from golf_app.utils import formatRank, format_name, fix_name
@@ -42,15 +42,34 @@ import random
 start = datetime.now()
 
 t = Tournament.objects.get(pga_tournament_num='999')
-data= golf_serializers.CountryPicks(CountryPicks.objects.filter(tournament=t), many=True).data
-print (data)
+sd = olympic_sd.OlympicScores().get_sd()
+#print (type(sd))
+#print (sd.get('info'))
+#print ("WI ", sd.get('info').get('womens_info'))
+exit()
+
+mens_field = scrape_espn.ScrapeESPN(tournament=t, url='https://www.espn.com/golf/leaderboard?tournamentId=401285309', setup=True).get_data() 
+mens_field['mens_info'] = mens_field.get('info')   
+womens_field = scrape_espn.ScrapeESPN(tournament=t, url="https://www.espn.com/golf/leaderboard/_/tour/womens-olympics-golf", setup=True).get_data()
+womens_field['womens_info'] = womens_field.get('info')
+
 #mens_field = scrape_espn.ScrapeESPN(tournament=t, url='https://www.espn.com/golf/leaderboard?tournamentId=401285309', setup=True).get_data()    
 #womens_field = scrape_espn.ScrapeESPN(tournament=t, url="https://www.espn.com/golf/leaderboard/_/tour/womens-olympics-golf", setup=True).get_data()
-#score_dict = {**mens_field, **womens_field}
+score_dict = {**mens_field, **womens_field}
+if not mens_field.get('info').get('complete'):
+    if mens_field.get('info').get('round') > 1:
+        info = mens_field.get('info')
+        score_dict['info'] = mens_field.get('info')
+        score_dict['info']['round_status'] = score_dict.get('info').get('round_status') + " - Mens"
+
 #score_dict.get('info') = mens_field.get('info')
 #print (score_dict)
 #print (score_dict.get('info'))
 #print (mens_field.get('info'))
+print (womens_field)
+print (score_dict.get('info'))
+print (score_dict.get('mens_info'))
+print (score_dict.get('womens_info'))
 exit()
 
 f = open('lpga_links.json',)
