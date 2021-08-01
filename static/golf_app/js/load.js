@@ -230,9 +230,9 @@ function get_picks(info, optimal_data) {
           $.each(country_detail, function(i, data) {
            // console.log('country picks api call', data)
             if (data.gender == 'men') {
-            $('#totals' + data.user.username + 'men_countries').append('<p><img src=' + data.get_flag + '</src></p>') }
+            $('#totals' + data.user.username + 'men_countries').append('<p><img src=' + data.get_flag + '</src></p><p>pts ' + data.score + '</p>') }
             else {
-            $('#totals' + data.user.username + 'women_countries').append('<p><img src=' + data.get_flag + '</src></p>') }
+            $('#totals' + data.user.username + 'women_countries').append('<p><img src=' + data.get_flag + '</src></p><p>pts ' + data.score + '</p>') }
 
     })
   })

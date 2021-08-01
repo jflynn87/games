@@ -1,7 +1,7 @@
 import urllib.request
 import json
 from golf_app.models import Picks, Tournament, TotalScore, BonusDetails, ScoreDetails, PickMethod, \
-    Group, Field
+    Group, Field, CountryPicks
 from django.contrib.auth.models import User
 import csv
 #from golf_app import calc_score
@@ -293,9 +293,58 @@ class Score(object):
                         bd.best_in_group_bonus = bd.best_in_group_bonus + 10
                         bd.save()
 
+        if self.tournament.pga_tournament_num == '999':
+            self.olympic_medals(sd, pick, optimal_picks, data)
 
         return
-        
+
+    def olympic_medals(self, sd, pick, optimal_picks, data):
+        if self.score_dict.get('info').get('mens_complete'):
+            if pick.gold_medal():
+                golfer_c = pick.playerName.golfer.country()
+                c = CountryPicks.objects.get(user=pick.user, country=golfer_c, gender='men')
+                num_of_golfers = pick.playerName.tournament.individual_country_count(golfer_c, 'men')
+                c.score = 50 - (5* (num_of_golfers -1))
+                print ('mens gold', pick, c.score)
+                c.save()
+            if pick.silver_medal():
+                golfer_c = pick.playerName.golfer.country()
+                c = CountryPicks.objects.get(user=pick.user, country=golfer_c, gender='men')
+                num_of_golfers = pick.playerName.tournament.individual_country_count(golfer_c, 'men')
+                c.score = 35 - (5* (num_of_golfers -1))
+                print ('mens silver', pick, c.score)
+                c.save()
+            if pick.bronze_medal():
+                golfer_c = pick.playerName.golfer.country()
+                c = CountryPicks.objects.get(user=pick.user, country=golfer_c, gender='men')
+                num_of_golfers = pick.playerName.tournament.individual_country_count(golfer_c, 'men')
+                c.score = 35 - (5* (num_of_golfers -1))
+                print ('mens bronze', pick, c.score)
+                c.save()
+        if self.score_dict.get('info').get('womens_complete'):
+            if pick.gold_medal():
+                golfer_c = pick.playerName.golfer.country()
+                c = CountryPicks.objects.get(user=pick.user, country=golfer_c, gender='women')
+                num_of_golfers = pick.playerName.tournament.individual_country_count(golfer_c, 'women')
+                c.score = 50 - (5* (num_of_golfers -1))
+                print ('womens gold', pick, c.score)
+                c.save()
+            if pick.silver_medal():
+                golfer_c = pick.playerName.golfer.country()
+                c = CountryPicks.objects.get(user=pick.user, country=golfer_c, gender='women')
+                num_of_golfers = pick.playerName.tournament.individual_country_count(golfer_c, 'women')
+                c.score = 35 - (5* (num_of_golfers -1))
+                print ('womens silver', pick, c.score)
+                c.save()
+            if pick.bronze_medal():
+                golfer_c = pick.playerName.golfer.country()
+                c = CountryPicks.objects.get(user=pick.user, country=golfer_c, gender='men')
+                num_of_golfers = pick.playerName.tournament.individual_country_count(golfer_c, 'women')
+                c.score = 35 - (5* (num_of_golfers -1))
+                print ('womens bronze', pick, c.score)
+                c.save()
+
+        return
 
 
     @transaction.atomic
@@ -361,6 +410,11 @@ class Score(object):
                 #ts.score -= bd.best_in_group_bonus
                 ts.score -= bd.playoff_bonus
                 #ts.save()
+            
+            if self.tournament.pga_tournament_num == '999':
+                medal_total = CountryPicks.objects.filter(user=ts.user).aggregate(Sum('score'))
+                if medal_total.get('score__sum'): #need to check for none since no picks for some
+                    ts.score -= int(medal_total.get('score__sum'))
             
             ts.save()
 

@@ -31,42 +31,42 @@ class OlympicScores(object):
 
         self.t = Tournament.objects.get(season__current=True, pga_tournament_num='999')
 
+    def get_mens_field(self):
+        mens_field = scrape_espn.ScrapeESPN(tournament=self.t, url=self.mens_url, setup=True).get_data() 
+        return mens_field
+
+    def get_womens_field(self):
+        womens_field = scrape_espn.ScrapeESPN(tournament=self.t, url=self.womens_url, setup=True).get_data()  #needs set up mode or only retuns mens
+        return womens_field
+
     def get_sd(self):
         score_dict = {}
-        mens_field = scrape_espn.ScrapeESPN(tournament=self.t, url=self.mens_url, setup=True).get_data() 
-        womens_field = scrape_espn.ScrapeESPN(tournament=self.t, url=self.womens_url, setup=True).get_data()  #needs set up mode or only retuns mens
+        mens_field = self.get_mens_field()
+        womens_field = self.get_womens_field()
 
         mens_info = mens_field.get('info')
         womens_info = womens_field.get('info')
-        #print ('MI: ', mens_info)
-        #print ('WI: ', womens_info)
         score_dict = {**mens_field, **womens_field}
-        
-        #score_dict['info'].update({'mens_info': mens_info})
-        #print ('PU: ', womens_field.get('info'))
-        #score_dict['info'].update({'womens_info': womens_field.get('info')})
-        #print ('AM: ', score_dict.get('info'))
-
-        
-        #score_dict['info']['mens_info'].update(mens_info)
-        #print ('PM: ', score_dict.get('info'))
-        
-        #score_dict['info']['womens_info'].update(womens_info)
-        #print ('PW: ', score_dict.get('info'))
-        print ('PW: ', score_dict.get('info').get('womens_info'))
 
         #assume mens starts first and womans second. 
         if not mens_field.get('info').get('complete'):
             if mens_field.get('info').get('round') > 1:
-                #score_dict['info'] = mens_field.get('info')
                 score_dict['info']['round_status'] = mens_field.get('info').get('round_status') + " - Mens"
+                score_dict['info']['mens_complete'] = mens_field.get('info').get('complete')
+                score_dict['info']['womens_complete'] = womens_field.get('info').get('complete')
         else:
-            #score_dict['info'] = womens_field.get('info')
             score_dict['info']['round_status'] = mens_field.get('info').get('round_status') + " - Womens.  Men Complete"
+            score_dict['info']['mens_complete'] = mens_field.get('info').get('complete')
+            score_dict['info']['womens_complete'] = womens_field.get('info').get('complete')
 
         return score_dict
 
+    def get_mens_info(self):
+        return (self.get_mens_field().get('info'))
 
+
+    def get_womens_info(self):
+        return (self.get_womens_field().get('info'))
 
  
 

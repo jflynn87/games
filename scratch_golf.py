@@ -40,10 +40,12 @@ import random
 
 
 start = datetime.now()
-
 t = Tournament.objects.get(pga_tournament_num='999')
-sd = olympic_sd.OlympicScores().get_sd()
-#print (type(sd))
+print (ScoreDetails.objects.filter(pick__playerName__tournament=t, thru=None).count())
+for sd in ScoreDetails.objects.filter(pick__playerName__tournament=t, thru=None):
+    sd.thru = 'x'
+    sd.save()
+
 #print (sd.get('info'))
 #print ("WI ", sd.get('info').get('womens_info'))
 exit()

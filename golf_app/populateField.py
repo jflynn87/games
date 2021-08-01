@@ -214,6 +214,7 @@ def get_field(t, owgr_rankings):
                                   'sow_owgr': ranks[1][1]
                                 }
     elif t.pga_tournament_num == '999': #Olympics
+        # update this to use the class from olympics_sd.py
         mens_field = scrape_espn.ScrapeESPN(tournament=t, url='https://www.espn.com/golf/leaderboard?tournamentId=401285309', setup=True).get_data()    
         womens_field = scrape_espn.ScrapeESPN(tournament=t, url="https://www.espn.com/golf/leaderboard/_/tour/womens-olympics-golf", setup=True).get_data()
         
