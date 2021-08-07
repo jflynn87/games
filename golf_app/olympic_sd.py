@@ -46,7 +46,12 @@ class OlympicScores(object):
         print ('MENS INFO: ', mens_field.get('info'))
 
         mens_info = mens_field.get('info')
+        for k, v in mens_field.items():
+            v.update({'gender': 'men'})
         womens_info = womens_field.get('info')
+        for k, v in womens_field.items():
+            v.update({'gender': 'women'})
+
         score_dict = {**mens_field, **womens_field}
 
         #assume mens starts first and womans second. 
