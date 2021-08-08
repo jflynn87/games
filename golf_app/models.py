@@ -351,9 +351,9 @@ class Tournament(models.Model):
         if self.pga_tournament_num == '999': #Olympics
             t = Tournament.objects.get(pga_tournament_num='999')
             sex = 'men'
-            d = {'men': {}, 'women': {}}
+            d = {'men': {}, 'woman': {}}
             for f in Field.objects.filter(tournament=self):
-                if f.playerName == "Nelly Korda": sex = 'women'  # top ranked woman
+                if f.playerName == "Nelly Korda": sex = 'woman'  # top ranked woman
                 country = f.golfer.flag_link.split('/')[9][0:3].upper()
                 if country == "NIR": #For Rory
                     country = "IRL"

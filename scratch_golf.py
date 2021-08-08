@@ -42,8 +42,16 @@ import random
 start = datetime.now()
 t = Tournament.objects.get(pga_tournament_num='999')
 #print (scrape_espn.ScrapeESPN(tournament=t, url='https://www.espn.com/golf/leaderboard?tournamentId=401285309', setup=True).get_data())
-print(olympic_sd.OlympicScores().get_sd())
-print(olympic_sd.OlympicScores().get_sd().get('info'))
+#print(olympic_sd.OlympicScores().get_sd())
+#print(olympic_sd.OlympicScores().get_sd().get('info'))
+gold_golfer = Golfer.objects.get(golfer_name="Mone Inami")
+user = User.objects.get(username="Taka")
+if CountryPicks.objects.filter(country=gold_golfer.country(), user=user, gender='woman').exists():
+                c = CountryPicks.objects.get(user=user, country=gold_golfer.country(), gender='woman')
+                num_of_golfers = t.individual_country_count(gold_golfer.country(), 'woman')
+                c.score = 50 - (5* (num_of_golfers -1))
+print (c, ' ', num_of_golfers, ' ', c.score)
+
 exit()
 
 mens_field = scrape_espn.ScrapeESPN(tournament=t, url='https://www.espn.com/golf/leaderboard?tournamentId=401285309', setup=True).get_data() 
