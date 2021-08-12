@@ -10,6 +10,7 @@ $(document).ready(function() {
         success: function (json) {
           var i;
           var data = $.parseJSON(json)
+          console.log('picks update data? ', data)
           for (i = 0; i < data.length; ++i) {
               $('#' + data[i]).attr('checked', 'checked');
 

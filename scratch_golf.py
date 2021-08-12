@@ -25,7 +25,7 @@ from urllib.request import Request, urlopen
 from selenium import webdriver
 import urllib
 import json
-from golf_app import views, manual_score, populateField, withdraw, scrape_scores_picks, utils, scrape_cbs_golf, scrape_masters, scrape_espn, update_favs, olympic_sd
+from golf_app import views, manual_score, populateField, withdraw, scrape_scores_picks, utils, scrape_cbs_golf, scrape_masters, scrape_espn, update_favs, olympic_sd, espn_api
 from unidecode import unidecode
 from django.core import serializers
 from golf_app.utils import formatRank, format_name, fix_name
@@ -38,19 +38,116 @@ import csv
 import random
 
 
-
 start = datetime.now()
-t = Tournament.objects.get(pga_tournament_num='999')
-#print (scrape_espn.ScrapeESPN(tournament=t, url='https://www.espn.com/golf/leaderboard?tournamentId=401285309', setup=True).get_data())
-#print(olympic_sd.OlympicScores().get_sd())
-#print(olympic_sd.OlympicScores().get_sd().get('info'))
-gold_golfer = Golfer.objects.get(golfer_name="Mone Inami")
-user = User.objects.get(username="Taka")
-if CountryPicks.objects.filter(country=gold_golfer.country(), user=user, gender='woman').exists():
-                c = CountryPicks.objects.get(user=user, country=gold_golfer.country(), gender='woman')
-                num_of_golfers = t.individual_country_count(gold_golfer.country(), 'woman')
-                c.score = 50 - (5* (num_of_golfers -1))
-print (c, ' ', num_of_golfers, ' ', c.score)
+g = Golfer.objects.get(golfer_name="Hideki Matsuyama")
+d = espn_api.ESPNData().player_started(g.espn_number)
+p = espn_api.ESPNData().picked_golfers()
+print (p)
+exit()
+
+#golfer detail link  11098 is the espn_id
+#http://sports.core.api.espn.com/v2/sports/golf/leagues/pga/events/401243408/competitions/401243408/competitors/11098/status?lang=en&region=us
+
+#historic tournamanet link
+#http://sports.core.api.espn.com/v2/sports/golf/leagues/pga/events/401243408
+
+#current event 
+#https://site.web.api.espn.com/apis/site/v2/sports/golf/leaderboard?league=pga
+
+#info
+#https://gist.github.com/akeaswaran/b48b02f1c94f873c6655e7129910fc3b
+
+#t = Tournament.objects.get(current=True)
+#print (t.get_country_counts())
+
+espn_num = '401243405'  #wyndham
+
+headers = {'User-Agent': 'Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.149 Mobile Safari/537.36'}
+url =  "https://site.web.api.espn.com/apis/site/v2/sports/golf/leaderboard?league=pga"
+
+#payload = {'week':'1'}
+jsonData = get(url, headers=headers).json()
+
+#print ('dur ', datetime.now() - start)
+
+f = open('espn_api.json', "w")
+f.write(json.dumps(jsonData))
+f.close()
+
+#print('A', jsonData.get('events')[0].keys())
+print ('start events keys')
+for k, v in jsonData.get('events')[0].items():
+    if k != 'competitions':
+        print (k, v)
+print ('end events keys')
+for event in jsonData.get('events'):
+    if event.get('id') == espn_num:
+        #print (event)
+        #continue
+
+        for row in event.get('competitions'):
+            print ('start Competions keys')
+            print ('field len', len(row.get('competitors')))
+            for k, v in row.items():
+                if k != 'competitors':
+                    print (k, v)
+                    print ('================================================')
+            print ('end Competions keys')
+        
+            #print ('B', row.items())
+            #print ('status', row.get('holeByHoleSource'))
+            for c in row.get('competitors'):
+                continue
+                #print (c.get('id'), ' ', c.get('athlete').get('displayName'))
+                #print (c.get('status'))
+                #if c.get('athlete').get('displayName') in ["Hideki Matsuyama", "Abraham Ancer"]:
+                #    print (c)
+                #    for k, v in c.items():
+                #        if k == 'linescores':
+                #            for l in v:
+                #                #print (l) 
+                #                print (' ')
+                ##        else:
+                #           print (k, v)
+                #print  (c)
+        #print ('------------------------------------')
+    
+exit()
+
+d = {}
+for sd in ScoreDict.objects.filter(tournament__season__current=True).exclude(tournament__pga_tournament_num__in=['470', '999']):
+    winner = [v.get('pga_num') for k,v in sd.data.items() if k != 'info' and v.get('rank') == '1'][0]
+    
+    golfer  = Golfer.objects.get(espn_number=winner)
+    if d.get(golfer.country()):
+        d.update({golfer.country(): d.get(golfer.country()) + 1})
+    else:
+        d[golfer.country()] = 1
+print (d)
+
+pd = {}
+c = {}
+s = Season.objects.get(current=True)
+users = s.get_users()
+for u in users:
+    pd[User.objects.get(pk=u.get('user'))] = {}
+try:
+    for p in Picks.objects.filter(playerName__tournament__season__current=True):
+        f = Field.objects.get(playerName=p.playerName, tournament=p.playerName.tournament)
+        if pd.get(p.user).get(f.golfer.country()):
+            pd.get(p.user).update({f.golfer.country(): pd.get(p.user).get(f.golfer.country()) + 1})
+        else:
+            pd.get(p.user).update({f.golfer.country(): 1})
+
+        if c.get(f.golfer.country()):
+            c.update({f.golfer.country(): c.get(f.golfer.country()) + 1})
+        else:
+            c[f.golfer.country()] = 1
+except Exception as e:
+    print ('failed ', p, p.user)
+
+print (pd)
+print (c)
 
 exit()
 

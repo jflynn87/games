@@ -286,7 +286,8 @@ class GetPicks(APIView):
         start = datetime.datetime.now()
         try: 
             pick_list = []
-            for pick in Picks.objects.filter(user__username=self.request.user, playerName__tournament__current=True):
+            #added WD exclued 8/12
+            for pick in Picks.objects.filter(user__username=self.request.user, playerName__tournament__current=True).exclude(playerName__withdrawn=True):
                 pick_list.append(pick.playerName.pk)
             print ('getting picks API response', self.request.user, json.dumps(pick_list), datetime.datetime.now() - start)
 

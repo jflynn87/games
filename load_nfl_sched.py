@@ -20,10 +20,15 @@ import pytz
 def load_sched(year):
 
     #changing weeks to load preseason weeks (make week 0 and cnt 1)
-    current_week = Week.objects.get(current=True)
-    week_cnt = current_week.week + 1
+    if Week.objects.filter(current=True).exists():
+        current_week = Week.objects.get(current=True)
+        week_cnt = current_week.week + 1
+    else:
+        week_cnt = 1
+    
+    #week_cnt = current_week.week + 1
     season = Season.objects.get(current=True)
-    while week_cnt < 22:
+    while week_cnt < 5:
             try:
                 week, created = Week.objects.get_or_create(season_model=season, week=week_cnt)
                 #week.season = season.season
@@ -42,7 +47,7 @@ def load_sched(year):
 
 
                 #url = "https://www.nfl.com/schedules/2020/" + str(week_cnt) + "/"
-                url = "https://www.nfl.com/schedules/2020/" + url_week + "/"
+                url = "https://www.nfl.com/schedules/" + str(season.season) + "/" + url_week + "/"
                 print (url)
 
                 game_dict = {}
@@ -131,7 +136,7 @@ def load_sched(year):
 if __name__ == '__main__':
     print ('populating script!')
     #clean_db()
-    load_sched(2020)
+    load_sched(2021)
     print ("Populating Complete!")
     #curr_week = Week.objects.get(current=True)
     #print (Games.objects.filter(week__season_model__current=True, week__week__gt=curr_week.week).values('week__week').annotate(Count('week')))

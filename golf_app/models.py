@@ -348,14 +348,15 @@ class Tournament(models.Model):
 
     def get_country_counts(self):
         '''retruns a dict of all the countries in the tournament'''
-        if self.pga_tournament_num == '999': #Olympics
-            t = Tournament.objects.get(pga_tournament_num='999')
+        #if self.pga_tournament_num == '999': #Olympics
+        try:
+            #t = Tournament.objects.get(pga_tournament_num='999')
             sex = 'men'
             d = {'men': {}, 'woman': {}}
             for f in Field.objects.filter(tournament=self):
                 if f.playerName == "Nelly Korda": sex = 'woman'  # top ranked woman
                 country = f.golfer.flag_link.split('/')[9][0:3].upper()
-                if country == "NIR": #For Rory
+                if self.pga_tournament_num == '999' and country == "NIR": #For Rory
                     country = "IRL"
                 if d.get(sex).get(country):
                     d.get(sex).update({country: d.get(sex).get(country) +  1})
@@ -363,8 +364,8 @@ class Tournament(models.Model):
                     d.get(sex).update({country: 1})
                 
             return d
-        else:
-            return {'msg': 'only for olympics'}
+        except Exception as e:
+            return {'msg': e}
 
     def individual_country_count(self, country, gender):
         '''takes a t obj and strings for country and gender, returns an int'''
@@ -594,10 +595,10 @@ class Golfer(models.Model):
 
 
     def country(self):
-        if self.flag_link.split('/')[9][0:3].upper() == "NIR":
-            return "IRL"
-        else:
-            return self.flag_link.split('/')[9][0:3].upper()
+        #if self.flag_link.split('/')[9][0:3].upper() == "NIR":
+        #    return "IRL"
+        #else:
+        return self.flag_link.split('/')[9][0:3].upper()
 
 class Field(models.Model):
 

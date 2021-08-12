@@ -128,9 +128,11 @@ function build_field(g, info) {
                 //$('#tbl-group-' + field.group.number.toString()).append('<tr id=player' + field.golfer.espn_number + ' class=top_row>' + 
                 $('#player-' + field.golfer.espn_number + '-row').append(
                                                                 '<td id=playerInfo' + field.golfer.espn_number + '>' +
-                                                                '<input type="hidden" name="csrfmiddlewaretoken" value=' + $.cookie('csrftoken') +  '>' +
+                                                                 (! field.withdrawn ?  '<input type="hidden" name="csrfmiddlewaretoken" value=' + $.cookie('csrftoken') +  '>' +
                                                                // '<input id=' + field.id +  ' type="radio" class="my-radio" name=group-' + field.group.number + ' value=' + field.id +  '>' +
-                                                               '<input id=' + field.id +  ' type=' + input_type + ' class=' + input_class + ' name=group-' + field.group.number + ' value=' + field.id +  ' disabled>' +
+                                                               '<input id=' + field.id +  ' type=' + input_type + ' class=' + input_class + ' name=group-' + field.group.number + ' value=' + field.id +  ' disabled>' 
+                                                               : 'WD' 
+                                                               ) +
                                                                 '<img src=' + field.golfer.pic_link + ' style="max-height:125px; alt="">' + field.playerName + ' ' + 
                                                                 '<img src=' + field.golfer.flag_link + ' alt="">' +
                                                                 '<a href="https://www.google.com/search?q=' + field.playerName + '" target="_blank" style="padding-left: 1em;">Google</a> / ' +
