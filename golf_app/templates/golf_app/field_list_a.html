@@ -1,18 +1,11 @@
 {% extends "golf_app/golf_app_base.html" %}
 {%load static%}
 {%load golf_extras%}
+{%load compress%}
 {% block body_block %}
 
 <!-- <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
 <script src="https://code.jquery.com/jquery-3.3.1.min.js" integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=" crossorigin="anonymous"></script> -->
-
-
-<script type="text/javascript" src="{%static 'golf_app/js/field_sect.js'%}"></script> 
-
-<script type="text/javascript" src="//unpkg.com/xlsx/dist/xlsx.full.min.js"></script>
-<link rel="stylesheet" href='{%static "golf_app/css/load.css"%}'> 
-
-
 
 <div class='load'>
   <!-- <label class="pulse" id='pulse'>
@@ -37,11 +30,12 @@
 
       <div id=withdraw></div>
       {%if tournament.pga_tournament_num != "470" and tournament.pga_tournament_num != "018"%}
-        <script type="text/babel" src="{%static 'test_app/src/withdraw.js'%}"></script> 
+      <script type="text/babel" src="{%static 'test_app/src/withdraw.js'%}"></script> 
       {%endif%} 
 
       <div id='espn_missing'></div>
       <script type="text/babel" src="{%static 'test_app/src/check_espn_num.js'%}"></script> 
+
 <!-- 
       {%if not tournament.started or tournament.late_picks%}
         <p>Please make 1 pick for each group below</p>
@@ -88,6 +82,16 @@
 </div>
 
 
-<!-- <script type="text/javascript" src="{%static 'golf_app/js/field.js'%}"></script> -->
+
+{%compress js%}
+<script type="text/javascript" src="{%static 'golf_app/js/field_sect.js'%}"></script> 
+{%endcompress%}
+<script type="text/javascript" src="//unpkg.com/xlsx/dist/xlsx.full.min.js"></script>
+{%compress css%}
+<link rel="stylesheet" href='{%static "golf_app/css/load.css"%}'> 
+{%endcompress%}
+
+
+
 
 {%endblock%}

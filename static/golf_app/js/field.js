@@ -11,10 +11,39 @@ $(document).ready(function() {
           var i;
           var data = $.parseJSON(json)
           console.log('picks update data? ', data)
-          for (i = 0; i < data.length; ++i) {
-              $('#' + data[i]).attr('checked', 'checked');
+          for (i = 0; i < data.picks.length; ++i) {
+              $('#' + data.picks[i]).attr('checked', 'checked');
 
             }
+            let started_l = Object.values(data.start).filter(item => item.started).length
+            let field_l = Object.values(data.start).length
+            console.log(field_l)
+            if (started_l > 0) {
+                for (let i=0; i < field_l; i++){
+                  if (Object.values(data.start)[i].started) {
+                  document.getElementById(Object.keys(data.start)[i]).disabled = true
+                  row= document.getElementById(Object.keys(data.start)[i]).parentElement
+                  row.style.background="gray";
+                  newCell = document.createElement('td')
+                  newCell.innerHTML = 'Started'
+                  newCell.style.color = "white"
+                  row.appendChild(newCell)
+
+                  if (data.picks.indexOf(document.getElementById(Object.keys(data.picks)[i]) != -1) && ! document.getElementById(Object.keys(data.start)[i]).checked) {
+                    
+                  document.getElementById(Object.keys(data.start)[i]).style.display = 'none'
+
+
+
+
+                }
+
+                          } }
+            }
+            
+            
+            //onsole.log(testData.filter(item => item.issue_type === 'Warning').length)
+            
             $('#pulse').hide()
             $('#main').show()
             get_info(info)
@@ -151,25 +180,6 @@ $(function () {
   $('[data-toggle="tooltip"]').tooltip({trigger:"hover",
                                         delay:{"show":400,"hide":800}})})
 
-
-// $(document).ready(function () {
-// var limit = 5;
-// $('input.my-checkbox').on('change', function(evt) {
-//    if($("input[name='multi-group-6']:checked").length > limit) {
-//        this.checked = false;
-//        alert (limit.toString() + ' picks already selected.  Deselect a pick first to change your picks')
-//    }
-//    get_info(info)
-// })
-// });
-
-// $(document).ready(function () {
-//  $('input.my-radio').on('change', function(evt) {
-//    console.log('caught clck')
-//    $('#pick-status').empty()
-//    get_info(info)
-//  })
-//  })
 
 function get_info(info, ele) {
     if (ele) {

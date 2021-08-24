@@ -3,6 +3,7 @@
 {%load mathfilters%}
 {%load static%}
 {%load fb_extras%}
+{%load compress%}
 
 {%block body_block%} 
 <!-- <script src="{% static "fb_app/js/scores.js"%}" type="text/javascript" ></script> -->
@@ -15,7 +16,7 @@
 <h4>Picks Submitted: {%for player in players%} {{player}} {%endfor%}</h4>
 {%if pending%}<h4>Picks Pending from: {%for player in pending%} {{player}} </h4> {%endfor%} {%endif%}
 {%endif%}
-
+<p>test</p>
 {%if week.started%}
 
 <table class="table table-striped" id='picks-tbl'>

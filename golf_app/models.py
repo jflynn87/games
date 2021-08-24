@@ -374,6 +374,21 @@ class Tournament(models.Model):
             if all_countries.get(gender).get(country):
                 return all_countries.get(gender).get(country)
         return 0
+
+    def field_quality(self):
+        if self.major:
+            return "major"
+        
+        f_len = Field.objects.filter(tournament=self).count()
+        #owgr_sum = Field.objects.filter(tournament=self).exclude(currentWGR=9999).aggregate(Sum('currentWGR'))
+        #unranked = Field.objects.filter(tournament=self, currentWGR=9999).count()
+        top_100 = round(Field.objects.filter(tournament=self, currentWGR__lte=100).count()/f_len,2)
+
+        if top_100 > .3:
+            return "strong"
+        else:
+            return "weak"
+    
             
         
 
@@ -752,21 +767,22 @@ class Field(models.Model):
         return self.currentWGR - self.partner_owgr
 
     def started(self, score_dict=None):
-        from golf_app import scrape_espn
+        from golf_app import espn_api
 
         if not score_dict:
-           sd = scrape_espn.ScrapeESPN().get_data()
+           sd = espn_api.ESPNData().player_started(self.golfer.espn_number)
         else:
            sd = score_dict
         
+        return sd
 
-        if sd.get('info').get('round') > 1:
-            return True
+        #if sd.get('info').get('round') > 1:
+        #    return True
         
-        if sd.get('info').get('round') == 1 and self.playing(sd):
-            return True
-        else:
-            return False
+        #if sd.get('info').get('round') == 1 and self.playing(sd):
+        #    return True
+        #else:
+        #    return False
         
     def playing(self, score_dict=None):
         from golf_app import scrape_espn
@@ -890,6 +906,9 @@ class ScoreDetails(models.Model):
 
 
 class BonusDetails(models.Model):
+    BONUS_CHOICES = (('1', 'winning golfer'), ('2', 'no cuts'), ('3', 'weekly winner'), 
+                     ('4', 'playoff'), ('5', 'best in group'), ('6', 'trifecta'), ('7', 'manual'))
+
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     tournament = models.ForeignKey(Tournament, on_delete=models.CASCADE, null=True)
     winner_bonus = models.IntegerField(default=0)
@@ -897,14 +916,15 @@ class BonusDetails(models.Model):
     major_bonus = models.IntegerField(default=0)
     playoff_bonus = models.BigIntegerField(default=0)
     best_in_group_bonus = models.BigIntegerField(default=0)
+    bonus_type = models.CharField(max_length=100, choices=BONUS_CHOICES, null=True)
+    bonus_points = models.IntegerField(default=0)
 
 
     def __str__(self):
         return str(self.user)
 
     class Meta():
-        unique_together = ('tournament', 'user')
-
+        unique_together = ('tournament', 'user', 'bonus_type')
 
 
 class TotalScore(models.Model):

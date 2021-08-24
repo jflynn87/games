@@ -1,22 +1,13 @@
 {%extends 'golf_app/golf_app_base.html'%}
 {%load golf_extras%}
 {%load static%}
-
+{%load compress%}
 
 
 {%block body_block%}
-
-{%if '/golf_app/new_scores/' in request.path%}
-  {%if tournament.pga_tournament_num == '470'%}
-  <script type="text/javascript" src="{%static 'golf_app/js/mp_load.js'%}"></script> 
-  {%else%}
-  <script type="text/javascript" src="{%static 'golf_app/js/load.js'%}"></script>
-  {%endif%} 
-{%else%}
-  <script type="text/javascript" src="{%static 'golf_app/js/load_by_player.js'%}"></script> 
-{%endif%}
-<script type="text/javascript" src="{%static 'golf_app/js/getPicksSummary.js'%}"></script> 
+{%compress css%}
 <link rel="stylesheet" href={%static 'golf_app/css/scores.css' %}>
+{%endcompress%}
 <link href="https://fonts.googleapis.com/css?family=Anton&display=swap" rel="stylesheet">
 
 
@@ -56,8 +47,7 @@
 <p></p>
 <div id='picks_info'></div>
 
-<table id='totals-table' class="table table-sm table-bordered">
-  <!-- <thead class='thead-dark'> -->
+<!-- <table id='totals-table' class="table table-sm table-bordered">
     <thead style='background-color: lightblue;'>
     <th>Player</th>
     <th>Bonus</th>
@@ -69,8 +59,8 @@
     {%endif%}
     {%endfor%}
   </thead>
-
-<tbody id='totals'>
+ -->
+<!-- <tbody id='totals'>
 {%for player in scores%}
   <tr id='totals{{player.user.username}}'>
     <td id='player'> <p> {{player.user}} {%if player.auto_pick%} - missed pick deadline (no bonuses) {%endif%} </p> 
@@ -82,7 +72,7 @@
   <td> <p>Optimal Picks</p></td>
 
 </tr>
-</tbody>
+ </tbody> -->
 
 </table>
 <p></p>
@@ -167,5 +157,18 @@
 </ul>
 </div>
 <!-- <div id='score_dict' hidden>{{score_dict}}</div> -->
+{%compress js%}
+{%if '/golf_app/new_scores/' in request.path%}
+  {%if tournament.pga_tournament_num == '470'%}
+  <script type="text/javascript" src="{%static 'golf_app/js/mp_load.js'%}"></script> 
+  {%else%}
+  <script type="text/javascript" src="{%static 'golf_app/js/load.js'%}"></script>
+  {%endif%} 
+{%else%}
+  <script type="text/javascript" src="{%static 'golf_app/js/load_by_player.js'%}"></script> 
+{%endif%}
+
+<script type="text/javascript" src="{%static 'golf_app/js/getPicksSummary.js'%}"></script> 
+{%endcompress%}
 
 {%endblock%}

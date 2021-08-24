@@ -37,7 +37,7 @@ class ESPNData(object):
 
             
     def started(self):
-        print (self.event_data.get('status').get('type').get('state'))
+        #print (self.event_data.get('status').get('type').get('state'))
         #  Try to change this is a positive check
         if self.event_data.get('status').get('type').get('state') != 'pre':
             return True
@@ -46,10 +46,25 @@ class ESPNData(object):
 
 
     def player_started(self, espn_num):
+        if Field.objects.filter(tournament=self.t, golfer__espn_number=espn_num, withdrawn=True).exists():
+            return False
         player = [x for x in self.field_data if x.get('id') == espn_num]
-        if len(player) > 1:
-            raise Exception('player lookup retured more than 1')
-        return player[0].get('status').get('type').get('name')
+
+        if len(player) > 1 or len(player) == 0:
+            raise Exception('player lookup retured more than 1', Golfer.objects.get(espn_number=espn_num), player)
+
+        #print (player, player[0].get('status').get('type').get('name'))
+
+        if player[0].get('status').get('period') > 1:
+            return True
+        elif player[0].get('status').get('period') == 1 and \
+            player[0].get('status').get('type').get('name') == "STATUS_SCHEDULED":
+            return False
+        elif player[0].get('status').get('period') == 1 and \
+            player[0].get('status').get('type').get('name') in ["STATUS_IN_PROGRESS", "STATUS_PLAY_COMPLETE", "STATUS_CUT"]:
+            return True
+        print ('cant tell if started, return False: ', espn_num, player)
+        return False
 
 
     def field(self):
@@ -62,3 +77,6 @@ class ESPNData(object):
         return [x for x in self.field_data if x.get('id') in golfers]
 
     
+    def get_all_data(self):
+        print ('all data')
+        return self.all_data

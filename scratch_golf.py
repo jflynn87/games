@@ -38,11 +38,86 @@ import csv
 import random
 
 
+
+t = Tournament.objects.get(current=True)
+espn = espn_api.ESPNData()
+print (espn.player_started('10548'))
+#field = espn.field()
+#print (field[0].get('id') == '10548')
+
+
+exit()
+espn_data = espn_api.ESPNData().get_all_data()
 start = datetime.now()
+data= golf_serializers.NewFieldSerializer(Field.objects.filter(tournament=t), context={'espn_data': espn_data}, many=True).data
+print (datetime.now() - start)
+print (len(data))
+ 
+
+golfers = espn_api.ESPNData().field()
+
+#for g in golfers:
+ #   print (g, g.get('status').get('period'), g.get('status').get('type').get('name'), g.get('status').get('type').get('shortDetail'))
+
+exit() 
+
+#     f_len = Field.objects.filter(tournament=t).count()
+#     owgr_sum = Field.objects.filter(tournament=t).exclude(currentWGR=9999).aggregate(Sum('currentWGR'))
+#     unranked = Field.objects.filter(tournament=t, currentWGR=9999).count()
+#     top_100 = round(Field.objects.filter(tournament=t, currentWGR__lte=100).count()/f_len,2)
+#     d[t.name] = {'avg_rank': round(int(owgr_sum.get('currentWGR__sum') + (unranked*2000))/f_len,0),
+#                  'unranked_golfers': unranked,
+#                  'top_100': top_100}
+
+# sorted_d = sorted(d.items(), key=lambda v:v[1].get('avg_rank'))
+# for k, v in sorted_d:
+#     print (k,v)
+
+
+
+sd = ScoreDict.objects.get(tournament=t)
+
+scores = manual_score.Score(sd.data, t)
+updated = scores.update_scores()
+totals = scores.new_total_scores()
+print (totals)
+exit()
+
+
+
+d = {}
+
+
+
+users = season.get_users()
+# tie = 0
+# no_t = 0
+# for sd in ScoreDict.objects.filter(tournament__season=season).exclude(tournament__current=True):
+#     t2 = {k:v for k,v in sd.data.items() if k!='info' and v.get('rank') == "T2"}
+#     t3 = {k:v for k,v in sd.data.items() if k!='info' and v.get('rank') == "T3"}
+#     if len(t2) + len(t3) > 0:
+#         tie += 1     
+#         print (sd.tournament, len(t2) + len(t3))
+#     else:
+#         no_t += 1
+
+# print ('tie: ', tie)
+# print ('no tie:', no_t)
+
+
+
+
+
+
+exit()                 
+
 g = Golfer.objects.get(golfer_name="Hideki Matsuyama")
 d = espn_api.ESPNData().player_started(g.espn_number)
-p = espn_api.ESPNData().picked_golfers()
-print (p)
+e = Golfer.objects.get(golfer_name="Matt Wallace")
+f = espn_api.ESPNData().player_started(e.espn_number)
+#p = espn_api.ESPNData().picked_golfers()
+#print (d)
+print (f)
 exit()
 
 #golfer detail link  11098 is the espn_id
@@ -60,7 +135,7 @@ exit()
 #t = Tournament.objects.get(current=True)
 #print (t.get_country_counts())
 
-espn_num = '401243405'  #wyndham
+espn_num = '401243404'  #Northern Trust
 
 headers = {'User-Agent': 'Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.149 Mobile Safari/537.36'}
 url =  "https://site.web.api.espn.com/apis/site/v2/sports/golf/leaderboard?league=pga"

@@ -24,7 +24,7 @@ import requests
 #from linebot.models import TextSendMessage
 #from linebot.exceptions import LineBotApiError
 from bs4 import BeautifulSoup
-from fb_app import scrape_cbs, scrape_cbs_playoff, playoff_stats
+from fb_app import scrape_cbs, scrape_cbs_playoff, playoff_stats, espn_data
 import pytz
 from django.core import serializers
 #import docx2txt
@@ -34,7 +34,30 @@ from django.http import HttpRequest
 
 
 start = datetime.now()
+
+sched = espn_data.ESPNData().get_data()
+print ('dur: ', datetime.now() - start)
+print (sched)
+exit()
+
+
+headers = {'User-Agent': 'Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.149 Mobile Safari/537.36'}
+url = "http://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard"
+#payload = {'week':'1'}
+payload = {}
+jsonData = requests.get(url, headers=headers, params=payload).json()
+print (jsonData.keys())
+print (jsonData.get('week'))
+for l in jsonData.get('events'):
+    print (l.get('name'))
+    for competition in l.get('competitions'):
+        print (competition.get('id'))
+        for c in competition.get('competitors'):
+            print (c.get('homeAway'), c.get('team').get('name'))
+    print ('--------')
+exit()
 stats_dict = {}
+
 html = urllib.request.urlopen("https://www.cbssports.com/nfl/stats/team/team/total/nfl/regular/")
 
 soup = BeautifulSoup(html, 'html.parser')

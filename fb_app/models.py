@@ -12,7 +12,7 @@ import json
 import scipy.stats as ss
 #from django.db.models import Q
 from bs4 import BeautifulSoup
-from fb_app import scrape_cbs
+from fb_app import scrape_cbs, espn_data
 from django.core import serializers
 
 # Create your models here.
@@ -70,13 +70,14 @@ class Week(models.Model):
             return False
         else:
             print ('checking if stated on cbs scores')
-            web = scrape_cbs.ScrapeCBS(self).get_data()
-            games = web['games']
+            #web = scrape_cbs.ScrapeCBS(self).get_data()
+            games = espn_data.ESPNData().get_data()
+            #games = web['games']
             
             
             for k, v in games.items():
                 print (k , v)
-                if v.get('qtr') not in [None, 'pregame', 'postponed']:
+                if v.get('qtr') not in [None, 'pregame', 'postponed', 'Scheduled']:
                     print ('week started based on scrape: ', v)
                     return True
                 #else:
@@ -158,8 +159,10 @@ class Week(models.Model):
             try:
                 print ('---------- updating football game scores')
                 #data = get_data()
-                web = scrape_cbs.ScrapeCBS(self).get_data()
-                data  = web['games']
+                #web = scrape_cbs.ScrapeCBS(self).get_data()
+                #data  = web['games']
+                data = espn_data.ESPNData().get_data()
+                print ('UPDATE GAMES: ', data)
 
 
                 for game in Games.objects.filter(week=self).exclude(final=True):
@@ -210,8 +213,10 @@ class Week(models.Model):
             except KeyError as e:
                 print ('update scores NFL score file not ready for the week', e)
                 pass
+        else:
+            data = espn_data.ESPNData().get_data()  # should make this model based if api seems slow
 
-            return web
+        return {'games': data}
 
     def update_scores(self, league):
         start = datetime.datetime.now()

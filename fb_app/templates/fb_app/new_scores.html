@@ -3,10 +3,13 @@
 {%load mathfilters%}
 {%load static%}
 {%load fb_extras%}
+{%load compress%}
 
 {%block body_block%} 
-<script src="{% static 'fb_app/js/scores.js'%}" type="text/javascript" ></script> 
 
+{%compress js%}
+<script src="{% static 'fb_app/js/scores.js'%}" type="text/javascript" ></script> 
+{%endcompress%}
 
 <div id='loading'>
   <img src="{%static 'fb_app/images/LT1.gif'%}" height="50%" width="50%"></img>
@@ -46,8 +49,9 @@
 <div id='picks-sect'>
 
 </div>
+{%compress js%}
   <script src="{% static "fb_app/js/ranks.js"%}" type="text/javascript"></script>
-
+{%endcompress%}
     <div id='nfl-scores'> 
       <!-- <form id='winners-form' method='post'>
         {%csrf_token%}  -->

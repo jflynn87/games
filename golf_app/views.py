@@ -18,7 +18,7 @@ import datetime
 #     manual_score, scrape_scores_picks, scrape_cbs_golf, scrape_masters, withdraw, scrape_espn, \
 #     populateMPField, mp_calc_scores, golf_serializers, utils, olympic_sd
 from golf_app import populateField, manual_score, scrape_masters, withdraw, scrape_espn, \
-     populateMPField, mp_calc_scores, golf_serializers, utils, olympic_sd
+     populateMPField, mp_calc_scores, golf_serializers, utils, olympic_sd, espn_api
 
 
 from django.utils import timezone
@@ -284,14 +284,31 @@ class GetPicks(APIView):
     
     def get(self, num):
         start = datetime.datetime.now()
+        # adding d and transforiming reply to a dict with original pick list and started indicator
+        d = {}
+        s = {}
+        t = Tournament.objects.get(current=True)
         try: 
             pick_list = []
             #added WD exclued 8/12
-            for pick in Picks.objects.filter(user__username=self.request.user, playerName__tournament__current=True).exclude(playerName__withdrawn=True):
+            for pick in Picks.objects.filter(user__username=self.request.user, playerName__tournament=t).exclude(playerName__withdrawn=True):
                 pick_list.append(pick.playerName.pk)
-            print ('getting picks API response', self.request.user, json.dumps(pick_list), datetime.datetime.now() - start)
+            #print ('getting picks API response', self.request.user, json.dumps(pick_list), datetime.datetime.now() - start)
+            d['picks'] = pick_list
+            espn_data = espn_api.ESPNData()
+            if t.started():
+                d['started'] = {}
+                for f in Field.objects.filter(tournament__current=True):
+                    s[f.pk] = {'started': espn_data.player_started(f.golfer.espn_number)}
+            
+                d.update({'start': s})
+            else:
+                d.update({'start': {}})
 
-            return Response(json.dumps(pick_list), 200)
+            print ('get picks duration: ', datetime.datetime.now() - start)
+            
+            return Response(json.dumps(d), 200)
+            #return Response(json.dumps(pick_list), 200)
         except Exception as e:
             print ('Get Picks API exception', e)
             return Response(json.dumps({'status': str(e)}), 500)

@@ -23,7 +23,7 @@ from rest_framework.views import APIView
 from rest_framework import generics
 from rest_framework.response import Response
 from rest_framework.permissions import AllowAny
-from fb_app import scrape_cbs, scrape_cbs_playoff, playoff_stats
+from fb_app import scrape_cbs, scrape_cbs_playoff, playoff_stats, espn_data
 from django.core import serializers
 from bs4 import BeautifulSoup
 import pytz
@@ -391,8 +391,11 @@ class UpdateScores(APIView):
         
         if week.started():
            games = week.update_games()
-           if games == None:
-               games = scrape_cbs.ScrapeCBS(week).get_data()
+           
+           #if games == None:
+               #games = scrape_cbs.ScrapeCBS(week).get_data()
+           #    games = {'games': espn_data.ESPNData().get_data()}
+           #    print ('games after espn inside none ', games)
            d = {'player-data': week.get_scores(league)}
            display = {**d, **games}
            data = json.dumps(display)

@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 {%load static%}
+{%load compress%}
 
 <html lang="en" dir="ltr">
   <head>
@@ -23,7 +24,9 @@
       <link href="https://fonts.googleapis.com/css?family=Abril+Fatface|Bree+Serif|Markazi+Text|Fira+Sans:100|Lato:300,400" rel="stylesheet">
 
       <script src="https://kit.fontawesome.com/013842494a.js" crossorigin="anonymous"></script>
+        {%compress css%}
       <link rel="stylesheet" href={%static "fb_app/css/my_style.css" %}>
+      {%endcompress%}
       <meta name="viewport" content="width=device-width, initial-scale=1">
     
       

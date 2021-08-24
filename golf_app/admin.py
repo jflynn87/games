@@ -5,6 +5,7 @@ from django.contrib import admin
 from golf_app.models import CountryPicks, Season, Tournament, Field, Picks, Group, TotalScore, \
                 ScoreDetails, Name, BonusDetails, mpScores, PickMethod, PGAWebScores, \
                 Golfer, ScoreDict, UserProfile, AccessLog, AuctionPick, StatLinks, CountryPicks
+                
 
 class GroupAdmin(admin.ModelAdmin):
     list_display = ('tournament', 'number', 'playerCnt')

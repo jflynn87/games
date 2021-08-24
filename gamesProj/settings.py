@@ -57,6 +57,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'corsheaders',
     'django_user_agents',
+    'compressor',
     'fb_app',
     'golf_app',
     'run_app',
@@ -211,7 +212,9 @@ USE_TZ = True
 STATIC_URL = '/static/'
 
 #STATIC_ROOT = os.path.join(os.path.dirname(BASE_DIR), 'static-cdn-local')
-STATIC_ROOT = os.path.join(STATIC_DIR, 'static-cdn-local')
+#STATIC_ROOT = os.path.join(STATIC_DIR, 'static-cdn-local')
+STATIC_ROOT = '/static/'
+COMPRESS_ROOT = '/static/compress/'
 STATICFILES_DIRS = [
     STATIC_DIR,
         
@@ -262,3 +265,12 @@ DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'
 # }
 
 # USER_AGENTS_CACHE = 'default'
+
+STATICFILES_FINDERS = (
+    'django.contrib.staticfiles.finders.FileSystemFinder',
+    'django.contrib.staticfiles.finders.AppDirectoriesFinder',
+    # other finders..
+    'compressor.finders.CompressorFinder',
+)
+
+COMPRESS_ENABLED = True 
