@@ -213,7 +213,7 @@ STATIC_URL = '/static/'
 
 #STATIC_ROOT = os.path.join(os.path.dirname(BASE_DIR), 'static-cdn-local')
 #STATIC_ROOT = os.path.join(STATIC_DIR, 'static-cdn-local')
-STATIC_ROOT = '/static/'
+STATIC_ROOT = os.path.join(STATIC_DIR, '/static/')
 #COMPRESS_ROOT = '/static/compress/'
 COMPRESS_ROOT = os.path.join(BASE_DIR, '/static/compress')
 STATICFILES_DIRS = [
