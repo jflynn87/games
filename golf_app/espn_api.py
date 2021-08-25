@@ -12,7 +12,7 @@ from golf_app.models import Tournament, Field, Golfer, ScoreDict, Picks
 class ESPNData(object):
     '''takes an optinal dict and provides funcitons to retrieve espn golf data'''
 
-    def __init__(self, t=None, data=None):
+    def __init__(self, t=None, data=None, mode='none'):
         if t:
             self.t = t 
         else:
@@ -26,12 +26,12 @@ class ESPNData(object):
             self.all_data = get(url, headers=headers).json()
 
         for event in self.all_data.get('events'):
-            if event.get('id') == self.t.espn_t_num:
+            if event.get('id') == self.t.espn_t_num or mode == 'setup':
                 self.event_data = event 
         #print (self.event_data)
         
         for f in self.event_data.get('competitions'):
-            if f.get('id') == self.t.espn_t_num:
+            if f.get('id') == self.t.espn_t_num or mode == 'setup': 
                 self.field_data = f.get('competitors')
         
 

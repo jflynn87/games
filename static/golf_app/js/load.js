@@ -257,7 +257,7 @@ function get_picks(info, optimal_data, total_data) {
 
       if (stats.toPar == 0) {toPar = "E"}
       else {toPar = stats.toPar} 
-      
+      try {
       $('#totals' + player).append('<td id=' + player + stats.pick.playerName.golfer.espn_number +  '>' + '<span class=watermark>' + 
                                    '<p>' + player.substring(0, 4)  + ' : ' + stats.pick.playerName.group.number +  '</p>'  +
                                    '</span>' + '<p> <img src=' + stats.pick.playerName.golfer.pic_link + ' style="max-height:85px;">' + 
@@ -283,6 +283,8 @@ function get_picks(info, optimal_data, total_data) {
       else {
         if ($.inArray(stats.pick.playerName.golfer.espn_number, Object.keys(optimal_data[stats.pick.playerName.group.number]['golfer'])) !== -1) {$('#' + player + stats.pick.playerName.golfer.espn_number).addClass('best')} 
            }
+          }
+          catch (e) {console.log('build picks error', player, stats, e)}
       }  // closes inner for loop
     })  //closes then
 //})  //comment this for all picks option
@@ -386,14 +388,14 @@ function update_score_tbl(data) {
 
   $('#picks-tbl').show()
   $('#totals-table').show()
-
+  
   update_picks(info, optimal_data, total_data)
-
+  .then(sort_table)
 
 }
 
 function update_picks(info, optimal_data, total_data) {
-
+  try {return new Promise (function (resolve, reject) {
   
   $.each(total_data, function(player, data) { 
 
@@ -441,8 +443,10 @@ function update_picks(info, optimal_data, total_data) {
 })  //comment this line for all option
 })
 
- sort_table(info)
-
+ //sort_table(info)
+resolve() })
+  }
+  catch (e) {console.log('picks failed: ', score_detail, e)}
 } 
 
 function sort_table(info) {

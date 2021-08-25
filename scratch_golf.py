@@ -40,11 +40,17 @@ import random
 
 
 t = Tournament.objects.get(current=True)
-espn = espn_api.ESPNData()
-print (espn.player_started('10548'))
+espn = espn_api.ESPNData(mode='setup')
+#print (espn.player_started('10548'))
+
+for g in espn.field():
+    print (g.get('athlete').get('displayName'))
+
 #field = espn.field()
 #print (field[0].get('id') == '10548')
+owgr = populateField.get_worldrank()
 
+field = populateField.get_field(t, owgr)
 
 exit()
 espn_data = espn_api.ESPNData().get_all_data()

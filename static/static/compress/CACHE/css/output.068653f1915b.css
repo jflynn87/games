@@ -1,0 +1,160 @@
+/*.pace {
+  -webkit-pointer-events: none;
+  pointer-events: none;
+
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  user-select: none;
+
+  overflow: hidden;
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 2000;
+  width: 100%;
+  height: 12px;
+  background: #fff;
+}
+
+.pace-inactive {
+  display: none;
+}
+
+.pace .pace-progress {
+  background-color: #0087E1;
+  position: fixed;
+  top: 0;
+  right: 100%;
+  width: 100%;
+  height: 12px;
+  overflow: hidden;
+
+  -webkit-border-radius: 0 0 4px 0;
+  -moz-border-radius: 0 0 4px 0;
+  -o-border-radius: 0 0 4px 0;
+  border-radius: 0 0 4px 0;
+
+  -webkit-box-shadow: inset -1px 0 #00558F, inset 0 -1px #00558F, inset 0 2px rgba(255, 255, 255, 0.5), inset 0 6px rgba(255, 255, 255, .3);
+  -moz-box-shadow: inset -1px 0 #00558F, inset 0 -1px #00558F, inset 0 2px rgba(255, 255, 255, 0.5), inset 0 6px rgba(255, 255, 255, .3);
+  -o-box-shadow: inset -1px 0 #00558F, inset 0 -1px #00558F, inset 0 2px rgba(255, 255, 255, 0.5), inset 0 6px rgba(255, 255, 255, .3);
+  box-shadow: inset -1px 0 #00558F, inset 0 -1px #00558F, inset 0 2px rgba(255, 255, 255, 0.5), inset 0 6px rgba(255, 255, 255, .3);
+}
+
+.pace .pace-activity {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: -28px;
+  bottom: 0;
+
+  -webkit-background-image: radial-gradient(rgba(255, 255, 255, .65) 0%, rgba(255, 255, 255, .15) 100%);
+  -moz-background-image: radial-gradient(rgba(255, 255, 255, .65) 0%, rgba(255, 255, 255, .15) 100%);
+  -o-background-image: radial-gradient(rgba(255, 255, 255, .65) 0%, rgba(255, 255, 255, .15) 100%);
+  background-image: radial-gradient(rgba(255, 255, 255, .65) 0%, rgba(255, 255, 255, .15) 100%);
+
+  -webkit-background-size: 28px 100%;
+  -moz-background-size: 28px 100%;
+  -o-background-size: 28px 100%;
+  background-size: 28px 100%;
+
+  -webkit-animation: pace-theme-mac-osx-motion 500ms linear infinite;
+  -moz-animation: pace-theme-mac-osx-motion 500ms linear infinite;
+  -ms-animation: pace-theme-mac-osx-motion 500ms linear infinite;
+  -o-animation: pace-theme-mac-osx-motion 500ms linear infinite;
+  animation: pace-theme-mac-osx-motion 500ms linear infinite;
+}
+
+@-webkit-keyframes pace-theme-mac-osx-motion {
+  0% { -webkit-transform: none; transform: none; }
+  100% { -webkit-transform: translate(-28px, 0); transform: translate(-28px, 0); }
+}
+@-moz-keyframes pace-theme-mac-osx-motion {
+  0% { -moz-transform: none; transform: none; }
+  100% { -moz-transform: translate(-28px, 0); transform: translate(-28px, 0); }
+}
+@-o-keyframes pace-theme-mac-osx-motion {
+  0% { -o-transform: none; transform: none; }
+  100% { -o-transform: translate(-28px, 0); transform: translate(-28px, 0); }
+}
+@-ms-keyframes pace-theme-mac-osx-motion {
+  0% { -ms-transform: none; transform: none; }
+  100% { -ms-transform: translate(-28px, 0); transform: translate(-28px, 0); }
+}
+@keyframes pace-theme-mac-osx-motion {
+  0% { transform: none; transform: none; }
+  100% { transform: translate(-28px, 0); transform: translate(-28px, 0); }
+}
+*/
+
+/* spin wheel css */
+
+#overlay{	
+	position: fixed;
+  top: 0;
+  left: 50em;
+	z-index: 100;
+	width: 100%;
+	height:100%;
+	display: none;
+	background: rgba(0,0,0,0.6);
+}
+.cv-spinner {
+	height: 100%;
+	display: flex;
+	justify-content: center;
+	align-items: center;  
+}
+.spinner {
+	width: 40px;
+	height: 40px;
+	border: 4px #ddd solid;
+	border-top: 4px #2e93e6 solid;
+	border-radius: 50%;
+	animation: sp-anime 0.8s infinite linear;
+}
+@keyframes sp-anime {
+	100% { 
+		transform: rotate(360deg); 
+	}
+}
+.is-hide{
+	display:none;
+}
+
+.up {
+  color: green
+}
+
+.bonus {
+  color: red;
+  
+  font: anton;
+  
+}
+
+.best {
+  background-color: lightgreen;
+}
+
+.cut {
+  background-color: lightgray;
+}
+
+
+@media only screen and (max-width: 600px) {
+td .watermark {
+  font-family: 'Raleway Dots';
+  color: red;
+  position: relative;
+  
+  
+}
+}
+@media only screen and (min-width: 601px) {
+
+td .watermark {
+  display: none;
+ }
+  
+}
+

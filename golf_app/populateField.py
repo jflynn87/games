@@ -2,7 +2,7 @@ from golf_app.models import (Picks, Field, Group, Tournament, TotalScore,
     ScoreDetails, Name, Season, User, BonusDetails, Golfer, ScoreDict, StatLinks)
 import urllib3
 from django.core.exceptions import ObjectDoesNotExist
-from golf_app import scrape_cbs_golf, scrape_espn, utils, scrape_scores_picks, populateMPField, populateZurichField
+from golf_app import scrape_cbs_golf, scrape_espn, utils, scrape_scores_picks, populateMPField, populateZurichField, espn_api
 from django.db import transaction
 import urllib
 from urllib.request import Request, urlopen
@@ -240,27 +240,48 @@ def get_field(t, owgr_rankings):
                                     'flag': stats.get('flag')}
         #field_dict['info'] = mens_field.get('info')
     else:
-        json_url = 'https://statdata-api-prod.pgatour.com/api/clientfile/Field?T_CODE=r&T_NUM=' + str(t.pga_tournament_num) +  '&YEAR=' + str(t.season.season) + '&format=json'
-        print (json_url)
+        try:
+            headers = {'User-Agent': 'Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.149 Mobile Safari/537.36'}
+            
+            
 
-        req = Request(json_url, headers={'User-Agent': 'Mozilla/5.0'})
-        data = json.loads(urlopen(req).read())
-        
-        for player in data["Tournament"]["Players"][0:]:
-            if player["isAlternate"] == "Yes":
-                    #exclude alternates from the field
-                    continue
+            json_url = 'https://statdata-api-prod.pgatour.com/api/clientfile/Field?T_CODE=r&T_NUM=' + str(t.pga_tournament_num) +  '&YEAR=' + str(t.season.season) + '&format=json'
+            print (json_url)
 
-            name = (' '.join(reversed(player["PlayerName"].rsplit(', ', 1))))
-            playerID = player['TournamentPlayerId']
-            team = player.get('TeamID')
-            ranks = utils.fix_name(name, owgr_rankings)
-            field_dict[name] = {'pga_num': playerID,
-                                'team': team,
-                                'curr_owgr': ranks[1][0],
-                                'soy_owgr': ranks[1][2],
-                                'sow_owgr': ranks[1][1]}
-        
+            #req = Request(json_url, headers={'User-Agent': 'Mozilla/5.0'})
+            req = Request(json_url, headers=headers)
+            data = json.loads(urlopen(req).read())
+            
+            for player in data["Tournament"]["Players"][0:]:
+                if player["isAlternate"] == "Yes":
+                        #exclude alternates from the field
+                        continue
+
+                name = (' '.join(reversed(player["PlayerName"].rsplit(', ', 1))))
+                playerID = player['TournamentPlayerId']
+                team = player.get('TeamID')
+                ranks = utils.fix_name(name, owgr_rankings)
+                field_dict[name] = {'pga_num': playerID,
+                                    'team': team,
+                                    'curr_owgr': ranks[1][0],
+                                    'soy_owgr': ranks[1][2],
+                                    'sow_owgr': ranks[1][1]}
+        except Exception as e:
+            print ('pga scrape failed: ', e)
+            data = espn_api.ESPNData(mode='setup').field()
+
+            for golfer in data:
+                name = golfer.get('athlete').get('displayName')
+                ranks = utils.fix_name(name, owgr_rankings)
+                #need this for now, fix rest of code to use ESPN
+                g_obj = Golfer.objects.get(espn_number=golfer.get('athlete').get('id'))
+
+                field_dict[name] = {'pga_num': g_obj.golfer_pga_num, 
+                                    'team': None,
+                                    'curr_owgr': ranks[1][0],
+                                    'soy_owgr': ranks[1][2],
+                                    'sow_owgr': ranks[1][1]}
+
 
     print (field_dict)
     return field_dict
