@@ -78,5 +78,4 @@ class ESPNData(object):
 
     
     def get_all_data(self):
-        print ('all data')
         return self.all_data

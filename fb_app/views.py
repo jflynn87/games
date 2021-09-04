@@ -52,51 +52,52 @@ class GetSpreads(generics.ListAPIView):
                 #week = Week.objects.get(current=True)
                 week = Week.objects.get(pk=self.kwargs.get('pk'))
                 print ('spreads weeek: ', week)
+                try:
+                    for row in nfl_sect.find_all('tr')[1:]:
+                        try:
+                            col = row.find_all('td')
+                            teams = col[0].text.split()
+                            line = col[5].text.split()
+                            if line[0][0] == '-':
+                                fav = teams[0]
+                                dog = teams[1]
+                                spread = line[0]
+                                #print ('o/a', line[1])
+                            else:
+                                fav = teams[1]
+                                dog = teams[0]
+                                spread = line [1]
+                                #print ('o/a', line[0])
+                            if fav == "Team":
+                                fav = "Football Team"
+                            elif dog == "Team":
+                                dog = "Football Team"
+                            fav_obj = Teams.objects.get(long_name__iexact=fav)
+                            dog_obj = Teams.objects.get(long_name__iexact=dog)
 
-                for row in nfl_sect.find_all('tr')[1:]:
-                    try:
-                        col = row.find_all('td')
-                        teams = col[0].text.split()
-                        line = col[5].text.split()
-                        if line[0][0] == '-':
-                            fav = teams[0]
-                            dog = teams[1]
-                            spread = line[0]
-                            #print ('o/a', line[1])
-                        else:
-                            fav = teams[1]
-                            dog = teams[0]
-                            spread = line [1]
-                            #print ('o/a', line[0])
-                        if fav == "Team":
-                            fav = "Football Team"
-                        elif dog == "Team":
-                            dog = "Football Team"
-                        fav_obj = Teams.objects.get(long_name__iexact=fav)
-                        dog_obj = Teams.objects.get(long_name__iexact=dog)
+                            if Games.objects.filter(Q(week=week) & Q(home=fav_obj) & Q(away=dog_obj)).exists():
+                                game = Games.objects.get(Q(week=week) & Q(home=fav_obj) & Q(away=dog_obj))
+                                game.fav=fav_obj
+                                game.dog=dog_obj
+                                game.spread=spread
+                                game.save()
+                                games_dict.append((game.eid, game.fav.nfl_abbr, str(game.fav.get_record()), game.dog.nfl_abbr.lower(), str(game.dog.get_record()), spread))
 
-                        if Games.objects.filter(Q(week=week) & Q(home=fav_obj) & Q(away=dog_obj)).exists():
-                            game = Games.objects.get(Q(week=week) & Q(home=fav_obj) & Q(away=dog_obj))
-                            game.fav=fav_obj
-                            game.dog=dog_obj
-                            game.spread=spread
-                            game.save()
-                            games_dict.append((game.eid, game.fav.nfl_abbr, str(game.fav.get_record()), game.dog.nfl_abbr.lower(), str(game.dog.get_record()), spread))
-
-                        elif Games.objects.filter(Q(week=week) & Q(home=dog_obj) & Q(away=fav_obj)).exists():
-                            game = Games.objects.get(Q(week=week) & Q(home=dog_obj) & Q(away=fav_obj))
-                            game.fav=fav_obj
-                            game.dog=dog_obj
-                            game.spread=spread
-                            game.save()
-                            games_dict.append((game.eid, game.fav.nfl_abbr.lower(), str(fav_obj.get_record()), game.dog.nfl_abbr, str(dog_obj.get_record()), spread))
-                        else:
-                            print ('game not found:', fav, dog)
-                        
-                    except Exception as e:
-                        print ('spread look up error', e, game, fav, dog)
-                        #return Response({'msg': e}, 404)
-                #print (games_dict)
+                            elif Games.objects.filter(Q(week=week) & Q(home=dog_obj) & Q(away=fav_obj)).exists():
+                                game = Games.objects.get(Q(week=week) & Q(home=dog_obj) & Q(away=fav_obj))
+                                game.fav=fav_obj
+                                game.dog=dog_obj
+                                game.spread=spread
+                                game.save()
+                                games_dict.append((game.eid, game.fav.nfl_abbr.lower(), str(fav_obj.get_record()), game.dog.nfl_abbr, str(dog_obj.get_record()), spread))
+                            else:
+                                print ('game not found:', fav, dog)
+                            
+                        except Exception as e:
+                            print ('spread look up error', e, game, fav, dog)
+                except Exception as f:
+                    print ('NY Post error', f)
+                    games_dict = {}
                 data = json.dumps(games_dict)
                 return Response(data, 200)
             except Exception as ex:

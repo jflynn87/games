@@ -1,7 +1,10 @@
 console.log('field js loaded')
+get_info(info) 
 
 //get existing picks on update
-$(document).ready(function() {
+//$(document).ready(function() {
+function get_picks_data(field) {
+    return new Promise(function (resolve) {
   console.log('field js executing')
       $.ajax({
         type: "GET",
@@ -9,10 +12,10 @@ $(document).ready(function() {
         dataType: 'json',
         success: function (json) {
           var i;
-          var data = $.parseJSON(json)
+          var data = json
           console.log('picks update data? ', data)
-          for (i = 0; i < data.picks.length; ++i) {
-              $('#' + data.picks[i]).attr('checked', 'checked');
+          for (i = 0; i < data.length; ++i) {
+              $('#' + data[i].playerName.id).attr('checked', 'checked');
 
             }
             let started_l = Object.values(data.start).filter(item => item.started).length
@@ -29,20 +32,14 @@ $(document).ready(function() {
                   newCell.style.color = "white"
                   row.appendChild(newCell)
 
-                  if (data.picks.indexOf(document.getElementById(Object.keys(data.picks)[i]) != -1) && ! document.getElementById(Object.keys(data.start)[i]).checked) {
-                    
-                  document.getElementById(Object.keys(data.start)[i]).style.display = 'none'
+                  if (data.picks.indexOf(document.getElementById(Object.keys(data.picks)[i]) != -1) && ! document.getElementById(Object.keys(data.start)[i]).checked)
+                   {document.getElementById(Object.keys(data.start)[i]).style.display = 'none'}
 
-
-
-
-                }
-
-                          } }
+                          }
+                  else (document.getElementById(Object.keys(data.start)[i]).prop.disabled=False)
+                  }
             }
-            
-            
-            //onsole.log(testData.filter(item => item.issue_type === 'Warning').length)
+            else($('input').prop('disabled', false))  //added 8/25 and commmented same code in field_Sect/ks
             
             $('#pulse').hide()
             $('#main').show()
@@ -74,8 +71,10 @@ $(document).ready(function() {
 
       })
     }
+    resolve() 
  })
-  
+}
+
 $(document).on("click", "#download", function() {
   console.log('clicked download')
           
@@ -271,12 +270,14 @@ $('#stats-dtl-toggle').on('click', function() {
   if ($('#stats-dtl-toggle').text().includes('Hide')) {
   $('#stats-dtl-toggle').html('<h4> Show Stats <i class="fa fa-plus-circle" style="color:lightblue;"></i> </h4>')
   $('#bottom #stats-dtl-toggle').html('<h4> Show Stats <i class="fa fa-plus-circle" style="color:lightblue;"></i> </h4>')
-  $('.stats-row').attr('hidden', '')
+  //$('.stats-row').attr('hidden', '')
+  $('.stats_row').attr('hidden', '')
   }
  else if ($('#stats-dtl-toggle').text().includes('Show')) {
     $('#stats-dtl-toggle').html('<h4> Hide Stats <i class="fa fa-minus-circle" style="color:lightblue;"></i> </h4>')
     $('#bottom #stats-dtl-toggle').html('<h4> Hide Stats <i class="fa fa-minus-circle" style="color:lightblue;"></i> </h4>')
-    $('.stats-row').removeAttr('hidden')
+    //$('.stats-row').removeAttr('hidden')
+    $('.stats_row').removeAttr('hidden')
     }
     
 })
@@ -286,12 +287,14 @@ $('#bottom #stats-dtl-toggle').on('click', function() {
   if ($('#bottom #stats-dtl-toggle').text().includes('Hide')) {
   $('#bottom #stats-dtl-toggle').html('<h4> Show Stats <i class="fa fa-plus-circle" style="color:lightblue;"></i> </h4>')
   $('#stats-dtl-toggle').html('<h4> Show Stats <i class="fa fa-plus-circle" style="color:lightblue;"></i> </h4>')
-  $('.stats-row').attr('hidden', '')
+  //$('.stats-row').attr('hidden', '')
+  $('.stats_row').attr('hidden', '')
   }
  else if ($('#bottom #stats-dtl-toggle').text().includes('Show')) {
     $('#bottom #stats-dtl-toggle').html('<h4> Hide Stats <i class="fa fa-minus-circle" style="color:lightblue;"></i> </h4>')
     $('#stats-dtl-toggle').html('<h4> Hide Stats <i class="fa fa-minus-circle" style="color:lightblue;"></i> </h4>')
-    $('.stats-row').removeAttr('hidden')
+    //$('.stats-row').removeAttr('hidden')
+    $('.stats_row').removeAttr('hidden')
     }
     
 })

@@ -38,8 +38,117 @@ import csv
 import random
 
 
+season = Season.objects.get(current=True)
+t= Tournament.objects.get(current=True)
+d = {}
+for g in range(1,11):
+    print (g)
+    group_data = ScoreDetails.objects.filter(pick__playerName__tournament__season=season, pick__playerName__group__number=g).order_by('user').values('user__username').annotate(Sum('score'))
+    for gd in group_data:
+        #print (gd)
+        if d.get(gd.get('user__username')):
+            d.get(gd.get('user__username')).update({g: gd.get('score__sum')})
+        else:
+            d[gd.get('user__username')] = {g: gd.get('score__sum')}
+    
+    
+for k, v in d.items():
+    print (k, v)
 
-t = Tournament.objects.get(current=True)
+
+exit()
+user = User.objects.get(pk=1)
+espn_data = espn_api.ESPNData().get_all_data()
+data= golf_serializers.NewFieldSerializer(Field.objects.filter(tournament=t, group__number=1), context={'espn_data': espn_data, 'user': user}, many=True).data
+#print (datetime.now() - start)
+print (data)
+
+exit()
+
+
+for f in Field.objects.filter(tournament__current=True).order_by('soy_WGR'):
+    print (f, ',', f.soy_WGR, ',', f.season_stats.get('fed_ex_rank'))
+
+
+owgr = populateField.get_worldrank()
+top_30 = {k:v for k,v in owgr.items() if int(v[2] <= 30)}
+print (top_30, len(top_30))
+fed_ex = populateField.get_fedex_data()
+
+for k, v in top_30.items():
+    print (k, ',', v[2], ',', fed_ex.get(k).get('rank'))
+
+
+
+
+
+exit()
+d = {'weak': {},
+    'strong': {},
+    'major': {}}
+
+e = {}
+
+for sd in ScoreDict.objects.filter(tournament__season__current=True).exclude(tournament__pga_tournament_num__in=['999', '470', '028']):  #018 zurich
+    if sd.tournament.last_group_multi_pick():
+        winner = [v.get('pga_num') for k,v in sd.data.items() if k != 'info' and v.get('rank') == '1']
+        
+        f = Field.objects.get(golfer__espn_number=winner[0], tournament=sd.tournament)
+        #print (f, f.group.number)
+        if d.get(sd.tournament.field_quality()).get(f.group.number):
+            c = d.get(sd.tournament.field_quality()).get(f.group.number) + 1
+            d.get(sd.tournament.field_quality()).update({f.group.number: c})
+            
+        else:
+            d[sd.tournament.field_quality()][f.group.number] = 1
+            
+        if f.group.number == 6:
+            if ScoreDetails.objects.filter(gross_score=1, pick__playerName__tournament=sd.tournament).exists():
+                print ('G6 winner: ', sd.tournament, ScoreDetails.objects.filter(gross_score=1, pick__playerName__tournament=sd.tournament))
+        if e.get(f.group.number):
+            e.update({f.group.number: e.get(f.group.number) + 1 })
+        else:
+            e[f.group.number] = 1
+
+        if f.group.number == 6:
+            print (f.playerName, f.tournament)
+
+for k, v in d.items():
+    print(k, v)
+print (e)
+
+s = Season.objects.get(current=True)
+users = s.get_users()
+totals = {}
+
+for u in users:
+    u_obj = User.objects.get(pk=u.get('user'))
+    g1 = ScoreDetails.objects.get(pick__)
+
+
+exit()    
+#t = Tournament.objects.get(current=True)
+start = datetime.now()
+espn_data = espn_api.ESPNData().get_all_data()
+
+data= golf_serializers.NewFieldSerializer(Field.objects.filter(tournament=t, group__number=1), context={'espn_data': espn_data}, many=True).data
+#print (datetime.now() - start)
+print (data)
+
+exit()
+start1 = datetime.now()
+espn_data = espn_api.ESPNData().get_all_data()
+
+data= golf_serializers.NewFieldSerializer(Field.objects.filter(tournament=t), context={'espn_data': espn_data}, many=True).data
+#print (datetime.now() - start)
+print (len(data), datetime.now() - start1)
+
+exit()
+
+for k,v  in data.items():
+    print (k)
+
+exit()
 espn = espn_api.ESPNData(mode='setup')
 #print (espn.player_started('10548'))
 

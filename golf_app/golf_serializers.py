@@ -1,7 +1,8 @@
 from rest_framework import serializers
 import json
-from golf_app.models import Field, ScoreDetails, Golfer, CountryPicks
+from golf_app.models import Field, ScoreDetails, Golfer, CountryPicks, Picks, Tournament
 from golf_app import espn_api
+from datetime import datetime
 
 class FieldSerializer(serializers.ModelSerializer):
 
@@ -31,12 +32,14 @@ class NewFieldSerializer(serializers.ModelSerializer):
     #recent = serializers.SerializerMethodField('get_recent')
     espn_link = serializers.SerializerMethodField('get_espn_link')
     pga_link = serializers.SerializerMethodField('get_pga_link')
-    #started = serializers.SerializerMethodField('get_started')
+    started = serializers.SerializerMethodField('get_started')
+    lock_group = serializers.SerializerMethodField('get_group_lock')
+    #user = serializers.SerializerMethodField('get_user')
 
     class Meta:
         model = Field
         fields = '__all__'
-        depth = 1
+        depth = 2
 
     def get_espn_link(self, field):
         return field.golfer.espn_link()
@@ -47,7 +50,18 @@ class NewFieldSerializer(serializers.ModelSerializer):
     def get_started(self, field):
         obj = espn_api.ESPNData(data=self.context.get('espn_data'))
         started = obj.player_started(field.golfer.espn_number)
+        
         return started
+
+    def get_group_lock(self, field):
+        if Picks.objects.filter(user=self.context.get('user'), playerName__group=field.group).exists():
+            pick = Picks.objects.get(user=self.context.get('user'), playerName__group=field.group)
+            if self.get_started(field):
+                return True
+
+        return False
+
+
 
 class ScoreDetailsSerializer(serializers.ModelSerializer):
     class Meta:
@@ -76,3 +90,31 @@ class CountryPicks(serializers.ModelSerializer):
 
     def get_flag_link(self, countrypick):
         return countrypick.get_flag()
+
+
+# class PlayerStartedSerializer(serializers.ModelSerializer):
+#     started = serializers.SerializerMethodField('get_started')
+#     #espn_number = serializers.PrimaryKeyRelatedField(many=True, read_only=True)
+
+#     class Meta:
+#         model = Field
+#         fields = ('golfer__espn_number', 'started')
+#         depth = 2
+
+#     def get_started(self, field):
+#         obj = espn_api.ESPNData(data=self.context.get('espn_data'))
+#         started = obj.player_started(field.golfer.espn_number)
+#         return started
+
+
+class PicksSerializer(serializers.ModelSerializer):
+    
+    class Meta:
+        model = Picks
+        fields = '__all__'
+        depth = 2
+
+    
+
+
+    

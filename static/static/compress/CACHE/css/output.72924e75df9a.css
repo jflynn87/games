@@ -1,0 +1,243 @@
+
+body {
+    font-family: Arial;
+    color: black;
+    height: 100%;
+    padding-left: 1em;
+}
+
+
+* {
+    box-sizing: border-box;
+
+}
+
+.row {
+  display: flex;
+}
+
+/*.column {
+/*  flex: 40%; */
+ /* padding-left: 2em;
+  width: 40%;
+  /*height: 700px;*/
+
+/*}
+*/
+.game_tbl {
+  height: 60%;
+}
+
+.footnote {
+  color: blue;
+}
+
+#teams tr {
+  cursor: move;
+}
+
+.spread {
+  padding-left: 2em;
+  padding-right: 20px;
+}
+
+.loser {
+  color: red;
+  text-decoration-line: line-through;
+
+}
+
+
+.record {
+  font-size: .25cm;
+
+}
+
+.status {
+  color: red;
+  animation: blinker 2s linear infinite;
+}
+
+@keyframes blinker {
+  50% {
+    opacity: 0;
+  }
+}
+
+.updated-status {
+  color: gray;
+  font-size: 75%;
+}
+
+.my-card {
+  border: 25px;
+  border-color: black;
+}
+
+.card {
+  border-color: #00588b;
+  border-width: 3px;
+  text-align: center;
+  width: 23%;
+  
+}
+
+.mytable th, td{
+    padding-left: 5px;
+}
+
+
+.middle {
+  width: 1%;
+}
+
+.highlight {
+   background-color: red;
+}
+
+.picks {
+  width: 40%;
+}
+
+.detail-view {
+  font-family: Verdana, Geneva, Tahoma, sans-serif;
+
+}
+
+.form-group label {
+  font-weight: bold;
+  font-size: 85%;
+}
+
+.help-block {
+  background-color: #f8d7da;
+  color: #842029;
+  border-color: #f5c2c7;
+  font-weight: 800;
+
+
+}
+
+.chart-style {
+  min-height: 250px;
+/*  width: auto;
+  padding-right: 10%; */
+}
+
+
+.top_row {
+ /* border-top: dotted;
+  border-color: black;
+  border-radius: 1px;  */
+  background-color: lightgreen;
+  width: 100%;
+  
+}
+
+.started {
+  background-color: darkgray;
+  width: 100%;
+  color: white;
+
+}
+
+.stats_row {
+  width: 100%;
+  column-span: 8;
+  background-color: lightblue;
+
+}
+
+.stat_table_category_header {
+  column-span: 8;
+  background-color: lightblue;
+}
+
+.group_header {
+  background-color: darkgray;
+  color: white;
+}
+
+.total_score {
+  background-color: lightcoral;
+  font-weight: bold;
+  color: white;
+}
+
+
+
+@media only screen and (max-width: 1199px) {
+.card {
+  width: 30em;
+}
+
+.picks {
+  width: 30em;
+}
+
+form #sub_button {
+  position: fixed;
+  bottom: 0;
+  right: 0
+}
+/* 
+#clear_6_button {
+  position: fixed;
+  bottom: 0;
+  right: 0;
+}
+#show_6_button {
+  position: fixed;
+  bottom: 0;
+  right: 30;  
+}
+ */
+
+.grp_6_buttons {
+  position: fixed;
+  bottom: 0;
+  left: 0%;
+
+}
+
+
+}
+
+
+/* all screens */
+form #bottom_sect {
+  position: relative;
+  bottom: 0;
+  right: 0;
+}
+
+/*big scree */
+@media only screen and (min-width: 1199px) {
+
+.field_stats_display {
+  position: fixed;
+  bottom: 0;
+  right: 0;
+}
+/* 
+#clear_6_button {
+  position: fixed;
+  bottom: 0;
+  left: 3%;
+}
+
+#show_6_button {
+  position: fixed;
+  bottom: 0;
+  left: 15%;
+}
+ */
+
+.grp_6_buttons {
+  position: fixed;
+  bottom: 0;
+  left: 15%;
+
+}
+
+}

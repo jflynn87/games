@@ -33,10 +33,10 @@ def load_sched(year):
             try:
                 week, created = Week.objects.get_or_create(season_model=season, week=week_cnt)
                 #week.season = season.season
-                #if not week.current and week.week != 1:
-                week.current = False
-                #else:
-                #week.current = True
+                if not week.current and week.week != 1:
+                    week.current = False
+                else:
+                    week.current = True
                 week.season = season.season
                 #week.week = week_cnt
                 week.game_cnt = 0
@@ -49,9 +49,12 @@ def load_sched(year):
 
                 headers = {'User-Agent': 'Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.149 Mobile Safari/537.36'}
                 url = "http://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard"
-                #payload = {'week':'1'}
-                payload = {}  #works for pre season/current week?
+                
+                payload = {'week': str(week_cnt)}
+                print ('payload ', payload)
+                #payload = {}  #works for pre season/current week?
                 json_data = requests.get(url, headers=headers, params=payload).json()
+                print (json_data)
                 print (json_data.keys())
                 print ('espn week: ', json_data.get('week'))
                 for l in json_data.get('events'):

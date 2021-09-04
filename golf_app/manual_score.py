@@ -579,7 +579,7 @@ class Score(object):
         print ('wd lookup', score)
 
         if not self.tournament.has_cut:
-            return len([x for x in self.score_dict.values() if x['rank'] not in self.not_playing_list]) + 1
+            return len([x for x in self.score_dict.values() if x.get('rank') not in self.not_playing_list]) 
         
         cut_indicators = ['--', '-', '_']
 

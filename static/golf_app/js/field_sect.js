@@ -1,24 +1,32 @@
 $(document).ready(function () {
     start = new Date()
-    $.ajax({
-        type: "GET",
-        url: "/golf_app/get_info/",
-        dataType: 'json',
-        data: {'tournament' : $('#tournament_key').text()},
-        success: function (json) {
-            info = $.parseJSON((json))
-            buildHeader()
-            groups = []
-            $.each($('#groups_list li'), function(i, g) {
-                groups.push(g.innerText) })
-                var fn = function wrapper(g){ // sample async action
-    
-                    return new Promise(resolve => resolve(build_field(g, info)));
-                };
+    Promise.all([
+    fetch("/golf_app/get_info/" + $('#tournament_key').text()).then(response => response.json()),
+    fetch("/golf_app/field_get_picks").then(response=> response.json())
+     ])
+     .then((responseJSON) => {
+         info = $.parseJSON(responseJSON[0])
+         picks = $.parseJSON(responseJSON[1])
+ 
+        var pick_array = [];
+        for (let i=0; i < picks.length; i++) {
+            pick_array.push(picks[i].playerName.id)
+        }
 
-            var actions = groups.map(fn) 
+        buildHeader()
+        groups = []
+        $.each($('#groups_list li'), function(i, g) {
+            groups.push(g.innerText) })
+            var fn = function wrapper(g){ // sample async action
+
+                return new Promise(resolve => resolve(build_field(g, info, pick_array)));
+            };
+
+        var actions = groups.map(fn) 
             var results = Promise.all(actions)
             results.then((() => {    
+                    $('[data-toggle="tooltip"]').tooltip();                                                    
+                    console.log('getting field js')
                     $.getScript('/static/golf_app/js/field.js')
 
                     $('#field_sect form').append('<div id=bottom_sect class=field_stats_display></div>')
@@ -26,7 +34,7 @@ $(document).ready(function () {
                     $('#bottom_sect').append(
                     '<div id=bottom class=field_stats_display>' +
                     '<div id=stats-dtl-toggle>' +
-                        '<h5>Hide Stats <i class="fa fa-minus-circle show" style="color:lightblue"></i></h5>' +
+                        '<h5>Show Stats <i class="fa fa-plus-circle show" style="color:lightblue"></i></h5>' +
                     '</div>' +
                     
                     '<div id=pick-status></div>' + 
@@ -48,23 +56,11 @@ $(document).ready(function () {
                         create_post();
                     });
 
-/*                     $('#clear_6_button').on('click', function(eve) {
-                        eve.preventDefault();
-                        console.log('clear group 6')
-                        console.log('G1 top', $('#tbl-group-1')[0].offsetTop)
-                        console.log($(document).scrollTop() )
-
-                       // $('input[name=group-6').prop('checked', false)
-                        console.log('chk completete ', info)
-                        $('#pick-status').empty()
-                        check_complete(info)
-                    })
- */
                     $('#show_6_button').on('click', function(eve) {
                         eve.preventDefault();
                         selected = []
                         $.each($('input[name=group-6' + ']:checked'), function(){selected.push($(this).parent().attr('id').replace('playerInfo', ''))})
-                        console.log(selected)
+                        console.log('selected G6 hide: ', selected)
                         
                         table = $('#tbl-group-6')
 
@@ -80,24 +76,33 @@ $(document).ready(function () {
                         window.location.href = '#tbl-group-6'
                     })
 
-
+                    //there should be a faster way to check started and deal with buttons
                     checkStarted()
-                    $('input').prop('disabled', false)
+                    
+
+                    
                         }))
             }
-    })        
-})
+     )
 
-function build_field(g, info) {
+    })        
+
+
+function build_field(g, info, pick_array) {
     return new Promise (function (resolve, reject) {
 
         //Intro section
         
         $('#field_sect #pick_form').append('<table id=tbl-group-' + g + ' class=table> \
-                                <thead class=total_score> <th> Group: ' + g + '</th> </thead>' +
+                                <thead class=total_score> <th> Group: ' + g + '<i id=expand-grp-' + g + ' class="fa fa-plus-circle show" style="color:white; float:right;"> Show Group Stats</i> </th> </thead>' +
                             '</table>')
+        
+        $('#expand-grp-' + g).on('click', function() {
+            toggle_stats_display(this, $('#tbl-group-' +g))
+        })
 
-        //picks tables/groups
+        const frag = new DocumentFragment()
+
         fetch("/golf_app/get_prior_result/",         
                 {method: "POST",
                 headers: {
@@ -112,9 +117,10 @@ function build_field(g, info) {
         .then((response) => response.json())
         .then((responseJSON) => {
             data = responseJSON
-            console.log('data', data)
-            $.each(data, function(i, field) {
-                
+            console.log('data group: ', g, data)
+            data_l = data.length
+            for (let idx = 0; idx < data_l; idx++) {
+                field = data[idx]
                 picks = info[field.group.number]
                 if (picks == 1) {
                     input_type = 'radio'
@@ -123,115 +129,30 @@ function build_field(g, info) {
                 else 
                     {input_type = 'checkbox'   
                      input_class = 'my-checkbox'}
-                     $('#tbl-group-' + field.group.number.toString()).append('<table id=player-' + field.golfer.espn_number + '-div style="width:100%;"></table>')
-                     $('#player-' + field.golfer.espn_number + '-div').append('<tr id=player-' + field.golfer.espn_number + '-row class=top_row></tr>')    
-                //$('#tbl-group-' + field.group.number.toString()).append('<tr id=player' + field.golfer.espn_number + ' class=top_row>' + 
 
-                $('#player-' + field.golfer.espn_number + '-row').append(
-                                                                '<td id=playerInfo' + field.golfer.espn_number + '>' +
-                                                                 (field.started ? 'Started'
-                                                                    : ! field.withdrawn  ?  '<input type="hidden" name="csrfmiddlewaretoken" value=' + $.cookie('csrftoken') +  '>' +
-                                                               // '<input id=' + field.id +  ' type="radio" class="my-radio" name=group-' + field.group.number + ' value=' + field.id +  '>' +
-                                                               '<input id=' + field.id +  ' type=' + input_type + ' class=' + input_class + ' name=group-' + field.group.number + ' value=' + field.id +  ' disabled>' 
-                                                               : 'WD' 
-                                                               ) +
-                                                                '<img src=' + field.golfer.pic_link + ' style="max-height:125px; alt="">' + field.playerName + ' ' + 
-                                                                '<img src=' + field.golfer.flag_link + ' alt="">' +
-                                                                '<a href="https://www.google.com/search?q=' + field.playerName + '" target="_blank" style="padding-left: 1em;">Google</a> / ' +
-                                                                '<a href=' + field.espn_link + ' target="_blank">ESPN</a> / ' +
-                                                                '<a href=' + field.pga_link + ' target="_blank">PGA</a>' +
-                                                            '</td>' ) 
-                                                          //'</tr>' ) 
-                $('#player-' + field.golfer.espn_number + '-div').append('<tr id=stats-row-' + field.golfer.espn_number + ' class="stats_row" >' +
-                                                          '<td>' +
-                                                          '<table id=stats' + field.golfer.espn_number +' class="table stats-row">' +
-                                                              '<tr style=background-color:lightblue;>' +
-                                                                 '<th colspan=2>Current OWGR</th>' +
-                                                                 '<th colspan=2>Last Week OWGR</th>' +
-                                                                 '<th colspan=2>Last Season OWGR</th>' +
-                                                                 '<th colspan=2>FedEx Cup</th>' +
-                                                              '</tr>' +
-                                                              '<tr>' +
-                                                                 '<td colspan=2>' + field.currentWGR + '</td>' + 
-                                                                 '<td colspan=2>' + field.sow_WGR + '</td>' +
-                                                                 '<td colspan=2>' + field.soy_WGR + '</td>' +
-                                                                 '<td colspan=2>rank: ' + field.season_stats.fed_ex_rank + '; points:' + field.season_stats.fed_ex_points + '</td>' +
-                                                               '</tr>' +
-                                                              '<tr class=stats_row>' +
-                                                                 '<th colspan=2>Handicap</th>' +
-                                                                 '<th colspan=2>This event last year</th>' +
-                                                                 '<th colspan=4>Recent Form</th>' +
-                                                              '</tr>' + 
-                                                              '<tr>' +
-                                                                 '<td colspan=2>' + field.handi + '</td>' +
-                                                                 '<td colspan=2>' + field.prior_year + '</td>' +
-                                                                 '<td colspan=3 id=recent' + field.golfer.espn_number + '> </td>' +
-                                                              '</tr>' +
-                                                              '<tr class=stats_row>' + 
-                                                                  '<th colspan=8>Season Stats</th>' +
-                                                              '</tr>' +
-                                                              '<tr>' + 
-                                                                    '<td>Played</td>' +
-                                                                    '<td>Won</td>' +  
-                                                                    '<td>2-10</td>' + 
-                                                                    '<td>11-29</td>' + 
-                                                                    '<td>30-49</td>' + 
-                                                                    '<td>> 50</td>' +
-                                                                    '<td>Cuts</td>' +
-                                                              '</tr>' +
-                                                              '<tr>' +
-                                                                    '<td>' + field.season_stats.played + '</td>' + 
-                                                                    '<td>' + field.season_stats.won + '</td>' + 
-                                                                    '<td>' + field.season_stats.top10 + '</td>' +
-                                                                    '<td>' + field.season_stats.bet11_29 + '</td>' +
-                                                                    '<td>' + field.season_stats.bet30_49 + '</td>' +
-                                                                    '<td>' + field.season_stats.over50 + '</td>' +
-                                                                    '<td>' + field.season_stats.cuts +  '</td>'  +
-                                                                    '<td></td>' + 
-                                                              '</tr>' + 
-                                                            //   '<tr style=background-color:lightblue;><th colspan=8>Shots Gained Stats</th></tr>' +
-                                                            //   '<tr><td>Off Tee Rank</td> <td>Off Tee</td> <td>Approach Rank</td> <td>Approach</td><td>Around Green Rank</td><td>Around Green</td> <td>Putting Rank</td> <td>Putting</td></tr>' +
-                                                            //   '<tr>' +
-                                                                    
-                                                            //         '<td>' + (field.season_stats.off_tee.rank || 'n/a') + '</td>' + 
-                                                            //         '<td>' + field.season_stats.off_tee.average || 'n/a' + '</td>' + 
-                                                            //         '<td>' + field.season_stats.approach_green.rank + '</td>' + 
-                                                            //         '<td>' + field.season_stats.approach_green.average + '</td>' + 
-                                                            //         '<td>' + field.season_stats.around_green.rank + '</td>' + 
-                                                            //         '<td>' + field.season_stats.around_green.average + '</td>' + 
-                                                            //         '<td>' + field.season_stats.putting.rank + '</td>' + 
-                                                            //         '<td>' + field.season_stats.putting.average + '</td>') + 
+                let field_table = document.createElement('table')
+                field_table.id = 'player-' + field.id +'-div'
+                field_table.style.width = '100%'
+
+                let golfer_row = build_golfer_row(field, pick_array)
+                field_table.append(golfer_row)
+
+                let stats_row = build_stats_row(field)
+                field_table.append(stats_row)
+
+                frag.appendChild(field_table)
+        
 
 
+                                resolve() 
+            }
 
-                                                        
-
-                                                            //   '</tr>' +
-                                                          '</table>' +
-                                                        '</td>' +
-                                                        '</tr>' )
-                                                formatSG(field)
-                                                        
-                                                $('input#' + field.id).on('change', function(evt) {
-                                                    $('#pick-status').empty()
-                                                    get_info(info, this)
-                                                })
-                                                           
-                                                ranks = ''
-                                                $.each(field.recent, function(i, rank){ranks += rank.rank + ', '})
-                                                            var items = ''
-                                                            $.each(field.recent, function(i, rank){items += rank.name + ': ' + rank.rank + '\n'})
-                                                            
-                                                            $('#recent' + field.golfer.espn_number).html('<p>' + ranks + '<span> <a id=tt-recent' + field.golfer.espn_number + 
-                                                                ' data-toggle="tooltip" html="true" > <i class="fa fa-info-circle" style="color:blue"></i> </a> </span> </p>')
-                                                            $('#tt-recent' + field.golfer.espn_number + '[data-toggle="tooltip"]').tooltip({trigger:"hover",
-                                                                 delay:{"show":400,"hide":800}, "title": items
-                                                        })
-                                                           resolve() })                                                          
+            document.getElementById('tbl-group-' + g).appendChild(frag);        
+            
 
                })    
-                })
-                }
+               })
+    }
 
 
 function formatSG(field) {
@@ -275,8 +196,8 @@ function checkStarted() {
     console.log('started ', started, started.started, started.late_picks)
     if (started.started  && ! started.late_picks) {        
         $("#make_picks").attr('hidden', '')
-        $('#too_late').removeAttr('hidden')
-        $('#sub_button').remove()
+        //$('#too_late').removeAttr('hidden')
+        //$('#sub_button').remove()
     }
     else {
         $('#random_btn').removeAttr('disabled').attr('class', 'btn btn-primary');
@@ -308,7 +229,7 @@ function buildHeader() {
         '</span>')
 
     $('#top_sect').append('<br> <div id=stats-dtl-toggle>' + 
-        '<h5>Hide Stats <i class="fa fa-minus-circle show" style="color:lightblue"></i></h5>' +
+        '<h5>Show Stats <i class="fa fa-plus-circle show" style="color:lightblue"></i></h5>' +
         '<br></div>')
 
     $('#field_sect').append('<form id=pick_form method=post></form>')
@@ -466,4 +387,432 @@ function formatWomenMedals(date) {
         
     })
 
+}
+
+function build_golfer_row(field, pick_array) {
+
+    let golfer_row = document.createElement('tr')
+        golfer_row.id = 'golfer-' + field.id
+
+    let golfer = document.createElement('td')
+    golfer.colSpan =1
+    
+    golfer.id = 'playerInfo' + field.golfer.espn_number
+    var status = ' '
+
+    if(field.withdrawn) {
+        var status = 'WD' + ' '
+        golfer_row.classList.add('started')
+        }
+
+    else if (! field.started || field.tournament.late_picks) {
+        let inputA =  document.createElement('input');
+            inputA.type = 'hidden';
+            inputA.name = "csrfmiddlewaretoken";
+            inputA.value  = $.cookie('csrftoken')
+        golfer.appendChild(inputA)
+
+        let inputB =  document.createElement('input');
+            inputB.id = field.id
+            inputB.type = input_type
+            inputB.classList.add(input_class)
+            inputB.name= "group-" + field.group.number
+            inputB.value = field.id
+            inputB.addEventListener('change', function(evt) {
+                        $('#pick-status').empty()
+                        get_info(info, this);
+                                                            });
+
+            if (pick_array.indexOf(field.id) != -1) {
+                inputB.checked = true
+            }
+             
+            if (field.lock_group) {
+                inputB.disabled = true
+            }
+            golfer.appendChild(inputB)
+            golfer_row.classList.add('top_row')
+                                                                }
+    else if(field.started) {
+        //clean this up, duplicte from above if
+        let inputA =  document.createElement('input');
+        inputA.type = 'hidden';
+        inputA.name = "csrfmiddlewaretoken";
+        inputA.value  = $.cookie('csrftoken')
+    golfer.appendChild(inputA)
+
+    let inputB =  document.createElement('input');
+        inputB.id = field.id
+        inputB.type = input_type
+        inputB.classList.add(input_class)
+        inputB.disabled = true
+        inputB.name= "group-" + field.group.number
+        inputB.value = field.id
+        //inputB.addEventListener('change', function(evt) {
+        //            $('#pick-status').empty()
+        //            get_info(info, this);
+        //                                                });
+
+        if (pick_array.indexOf(field.id) != -1) {
+            inputB.checked = true
+        }
+                                                            
+        golfer.appendChild(inputB)
+
+        var status = 'Started' + ' '
+        golfer_row.classList.add('started')
+                            }
+    else {
+        var status = 'Problem' + ' '
+        golfer_row.classList.add('started')
+        }
+        
+    img = document.createElement('img')
+    img.src = field.golfer.pic_link
+    flag = document.createElement('img')
+    flag.src = field.golfer.flag_link
+    google = document.createElement('a')
+    google.href = 'https://www.google.com/search?q=' + field.playerName
+    google.innerHTML = " Google"
+    espn = document.createElement('a')
+    espn.href = field.espn_link
+    espn.innerHTML = "/ESPN"
+    pga = document.createElement('a')
+    pga.href = field.pga_link
+    pga.innerHTML = "/PGA"
+
+    golfer.appendChild(img)
+    if (field.started || field.withdrawn) {
+        t = field.playerName.strike() + ' ' + status}
+    else {
+        t = field.playerName + ' ' + status
+    }
+
+    text = document.createElement('b')
+    text.innerHTML = t
+    golfer.append(text)
+    
+    golfer.appendChild(flag)
+    golfer.appendChild(google)
+    golfer.appendChild(espn)
+    golfer.appendChild(pga)
+    
+    t1 = document.createElement('b')
+    t1.innerHTML = '      ' + 'OWGR: ' + field.currentWGR + ' ;  ' + 'Handicap: ' + field.handi + ' ; ' +  "Prior Year: " + field.prior_year
+    
+    golfer.appendChild(t1)
+    
+    expand = document.createElement('i')
+        expand.classList.add('fa', 'fa-plus-circle', 'expand')
+        //expand.style.color = 'white'
+        expand.style.float= 'right'
+        expand.innerHTML = 'Show Golfer Stats'
+        expand.id = 'expand-' + field.id
+        expand.addEventListener('click', function() {toggle_golfer_stats(field.id)})
+    
+        golfer.appendChild(expand)
+    
+    //    $('#expand-' + g).on('click', function() {
+    //    toggle_stats_display(this, $('#tbl-group-' +g))
+    //})
+
+
+    golfer_row.appendChild(golfer)
+    
+    return golfer_row
+}
+
+function build_stats_row(field) {
+    let stats_row = document.createElement('tr');
+    stats_row.id = 'stats_row-' + field.id
+    stats_row.style.width = '100%'
+    stats_row.classList.add('stats_row')
+    stats_row.setAttribute('hidden', true)
+    stats_cell = document.createElement('td')
+    stats_row.appendChild(stats_cell)
+    let stats_table = document.createElement('table');
+        stats_table.style.width = '100%'
+        stats_table.classList.add('table',  'stats-row')
+
+        let rowA_header_fields = ['Current OWGR', 'Last Week OWGR', 'Last Season OWGR', 'FedEx Cup']
+        rowA_field_l = rowA_header_fields.length
+        rowA_header = document.createElement('tr')
+        rowA_header_cells = []
+        for (let i=0; i < rowA_field_l; i++ ) {
+            let header_field = document.createElement('th')
+                header_field.innerHTML = rowA_header_fields[i]
+                header_field.colSpan = 2
+                rowA_header_cells.push(header_field)
+        }
+        for (let i=0; i < rowA_field_l; i++) {
+            rowA_header.append(rowA_header_cells[i])
+        }
+        rowA_header.classList.add('stats_row')
+        stats_table.appendChild(rowA_header)
+            
+        let stats_rowA = document.createElement('tr')
+            
+            currOWGR = document.createElement('td')
+            currOWGR.innerHTML = field.currentWGR
+            currOWGR.colSpan = 2
+            sowOWGR = document.createElement('td')
+            sowOWGR.innerHTML = field.sow_WGR
+            sowOWGR.colSpan = 2
+            soyOWGR = document.createElement('td')
+            soyOWGR.innerHTML = field.soy_WGR
+            soyOWGR.colSpan = 2
+            fedEx = document.createElement('td')
+            fedEx.innerHTML = 'rank: ' + field.season_stats.fed_ex_rank + '; points:' + field.season_stats.fed_ex_points
+            fedEx.colSpan = 2
+
+            stats_rowA.append(currOWGR)
+            stats_rowA.append(sowOWGR)
+            stats_rowA.append(soyOWGR)
+            stats_rowA.append(fedEx)
+        stats_table.appendChild(stats_rowA)
+            
+
+        let stats_rowB = document.createElement('tr')
+        let rowB_header_fields = ['Handicap', 'This event last year', 'Recent Form']
+
+        rowB_field_l = rowB_header_fields.length
+        rowB_header = document.createElement('tr')
+        rowB_header_cells = []
+        for (let i=0; i < rowB_field_l; i++ ) {
+            let header_field = document.createElement('th')
+                header_field.innerHTML = rowB_header_fields[i]
+                if (i+1 == rowB_field_l) {header_field.colSpan = 4}
+                else {header_field.colSpan = 2}
+                rowB_header_cells.push(header_field)
+        }
+        for (let i=0; i < rowB_field_l; i++) {
+            rowB_header.append(rowB_header_cells[i])
+        }
+        rowB_header.classList.add('stats_row')
+
+        handicap = document.createElement('td')
+        handicap.innerHTML = field.handi
+        handicap.colSpan = 2
+        prior_year = document.createElement('td')
+        prior_year.innerHTML = field.prior_year
+        prior_year.colSpan = 2
+        
+        recent_form = document.createElement('td')
+        recent_form.id = 'recent' + field.golfer.espn_number
+        recent_form.colSpan = 4
+        
+        recent_p = document.createElement('p')
+        var ranks = ''
+        var items = ''
+        rec_l = Object.keys(field.recent).length
+        for (let i=0; i < rec_l; i++) {
+            var r = Object.values(field.recent)[i]
+            if (i+1 < rec_l) {ranks += r.rank + ', '} 
+            else {ranks += r.rank + ' '}
+            items += r.name + ': ' + r.rank + '\n'
+            }
+        
+        recent_p.innerHTML = ranks
+        recent_form.appendChild(recent_p)
+
+        recent_span = document.createElement('span')
+        recent_a = document.createElement('a')
+        recent_circle = document.createElement('i')
+        
+        recent_a.id = 'tt-recent' + field.id
+        recent_a.setAttribute('data-toggle', 'tooltip')
+        recent_a.setAttribute('title', items)
+        
+        recent_circle.classList.add('fa', 'fa-info-circle')
+        recent_circle.style.color = 'blue'
+       
+        recent_span.appendChild(recent_a)
+        recent_a.appendChild(recent_circle)
+
+        recent_p.appendChild(recent_span)       
+
+        stats_rowB.append(handicap)
+        stats_rowB.append(prior_year)
+        stats_rowB.append(recent_form)
+
+        stats_table.appendChild(rowB_header)        
+        stats_table.appendChild(stats_rowB)
+
+        let stats_rowC = document.createElement('tr')
+            let cell = document.createElement('th')
+            cell.innerHTML = 'Season Stats'
+            cell.colSpan = 8
+            cell.classList.add('stats_row')
+        stats_rowC.appendChild(cell)
+        stats_table.appendChild(stats_rowC)
+
+        let rowD_header = document.createElement('tr')
+        rowD_header_fields = ['Played', 'Won', '2-10', '11-29', '30-49', '50', 'Cuts']
+
+        rowD_field_l = rowD_header_fields.length
+        
+        rowD_header_cells = []
+        for (let i=0; i < rowD_field_l; i++ ) {
+            let header_field = document.createElement('th')
+                header_field.innerHTML = rowD_header_fields[i]
+                if (i+1 == rowD_field_l) {header_field.colSpan = 2}
+                else {header_field.colSpan = 1}
+                rowD_header_cells.push(header_field)
+        }
+        for (let i=0; i < rowD_field_l; i++) {
+            rowD_header.append(rowD_header_cells[i])
+        }
+
+        let stats_rowD = document.createElement('tr')
+            let cellA = document.createElement('td')
+                cellA.colSpan = 1
+                cellA.innerHTML = field.season_stats.played
+                stats_rowD.appendChild(cellA)
+            let cellB = document.createElement('td')
+                cellB.colSpan = 1
+                cellB.innerHTML = field.season_stats.won
+                stats_rowD.appendChild(cellB)
+            let cellC = document.createElement('td')
+                cellC.colSpan = 1
+                cellC.innerHTML = field.season_stats.top10
+                stats_rowD.appendChild(cellC)
+            let cellD = document.createElement('td')
+                cellD.colSpan = 1
+                cellD.innerHTML = field.season_stats.bet11_29
+                stats_rowD.appendChild(cellD)
+            let cellE = document.createElement('td')
+                cellE.colSpan = 1
+                cellE.innerHTML = field.season_stats.bet30_49
+                stats_rowD.appendChild(cellE)
+            let cellF = document.createElement('td')
+                cellF.colSpan = 1
+                cellF.innerHTML = field.season_stats.over50
+                stats_rowD.appendChild(cellF)
+            let cellG = document.createElement('td')
+                cellG.colSpan = 1
+                cellG.innerHTML = field.season_stats.cuts
+                stats_rowD.appendChild(cellG)
+            
+            stats_table.appendChild(rowD_header)
+            stats_table.appendChild(stats_rowD)
+
+            let sg_row = document.createElement('tr')
+            let sg_cell = document.createElement('th')
+            sg_cell.innerHTML = 'Shots Gained Stats'
+            sg_cell.colSpan = 8
+            sg_cell.classList.add('stats_row')
+        sg_row.appendChild(sg_cell)
+        stats_table.appendChild(sg_row)
+
+
+            let rowE_header = document.createElement('tr')
+            rowE_header_fields = ['Off Tee Rank', 'Off Tee', 'Approach Rank', 'Approach', 'Around Green Rank', 'Around Green', 'Putting Rank', 'Putting']
+
+            rowE_field_l = rowE_header_fields.length
+            
+            rowE_header_cells = []
+            for (let i=0; i < rowE_field_l; i++ ) {
+                let header_field = document.createElement('th')
+                    header_field.innerHTML = rowE_header_fields[i]
+                    rowE_header_cells.push(header_field)
+            }
+            for (let i=0; i < rowE_field_l; i++) {
+                rowE_header.append(rowE_header_cells[i])
+            }
+
+            let stats_rowE = document.createElement('tr')
+                let sg_cellA = document.createElement('td')
+                    sg_cellA.innerHTML = field.season_stats.off_tee.rank || 'n/a'
+                    stats_rowE.appendChild(sg_cellA)
+
+                let sg_cellB = document.createElement('td')
+                    sg_cellB.innerHTML = field.season_stats.off_tee.average
+                    stats_rowE.appendChild(sg_cellB)
+
+                let sg_cellC = document.createElement('td')
+                    sg_cellC.innerHTML = field.season_stats.approach_green.rank
+                    stats_rowE.appendChild(sg_cellC)
+
+                let sg_cellD = document.createElement('td')
+                    sg_cellD.innerHTML = field.season_stats.approach_green.average 
+                    stats_rowE.appendChild(sg_cellD)
+
+                let sg_cellE = document.createElement('td')
+                    sg_cellE.innerHTML = field.season_stats.around_green.rank
+                    stats_rowE.appendChild(sg_cellE)
+
+                let sg_cellF = document.createElement('td')
+                    sg_cellF.innerHTML = field.season_stats.around_green.average
+                    stats_rowE.appendChild(sg_cellF)
+
+                let sg_cellG = document.createElement('td')
+                    sg_cellG.innerHTML = field.season_stats.putting.rank
+                    stats_rowE.appendChild(sg_cellG)
+
+                let sg_cellH = document.createElement('td')
+                    sg_cellH.innerHTML = field.season_stats.putting.average
+                    stats_rowE.appendChild(sg_cellH)
+       
+
+            stats_table.appendChild(rowE_header)
+            stats_table.appendChild(stats_rowE)
+            
+        stats_cell.append(stats_table)
+
+        return stats_row
+}
+
+function  toggle_stats_display(ele, table) {
+    t_id = table[0].id
+    var toggle_ind = document.getElementById(ele.id).innerHTML.trim()
+    
+    if (toggle_ind == 'Show Group Stats') {
+        $('#' + t_id + ' .stats_row').attr('hidden', false)
+                ele.classList.remove('fa-plus-circle')
+                ele.classList.add('fa-minus-circle')
+                ele.innerHTML = 'Hide Group Stats'
+        
+        expand_l = table[0].getElementsByClassName('expand').length
+        
+        for (let i=0; i < expand_l; i++) {
+            table[0].getElementsByClassName('expand')[i].classList.remove('fa-plus-circle')
+            table[0].getElementsByClassName('expand')[i].classList.add('fa-minus-circle')
+            table[0].getElementsByClassName('expand')[i].innerHTML = 'Hide Golfer Stats'
+        }
+            
+        }
+    else {$('#' + t_id + ' .stats_row').attr('hidden', true)
+        ele.classList.remove('fa-minus-circle')
+        ele.classList.add('fa-plus-circle')
+        ele.innerHTML = 'Show Group Stats'
+
+        expand_l = table[0].getElementsByClassName('expand').length
+    
+        for (let i=0; i < expand_l; i++) {
+            table[0].getElementsByClassName('expand')[i].classList.remove('fa-minus-circle')
+            table[0].getElementsByClassName('expand')[i].classList.add('fa-plus-circle')
+            table[0].getElementsByClassName('expand')[i].innerHTML = 'Show Golfer Stats'
+        }
+        
+            
+        }
+}
+
+function toggle_golfer_stats(field_id) {
+    
+    indicator = document.getElementById('expand-' + field_id).innerHTML.trim()
+
+    if (indicator == "Show Golfer Stats") {
+        $('#stats_row-' + field_id).removeAttr('hidden')
+        document.getElementById('expand-' + field_id).innerText = "Hide Golfer Stats"
+        document.getElementById('expand-' + field_id).classList.remove('fa-plus-circle')
+        document.getElementById('expand-' + field_id).classList.add('fa-minus-circle')
+    }
+    else {
+        $('#stats_row-' + field_id).attr('hidden', true)
+        document.getElementById('expand-' + field_id).innerText = "Show Golfer Stats"
+        document.getElementById('expand-' + field_id).classList.remove('fa-minus-circle')
+        document.getElementById('expand-' + field_id).classList.add('fa-plus-circle')
+
+    }
 }

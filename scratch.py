@@ -34,7 +34,22 @@ from django.http import HttpRequest
 
 
 start = datetime.now()
+headers = {'User-Agent': 'Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.149 Mobile Safari/537.36'}
+url = "http://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard"
+payload = {'week':'2'}
+#payload = {}
+jsonData = requests.get(url, headers=headers, params=payload).json()
+print (jsonData.keys())
+print (jsonData.get('week'))
+print (jsonData.get('events'))
+exit()
 
+w = Week.objects.get(current=True)
+print (w.started())
+games = Games.objects.filter(week=w, qtr__isnull=False).exclude(qtr__in=['pregame', 'postponed']).exclude(qtr__icontains='AM').exclude(qtr__icontains='PM')
+for g in games:
+    print (g.home, g.qtr)
+exit()
 sched = espn_data.ESPNData().get_data()
 print ('dur: ', datetime.now() - start)
 print (sched)

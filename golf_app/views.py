@@ -186,12 +186,12 @@ class NewFieldListView(LoginRequiredMixin,TemplateView):
         print ('user', user)
         print ('started', tournament.started())
 
-        if tournament.started() and tournament.late_picks is False:
-            print ('picks too late', user, datetime.datetime.now())
-            print (timezone.now())
-            msg = 'Too late for picks, tournament started'
-            response = {'status': 0, 'message': msg} 
-            return HttpResponse(json.dumps(response), content_type='application/json')
+        # if tournament.started() and tournament.late_picks is False:
+        #     print ('picks too late', user, datetime.datetime.now())
+        #     print (timezone.now())
+        #     msg = 'Too late for picks, tournament started'
+        #     response = {'status': 0, 'message': msg} 
+        #     return HttpResponse(json.dumps(response), content_type='application/json')
 
         
         if Picks.objects.filter(playerName__tournament=tournament, user=user).count()>0:
@@ -279,35 +279,35 @@ class ScoreGetPicks(ListAPIView):
         print ('return serialized piks: ', datetime.datetime.now() - start)
         return queryset
            
-
 class GetPicks(APIView):
     
     def get(self, num):
         start = datetime.datetime.now()
         # adding d and transforiming reply to a dict with original pick list and started indicator
-        d = {}
-        s = {}
+        # d = {}
+        # s = {}
         t = Tournament.objects.get(current=True)
         try: 
-            pick_list = []
+            #pick_list = []
             #added WD exclued 8/12
-            for pick in Picks.objects.filter(user__username=self.request.user, playerName__tournament=t).exclude(playerName__withdrawn=True):
-                pick_list.append(pick.playerName.pk)
+            #for pick in Picks.objects.filter(user__username=self.request.user, playerName__tournament=t).exclude(playerName__withdrawn=True):
+            #    pick_list.append(pick.playerName.pk)
             #print ('getting picks API response', self.request.user, json.dumps(pick_list), datetime.datetime.now() - start)
-            d['picks'] = pick_list
-            espn_data = espn_api.ESPNData()
-            if t.started():
-                d['started'] = {}
-                for f in Field.objects.filter(tournament__current=True):
-                    s[f.pk] = {'started': espn_data.player_started(f.golfer.espn_number)}
-            
-                d.update({'start': s})
-            else:
-                d.update({'start': {}})
+            #d['picks'] = pick_list
+            picks = golf_serializers.PicksSerializer(Picks.objects.filter(user__username=self.request.user, playerName__tournament=t).exclude(playerName__withdrawn=True), many=True).data
+            #espn_data = espn_api.ESPNData().get_all_data()
+            #if not t.started():
+            #    d['started'] = {}
+                #for f in Field.objects.filter(tournament__current=True):
+                #    s[f.pk] = {'started': espn_data.player_started(f.golfer.espn_number)}
+            #    s = golf_serializers.PlayerStartedSerializer(Field.objects.filter(tournament__current=True), context={'espn_data': espn_data}, many=True).data
+            #    d['player_started_info'] = s
+            #else:
+            #    d.update({'start': {}})
 
             print ('get picks duration: ', datetime.datetime.now() - start)
             
-            return Response(json.dumps(d), 200)
+            return Response(json.dumps(picks), 200)
             #return Response(json.dumps(pick_list), 200)
         except Exception as e:
             print ('Get Picks API exception', e)
@@ -897,11 +897,13 @@ class OptimalPicks(APIView):
 
 class GetInfo(APIView):
 
-    def get(self, num):
+    def get(self, request, pk):
+        print ('PK :: ', pk)
         print (self.request.GET)
         try:
             info_dict = {}
-            t = Tournament.objects.get(pk=self.request.GET.get('tournament'))
+            #t = Tournament.objects.get(pk=self.request.GET.get('tournament'))
+            t = Tournament.objects.get(pk=pk)
             total_picks = 0
 
             for g in Group.objects.filter(tournament=t):
@@ -1227,13 +1229,14 @@ class PriorResultAPI(APIView):
         try:
             #g_num = group.split('-')[2]
             t= Tournament.objects.get(pk=request.data.get('tournament_key'))
-            
+            espn_data = espn_api.ESPNData().get_all_data()
+            context = {'espn_data': espn_data, 'user': self.request.user}
             if request.data.get('group') == 'all':
-                data= golf_serializers.NewFieldSerializer(Field.objects.filter(tournament=t), many=True).data
+                data= golf_serializers.NewFieldSerializer(Field.objects.filter(tournament=t), context=context, many=True).data
             elif len(request.data.get('golfer_list')) == 0:
-                data= golf_serializers.NewFieldSerializer(Field.objects.filter(tournament=t, group__number=request.data.get('group')), many=True).data
+                data= golf_serializers.NewFieldSerializer(Field.objects.filter(tournament=t, group__number=request.data.get('group')), context=context, many=True).data
             else:
-                data = golf_serializers.NewFieldSerializer(Field.objects.filter(tournament=t, golfer__espn_number__in=request.data.get('golfer_list')), many=True).data
+                data = golf_serializers.NewFieldSerializer(Field.objects.filter(tournament=t, golfer__espn_number__in=request.data.get('golfer_list')), context=context, many=True).data
             #data = serializers.serialize("json", Field.objects.filter(tournament=t, golfer__espn_number__in=request.data.get('golfer_list')), use_natural_foreign_keys=True)
             #print(data)
         except Exception as e:

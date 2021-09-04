@@ -62,7 +62,7 @@ class Week(models.Model):
             print ('manually set not started')
             return False
         #if Games.objects.filter(week=self, qtr__isnull=False).exists():
-        if Games.objects.filter(week=self, qtr__isnull=False).exclude(qtr__in=['pregame', 'postponed']).exists():
+        if Games.objects.filter(week=self, qtr__isnull=False).exclude(qtr__in=['pregame', 'postponed']).exclude(qtr__icontains='AM').exclude(qtr__icontains='PM').exists():
             print ('week started based on db scores')
             return True
         elif not self.current:
@@ -74,10 +74,12 @@ class Week(models.Model):
             games = espn_data.ESPNData().get_data()
             #games = web['games']
             
-            
+            #print (games)
             for k, v in games.items():
                 print (k , v)
-                if v.get('qtr') not in [None, 'pregame', 'postponed', 'Scheduled']:
+                time_inds = ['am', 'pm', 'AM', 'PM', 'pregame', 'postponed', 'Scheduled']
+                print (v.get('qtr'))
+                if v.get('qtr') not in [None, 'pregame', 'postponed', 'Scheduled'] and not any(ele in v.get('qtr') for ele in time_inds):
                     print ('week started based on scrape: ', v)
                     return True
                 #else:
