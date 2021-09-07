@@ -1639,3 +1639,9 @@ class GetCountryPicks(APIView):
             data = json.dumps({'msg': e})    
             
         return JsonResponse(data, status=200, safe=False)
+
+
+class FedExPicksView(LoginRequiredMixin,TemplateView):
+     login_url = 'login'
+     template_name = 'golf_app/fedex_picks.html'
+

@@ -25,7 +25,8 @@ from urllib.request import Request, urlopen
 from selenium import webdriver
 import urllib
 import json
-from golf_app import views, manual_score, populateField, withdraw, scrape_scores_picks, utils, scrape_cbs_golf, scrape_masters, scrape_espn, update_favs, olympic_sd, espn_api
+from golf_app import views, manual_score, populateField, withdraw, scrape_scores_picks, utils, \
+                            scrape_masters, scrape_espn, espn_api, fedexData
 from unidecode import unidecode
 from django.core import serializers
 from golf_app.utils import formatRank, format_name, fix_name
@@ -37,8 +38,11 @@ import scipy.stats as ss
 import csv
 import random
 
+season = Season.objects.get(season=2021)
+field = fedexData.FedEx().get_field() 
+exit()
 
-season = Season.objects.get(current=True)
+
 t= Tournament.objects.get(current=True)
 d = {}
 for g in range(1,11):
@@ -55,17 +59,6 @@ for g in range(1,11):
 for k, v in d.items():
     print (k, v)
 
-
-exit()
-user = User.objects.get(pk=1)
-espn_data = espn_api.ESPNData().get_all_data()
-data= golf_serializers.NewFieldSerializer(Field.objects.filter(tournament=t, group__number=1), context={'espn_data': espn_data, 'user': user}, many=True).data
-#print (datetime.now() - start)
-print (data)
-
-exit()
-
-
 for f in Field.objects.filter(tournament__current=True).order_by('soy_WGR'):
     print (f, ',', f.soy_WGR, ',', f.season_stats.get('fed_ex_rank'))
 
@@ -77,9 +70,6 @@ fed_ex = populateField.get_fedex_data()
 
 for k, v in top_30.items():
     print (k, ',', v[2], ',', fed_ex.get(k).get('rank'))
-
-
-
 
 
 exit()

@@ -41,7 +41,15 @@ payload = {'week':'2'}
 jsonData = requests.get(url, headers=headers, params=payload).json()
 print (jsonData.keys())
 print (jsonData.get('week'))
-print (jsonData.get('events'))
+
+f = open('espn_nfl_api.json', "w")
+f.write(json.dumps(jsonData))
+f.close()
+
+#print (jsonData.get('events'))
+for e in jsonData.get('events'):
+    print ('-------------------')
+    print (e)
 exit()
 
 w = Week.objects.get(current=True)

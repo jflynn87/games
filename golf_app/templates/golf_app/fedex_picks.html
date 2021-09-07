@@ -1,0 +1,15 @@
+{% extends "golf_app/golf_app_base.html" %}
+{%load static%}
+{%load bootstrap%}
+{%load compress%}
+{%load golf_extras%}
+
+{% block body_block %}
+<h1>FedEx Cup Season Picks</h1>
+<div id='field'></div>
+
+{%compress js%}
+<script type="text/javascript" src="{%static 'golf_app/js/field_sect.js'%}"></script> 
+{%endcompress%}
+
+{%endblock%}

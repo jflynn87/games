@@ -389,6 +389,12 @@ class Games(models.Model):
         index_together = ['week', 'home', 'away']
 
 
+    def check_started(self):
+        pass
+
+    def pre_start_inds(self):
+        return ['am', 'pm', 'AM', 'PM', 'pregame', 'postponed', 'Scheduled']
+
 
     #def get_game_id(self):
     #    return self.eid

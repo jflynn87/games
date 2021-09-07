@@ -2,9 +2,10 @@ from django.contrib import admin
 
 # Register your models here.
 
-from golf_app.models import CountryPicks, Season, Tournament, Field, Picks, Group, TotalScore, \
+from golf_app.models import CountryPicks, FedExField, FedExPicks, FedExSeason, Season, Tournament, Field, Picks, Group, TotalScore, \
                 ScoreDetails, Name, BonusDetails, mpScores, PickMethod, PGAWebScores, \
-                Golfer, ScoreDict, UserProfile, AccessLog, AuctionPick, StatLinks, CountryPicks
+                Golfer, ScoreDict, UserProfile, AccessLog, AuctionPick, StatLinks, CountryPicks, \
+                FedExSeason, FedExField, FedExPicks
                 
 
 class GroupAdmin(admin.ModelAdmin):
@@ -56,6 +57,36 @@ class AccessLogAdmin(admin.ModelAdmin):
 class StatLinksAdmin(admin.ModelAdmin):
     list_display = ['name', 'link']
 
+class FedExSeasonAdmin(admin.ModelAdmin):
+    list_display = ['get_season',]
+
+    def get_season(self, obj):
+        return obj.season.season
+
+
+class FedExFieldAdmin(admin.ModelAdmin):
+    list_display = ['get_season', 'get_name']
+
+    def get_season(self, obj):
+        return obj.season.season
+
+    def get_name(self, obj):
+        return obj.golfer.golfer_name
+
+
+class FedExPicksAdmin(admin.ModelAdmin):
+    list_display = ['get_season', 'get_username', 'get_name']
+
+    def get_season(self, obj):
+        return obj.season.season
+
+    def get_name(self, obj):
+        return obj.golfer.golfer_name
+
+    def get_username(self, obj):
+        return obj.user.username
+
+
 
 admin.site.register(Tournament)
 admin.site.register(Field, FieldAdmin)
@@ -76,4 +107,7 @@ admin.site.register(AccessLog, AccessLogAdmin)
 admin.site.register(AuctionPick)
 admin.site.register(StatLinks, StatLinksAdmin)
 admin.site.register(CountryPicks)
+admin.site.register(FedExSeason, FedExSeasonAdmin)
+admin.site.register(FedExField, FedExFieldAdmin)
+admin.site.register(FedExPicks, FedExPicksAdmin)
 

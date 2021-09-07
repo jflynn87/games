@@ -4,6 +4,7 @@ from django.contrib.auth.models import Group, User
 from django.conf import settings
 from django.db.models import Min, Q, Count, Sum, Max, fields
 from datetime import datetime
+from django.db.models.base import Model
 
 from scipy.stats.stats import mode
 from golf_app import utils
@@ -388,9 +389,6 @@ class Tournament(models.Model):
             return "strong"
         else:
             return "weak"
-    
-            
-        
 
 
 class Group(models.Model):
@@ -1058,3 +1056,20 @@ class CountryPicks(models.Model):
         c = self.country.lower()
         return "https://a.espncdn.com/combiner/i?img=/i/teamlogos/countries/500/" + c + ".png&w=40&h=40&scale=crop"
 
+class FedExSeason(models.Model):
+    season = models.ForeignKey(Season, on_delete=models.CASCADE)
+    allow_picks = models.BooleanField(default=True)
+    prior_season_data = models.JSONField(default=dict)
+
+class FedExField(models.Model):
+    season = models.ForeignKey(FedExSeason, on_delete=models.CASCADE)
+    golfer = models.ForeignKey(Golfer, on_delete=models.CASCADE)
+    soy_owgr = models.IntegerField()
+    rank = models.IntegerField()
+    prior_season_data = models.JSONField(null=True)
+    current_season_data = models.JSONField(null=True)
+
+
+class FedExPicks(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    pick = models.ForeignKey(FedExField, on_delete=models.CASCADE)
