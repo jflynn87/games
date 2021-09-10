@@ -245,13 +245,14 @@ def get_field(t, owgr_rankings):
             
             
 
-            json_url = 'https://statdata-api-prod.pgatour.com/api/clientfile/Field?T_CODE=r&T_NUM=' + str(t.pga_tournament_num) +  '&YEAR=' + str(t.season.season) + '&format=json'
+            #json_url = 'https://statdata-api-prod.pgatour.com/api/clientfile/Field?T_CODE=r&T_NUM=' + str(t.pga_tournament_num) +  '&YEAR=' + str(t.season.season) + '&format=json'
+            json_url = 'https://statdata-api-prod.pgatour.com/api/clientfile/Field?T_CODE=r&T_NUM=013&YEAR=2021&format=json'
             print (json_url)
 
             #req = Request(json_url, headers={'User-Agent': 'Mozilla/5.0'})
             req = Request(json_url, headers=headers)
             data = json.loads(urlopen(req).read())
-            
+            print ('data', len(data))
             for player in data["Tournament"]["Players"][0:]:
                 if player["isAlternate"] == "Yes":
                         #exclude alternates from the field
@@ -307,9 +308,15 @@ def configure_groups(field_list, tournament):
                 groups[group_cnt] = group_size
                 group_cnt += 1
 
+            group_size = int(round((len(field_list) - 50)/4, 0))
+            remainder =  int(len(field_list) % (50 + (group_size *4)))
+            print ('remainder ', remainder)
+            while group_cnt > 5 and group_cnt < 9:
+                groups[group_cnt] = group_size
+                group_cnt += 1
             #added to dict at end of funciton
-            group_size = len(field_list) - 50
-            remainder = 0
+            #group_size = len(field_list) - 50
+            #remainder = 0
 
     elif len(field_list) > 29 and len(field_list) < 65 :
         print ('bet 30 - 64, 10 groups')

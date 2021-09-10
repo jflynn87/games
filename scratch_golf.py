@@ -38,8 +38,33 @@ import scipy.stats as ss
 import csv
 import random
 
-season = Season.objects.get(season=2021)
-field = fedexData.FedEx().get_field() 
+
+#g =Golfer.objects.get(golfer_name='Hideki Matsuyama')
+#print (Golfer.objects.filter(espn_number=g.espn_number))
+t = Tournament.objects.get(current=True)
+espn_data = espn_api.ESPNData().get_all_data()
+context = {'espn_data': espn_data, 'user': User.objects.get(pk=1)}
+data= golf_serializers.NewFieldSerializer(Field.objects.filter(tournament=t, group__number=2), context=context, many=True).data
+#d = json.loads(data[0])
+#print (type(d))
+for row in data:
+    for k, v in row.items():
+        if k == 'playerName':
+            print (v)
+        elif k == 'season_stats':
+            print (v)
+
+
+
+#f = open('owgr.json',)
+#print (type(f))
+#owgr = json.load(f)
+#field_dict = populateField.get_field(t, owgr)
+#print (len(field_dict))
+#populateField.configure_groups(field_dict, t)
+#for k, v in sorted(field.items(), key=lambda v:v[1].get('soy_owgr')):
+#    print (k, v)
+#print (len(field))
 exit()
 
 

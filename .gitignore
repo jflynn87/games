@@ -27,6 +27,7 @@ static-cdn-local/rest_framework/
 bin/
 include/
 lib/
+static/static
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

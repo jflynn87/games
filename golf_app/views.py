@@ -1228,7 +1228,7 @@ class PriorResultAPI(APIView):
         print ('PROIR RESULT api DATA: ', request.data)
         try:
             #g_num = group.split('-')[2]
-            t= Tournament.objects.get(pk=request.data.get('tournament_key'))
+            t= Tournament.objects.get(pk=request.data.get('tournament_key'), season__current=True)
             espn_data = espn_api.ESPNData().get_all_data()
             context = {'espn_data': espn_data, 'user': self.request.user}
             if request.data.get('group') == 'all':

@@ -146,4 +146,4 @@ def readSheet(file,numPlayers):
 
 
 
-readSheet('20-21 FOOTBALL FOOLS.xml', 26)
+readSheet('21-22 FOOTBALL FOOLS.xml', 25)

@@ -287,7 +287,18 @@ class Tournament(models.Model):
         return pick_list
        
     def last_group_multi_pick(self):
+        if int(self.season.season) > 2021:
+            return False
         if len(Field.objects.filter(tournament=self)) > 64 and not Group.objects.filter(tournament=self, number=7).exists():
+            return True
+        else:
+            return False
+
+       
+    def first_group_multi_pick(self):
+        if int(self.season.season) < 2022:
+            return False
+        if len(Field.objects.filter(tournament=self)) > 70:
             return True
         else:
             return False
@@ -419,8 +430,12 @@ class Group(models.Model):
     def num_of_picks(self):
         if self.tournament.last_group_multi_pick() and self.number == 6:
             return 5
+        elif int(self.tournament.season.season) > 2021 and self.tournament.first_group_multi_pick() \
+            and self.number == 1:
+            return 2
         else:
             return 1
+
 
     def natural_key(self):
         return self.number
@@ -1061,15 +1076,23 @@ class FedExSeason(models.Model):
     allow_picks = models.BooleanField(default=True)
     prior_season_data = models.JSONField(default=dict)
 
+    def __str__(self):
+        return str(self.season.season)
+
 class FedExField(models.Model):
     season = models.ForeignKey(FedExSeason, on_delete=models.CASCADE)
     golfer = models.ForeignKey(Golfer, on_delete=models.CASCADE)
-    soy_owgr = models.IntegerField()
-    rank = models.IntegerField()
+    soy_owgr = models.IntegerField(null=True)
+    rank = models.IntegerField(null=True)
     prior_season_data = models.JSONField(null=True)
     current_season_data = models.JSONField(null=True)
 
+    def __str__(self):
+        return str(self.season.season) + ' ' + str(self.golfer.golfer_name)
 
 class FedExPicks(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     pick = models.ForeignKey(FedExField, on_delete=models.CASCADE)
+
+    def __str__(self):
+        return str(self.user.username) + ' ' + str(self.picks.golfer.golfer_name)

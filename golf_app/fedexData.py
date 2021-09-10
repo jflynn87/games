@@ -28,11 +28,28 @@ class FedEx(object):
       
       return data
 
-   def get_field(self):
+   def create_field(self):
       owgr = populateField.get_worldrank()
-      
-      for g in Golfer.objects.all():
+      d = {}
+      for g in Golfer.objects.all().exclude(golfer_pga_num=''):
          golfer_owgr = utils.fix_name(g.golfer_name, owgr)
          if int (golfer_owgr[1][0]) < 201:
-            print (g, golfer_owgr)
-      return
+            #d[g.golfer_name] = golfer_owgr[1]
+            season = FedExSeason.objects.get(season__current=True)
+            print (g,  golfer_owgr[1][0])
+            
+            field, created= FedExField.objects.get_or_create(season=season, golfer=g)
+            field.soy_owgr = golfer_owgr[1][0]
+            prior = utils.fix_name(g.golfer_name, season.prior_season_data)
+            print ('PRIOR ', prior, type(prior))
+            if type(prior[1]) == dict and prior[1].get('rank'):
+               field.prior_season_data = prior[1]    
+            else:
+               field.prior_season_data = {}
+            
+               
+            d[g.golfer_name] = {'soy_owgr' : golfer_owgr[1][0], 'prior_season': field.prior_season_data}
+            field.save()
+         #print (d)
+      return d
+

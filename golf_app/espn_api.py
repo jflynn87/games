@@ -50,8 +50,12 @@ class ESPNData(object):
             return False
         player = [x for x in self.field_data if x.get('id') == espn_num]
 
-        if len(player) > 1 or len(player) == 0:
-            raise Exception('player lookup retured more than 1', Golfer.objects.get(espn_number=espn_num), player)
+
+        #comment for testing, reapply 
+        if len(player) == 0:
+            return False
+        #if len(player) > 1 or len(player) == 0:
+        #    raise Exception('player lookup retured more than 1', Golfer.objects.get(espn_number=espn_num), player, 'len player: ', len(player))
 
         #print (player, player[0].get('status').get('type').get('name'))
 
