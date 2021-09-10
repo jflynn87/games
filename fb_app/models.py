@@ -122,7 +122,7 @@ class Week(models.Model):
     def score_ranks(self, league):
         u = []
         l = []
-        for score in WeekScore.objects.filter(week=self, player__league=league):
+        for score in WeekScore.objects.filter(week=self, player__league=league, player__active=True):
             u.append(score.player.name.username)
             l.append(score.score)
 
@@ -139,7 +139,7 @@ class Week(models.Model):
         u = []
         l = []
         if proj_score == None:
-            for score in WeekScore.objects.filter(week=self, player__league=league):
+            for score in WeekScore.objects.filter(week=self, player__league=league, player__active=True):
                 u.append(score.player.name.username)
                 l.append(score.projected_score)
         else:
@@ -296,6 +296,7 @@ class Week(models.Model):
         #         score_dict[pick.player.name.username]['picks'] = {pick.pick_num: {'team': pick.team.nfl_abbr, 'status': status}}
 
         print ('after building pick dict:', datetime.datetime.now() - start)
+
         for user, score in scores.items():
             score_dict[user].update(score)
 

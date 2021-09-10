@@ -37,7 +37,21 @@ import math
 import scipy.stats as ss
 import csv
 import random
+i = 0
+for t in Tournament.objects.filter(season__season=2021).order_by('-pk'):
+    if i < 8:
+        print (t.name)
+        field = Field.objects.filter(tournament=t)
+        for f in field:
+            print (f.season_stats)
+            if f.season_stats in [None, '']:
+                print (f)
+       
+        i += 1
+    else:
+        break
 
+exit()
 
 #g =Golfer.objects.get(golfer_name='Hideki Matsuyama')
 #print (Golfer.objects.filter(espn_number=g.espn_number))

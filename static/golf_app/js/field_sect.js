@@ -719,10 +719,16 @@ function build_stats_row(field) {
             for (let i=0; i < rowE_field_l; i++) {
                 rowE_header.append(rowE_header_cells[i])
             }
-
+            
             let stats_rowE = document.createElement('tr')
+
+            if (field.season_stats.off_tee === undefined) {
                 let sg_cellA = document.createElement('td')
-                    sg_cellA.innerHTML = field.season_stats.off_tee.rank || 'n/a'
+                sg_cellA.innerHTML = "No STATS"
+                stats_rowE.appendChild(sg_cellA) }
+            else {
+                let sg_cellA = document.createElement('td')
+                    sg_cellA.innerHTML = field.season_stats.off_tee.rank
                     stats_rowE.appendChild(sg_cellA)
 
                 let sg_cellB = document.createElement('td')
@@ -753,6 +759,7 @@ function build_stats_row(field) {
                     sg_cellH.innerHTML = field.season_stats.putting.average
                     stats_rowE.appendChild(sg_cellH)
        
+            }
 
             stats_table.appendChild(rowE_header)
             stats_table.appendChild(stats_rowE)
