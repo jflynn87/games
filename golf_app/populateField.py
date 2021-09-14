@@ -245,8 +245,8 @@ def get_field(t, owgr_rankings):
             
             
 
-            #json_url = 'https://statdata-api-prod.pgatour.com/api/clientfile/Field?T_CODE=r&T_NUM=' + str(t.pga_tournament_num) +  '&YEAR=' + str(t.season.season) + '&format=json'
-            json_url = 'https://statdata-api-prod.pgatour.com/api/clientfile/Field?T_CODE=r&T_NUM=013&YEAR=2021&format=json'
+            json_url = 'https://statdata-api-prod.pgatour.com/api/clientfile/Field?T_CODE=r&T_NUM=' + str(t.pga_tournament_num) +  '&YEAR=' + str(t.season.season) + '&format=json'
+
             print (json_url)
 
             #req = Request(json_url, headers={'User-Agent': 'Mozilla/5.0'})

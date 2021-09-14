@@ -189,13 +189,16 @@ function get_info(info, ele) {
         ele.checked = false;
         alert (picks.toString() + ' picks already selected.  Deselect a pick first to change your picks')
                   }
+    
     //else {
+      
     //  $('#pick-status').empty()
     //  check_complete(info)
- // }
+ //}
 }
   $('#pick-status').empty()
   check_complete(info)
+  
 }
 
 function check_complete(info) {
@@ -331,7 +334,9 @@ $(document).on("click", "#download_excel", function() {
     $.each(golfers, function(i, results) {
       var row = {}
       var t_data = []
-      
+      console.log('result: ', results, Object.keys(results.results).length)
+
+      if (Object.keys(results.results).length > 0) {
       for (j=0; j < order.length; j++) {
         t_data.push({'t_name': results.results[order[j]].t_name,
                     'rank': results.results[order[j]].rank})
@@ -353,9 +358,11 @@ $(document).on("click", "#download_excel", function() {
                         
     }
     })
+  }
     xlsRows.push(row)
+  
     })
-
+  
     createXLSLFormatObj.push(xlsHeader);
 
     $.each(xlsRows, function(index, value) {
@@ -503,3 +510,4 @@ $(document).on("click", "#download_excel", function() {
     }
   })
 })
+

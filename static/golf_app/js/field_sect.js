@@ -34,7 +34,7 @@ $(document).ready(function () {
                     $('#bottom_sect').append(
                     '<div id=bottom class=field_stats_display>' +
                     '<div id=stats-dtl-toggle>' +
-                        '<h5>Show Stats <i class="fa fa-plus-circle show" style="color:lightblue"></i></h5>' +
+                 //       '<h5>Show Stats <i class="fa fa-plus-circle show" style="color:lightblue"></i></h5>' +
                     '</div>' +
                     
                     '<div id=pick-status></div>' + 
@@ -47,7 +47,7 @@ $(document).ready(function () {
                     )
 
                     $.each(info, function(group, picks) {if (group != "total"){ $('#jump_to').append('<a href=#tbl-group-' + group + '>' + group + '</a>' + ' ')}}) 
-                    $('#grp_6_buttons').append('<button id=show_6_button class="btn btn-primary btn-group-sm">My G-6 Picks</button>')
+                   // $('#grp_6_buttons').append('<button id=show_6_button class="btn btn-primary btn-group-sm">My G-6 Picks</button>')
 
                     //trying to fix position small screen
                     $('#pick_form').on('submit', function(event){
@@ -56,28 +56,29 @@ $(document).ready(function () {
                         create_post();
                     });
 
-                    $('#show_6_button').on('click', function(eve) {
-                        eve.preventDefault();
-                        selected = []
-                        $.each($('input[name=group-6' + ']:checked'), function(){selected.push($(this).parent().attr('id').replace('playerInfo', ''))})
-                        console.log('selected G6 hide: ', selected)
+                    // $('#show_6_button').on('click', function(eve) {
+                    //     eve.preventDefault();
+                    //     selected = []
+                    //     $.each($('input[name=group-6' + ']:checked'), function(){selected.push($(this).parent().attr('id').replace('playerInfo', ''))})
+                    //     console.log('selected G6 hide: ', selected)
                         
-                        table = $('#tbl-group-6')
+                    //     table = $('#tbl-group-6')
 
-                        if ($('#show_6_button').html() == 'All Group 6') {
-                            $('input[name=group-6' + ']').parent().parent().parent().prop('hidden', false)    
-                            $('#show_6_button').html('My Picks G-6')
-                        }
-                        else {
-                            $('input[name=group-6' + ']').parent().parent().parent().prop('hidden', true)
-                            $('input[name=group-6' + ']:checked').parent().parent().parent().prop('hidden', false)
-                            $('#show_6_button').html('All Group 6')
-                        }
-                        window.location.href = '#tbl-group-6'
-                    })
+                    //     if ($('#show_6_button').html() == 'All Group 6') {
+                    //         $('input[name=group-6' + ']').parent().parent().parent().prop('hidden', false)    
+                    //         $('#show_6_button').html('My Picks G-6')
+                    //     }
+                    //     else {
+                    //         $('input[name=group-6' + ']').parent().parent().parent().prop('hidden', true)
+                    //         $('input[name=group-6' + ']:checked').parent().parent().parent().prop('hidden', false)
+                    //         $('#show_6_button').html('All Group 6')
+                    //     }
+                    //     window.location.href = '#tbl-group-6'
+                    // })
 
                     //there should be a faster way to check started and deal with buttons
                     checkStarted()
+
                     
 
                     
@@ -141,8 +142,6 @@ function build_field(g, info, pick_array) {
                 field_table.append(stats_row)
 
                 frag.appendChild(field_table)
-        
-
 
                                 resolve() 
             }
@@ -194,20 +193,60 @@ function checkStarted() {
 .then((responseJSON) => {
     started = $.parseJSON(responseJSON)
     console.log('started ', started, started.started, started.late_picks)
-    if (started.started  && ! started.late_picks) {        
-        $("#make_picks").attr('hidden', '')
+//    if (started.started  && ! started.late_picks) {        
+        //$("#make_picks").attr('hidden', '')
         //$('#too_late').removeAttr('hidden')
         //$('#sub_button').remove()
-    }
-    else {
+//    }
+    checkbox_input = document.getElementsByClassName('my-checkbox')
+    var checkbox_l = checkbox_input.length
+    radio_input = document.getElementsByClassName('my-radio')
+    var radio_l = radio_input.length
+    lock_classes = ['started', 'lock']
+
+    if (!started.started || started.late_picks) {
         $('#random_btn').removeAttr('disabled').attr('class', 'btn btn-primary');
+        for (let i=0; i < checkbox_l; i++){
+            checkbox_input[i].disabled = false
+            }
+        for (let i=0; i < radio_l; i++){
+            radio_input[i].disabled = false
+            }
+                                                }
+    else if(started.started && ! started.late_picks) {
+        for (let i=0; i < checkbox_l; i++){
+            //console.log(checkbox_input[i].parentElement.parentElement.classList)
+            //if (pick_array.indexOf(field.id) != -1) {
+            if (checkbox_input[i].parentElement.parentElement.classList.contains('started') || checkbox_input[i].parentElement.parentElement.classList.contains('lock')) {
+                checkbox_input[i].disabled = true
+            }
+            else {checkbox_input[i].disabled = false}
+        }
+        for (let i=0; i < radio_l; i++){
+            if (radio_input[i].parentElement.parentElement.classList.contains('started') || radio_input[i].parentElement.parentElement.classList.contains('lock')) {
+                //console.log('lock check started ', radio_input[i], radio_input[i].parentElement.parentElement.classList, radio_input[i].parentElement.parentElement.classList.contains('started', 'lock'))
+                radio_input[i].disabled = true
+                        }
+            else {radio_input[i].disabled = false}
+        }
+
+        }
+    else {
+        console.log('unexpected started condiiton, check')
+        for (let i=0; i < checkbox_l; i++){
+            checkbox_input[i].disabled = false
+            }
+        for (let i=0; i < radio_l; i++){
+            radio_input[i].disabled = false
+            }
+
     }
 })
 }
 
 
 function buildHeader() {
-    $('#top_sect').append('<div id=make_picks><br> <p>Please make 1 pick for each group below</p>' +
+    $('#top_sect').append('<div id=make_picks><br> <p>Please make 2 picks for group 1 and 1 pick for other groups</p>' +
     '<form id="random_form" name="random_form" method="post">' +
     '<input type="hidden" name="csrfmiddlewaretoken" value=' + $.cookie('csrftoken') +  '>' +
     //'<input type="text" name="random" value="random" hidden>' +
@@ -228,9 +267,9 @@ function buildHeader() {
         '</a>' +
         '</span>')
 
-    $('#top_sect').append('<br> <div id=stats-dtl-toggle>' + 
-        '<h5>Show Stats <i class="fa fa-plus-circle show" style="color:lightblue"></i></h5>' +
-        '<br></div>')
+    // $('#top_sect').append('<br> <div id=stats-dtl-toggle>' + 
+    //     '<h5>Show Stats <i class="fa fa-plus-circle show" style="color:lightblue"></i></h5>' +
+    //     '<br></div>')
 
     $('#field_sect').append('<form id=pick_form method=post></form>')
 
@@ -391,6 +430,7 @@ function formatWomenMedals(date) {
 
 function build_golfer_row(field, pick_array) {
 
+    //console.log(field.playerName, field.started, field.tournament.late_picks, field.lock_group)
     let golfer_row = document.createElement('tr')
         golfer_row.id = 'golfer-' + field.id
 
@@ -418,6 +458,7 @@ function build_golfer_row(field, pick_array) {
             inputB.classList.add(input_class)
             inputB.name= "group-" + field.group.number
             inputB.value = field.id
+            inputB.disabled = true
             inputB.addEventListener('change', function(evt) {
                         $('#pick-status').empty()
                         get_info(info, this);
@@ -427,13 +468,15 @@ function build_golfer_row(field, pick_array) {
                 inputB.checked = true
             }
              
-            if (field.lock_group) {
-                inputB.disabled = true
-            }
             golfer.appendChild(inputB)
             golfer_row.classList.add('top_row')
+            if (field.lock_group) {
+                golfer_row.classList.add('lock')    
+            }
+
                                                                 }
     else if(field.started) {
+
         //clean this up, duplicte from above if
         let inputA =  document.createElement('input');
         inputA.type = 'hidden';
@@ -461,7 +504,11 @@ function build_golfer_row(field, pick_array) {
 
         var status = 'Started' + ' '
         golfer_row.classList.add('started')
-                            }
+                           // }
+        if (field.lock_group) {
+           golfer_row.classList.add('lock')    
+                        }
+    }
     else {
         var status = 'Problem' + ' '
         golfer_row.classList.add('started')

@@ -1,6 +1,6 @@
 from rest_framework import serializers
 import json
-from golf_app.models import Field, ScoreDetails, Golfer, CountryPicks, Picks, Tournament
+from golf_app.models import Field, ScoreDetails, Golfer, CountryPicks, Picks, Tournament, FedExField
 from golf_app import espn_api
 from datetime import datetime
 
@@ -48,16 +48,34 @@ class NewFieldSerializer(serializers.ModelSerializer):
         return field.golfer.get_pga_player_link()
 
     def get_started(self, field):
+        #used for testing, delete
+        #if Picks.objects.filter(user=self.context.get('user'), playerName__playerName=field.playerName, playerName__tournament=field.tournament).exists():
+        #if field.playerName in ["Jon Rahm", "Charley Hoffman", "Troy Merritt"] : 
+        #        print ('started check A ', field.playerName, True)
+        #        return True 
         obj = espn_api.ESPNData(data=self.context.get('espn_data'))
         started = obj.player_started(field.golfer.espn_number)
-        
+        #print ('started check ', field.playerName, started)
         return started
 
     def get_group_lock(self, field):
+        group = field.group
         if Picks.objects.filter(user=self.context.get('user'), playerName__group=field.group).exists():
-            pick = Picks.objects.get(user=self.context.get('user'), playerName__group=field.group)
-            if self.get_started(field):
-                return True
+            #if group.num_of_picks == 1 and self.get_started(field):
+            #    return True
+            #elif group.num_of_picks() > 1:
+                started_count = 0
+                for p in Picks.objects.filter(user=self.context.get('user'), playerName__group=field.group, playerName__tournament=field.tournament):
+                    if self.get_started(Field.objects.get(playerName=p.playerName, tournament=p.playerName.tournament)):
+                        started_count += 1
+                if started_count == Picks.objects.filter(user=self.context.get('user'), playerName__group=field.group).count():
+                    return True
+                else:
+                    return False
+            #elif group.num_of_picks() == 1:
+            #    pick = Picks.objects.get(user=self.context.get('user'), playerName__group=field.group)
+            #    if self.get_started(field):
+            #        return True
 
         return False
 
@@ -114,7 +132,11 @@ class PicksSerializer(serializers.ModelSerializer):
         fields = '__all__'
         depth = 2
 
-    
 
+class FedExFieldSerializer(serializers.ModelSerializer):
 
+    class Meta:
+        model = FedExField
+        fields = '__all__'
+        depth = 2
     

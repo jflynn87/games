@@ -366,8 +366,8 @@ class SeasonTotals(ListView):
                     score_list.append(score.score)
                 if not score_week.current:
                     try:
-                        winning_score = WeekScore.objects.filter(player__league=league, week=score_week).aggregate(Min('score'))
-                        winners = WeekScore.objects.filter(score=winning_score.get('score__min'), week=score_week, player__league=league)
+                        winning_score = WeekScore.objects.filter(player__league=league, player__active=True, week=score_week).aggregate(Min('score'))
+                        winners = WeekScore.objects.filter(score=winning_score.get('score__min'), week=score_week, player__league=league, player__active=True)
                         for winner in winners:
                                 score = winners_dict.get(winner.player.name)
                                 winners_dict[winner.player.name] = score + 30/len(winners)

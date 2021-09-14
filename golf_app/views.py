@@ -4,7 +4,7 @@ from django.views.generic import View, TemplateView, ListView, DetailView, Creat
 #from extra_views import ModelFormSetView
 from golf_app.models import CountryPicks, Field, Tournament, Picks, Group, TotalScore, ScoreDetails, \
            mpScores, BonusDetails, PickMethod, PGAWebScores, ScoreDict, UserProfile, \
-           Season, AccessLog, Golfer, AuctionPick, CountryPicks
+           Season, AccessLog, Golfer, AuctionPick, CountryPicks, FedExField, FedExSeason
 from golf_app.forms import  CreateManualScoresForm, FieldForm, FieldFormSet, AuctionPicksFormSet
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponseRedirect, HttpResponse, Http404
@@ -1576,6 +1576,7 @@ class GetGolfers(APIView):
             #print ('DATA ', request.data)
             data = {'golfers': golfers.data,
                     'field': field}
+            print (field)
             return Response(data, status=200)
         except Exception as e:
             print ('get golfers data exception: ', e)
@@ -1645,3 +1646,16 @@ class FedExPicksView(LoginRequiredMixin,TemplateView):
      login_url = 'login'
      template_name = 'golf_app/fedex_picks.html'
 
+
+class FedExFieldAPI(APIView):
+    def get(self,request):
+
+        s = FedExSeason.objects.get(season__current=True)
+        
+        try:
+            data= golf_serializers.FedExFieldSerializer(FedExField.objects.filter(season=s).order_by('soy_owgr'), many=True).data
+        except Exception as e:
+            print ('FedEx Field API exception: ', e)
+            data = json.dumps({'msg': e})    
+            
+        return JsonResponse(data, status=200, safe=False)

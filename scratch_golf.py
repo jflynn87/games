@@ -3,7 +3,8 @@ os.environ.setdefault("DJANGO_SETTINGS_MODULE","gamesProj.settings")
 
 import django
 django.setup()
-from golf_app.models import Tournament, TotalScore, ScoreDetails, Picks, PickMethod, BonusDetails, Season, Golfer, Group, Field, ScoreDict, AuctionPick, AccessLog, StatLinks, CountryPicks
+from golf_app.models import Tournament, TotalScore, ScoreDetails, Picks, PickMethod, BonusDetails, \
+        Season, Golfer, Group, Field, ScoreDict, AuctionPick, AccessLog, StatLinks, CountryPicks, FedExSeason
 from django.contrib.auth.models import User
 from datetime import date, datetime, timedelta
 import sqlite3
@@ -37,38 +38,28 @@ import math
 import scipy.stats as ss
 import csv
 import random
-i = 0
-for t in Tournament.objects.filter(season__season=2021).order_by('-pk'):
-    if i < 8:
-        print (t.name)
-        field = Field.objects.filter(tournament=t)
-        for f in field:
-            print (f.season_stats)
-            if f.season_stats in [None, '']:
-                print (f)
-       
-        i += 1
-    else:
-        break
 
-exit()
 
-#g =Golfer.objects.get(golfer_name='Hideki Matsuyama')
-#print (Golfer.objects.filter(espn_number=g.espn_number))
-t = Tournament.objects.get(current=True)
-espn_data = espn_api.ESPNData().get_all_data()
-context = {'espn_data': espn_data, 'user': User.objects.get(pk=1)}
-data= golf_serializers.NewFieldSerializer(Field.objects.filter(tournament=t, group__number=2), context=context, many=True).data
+start  = datetime.now()  
+s = Season.objects.get(current=True)
+f, created = FedExSeason.objects.get_or_create(season=s, allow_picks=True)
+f.prior_season_data = populateField.get_fedex_data()
+
+f.save()
+
+fed = fedexData.FedEx(s).create_field()
+#owgr = populateField.get_worldrank()
+#top_200 = {k:v for k,v in owgr.items() if int(v[2] <= 201)}
+
+
+
+
+
+#espn_data = espn_api.ESPNData().get_all_data()
+#context = {'espn_data': espn_data, 'user': User.objects.get(pk=1)}
+#data= golf_serializers.NewFieldSerializer(Field.objects.filter(tournament=t, group__number=2), context=context, many=True).data
 #d = json.loads(data[0])
-#print (type(d))
-for row in data:
-    for k, v in row.items():
-        if k == 'playerName':
-            print (v)
-        elif k == 'season_stats':
-            print (v)
-
-
+print (datetime.now() - start)
 
 #f = open('owgr.json',)
 #print (type(f))

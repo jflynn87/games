@@ -51,6 +51,8 @@ urlpatterns= [
     path('get_country_picks/<int:pga_t_num>/<str:user>', views.GetCountryPicks.as_view(), name='get_country_picks'),
     path('olympic_scores/', views.OlympicScoresView.as_view(), name='olympic_scores'),
     path('fedex_picks_view/', views.FedExPicksView.as_view(), name='fedex_picks_view'),
+    path('fedex_field/', views.FedExFieldAPI.as_view(), name='fedex_field'),
+
 
 
     
