@@ -28,6 +28,17 @@
 
       <h4 id="t-name">{{tournament.name}}</h4>
 
+      {%if tournament.field_quality == 'major'%}
+      <h3>Major - 150 bonus points for the winning picks</h3>
+      {%elif tournament.field_quality == 'stong'%}
+      <h3>Strong Field - 100 bonus points for the winning picks</h3>
+      {%elif tournament.field_quality == 'weak'%}
+      <h3>Weak Field - 50 bonus points for the winning picks</h3>
+      {%else%}
+      <h3>Field Quality Not Available</h3>
+      {%endif%}
+
+
       <div id=withdraw></div>
       {%if tournament.pga_tournament_num != "470" and tournament.pga_tournament_num != "018"%}
       <script type="text/babel" src="{%static 'test_app/src/withdraw.js'%}"></script> 
