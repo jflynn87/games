@@ -1576,7 +1576,7 @@ class GetGolfers(APIView):
             #print ('DATA ', request.data)
             data = {'golfers': golfers.data,
                     'field': field}
-            print (field)
+
             return Response(data, status=200)
         except Exception as e:
             print ('get golfers data exception: ', e)
@@ -1645,6 +1645,17 @@ class GetCountryPicks(APIView):
 class FedExPicksView(LoginRequiredMixin,TemplateView):
      login_url = 'login'
      template_name = 'golf_app/fedex_picks.html'
+
+     @transaction.atomic
+     def post(self, request):
+        
+        data = json.loads(self.request.body)
+        print ('pick list', data.get('pick_list'))
+        msg = 'Picks Submitted'
+        response = {'status': 1, 'message': msg, 'url': '/golf_app/picks_list'} 
+        return HttpResponse(json.dumps(response), content_type='application/json')
+
+
 
 
 class FedExFieldAPI(APIView):

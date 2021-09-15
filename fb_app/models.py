@@ -77,8 +77,11 @@ class Week(models.Model):
             #print (games)
             for k, v in games.items():
                 print (k , v)
+                if not Games.objects.filter(eid=k, week=self).exists():
+                    print ('last week API data, skip')
+                    continue
                 time_inds = ['am', 'pm', 'AM', 'PM', 'pregame', 'postponed', 'Scheduled']
-                print (v.get('qtr'))
+
                 if v.get('qtr') not in [None, 'pregame', 'postponed', 'Scheduled'] and not any(ele in v.get('qtr') for ele in time_inds):
                     print ('week started based on scrape: ', v)
                     return True
@@ -424,7 +427,7 @@ class League(models.Model):
 
     def leading_score(self):
         l = []
-        for player in Player.objects.filter(league=self):
+        for player in Player.objects.filter(league=self, active=True):
             l.append(player.season_total())
 
         return min(l)

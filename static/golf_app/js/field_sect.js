@@ -95,7 +95,7 @@ function build_field(g, info, pick_array) {
         //Intro section
         
         $('#field_sect #pick_form').append('<table id=tbl-group-' + g + ' class=table> \
-                                <thead class=total_score> <th> Group: ' + g + '<i id=expand-grp-' + g + ' class="fa fa-plus-circle show" style="color:white; float:right;"> Show Group Stats</i> </th> </thead>' +
+                                <thead class=total_score> <th> Group: ' + g + ' - Pick ' + info[g] + ' Golfers' + '<i id=expand-grp-' + g + ' class="fa fa-plus-circle show" style="color:white; float:right;"> Show Group Stats</i> </th> </thead>' +
                             '</table>')
         
         $('#expand-grp-' + g).on('click', function() {

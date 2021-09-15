@@ -1,5 +1,6 @@
 $(document).ready(function () {
     start = new Date()
+    $('#field').append('<div><h4 id=loading_msg>Loading .... </h4></div>')
     fetch("/golf_app/fedex_field")
     .then(response=> response.json())
     .then((responseJSON) => {
@@ -7,6 +8,8 @@ $(document).ready(function () {
          console.log(field)
          
          const frag = new DocumentFragment()
+         form = document.createElement('form')
+         form.method = 'post'
 
          table = document.createElement('table')
          table.classList.add('table')
@@ -65,7 +68,9 @@ $(document).ready(function () {
                 c_2 = document.createElement('td')
                 c_2.innerHTML = g.soy_owgr
                 c_3 = document.createElement('td')
-                c_3.innerHTML = g.prior_season_data.rank 
+                if (g.prior_season_data.rank != undefined) {
+                c_3.innerHTML = g.prior_season_data.rank }
+                else {c_3.innerHTML = 'n/a'}
 
                 row.appendChild(c_0)
                 row.appendChild(c_1)
@@ -74,10 +79,69 @@ $(document).ready(function () {
                 table.appendChild(row)
 
          }
-            frag.appendChild(table)
+            sub_btn = document.createElement('button')
+            sub_btn.id = 'sub_btn'
+            sub_btn.type = 'button'
+            sub_btn.innerHTML = "Submit Picks"
+            sub_btn.classList.add('button', 'btn-primary')
+/*             $('#pick_form').on('submit', function(event){
+                event.preventDefault();
+                console.log("form submitted!")  
+                create_post();
+            });
+
+ */         sub_btn.addEventListener('click', function(event) {
+                    event.preventDefault();
+                    create_post()                    
+                });
+
+            form.appendChild(sub_btn)   
+
+            form.appendChild(table)
+            
+            frag.appendChild(form)
+            document.getElementById('loading_msg').hidden = true
             document.getElementById('field').appendChild(frag);
 
 
          
      })
     })
+
+function create_post() {
+    console.log('submit form')
+    //toggle_submitting()    
+    checked = $('input:checked')
+    //console.log(checked)
+    pick_list = []
+    $.each(checked, function(i, pick){
+        pick_list.push(pick.value)
+    })
+
+    console.log(pick_list)
+    fetch("/golf_app/fedex_picks_view/",         
+    {method: "POST",
+     headers: {
+     'Accept': 'application/json',
+     'Content-Type': 'application/json',
+     'X-CSRFToken': $.cookie('csrftoken')
+             },
+     body: JSON.stringify({'pick_list': pick_list, 
+                             })
+ })
+    .then((response) => response.json())
+    .then((responseJSON) => {
+     d = responseJSON
+     if (d.status == 1) {
+         window.location = d.url
+     }
+     else {
+         console.log(d.message)
+         $('#error_msg').text(d.message).addClass('alert alert-danger')
+         window.scrollTo(0,0);
+     }
+     console.log(d)
+
+ })
+
+}

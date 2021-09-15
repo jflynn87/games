@@ -762,8 +762,8 @@ class FBLeaderboard(APIView):
             
             #league = League.objects.get(league=player.league)
             ranks = player.league.season_ranks()
-            
-            for p in Player.objects.filter(league=player.league):
+
+            for p in Player.objects.filter(league=player.league, active=True):
                 
                 data[p.name.username] = {'score': p.season_total(),
                                             'rank': ranks[p.name.username],
