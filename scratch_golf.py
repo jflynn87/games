@@ -39,8 +39,23 @@ import scipy.stats as ss
 import csv
 import random
 
+start  = datetime.now()
+espn = scrape_espn.ScrapeESPN().get_data()
+print (espn)
+exit()
+#s = Season.objects.get(season=2021)
+#for g in Golfer.objects.all(): 
+#    g.get_season_results(season=s)
+#golfers = golf_serializers.GolferSerializer(Golfer.objects.all(), many=True).data
+#print (len(golfers))
+#print (golfers[1])
+#g = Golfer.objects.get(golfer_pga_num=49947)
+f = Field.objects.filter(playerName='Trey Mullinax')
+for t in f:
+    print (t.tournament, t.tournament.season)
+#print (g.golfer_name, g.results)
 
-start  = datetime.now()  
+exit()  
 s = Season.objects.get(current=True)
 f, created = FedExSeason.objects.get_or_create(season=s, allow_picks=True)
 f.prior_season_data = populateField.get_fedex_data()

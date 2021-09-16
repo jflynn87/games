@@ -147,6 +147,7 @@ class ScrapeESPN(object):
                         score_dict[row.a.text] =  {
                                                 'pga_num': row.a['href'].split('/')[7],
                                                 'pos': td[1].text,
+                                                'change': ''
                     }
                 elif len(td) == 11:  #afer round 1  
                     if td[3].text in self.tournament.not_playing_list():

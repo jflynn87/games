@@ -32,7 +32,12 @@ class Season(models.Model):
 
     def get_users(self):
         ''''returns a list of user pk's as dict values'''
-        first_t = Tournament.objects.filter(season=self).first()
+        if Tournament.objects.filter(season=self).count() > 1:
+            first_t = Tournament.objects.filter(season=self).first()
+        else:
+            print (str(int(self.season) - 1))
+            first_t = Tournament.objects.filter(season__season=str(int(self.season) - 1)).first()
+        print (first_t)
         users = TotalScore.objects.filter(tournament=first_t).values('user')
         return users
 
@@ -278,11 +283,11 @@ class Tournament(models.Model):
             pm.method = '1'
         pm.save()
 
-        bd, created = BonusDetails.objects.get_or_create(tournament=self, user=user)
-        bd.winner_bonus = 0
-        bd.cut_bonus = 0
-        bd.major_bonus = 0
-        bd.save()
+        #bd, created = BonusDetails.objects.get_or_create(tournament=self, user=user)
+        #bd.winner_bonus = 0
+        #bd.cut_bonus = 0
+        #bd.major_bonus = 0
+        #bd.save()
         
         return pick_list
        
@@ -537,7 +542,11 @@ class Golfer(models.Model):
     def get_season_results(self, season=None, rerun=False):
         '''takes a golfer and an optional season object, returns a dict with only the updated data'''
         if not season:
-            season = Season.objects.get(current=True)
+            curr_s = Season.objects.get(current=True)
+            if Tournament.objects.filter(season=curr_s).count() > 1:
+                season = Season.objects.get(current=True)
+            else:
+                season = Season.objects.get(season=str(int(curr_s.season)-1))
         
         #if not t:
         #    t = Tournament.objects.get(current=True)

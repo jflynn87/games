@@ -411,7 +411,7 @@ class Score(object):
             ts.cut_count = cuts
             #ts.save()
 
-            bd = BonusDetails.objects.get(tournament=self.tournament, user=user)
+            #bd = BonusDetails.objects.get(tournament=self.tournament, user=user)
 
             if not PickMethod.objects.filter(tournament=self.tournament, user=user, method=3).exists() and \
                cuts == 0 and len([v for (k,v) in self.score_dict.items() if k != 'info' and v.get('total_score') == "CUT"]) != 0:
@@ -421,21 +421,24 @@ class Score(object):
 
                 cut_bonus = (len(self.score_dict) -1) - (len([k for k,v in self.score_dict.items() if k != 'info' and v.get('rank') not in self.tournament.not_playing_list()]) + post_cut_wd)
                 print (cut_bonus)
+                bd, created = BonusDetails.objects.get_or_create(tournament=self.tournament, user=user, bonus_type=2)
                 if int(self.tournament.season.season) < 2022:
                     bd.cut_bonus = cut_bonus
                 else:
-                    bd.bonus_type = '2'
+                    #bd.bonus_type = '2'
                     bd.bonus_points = cut_bonus
                 bd.save()
 
-            if int(self.tournament.season.season) < 2022:
-                ts.score -= bd.cut_bonus
-                ts.score -= bd.best_in_group_bonus
-            else:
-                no_cut= BonusDetails.objects.get(user=user, tournament=self.tournament, bonus_type='2')
-                ts.score -= no_cut.bonus_points
-                b_in_g = BonusDetails.objects.get(user=user, tournament=self.tournament, bonus_type='5')
-                ts.score -= b_in_g.bonus_points
+            #if int(self.tournament.season.season) < 2022:
+            ##    ts.score -= bd.cut_bonus
+            #    ts.score -= bd.best_in_group_bonus
+            #else:
+            #    if BonusDetails.objects.filter(user=user, tournament=self.tournament, bonus_type='2').exists():
+            #        no_cut= BonusDetails.objects.get(user=user, tournament=self.tournament, bonus_type='2')
+            #        ts.score -= no_cut.bonus_points
+            #    if BonusDetails.objects.filter(user=user, tournament=self.tournament, bonus_type='5').exists():
+            #        b_in_g = BonusDetails.objects.get(user=user, tournament=self.tournament, bonus_type='5')
+            #        ts.score -= b_in_g.bonus_points
 
 #           commented if during olympics to get mens winner bonus.  May not need the if as the calcs are also not executed till complete?            
 #           if self.tournament.complete: 
@@ -444,8 +447,8 @@ class Score(object):
                 ts.score -= bd.cut_bonus
                 ts.score -= bd.playoff_bonus
             else:
-                for b in BonsuDetails.objects.filter(user=user, tournament=self.tournament, bonus_type__in=['1', '4', '2']):
-                    ts.score -= s.bonus_points
+                for b in BonusDetails.objects.filter(user=user, tournament=self.tournament, bonus_type__in=['1', '4', '2', '5']):
+                    ts.score -= b.bonus_points
             
             if self.tournament.pga_tournament_num == '999':
                 medals = self.olympic_medals(user)
@@ -507,9 +510,10 @@ class Score(object):
 
         
         for ts in TotalScore.objects.filter(tournament=self.tournament):
-            bd = BonusDetails.objects.get(tournament=ts.tournament, user=ts.user)
-            ts_dict[ts.user.username].update({'total_score': ts.score, 'winner_bonus': bd.winner_bonus, 'major_bonus': bd.major_bonus, 'cut_bonus': bd.cut_bonus,
-             'best_in_group': bd.best_in_group_bonus, 'playoff_bonus': bd.playoff_bonus, 'handicap': ts.total_handicap()})
+            for bd in BonusDetails.objects.filter(tournament=ts.tournament, user=ts.user):
+                ts_dict[ts.user.username].update({bd.get_bonus_type_display(): bd.bonus_points})
+            #ts_dict[ts.user.username].update({'total_score': ts.score, 'winner_bonus': bd.winner_bonus, 'major_bonus': bd.major_bonus, 'cut_bonus': bd.cut_bonus,
+            # 'best_in_group': bd.best_in_group_bonus, 'playoff_bonus': bd.playoff_bonus, 'handicap': ts.total_handicap()})
 
         
         sorted_ts_dict = sorted(ts_dict.items(), key=lambda v: v[1].get('total_score'))

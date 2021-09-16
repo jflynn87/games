@@ -257,6 +257,11 @@ function get_picks(info, optimal_data, total_data) {
 
       if (stats.toPar == 0) {toPar = "E"}
       else {toPar = stats.toPar} 
+      if (stats.sod_position) {
+        sod = stats.sod_position
+      }
+      else {sod = ''}
+
       try {
       $('#totals' + player).append('<td id=' + player + stats.pick.playerName.golfer.espn_number +  '>' + '<span class=watermark>' + 
                                    '<p>' + player.substring(0, 4)  + ' : ' + stats.pick.playerName.group.number +  '</p>'  +
@@ -266,7 +271,7 @@ function get_picks(info, optimal_data, total_data) {
                                    stats.score + '<span > <a id=tt-' + pick + 
                                    ' data-toggle="tooltip" > <i class="fa fa-info-circle" style="color:blue;"></i> </a> </span>' +
                                    '</p>' +  toPar + ' (' + stats.thru + ')' +  '   ' +
-                                   format_move(stats.sod_position) +  stats.sod_position.replace(filler, '') +
+                                   format_move(sod) +  sod.replace(filler, '') +
                                    '</p>' +  '</td>')
      
       $('#tt-' + pick + '[data-toggle="tooltip"]').tooltip({trigger:"hover",
@@ -416,13 +421,19 @@ function update_picks(info, optimal_data, total_data) {
         toPar = "E"
       }
       else {toPar = stats.toPar} 
+
+      if (stats.sod_position) {
+        sod = stats.sod_position
+      }
+      else {sod = ''}
+
     
       $('#' + player + stats.pick.playerName.golfer.espn_number).html('<span class=watermark>' + 
        '<p>' + player.substring(0, 4)  + ' : ' + stats.pick.playerName.group.number +
        '</p>'  + '</span>' + '<p>' +  '<img src=' + stats.pick.playerName.golfer.pic_link + ' style="max-height:85px;">' + stats.pick.playerName.playerName + '</img> </p>' + 
        '<p> <img src=' + stats.pick.playerName.golfer.flag_link + ' style="max-height:25px;"></img>' +  stats.score +
         '<span > <a id=tt-' + pick + ' data-toggle="tooltip" > <i class="fa fa-info-circle" style="color:blue;"></i> </a> </span>' +
-     '</p>' +  toPar + ' (' + stats.thru + ')' +  '   ' +  format_move(stats.sod_position) +  stats.sod_position.replace(filler, '') + '</p>' +  '</td>')
+     '</p>' +  toPar + ' (' + stats.thru + ')' +  '   ' +  format_move(sod) +  sod.replace(filler, '') + '</p>' +  '</td>')
      //console.log($('#tt-' + $(this)[0]['pick'].replace(/ +?/g, '').replace(/\./g,'') + '[data-toggle="tooltip"]'))
       $('#tt-' + pick + '[data-toggle="tooltip"]').tooltip({trigger:"hover",
                                             delay:{"show":400,"hide":800}, "title": 'gross score: ' + stats.gross_score
@@ -529,7 +540,10 @@ function build_dtl_table(scores) {
     let player = Object.keys(scores)[i]
     let data = Object.values(scores)[i]  
     if (player != 'info'){
-      let change = format_move(data['change']) + data['change'].replace(filler, '')
+      try {
+      var change = format_move(data['change']) + data['change'].replace(filler, '')}
+      catch (e) {console.log('change fail ', data['change']);
+                var change = ''}
       let row_fields = [data['rank'], change, player.bold(), data['total_score'], data['thru'], data['round_score'], 
                         data['r1'], data['r2'], data['r3'], data['r4']]
       
