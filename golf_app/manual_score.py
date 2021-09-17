@@ -512,6 +512,7 @@ class Score(object):
         for ts in TotalScore.objects.filter(tournament=self.tournament):
             for bd in BonusDetails.objects.filter(tournament=ts.tournament, user=ts.user):
                 ts_dict[ts.user.username].update({bd.get_bonus_type_display(): bd.bonus_points})
+            ts_dict[ts.user.username].update({'handicap': ts.total_handicap()})
             #ts_dict[ts.user.username].update({'total_score': ts.score, 'winner_bonus': bd.winner_bonus, 'major_bonus': bd.major_bonus, 'cut_bonus': bd.cut_bonus,
             # 'best_in_group': bd.best_in_group_bonus, 'playoff_bonus': bd.playoff_bonus, 'handicap': ts.total_handicap()})
 
