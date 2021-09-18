@@ -72,6 +72,7 @@ function build_score_tbl(data) {
   var season_totals = $.parseJSON(data['season_totals']);
   var info = $.parseJSON(data['info']);
   var t_data = $.parseJSON(data['t_data']);
+  var lables_to_exclude = ['null', 'total_score', 'handicap', 'cuts', 'msg']
   
  //$('#totals').empty()
  console.log('info: ', info)
@@ -111,11 +112,15 @@ function build_score_tbl(data) {
      if (total['msg']) {bonus = '<p> h/c: ' + total['handicap'] + '</p> <p>' + total["msg"] + '</p>'}
      else {
       bonus = bonus + '<p> h/c: ' + total['handicap'] + '</p>';
-      if (total['winner_bonus'] >0) {bonus = bonus + '<p> Winner: -' + total['winner_bonus'] +  '</p>'}
-      if (total['best_in_group'] > 0) {bonus = bonus + '<p> Group: -' + total['best_in_group'] +  '</p>'}
-      if (total['major_bonus'] > 0) {bonus = bonus + '<p> Major: -' + total['major_bonus'] +  '</p>'}
-      if (total['cut_bonus'] > 0) {bonus = bonus + '<p> No Cut: -' + total['cut_bonus'] +  '</p>'}
-      if (total['playoff_bonus'] > 0) {bonus = bonus + '<p> Playoff: -' + total['playoff_bonus'] +  '</p>'}
+      $.each(total, function(key, value) {
+        if (lables_to_exclude.indexOf(key) == -1 && value != 0)  {
+        bonus = bonus + '<p>' + key + ': -' + value + '</p>'}})
+
+      //if (total['winner_bonus'] >0) {bonus = bonus + '<p> Winner: -' + total['winner_bonus'] +  '</p>'}
+      //if (total['best_in_group'] > 0) {bonus = bonus + '<p> Group: -' + total['best_in_group'] +  '</p>'}
+      //if (total['major_bonus'] > 0) {bonus = bonus + '<p> Major: -' + total['major_bonus'] +  '</p>'}
+      //if (total['cut_bonus'] > 0) {bonus = bonus + '<p> No Cut: -' + total['cut_bonus'] +  '</p>'}
+      //if (total['playoff_bonus'] > 0) {bonus = bonus + '<p> Playoff: -' + total['playoff_bonus'] +  '</p>'}
           }
 
     let ts_row = document.createElement('tr');
@@ -354,7 +359,7 @@ function update_score_tbl(data) {
   $.each(total_data, function(p, total) {
     $('#ts_' + p).html(p  + ' (' + season_totals[p]['diff'] + ' / ' + season_totals[p]['points_behind_second'] + ')'  + '</p>' + '<p>' +  total['total_score'] + ' / ' + total['cuts'])
     
-    console.log('total: ', total)
+    //console.log('total: ', total)
     
     var bonus = ''
      if (total['msg']) {$('#msg_' + p).html('<p> h/c: ' + total['handicap'] + '</p> <td>' + total["msg"] + '</td>') }

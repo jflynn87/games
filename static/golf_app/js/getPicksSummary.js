@@ -8,7 +8,7 @@ fetch("/golf_app/get_picks_summary/" + $('#tournament_key').text(),
 .then((responseJSON) => {
 picks_data = responseJSON
 console.log('picks data: ', picks_data)
-$('#picks_info').append('<p> Total Golfers Picked: ' + picks_data.total_picks.playerName__count + '  <i id="picks_toggle" class="fa fa-plus-circle" style="color:lightblue;">View Pick Counts</i> </p')
+$('#picks_summary').append('<p> Total Golfers Picked: ' + picks_data.total_picks.playerName__count + '  <i id="picks_toggle" class="fa fa-plus-circle" style="color:lightblue;">View Pick Counts</i> </p')
 $('#picks_toggle').on('click', function() {togglePicks($(this))})
 $('#picks_info').append('<div id=picks_counts hidden><table id=picks_summary_table class="table table-borderless table-sm"></table></div>')
 $('#picks_summary_table').append('<tr class=small><th>Picks</th></tr>')

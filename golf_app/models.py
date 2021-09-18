@@ -445,6 +445,14 @@ class Group(models.Model):
     def natural_key(self):
         return self.number
 
+    
+    def cut_count(self, score_dict=None):
+        if score_dict:
+            return len([v for k, v in score_dict.items() if k != 'info' and v.get('group') == self.number and v.get('rank') in self.tournament.not_playing_list()])
+        else:
+            return 0  # add score dict lookup here and fix code
+
+
 
 class Golfer(models.Model):
     golfer_pga_num = models.CharField(max_length=100)

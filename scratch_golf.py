@@ -40,8 +40,14 @@ import csv
 import random
 
 start  = datetime.now()
-espn = scrape_espn.ScrapeESPN().get_data()
-print (espn)
+t = Tournament.objects.filter(season__season='2021').first()
+#espn = scrape_espn.ScrapeESPN().get_data()
+sd = ScoreDict.objects.get(tournament=t)
+espn = sd.data
+
+for g in Group.objects.filter(tournament=t):
+    print(g, g.cut_count(espn))
+#print (espn)
 exit()
 #s = Season.objects.get(season=2021)
 #for g in Golfer.objects.all(): 
