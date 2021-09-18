@@ -182,13 +182,13 @@ class Score(object):
                
                 print ('thru skip checks')
                 if data.get('rank') == "CUT":
-                    score = cut_num + self.cut_penalty(p)
+                    score = cut_num + self.cut_penalty(pick)
                 elif data.get('rank') in ["WD", "DQ"] or (data.get('rank') in self.cut_indicators and data.get('total_score') in ['WD', 'DQ']):
                     print ('WD/DQ: ', pick, data)
                     score = self.get_wd_score(pick) 
                 else:
                     if int(utils.formatRank(data.get('rank'))) > cut_num:
-                         score=cut_num + self.cut_penalty(p)
+                         score=cut_num + self.cut_penalty(pick)
                     else:
                         score = utils.formatRank(data.get('rank')) 
 
