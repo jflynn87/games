@@ -38,28 +38,34 @@ import math
 import scipy.stats as ss
 import csv
 import random
+from operator import itemgetter
 
 start  = datetime.now()
-t = Tournament.objects.filter(season__season='2021').first()
-#espn = scrape_espn.ScrapeESPN().get_data()
-sd = ScoreDict.objects.get(tournament=t)
-espn = sd.data
 
-for g in Group.objects.filter(tournament=t):
-    print(g, g.cut_count(espn))
-#print (espn)
-exit()
-#s = Season.objects.get(season=2021)
-#for g in Golfer.objects.all(): 
-#    g.get_season_results(season=s)
-#golfers = golf_serializers.GolferSerializer(Golfer.objects.all(), many=True).data
-#print (len(golfers))
-#print (golfers[1])
-#g = Golfer.objects.get(golfer_pga_num=49947)
-f = Field.objects.filter(playerName='Trey Mullinax')
-for t in f:
-    print (t.tournament, t.tournament.season)
-#print (g.golfer_name, g.results)
+s = Season.objects.get(current=True)
+#t = populateField.setup_t('468')
+t = Tournament.objects.get(current=True)
+#owgr = populateField.get_worldrank()
+f = open('owgr.json',)
+#print (type(f))
+owgr = json.load(f)
+
+field = populateField.get_field(t, owgr)
+
+
+#sorted_intl_team = sorted({k:v for k,v in field.items() if v.get('team') == 'INTL'}, key=lambda item: item[1].get('curr_owgr'))
+#sorted_usa_team = sorted({k:v for k,v in field.items() if v.get('team') == 'USA'}, key=lambda item: item[1].get('curr_owgr'))
+intl_d = {k:v for k,v in field.items() if v.get('team') == "INTL"}
+sorted_intl = sorted(intl_d.items(), key=lambda item: int(item[1].get('curr_owgr')))
+
+usa_d = {k:v for k,v in field.items() if v.get('team') == "USA"}
+sorted_usa = sorted(intl_d.items(), key=lambda item: int(item[1].get('curr_owgr')))
+
+
+#sorted_intl_team = OrderedDict({k:v for k,v in sorted(field.items(), key=lambda item: (item[1].get('team') != "USA", int(item[1].get('curr_owgr'))))})
+
+#print (sorted_intl_team)
+#print (sorted_usa_team)
 
 exit()  
 s = Season.objects.get(current=True)

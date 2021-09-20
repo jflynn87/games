@@ -1,5 +1,11 @@
 $(document).ready(function () {
     start = new Date()
+    $('#field').append('<p>Pick 30 the golfers who will make the Tour Championship</p> \
+     <p>-30 points for any correct pick</p><p>Additional -50 for any pick that was outside the top 30 OWGR as of the start of the season</p> \
+     <p>+20 for any pick that was in the top 30 OWGR but doesn' + "'" + 't make it</p> \
+     <p>Total points included in season total like a regular tournament.</p> <br>')
+
+
     $('#field').append('<div><h4 id=loading_msg>Loading .... </h4></div>')
     fetch("/golf_app/fedex_field")
     .then(response=> response.json())
@@ -18,6 +24,7 @@ $(document).ready(function () {
              h_0.innerHTML = 'Select'
              h_1 = document.createElement('th')
              h_1.innerHTML = 'Golfer'
+             h_1.colSpan = 2
              h_2 = document.createElement('th')
              h_2.innerHTML = 'OWGR - start of year'
              h_3 = document.createElement('th')
@@ -51,10 +58,9 @@ $(document).ready(function () {
                 inputB.name= g.id
                 inputB.value = g.id
                 //inputB.disabled = true
-                //inputB.addEventListener('change', function(evt) {
-                //            $('#pick-status').empty()
-                //            get_info(info, this);
-                //                                                });
+                inputB.addEventListener('change', function(evt) {
+                            count_actual();
+                                                                });
     
                 //if (pick_array.indexOf(field.id) != -1) {
                 //    inputB.checked = true
@@ -64,7 +70,21 @@ $(document).ready(function () {
 
 
                 c_1 = document.createElement('td')
-                c_1.innerHTML = g.golfer.golfer_name
+                img = document.createElement('img')
+                img.src = g.golfer.pic_link
+
+                //c_1.innerHTML = g.golfer.golfer_name
+
+
+                flag = document.createElement('img')
+                flag.src = g.golfer.flag_link
+
+                c_1.append(img)
+                c_1.append(flag)
+                c_1a = document.createElement('td')
+                c_1a.innerText = g.golfer.golfer_name
+
+
                 c_2 = document.createElement('td')
                 c_2.innerHTML = g.soy_owgr
                 c_3 = document.createElement('td')
@@ -74,16 +94,18 @@ $(document).ready(function () {
 
                 row.appendChild(c_0)
                 row.appendChild(c_1)
+                row.appendChild(c_1a)
                 row.appendChild(c_2)
                 row.appendChild(c_3)
                 table.appendChild(row)
 
          }
             sub_btn = document.createElement('button')
-            sub_btn.id = 'sub_btn'
+            sub_btn.id = 'sub_button'
             sub_btn.type = 'button'
-            sub_btn.innerHTML = "Submit Picks"
-            sub_btn.classList.add('button', 'btn-primary')
+            sub_btn.innerHTML = "0 of 30 Picks"
+            sub_btn.disabled = true
+            sub_btn.classList.add('btn', 'btn-secondary')
 /*             $('#pick_form').on('submit', function(event){
                 event.preventDefault();
                 console.log("form submitted!")  
@@ -95,8 +117,8 @@ $(document).ready(function () {
                     create_post()                    
                 });
 
-            form.appendChild(sub_btn)   
-
+            //form.appendChild(sub_btn)   
+            $('#bottom_sect').append(sub_btn)
             form.appendChild(table)
             
             frag.appendChild(form)
@@ -145,3 +167,18 @@ function create_post() {
  })
 
 }
+
+
+function count_actual(group, picks) {
+        var selected = $('input[class=my-checkbox]:checked').length
+        console.log('selected', selected)
+        $('#sub_button').text(selected + ' of 30 Picks')
+        if (selected === 30) {
+            $('#sub_button').removeAttr('disabled').attr('class', 'btn btn-primary').text('Submit Picks')
+        }
+        else {
+            $('#sub_button').attr('disabled', true).attr('class', 'btn btn-secondary').text(selected + ' of 30 Picks')
+        }
+    return selected
+  }
+  

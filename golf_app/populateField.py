@@ -14,6 +14,7 @@ import unidecode
 from collections import OrderedDict
 import csv
 import string
+from operator import itemgetter
 
 
 @transaction.atomic
@@ -43,15 +44,17 @@ def create_groups(tournament_number):
     print ('field length: ', len(field))
     #OWGR_rankings = {}
    
-    if tournament.pga_tournament_num not in ['470', '018', '999']:  #Match Play and Zurich (team event)  
+    if tournament.pga_tournament_num not in ['470', '018', '999', '468']:  #Match Play and Zurich (team event)  
         groups = configure_groups(field, tournament)
         prior_year = prior_year_sd(tournament)  #diff sources for MP & Zurich so don't use this func for those events
     elif tournament.pga_tournament_num == '470':
-        groups = configure_mp_groups(tournament) #confifure MP groups - 16 groups of 4 based on MP groupings
+        groups = configure_mp_groups(tournament) #configure MP groups - 16 groups of 4 based on MP groupings
     elif tournament.pga_tournament_num == '018':
         groups = configure_zurich_groups(tournament)
     elif tournament.pga_tournament_num == '999': # my code for olymics
         groups = configure_groups(field, tournament)
+    elif tournament.pga_tournament_num == '468': # Ryder Cup
+        groups = configure_ryder_cup_groups(tournament)
     else:
         #shouldnt get here
         print ('populate field bad pga number')
@@ -59,6 +62,8 @@ def create_groups(tournament_number):
     
     if tournament.pga_tournament_num == '999':
         create_olympic_field(field, tournament)
+    elif tournament.pga_tournament_num == '468':
+        create_ryder_cup_field(field, tournament)
     else:
         create_field(field, tournament)
     return ({'msg: ', tournament.name, ' Field complete'})
@@ -165,7 +170,7 @@ def setup_t(tournament_number):
         tourny.saved_cut_round = 2
         tourny.espn_t_num = scrape_espn.ScrapeESPN(tourny).get_t_num()
         tourny.save()
-    else:
+    elif tournament_number == '999':
         json_url = ''
   
         #req = Request(json_url, headers={'User-Agent': 'Mozilla/5.0'})
@@ -196,6 +201,13 @@ def setup_t(tournament_number):
         tourny.has_cut = False
         tourny.espn_t_num = '401285309'
         tourny.save()
+
+       # Ryder cup: tourny.espn_t_num = '401219595'
+
+    else:
+        raise Exception('Unknown T Num logic, pls check')
+
+    
         
     return tourny
 
@@ -239,6 +251,7 @@ def get_field(t, owgr_rankings):
                                     'curr_owgr': int(rank[1].get('rank')) + 1000,
                                     'flag': stats.get('flag')}
         #field_dict['info'] = mens_field.get('info')
+    #elif t.pga_tournament_num == 'RYDCUP':
     else:
         try:
             headers = {'User-Agent': 'Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.149 Mobile Safari/537.36'}
@@ -260,7 +273,13 @@ def get_field(t, owgr_rankings):
 
                 name = (' '.join(reversed(player["PlayerName"].rsplit(', ', 1))))
                 playerID = player['TournamentPlayerId']
-                team = player.get('TeamID')
+                if player.get('TeamID'):
+                    team = player.get('TeamID')
+                elif player.get('cupTeam'):
+                    team = player.get('cupTeam')
+                else:
+                    team = None
+
                 ranks = utils.fix_name(name, owgr_rankings)
                 field_dict[name] = {'pga_num': playerID,
                                     'team': team,
@@ -375,6 +394,22 @@ def configure_zurich_groups(tournment):
         group.playerCnt = 10
         group.save()
         group_dict[i]=10 #hard coded to 10, assumes 80 teams.  
+        i +=1
+    
+    return group_dict
+
+
+def configure_ryder_cup_groups(tournment):
+    '''takes a tournament.  updates groups for the tournament, retruns a dict'''
+    group_dict = {}
+    i = 1
+    while i < 7:
+        group = Group()
+        group.tournament = tournment
+        group.number = i
+        group.playerCnt = 4
+        group.save()
+        group_dict[i]=4 
         i +=1
     
     return group_dict
@@ -550,6 +585,115 @@ def create_olympic_field(field, tournament):
 
 
     print ('saved field objects')
+
+
+def create_ryder_cup_field(field, tournament):
+    '''takes a dict and tournament object, updates creates field database, returns a dict'''
+    sorted_field = {}
+    espn_data = get_espn_players()
+    intl_d = {k:v for k,v in field.items() if v.get('team') == "INTL"}
+    sorted_intl = OrderedDict({k:v for k,v in sorted(intl_d.items(), key=lambda item: int(item[1].get('curr_owgr')))})
+    usa_d = {k:v for k,v in field.items() if v.get('team') == "USA"}
+    sorted_usa = OrderedDict({k:v for k,v in sorted(usa_d.items(), key=lambda item: int(item[1].get('curr_owgr')))})
+
+    player_cnt = 1
+    group_num = 1
+
+    for player, info in sorted_intl.items():
+        print (player, info)
+        golfer = get_golfer(player, info.get('pga_num'), espn_data)
+        golfer = Golfer.objects.get(golfer_pga_num=info.get('pga_num'))  #assume any ryder cup golfer already set up
+        group = Group.objects.get(tournament=tournament, number=group_num)
+        #print (player, info)
+        f = Field()
+        print ('saving field')
+        f.tournament = tournament
+        f.playerName = player
+        f.alternate = False
+        f.playerID = info.get('pga_num')
+        f.golfer = golfer
+        f.group = group
+        f.teamID = info.get('team')
+        f.currentWGR = info.get('curr_owgr')
+        f.sow_WGR = info.get('sow_owgr')
+        f.soy_WGR = info.get('soy_owgr')
+        f.handi = 0
+
+        f.save()
+        #print ('saved field')
+        if player_cnt < 2:  #hard code ok, just 2 per team per group
+            player_cnt += 1
+        elif player_cnt == 2:
+            group_num += 1
+            player_cnt = 1
+        #f.save()
+
+    #need to do this after full field is saved for the calcs to work.  No h/c in MP
+    #print ('thru field')
+
+    player_cnt = 1
+    group_num = 1
+
+    for player, info in sorted_usa.items():
+        print (player, info)
+        golfer = get_golfer(player, info.get('pga_num'), espn_data)
+        group = Group.objects.get(tournament=tournament, number=group_num)
+        #print (player, info)
+        f = Field()
+
+        f.tournament = tournament
+        f.playerName = player
+        f.alternate = False
+        f.playerID = info.get('pga_num')
+        f.golfer = golfer
+        f.group = group
+        f.teamID = info.get('team')
+        f.currentWGR = info.get('curr_owgr')
+        f.sow_WGR = info.get('sow_owgr')
+        f.soy_WGR = info.get('soy_owgr')
+        f.handi = 0
+
+        f.save()
+    
+        if player_cnt < 2:  #hard code ok, just 2 per team per group
+            player_cnt += 1
+        elif player_cnt == 2:
+            group_num += 1
+            player_cnt = 1
+
+    #need to do this after full field is saved for the calcs to work.  No h/c in MP
+    fed_ex = get_fedex_data()
+    individual_stats = get_individual_stats()
+
+    for f in Field.objects.filter(tournament=tournament):
+
+        f.prior_year = 'n/a'
+        recent = OrderedDict(sorted(f.recent_results().items(), reverse=True))
+        f.recent = recent
+        f.season_stats = f.golfer.summary_stats(tournament.season) 
+
+        # print (fed_ex)#
+        if fed_ex.get(f.playerName):
+            f.season_stats.update({'fed_ex_points': fed_ex.get(f.playerName).get('points'),
+                                'fed_ex_rank': fed_ex.get(f.playerName).get('rank')})
+        else:
+            f.season_stats.update({'fed_ex_points': 'n/a',
+                                'fed_ex_rank': 'n/a'})
+
+        if individual_stats.get(f.playerName):
+            player_s = individual_stats.get(f.playerName)
+        for k, v in player_s.items():
+            if k != 'pga_num':
+                f.season_stats.update({k: v})
+            
+        f.save()
+
+    for g in Golfer.objects.all():
+        g.results = g.get_season_results()
+        g.save()
+
+
+    print ('saved Ryder Cup field objects')
 
 
 def get_individual_stats():

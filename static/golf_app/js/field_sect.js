@@ -298,6 +298,14 @@ function buildHeader() {
     })
     }
 
+    //Ryder Cup
+    if ($('#pga_t_num').text() == 468) {
+        $('#field_sect #pick_form').append('<table id=ryderCup_picks' + " class=table> \
+        <thead class=total_score> <th colspan=2>Ryder Cup Picks " + '</th> </thead>' +
+        '</table>')
+        $('#ryderCup_picks').append('<tr><td>Winning Team </td> <td>slecte here</td> </tr>')
+
+    }
     $('#random_form').on('submit', function(event){
         event.preventDefault();
         console.log("random submitted!")  

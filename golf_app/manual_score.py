@@ -453,9 +453,9 @@ class Score(object):
                 ts.score -= bd.winner_bonus
                 ts.score -= bd.cut_bonus
                 ts.score -= bd.playoff_bonus
-            else:
-                for b in BonusDetails.objects.filter(user=user, tournament=self.tournament, bonus_type__in=['1', '4', '2', '5']):
-                    ts.score -= b.bonus_points
+           # else:
+           #     for b in BonusDetails.objects.filter(user=user, tournament=self.tournament, bonus_type__in=['1', '4', '2', '5']):
+           #         ts.score -= b.bonus_points
             
             if self.tournament.pga_tournament_num == '999':
                 medals = self.olympic_medals(user)
@@ -498,6 +498,7 @@ class Score(object):
                         #w.save()
             if int(self.tournament.season.season) > 2021:
                     users = self.tournament.season.get_users()
+                    t = self.tournament
                     for u in users:
                         if not PickMethod.objects.filter(tournament=self.tournament, user=User.objects.get(pk=u.get('user')), method=3).exists() and \
                            Field.objects.filter(tournament=self.tournament).count() > 70 and User.objects.get(pk=u.get('user')) and \
@@ -529,11 +530,12 @@ class Score(object):
                             manual_bonus = BonusDetails.objects.get(user=User.objects.get(pk=u.get('user')), tournament=self.tournament, bonus_type='7')
                             manual.score -= manual_bonus.manual_bonus
                             manual.save()
-
         
         for ts in TotalScore.objects.filter(tournament=self.tournament):
             for bd in BonusDetails.objects.filter(tournament=ts.tournament, user=ts.user):
-                ts_dict[ts.user.username].update({bd.get_bonus_type_display(): bd.bonus_points})
+                ts.score -= bd.bonus_points
+                ts.save()
+                ts_dict[ts.user.username].update({bd.get_bonus_type_display(): bd.bonus_points, 'total_score': ts.score})
             ts_dict[ts.user.username].update({'handicap': ts.total_handicap()})
             #ts_dict[ts.user.username].update({'total_score': ts.score, 'winner_bonus': bd.winner_bonus, 'major_bonus': bd.major_bonus, 'cut_bonus': bd.cut_bonus,
             # 'best_in_group': bd.best_in_group_bonus, 'playoff_bonus': bd.playoff_bonus, 'handicap': ts.total_handicap()})
