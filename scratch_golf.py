@@ -46,26 +46,22 @@ s = Season.objects.get(current=True)
 #t = populateField.setup_t('468')
 t = Tournament.objects.get(current=True)
 #owgr = populateField.get_worldrank()
-f = open('owgr.json',)
+#f = open('owgr.json',)
 #print (type(f))
-owgr = json.load(f)
-
-field = populateField.get_field(t, owgr)
+#owgr = json.load(f)
+#field = populateField.get_field(t, owgr)
 
 
 #sorted_intl_team = sorted({k:v for k,v in field.items() if v.get('team') == 'INTL'}, key=lambda item: item[1].get('curr_owgr'))
 #sorted_usa_team = sorted({k:v for k,v in field.items() if v.get('team') == 'USA'}, key=lambda item: item[1].get('curr_owgr'))
-intl_d = {k:v for k,v in field.items() if v.get('team') == "INTL"}
-sorted_intl = sorted(intl_d.items(), key=lambda item: int(item[1].get('curr_owgr')))
 
-usa_d = {k:v for k,v in field.items() if v.get('team') == "USA"}
-sorted_usa = sorted(intl_d.items(), key=lambda item: int(item[1].get('curr_owgr')))
+espn = espn_api.ESPNData().get_all_data()
+print (espn)
 
-
-#sorted_intl_team = OrderedDict({k:v for k,v in sorted(field.items(), key=lambda item: (item[1].get('team') != "USA", int(item[1].get('curr_owgr'))))})
-
-#print (sorted_intl_team)
-#print (sorted_usa_team)
+headers = {'User-Agent': 'Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.149 Mobile Safari/537.36'}
+url =  "https://site.web.api.espn.com/apis/site/v2/sports/golf/leaderboard?league=pga"
+all_data = get(url, headers=headers).json()
+print (all_data)
 
 exit()  
 s = Season.objects.get(current=True)

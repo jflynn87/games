@@ -28,11 +28,14 @@ class ESPNData(object):
         for event in self.all_data.get('events'):
             if event.get('id') == self.t.espn_t_num or mode == 'setup':
                 self.event_data = event 
-        #print (self.event_data)
+        #print ('espn event DATA: ', self.event_data)
         
-        for f in self.event_data.get('competitions'):
-            if f.get('id') == self.t.espn_t_num or mode == 'setup': 
-                self.field_data = f.get('competitors')
+        if self.t.pga_tournament_num == '468':
+            self.field_data = {}
+        else:
+            for f in self.event_data.get('competitions'):
+                if f.get('id') == self.t.espn_t_num or mode == 'setup': 
+                    self.field_data = f.get('competitors')
         
 
             

@@ -227,6 +227,16 @@ class NewFieldListView(LoginRequiredMixin,TemplateView):
                 cp.gender = 'women'
                 cp.save()
 
+        if tournament.pga_tournament_num == '468':  #Ryder Cup
+            cp = CountryPicks()
+            cp.user = user
+            cp.tournament = tournament
+            cp.country = data.get('ryder_cup')[0]
+            cp.ryder_cup_score = data.get('ryder_cup')[1]
+            cp.gender = 'men'
+            cp.save()
+            
+
         print ('user submitting picks', datetime.datetime.now(), request.user, Picks.objects.filter(playerName__tournament=tournament, user=user))
         print ('submit picks duration: ',  datetime.datetime.now() - start)
     
@@ -324,6 +334,8 @@ class PicksListView(LoginRequiredMixin,ListView):
         context = super(PicksListView, self).get_context_data(**kwargs)
         t = Tournament.objects.get(current=True)
         if t.pga_tournament_num == '999':  
+            countries = CountryPicks.objects.filter(user=self.request.user, tournament=t)
+        elif t.pga_tournament_num == '468':
             countries = CountryPicks.objects.filter(user=self.request.user, tournament=t)
         else:
             countries = None
@@ -1230,6 +1242,7 @@ class PriorResultAPI(APIView):
             #g_num = group.split('-')[2]
             t= Tournament.objects.get(pk=request.data.get('tournament_key'), season__current=True)
             espn_data = espn_api.ESPNData().get_all_data()
+
             context = {'espn_data': espn_data, 'user': self.request.user}
             if request.data.get('group') == 'all':
                 data= golf_serializers.NewFieldSerializer(Field.objects.filter(tournament=t), context=context, many=True).data

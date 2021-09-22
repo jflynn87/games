@@ -246,11 +246,22 @@ function checkStarted() {
 
 
 function buildHeader() {
-    $('#top_sect').append('<div id=make_picks><br> <p>Please make 2 picks for group 1 and 1 pick for other groups</p>' +
+    if ($('#pga_t_num').text() == 468) {
+        var instructions = '<p style=font-weight:bold;>Instructions:</p><p>One Pick per Group</p> <p>Match win -10 points, -1 point per hole of winning margin</p>' +
+        '<p>Match loss +10 points, +1 point per hole of winning margin</p>' +
+        '<p>Winning team -25 points</p>' +
+        '<p>Closest to winning score -25.  Must pick winning team to qualify for this bonus.</p>' +
+        '<p>To bet on a 14/14 tie, choose Europe as the winner and 14 points as the winning score.</p>'
+    }
+    else {
+        var instructions = '<p>Enter 2 picks for group 1, and 1 pick for remaining groups</p>'
+    }
+    
+    $('#top_sect').append('<div id=make_picks><br>' + instructions + '<br>' +
     '<form id="random_form" name="random_form" method="post">' +
     '<input type="hidden" name="csrfmiddlewaretoken" value=' + $.cookie('csrftoken') +  '>' +
     //'<input type="text" name="random" value="random" hidden>' +
-    '<p>or click for random picks  <input id=random_btn type="submit" class="btn btn-secondary" value="Random" disabled> </p>' +
+    '<p id=random_line>or click for random picks  <input id=random_btn type="submit" class="btn btn-secondary" value="Random" disabled> </p>' +
     '</form>')
 
     $('#top_sect').append('<div id=too_late hidden><br> <p>Tournament Started, too late for picks</p></div>')
@@ -301,11 +312,46 @@ function buildHeader() {
     //Ryder Cup
     if ($('#pga_t_num').text() == 468) {
         $('#field_sect #pick_form').append('<table id=ryderCup_picks' + " class=table> \
-        <thead class=total_score> <th colspan=2>Ryder Cup Picks " + '</th> </thead>' +
+        <thead class=total_score> <th colspan=2>Special Ryder Cup Picks " + '</th> </thead>' +
         '</table>')
-        $('#ryderCup_picks').append('<tr><td>Winning Team </td> <td>slecte here</td> </tr>')
+        $('#ryderCup_picks').append('<p><label for=winning_team style=font-weight:bold>Choose Winning Team</label>' +  
+             '<select id=winning_team class="form-control"><option></option><option value=euro>Europe</option><option value-usa>USA</option> </select> </p>' + 
+             '<p><label for=winning_points style=font-weight:bold>Enter winning team score, number between 14 - 28</label>' + 
+             '<input id=winning_points class="form-control"  type=number placeholder="enter between 14 - 28" step=0.5 min=14 max=28><textbox></textbox></input></p>')
+
+        $('#winning_points').on('change', function() {
+            
+            if (parseFloat($('#winning_points').val()) % 1 == 0 || parseFloat($('#winning_points').val()) % 1 == 0.5)
+                {
+                    if (parseFloat($('#winning_points').val()) >= 14 && parseFloat($('#winning_points').val()) <= 28) 
+                        {
+                             $('#pick-status').empty()
+                             check_complete(info)
+                        }
+                    else {
+                        $('#winning_points').val('')                        
+                        $('#pick-status').empty()
+                        check_complete(info)
+                        alert('Bad winning points entry: ' + $('#winning_points').val() + '. Please enter between 14 and 28')}
+            
+                }   
+                else {
+                       $('#winning_points').val('')                        
+                       $('#pick-status').empty()
+                       check_complete(info)
+                       alert ('Bad winning points value, must be a whole number or .5')}
+            })
+
+        $('#winning_team').change(function() {console.log('selected team '), winning_team;
+                $('#pick-status').empty()                            
+                check_complete(info)})
+        
+
+        $('#random_line').remove()
 
     }
+    
+    
     $('#random_form').on('submit', function(event){
         event.preventDefault();
         console.log("random submitted!")  
@@ -323,6 +369,8 @@ function create_post() {
     women_countries = []
     men_countries.push($('#men_1_country').val(), $('#men_2_country').val(), $('#men_3_country').val())
     women_countries.push($('#women_1_country').val(), $('#women_2_country').val(), $('#women_3_country').val())
+    ryder_cup = []
+    ryder_cup.push($('#winning_team').val(), $('#winning_points').val())
     $.each(checked, function(i, pick){
         pick_list.push(pick.value)
     })
@@ -339,6 +387,7 @@ function create_post() {
                             'pick_list': pick_list, 
                             'men_countries': men_countries,
                             'women_countries': women_countries,
+                            'ryder_cup': ryder_cup
                              })
  })
     .then((response) => response.json())

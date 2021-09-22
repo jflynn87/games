@@ -19,6 +19,13 @@
           <li>{{c.gender}}: {{c.country}} </li>
         {%endfor%}
         {%endif%}
+
+        {%if tournament.pga_tournament_num == '468'%}
+        {%for c in country_list%}
+          <li>{{c.country}}: {{c.ryder_cup_score}} </li>
+        {%endfor%}
+        {%endif%}
+
       </ul>
 
 

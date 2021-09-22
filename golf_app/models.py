@@ -817,6 +817,12 @@ class Field(models.Model):
     def playing(self, score_dict=None):
         from golf_app import scrape_espn
 
+        if self.tournament.pga_tournament_num == '468' and not self.tournament.started():
+            return False
+        elif self.tournament.pga_tournament_num == '468' and self.tournament.started():
+            return True
+
+
         if not score_dict:
            sd = scrape_espn.ScrapeESPN().get_data()
         else:
@@ -1080,6 +1086,7 @@ class CountryPicks(models.Model):
     country = models.CharField(max_length=30)
     gender = models.CharField(max_length=30)
     score = models.PositiveBigIntegerField(default=0)
+    ryder_cup_score = models.FloatField(null=True, blank=True)
 
     def __str__(self):
         return str(self.user) + str(self.tournament) + str(self.country)

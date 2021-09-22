@@ -243,8 +243,21 @@ $("#actual-row").each(function () {
         if (Object.keys(picks).length == 6) {countries_ok = true}
         else {countries_ok = false}
       }
+
+      if ($('#pga_t_num').text() == 468) {var ryder_ok = false}
+      else {var ryder_ok = true}
+
+      if ($('#pga_t_num').text() == '468') {
+        console.log('complete chk ', $('#winning_points').val())
+        if ($('#winning_team').val() && parseFloat($('#winning_points').val()) > 14) {
+            ryder_ok = true
+        }
+      else {ryder_o = false}
+   //   console.log(ryder_o)
+      }
+
       //console.log(Object.keys(picks).length, countries_ok)
-      if (total == parseInt(info['total']) && countries_ok == true) {
+      if (total == parseInt(info['total']) && countries_ok == true && ryder_ok == true) {
         $('#sub_button').removeAttr('disabled').attr('class', 'btn btn-primary').val('Submit Picks');
         $('#actual-grouptotal').css('background-color', '')  
         $('#required-groupcomplete').text('True')
