@@ -249,6 +249,8 @@ function buildHeader() {
     if ($('#pga_t_num').text() == 468) {
         var instructions = '<p style=font-weight:bold;>Instructions:</p><p>One Pick per Group</p> <p>Match win -10 points, -1 point per hole of winning margin</p>' +
         '<p>Match loss +10 points, +1 point per hole of winning margin</p>' +
+        '<p>Draw 0 points</p>' + 
+        '<p>DNP +5 points (per session)</p>' + 
         '<p>Winning team -25 points</p>' +
         '<p>Closest to winning score -25.  Must pick winning team to qualify for this bonus.</p>' +
         '<p>To bet on a 14/14 tie, choose Europe as the winner and 14 points as the winning score.</p>'
