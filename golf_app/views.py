@@ -1683,3 +1683,52 @@ class FedExFieldAPI(APIView):
             data = json.dumps({'msg': e})    
             
         return JsonResponse(data, status=200, safe=False)
+
+class PriorYearStatsAPI(APIView):
+
+    def get(self, request):
+        pass
+
+class RyderCupScoresView(LoginRequiredMixin, TemplateView):
+    login_url = 'login'
+    template_name= 'golf_app/ryder_cup_scores.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        s = Season.objects.get(current=True)
+        t = Tournament.objects.get(pga_tournament_num='468', season=s)
+        
+
+        context.update({
+             't': t,
+
+         })
+
+        return context
+
+
+class RyderCupScoresAPI(APIView):
+    def get(self,request):
+
+        s = Season.objects.get(current=True)
+        t = Tournament.objects.get(season=s, pga_tournament_num='468')
+        
+        try:
+            data = {}
+            for u in s.get_users():
+                user = User.objects.get(pk=u.get('user'))
+                cp = CountryPicks.objects.get(tournament=t, user=user)
+                picks = Picks.objects.filter(playerName__tournament=t, user=user).order_by('playerName__group__number')
+                data[user.username] = {'c_pick': cp.country,
+                                       'c_points':  cp.ryder_cup_score}
+                for pick in picks:
+                    data[user.username].update({
+                                                'group_' +  str(pick.playerName.group.number): pick.playerName.playerName,
+                                                #'flag_' + str(pick.playerName.group.number): pick.playerName.golfer.flag_link
+                    })
+
+        except Exception as e:
+            print ('FedEx Field API exception: ', e)
+            data = json.dumps({'msg': e})    
+            
+        return JsonResponse(data, status=200, safe=False)

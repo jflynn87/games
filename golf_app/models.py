@@ -1013,6 +1013,24 @@ class mpScores(models.Model):
         #print (field)
         #return
 
+
+class RyderCupMatch(models.Model):
+    play_format  = models.CharField(max_length=50)
+    match_num = models.CharField(max_length=50)
+    data_links = models.JSONField(null=True, blank=True)
+    usa_golfer = models.ForeignKey(Field, on_delete=models.CASCADE, related_name='usa_golfer')
+    euro_golfer = models.ForeignKey(Field, on_delete=models.CASCADE, related_name='euro_golfer')
+    winner = models.ForeignKey(Field, on_delete=models.CASCADE, null=True, blank=True, related_name='winner')
+    loser = models.ForeignKey(Field, on_delete=models.CASCADE, null=True, blank=True, related_name='loser')
+    result = models.CharField(max_length=10, null=True, blank=True)
+    winner_score = models.CharField(max_length=10, null=True)
+    loser_score = models.CharField(max_length=10, null=True)
+    
+
+    def __str__(self):
+        return str(self.play_format) + str(self.usa_golfer.playerName) + str(self.euro_golfer.playerName)
+
+
 class ScoreDict(models.Model):
     tournament = models.ForeignKey(Tournament, null=True, on_delete=models.CASCADE, related_name='score_dict')
     data = models.JSONField(null=True)

@@ -4,7 +4,7 @@ os.environ.setdefault("DJANGO_SETTINGS_MODULE","gamesProj.settings")
 import django
 django.setup()
 from golf_app.models import Tournament, TotalScore, ScoreDetails, Picks, PickMethod, BonusDetails, \
-        Season, Golfer, Group, Field, ScoreDict, AuctionPick, AccessLog, StatLinks, CountryPicks, FedExSeason
+        Season, Golfer, Group, Field, ScoreDict, AuctionPick, AccessLog, StatLinks, CountryPicks, FedExSeason, FedExField
 from django.contrib.auth.models import User
 from datetime import date, datetime, timedelta
 import sqlite3
@@ -27,7 +27,7 @@ from selenium import webdriver
 import urllib
 import json
 from golf_app import views, manual_score, populateField, withdraw, scrape_scores_picks, utils, \
-                            scrape_masters, scrape_espn, espn_api, fedexData
+                            scrape_masters, scrape_espn, espn_api, fedexData, espn_ryder_cup, ryder_cup_scores
 from unidecode import unidecode
 from django.core import serializers
 from golf_app.utils import formatRank, format_name, fix_name
@@ -41,27 +41,119 @@ import random
 from operator import itemgetter
 
 start  = datetime.now()
-
 s = Season.objects.get(current=True)
-#t = populateField.setup_t('468')
 t = Tournament.objects.get(current=True)
-#owgr = populateField.get_worldrank()
+print (espn_ryder_cup.ESPNData().pga_score_dict())
+exit()
+
+espn = espn_ryder_cup.ESPNData(espn_t_num='401025269')
+print (espn.pga_score_dict())
+exit()
+sd = ScoreDict.objects.get(tournament=t)
+if espn.field() == sd.cbs_data:
+    print ("No change in ryder cup score DATA")
+else:
+    print ('different ryder cup data')
+    sd.cbs_data = espn.field()
+    sd.save()
+ 
+ryder_cup_scores.Score(espn.score_dict()).update_scores()
+exit()
+#print (espn.field())
+#exit()
+headers = {'User-Agent': 'Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.149 Mobile Safari/537.36'}
+score_dict = {}
+for match, info in espn.field().items():
+    score_dict[match] = {}
+    if match != 'overall':
+        if info.get('type') != 'singles':
+            for t in ['USA', 'EURO']:
+                url =  info.get(t).get('golfers_link')
+                golfers = get(url, headers=headers).json()
+                for entry in golfers.get('entries'):
+                    golfer_obj = Golfer.objects.get(espn_number=entry.get('playerId'))
+                    score_url = info.get(t).get('score_link')
+                    score_data = get(score_url, headers=headers).json()
+                    #print (t, info.get('type'), golfer_obj, score_data.get('winner'), score_data.get('value'), score_data.get('holesRemaining'), score_data.get('displayValue'), score_data.get('draw'))
+                    score_dict[match].update({t: {'type': info.get('type'),
+                                                  'golfer_pk': golfer_obj.pk, 
+                                                  'winner': score_data.get('winner'),
+                                                  'value': score_data.get('value'),
+                                                  'holes_remaining': score_data.get('holesRemaining'),
+                                                  'display_value': score_data.get('displayValue'),
+                                                  'draw': score_data.get('draw')
+                                                  }})
+        elif info.get('type') == 'singles':
+            for t in ['USA', 'EURO']:
+                url =  info.get(t).get('golfers_link')
+                golfer = get(url, headers=headers).json()
+                #print (golfer)
+                golfer_obj = Golfer.objects.get(espn_number=golfer.get('id'))
+                score_url = info.get(t).get('score_link')
+                score_data = get(score_url, headers=headers).json()
+                #print (t, info.get('type'), golfer_obj, score_data.get('winner'), score_data.get('value'), score_data.get('holesRemaining'), score_data.get('displayValue'), score_data.get('draw'))
+                score_dict[match].update({t: {'type': info.get('type'),
+                            'golfer_pk': golfer_obj.pk, 
+                            'winner': score_data.get('winner'),
+                            'value': score_data.get('value'),
+                            'holes_remaining': score_data.get('holesRemaining'),
+                            'display_value': score_data.get('displayValue'),
+                            'draw': score_data.get('draw')
+                            }})
+
+    
+print (score_dict)
+print (datetime.now() - start)
+exit()
+print (espn.get_all_data().keys())
+print ('competitions')
+print (espn.get_all_data().get('competitions')[0].keys(), len(espn.get_all_data().get('competitions')[0]))
+
+for c in espn.get_all_data().get('competitions'):
+    print ('=============================================================')
+    print (c)
+
+print ('competitors')
+print (espn.get_all_data().get('competitions')[0].get('competitors')[0].keys())
+print ("Teams")
+print (espn.get_all_data().get('competitions')[0].get('competitors')[0].get('team'))
+print (espn.get_all_data().get('competitions')[0].get('competitors')[0].get('score'))
+
+exit()
 #f = open('owgr.json',)
 #print (type(f))
 #owgr = json.load(f)
+
+for golfer in Golfer.objects.filter()[1:5]:
+    rank = utils.fix_name(golfer.golfer_name, owgr)
+    if int(rank[1][0]) < 30:
+        print (golfer, rank[0])
+exit()
+#owgr = populateField.get_worldrank()
+f = open('owgr.json',)
+print (type(f))
+owgr = json.load(f)
 #field = populateField.get_field(t, owgr)
 
 
 #sorted_intl_team = sorted({k:v for k,v in field.items() if v.get('team') == 'INTL'}, key=lambda item: item[1].get('curr_owgr'))
 #sorted_usa_team = sorted({k:v for k,v in field.items() if v.get('team') == 'USA'}, key=lambda item: item[1].get('curr_owgr'))
 
-espn = espn_api.ESPNData().get_all_data()
+headers = {'User-Agent': 'Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.149 Mobile Safari/537.36'}
+#url =  "https://site.web.api.espn.com/apis/site/v2/sports/golf/leaderboard?league=pga"
+#url = 'http://sports.core.api.espn.com/v2/sports/golf/leagues/pga/events/401025269'
+espn = espn_ryder_cup.ESPNData(espn_t_num='401025269').field()
+
 print (espn)
 
-headers = {'User-Agent': 'Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.149 Mobile Safari/537.36'}
-url =  "https://site.web.api.espn.com/apis/site/v2/sports/golf/leaderboard?league=pga"
-all_data = get(url, headers=headers).json()
-print (all_data)
+# print ('--------------------------------------------------------')
+
+# for key, match in espn.items():
+#     print (key, match)
+#     try:
+#         print (match.get('id'), match.get('description'))
+#     except Exception as e:
+#         continue
 
 exit()  
 s = Season.objects.get(current=True)

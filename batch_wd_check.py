@@ -21,6 +21,10 @@ from django.core.mail import send_mail
 
 t = Tournament.objects.get(current=True)
 
+if t.pga_tournament_nume == '468':
+    print ('skipping Ryder Cup')
+    exit()
+
 if t.started():
     print (t.name, ': started, exiting')
     exit()

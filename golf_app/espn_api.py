@@ -12,7 +12,7 @@ from golf_app.models import Tournament, Field, Golfer, ScoreDict, Picks
 class ESPNData(object):
     '''takes an optinal dict and provides funcitons to retrieve espn golf data'''
 
-    def __init__(self, t=None, data=None, mode='none'):
+    def __init__(self, t=None, data=None, mode='none', espn_t_num=None):
         if t:
             self.t = t 
         else:
@@ -22,8 +22,19 @@ class ESPNData(object):
             self.all_data = data 
         else:
             headers = {'User-Agent': 'Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.149 Mobile Safari/537.36'}
-            url =  "https://site.web.api.espn.com/apis/site/v2/sports/golf/leaderboard?league=pga"
+            print (espn_t_num)
+            if espn_t_num:
+                url = 'http://sports.core.api.espn.com/v2/sports/golf/leagues/pga/events/' + espn_t_num 
+            else:
+                url =  "https://site.web.api.espn.com/apis/site/v2/sports/golf/leaderboard?league=pga"
+               
+            
             self.all_data = get(url, headers=headers).json()
+            #f = open('espn_api.json', "w")
+            #f.write(json.dumps(self.all_data))
+            #f.close()
+
+            #print (self.all_data)
 
         for event in self.all_data.get('events'):
             if event.get('id') == self.t.espn_t_num or mode == 'setup':
@@ -36,7 +47,6 @@ class ESPNData(object):
             for f in self.event_data.get('competitions'):
                 if f.get('id') == self.t.espn_t_num or mode == 'setup': 
                     self.field_data = f.get('competitors')
-        
 
             
     def started(self):

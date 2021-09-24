@@ -18,6 +18,7 @@ $(document).ready(function () {
          form.method = 'post'
 
          table = document.createElement('table')
+         table.id = 'fedex_table'
          table.classList.add('table')
          header = document.createElement('thead')
              h_0 = document.createElement('th')
@@ -26,23 +27,96 @@ $(document).ready(function () {
              h_1.innerHTML = 'Golfer'
              h_1.colSpan = 2
              h_2 = document.createElement('th')
-             h_2.innerHTML = 'OWGR - start of year'
+             h_2.id = 'curr_owgr'
+             h_2.innerHTML = 'Current OWGR'
+             h_2_i = document.createElement('i')
+             h_2_i.classList.add("fas", "fa-sort")
+             h_2.appendChild(h_2_i)
+             h_2.addEventListener('click', function(evt) {
+                th = this
+                const cell_i = 3
+                const order = document.getElementById('curr_owgr_sort').innerHTML
+                sort_table($('#fedex_table'), cell_i, order);  //index or pointer to clicked cell
+                if (document.getElementById('curr_owgr_sort').innerHTML == 'asc') {
+                    document.getElementById('curr_owgr_sort').innerHTML = 'desc'
+                }
+                else {document.getElementById('curr_owgr_sort').innerHTML = 'asc'}
+                
+                                                    });
+
+
+
              h_3 = document.createElement('th')
-             h_3.innerHTML = 'Prior FedEx Rank'
+             h_3.id = 'prior_fedex'
+             h_3.innerHTML = '20/21 FedEx Rank'
+             h_3_i = document.createElement('i')
+             h_3_i.classList.add("fas", "fa-sort")
+             h_3.appendChild(h_3_i)
+
+             h_3.addEventListener('click', function(evt) {
+                th = this
+                const cell_i = 4
+                const order = document.getElementById('prior_fedex_sort').innerHTML
+                sort_table($('#fedex_table'), cell_i, order);  //index or pointer to clicked cell
+                if (document.getElementById('prior_fedex_sort').innerHTML == 'asc') {
+                    document.getElementById('prior_fedex_sort').innerHTML = 'desc'
+                }
+                else {document.getElementById('prior_fedex_sort').innerHTML = 'asc'}
+                
+                                                    });
+
+
+             h_4 = document.createElement('th')
+             h_4.id = 'prior_owgr'
+             h_4.innerHTML = '2021 SOY OWGR'
+             h_4_i = document.createElement('i')
+             h_4_i.classList.add("fas", "fa-sort")
+             h_4.appendChild(h_4_i)
+
+             h_4.addEventListener('click', function(evt) {
+                th = this
+                const cell_i = 5
+                const order = document.getElementById('prior_season_owgr_sort').innerHTML
+                sort_table($('#fedex_table'), cell_i, order);  //index or pointer to clicked cell
+                if (document.getElementById('prior_season_owgr_sort').innerHTML == 'asc') {
+                    document.getElementById('prior_season_owgr_sort').innerHTML = 'desc'
+                }
+                else {document.getElementById('prior_season_owgr_sort').innerHTML = 'asc'}
+                
+                                                    });
+
+         curr_owgr_sort = document.createElement('p')
+            curr_owgr_sort.id = 'curr_owgr_sort'
+            curr_owgr_sort.innerHTML = 'asc'
+            curr_owgr_sort.hidden = true
+         prior_fedex_sort = document.createElement('p')
+            prior_fedex_sort.id = 'prior_fedex_sort'
+            prior_fedex_sort.innerHTML = 'asc'
+            prior_fedex_sort.hidden = true
+
+         prior_season_owgr_sort = document.createElement('p')
+            prior_season_owgr_sort.id = 'prior_season_owgr_sort'
+            prior_season_owgr_sort.innerHTML = 'asc'
+            prior_season_owgr_sort.hidden = true
+
+
 
          header.appendChild(h_0)
          header.appendChild(h_1)
          header.appendChild(h_2)
          header.appendChild(h_3)
+         header.appendChild(h_4)
          table.appendChild(header)
 
+        t_body = document.createElement('tbody')                                                    
+      
 
          field_l = field.length
 
          for (let i=0; i < field_l; i++) {
              g = field[i]
              row = document.createElement('tr')
-             row.id = g.id
+             row.id = 'row' + g.id
                 c_0 = document.createElement('td')
 
                 let inputA =  document.createElement('input');
@@ -91,13 +165,17 @@ $(document).ready(function () {
                 if (g.prior_season_data.rank != undefined) {
                 c_3.innerHTML = g.prior_season_data.rank }
                 else {c_3.innerHTML = 'n/a'}
+                c_4 = document.createElement('td')
+                c_4.innerHTML = g.prior_owgr
 
                 row.appendChild(c_0)
                 row.appendChild(c_1)
                 row.appendChild(c_1a)
                 row.appendChild(c_2)
                 row.appendChild(c_3)
-                table.appendChild(row)
+                row.appendChild(c_4)
+                t_body.appendChild(row)
+                //table.appendChild(row)
 
          }
             sub_btn = document.createElement('button')
@@ -119,15 +197,16 @@ $(document).ready(function () {
 
             //form.appendChild(sub_btn)   
             $('#bottom_sect').append(sub_btn)
+            table.appendChild(t_body)
             form.appendChild(table)
             
             frag.appendChild(form)
             document.getElementById('loading_msg').hidden = true
             document.getElementById('field').appendChild(frag);
-
-
-         
-     })
+            document.getElementById('field').append(curr_owgr_sort)
+            document.getElementById('field').append(prior_fedex_sort)
+            document.getElementById('field').append(prior_season_owgr_sort)
+            })
     })
 
 function create_post() {
@@ -182,3 +261,32 @@ function count_actual(group, picks) {
     return selected
   }
   
+function sort_table(table, cell_i, order) {
+    
+    const tRows = Array.from(table[0].rows)
+    tRows.sort( ( x, y) => {
+        console.log(x.cells[cell_i].innerHTML, x.cells[cell_i].innerHTML.length)
+        if (x.cells[cell_i].innerHTML != '' && x.cells[cell_i].innerHTML != 'n/a') {
+        var xValue = x.cells[cell_i].innerHTML;}
+        else {var xValue = '999'}
+
+        if (y.cells[cell_i].innerHTML != '' && y.cells[cell_i].innerHTML != 'n/a') {
+        var yValue = y.cells[cell_i].innerHTML; }
+        else {var yValue = '999'}
+        
+       // console.log(xValue, yValue)
+
+        const xNum = parseInt( xValue );
+        const yNum = parseInt( yValue );
+        var ascending = true
+        if (order != 'asc') {var ascending = false}
+        return ascending ? ( xNum - yNum ) : ( yNum - xNum );
+    })
+        
+    for( let row of tRows ) {
+        table[0].appendChild( row );
+
+    }
+
+}
+    

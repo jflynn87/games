@@ -1,0 +1,25 @@
+{%extends 'golf_app/golf_app_base.html'%}
+{%load golf_extras%}
+{%load static%}
+{%load compress%}
+{%block body_block%}
+<br>
+<h1>{{t.name}}</h1>
+<br>
+<script type='text/javascript' src="{%static 'golf_app/js/ryderCupScores.js'%}"></script>
+<table id='score_table' class='table'>
+    <thead>
+    <th>Player</th>
+    <th>Winner/Points</th>
+    <th>Group 1</th>
+    <th>Group 2</th>
+    <th>Group 3</th>
+    <th>Group 4</th>
+    <th>Group 5</th>
+    <th>Group 6</th>
+    </thead>
+    <tbody id='score_tbl_body'></tbody>
+
+</table>
+
+{%endblock%}

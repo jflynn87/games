@@ -51,7 +51,7 @@ class ScrapeESPN(object):
             soup = BeautifulSoup(html, 'html.parser')
             
             leaderboard = soup.find_all('tbody', {'class': 'Table__TBODY'})
-
+            
             status = soup.find('div', {'class', 'status'}).span.text
             t_name = soup.find('h1', {'class', 'Leaderboard__Event__Title'}).text
             start = datetime.now()
