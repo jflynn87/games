@@ -23,7 +23,7 @@ class ESPNData(object):
             self.all_data = data 
         else:
             headers = {'User-Agent': 'Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.149 Mobile Safari/537.36'}
-            print (espn_t_num)
+            #print (espn_t_num)
             if espn_t_num:
                 url = 'http://sports.core.api.espn.com/v2/sports/golf/leagues/pga/events/' + espn_t_num 
             else:

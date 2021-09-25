@@ -1720,6 +1720,9 @@ class RyderCupScoresAPI(APIView):
         
         try:
             data = {}
+            data['score_dict'] = score_dict
+            #field = data= golf_serializers.NewFieldSerializer(Field.objects.filter(tournament=t), context={}, many=True).data
+
             for u in s.get_users():
                 
                 user = User.objects.get(pk=u.get('user'))
@@ -1740,7 +1743,8 @@ class RyderCupScoresAPI(APIView):
                     })
 
         except Exception as e:
-            print ('FedEx Field API exception: ', e)
+            print ('Ryder Cup scrores API exception: ', e)
             data = json.dumps({'msg': e})    
             
         return JsonResponse(data, status=200, safe=False)
+

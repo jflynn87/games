@@ -164,6 +164,27 @@ body {
   color: white;
 }
 
+.left_ryder_cup_score {
+  font-weight: bold;
+  font-size: xx-large;
+  padding-left: 5%;
+}
+
+.right_ryder_cup_score {
+  font-weight: bold;
+  font-size: xx-large;
+  padding-right: 5%;
+}
+
+.middle_ryder_cup_score {
+  padding-left: 15%;
+  padding-right: 15%;
+}
+
+.center {
+  display: flex;
+  justify-content: center;
+}
 
 
 @media only screen and (max-width: 1199px) {

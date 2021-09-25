@@ -43,11 +43,15 @@ from operator import itemgetter
 start  = datetime.now()
 s = Season.objects.get(current=True)
 t = Tournament.objects.get(current=True)
+field = data= golf_serializers.NewFieldSerializer(Field.objects.filter(tournament=t), context={}, many=True).data
+print (field)
+exit()
+
 espn = espn_ryder_cup.ESPNData()
 
 f = espn.field()
-match = f.get('Friday Morning Foursomes').get('10659')
-
+print (f.get('overall'))
+exit()
 #print (match)
 winning_holes = [v.get('score').get('value') for k,v in match.items() if k !='status' and v.get('score').get('winner') == True]
 print (winning_holes)
