@@ -43,11 +43,34 @@ from operator import itemgetter
 start  = datetime.now()
 s = Season.objects.get(current=True)
 t = Tournament.objects.get(current=True)
-print (espn_ryder_cup.ESPNData().pga_score_dict())
+espn = espn_ryder_cup.ESPNData()
+
+#for k, v in espn.field().items():
+#    print (k, v)
+score = ryder_cup_scores.Score(espn.field()).update_scores()
+total_scores = ryder_cup_scores.Score(espn.field()).total_scores()
+
+exit()
+for session, matches in espn.field().items():
+    print (session)
+    if session != 'overall':
+        for m_id, m_data in matches.items():
+            for espn_num, info in m_data.items():
+                print (m_id, info.get('golfer'), info.get('score'))
+                print ('-----')         
+print (espn.field().get('overall'))
+print (espn.field())
+print (datetime.now() - start)
 exit()
 
-espn = espn_ryder_cup.ESPNData(espn_t_num='401025269')
-print (espn.pga_score_dict())
+#espn = espn_ryder_cup.ESPNData(espn_t_num='401025269')
+
+
+for session, matches in espn.field.items():
+    print (session, matches)
+
+
+
 exit()
 sd = ScoreDict.objects.get(tournament=t)
 if espn.field() == sd.cbs_data:

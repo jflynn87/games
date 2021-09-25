@@ -18,7 +18,8 @@ import datetime
 #     manual_score, scrape_scores_picks, scrape_cbs_golf, scrape_masters, withdraw, scrape_espn, \
 #     populateMPField, mp_calc_scores, golf_serializers, utils, olympic_sd
 from golf_app import populateField, manual_score, scrape_masters, withdraw, scrape_espn, \
-     populateMPField, mp_calc_scores, golf_serializers, utils, olympic_sd, espn_api
+     populateMPField, mp_calc_scores, golf_serializers, utils, olympic_sd, espn_api, \
+     ryder_cup_scores, espn_ryder_cup
 
 
 from django.utils import timezone
@@ -1712,19 +1713,30 @@ class RyderCupScoresAPI(APIView):
 
         s = Season.objects.get(current=True)
         t = Tournament.objects.get(season=s, pga_tournament_num='468')
+        score_dict = espn_ryder_cup.ESPNData().field()
+        scores = ryder_cup_scores.Score(score_dict).update_scores()
+        totals = ryder_cup_scores.Score(score_dict).total_scores()
+        print ('view totals: ', totals)
         
         try:
             data = {}
             for u in s.get_users():
+                
                 user = User.objects.get(pk=u.get('user'))
+                print (user, totals.get(user.username))
                 cp = CountryPicks.objects.get(tournament=t, user=user)
                 picks = Picks.objects.filter(playerName__tournament=t, user=user).order_by('playerName__group__number')
                 data[user.username] = {'c_pick': cp.country,
                                        'c_points':  cp.ryder_cup_score}
                 for pick in picks:
+                    sd = ScoreDetails.objects.get(user=user, pick=pick)
+                    score = sd.score
                     data[user.username].update({
+                                                'total_score': totals.get(user.username).get('total_score'),
                                                 'group_' +  str(pick.playerName.group.number): pick.playerName.playerName,
-                                                #'flag_' + str(pick.playerName.group.number): pick.playerName.golfer.flag_link
+                                                'flag_' + str(pick.playerName.group.number): pick.playerName.golfer.flag_link,
+                                                'pic_' + str(pick.playerName.group.number): pick.playerName.golfer.pic_link,
+                                                'score_' + str(pick.playerName.group.number): score,
                     })
 
         except Exception as e:

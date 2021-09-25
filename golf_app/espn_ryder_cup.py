@@ -31,6 +31,7 @@ class ESPNData(object):
                
             
             self.all_data = get(url, headers=headers).json()
+            #print (self.all_data)
          
         
             
@@ -62,99 +63,49 @@ class ESPNData(object):
         # print ('cant tell if started, return False: ', espn_num, player)
         # return False
 
-
     def field(self):
-
         field = {}
-        for c in self.all_data.get('competitions'):
-            #print (c)
-            if c.get('type').get('id') == '1':
-                field['overall'] = {}
-                for team in c.get('competitors'):
-                    if team.get('homeAway') == 'home':
-                        field['overall'].update({'USA': {'score_link': team.get('score').get('$ref')}})
-                    elif team.get('homeAway') == 'away':
-                        field['overall'].update({'EURO': {'score_link': team.get('score').get('$ref')}})
-            elif c.get('type').get('id') != '3':
-                match = c.get('id')
-                field[match] = {'type': c.get('type').get('text')}
-                for team in c.get('competitors'):
-                    if team.get('homeAway') == 'away':
-                        team_name = 'EURO'
-                        golfers_link = team.get('roster').get('$ref')
-                        score_link = team.get('score').get('$ref')
-                    elif team.get('homeAway') == 'home':
-                        team_name = 'USA'
-                        golfers_link = team.get('roster').get('$ref')
-                        score_link = team.get('score').get('$ref')
+        for c in self.all_data.get('events')[0].get('competitions'):
+            
+            if len(c) == 1:
+                field['overall'] = {}                
+                for competitor in c[0].get('competitors'):
+                    field.get('overall').update({competitor.get('team').get('abbreviation'): {'score': competitor.get('score'),
+                                                                                            'flag': competitor.get('team').get('logos')[0].get('href')}})
+                    
+            else:
+                for m in c:
+                    #field[m.get('description')] = {}
+                    #print (m)
+                    session = m.get('description')
+                    match_id = m.get('id')
+                    if field.get(session):
+                        field.get(session).update({match_id: {'status': m.get('status').get('type').get('id')}})    
+                    else:
+                        field[session] = {match_id: {'status': m.get('status').get('type').get('id')}}    
 
-                    field[match].update({team_name: { 
-                                            'score_link': score_link, 
-                                            'golfers_link': golfers_link}})
-            elif c.get('type').get('id') == '3':
-                match = c.get('id')
-                field[match] = {'type': c.get('type').get('text')}
-
-                for team in c.get('competitors'):
-                    if team.get('homeAway') == 'away':
-                        team_name = 'EURO'
-                        golfers_link = team.get('athlete').get('$ref')
-                        score_link = team.get('score').get('$ref')
-                    elif team.get('homeAway') == 'home':
-                        team_name = 'USA'
-                        golfers_link = team.get('athlete').get('$ref')
-                        score_link = team.get('score').get('$ref')
-
-                    field[match].update({team_name: { 
-                                         'score_link': score_link,
-                                         'golfers_link': golfers_link}})
-
+                    for competitors in m.get('competitors'):
+                        score = competitors.get('score')
+                        for golfer in competitors.get('roster'):
+                            golfer_name = golfer.get('athlete').get('displayName')
+                            espn_num = golfer.get('athlete').get('id')
+                            field.get(session).get(match_id).update({espn_num: {'golfer': golfer_name, 
+                                            'score': score}})
+                            
+                            #print (field)
         return field
+                        
+                    
+                                    
+                        
 
-    def score_dict(self):
-        headers = {'User-Agent': 'Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.149 Mobile Safari/537.36'}
-        score_dict = {}
-        for match, info in self.field().items():
-            score_dict[match] = {}
-            if match != 'overall':
-                if info.get('type') != 'singles':
-                    for t in ['USA', 'EURO']:
-                        url =  info.get(t).get('golfers_link')
-                        golfers = get(url, headers=headers).json()
-                        for entry in golfers.get('entries'):
-                            golfer_obj = Golfer.objects.get(espn_number=entry.get('playerId'))
-                            score_url = info.get(t).get('score_link')
-                            score_data = get(score_url, headers=headers).json()
-                            #print (t, info.get('type'), golfer_obj, score_data.get('winner'), score_data.get('value'), score_data.get('holesRemaining'), score_data.get('displayValue'), score_data.get('draw'))
-                            score_dict[match].update({t: {'type': info.get('type'),
-                                                        'golfer_pk': golfer_obj.pk, 
-                                                        'winner': score_data.get('winner'),
-                                                        'value': score_data.get('value'),
-                                                        'holes_remaining': score_data.get('holesRemaining'),
-                                                        'display_value': score_data.get('displayValue'),
-                                                        'draw': score_data.get('draw')
-                                                        }})
-                elif info.get('type') == 'singles':
-                    for t in ['USA', 'EURO']:
-                        url =  info.get(t).get('golfers_link')
-                        golfer = get(url, headers=headers).json()
-                        #print (golfer)
-                        golfer_obj = Golfer.objects.get(espn_number=golfer.get('id'))
-                        score_url = info.get(t).get('score_link')
-                        score_data = get(score_url, headers=headers).json()
-                        #print (t, info.get('type'), golfer_obj, score_data.get('winner'), score_data.get('value'), score_data.get('holesRemaining'), score_data.get('displayValue'), score_data.get('draw'))
-                        score_dict[match].update({t: {'type': info.get('type'),
-                                    'golfer_pk': golfer_obj.pk, 
-                                    'winner': score_data.get('winner'),
-                                    'value': score_data.get('value'),
-                                    'holes_remaining': score_data.get('holesRemaining'),
-                                    'display_value': score_data.get('displayValue'),
-                                    'draw': score_data.get('draw')
-                                    }})
+                        #    for k,v in golfer.items():
+                        #        print (k,v)
+
+
 
             
-        return score_dict
-
+            #if c.get('type').get('id') == '1':
 
 
 
