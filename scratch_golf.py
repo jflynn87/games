@@ -45,6 +45,14 @@ s = Season.objects.get(current=True)
 t = Tournament.objects.get(current=True)
 espn = espn_ryder_cup.ESPNData()
 
+f = espn.field()
+match = f.get('Friday Morning Foursomes').get('10659')
+
+#print (match)
+winning_holes = [v.get('score').get('value') for k,v in match.items() if k !='status' and v.get('score').get('winner') == True]
+print (winning_holes)
+exit()
+
 #for k, v in espn.field().items():
 #    print (k, v)
 score = ryder_cup_scores.Score(espn.field()).update_scores()

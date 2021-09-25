@@ -9,7 +9,7 @@ $(document).ready(function() {
           console.log(picks)
 
           picks_l = Object.keys(picks).length
-          console.log([picks_l])
+
           for (let i=0; i < picks_l; i++) {
               
               $('#score_tbl_body').append('<tr id=' + Object.keys(picks)[i] + '-row><td>' + Object.keys(picks)[i] + '</td></tr>' )
@@ -31,9 +31,9 @@ $(document).ready(function() {
 function sort_table(table, cell_i, order) {
     
     const tRows = Array.from(table[0].rows)
-    console.log(tRows.length)
+    //console.log(tRows.length)
     tRows.sort( ( x, y) => {
-        console.log(x.cells[cell_i].innerHTML, x.cells[cell_i].innerHTML.length)
+       // console.log(x.cells[cell_i].innerHTML, x.cells[cell_i].innerHTML.length)
         if (x.cells[cell_i].innerHTML != '' && x.cells[cell_i].innerHTML != 'n/a') {
         var xValue = x.cells[cell_i].innerHTML;}
         else {var xValue = '999'}

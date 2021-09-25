@@ -47,25 +47,39 @@ class Score(object):
                 else:
                     data = {k:v for k,v in match.items() if v.get(pick.playerName.golfer.espn_number)}
                     status = [v.get('status') for k,v in data.items()]
-                    #print (session, pick, status)
+                    print (pick, session, status, score)
                     if len(status) == 0:
                         score += 5
-                    elif status[0] in ['1', '2']:
+                        continue
+                    if status[0] in ['1', '2']:
                         continue
                     else:
+                        #print (match)
                         match_score = [v.get(pick.playerName.golfer.espn_number).get('score') for k, v in match.items() if v.get(pick.playerName.golfer.espn_number)]
+                        #for k, v in data.items():
+                        m_data = [v for k,v in data.items()][0]
+                        print (m_data)
+                        winning_holes = [v.get('score').get('value') for k,v in m_data.items() if k != 'status' and v.get('score').get('winner')]
+                        print ('winning holes', winning_holes)
+
+                        #winning_holes = [v.get('score').get('value') for k,v in match.items() if k !='status' and v.get('score').get('winner') == True]
                         
-                        if match_score[0].get('draw'):
+                        #print ('winning holes', winning_holes)
+                        if len(match_score) == 0:
+                            score += 5    
+                        elif match_score[0].get('draw'):
                             score -= 5
                         elif match_score[0].get('winner'):
                             score -= 10
-                            score -= int(match_score[0].get('value'))
+                            #score -= int(match_score[0].get('value'))
+                            score -= int(winning_holes[0])
                         else:
                             score += 10
-                            score += int(match_score[0].get('value'))
+                            print ('loss penalty: ', int(match_score[0].get('value')))
+                            score += int(winning_holes[0])
             
-            print (pick, score)    
-
+                print (pick, score)    
+            print ('pre  save ', pick, score)
             sd = ScoreDetails.objects.filter(pick__playerName__tournament=self.tournament, pick__playerName=pick.playerName).update(score=score)
             
     def total_scores(self):
