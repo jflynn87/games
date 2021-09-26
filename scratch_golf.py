@@ -40,6 +40,7 @@ import csv
 import random
 from operator import itemgetter
 
+
 start  = datetime.now()
 s = Season.objects.get(current=True)
 t = Tournament.objects.get(current=True)
@@ -48,8 +49,54 @@ t = Tournament.objects.get(current=True)
 #exit()
 
 espn = espn_ryder_cup.ESPNData()
-f = espn.field()
-print (f.get('Sunday Singles'))
+score_dict = espn.field()
+d = {}
+for f in Field.objects.filter(tournament=t, playerName="Jordan Spieth"):
+    d[f.golfer.espn_number] = {'golfer_name': f.playerName,
+                        }
+
+    for session, matches in espn.field().items():
+        if session != 'overall':
+            #print (session)
+            session_matches = {k:v for k,v in matches.items()}
+            playing = {k:v for k,v in session_matches.items() for x,y in v.items() if x == f.golfer.espn_number}
+
+            
+            if len(playing) == 0:
+                d.get(f.golfer.espn_number).update({session: {"DNP": True}})
+            else:
+                match_num = list(playing.keys())[0]
+                d.get(f.golfer.espn_number).update({session: {'win': playing.get(match_num).get(f.golfer.espn_number).get('score').get('winner'),
+                                                      'draw': playing.get(match_num).get(f.golfer.espn_number).get('score').get('draw'),
+                                                      'value': playing.get(match_num).get(f.golfer.espn_number).get('score').get('value'),
+                                                      'DNP': False  }})
+print (d)   
+exit()
+
+
+
+#print (espn.get_all_data().get('events')[0].keys())
+overall = [v for k, v in score_dict.items() if k =='overall']
+winning_team = [k for k, v in overall[0].items() if k not in ['status', 'complete'] and v.get('score').get('value') > 10]
+print ('winning team: ', winning_team[0])
+winning_score = [v.get('score').get('value') for k, v in overall[0].items() if k not in ['status', 'complete'] and v.get('score').get('value') > 10]
+print ('winning team: ', winning_team[0], winning_score[0])
+winning_score = 16.5
+cp = CountryPicks.objects.filter(tournament=t).order_by('ryder_cup_score').values_list('ryder_cup_score', flat=True)
+print (cp)
+
+if CountryPicks.objects.filter(tournament=t, ryder_cup_score=winning_score).exists():
+    bonus_scores = [winning_score] 
+else:
+    diff = 28
+    for score in cp:
+        if abs(score-winning_score) < diff:
+            diff = abs(score-winning_score)
+    print (diff)
+    bonus_scores = [score for score in cp if abs(winning_score-score) == diff]
+print (bonus_scores)
+
+
 exit()
 #print (type(espn.get_all_data()), len(espn.get_all_data()))
 for event in espn.get_all_data().get('events')[0].get('competitions'):

@@ -68,7 +68,9 @@ class ESPNData(object):
         for c in self.all_data.get('events')[0].get('competitions'):
             
             if len(c) == 1:
-                field['overall'] = {}                
+                
+                field['overall'] = {'status': self.all_data.get('events')[0].get('status').get('type').get('description'),
+                                    'complete': self.all_data.get('events')[0].get('status').get('type').get('completed')}                
                 for competitor in c[0].get('competitors'):
                     field.get('overall').update({competitor.get('team').get('abbreviation'): {'score': competitor.get('score'),
                                                                                             'flag': competitor.get('team').get('logos')[0].get('href')}})
@@ -78,11 +80,10 @@ class ESPNData(object):
                     #field[m.get('description')] = {}
                     #print (m)
                     session = m.get('description')
-                    print (session)
+                    #print (session)
                     match_id = m.get('id')
-                    print (match_id)
+                    #print (match_id)
                     if field.get(session):
-                    #    if field.get(session).get(match_id):
                         field.get(session).update({match_id: {'status': m.get('status').get('type').get('id')}})    
                     else:
                         field[session] = {match_id: {'status': m.get('status').get('type').get('id')}}    
@@ -96,14 +97,18 @@ class ESPNData(object):
                                 field.get(session).get(match_id).update({espn_num: {'golfer': golfer_name, 
                                                 'score': score}})
                         else:
-                            print (competitors)
+                            #print (competitors)
                             golfer_name = competitors.get('athlete').get('displayName')
                             espn_num = competitors.get('athlete').get('id')
                             field.get(session).get(match_id).update({espn_num: {'golfer': golfer_name, 
                                                 'score': score}})
-                            print ('------------------------------')
-                            print (field.get(session).get(match_id))
+                            #print ('------------------------------')
+                            #print (field.get(session).get(match_id))
                             #print (field)
+        sd = ScoreDict.objects.get(tournament=self.t)
+        sd.data = self.all_data
+        sd.save()
+
         return field
                         
                     

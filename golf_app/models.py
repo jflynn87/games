@@ -943,7 +943,8 @@ class ScoreDetails(models.Model):
 
 class BonusDetails(models.Model):
     BONUS_CHOICES = (('1', 'winning golfer'), ('2', 'no cuts'), ('3', 'weekly winner'), 
-                     ('4', 'playoff'), ('5', 'best in group'), ('6', 'trifecta'), ('7', 'manual'))
+                     ('4', 'playoff'), ('5', 'best in group'), ('6', 'trifecta'), ('7', 'manual'),
+                     ('9', 'Ryder Cup winner'), ('10', 'Ryder Cup Score'))
 
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     tournament = models.ForeignKey(Tournament, on_delete=models.CASCADE, null=True)

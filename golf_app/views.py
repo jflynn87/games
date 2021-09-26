@@ -1722,8 +1722,8 @@ class RyderCupScoresAPI(APIView):
             data = {}
             data['score_dict'] = score_dict
             data['field'] = {}
-            for f in Field.objects.filter(tournament=t):
-                data['field'].update({f.golfer.espn_number: f.playerName})
+            #for f in Field.objects.filter(tournament=t):
+            #    data['field'].update({f.golfer.espn_number: f.playerName})
 
             for u in s.get_users():
                 
@@ -1733,6 +1733,11 @@ class RyderCupScoresAPI(APIView):
                 picks = Picks.objects.filter(playerName__tournament=t, user=user).order_by('playerName__group__number')
                 data[user.username] = {'c_pick': cp.country,
                                        'c_points':  cp.ryder_cup_score}
+                for bd in BonusDetails.objects.filter(user=user, tournament=t):
+                    if data.get(user.username).get('bonus'):
+                        data.get(user.username).get('bonus').update({bd.get_bonus_type_display(): bd.bonus_points})
+                    else:
+                        data[user.username]['bonus'] = {bd.get_bonus_type_display(): bd.bonus_points}
                 for pick in picks:
                     sd = ScoreDetails.objects.get(user=user, pick=pick)
                     score = sd.score

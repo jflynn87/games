@@ -12,7 +12,13 @@ $(document).ready(function() {
 
           for (let i=0; i < picks_l; i++) {
               if (Object.keys(picks)[i] != 'score_dict' && Object.keys(picks)[i] != 'field') {
-              $('#score_tbl_body').append('<tr id=' + Object.keys(picks)[i] + '-row><td>' + Object.keys(picks)[i] + '</td></tr>' )
+              $('#score_tbl_body').append('<tr id=' + Object.keys(picks)[i] + '-row><td id=' + Object.keys(picks)[i] + '-name style=font-weight:bold>' + Object.keys(picks)[i] + '</td></tr>' )
+              if (Object.values(picks)[i].bonus) {
+              var bonuses = Object.values(picks)[i].bonus}
+              else (bonuses = '')
+              for (let j=0; j <  Object.keys(bonuses).length; j++) {
+                  $('#' + Object.keys(picks)[i] + '-name').append('<p style=font-size:small;>' + Object.keys(bonuses)[j] + ': ' + Object.values(bonuses)[j] + '</p>' )
+              }
               $('#' + Object.keys(picks)[i] + '-row').append('<td id=score' +  Object.keys(picks)[i] + ' style=font-weight:bold>' + Object.values(picks)[i].total_score  + '</td>')
               $('#' + Object.keys(picks)[i] + '-row').append('<td>' + Object.values(picks)[i].c_pick + ' / ' + Object.values(picks)[i].c_points + '</td>')
               $('#' + Object.keys(picks)[i] + '-row').append('<td>' +  '<img src=' + Object.values(picks)[i].pic_1 + ' style="max-height:50px;"></img><img src=' + Object.values(picks)[i].flag_1 + ' style="max-height:25px;"></img>' +Object.values(picks)[i].group_1 + '<p style=font-weight:bold;>' + Object.values(picks)[i].score_1 + ' </p></td>')
@@ -31,7 +37,7 @@ $(document).ready(function() {
                                         '<span class=middle_ryder_cup_score></span>'  +
                                         '<span class=right_ryder_cup_score>' + eur.score.displayValue + '</span><img src=' + eur.flag + '></img>')
         $('#loading').hide()
-         create_detail(picks.score_dict, picks.field)
+         //create_detail(picks.score_dict, picks.field)
     })
 })
 
