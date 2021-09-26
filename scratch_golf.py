@@ -43,13 +43,14 @@ from operator import itemgetter
 start  = datetime.now()
 s = Season.objects.get(current=True)
 t = Tournament.objects.get(current=True)
-field = data= golf_serializers.NewFieldSerializer(Field.objects.filter(tournament=t), context={}, many=True).data
-print (field)
-exit()
+#field = data= golf_serializers.NewFieldSerializer(Field.objects.filter(tournament=t), context={}, many=True).data
+#print (field)
+#exit()
 
 espn = espn_ryder_cup.ESPNData()
 
 f = espn.field()
+print (f)
 print (f.get('overall'))
 exit()
 #print (match)

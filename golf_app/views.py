@@ -1710,7 +1710,7 @@ class RyderCupScoresView(LoginRequiredMixin, TemplateView):
 
 class RyderCupScoresAPI(APIView):
     def get(self,request):
-
+        
         s = Season.objects.get(current=True)
         t = Tournament.objects.get(season=s, pga_tournament_num='468')
         score_dict = espn_ryder_cup.ESPNData().field()
@@ -1721,7 +1721,9 @@ class RyderCupScoresAPI(APIView):
         try:
             data = {}
             data['score_dict'] = score_dict
-            #field = data= golf_serializers.NewFieldSerializer(Field.objects.filter(tournament=t), context={}, many=True).data
+            data['field'] = {}
+            for f in Field.objects.filter(tournament=t):
+                data['field'].update({f.golfer.espn_number: f.playerName})
 
             for u in s.get_users():
                 

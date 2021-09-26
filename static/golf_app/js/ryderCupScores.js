@@ -11,7 +11,7 @@ $(document).ready(function() {
           picks_l = Object.keys(picks).length
 
           for (let i=0; i < picks_l; i++) {
-              if (Object.keys(picks)[i] != 'score_dict') {
+              if (Object.keys(picks)[i] != 'score_dict' && Object.keys(picks)[i] != 'field') {
               $('#score_tbl_body').append('<tr id=' + Object.keys(picks)[i] + '-row><td>' + Object.keys(picks)[i] + '</td></tr>' )
               $('#' + Object.keys(picks)[i] + '-row').append('<td id=score' +  Object.keys(picks)[i] + ' style=font-weight:bold>' + Object.values(picks)[i].total_score  + '</td>')
               $('#' + Object.keys(picks)[i] + '-row').append('<td>' + Object.values(picks)[i].c_pick + ' / ' + Object.values(picks)[i].c_points + '</td>')
@@ -31,7 +31,7 @@ $(document).ready(function() {
                                         '<span class=middle_ryder_cup_score></span>'  +
                                         '<span class=right_ryder_cup_score>' + eur.score.displayValue + '</span><img src=' + eur.flag + '></img>')
         $('#loading').hide()
-         // create_detail(picks.score_dict)
+         //create_detail(picks.score_dict, picks.field)
     })
 })
 
@@ -65,7 +65,7 @@ function sort_table(table, cell_i, order) {
 
 }
 
-function create_detail(score_dict) {
+function create_detail(score_dict, field) {
     $('#detail_table').append('<h3>Score Details</h3>')
     $('#detail_table').append('<br>')
     frag = document.createDocumentFragment(); 
@@ -92,8 +92,24 @@ function create_detail(score_dict) {
     thead.appendChild(th_f)
     table.appendChild(thead)
     
-    l = Object.keys(score_dict).length
-    console.log(l)
+    
+    l = Object.keys(field).length
+    var fri_4some = Object.values(score_dict["Friday Morning Foursomes"])
+    var fri_4ball = Object.values(score_dict["Friday Afternoon Four-Balls"])
+    var sat_4some = Object.values(score_dict["saturday Morning Foursomes"])
+    var sat_4some = Object.values(score_dict["Saturday Afternoon Four-Balls"])
+    console.log(fri_4some)
+    for (let i=0; i < l; i++) {
+        row = document.createElement('tr')
+        td_A = document.createElement('td')
+        td_A.innerHTML = Object.values(field)[i]
+        row.append(td_A)
+        td_B = document.createElement('td')
+        if (Object.keys(field)[i])
+
+        table.appendChild(row)
+
+    }
     
     
     frag.appendChild(table)

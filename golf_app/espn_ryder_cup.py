@@ -86,12 +86,18 @@ class ESPNData(object):
 
                     for competitors in m.get('competitors'):
                         score = competitors.get('score')
-                        for golfer in competitors.get('roster'):
+                        if session != 'Sunday Singles':
+                            for golfer in competitors.get('roster'):
+                                golfer_name = golfer.get('athlete').get('displayName')
+                                espn_num = golfer.get('athlete').get('id')
+                                field.get(session).get(match_id).update({espn_num: {'golfer': golfer_name, 
+                                                'score': score}})
+                        else:
                             golfer_name = golfer.get('athlete').get('displayName')
                             espn_num = golfer.get('athlete').get('id')
                             field.get(session).get(match_id).update({espn_num: {'golfer': golfer_name, 
-                                            'score': score}})
-                            
+                                                'score': score}})
+
                             #print (field)
         return field
                         
