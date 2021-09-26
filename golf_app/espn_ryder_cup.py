@@ -78,8 +78,11 @@ class ESPNData(object):
                     #field[m.get('description')] = {}
                     #print (m)
                     session = m.get('description')
+                    print (session)
                     match_id = m.get('id')
+                    print (match_id)
                     if field.get(session):
+                    #    if field.get(session).get(match_id):
                         field.get(session).update({match_id: {'status': m.get('status').get('type').get('id')}})    
                     else:
                         field[session] = {match_id: {'status': m.get('status').get('type').get('id')}}    
@@ -93,11 +96,13 @@ class ESPNData(object):
                                 field.get(session).get(match_id).update({espn_num: {'golfer': golfer_name, 
                                                 'score': score}})
                         else:
-                            golfer_name = golfer.get('athlete').get('displayName')
-                            espn_num = golfer.get('athlete').get('id')
+                            print (competitors)
+                            golfer_name = competitors.get('athlete').get('displayName')
+                            espn_num = competitors.get('athlete').get('id')
                             field.get(session).get(match_id).update({espn_num: {'golfer': golfer_name, 
                                                 'score': score}})
-
+                            print ('------------------------------')
+                            print (field.get(session).get(match_id))
                             #print (field)
         return field
                         
@@ -115,4 +120,5 @@ class ESPNData(object):
 
 
 
-
+    def get_all_data(self):
+            return self.all_data

@@ -48,10 +48,23 @@ t = Tournament.objects.get(current=True)
 #exit()
 
 espn = espn_ryder_cup.ESPNData()
-
+f = espn.field()
+print (f.get('Sunday Singles'))
+exit()
+#print (type(espn.get_all_data()), len(espn.get_all_data()))
+for event in espn.get_all_data().get('events')[0].get('competitions'):
+    print (len(event), type(event))
+    for e in event:
+        if e.get('description') == "Sunday Singles":
+            print ('=============================')
+            print (e)
+    
+    
+exit()
 f = espn.field()
 print (f)
 print (f.get('overall'))
+print (f.get('Sunday Singles'))
 exit()
 #print (match)
 winning_holes = [v.get('score').get('value') for k,v in match.items() if k !='status' and v.get('score').get('winner') == True]

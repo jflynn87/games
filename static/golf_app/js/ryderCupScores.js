@@ -31,7 +31,7 @@ $(document).ready(function() {
                                         '<span class=middle_ryder_cup_score></span>'  +
                                         '<span class=right_ryder_cup_score>' + eur.score.displayValue + '</span><img src=' + eur.flag + '></img>')
         $('#loading').hide()
-         //create_detail(picks.score_dict, picks.field)
+         create_detail(picks.score_dict, picks.field)
     })
 })
 
@@ -98,6 +98,7 @@ function create_detail(score_dict, field) {
     var fri_4ball = Object.values(score_dict["Friday Afternoon Four-Balls"])
     var sat_4some = Object.values(score_dict["saturday Morning Foursomes"])
     var sat_4some = Object.values(score_dict["Saturday Afternoon Four-Balls"])
+    var singles = Object.values(score_dict["Sunday Singles"])
     console.log(fri_4some)
     for (let i=0; i < l; i++) {
         row = document.createElement('tr')
