@@ -1713,7 +1713,12 @@ class RyderCupScoresAPI(APIView):
         
         s = Season.objects.get(current=True)
         t = Tournament.objects.get(season=s, pga_tournament_num='468')
-        score_dict = espn_ryder_cup.ESPNData().field()
+        if t.complete:
+            sd = ScoreDict.objects.get(tournament=t)
+            score_dict = espn_ryder_cup.ESPNData(data=sd.data).field()
+        else:
+            score_dict = espn_ryder_cup.ESPNData().field()
+
         scores = ryder_cup_scores.Score(score_dict).update_scores()
         totals = ryder_cup_scores.Score(score_dict).total_scores()
         print ('view totals: ', totals)

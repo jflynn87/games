@@ -61,7 +61,11 @@
   {%if t == 'totals'%}
   <td>Totals:</td>
   {%else%}
+  {%if t.pga_tournament_num == '468'%}
+  <td> <a href="{%url 'golf_app:ryder_cup_scores'%}">{{t.name}}</td>
+  {%else%}
   <td> <a href="{%url 'golf_app:new_scores' pk=t.pk %}">{{t.name}}</td>
+  {%endif%}
   {%endif%}
   {%for s in score%}
     {%if t != "totals"%}

@@ -466,17 +466,18 @@ def create_field(field, tournament):
     individual_stats = get_individual_stats()
 
     for f in Field.objects.filter(tournament=tournament):
+        
         if tournament.pga_tournament_num not in ['470', '018']:
             f.handi = f.handicap()
         else:
             f.handi = 0
-
+        
         f.prior_year = f.prior_year_finish()
         recent = OrderedDict(sorted(f.recent_results().items(), reverse=True))
         f.recent = recent
         f.season_stats = f.golfer.summary_stats(tournament.season) 
 
-       # print (fed_ex)#
+        #print (fed_ex)
         if fed_ex.get(f.playerName):
            f.season_stats.update({'fed_ex_points': fed_ex.get(f.playerName).get('points'),
                                   'fed_ex_rank': fed_ex.get(f.playerName).get('rank')})

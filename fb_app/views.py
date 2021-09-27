@@ -601,7 +601,7 @@ class UpdateProj(APIView):
     
     def get(self, num):
         try:
-            #print (self.request.GET.getlist('winners[]'))
+            print (self.request.GET.getlist('winners[]'))
 
             w = Week.objects.get(week=self.request.GET.get('week'), season_model__current=True)
             l = League.objects.get(league=self.request.GET.get('league'))

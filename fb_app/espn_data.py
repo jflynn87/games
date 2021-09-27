@@ -31,8 +31,10 @@ class ESPNData(object):
         for l in self.data.get('events'):
             #print (l.get('name'))
             for competition in l.get('competitions'):
+                winner = False
                 for c in competition.get('competitors'):
                     #print (c.get('homeAway'), c.get('team').get('name'))
+                    
                     if c.get('team').get('name'):
                         t_name = c.get('team').get('name')
 
@@ -49,6 +51,9 @@ class ESPNData(object):
                         else:
                             home_abbr = c.get('team').get('abbreviation')
                         home_score = c.get('score')
+                        if c.get('winner'): 
+                            winner = home_abbr
+
                     elif c.get('homeAway') == "away":
                         away = Teams.objects.get(long_name=t_name)
                         if c.get('team').get('abbreviation') == "WSH":
@@ -56,15 +61,22 @@ class ESPNData(object):
                         else:
                             away_abbr = c.get('team').get('abbreviation')
                         away_score = c.get('score')
+        
+                        if c.get('winner'): 
+                            winner = away_abbr
+
                     else:
-                        raise Exception('uknown value in home/away: ', c.get('homeAway'))                        
+                        raise Exception('uknown value in home/away: ', c.get('homeAway'))
+
+                        
                 d[competition.get('id')] = {'home': home_abbr, 
                                   'away': away_abbr,
                                   'game_time': competition.get('date'),
                                   'home_score': home_score, 
                                   'away_score': away_score,
                                   #'qtr': competition.get('status').get('type').get('description')}
-                                  'qtr': competition.get('status').get('type').get('shortDetail')}
+                                  'qtr': competition.get('status').get('type').get('shortDetail'),
+                                  'winner': winner}
         return d
 
 

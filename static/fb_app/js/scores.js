@@ -137,11 +137,12 @@ $('#score-tbl').append('<thead style="background-color:lightblue">' + '<th> Home
 
 
 $.each(games, function(id,game) {
+    console.log(game)
     $('#score-tbl').append('<tr id=' + id + '>' + '<td id=home>' + game['home'] + '</td>' + '<td id=home_score>' + game['home_score'] + '</td>' +
                            '<td id=away>' + game['away'] + '</td>' + '<td id=away_score>' + game['away_score'] + '</td>' +
                                     '<td id=qtr>' + game['qtr'] + '</td>')
 
-                                        if (game['qtr'].substring(0,5) == 'FINAL') {
+                                        if (game['qtr'].substring(0,5) == 'Final') {
                                             update_winner(id, game)
                                             //if (parseInt(game['home_score']) > parseInt(game['away_score'])) {$('#' + id).append('<td id=winner> <input name=winners type=hidden value=' + game['home'] + '> </input> ' + game['home'] + '</td>')}
                                             //else if (parseInt(game['home_score']) < parseInt(game['away_score'])) {$('#' + id).append('<td id=winner> <input name=winners type=hidden value=' + game['away'] + '> </input> ' + game['away'] + '</td>')}
@@ -176,7 +177,7 @@ $.each(games, function(id,game) {
     $('#' + id + ' #away_score').text(game['away_score'])
     $('#' + id + ' #qtr').text(game['qtr'])
 
-     if (game['qtr'].substring(0,5) == 'FINAL') {
+     if (game['qtr'].substring(0,5) == 'Final') {
         // $('#' + id + ' #winner').empty()
         // if (parseInt(game['home_score']) > parseInt(game['away_score'])) {$('#' + id + ' #winner').html('<input name=winners type=hidden value=' + game['home'] + '> </input> ' + game['home'])}
         // else if (parseInt(game['home_score']) < parseInt(game['away_score'])) {$('#' + id + ' #winner').html('<input name=winners type=hidden value=' + game['away'] + '> </input> ' + game['away'])}
@@ -196,7 +197,7 @@ function update_winner(id, game) {
     //$('#' + id + ' #winner').detach()
     winner = $('#' + id + ' #winner')
     winner.remove()
-    if (game['qtr'].substring(0,5) == 'FINAL') {
+    if (game['qtr'].substring(0,5) == 'Final') {
         if (parseInt(game['home_score']) > parseInt(game['away_score'])) {$('#' + id).append('<td id=winner> <input name=winners type=hidden value=' + game['home'] + '> </input> ' + game['home'] + '</td>')}
         else if (parseInt(game['home_score']) < parseInt(game['away_score'])) {$('#' + id).append('<td id=winner> <input name=winners type=hidden value=' + game['away'] + '> </input> ' + game['away'] + '</td>')}
         else if (parseInt(game['home_score']) == parseInt(game['away_score'])) {$('#' + id).append('<td id=winner> <input name=tie type=hidden value=' + game['home'] + '> </input>' + '<input name=tie type=hidden value=' + game['away'] + '> </input>' + 'Tie, no winner' + '</td>')}
@@ -245,7 +246,7 @@ $(document).on('click', '#sub-btn', function() {
     var proj_winners = new Array()
     //start with 1 to skip header
     for (var i=1, row; row = t.rows[i]; i++) {
-        if ($('#' + row.id +  ' #qtr').text().substring(0,5) ==  "FINAL") {
+        if ($('#' + row.id +  ' #qtr').text().substring(0,5) ==  "Final") {
             proj_winners.push($('#' + row.id + ' #winner').text().replace(filler, ''))
             //proj_winners.push($('#' + row.id + ' #winner').text())
         }

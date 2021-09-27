@@ -163,6 +163,9 @@ class Score(object):
                     ts_dict[ts.user.username].update({bd.get_bonus_type_display(): bd.bonus_points, 'total_score': ts.score})
                 #ts_dict[ts.user.username].update({'handicap': ts.total_handicap()})
 
+            self.tournament.complete = True
+            self.tournament.save()
+
     
         sorted_ts_dict = sorted(ts_dict.items(), key=lambda v: v[1].get('total_score'))
         print ('total score dict: ', ts_dict)

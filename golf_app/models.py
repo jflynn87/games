@@ -510,7 +510,7 @@ class Golfer(models.Model):
             }
         played = 0
         
-        fields = Field.objects.filter((Q(golfer=self) | Q(partner_golfer=self)), tournament__season=season).exclude(tournament__current=True).values_list('tournament__pk',flat=True).order_by('tournament__pk')
+        fields = Field.objects.filter((Q(golfer=self) | Q(partner_golfer=self)), tournament__season=season).exclude(tournament__current=True).exclude(tournament__pga_tournament_num='468').values_list('tournament__pk',flat=True).order_by('tournament__pk')
         t_list = Tournament.objects.filter(pk__in=fields)
         
         #for sd in ScoreDict.objects.filter(tournament__season=season).exclude(tournament__current=True):
@@ -562,9 +562,9 @@ class Golfer(models.Model):
         #data = {}
  
         if self.results and not rerun:
-            tournaments = Tournament.objects.filter(season=season).exclude(pk__in=list(self.results.keys())).exclude(current=True)
+            tournaments = Tournament.objects.filter(season=season).exclude(pk__in=list(self.results.keys())).exclude(current=True).exclude(pga_tournament_num='468') #ryder cup
         else:
-            tournaments = Tournament.objects.filter(season=season).exclude(current=True)
+            tournaments = Tournament.objects.filter(season=season).exclude(current=True).exclude(pga_tournament_num='468')
             self.results = {}
         
         #print (tournaments)
@@ -746,7 +746,7 @@ class Field(models.Model):
         start = datetime.now()
         try:
             #for t in Tournament.objects.all().order_by('-pk')[1:5]):
-            for t in Tournament.objects.all().order_by('pk').reverse()[1:5]:
+            for t in Tournament.objects.all().order_by('pk').exclude(pga_tournament_num='468').reverse()[1:5]:  # excld ryder cup
                 if Field.objects.filter(tournament=t, golfer__espn_number=self.golfer.espn_number).exclude(withdrawn=True).exclude(golfer__espn_number__isnull=True).exists():
                     sd = ScoreDict.objects.get(tournament=t)
                     f = Field.objects.get(tournament=t, golfer__espn_number=self.golfer.espn_number)
@@ -772,6 +772,7 @@ class Field(models.Model):
 
         except Exception as e:
             print ('recent results exception', e)
+            data.update({t.pk:{'name': t.name, 'rank': 'DNP'}})
         #print ('recent results: ', datetime.now() - start)
         return data
 
