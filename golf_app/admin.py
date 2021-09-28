@@ -78,10 +78,10 @@ class FedExPicksAdmin(admin.ModelAdmin):
     list_display = ['get_season', 'get_username', 'get_name']
 
     def get_season(self, obj):
-        return obj.season.season
+        return obj.pick.season.season
 
     def get_name(self, obj):
-        return obj.golfer.golfer_name
+        return obj.pick.golfer.golfer_name
 
     def get_username(self, obj):
         return obj.user.username

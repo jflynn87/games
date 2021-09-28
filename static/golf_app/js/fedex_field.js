@@ -14,9 +14,42 @@ $(document).ready(function () {
          console.log(field)
          
          const frag = new DocumentFragment()
+         top_30 = document.createElement('div')
+         top_30.classList.add('form-check')
+            
+            top_30_input = document.createElement('input')
+            top_30_input.type = 'checkbox'   
+            top_30_input.id = 'top_30'
+            top_30_input.classList.add('form-check-input')
+            top_30_input.addEventListener('click', function(evt) {
+                checked_items = $('input[name^=owgr]:checked').length
+                if (checked_items === 30) {
+                    $('input[name^=owgr]:checked').attr('checked', false)
+                    $('input[name^=owgr]:checked').attr('checked', '')
+                }
+                else {
+                l = 31
+                for (let i=0; i < l; i++){
+                    $('input[name=owgr-' + i).attr('checked', true)
+                                        }    
+                }
+                count_actual()
+            })
+            label = document.createElement('label')
+            label.setAttribute('for', 'top_30')
+            label.innerText = 'Select top 30 OWGR'
+            label.classList.add('form-check-label')
+            label.style.fontWeight = 'bold'
+            
+            top_30.appendChild(top_30_input)
+
+            top_30.appendChild(label)
+            
+        frag.appendChild(top_30)
+
          form = document.createElement('form')
          form.method = 'post'
-
+         
          table = document.createElement('table')
          table.id = 'fedex_table'
          table.classList.add('table')
@@ -123,17 +156,22 @@ $(document).ready(function () {
                 inputA.type = 'hidden';
                 inputA.name = "csrfmiddlewaretoken";
                 inputA.value  = $.cookie('csrftoken')
-                
+
     
                 let inputB =  document.createElement('input');
                 inputB.id = g.id
                 inputB.type = 'checkbox'   
                 inputB.classList.add('my-checkbox')
-                inputB.name= g.id
+                inputB.name= 'owgr-' + g.soy_owgr
                 inputB.value = g.id
+                if (g.picked) {
+                    console.log('picked', g.golfer.golfer_name)
+                    //inputB.setAttribute('chedked' , true)
+                    inputB.checked = true
+                }
                 //inputB.disabled = true
                 inputB.addEventListener('change', function(evt) {
-                            count_actual();
+                            count_actual(this);
                                                                 });
     
                 //if (pick_array.indexOf(field.id) != -1) {
@@ -201,18 +239,21 @@ $(document).ready(function () {
             form.appendChild(table)
             
             frag.appendChild(form)
+            
             document.getElementById('loading_msg').hidden = true
             document.getElementById('field').appendChild(frag);
             document.getElementById('field').append(curr_owgr_sort)
             document.getElementById('field').append(prior_fedex_sort)
             document.getElementById('field').append(prior_season_owgr_sort)
+            count_actual()
             })
+      
     })
 
 function create_post() {
     console.log('submit form')
     //toggle_submitting()    
-    checked = $('input:checked')
+    checked = $('input[class=my-checkbox]:checked')
     //console.log(checked)
     pick_list = []
     $.each(checked, function(i, pick){
@@ -248,10 +289,18 @@ function create_post() {
 }
 
 
-function count_actual(group, picks) {
+function count_actual(ele) {
         var selected = $('input[class=my-checkbox]:checked').length
+        
+        if (ele && selected > 30) {
+            alert('30 already picked, deselect one pick');
+            console.log(ele)
+            ele.checked = false;
+            selected = $('input[class=my-checkbox]:checked').length
+                                            
+        }
         console.log('selected', selected)
-        $('#sub_button').text(selected + ' of 30 Picks')
+        //$('#sub_button').text(selected + ' of 30 Picks')
         if (selected === 30) {
             $('#sub_button').removeAttr('disabled').attr('class', 'btn btn-primary').text('Submit Picks')
         }

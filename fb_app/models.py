@@ -14,6 +14,9 @@ import scipy.stats as ss
 from bs4 import BeautifulSoup
 from fb_app import scrape_cbs, espn_data
 from django.core import serializers
+from django.db.models.signals import post_save
+from django.dispatch import receiver
+
 
 # Create your models here.
 
@@ -38,20 +41,24 @@ class Week(models.Model):
     def __str__(self):
         return str(self.week)
 
-    # def save(self, *args, **kwargs):
-    #     if self.week != 1:
-    #         print ('model self', self)
-    #         print ('model kwargs', kwargs)
-    #         last_week = Week.objects.get(current=True)
-    #         if self.pk != None and last_week.started():
-    #             for league in League.objects.all():
-    #                 scores = WeekScore()
-    #                 calc_scores(scores, league, last_week)
+    #def save(self, *args, **kwargs):
+    #    if self.week != 1:
+    #       print ('model self', self)
+    #       print ('model kwargs', kwargs)
+    #       last_week = Week.objects.get(current=True)
+           #if self.pk != None and last_week.started():
 
-    #             if self.current==True:
-    #                 last_week.current = False
-    #                 last_week.save()
-    #     super(Week, self).save()
+    #              scores = WeekScore()
+    #              calc_scores(scores, league, last_week)
+
+    #       if self.current==True:
+    #           last_week.current = False
+    #           last_week.save()
+           
+           
+
+        
+    #    super(Week, self).save()
 
     def started(self):
         print ('week started check', self.current)
@@ -330,6 +337,18 @@ class Week(models.Model):
             return True
         else:
             return False
+@receiver(post_save, sender=Week)
+def update_analyitcs(sender, **kwargs):
+    print (kwargs.get('instance'))
+    week = kwargs.get('instance')
+    if week.current:
+        print ('current week, updating stats')
+        season = Season.objects.get(current=True)
+        for league in League.objects.all():
+            stats, created = PickPerformance.objects.get_or_create(season=season, league=league)
+            stats.calculate()
+    return
+
 
 class Teams(models.Model):
     mike_abbr = models.CharField(max_length=4, null=True)

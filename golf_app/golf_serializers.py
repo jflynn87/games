@@ -1,6 +1,6 @@
 from rest_framework import serializers
 import json
-from golf_app.models import Field, ScoreDetails, Golfer, CountryPicks, Picks, Tournament, FedExField, Season
+from golf_app.models import Field, ScoreDetails, Golfer, CountryPicks, Picks, Tournament, FedExField, Season, FedExPicks
 from golf_app import espn_api
 from datetime import datetime
 
@@ -135,6 +135,7 @@ class PicksSerializer(serializers.ModelSerializer):
 
 class FedExFieldSerializer(serializers.ModelSerializer):
     prior_owgr = serializers.SerializerMethodField('get_prior_owgr')
+    picked = serializers.SerializerMethodField('get_picked')
 
     class Meta:
         model = FedExField
@@ -145,8 +146,12 @@ class FedExFieldSerializer(serializers.ModelSerializer):
         c_s = Season.objects.get(current=True)
         season = Season.objects.get(season=str(int(c_s.season)-1))
 
-        #f = Field.objects.filter(golfer=fedexfield.golfer, tournament__season=season).first()
         f = Field.objects.filter(golfer=fedexfield.golfer, tournament__season=season).exclude(tournament__pga_tournament_num='999').order_by('-pk')[0]
-        print (f)
+
         return f.soy_WGR
     
+    def get_picked(self, obj):
+        if FedExPicks.objects.filter(pick=obj).exists():
+            return True
+        else:
+            return False

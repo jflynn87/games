@@ -4,7 +4,7 @@ from django.views.generic import View, TemplateView, ListView, DetailView, Creat
 #from extra_views import ModelFormSetView
 from golf_app.models import CountryPicks, Field, Tournament, Picks, Group, TotalScore, ScoreDetails, \
            mpScores, BonusDetails, PickMethod, PGAWebScores, ScoreDict, UserProfile, \
-           Season, AccessLog, Golfer, AuctionPick, CountryPicks, FedExField, FedExSeason
+           Season, AccessLog, Golfer, AuctionPick, CountryPicks, FedExField, FedExSeason, FedExPicks
 from golf_app.forms import  CreateManualScoresForm, FieldForm, FieldFormSet, AuctionPicksFormSet
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponseRedirect, HttpResponse, Http404
@@ -1662,11 +1662,17 @@ class FedExPicksView(LoginRequiredMixin,TemplateView):
 
      @transaction.atomic
      def post(self, request):
-        
+        FedExPicks.objects.filter(user=self.request.user, pick__season__season__current=True).delete()
         data = json.loads(self.request.body)
         print ('pick list', data.get('pick_list'))
-        msg = 'Picks Submitted'
-        response = {'status': 1, 'message': msg, 'url': '/golf_app/picks_list'} 
+        msg = 'FedEx Picks Submitted'
+        for p in data.get('pick_list'):
+            pick = FedExPicks()
+            pick.user = self.request.user
+            pick.pick = FedExField.objects.get(season__season__current=True, pk=p)
+            pick.save()
+            
+        response = {'status': 1, 'message': msg, 'url': '/golf_app/fedex_picks_list'} 
         return HttpResponse(json.dumps(response), content_type='application/json')
 
 
@@ -1684,6 +1690,22 @@ class FedExFieldAPI(APIView):
             data = json.dumps({'msg': e})    
             
         return JsonResponse(data, status=200, safe=False)
+
+
+class FedExPicksListView(LoginRequiredMixin,ListView):
+    login_url = 'login'
+    #redirect_field_name = 'golf_app/fedex_pick_list.html'
+    model = FedExPicks
+    template_name = 'golf_app/fedex_picks_list.html'
+
+    def get_context_data(self,**kwargs):
+        context = super(FedExPicksListView, self).get_context_data(**kwargs)
+
+        context.update({
+         'picks_list': FedExPicks.objects.filter(user=self.request.user, pick__season__season__current=True),
+                        })
+        return context
+
 
 class PriorYearStatsAPI(APIView):
 

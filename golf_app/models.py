@@ -1132,11 +1132,11 @@ class FedExField(models.Model):
     current_season_data = models.JSONField(null=True)
 
     def __str__(self):
-        return str(self.season.season) + ' ' + str(self.golfer.golfer_name)
+        return str(self.season.season.season) + ' ' + str(self.golfer.golfer_name)
 
 class FedExPicks(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     pick = models.ForeignKey(FedExField, on_delete=models.CASCADE)
 
     def __str__(self):
-        return str(self.user.username) + ' ' + str(self.picks.golfer.golfer_name)
+        return str(self.user.username) + ' ' + str(self.pick.golfer.golfer_name)

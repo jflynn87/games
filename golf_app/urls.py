@@ -52,6 +52,7 @@ urlpatterns= [
     path('olympic_scores/', views.OlympicScoresView.as_view(), name='olympic_scores'),
     path('fedex_picks_view/', views.FedExPicksView.as_view(), name='fedex_picks_view'),
     path('fedex_field/', views.FedExFieldAPI.as_view(), name='fedex_field'),
+    path('fedex_picks_list/', views.FedExPicksListView.as_view(), name='fedex_picks_list'),
     path('ryder_cup_scores/', views.RyderCupScoresView.as_view(), name='ryder_cup_scores'),
     path('ryder_cup_score_api/', views.RyderCupScoresAPI.as_view(), name='ryder_cup_score_api'),
 

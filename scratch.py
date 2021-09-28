@@ -34,6 +34,21 @@ from django.http import HttpRequest
 
 
 start = datetime.now()
+
+#league = League.objects.get(league="Golfers")
+#season = Season.objects.get(current=True)
+
+
+#stats, created = PickPerformance.objects.get_or_create(season=season, league=league)
+#print (stats.team_results('NYG', 'john'))
+#stats.calculate()
+for stats in PickPerformance.objects.filter(season__current=True):
+    for k,v in json.loads(stats.data).items():
+        print (k, v)
+    
+print (datetime.now() - start)
+exit()
+
 week = Week.objects.get(current=True)
 print (week.started())
 exit()
@@ -222,14 +237,6 @@ print (datetime.now() - start)
 
 exit()
 
-league = League.objects.get(league="Golfers")
-season = Season.objects.get(current=True)
-#player = Player.objects.get(name__username="john")
-
-stats, created = PickPerformance.objects.get_or_create(season=season, league=league)
-#print (stats.team_results('NYG', 'john'))
-stats.calculate()
-exit()
 #print (stats.all_team_results())
 
 data = json.loads(stats.data)
