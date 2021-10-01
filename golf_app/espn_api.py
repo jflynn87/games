@@ -22,14 +22,20 @@ class ESPNData(object):
             self.all_data = data 
         else:
             headers = {'User-Agent': 'Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.149 Mobile Safari/537.36'}
-            print (espn_t_num)
-            if espn_t_num:
-                url = 'http://sports.core.api.espn.com/v2/sports/golf/leagues/pga/events/' + espn_t_num 
-            else:
-                url =  "https://site.web.api.espn.com/apis/site/v2/sports/golf/leaderboard?league=pga"
+            #print (espn_t_num)
+            #if espn_t_num:
+            #    url = 'http://sports.core.api.espn.com/v2/sports/golf/leagues/pga/events/' + espn_t_num 
+            #else:
+            url =  "https://site.web.api.espn.com/apis/site/v2/sports/golf/leaderboard?league=pga"
                
             
             self.all_data = get(url, headers=headers).json()
+            if self.t.pga_tournament_num != '999' and self.all_data.get('name') != self.t.name and not self.t.ignore_name_mismatch:
+                match = utils.check_t_names(self.t.name, self.t)
+                if not match:
+                    print ('tournament mismatch: espn name: ', t.name, 'DB name: ', self.t.name)
+                    return {}
+
             #f = open('espn_api.json', "w")
             #f.write(json.dumps(self.all_data))
             #f.close()
@@ -96,3 +102,6 @@ class ESPNData(object):
     
     def get_all_data(self):
         return self.all_data
+
+    def score_dict(self):
+        pass

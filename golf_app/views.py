@@ -592,7 +592,8 @@ class GetScores(APIView):
         print ('get picks duration:: ', datetime.datetime.now()- picks_ret)
 
         leaders = scores.get_leader()
-        totals = Season.objects.get(season=t.season).get_total_points()
+        totals = Season.objects.get(season=int(t.season.season)).get_total_points()
+        print ("TOTALS ", totals)
         t_data = serializers.serialize("json", [t, ])
         display_dict = {}
         display_dict['display_data'] = {'picks': d,
@@ -1659,6 +1660,15 @@ class GetCountryPicks(APIView):
 class FedExPicksView(LoginRequiredMixin,TemplateView):
      login_url = 'login'
      template_name = 'golf_app/fedex_picks.html'
+     
+
+     def get_context_data(self,**kwargs):
+        context = super(FedExPicksView, self).get_context_data(**kwargs)
+
+        context.update({
+         'season': FedExSeason.objects.filter(season__current=True),
+                        })
+        return context
 
      @transaction.atomic
      def post(self, request):
@@ -1682,9 +1692,10 @@ class FedExFieldAPI(APIView):
     def get(self,request):
 
         s = FedExSeason.objects.get(season__current=True)
-        
+        user = self.request.user
         try:
-            data= golf_serializers.FedExFieldSerializer(FedExField.objects.filter(season=s).order_by('soy_owgr'), many=True).data
+            data= golf_serializers.FedExFieldSerializer(FedExField.objects.filter(season=s).order_by('soy_owgr'), context={'user': user}, many=True).data
+            #data= golf_serializers.FedExFieldSerializer(FedExField.objects.filter(season=s).order_by('soy_owgr'), many=True).data
         except Exception as e:
             print ('FedEx Field API exception: ', e)
             data = json.dumps({'msg': e})    

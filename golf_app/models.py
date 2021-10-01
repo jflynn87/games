@@ -24,11 +24,12 @@ from bs4 import BeautifulSoup
 # Create your models here.
 
 class Season(models.Model):
-    season = models.CharField(max_length=10, null=True)
+    #season = models.CharField(max_length=10, null=True)
+    season = models.IntegerField(default=0)
     current = models.BooleanField()
 
     def __str__(self):
-        return self.season
+        return str(self.season)
 
     def get_users(self):
         ''''returns a list of user pk's as dict values'''
@@ -511,6 +512,7 @@ class Golfer(models.Model):
         played = 0
         
         fields = Field.objects.filter((Q(golfer=self) | Q(partner_golfer=self)), tournament__season=season).exclude(tournament__current=True).exclude(tournament__pga_tournament_num='468').values_list('tournament__pk',flat=True).order_by('tournament__pk')
+        
         t_list = Tournament.objects.filter(pk__in=fields)
         
         #for sd in ScoreDict.objects.filter(tournament__season=season).exclude(tournament__current=True):
@@ -549,6 +551,7 @@ class Golfer(models.Model):
 
     def get_season_results(self, season=None, rerun=False):
         '''takes a golfer and an optional season object, returns a dict with only the updated data'''
+        # fix so this runs from 2021 and beyond
         if not season:
             curr_s = Season.objects.get(current=True)
             if Tournament.objects.filter(season=curr_s).count() > 1:
@@ -560,11 +563,18 @@ class Golfer(models.Model):
         #    t = Tournament.objects.get(current=True)
 
         #data = {}
+        if self.results:
+            missing_t = Tournament.objects.filter(season__season__gte='2021').exclude(current=True).exclude(pga_tournament_num='468').count() - len(self.results)
+        else:
+            missing_t = Tournament.objects.filter(season__season__gte='2021').exclude(current=True).exclude(pga_tournament_num='468').count()
+        print ('results counts ', missing_t)
  
         if self.results and not rerun:
-            tournaments = Tournament.objects.filter(season=season).exclude(pk__in=list(self.results.keys())).exclude(current=True).exclude(pga_tournament_num='468') #ryder cup
+            #tournaments = Tournament.objects.filter(season=season).exclude(pk__in=list(self.results.keys())).exclude(current=True).exclude(pga_tournament_num='468') #ryder cup
+            tournaments = Tournament.objects.filter(season__season__gte='2021').exclude(pk__in=list(self.results.keys())).exclude(current=True).exclude(pga_tournament_num='468') #ryder cup
         else:
-            tournaments = Tournament.objects.filter(season=season).exclude(current=True).exclude(pga_tournament_num='468')
+            #tournaments = Tournament.objects.filter(season=season).exclude(current=True).exclude(pga_tournament_num='468')
+            tournaments = Tournament.objects.filter(season__season__gte='2021').exclude(current=True).exclude(pga_tournament_num='468')
             self.results = {}
         
         #print (tournaments)

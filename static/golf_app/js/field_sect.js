@@ -528,7 +528,7 @@ function build_golfer_row(field, pick_array) {
             }
              
             golfer.appendChild(inputB)
-            golfer_row.classList.add('top_row')
+            golfer_row.classList.add('border', 'rounded', 'border-2')
             if (field.lock_group) {
                 golfer_row.classList.add('lock')    
             }
@@ -604,8 +604,24 @@ function build_golfer_row(field, pick_array) {
     golfer.appendChild(pga)
     
     t1 = document.createElement('b')
-    t1.innerHTML = '      ' + 'OWGR: ' + field.currentWGR + ' ;  ' + 'Handicap: ' + field.handi + ' ; ' +  "Prior Year: " + field.prior_year
-    
+    //t1.innerHTML = '      ' + 'OWGR: ' + field.currentWGR + ' ;  ' + 'Handicap: ' + field.handi + ' ; ' +  "Prior Year: " + field.prior_year
+    console.log('WIDTH ', $(window).width())
+    if ($(window).width() < 650) {
+    p1 = document.createElement('p')
+    p1.innerHTML = 'OWGR: ' + field.currentWGR
+    p2 = document.createElement('p')
+    p2.innerHTML = 'Handicap: ' + field.handi
+    p3 = document.createElement('p')
+    p3.innerHTML = "Prior Year: " + field.prior_year
+    //t1.innerHTML = '      ' + 'OWGR: ' + field.currentWGR + ' ;  ' + 'Handicap: ' + field.handi + ' ; ' +  "Prior Year: " + field.prior_year
+    t1.appendChild(p1)
+    t1.appendChild(p2)
+    t1.appendChild(p3)
+                            }
+    else {
+        t1.innerHTML = '      ' + 'OWGR: ' + field.currentWGR + ' ;  ' + 'Handicap: ' + field.handi + ' ; ' +  "Prior Year: " + field.prior_year
+    }
+
     golfer.appendChild(t1)
     
     expand = document.createElement('i')

@@ -43,7 +43,21 @@ from operator import itemgetter
 
 start  = datetime.now()
 s = Season.objects.get(current=True)
+print (s.get_total_points())
+exit()
 t = Tournament.objects.get(current=True)
+for g in Golfer.objects.all():
+    g.get_season_results()
+#golfers = golf_serializers.GolferSerializer(Golfer.objects.all(), many=True).data
+#espn  = espn_api.ESPNData().get_all_data()
+#for k in golfers:
+#    print(k)
+
+#print (AccessLog.objects.all().values('page').annotate(Sum('views')))
+#print (AccessLog.objects.filter(page='home page').exclude(user__pk=1).values('page').annotate(Sum('views')))
+
+
+exit()
 
 espn_data = scrape_espn.ScrapeESPN().get_data()
 user = User.objects.get(pk=1)

@@ -18,7 +18,8 @@ $(document).ready(function() {
         //console.log(json, typeof(json))
         if (!$.isEmptyObject(json)) {
           build_score_tbl(json)
-         
+          update_scores()
+          setInterval(update_scores, 120000)
         console.log('first load duration: ', start, new Date()) 
                                     }
         else {$('#det-list').append('<p>No Saved Scores, please wait</p>')}
@@ -32,7 +33,9 @@ $(document).ready(function() {
 })
 
 
-$('#tournament_key').ready(function (){
+function update_scores() {
+  //console.log('auto updating score')
+//$('#tournament_key').ready(function (){
 $.ajax({
   type: "GET",
   url: "/golf_app/get_scores/",
@@ -60,7 +63,8 @@ $.ajax({
   }
 })
 
-})
+}
+//)
 
 function build_score_tbl(data) {
   

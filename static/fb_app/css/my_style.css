@@ -3,7 +3,7 @@ body {
     font-family: Arial;
     color: black;
     height: 100%;
-    padding-left: 1em;
+    /* padding-left: 1em; */
 }
 
 
@@ -126,10 +126,12 @@ body {
 
 
 .top_row {
- /* border-top: dotted;
+ border-bottom: dotted;
+ border-right: dotted;
+ border-left: dotted;
   border-color: black;
-  border-radius: 1px;  */
-  background-color: lightgreen;
+  border-radius: .5px;  
+  /* background-color: lightgreen; */
   /*width: 100%;*/
   
 }
@@ -159,7 +161,8 @@ body {
 }
 
 .total_score {
-  background-color: lightcoral;
+  background-color: darkgreen;
+  /* background-color: lightcoral; */
   font-weight: bold;
   color: white;
 }

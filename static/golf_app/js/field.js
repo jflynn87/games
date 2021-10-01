@@ -347,10 +347,12 @@ $(document).on("click", "#download_excel", function() {
     $.each(golfers, function(i, results) {
       var row = {}
       var t_data = []
-      console.log('result: ', results, Object.keys(results.results).length)
+      //console.log('result: ', order.length, Object.keys(results.results).length)
 
       if (Object.keys(results.results).length > 0) {
-      for (j=0; j < order.length; j++) {
+      //if (Object.keys(results.results).length == order.length) {
+      //for (j=0; j < order.length; j++) {
+        for (j=0; j < Object.keys(results.results).length; j++) {
         t_data.push({'t_name': results.results[order[j]].t_name,
                     'rank': results.results[order[j]].rank})
       }
@@ -367,7 +369,7 @@ $(document).on("click", "#download_excel", function() {
           }
         else {
           conssole.log(results.golfer_name,  'NO DATA')
-          row['no data'] = 'no data';
+          row[idx] = 'no data';
                         
     }
     })

@@ -151,7 +151,8 @@ class FedExFieldSerializer(serializers.ModelSerializer):
         return f.soy_WGR
     
     def get_picked(self, obj):
-        if FedExPicks.objects.filter(pick=obj).exists():
+        user = self.context.get('user')
+        if FedExPicks.objects.filter(pick=obj, user=user).exists():
             return True
         else:
             return False
