@@ -19,7 +19,7 @@ $(document).ready(function() {
         if (!$.isEmptyObject(json)) {
           build_score_tbl(json)
           update_scores()
-          setInterval(update_scores, 120000)
+          setInterval(update_scores, 360000)
         console.log('first load duration: ', start, new Date()) 
                                     }
         else {$('#det-list').append('<p>No Saved Scores, please wait</p>')}
