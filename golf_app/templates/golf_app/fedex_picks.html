@@ -5,8 +5,10 @@
 {%load golf_extras%}
 
 {% block body_block %}
-<h1>FedEx Cup Season Picks</h1>
-<p id='allow_picks'>{{season.allow_picks}}</p>
+<h1>{{season.season}} FedEx Cup Season Picks {%if not season.allow_picks%} - Picks Closed {%endif%}</h1>
+
+
+<p id='allow_picks' hidden>{{ season.allow_picks|yesno:"true,false,none" }}</p>
 <div id='field'></div>
 <div id='bottom_sect' class='field_stats_display'></div>
 {%compress js%}

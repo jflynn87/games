@@ -41,6 +41,10 @@ $(document).ready(function () {
             label.classList.add('form-check-label')
             label.style.fontWeight = 'bold'
             
+            if ($('#allow_picks').text() == 'false') {
+                top_30_input.disabled = true
+            }
+
             top_30.appendChild(top_30_input)
 
             top_30.appendChild(label)
@@ -165,11 +169,14 @@ $(document).ready(function () {
                 inputB.name= 'owgr-' + g.soy_owgr
                 inputB.value = g.id
                 if (g.picked) {
-                    console.log('picked', g.golfer.golfer_name)
+                    //console.log('picked', g.golfer.golfer_name)
                     //inputB.setAttribute('chedked' , true)
                     inputB.checked = true
                 }
-                //inputB.disabled = true
+
+                if ($('#allow_picks').text() == 'false') {
+                            inputB.disabled = true }
+
                 inputB.addEventListener('change', function(evt) {
                             count_actual(this);
                                                                 });
@@ -216,22 +223,32 @@ $(document).ready(function () {
                 //table.appendChild(row)
 
          }
-            sub_btn = document.createElement('button')
-            sub_btn.id = 'sub_button'
-            sub_btn.type = 'button'
-            sub_btn.innerHTML = "0 of 30 Picks"
-            sub_btn.disabled = true
-            sub_btn.classList.add('btn', 'btn-secondary')
-/*             $('#pick_form').on('submit', function(event){
-                event.preventDefault();
-                console.log("form submitted!")  
-                create_post();
-            });
-
- */         sub_btn.addEventListener('click', function(event) {
+            if ($('#allow_picks').text() == 'true') {
+                console.log('allow picks')
+                sub_btn = document.createElement('button')
+                sub_btn.id = 'sub_button'
+                sub_btn.type = 'button'
+                sub_btn.innerHTML = "0 of 30 Picks"
+                sub_btn.disabled = true
+                sub_btn.classList.add('btn', 'btn-secondary')
+    /*             $('#pick_form').on('submit', function(event){
                     event.preventDefault();
-                    create_post()                    
+                    console.log("form submitted!")  
+                    create_post();
                 });
+    
+     */         sub_btn.addEventListener('click', function(event) {
+                        event.preventDefault();
+                        create_post()                    
+                    });
+    
+            }
+            else {console.log('picks closed')
+                    sub_btn = document.createElement('button')
+                    sub_btn.classList.add('btn', 'btn-secondary')
+                    sub_btn.innerHTML = 'Too Late for Picks'
+                }
+
 
             //form.appendChild(sub_btn)   
             $('#bottom_sect').append(sub_btn)

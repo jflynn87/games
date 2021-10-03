@@ -10,7 +10,11 @@ from golf_app.models import Tournament, Field, Golfer, ScoreDict, Picks
 
 
 class ESPNData(object):
-    '''takes an optinal dict and provides funcitons to retrieve espn golf data'''
+    '''takes an optinal dict and provides funcitons to retrieve espn golf data,
+        all_data is a list of dicts
+        event_data is the data for the event but most is in competition
+        competition_data varoius datat about  the tournament
+        field_data is the actual golfers in the tournament'''
 
     def __init__(self, t=None, data=None, mode='none', espn_t_num=None):
         if t:
@@ -45,18 +49,26 @@ class ESPNData(object):
         for event in self.all_data.get('events'):
             if event.get('id') == self.t.espn_t_num or mode == 'setup':
                 self.event_data = event 
-        #print ('espn event DATA: ', self.event_data)
         
         if self.t.pga_tournament_num == '468':
             self.field_data = {}
         else:
-            for f in self.event_data.get('competitions'):
-                if f.get('id') == self.t.espn_t_num or mode == 'setup': 
-                    self.field_data = f.get('competitors')
+            for c in self.event_data.get('competitions'):
+                
+                if c.get('id') == self.t.espn_t_num or mode == 'setup': 
+                    self.competition_data = c
+                    self.field_data = c.get('competitors')
 
-            
+
+    def get_round(self):
+        
+        return self.competition_data.get('status').get('period')
+
+    def get_round_status(self):
+        return self.competition_data.get('status').get('type').get('state')
+
+
     def started(self):
-        #print (self.event_data.get('status').get('type').get('state'))
         #  Try to change this is a positive check
         if self.event_data.get('status').get('type').get('state') != 'pre':
             return True
@@ -70,13 +82,8 @@ class ESPNData(object):
         player = [x for x in self.field_data if x.get('id') == espn_num]
 
 
-        #comment for testing, reapply 
         if len(player) == 0:
             return False
-        #if len(player) > 1 or len(player) == 0:
-        #    raise Exception('player lookup retured more than 1', Golfer.objects.get(espn_number=espn_num), player, 'len player: ', len(player))
-
-        #print (player, player[0].get('status').get('type').get('name'))
 
         if player[0].get('status').get('period') > 1:
             return True
@@ -103,5 +110,23 @@ class ESPNData(object):
     def get_all_data(self):
         return self.all_data
 
-    def score_dict(self):
+    def cut_num(self):
+        if self.event_data.get('tournament').get('cutCount'):
+            return self.event_data.get('tournament').get('cutCount')
+        else:
+            cuts = [v for v in self.field_data if v.get('status').get('type').get('id') == '3']
+            return len(cuts)
+
+        #need to make this work pre-cut
+
+    def get_rank(self, golfer_data):
+        if golfer_data.get('status').get('type').get('id') in ['3']:
+           return golfer_data.get('status').get('type').get('shortDetail')
+        else:
+           return golfer_data.get('status').get('position')
+        
+    def get_movement(self, golfer_data):
+        print (golfer_data.get('movement'))
+
+    def get_player_hole():
         pass

@@ -1666,7 +1666,7 @@ class FedExPicksView(LoginRequiredMixin,TemplateView):
         context = super(FedExPicksView, self).get_context_data(**kwargs)
 
         context.update({
-         'season': FedExSeason.objects.filter(season__current=True),
+         'season': FedExSeason.objects.get(season__current=True),
                         })
         return context
 

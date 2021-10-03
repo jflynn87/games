@@ -43,22 +43,22 @@ from operator import itemgetter
 
 start  = datetime.now()
 s = Season.objects.get(current=True)
-print (s.get_total_points())
-exit()
 t = Tournament.objects.get(current=True)
-for g in Golfer.objects.all():
-    g.get_season_results()
-#golfers = golf_serializers.GolferSerializer(Golfer.objects.all(), many=True).data
-#espn  = espn_api.ESPNData().get_all_data()
-#for k in golfers:
-#    print(k)
-
-#print (AccessLog.objects.all().values('page').annotate(Sum('views')))
-#print (AccessLog.objects.filter(page='home page').exclude(user__pk=1).values('page').annotate(Sum('views')))
-
-
+espn = espn_api.ESPNData()
+#for c in espn.event_data.get('competitions'):
+#    for k,v in c.items():
+#        if k != 'competitors':
+#            print (k, v)
+#cut_num = espn.cut_num()
+print ('round: ', espn.get_round())
+print ('state: ', espn.get_round_status())
+print ('started ', espn.started())
+#print (espn.event_data.get('status'))
+#print (espn.event_data.get('competitions')[0].get('status'))
+#print (espn.event_data.get('competitions')[0].keys())
+print ('cut num', espn.cut_num())
+print (datetime.now() - start)
 exit()
-
 espn_data = scrape_espn.ScrapeESPN().get_data()
 user = User.objects.get(pk=1)
 context = {'espn_data': espn_data, 'user': user}
