@@ -59,7 +59,7 @@ rcssmin==1.0.6
 requests==2.25.1
 rjsmin==1.1.0
 scipy==1.4.1
-Scrapy==1.8.0
+Scrapy==1.8.1
 selenium==3.141.0
 service-identity==18.1.0
 six @ file:///C:/ci/six_1605187374963/work
