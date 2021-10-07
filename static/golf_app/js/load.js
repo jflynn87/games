@@ -22,7 +22,10 @@ $(document).ready(function() {
           setInterval(update_scores, 360000)
         console.log('first load duration: ', start, new Date()) 
                                     }
-        else {$('#det-list').append('<p>No Saved Scores, please wait</p>')}
+        else {$('#det-list').append('<p>No Saved Scores, please wait</p>')
+                update_scores()
+                setInterval(update_scores, 360000)
+            }
                                   },
       failure: function(json) {
         console.log('fail');

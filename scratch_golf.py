@@ -46,8 +46,9 @@ start  = datetime.now()
 s = Season.objects.get(current=True)
 t = Tournament.objects.get(current=True)
 #espn = espn_api.ESPNData()
+sd = ScoreDict.objects.get(tournament=t)
+print (sd.data.get('Sam Burns'))
 
-print (FedExPicks.objects.filter(pick__season__season__current=True))
 
 
 exit()

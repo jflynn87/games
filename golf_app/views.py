@@ -561,7 +561,7 @@ class GetScores(APIView):
         #         }), 200)
         # except Exception as e:
         #     print ('cant restore from display dict, recalc scores')
-
+        
         scores = manual_score.Score(score_dict, t, 'json')
         # change so this isn't executed when complete, add function to get total scores without updating
         print ('XXXXXX', score_dict.get('info'), t.started())
