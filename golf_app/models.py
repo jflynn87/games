@@ -31,16 +31,23 @@ class Season(models.Model):
     def __str__(self):
         return str(self.season)
 
-    def get_users(self):
-        ''''returns a list of user pk's as dict values'''
+    def get_users(self, mode=None):
+        ''''returns a list of user pk's as dict values or native objects if mode == obj'''
+            
         if Tournament.objects.filter(season=self).count() > 1:
             first_t = Tournament.objects.filter(season=self).first()
         else:
-            print (str(int(self.season) - 1))
+            #print (str(int(self.season) - 1))
             first_t = Tournament.objects.filter(season__season=str(int(self.season) - 1)).first()
-        print (first_t)
+        #print (first_t)
         users = TotalScore.objects.filter(tournament=first_t).values('user')
-        return users
+        if mode == 'obj':
+            l = []
+            for u in users:
+                l.append(u.get('user'))
+            return User.objects.filter(pk__in=l)
+        else:
+            return users
 
     def get_total_points(self, tournament=None):
         '''takes a season and optional tournament object and returns a json response'''
@@ -1150,3 +1157,6 @@ class FedExPicks(models.Model):
 
     def __str__(self):
         return str(self.user.username) + ' ' + str(self.pick.golfer.golfer_name)
+
+    def all_picks_view(self):
+        print (FedExPicks.objects.filter(season__current=True).values('user__username').annotate('pick__golfer__golfer_name'))

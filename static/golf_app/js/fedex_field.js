@@ -1,17 +1,20 @@
 $(document).ready(function () {
     start = new Date()
-    $('#field').append('<p>Pick 30 the golfers who will make the Tour Championship</p> \
+    $('#intro').append('<p>Pick 30 the golfers who will make the Tour Championship</p> \
      <p>-30 points for any correct pick</p><p>Additional -50 for any pick that was outside the top 30 OWGR as of the start of the season</p> \
      <p>+20 for any pick that was in the top 30 OWGR but doesn' + "'" + 't make it</p> \
      <p>Total points included in season total like a regular tournament.</p> <br>')
 
+    $('#intro').append('<p><i id=picks_toggle class="fas fa-toggle-on large">Show All Picks</i></p>')
+    $('#picks_toggle').on('click', function() {toggle_picks()})
 
     $('#field').append('<div><h4 id=loading_msg>Loading .... </h4></div>')
-    fetch("/golf_app/fedex_field")
+    fetch("/golf_app/fedex_field" + '/player')
     .then(response=> response.json())
     .then((responseJSON) => {
          field = responseJSON
          console.log(field)
+         get_all_picks()
          
          const frag = new DocumentFragment()
          top_30 = document.createElement('div')
@@ -355,4 +358,63 @@ function sort_table(table, cell_i, order) {
     }
 
 }
-    
+
+function toggle_picks() {
+    if ($('#picks_toggle').text() == 'Show All Picks') {
+    $('#field').hide()
+    $('#picks_toggle').text('Show My Picks')
+    $('#picks_toggle').removeClass("fa-toggle-on")
+    $('#picks_toggle').addClass("fa-toggle-off")
+    }
+    else if ($('#picks_toggle').text() == 'Show My Picks') {
+        $('#field').show()
+        $('#picks_toggle').text('Show All Picks')
+        $('#picks_toggle').removeClass("fa-toggle-off")
+        $('#picks_toggle').addClass("fa-toggle-on")
+                                                        }
+}
+
+function get_all_picks() {
+    fetch("/golf_app/fedex_field" + '/all')
+    .then(response=> response.json())
+    .then((responseJSON) => {
+        picks = responseJSON.picks
+        users = $.parseJSON(responseJSON.users)
+
+        console.log(picks)
+        console.log(users)
+
+        const picks_frag = new DocumentFragment()
+
+        pick_tbl = document.createElement('table')
+        pick_tbl.classList.add('table', 'table-sm')
+        header = document.createElement('thead')
+        th0 = document.createElement('th')
+        th0.innerHTML = 'Golfer'
+        header.appendChild(th0)
+        var user_order = []
+        $.each(users, function(i, user) {
+            th = document.createElement('th')
+            th.innerHTML = user.fields.username
+            header.appendChild(th)
+            user_order.push(user.fields.username)
+        })
+        body = document.createElement('tbody')
+        $.each(picks, function(i, pick) {
+            console.log(pick.pick.golfer)
+            tr = document.createElement('tr')
+            tdA = document.createElement('td')
+            tdA.innerHTML = pick.pick.golfer.golfer_name
+            tr.appendChild(tdA)
+            body.appendChild(tr)
+        })
+        
+
+        pick_tbl.appendChild(header)
+        pick_tbl.appendChild(body)
+        picks_frag.appendChild(pick_tbl)
+        document.getElementById('all_picks').appendChild(picks_frag)
+        
+
+})
+}

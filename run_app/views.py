@@ -135,7 +135,7 @@ class ShoeListView(ListView):
              'total_cals': total_cals,
              'start_date': start_date
          })
-
+        print (context)
         return context
 
 

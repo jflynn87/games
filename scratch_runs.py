@@ -6,8 +6,7 @@ django.setup()
 from run_app.models import Schedule, Plan, Run, Shoes
 from datetime import timedelta, datetime
 import time
-from django.db.models import Max
-
+from django.db.models import Max, Sum
 #from django.db.models import Min, Q, Count, Sum, Max
 #from django.db.models.functions import ExtractWeek, ExtractYear
 
@@ -28,9 +27,9 @@ from run_app import strava
 import time
 import json
 
-for day in Schedule.objects.filter(plan__name="Nagano 21"):
-    print (day.date, day.dist)
-
+r = Run.objects.all().values('shoes__name').order_by('-shoes__pk').annotate(Sum('dist'))
+for x in r:
+    print (x)
 exit()
 
 

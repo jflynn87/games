@@ -156,3 +156,11 @@ class FedExFieldSerializer(serializers.ModelSerializer):
             return True
         else:
             return False
+
+
+class FedExPicksSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = FedExPicks
+        fields = '__all__'
+        depth = 2

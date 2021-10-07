@@ -4,7 +4,8 @@ os.environ.setdefault("DJANGO_SETTINGS_MODULE","gamesProj.settings")
 import django
 django.setup()
 from golf_app.models import Tournament, TotalScore, ScoreDetails, Picks, PickMethod, BonusDetails, \
-        Season, Golfer, Group, Field, ScoreDict, AuctionPick, AccessLog, StatLinks, CountryPicks, FedExSeason, FedExField
+        Season, Golfer, Group, Field, ScoreDict, AuctionPick, AccessLog, StatLinks, CountryPicks, \
+         FedExSeason, FedExField, FedExPicks
 from django.contrib.auth.models import User
 from datetime import date, datetime, timedelta
 import sqlite3
@@ -44,7 +45,12 @@ from operator import itemgetter
 start  = datetime.now()
 s = Season.objects.get(current=True)
 t = Tournament.objects.get(current=True)
-espn = espn_api.ESPNData()
+#espn = espn_api.ESPNData()
+
+print (FedExPicks.objects.filter(pick__season__season__current=True))
+
+
+exit()
 #for c in espn.event_data.get('competitions'):
 #    for k,v in c.items():
 #        if k != 'competitors':

@@ -1689,16 +1689,22 @@ class FedExPicksView(LoginRequiredMixin,TemplateView):
 
 
 class FedExFieldAPI(APIView):
-    def get(self,request):
+    def get(self, request, filter):
 
         s = FedExSeason.objects.get(season__current=True)
-        user = self.request.user
-        try:
-            data= golf_serializers.FedExFieldSerializer(FedExField.objects.filter(season=s).order_by('soy_owgr'), context={'user': user}, many=True).data
-            #data= golf_serializers.FedExFieldSerializer(FedExField.objects.filter(season=s).order_by('soy_owgr'), many=True).data
-        except Exception as e:
-            print ('FedEx Field API exception: ', e)
-            data = json.dumps({'msg': e})    
+        if filter == 'all':
+            picks = golf_serializers.FedExPicksSerializer(FedExPicks.objects.filter(pick__season=s), many=True).data
+            users = serializers.serialize(queryset=s.season.get_users('obj'), format='json')
+            data = {'picks': picks,
+                    'users': users}
+        else:            
+            context = {'user': self.request.user}
+            try:
+                data= golf_serializers.FedExFieldSerializer(FedExField.objects.filter(season=s).order_by('soy_owgr'), context=context, many=True).data
+                #data= golf_serializers.FedExFieldSerializer(FedExField.objects.filter(season=s).order_by('soy_owgr'), many=True).data
+            except Exception as e:
+                print ('FedEx Field API exception: ', e)
+                data = json.dumps({'msg': e})    
             
         return JsonResponse(data, status=200, safe=False)
 
