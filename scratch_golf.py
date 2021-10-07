@@ -46,9 +46,8 @@ start  = datetime.now()
 s = Season.objects.get(current=True)
 t = Tournament.objects.get(current=True)
 #espn = espn_api.ESPNData()
-sd = ScoreDict.objects.get(tournament=t)
-print (sd.data.get('Sam Burns'))
-
+f = Field.objects.get(tournament=t, playerName='Harris English')
+print (f.started())
 
 
 exit()

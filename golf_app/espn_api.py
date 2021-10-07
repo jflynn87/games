@@ -91,9 +91,9 @@ class ESPNData(object):
             player[0].get('status').get('type').get('name') == "STATUS_SCHEDULED":
             return False
         elif player[0].get('status').get('period') == 1 and \
-            player[0].get('status').get('type').get('name') in ["STATUS_IN_PROGRESS", "STATUS_PLAY_COMPLETE", "STATUS_CUT"]:
+            player[0].get('status').get('type').get('name') in ["STATUS_IN_PROGRESS", "STATUS_PLAY_COMPLETE", "STATUS_CUT", "STATUS_FINISH"]:
             return True
-        print ('cant tell if started, return False: ', espn_num, player)
+        print ('cant tell if started, return False: ', espn_num, player[0].get('status'))
         return False
 
 
