@@ -9,7 +9,7 @@ from django.core.exceptions import ObjectDoesNotExist
 from fb_app import validate_picks
 
 
-def readSheet(file,numPlayers):
+def readSheet(file,numPlayers,override_week=None):
         '''takes a pick file and updates week, owner list and picsk'''
         from bs4 import BeautifulSoup
 
@@ -29,7 +29,11 @@ def readSheet(file,numPlayers):
         print ('week: ' + week_str)
 
 
-        app_week = Week.objects.get(current=True)
+        if not override_week:
+            app_week = Week.objects.get(current=True)
+        else:
+            app_week = override_week
+
         if app_week.week == 1:
             mike_score_week = app_week
         else:
@@ -146,4 +150,4 @@ def readSheet(file,numPlayers):
 
 
 
-readSheet('21-22 FOOTBALL FOOLS.xml', 25)
+#readSheet('21-22 FOOTBALL FOOLS.xml', 25)

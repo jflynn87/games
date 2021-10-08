@@ -24,16 +24,21 @@ import requests
 #from linebot.models import TextSendMessage
 #from linebot.exceptions import LineBotApiError
 from bs4 import BeautifulSoup
-from fb_app import scrape_cbs, scrape_cbs_playoff, playoff_stats, espn_data
+from fb_app import scrape_cbs, scrape_cbs_playoff, playoff_stats, espn_data 
 import pytz
 from django.core import serializers
 #import docx2txt
 from math import ceil
 from fb_app import views
 from django.http import HttpRequest
+import load_sheet
 
 
 start = datetime.now()
+week = Week.objects.get(season_model__current=True, week=4)
+load_sheet.readSheet('FOOTBALL FOOLS week 4.xml', 25, week)
+week.update_scores(League.objects.get(league="Football Fools"),  recalc=True)
+exit()
 
 #league = League.objects.get(league="Golfers")
 #season = Season.objects.get(current=True)
@@ -42,6 +47,13 @@ start = datetime.now()
 #stats, created = PickPerformance.objects.get_or_create(season=season, league=league)
 #print (stats.team_results('NYG', 'john'))
 #stats.calculate()
+for score in MikeScore.objects.filter(week__season_model__current=True, player__name__username="JABO"):
+    print (score.week, score.total)
+    ws = WeekScore.objects.get(player__name__username="JABO", week=score.week)
+    print (ws.score)
+
+exit()
+
 for stats in PickPerformance.objects.filter(season__current=True):
     for k,v in json.loads(stats.data).items():
         print (k, v)

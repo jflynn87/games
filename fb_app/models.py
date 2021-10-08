@@ -230,7 +230,7 @@ class Week(models.Model):
 
         return {'games': data}
 
-    def update_scores(self, league):
+    def update_scores(self, league, recalc=False):
         start = datetime.datetime.now()
 
         loser_list = []
@@ -262,7 +262,7 @@ class Week(models.Model):
         for pick in Picks.objects.filter(team__in=proj_loser_list, player__league=league, week=self, player__active=True):
             score_dict[pick.player.name.username].update({'proj_score': score_dict.get(pick.player.name.username).get('proj_score') + pick.pick_num})
 
-        if self.current:
+        if self.current or recalc:
             for player in Player.objects.filter(league=league, active=True):
                 sd, created = WeekScore.objects.get_or_create(player=player, week=self)
                 sd.score = score_dict[player.name.username].get('score')
