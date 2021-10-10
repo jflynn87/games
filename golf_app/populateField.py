@@ -462,7 +462,7 @@ def create_field(field, tournament):
             player_cnt = 1
 
     #need to do this after full field is saved for the calcs to work.  No h/c in MP
-    fed_ex = get_fedex_data()
+    fed_ex = get_fedex_data(tournament)
     individual_stats = get_individual_stats()
 
     for f in Field.objects.filter(tournament=tournament):
@@ -550,7 +550,7 @@ def create_olympic_field(field, tournament):
             player_cnt = 1
 
     #need to do this after full field is saved for the calcs to work.  No h/c in MP
-    fed_ex = get_fedex_data()
+    fed_ex = get_fedex_data(tournament)
     individual_stats = get_individual_stats()
 
     for f in Field.objects.filter(tournament=tournament):
@@ -663,7 +663,7 @@ def create_ryder_cup_field(field, tournament):
             player_cnt = 1
 
     #need to do this after full field is saved for the calcs to work.  No h/c in MP
-    fed_ex = get_fedex_data()
+    fed_ex = get_fedex_data(tournament)
     individual_stats = get_individual_stats()
 
     for f in Field.objects.filter(tournament=tournament):
@@ -732,7 +732,7 @@ def get_individual_stats():
     return d
 
 
-def get_fedex_data():
+def get_fedex_data(tournament):
     data = {}
     try:
         link = 'https://www.pgatour.com/fedexcup/official-standings.html'
@@ -751,6 +751,9 @@ def get_fedex_data():
             print ('fedex mapping issue ', e)
     except Exception as ex:
         print ('fedex overall issue ', ex)
+
+    tournament.fedex_data = data
+    tournament.save()
 
     return data
 

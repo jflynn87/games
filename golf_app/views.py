@@ -1692,9 +1692,10 @@ class FedExFieldAPI(APIView):
     def get(self, request, filter):
 
         s = FedExSeason.objects.get(season__current=True)
+
         if filter == 'all':
-            picks = golf_serializers.FedExPicksSerializer(FedExPicks.objects.filter(pick__season=s), many=True).data
             users = serializers.serialize(queryset=s.season.get_users('obj'), format='json')
+            picks = s.picks_by_golfer()
             data = {'picks': picks,
                     'users': users}
         else:            

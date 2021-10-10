@@ -1,14 +1,28 @@
 $(document).ready(function () {
     start = new Date()
+
     $('#intro').append('<p>Pick 30 the golfers who will make the Tour Championship</p> \
      <p>-30 points for any correct pick</p><p>Additional -50 for any pick that was outside the top 30 OWGR as of the start of the season</p> \
      <p>+20 for any pick that was in the top 30 OWGR but doesn' + "'" + 't make it</p> \
      <p>Total points included in season total like a regular tournament.</p> <br>')
 
-    $('#intro').append('<p><i id=picks_toggle class="fas fa-toggle-on large">Show All Picks</i></p>')
-    $('#picks_toggle').on('click', function() {toggle_picks()})
+    // $('#intro').append('<p><i id=picks_toggle class="fas fa-toggle-on large">Show All Picks</i></p>')
+    // $('#picks_toggle').on('click', function() {toggle_picks()})
 
-    $('#field').append('<div><h4 id=loading_msg>Loading .... </h4></div>')
+    if ($('#allow_picks').text() == 'true') {
+        $('#field').append('<div><h4 id=loading_msg>Loading .... </h4></div>')
+        $('#all_picks').hide()
+        user_picks()
+    }
+    else {
+        $('#field').hide()
+        $('#all_picks').append('<div><h4 id=loading_msg>Loading .... </h4></div>')
+        get_all_picks()
+    }
+
+})
+    
+function user_picks() {
     fetch("/golf_app/fedex_field" + '/player')
     .then(response=> response.json())
     .then((responseJSON) => {
@@ -139,8 +153,6 @@ $(document).ready(function () {
             prior_season_owgr_sort.innerHTML = 'asc'
             prior_season_owgr_sort.hidden = true
 
-
-
          header.appendChild(h_0)
          header.appendChild(h_1)
          header.appendChild(h_2)
@@ -172,8 +184,6 @@ $(document).ready(function () {
                 inputB.name= 'owgr-' + g.soy_owgr
                 inputB.value = g.id
                 if (g.picked) {
-                    //console.log('picked', g.golfer.golfer_name)
-                    //inputB.setAttribute('chedked' , true)
                     inputB.checked = true
                 }
 
@@ -184,19 +194,12 @@ $(document).ready(function () {
                             count_actual(this);
                                                                 });
     
-                //if (pick_array.indexOf(field.id) != -1) {
-                //    inputB.checked = true
-                // }
                 c_0.appendChild(inputA)
                 c_0.appendChild(inputB) 
-
 
                 c_1 = document.createElement('td')
                 img = document.createElement('img')
                 img.src = g.golfer.pic_link
-
-                //c_1.innerHTML = g.golfer.golfer_name
-
 
                 flag = document.createElement('img')
                 flag.src = g.golfer.flag_link
@@ -223,7 +226,6 @@ $(document).ready(function () {
                 row.appendChild(c_3)
                 row.appendChild(c_4)
                 t_body.appendChild(row)
-                //table.appendChild(row)
 
          }
             if ($('#allow_picks').text() == 'true') {
@@ -234,13 +236,8 @@ $(document).ready(function () {
                 sub_btn.innerHTML = "0 of 30 Picks"
                 sub_btn.disabled = true
                 sub_btn.classList.add('btn', 'btn-secondary')
-    /*             $('#pick_form').on('submit', function(event){
-                    event.preventDefault();
-                    console.log("form submitted!")  
-                    create_post();
-                });
     
-     */         sub_btn.addEventListener('click', function(event) {
+              sub_btn.addEventListener('click', function(event) {
                         event.preventDefault();
                         create_post()                    
                     });
@@ -267,8 +264,9 @@ $(document).ready(function () {
             document.getElementById('field').append(prior_season_owgr_sort)
             count_actual()
             })
-      
-    })
+    
+}
+
 
 function create_post() {
     console.log('submit form')
@@ -334,7 +332,7 @@ function sort_table(table, cell_i, order) {
     
     const tRows = Array.from(table[0].rows)
     tRows.sort( ( x, y) => {
-        console.log(x.cells[cell_i].innerHTML, x.cells[cell_i].innerHTML.length)
+        //console.log(x.cells[cell_i].innerHTML, x.cells[cell_i].innerHTML.length)
         if (x.cells[cell_i].innerHTML != '' && x.cells[cell_i].innerHTML != 'n/a') {
         var xValue = x.cells[cell_i].innerHTML;}
         else {var xValue = '999'}
@@ -387,11 +385,24 @@ function get_all_picks() {
         const picks_frag = new DocumentFragment()
 
         pick_tbl = document.createElement('table')
-        pick_tbl.classList.add('table', 'table-sm')
+        pick_tbl.classList.add('table', 'table-sm', 'table-bordered', 'table-stripped')
+        pick_tbl.id = 'all_picks_tbl'
         header = document.createElement('thead')
+        
         th0 = document.createElement('th')
         th0.innerHTML = 'Golfer'
+        th1 = document.createElement('th')
+        th1.innerHTML = '# Picks'
+        th2 = document.createElement('th')
+        th2.innerHTML = 'Rank/Points'
+
         header.appendChild(th0)
+        header.appendChild(th1)
+        header.appendChild(th2)
+
+        user_l = users.length
+
+        if ($(window).width() > 649) {
         var user_order = []
         $.each(users, function(i, user) {
             th = document.createElement('th')
@@ -399,13 +410,81 @@ function get_all_picks() {
             header.appendChild(th)
             user_order.push(user.fields.username)
         })
+            }
+        else {th = document.createElement('th')
+                th.innerHTML = 'Picked By'
+                header.appendChild(th)}
+        
+
         body = document.createElement('tbody')
-        $.each(picks, function(i, pick) {
-            console.log(pick.pick.golfer)
+        $.each(picks, function(espn_num, data) {
+
             tr = document.createElement('tr')
             tdA = document.createElement('td')
-            tdA.innerHTML = pick.pick.golfer.golfer_name
+            tdA.innerHTML = data.golfer
+
+            tdB = document.createElement('td')
+            tdB.innerHTML = data.num_picks
+            tdC = document.createElement('td')
+            if (data.rank)
+            {tdC.innerHTML = data.rank + ' / ' + data.points}
+
             tr.appendChild(tdA)
+            tr.appendChild(tdB)
+            tr.appendChild(tdC)
+
+            if ($(window).width() > 649) {
+            for (let i=0; i < user_l; i++) {
+                user_td = document.createElement('td')
+                if (data.picked_by.indexOf(user_order[i]) != -1) {
+                    user_td_i = document.createElement('i')
+                    user_td_i.classList.add("fas", "fa-check")
+                    user_td_i.style.color = 'green'
+                    user_td_i.innerHTML = user_order[i]
+                    user_td.appendChild(user_td_i)
+       
+                }
+                else {user_td.innerHTML = ''}
+                tr.appendChild(user_td)
+            }            
+            }
+            else {
+                user_td = document.createElement('td')
+                if (data.num_picks == user_l) {
+                    user_td.innerHTML = 'All'
+                }
+                else if (parseInt(data.num_picks) >= parseInt(user_l) / 2) {
+                    //console.log(users)
+                    top_p = document.createElement('p')
+                    bot_p = document.createElement('p')
+
+                    for (const u in Object.values(users)){
+                        console.log(users[u].fields.username)
+                        p = document.createElement('p')
+                        p.innerHTML = users[u].fields.username
+                        if (data.picked_by.indexOf(users[u].fields.username) == -1) {
+                            p.style.textDecoration = 'line-through'
+                            bot_p.appendChild(p)
+                        }
+                        else {
+                            p.style.color = 'green'
+                            top_p.appendChild(p)
+                        }
+                        user_td.appendChild(top_p)
+                        user_td.appendChild(bot_p)
+                    }
+                    
+                }
+                else {
+                for (let i=0; i < data.picked_by.length; i++) {
+                    p = document.createElement('p')
+                    p.innerHTML = data.picked_by[i]
+                    user_td.appendChild(p)
+                }
+            }
+                tr.appendChild(user_td)
+            }
+
             body.appendChild(tr)
         })
         
@@ -414,6 +493,8 @@ function get_all_picks() {
         pick_tbl.appendChild(body)
         picks_frag.appendChild(pick_tbl)
         document.getElementById('all_picks').appendChild(picks_frag)
+        sort_table($('#all_picks_tbl'), 1, 'asc')
+        $('#loading_msg').hide()
         
 
 })

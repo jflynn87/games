@@ -120,6 +120,7 @@ class Tournament(models.Model):
     ignore_name_mismatch = models.BooleanField(default=False)
     espn_t_num = models.CharField(max_length=100, null=True, blank=True)
     auction = models.BooleanField(default=False)
+    fedex_data = models.JSONField(null=True, blank=True)
 
 
     #def get_queryset(self):t
@@ -1139,6 +1140,38 @@ class FedExSeason(models.Model):
 
     def __str__(self):
         return str(self.season.season)
+
+    def picks_by_golfer(self):
+
+        d = {}
+        t = Tournament.objects.get(current=True)
+        if t.fedex_data:
+            fedex = t.fedex_data
+        else:
+            from golf_app import populateField
+            fedex = populateField.get_fedex_data(t)
+
+        for p in FedExPicks.objects.filter(pick__season=self).values('pick__golfer__golfer_name').distinct():
+            rank_data = utils.fix_name(p.get('pick__golfer__golfer_name'), fedex)
+            if rank_data[0]:
+                rank = rank_data[1].get('rank')
+                points = rank_data[1].get('points')
+
+            else:
+                rank = None
+                points = None
+            #print (p, rank)
+            pick = FedExPicks.objects.filter(pick__season=self, pick__golfer__golfer_name=p.get('pick__golfer__golfer_name')).first()
+            users = list(FedExPicks.objects.filter(pick__season=self, pick__golfer__golfer_name=p.get('pick__golfer__golfer_name')).values_list('user__username', flat=True))
+            #d[pick.pick.golfer.golfer_name] = users
+            d[pick.pick.golfer.espn_number] = {'golfer': pick.pick.golfer.golfer_name,
+                                                'rank': rank,
+                                                'points': points,
+                                                'picked_by': users,
+                                                'num_picks': len(users)}
+        
+        return d
+        
 
 class FedExField(models.Model):
     season = models.ForeignKey(FedExSeason, on_delete=models.CASCADE)

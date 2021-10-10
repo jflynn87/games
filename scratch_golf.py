@@ -43,12 +43,13 @@ from operator import itemgetter
 
 
 start  = datetime.now()
-s = Season.objects.get(current=True)
-t = Tournament.objects.get(current=True)
+#s = Season.objects.get(current=True)
+#t = Tournament.objects.get(current=True)
 #espn = espn_api.ESPNData()
-f = Field.objects.get(tournament=t, playerName='Harris English')
-print (f.started())
 
+s = FedExSeason.objects.get(season__current=True)
+print ({k:v for k,v in s.picks_by_golfer().items() if v.get('golfer') in ["Sam Burns", "Justin Thomas"]})
+exit()
 
 exit()
 #for c in espn.event_data.get('competitions'):
