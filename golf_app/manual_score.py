@@ -416,7 +416,7 @@ class Score(object):
             ts, created = TotalScore.objects.get_or_create(user=user, tournament=self.tournament)
             ts.score = net_score
             ts.cut_count = cuts
-            #ts.save()
+            ts.save()
 
             #bd = BonusDetails.objects.get(tournament=self.tournament, user=user)
 
@@ -449,10 +449,10 @@ class Score(object):
 
 #           commented if during olympics to get mens winner bonus.  May not need the if as the calcs are also not executed till complete?            
 #           if self.tournament.complete: 
-            if int(self.tournament.season.season) < 2022:
-                ts.score -= bd.winner_bonus
-                ts.score -= bd.cut_bonus
-                ts.score -= bd.playoff_bonus
+            #if int(self.tournament.season.season) < 2022:
+            #    ts.score -= bd.winner_bonus
+            #    ts.score -= bd.cut_bonus
+            #    ts.score -= bd.playoff_bonus
            # else:
            #     for b in BonusDetails.objects.filter(user=user, tournament=self.tournament, bonus_type__in=['1', '4', '2', '5']):
            #         ts.score -= b.bonus_points
@@ -464,8 +464,8 @@ class Score(object):
                 if medal_total.get('score__sum'): #need to check for none since no picks for some
                     ts.score -= int(medal_total.get('score__sum'))
             
-            print ('saving TS ', ts.user, ts.score)
-            ts.save()
+            #print ('saving TS ', ts.user, ts.score)
+            #ts.save()
 
             if PickMethod.objects.filter(tournament=self.tournament, user=user, method='3').exists():
                 message = "- missed pick deadline (no bonuses)"
@@ -476,8 +476,10 @@ class Score(object):
             ts_dict[ts.user.username] = {'total_score': ts.score, 'cuts': ts.cut_count, 'msg': message}
             print ('ts loop duration', datetime.now() - ts_loop_start)
             print ('ts dict', ts_dict)
+
         if self.tournament.complete:
-            if self.tournament.major: 
+
+            """if self.tournament.major: 
                 winning_score = TotalScore.objects.filter(tournament=self.tournament).aggregate(Min('score'))
                 print (winning_score)
                 winner = TotalScore.objects.filter(tournament=self.tournament, score=winning_score.get('score__min'))
@@ -495,44 +497,54 @@ class Score(object):
                         bd.bonus_points = bonus_points
                         bd.save()
                         #w.score -= bd.major_bonus
-                        #w.save()
+                        #w.save()"""
+            
             if int(self.tournament.season.season) > 2021:
-                    users = self.tournament.season.get_users()
-                    t = self.tournament
-                    for u in users:
-                        if not PickMethod.objects.filter(tournament=self.tournament, user=User.objects.get(pk=u.get('user')), method=3).exists() and \
-                           Field.objects.filter(tournament=self.tournament).count() > 70 and User.objects.get(pk=u.get('user')) and \
-                           ScoreDetails.objects.filter(pick__playerName__tournament=t, gross_score=1, pick__user=User.objects.get(pk=u.get('user'))).exists() and \
-                           ScoreDetails.objects.filter(pick__playerName__tournament=t, gross_score=2, pick__user=User.objects.get(pk=u.get('user'))).exists() and \
-                           ScoreDetails.objects.filter(pick__playerName__tournament=t, gross_score__in=[1,2,3], pick__user=User.objects.get(pk=u.get('user'))).count() >= 3:
-                            trifecta = TotalScore.objects.filter(tournament=self.tournament, user=User.objects.get(pk=u.get('user')))
-                            bd, created = BonusDetails.objects.get_or_create(user=User.objects.get(pk=u.get('user')), tournament=self.tournament, bonus_type='6')
-                            bd.bonus_points = 50
-                            trifecta.score -= bd.bonus_points
-                            bd.save()
-                            trifecta.save()
-                        if self.tournament.winning_picks(User.objects.get(pk=u.get('user'))):
-                            print ('weekly winner ', User.objects.get(pk=u.get('user')))
-                            bd, created = BonusDetails.objects.get_or_create(user=User.objects.get(pk=u.get('user')), tournament=self.tournament, bonus_type='3')
-                            field_type = self.tournament.field_quality()
-                            if field_type == 'weak':
-                                bd.bonus_points = 50 / self.tournament.num_of_winners()
-                            elif field_type == 'strong':
-                                bd.bonus_points = 100 / self.tournament.num_of_winners()
-                            elif field_type == 'major':
-                                bd.bonus_points = 150 / self.tournament.num_of_winners()
-                            else:
-                                print ('no winner ', self.tournament.field_quality())
-                            bd.save()
+                users = self.tournament.season.get_users()
+                t = self.tournament
+                for u in users:
+                    if not PickMethod.objects.filter(tournament=self.tournament, user=User.objects.get(pk=u.get('user')), method=3).exists() and \
+                        Field.objects.filter(tournament=self.tournament).count() > 70 and User.objects.get(pk=u.get('user')) and \
+                        ScoreDetails.objects.filter(pick__playerName__tournament=t, gross_score=1, pick__user=User.objects.get(pk=u.get('user'))).exists() and \
+                        ScoreDetails.objects.filter(pick__playerName__tournament=t, gross_score=2, pick__user=User.objects.get(pk=u.get('user'))).exists() and \
+                        ScoreDetails.objects.filter(pick__playerName__tournament=t, gross_score__in=[1,2,3], pick__user=User.objects.get(pk=u.get('user'))).count() >= 3:
+                        #trifecta = TotalScore.objects.filter(tournament=self.tournament, user=User.objects.get(pk=u.get('user')))
+                        bd, created = BonusDetails.objects.get_or_create(user=User.objects.get(pk=u.get('user')), tournament=self.tournament, bonus_type='6')
+                        bd.bonus_points = 50
+                        #trifecta.score -= bd.bonus_points
+                        bd.save()
+                        #trifecta.save()
+                    #if BonusDetails.objects.filter(user=User.objects.get(pk=u.get('user')), tournament=self.tournament, bonus_type='7').exists():
+                    #    manual = TotalScore.objects.filter(tournament=self.tournament, user=User.objects.get(pk=u.get('user')))
+                    #    manual_bonus = BonusDetails.objects.get(user=User.objects.get(pk=u.get('user')), tournament=self.tournament, bonus_type='7')
+                    #    manual.score -= manual_bonus.manual_bonus
+                    #    manual.save()
 
-                        if BonusDetails.objects.filter(user=User.objects.get(pk=u.get('user')), tournament=self.tournament, bonus_type='7').exists():
-                            manual = TotalScore.objects.filter(tournament=self.tournament, user=User.objects.get(pk=u.get('user')))
-                            manual_bonus = BonusDetails.objects.get(user=User.objects.get(pk=u.get('user')), tournament=self.tournament, bonus_type='7')
-                            manual.score -= manual_bonus.manual_bonus
-                            manual.save()
+                    tot_score = TotalScore.objects.get(tournament=self.tournament, user=User.objects.get(pk=u.get('user')))
+                    print (tot_score, User.objects.get(pk=u.get('user')))
+                    for bd in BonusDetails.objects.filter(tournament=ts.tournament, user=tot_score.user).exclude(bonus_type='3'):
+                        tot_score.score -= bd.bonus_points
+                        tot_score.save()
+                        ts_dict[tot_score.user.username].update({bd.get_bonus_type_display(): bd.bonus_points, 'total_score': tot_score.score})
+
+                for u in users:
+                    if self.tournament.winning_picks(User.objects.get(pk=u.get('user'))):
+                        print ('weekly winner ', User.objects.get(pk=u.get('user')))
+                        bd, created = BonusDetails.objects.get_or_create(user=User.objects.get(pk=u.get('user')), tournament=self.tournament, bonus_type='3')
+                        field_type = self.tournament.field_quality()
+                        if field_type == 'weak':
+                            bd.bonus_points = 50 / self.tournament.num_of_winners()
+                        elif field_type == 'strong':
+                            bd.bonus_points = 100 / self.tournament.num_of_winners()
+                        elif field_type == 'major':
+                            bd.bonus_points = 150 / self.tournament.num_of_winners()
+                        else:
+                            print ('no winner ', self.tournament.field_quality())
+                        bd.save()
+
         
         for ts in TotalScore.objects.filter(tournament=self.tournament):
-            for bd in BonusDetails.objects.filter(tournament=ts.tournament, user=ts.user):
+            for bd in BonusDetails.objects.filter(tournament=ts.tournament, user=ts.user, bonus_type='3'):
                 ts.score -= bd.bonus_points
                 ts.save()
                 ts_dict[ts.user.username].update({bd.get_bonus_type_display(): bd.bonus_points, 'total_score': ts.score})

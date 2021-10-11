@@ -48,7 +48,8 @@ start  = datetime.now()
 #espn = espn_api.ESPNData()
 
 s = FedExSeason.objects.get(season__current=True)
-print ({k:v for k,v in s.picks_by_golfer().items() if v.get('golfer') in ["Sam Burns", "Justin Thomas"]})
+print (s.picks_by_golfer())
+print (datetime.now() - start)
 exit()
 
 exit()

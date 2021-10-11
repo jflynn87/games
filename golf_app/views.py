@@ -1664,7 +1664,7 @@ class FedExPicksView(LoginRequiredMixin,TemplateView):
 
      def get_context_data(self,**kwargs):
         context = super(FedExPicksView, self).get_context_data(**kwargs)
-
+        utils.save_access_log(self.request, 'fedex picks')
         context.update({
          'season': FedExSeason.objects.get(season__current=True),
                         })

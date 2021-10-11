@@ -1144,12 +1144,7 @@ class FedExSeason(models.Model):
     def picks_by_golfer(self):
 
         d = {}
-        t = Tournament.objects.get(current=True)
-        if t.fedex_data:
-            fedex = t.fedex_data
-        else:
-            from golf_app import populateField
-            fedex = populateField.get_fedex_data(t)
+        fedex = self.current_fedex_data()
 
         for p in FedExPicks.objects.filter(pick__season=self).values('pick__golfer__golfer_name').distinct():
             rank_data = utils.fix_name(p.get('pick__golfer__golfer_name'), fedex)
@@ -1160,17 +1155,53 @@ class FedExSeason(models.Model):
             else:
                 rank = None
                 points = None
-            #print (p, rank)
+
             pick = FedExPicks.objects.filter(pick__season=self, pick__golfer__golfer_name=p.get('pick__golfer__golfer_name')).first()
+            score = pick.score(fedex)
             users = list(FedExPicks.objects.filter(pick__season=self, pick__golfer__golfer_name=p.get('pick__golfer__golfer_name')).values_list('user__username', flat=True))
-            #d[pick.pick.golfer.golfer_name] = users
+
             d[pick.pick.golfer.espn_number] = {'golfer': pick.pick.golfer.golfer_name,
                                                 'rank': rank,
                                                 'points': points,
                                                 'picked_by': users,
-                                                'num_picks': len(users)}
+                                                'num_picks': len(users),
+                                                'score': score}
         
         return d
+
+    def player_points(self):
+        fedex = self.current_fedex_data()
+        d = {}
+        for user in self.season.get_users('obj'):
+            d[user.username] = {}
+            #total_score = 0
+        #for p in FedExPicks.objects.filter(pick__season=self, user=user).values('pick__golfer.espn_number').dictinct():
+            for p in FedExPicks.objects.filter(pick__season=self, user=user):
+                in_d = [v.get('score') for x in d.values()  for k, v in x.items() if k == p.pick.golfer.espn_number]
+                print ('in D: ', in_d)
+                if len(in_d) >= 1:
+                    score = in_d[0]
+                else:
+                    score = p.score(fedex)
+                total_score += score
+                d[user.username].update({p.pick.golfer.espn_number: {'score': score, 
+                                        'golfer': p.pick.golfer.golfer_name}})    
+            d[user.username].update({'total': total_score})
+
+        return d
+
+
+    def current_fedex_data(self):
+        t = Tournament.objects.get(current=True)
+        if t.fedex_data:
+            fedex = t.fedex_data
+        else:
+            from golf_app import populateField
+            fedex = populateField.get_fedex_data(t)
+        
+        return fedex
+
+
         
 
 class FedExField(models.Model):
@@ -1193,3 +1224,25 @@ class FedExPicks(models.Model):
 
     def all_picks_view(self):
         print (FedExPicks.objects.filter(season__current=True).values('user__username').annotate('pick__golfer__golfer_name'))
+
+    def score(self, fedex):
+        '''takes a picks and dict of fedex data, returns an int'''
+        rank_data = utils.fix_name(self.pick.golfer.golfer_name, fedex)
+        if rank_data[0]:
+            rank = int(rank_data[1].get('rank'))
+        else:
+            if self.pick.soy_owgr < 30:
+                return 20
+            else:
+                return 0
+        
+        if rank < 31 and self.pick.soy_owgr < 31:
+            return -30
+        elif rank < 31 and self.pick.soy_owgr > 30:
+            return -80
+        elif rank > 31 and self.pick.soy_owgr < 31:
+            return 20
+        else:
+            return 0
+            
+
