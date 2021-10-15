@@ -43,12 +43,14 @@ from operator import itemgetter
 
 
 start  = datetime.now()
-#s = Season.objects.get(current=True)
-#t = Tournament.objects.get(current=True)
-#espn = espn_api.ESPNData()
+t = Tournament.objects.get(current=True)
+print (t)
+espn = espn_api.ESPNData()
+espn_nums = Picks.objects.filter(playerName__tournament=t, user__pk=1).values_list('espn_number', flat=True)
+for p in Picks.objects.filter(playerName__tournament=t, user__pk=1):
+    #print ([x for x in espn.field()[0].items() if x == p.playerName.golfer.espn_number])
+    print (p.playerName.golfer.golfer_name, espn.get_rank(espn.golfer_data(p.playerName.golfer.espn_number)), espn.get_movement(espn.golfer_data(p.playerName.golfer.espn_number)))
 
-s = FedExSeason.objects.get(season__current=True)
-print (s.picks_by_golfer())
 print (datetime.now() - start)
 exit()
 

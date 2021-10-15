@@ -1,4 +1,6 @@
 import os
+
+from django.db.models.query import QuerySet
 os.environ.setdefault("DJANGO_SETTINGS_MODULE","gamesProj.settings")
 
 import django
@@ -13,6 +15,7 @@ import time
 import urllib
 from urllib import request
 import json
+from fb_app import fb_serializers
 #from fb_app.scores import Scores
 #from urllib.request import Request, urlopen
 #from selenium.webdriver import Chrome, ChromeOptions
@@ -31,13 +34,28 @@ from django.core import serializers
 from math import ceil
 from fb_app import views
 from django.http import HttpRequest
-import load_sheet
+from rest_framework.renderers import JSONRenderer
+from rest_framework.parsers import JSONParser
 
+import io
 
 start = datetime.now()
-week = Week.objects.get(season_model__current=True, week=4)
-load_sheet.readSheet('FOOTBALL FOOLS week 4.xml', 25, week)
-week.update_scores(League.objects.get(league="Football Fools"),  recalc=True)
+#data = Picks.objects.filter(week__season_model__current=True, week__week=5, player__league__league='Football Fools')
+data = fb_serializers.PicksSerializer(Picks.objects.filter(week__season_model__current=True, week__week=5, player__league__league='Football Fools'), many=True).data
+
+#data = serializers.serialize(queryset=Picks.objects.filter(week__season_model__current=True, week__week=5, player__league__league='Golfers'), format='json')
+#week = Week.objects.get(season_model__current=True, week=4)
+#load_sheet.readSheet('FOOTBALL FOOLS week 4.xml', 25, week)
+#week.update_scores(League.objects.get(league="Football Fools"),  recalc=True)
+
+print (data)
+print ('serializer: ', datetime.now() - start)
+
+
+req = HttpRequest()
+req.method = 'GET'
+
+print (req)
 exit()
 
 #league = League.objects.get(league="Golfers")

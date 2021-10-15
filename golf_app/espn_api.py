@@ -101,10 +101,17 @@ class ESPNData(object):
         return self.field_data
 
 
-    def picked_golfers(self):
-        golfers = list(Picks.objects.filter(playerName__tournament=self.t).values_list('playerName__golfer__espn_number', flat=True))
+    def golfer_data(self, espn_num=None):
+        if espn_num:
+            #print (espn_num, [x for x in self.field_data if x.get('id') == espn_num])
+            return [x for x in self.field_data if x.get('id') == espn_num][0]
+        else:
+            return None
+
+        ## fix this to have more options, all or other extracts?
+        #golfers = list(Picks.objects.filter(playerName__tournament=self.t).values_list('playerName__golfer__espn_number', flat=True))
         
-        return [x for x in self.field_data if x.get('id') in golfers]
+        #return [x.get('athlete').get('displayName') for x in self.field_data if x.get('id') in golfers]
 
     
     def get_all_data(self):
@@ -123,10 +130,11 @@ class ESPNData(object):
         if golfer_data.get('status').get('type').get('id') in ['3']:
            return golfer_data.get('status').get('type').get('shortDetail')
         else:
-           return golfer_data.get('status').get('position')
+           return golfer_data.get('status').get('position').get('id')
+           
         
     def get_movement(self, golfer_data):
-        print (golfer_data.get('movement'))
+        return golfer_data.get('movement')
 
     def get_player_hole():
         pass

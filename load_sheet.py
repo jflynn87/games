@@ -150,4 +150,4 @@ def readSheet(file,numPlayers,override_week=None):
 
 
 
-#readSheet('21-22 FOOTBALL FOOLS.xml', 25)
+readSheet('21-22 FOOTBALL FOOLS.xml', 25)

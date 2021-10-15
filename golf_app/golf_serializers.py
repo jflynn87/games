@@ -1,5 +1,4 @@
 from rest_framework import serializers
-import json
 from golf_app.models import Field, ScoreDetails, Golfer, CountryPicks, Picks, Tournament, FedExField, Season, FedExPicks
 from golf_app import espn_api
 from datetime import datetime

@@ -575,7 +575,7 @@ class Golfer(models.Model):
             missing_t = Tournament.objects.filter(season__season__gte='2021').exclude(current=True).exclude(pga_tournament_num='468').count() - len(self.results)
         else:
             missing_t = Tournament.objects.filter(season__season__gte='2021').exclude(current=True).exclude(pga_tournament_num='468').count()
-        print ('results counts ', missing_t)
+        #print ('results counts ', missing_t)
  
         if self.results and not rerun:
             #tournaments = Tournament.objects.filter(season=season).exclude(pk__in=list(self.results.keys())).exclude(current=True).exclude(pga_tournament_num='468') #ryder cup
