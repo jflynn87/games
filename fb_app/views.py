@@ -744,10 +744,12 @@ class GetPick(APIView):
             try:
                 data[pick.pick_num].update({str(pick.player.name.username): 
                     {'team': pick.team.nfl_abbr, 
+                    'logo': pick.team.pic,
                     'loser': pick.is_loser()}})
             except Exception as e:
                 data[pick.pick_num] = {str(pick.player.name.username): 
                     {'team': pick.team.nfl_abbr, 
+                    'logo': pick.team.pic, 
                     'loser': pick.is_loser()}}
                 
         return Response(json.dumps(data), 200)

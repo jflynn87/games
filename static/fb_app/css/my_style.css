@@ -41,12 +41,25 @@ body {
   padding-right: 20px;
 }
 
-.loser {
-  color: red;
-  text-decoration-line: line-through;
-
+.tbl_center {
+  text-align: center;
 }
 
+.loser {
+  position: relative;
+  opacity: 75%;
+  text-align: center;
+  
+}
+
+.loser p{
+  position: absolute;
+  color: red;
+  top: 15%;
+  left: 40%;
+  
+  
+}
 
 .record {
   font-size: .25cm;

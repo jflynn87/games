@@ -54,10 +54,13 @@ function get_picks() {
              $.each(data, function(player, pick) {
                  p =player.replace(filler, '')
                 if (pick['loser']) {
-                $('#pick-' + p + num).text(pick['team']).removeClass('status').addClass('loser')
+                //$('#pick-' + p + num).text(pick['team']).removeClass('status').addClass('loser')
+                $('#pick-' + p + num).html('<img src=' + pick['logo'] + ' height=40 width=40 class=loser></img> <p>X</p>').addClass('loser').addClass('fs-2').removeClass('status')
+                
                 }
                 else {
-                $('#pick-' + p + num).text(pick['team']).removeClass('status')
+                $('#pick-' + p + num).html('<img src=' + pick['logo'] + ' height=40 width=40">').addClass('tbl_center').removeClass('status')
+                //$('#pick-' + p + num).text(pick['team']).removeClass('status')
                 }
              })
         })
@@ -75,7 +78,7 @@ games = $.parseJSON(json)['games']
 
 
 if (first_time) {
-$('#picks-sect').append('<table id=picks-tbl class="table table-striped"> </table>')
+$('#picks-sect').append('<table id=picks-tbl class="table table-striped table-sm tbl_center"> </table>')
 
 //headers
 $('#picks-tbl').append('<thead style="background-color:lightblue">' + '<th> Week' + $("#week").text() + '</th> </thead>')
@@ -100,7 +103,8 @@ for (var i= 16; i > 16 - parseInt($('#game_cnt').text()); i -- ) {
     $('#picks-tbl').append('<tr id=pick-' + i + '> <td>' + i + '</td> </tr>')
     $.each(picks_data, function(player, data) {
         if (first_time) {
-        $('#pick-' + i).append('<td id=pick-' + player.replace(filler, '') + i +' class=status> updating... </td>') 
+        //$('#pick-' + i).append('<td id=pick-' + player.replace(filler, '') + i +' class=status> updating... </td>') 
+        $('#pick-' + i).append('<td id=pick-' + player.replace(filler, '') + i +' ></td>') 
         }
         else {$('#pick-' + i).append('<td id=pick-' + player.replace(filler, '') + i +' class=status>' + $('#pick-' + player.replace(filler, '') + i).text()  +'</td>')
     }})}

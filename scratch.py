@@ -36,26 +36,62 @@ from fb_app import views
 from django.http import HttpRequest
 from rest_framework.renderers import JSONRenderer
 from rest_framework.parsers import JSONParser
+import cProfile
 
 import io
 
+
+for t in Teams.objects.all():
+    t.pic = 'https://a.espncdn.com/combiner/i?img=/i/teamlogos/nfl/500/' + str(t.nfl_abbr.lower()) +  '.png'
+    t.save()
+
+exit()
+
+
+view_start = datetime.now()
+i = 16
+while i >= 1:
+    
+    req = HttpRequest()
+    req.method = 'GET'
+    req.data = {'week': '5',
+            #'pick_num': str(i),
+           'pick_num': i,
+            'league': 'Football Fools'}
+    view = views.GetPick().post(req)
+    #print (view.data)
+    i -= 1
+    print ('loop: ', datetime.now() - view_start)
+print ('view dur: ', datetime.now() - view_start)
+exit()
+
+
 start = datetime.now()
 #data = Picks.objects.filter(week__season_model__current=True, week__week=5, player__league__league='Football Fools')
-data = fb_serializers.PicksSerializer(Picks.objects.filter(week__season_model__current=True, week__week=5, player__league__league='Football Fools'), many=True).data
+#cProfile.run("fb_serializers.PicksSerializer(Picks.objects.filter(week__season_model__current=True, week__week=5, player__league__league='Golfers'), many=True).data")
+data = fb_serializers.PicksSerializer(Picks.objects.filter(week__season_model__current=True, week__week=5, player__league__league='Golfers'), many=True).data
 
 #data = serializers.serialize(queryset=Picks.objects.filter(week__season_model__current=True, week__week=5, player__league__league='Golfers'), format='json')
 #week = Week.objects.get(season_model__current=True, week=4)
 #load_sheet.readSheet('FOOTBALL FOOLS week 4.xml', 25, week)
 #week.update_scores(League.objects.get(league="Football Fools"),  recalc=True)
-
+#for d in data:
 print (data)
 print ('serializer: ', datetime.now() - start)
 
-
-req = HttpRequest()
-req.method = 'GET'
-
-print (req)
+view_start = datetime.now()
+i = 16
+while i >= 1:
+    req = HttpRequest()
+    req.method = 'GET'
+    req.data = {'week': '5',
+            'pick_num': str(i),
+            'league': 'Golfers'}
+    view = views.GetPick().post(req)
+    #print (view.data)
+    i -= 1
+#print (view.__dict__)
+print ('view dur: ', datetime.now() - view_start)
 exit()
 
 #league = League.objects.get(league="Golfers")

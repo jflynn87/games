@@ -1,12 +1,8 @@
 from datetime import datetime, timedelta
-#import pytz
-#import urllib
 from requests import get
 import json
-#from bs4 import BeautifulSoup
 from golf_app import utils
 from golf_app.models import Tournament, Field, Golfer, ScoreDict, Picks
-#from collections import OrderedDict
 
 
 class ESPNData(object):
@@ -118,6 +114,9 @@ class ESPNData(object):
         return self.all_data
 
     def cut_num(self):
+        if self.event_data.get('tournament').get('cutRound') == 0:
+            print ('no cut')
+            return len([x for x in self.field_data if x.get('status').get('type').get('id') != '3'])
         if self.event_data.get('tournament').get('cutCount'):
             return self.event_data.get('tournament').get('cutCount')
         else:

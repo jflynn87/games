@@ -42,19 +42,66 @@ import random
 from operator import itemgetter
 
 
-start  = datetime.now()
+start = datetime.now()
+
 t = Tournament.objects.get(current=True)
-print (t)
+api_start = datetime.now()
+
+
 espn = espn_api.ESPNData()
-espn_nums = Picks.objects.filter(playerName__tournament=t, user__pk=1).values_list('espn_number', flat=True)
-for p in Picks.objects.filter(playerName__tournament=t, user__pk=1):
-    #print ([x for x in espn.field()[0].items() if x == p.playerName.golfer.espn_number])
-    print (p.playerName.golfer.golfer_name, espn.get_rank(espn.golfer_data(p.playerName.golfer.espn_number)), espn.get_movement(espn.golfer_data(p.playerName.golfer.espn_number)))
 
-print (datetime.now() - start)
+print ('api dur: ', datetime.now() - api_start)
+
+start_big = datetime.now()
+
+big = {}
+
+for g in Group.objects.filter(tournament=t):
+    golfers = Field.objects.filter(group=g).values_list('golfer__espn_number', flat=True)
+    min_score = min([int(x.get('status').get('position').get('id')) - Field.objects.values('handi').get(tournament=t, golfer__espn_number=x.get('id')).get('handi') for x in espn.field() if x.get('id') in golfers])
+    best = [x.get('athlete').get('id') for x in espn.field() if x.get('id') in golfers and int(x.get('status').get('position').get('id')) - Field.objects.values('handi').get(tournament=t, golfer__espn_number=x.get('id')).get('handi') == min_score]
+    for b in best:
+        big[b] = {'group': g}
+
+print ('big dur ', datetime.now() - start_big)
+
+start_calc_score  = datetime.now()
+
+d = {}
+for u in t.season.get_users('obj'):
+    d[u.username] = {'score': 0}
+
+for golfer in Picks.objects.filter(playerName__tournament=t).values('playerName__golfer__espn_number').distinct():
+    p = Picks.objects.filter(playerName__tournament=t, playerName__golfer__espn_number=golfer.get('playerName__golfer__espn_number')).first()
+    for pick in Picks.objects.filter(playerName__tournament=t, playerName__golfer__espn_number=p.playerName.golfer.espn_number):
+        if espn.golfer_data(pick.playerName.golfer.espn_number):
+            if espn.golfer_data(pick.playerName.golfer.espn_number).get('status').get('type').get('id') == "3":
+                print ('cut logic')
+                score = d.get(pick.user.username).get('score') + (int(espn.cut_num()) + 1) - int(pick.playerName.handi)
+            else: 
+                score = d.get(pick.user.username).get('score') + int(espn.get_rank(espn.golfer_data(pick.playerName.golfer.espn_number))) - int(pick.playerName.handi)
+        else:
+            score = (int(espn.cut_num()) + 1) - pick.handi
+        if big.get(pick.playerName.golfer.espn_number):
+            score -= 10
+        d.get(pick.user.username).update({'score': score})
+    
+    #print (d.get('john'))
+
+print (d)
+print (datetime.now() - start_calc_score)
+print ('cut num ', espn.cut_num())
+print ('total time: ', datetime.now() - start)
+
+for ts in TotalScore.objects.filter(tournament=t):
+    if ts.score == d.get(ts.user.username).get('score'):
+        print (ts.user, ' : match')
+    else:
+        print (ts.user, ': mismatch : ', ts.score, d.get(ts.user.username).get('score'))
+
+
 exit()
 
-exit()
 #for c in espn.event_data.get('competitions'):
 #    for k,v in c.items():
 #        if k != 'competitors':

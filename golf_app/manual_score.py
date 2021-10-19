@@ -163,7 +163,7 @@ class Score(object):
 
         for p in Picks.objects.filter(playerName__tournament=self.tournament).values('playerName').distinct():
             pick_loop_start = datetime.now()
-            #print (p)
+            #print ('PICK ', p)
             pick = Picks.objects.filter(playerName__pk=p.get('playerName')).first()
             sd, sd_created = ScoreDetails.objects.get_or_create(user=pick.user, pick=pick)
 
@@ -173,6 +173,7 @@ class Score(object):
                 #print ('temp', temp)
                 data = temp[0] 
                 #print ('data', data)
+                #print ('SD: ', sd, sd.user, sd.gross_score, int(utils.formatRank(data.get('rank'))))
                 
                 if ScoreDetails.objects.filter(pick__playerName__tournament=self.tournament, pick__playerName__golfer__espn_number=pick.playerName.golfer.espn_number) \
                         .exclude(gross_score=utils.formatRank(data.get('rank')), thru=data.get('thru'), toPar=data.get('total_score')).count() == 0:
