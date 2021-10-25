@@ -28,7 +28,7 @@ from selenium import webdriver
 import urllib
 import json
 from golf_app import views, manual_score, populateField, withdraw, scrape_scores_picks, utils, \
-                            scrape_masters, scrape_espn, espn_api, fedexData, espn_ryder_cup, ryder_cup_scores
+                            scrape_masters, scrape_espn, espn_api, fedexData, espn_ryder_cup, ryder_cup_scores, bonus_details
 from unidecode import unidecode
 from django.core import serializers
 from golf_app.utils import formatRank, format_name, fix_name
@@ -45,9 +45,8 @@ from operator import itemgetter
 start = datetime.now()
 
 t = Tournament.objects.get(current=True)
+
 api_start = datetime.now()
-
-
 espn = espn_api.ESPNData()
 
 print ('api dur: ', datetime.now() - api_start)
@@ -72,25 +71,35 @@ for u in t.season.get_users('obj'):
     d[u.username] = {'score': 0}
 
 for golfer in Picks.objects.filter(playerName__tournament=t).values('playerName__golfer__espn_number').distinct():
-    p = Picks.objects.filter(playerName__tournament=t, playerName__golfer__espn_number=golfer.get('playerName__golfer__espn_number')).first()
-    for pick in Picks.objects.filter(playerName__tournament=t, playerName__golfer__espn_number=p.playerName.golfer.espn_number):
-        if espn.golfer_data(pick.playerName.golfer.espn_number):
-            if espn.golfer_data(pick.playerName.golfer.espn_number).get('status').get('type').get('id') == "3":
-                print ('cut logic')
-                score = d.get(pick.user.username).get('score') + (int(espn.cut_num()) + 1) - int(pick.playerName.handi)
-            else: 
-                score = d.get(pick.user.username).get('score') + int(espn.get_rank(espn.golfer_data(pick.playerName.golfer.espn_number))) - int(pick.playerName.handi)
-        else:
-            score = (int(espn.cut_num()) + 1) - pick.handi
-        if big.get(pick.playerName.golfer.espn_number):
-            score -= 10
-        d.get(pick.user.username).update({'score': score})
+    pick = Picks.objects.filter(playerName__tournament=t, playerName__golfer__espn_number=golfer.get('playerName__golfer__espn_number')).first()
+    if espn.golfer_data(pick.playerName.golfer.espn_number):
+        if espn.golfer_data(pick.playerName.golfer.espn_number).get('status').get('type').get('id') == "3":
+            print ('cut logic')
+            score = (int(espn.cut_num()) + 1) - int(pick.playerName.handi)
+        else: 
+            score = int(espn.get_rank(pick.playerName.golfer.espn_number)) - int(pick.playerName.handi)
+    else:
+        print ('WD? not found in espn: ', pick.playerName, pick.golfer.espn_number)
+        score = (int(espn.cut_num()) + 1) - int(pick.playerName.handi)
+
+    bd_start = datetime.now()
+    bd = bonus_details.BonusDtl(espn, t)
+    bd_big = bd.best_in_group(big, pick)
+    #if big.get(pick.playerName.golfer.espn_number):
+    if bd_big:
+        score -= 10 
+    if bd.winner(pick):
+        score -= 52
+
+        #print ('db class dur: ', pick, datetime.now() - bd_start)
+    for p in Picks.objects.filter(playerName__tournament=t, playerName__golfer__espn_number=pick.playerName.golfer.espn_number):
+        d.get(p.user.username).update({'score': d.get(p.user.username).get('score') + score})
     
-    #print (d.get('john'))
+    #print (d.get('john'), score)
 
 print (d)
-print (datetime.now() - start_calc_score)
-print ('cut num ', espn.cut_num())
+print ('calc score dur: ', datetime.now() - start_calc_score)
+#print ('cut num ', espn.cut_num())
 print ('total time: ', datetime.now() - start)
 
 for ts in TotalScore.objects.filter(tournament=t):
@@ -98,7 +107,6 @@ for ts in TotalScore.objects.filter(tournament=t):
         print (ts.user, ' : match')
     else:
         print (ts.user, ': mismatch : ', ts.score, d.get(ts.user.username).get('score'))
-
 
 exit()
 

@@ -71,6 +71,16 @@ class ESPNData(object):
             
         return False
 
+    def tournament_complete(self):
+        #print (self.event_data.get('status'))
+        return self.event_data.get('status').get('type').get('completed')
+
+    def playoff(self):
+        #print ('playoff :', self.event_data.get('playoffType'))
+        if self.event_data.get('playoffType').get('id') == -1:
+            return False
+        else:
+            return True
 
     def player_started(self, espn_num):
         if Field.objects.filter(tournament=self.t, golfer__espn_number=espn_num, withdrawn=True).exists():
@@ -125,7 +135,8 @@ class ESPNData(object):
 
         #need to make this work pre-cut
 
-    def get_rank(self, golfer_data):
+    def get_rank(self, espn_number):
+        golfer_data = self.golfer_data(espn_number)
         if golfer_data.get('status').get('type').get('id') in ['3']:
            return golfer_data.get('status').get('type').get('shortDetail')
         else:

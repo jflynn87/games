@@ -31,9 +31,28 @@
 
 
 {%if not week.started%}
+<h2>Week {{prior_week.week}} Results</h2>
+<br>
+<p><a href="{%url 'fb_app:scores_list' pk=prior_week.pk %}">Prior Week Details</a></p>
+<br>
 
+<table class='table table=sm' style='width: 50%;'> 
+  <tr>
+    <th>Player</th>
+    <th>Score</th>
+  </tr>
+  
+{%for score in scores%}
+<tr>
+  <td>{{score.player.name.username}}</td>
+  <td>{{score.score}}</td>
+</tr>
 
-<h2>Week {{week}}: come back when the games begin.</h2
+{%endfor%}
+</table>
+
+<h2>Week {{week}}: come back when the games begin.</h2>
+
 <br>
 <h4>Picks Submitted:</h4>
  {%for player in players%} <li> {{player}} </li> {%endfor%}

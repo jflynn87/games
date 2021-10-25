@@ -863,6 +863,11 @@ class Field(models.Model):
             return False
         return True
 
+    def fedex_pick(self, user):
+        if FedExPicks.objects.filter(user=user, pick__golfer=self.golfer):
+            return True
+        return False
+
 
 class PGAWebScores(models.Model):
     tournament= models.ForeignKey(Tournament, on_delete=models.CASCADE)
@@ -879,8 +884,6 @@ class PGAWebScores(models.Model):
 
     def __str__(self):
         return str(self.tournament) + str(self.golfer)
-
-
 
 
 class Name(models.Model):
@@ -956,7 +959,6 @@ class ScoreDetails(models.Model):
             return True
         else:
             return False
-
 
 
 
@@ -1200,8 +1202,6 @@ class FedExSeason(models.Model):
             fedex = populateField.get_fedex_data(t)
         
         return fedex
-
-
         
 
 class FedExField(models.Model):

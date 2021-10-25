@@ -7,6 +7,7 @@ class FieldSerializer(serializers.ModelSerializer):
 
     prior = serializers.SerializerMethodField('get_prior')
     recent = serializers.SerializerMethodField('get_recent')
+    
     #started = serializers.SerializerMethodField('get_started')
 
     class Meta:
@@ -21,6 +22,7 @@ class FieldSerializer(serializers.ModelSerializer):
     def get_recent(self, field):
         recent = field.recent_results()
         return recent
+
     
     #def get_started(self, field):
     #    started = field.started()
@@ -33,6 +35,7 @@ class NewFieldSerializer(serializers.ModelSerializer):
     pga_link = serializers.SerializerMethodField('get_pga_link')
     started = serializers.SerializerMethodField('get_started')
     lock_group = serializers.SerializerMethodField('get_group_lock')
+    fedex_pick = serializers.SerializerMethodField('get_fedex')
     #user = serializers.SerializerMethodField('get_user')
 
     class Meta:
@@ -78,6 +81,10 @@ class NewFieldSerializer(serializers.ModelSerializer):
 
         return False
 
+
+    def get_fedex(self, field):
+        user = self.context.get('user')
+        return field.fedex_pick(user)
 
 
 class ScoreDetailsSerializer(serializers.ModelSerializer):

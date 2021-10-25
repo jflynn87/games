@@ -579,19 +579,33 @@ function build_golfer_row(field, pick_array) {
     flag.src = field.golfer.flag_link
     google = document.createElement('a')
     google.href = 'https://www.google.com/search?q=' + field.playerName
+    google.target =  '_blank'
     google.innerHTML = " Google"
     espn = document.createElement('a')
     espn.href = field.espn_link
     espn.innerHTML = "/ESPN"
+    espn.target =  '_blank'
     pga = document.createElement('a')
     pga.href = field.pga_link
     pga.innerHTML = "/PGA"
+    pga.target =  '_blank'
 
     golfer.appendChild(img)
-    if (field.started || field.withdrawn) {
-        t = field.playerName.strike() + ' ' + status}
+    if (field.withdrawn) {
+        t = ' ' + field.playerName.strike() + ' ' + status}
+    else if (field.started && ! field.tournament.late_picks) {
+        t = ' ' + field.playerName.strike() + ' ' + status
+                                                           }
     else {
-        t = field.playerName + ' ' + status
+        t = ' ' + field.playerName + ' ' + status
+    }
+
+    if (field.fedex_pick) {
+        fedex = document.createElement('img')
+        fedex.src = '/static/img/fedex.jpg'
+        fedex.style.width = '30px'
+        //fedex.style.border='1px solid lightblue';
+        golfer.appendChild(fedex)
     }
 
     text = document.createElement('b')
@@ -602,28 +616,18 @@ function build_golfer_row(field, pick_array) {
     golfer.appendChild(google)
     golfer.appendChild(espn)
     golfer.appendChild(pga)
-    
-    t1 = document.createElement('b')
-    //t1.innerHTML = '      ' + 'OWGR: ' + field.currentWGR + ' ;  ' + 'Handicap: ' + field.handi + ' ; ' +  "Prior Year: " + field.prior_year
-    console.log('WIDTH ', $(window).width())
-    if ($(window).width() < 650) {
-    p1 = document.createElement('p')
-    p1.innerHTML = 'OWGR: ' + field.currentWGR
-    p2 = document.createElement('p')
-    p2.innerHTML = 'Handicap: ' + field.handi
-    p3 = document.createElement('p')
-    p3.innerHTML = "Prior Year: " + field.prior_year
-    //t1.innerHTML = '      ' + 'OWGR: ' + field.currentWGR + ' ;  ' + 'Handicap: ' + field.handi + ' ; ' +  "Prior Year: " + field.prior_year
-    t1.appendChild(p1)
-    t1.appendChild(p2)
-    t1.appendChild(p3)
-                            }
+
+    fed_ex_data = ''
+    if (field.season_stats.fed_ex_rank == 'n/a') {
+        fed_ex_data = 'n/a'
+    }
     else {
-        t1.innerHTML = '      ' + 'OWGR: ' + field.currentWGR + ' ;  ' + 'Handicap: ' + field.handi + ' ; ' +  "Prior Year: " + field.prior_year
+        fed_ex_data = field.season_stats.fed_ex_rank + ' / ' + field.season_stats.fed_ex_points + ' pts.'
     }
 
-    golfer.appendChild(t1)
-    
+    t1 = document.createElement('b')
+    //t1.innerHTML = '      ' + 'OWGR: ' + field.currentWGR + ' ;  ' + 'Handicap: ' + field.handi + ' ; ' +  "Prior Year: " + field.prior_year
+
     expand = document.createElement('i')
         expand.classList.add('fa', 'fa-plus-circle', 'expand')
         //expand.style.color = 'white'
@@ -631,6 +635,31 @@ function build_golfer_row(field, pick_array) {
         expand.innerHTML = 'Show Golfer Stats'
         expand.id = 'expand-' + field.id
         expand.addEventListener('click', function() {toggle_golfer_stats(field.id)})
+
+
+    if ($(window).width() < 650) {
+        p1 = document.createElement('p')
+        p1.innerHTML = 'OWGR: ' + field.currentWGR + " ; Prior Year: " + field.prior_year
+        p2 = document.createElement('p')
+        p2.innerHTML = 'Handicap: ' + field.handi + ' ; FedEx: ' + fed_ex_data
+        //p2a = document.createElement('p')
+        //p2a.innerHTML = 'FedEx Rank: ' + field.season_stats.fed_ex_rank
+        //p3 = document.createElement('p')
+        //p3.innerHTML = "Prior Year: " + field.prior_year
+        //t1.innerHTML = '      ' + 'OWGR: ' + field.currentWGR + ' ;  ' + 'Handicap: ' + field.handi + ' ; ' +  "Prior Year: " + field.prior_year
+        t1.appendChild(p1)
+        t1.appendChild(p2)
+        //t1.appendChild(p2a)
+        //t1.appendChild(p3)
+                            }
+    else {
+        t1.innerHTML = '      ' + 'OWGR: ' + field.currentWGR + ' ;  ' + 'Handicap: ' + field.handi + ' ; ' + "FedEx: " +
+        fed_ex_data + 
+         ' ; ' + "Prior Year: " + field.prior_year
+    }
+
+    golfer.appendChild(t1)
+    
     
         golfer.appendChild(expand)
     

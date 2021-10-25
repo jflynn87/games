@@ -561,11 +561,15 @@ class NewScoresView(TemplateView):
                 else:
                     picks_pending.append(player.name.username)
             
+            prior_week_scores = WeekScore.objects.filter(player__league=league, week__week=week.week - 1, week__season_model__current=True).order_by('score')
+
             context.update ({'players': picks_submitted,
                         #'picks': pick_dict,
                         'week': week,
                         'pending': picks_pending,
                         'league': league, 
+                        'scores': prior_week_scores,
+                        'prior_week': Week.objects.get(week=week.week-1, season_model__current=True)
                         
                         #'games': Games.objects.filter(week=week).order_by('eid'),
                              })

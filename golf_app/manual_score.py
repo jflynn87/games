@@ -188,7 +188,7 @@ class Score(object):
                     print ('WD/DQ: ', pick, data)
                     score = self.get_wd_score(pick) 
                 else:
-                    if int(utils.formatRank(data.get('rank'))) > cut_num:
+                    if self.tournament.has_cut and int(utils.formatRank(data.get('rank'))) > cut_num:
                          score=cut_num + self.cut_penalty(pick)
                     else:
                         score = utils.formatRank(data.get('rank')) 
@@ -308,7 +308,7 @@ class Score(object):
                     if int(self.tournament.season.season) < 2022:
                         BonusDetails.objects.filter(user=loser.user, tournament=loser.playerName.tournament).update(playoff_bonus= 25)
                     else:
-                        bd, created = BonusDetails.objects.get_or_create(user=winner.user, tournament=winner.playerName.tournament, bonus_type='4')
+                        bd, created = BonusDetails.objects.get_or_create(user=loser.user, tournament=loser.playerName.tournament, bonus_type='4')
                         bd.bonus_points = 25
                         bd.save()
                     playoff_loser_picked = True
