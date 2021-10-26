@@ -45,7 +45,8 @@ $(document).ready(function () {
                     '</div>' +
                     '<input id=sub_button type="submit" class="btn btn-secondary" value="Submit Picks" disabled>' 
                     )
-
+                    //window.onscroll = function () {console.log('focus: ', document.activeElement.querySelector)}
+                    
                     $.each(info, function(group, picks) {if (group != "total"){ $('#jump_to').append('<a href=#tbl-group-' + group + '>' + group + '</a>' + ' ')}}) 
                    // $('#grp_6_buttons').append('<button id=show_6_button class="btn btn-primary btn-group-sm">My G-6 Picks</button>')
 
@@ -610,12 +611,12 @@ function build_golfer_row(field, pick_array) {
 
     text = document.createElement('b')
     text.innerHTML = t
-    golfer.append(text)
+    //golfer.append(text)
     
-    golfer.appendChild(flag)
-    golfer.appendChild(google)
-    golfer.appendChild(espn)
-    golfer.appendChild(pga)
+    //golfer.appendChild(flag)
+    //golfer.appendChild(google)
+    //golfer.appendChild(espn)
+    //golfer.appendChild(pga)
 
     fed_ex_data = ''
     if (field.season_stats.fed_ex_rank == 'n/a') {
@@ -642,17 +643,26 @@ function build_golfer_row(field, pick_array) {
         p1.innerHTML = 'OWGR: ' + field.currentWGR + " ; Prior Year: " + field.prior_year
         p2 = document.createElement('p')
         p2.innerHTML = 'Handicap: ' + field.handi + ' ; FedEx: ' + fed_ex_data
-        //p2a = document.createElement('p')
-        //p2a.innerHTML = 'FedEx Rank: ' + field.season_stats.fed_ex_rank
-        //p3 = document.createElement('p')
-        //p3.innerHTML = "Prior Year: " + field.prior_year
-        //t1.innerHTML = '      ' + 'OWGR: ' + field.currentWGR + ' ;  ' + 'Handicap: ' + field.handi + ' ; ' +  "Prior Year: " + field.prior_year
         t1.appendChild(p1)
         t1.appendChild(p2)
-        //t1.appendChild(p2a)
-        //t1.appendChild(p3)
+        golfer.append(text)
+    
+        golfer.appendChild(flag)
+        golfer.appendChild(google)
+        golfer.appendChild(espn)
+        golfer.appendChild(pga)
+        golfer.appendChild(expand)
+
                             }
     else {
+        golfer.append(text)
+    
+        golfer.appendChild(flag)
+        golfer.appendChild(google)
+        golfer.appendChild(espn)
+        golfer.appendChild(pga)
+        golfer.appendChild(expand)
+
         t1.innerHTML = '      ' + 'OWGR: ' + field.currentWGR + ' ;  ' + 'Handicap: ' + field.handi + ' ; ' + "FedEx: " +
         fed_ex_data + 
          ' ; ' + "Prior Year: " + field.prior_year
@@ -661,7 +671,7 @@ function build_golfer_row(field, pick_array) {
     golfer.appendChild(t1)
     
     
-        golfer.appendChild(expand)
+        
     
     //    $('#expand-' + g).on('click', function() {
     //    toggle_stats_display(this, $('#tbl-group-' +g))
