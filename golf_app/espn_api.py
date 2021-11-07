@@ -2,7 +2,7 @@ from datetime import datetime, timedelta
 from requests import get
 import json
 from golf_app import utils
-from golf_app.models import Tournament, Field, Golfer, ScoreDict, Picks
+from golf_app.models import Tournament, Field, Group
 
 
 class ESPNData(object):
@@ -108,10 +108,13 @@ class ESPNData(object):
 
 
     def golfer_data(self, espn_num=None):
-        if espn_num:
-            #print (espn_num, [x for x in self.field_data if x.get('id') == espn_num])
-            return [x for x in self.field_data if x.get('id') == espn_num][0]
-        else:
+        try:
+            if espn_num:
+                return [x for x in self.field_data if x.get('id') == espn_num][0]
+            else:
+                return None
+        except Exception as e:
+            print ('espnApi golfer_data issue, espn_num: ', espn_num, e)
             return None
 
         ## fix this to have more options, all or other extracts?
@@ -127,8 +130,10 @@ class ESPNData(object):
         if self.event_data.get('tournament').get('cutRound') == 0:
             print ('no cut')
             return len([x for x in self.field_data if x.get('status').get('type').get('id') != '3'])
-        if self.event_data.get('tournament').get('cutCount'):
+        if self.event_data.get('tournament').get('cutCount') != 0:
             return self.event_data.get('tournament').get('cutCount')
+        elif self.t.has_cut and int(self.get_round()) <= int(self.t.saved_cut_round):
+            return  min(int(x.get('status').get('position').get('id')) for x in self.field_data if int(x.get('status').get('position').get('id')) > int(self.t.saved_cut_num)) 
         else:
             cuts = [v for v in self.field_data if v.get('status').get('type').get('id') == '3']
             return len(cuts)
@@ -137,11 +142,44 @@ class ESPNData(object):
 
     def get_rank(self, espn_number):
         golfer_data = self.golfer_data(espn_number)
+        if not golfer_data:
+            return "WD"
         if golfer_data.get('status').get('type').get('id') in ['3']:
            return golfer_data.get('status').get('type').get('shortDetail')
         else:
            return golfer_data.get('status').get('position').get('id')
+
+    def group_stats(self):
+        '''takes a espn api obj, returns a dict with best in group and group cut counts'''
+        d = {}
+
+        for g in Group.objects.filter(tournament=self.t):
+            #golfers = Field.objects.filter(group=g).values_list('golfer__espn_number', flat=True)
+            golfers = g.get_golfers()
+            min_score = min([int(x.get('status').get('position').get('id')) - Field.objects.values('handi').get(tournament=self.t, golfer__espn_number=x.get('id')).get('handi') for x in self.field_data if x.get('id') in golfers])
+            best = [x.get('athlete').get('id') for x in self.field_data if x.get('id') in golfers and int(x.get('status').get('position').get('id')) - Field.objects.values('handi').get(tournament=self.t, golfer__espn_number=x.get('id')).get('handi') == min_score]
+            cuts = len([x.get('athlete').get('id') for x in self.field_data if x.get('id') in golfers and x.get('status').get('type').get('id') == '3'])
+            for b in best:
+                d[b] = {'group': g}
+            d[g] = {'cuts': cuts}
+            g.cutCount = cuts
+            g.save()                        
+        return d
            
+    def cut_penalty(self, p):
+        '''takes a pick obj and a score obj, returns an int'''
+        if not p.playerName.group.cut_penalty():
+            return 0
+
+        #golfers = Field.objects.filter(group=p.playerName.group).values_list('golfer__espn_number', flat=True)
+        golfers = p.playerName.group.get_golfers()
+        #cuts = len([x for x in self.field_data if x.get('id') in golfers and x.get('status').get('type').get('id') == '3'])
+        cuts = p.playerName.group.cut_count(espn_api_data=self.field_data)
+        if cuts == 0:
+            return 0
+        else:
+            return p.playerName.group.playerCnt - cuts
+
         
     def get_movement(self, golfer_data):
         return golfer_data.get('movement')

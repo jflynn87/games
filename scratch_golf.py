@@ -40,73 +40,100 @@ import scipy.stats as ss
 import csv
 import random
 from operator import itemgetter
-
-
-start = datetime.now()
-
+import sys
+ 
 t = Tournament.objects.get(current=True)
 
-api_start = datetime.now()
-espn = espn_api.ESPNData()
+if os.environ.get('DEBUG'):
+    domain = '127.0.0.1:8000'
+else:
+    domain = 'jflynn87.pythonanywhere.com'
 
-print ('api dur: ', datetime.now() - api_start)
+req = Request('http://' + domain + '/golf_app/espn_api_scores/' + t.pga_tournament_num)
 
-start_big = datetime.now()
-
-big = {}
-
-for g in Group.objects.filter(tournament=t):
-    golfers = Field.objects.filter(group=g).values_list('golfer__espn_number', flat=True)
-    min_score = min([int(x.get('status').get('position').get('id')) - Field.objects.values('handi').get(tournament=t, golfer__espn_number=x.get('id')).get('handi') for x in espn.field() if x.get('id') in golfers])
-    best = [x.get('athlete').get('id') for x in espn.field() if x.get('id') in golfers and int(x.get('status').get('position').get('id')) - Field.objects.values('handi').get(tournament=t, golfer__espn_number=x.get('id')).get('handi') == min_score]
-    for b in best:
-        big[b] = {'group': g}
-
-print ('big dur ', datetime.now() - start_big)
-
-start_calc_score  = datetime.now()
-
-d = {}
-for u in t.season.get_users('obj'):
-    d[u.username] = {'score': 0}
-
-for golfer in Picks.objects.filter(playerName__tournament=t).values('playerName__golfer__espn_number').distinct():
-    pick = Picks.objects.filter(playerName__tournament=t, playerName__golfer__espn_number=golfer.get('playerName__golfer__espn_number')).first()
-    if espn.golfer_data(pick.playerName.golfer.espn_number):
-        if espn.golfer_data(pick.playerName.golfer.espn_number).get('status').get('type').get('id') == "3":
-            print ('cut logic')
-            score = (int(espn.cut_num()) + 1) - int(pick.playerName.handi)
-        else: 
-            score = int(espn.get_rank(pick.playerName.golfer.espn_number)) - int(pick.playerName.handi)
-    else:
-        print ('WD? not found in espn: ', pick.playerName, pick.golfer.espn_number)
-        score = (int(espn.cut_num()) + 1) - int(pick.playerName.handi)
-
-    bd_start = datetime.now()
-    bd = bonus_details.BonusDtl(espn, t)
-    bd_big = bd.best_in_group(big, pick)
-    #if big.get(pick.playerName.golfer.espn_number):
-    if bd_big:
-        score -= 10 
-    if bd.winner(pick):
-        score -= 52
-
-        #print ('db class dur: ', pick, datetime.now() - bd_start)
-    for p in Picks.objects.filter(playerName__tournament=t, playerName__golfer__espn_number=pick.playerName.golfer.espn_number):
-        d.get(p.user.username).update({'score': d.get(p.user.username).get('score') + score})
-    
-    #print (d.get('john'), score)
-
+data = views.EspnApiScores().get(req, t.pga_tournament_num)
+d = json.loads(data.content)
 print (d)
-print ('calc score dur: ', datetime.now() - start_calc_score)
-#print ('cut num ', espn.cut_num())
-print ('total time: ', datetime.now() - start)
 
 for ts in TotalScore.objects.filter(tournament=t):
     if ts.score == d.get(ts.user.username).get('score'):
         print (ts.user, ' : match')
     else:
         print (ts.user, ': mismatch : ', ts.score, d.get(ts.user.username).get('score'))
+
+# espn = espn_api.ESPNData().all_data
+
+# with open('espn_api_r1_complete.json', 'w') as convert_file:
+#      convert_file.write(json.dumps(espn))
+
+
+exit()
+
+# start = datetime.now()
+
+# t = Tournament.objects.get(current=True)
+# api_start = datetime.now()
+# espn = espn_api.ESPNData()
+
+# #print ('api dur: ', datetime.now() - api_start)
+
+# start_big = datetime.now()
+
+# big = espn.group_stats()
+
+# print ('big dur ', datetime.now() - start_big)
+
+# start_calc_score  = datetime.now()
+
+# d = {}
+# for u in t.season.get_users('obj'):
+#     d[u.username] = {'score': 0}
+
+# for golfer in Picks.objects.filter(playerName__tournament=t).values('playerName__golfer__espn_number').distinct():
+#     pick = Picks.objects.filter(playerName__tournament=t, playerName__golfer__espn_number=golfer.get('playerName__golfer__espn_number')).first()
+#     if espn.golfer_data(pick.playerName.golfer.espn_number):
+#         if espn.golfer_data(pick.playerName.golfer.espn_number).get('status').get('type').get('id') == "3":
+#             #print ('cut logic', pick.playerName)
+#             score = (int(espn.cut_num()) + 1) - int(pick.playerName.handi) + espn.cut_penalty(pick) 
+#         else: 
+#             score = int(espn.get_rank(pick.playerName.golfer.espn_number)) - int(pick.playerName.handi)
+#     else:
+#         print ('WD? not found in espn: ', pick.playerName, pick.playerName.golfer.espn_number) 
+#         score = (int(espn.cut_num()) + 1) - int(pick.playerName.handi) + espn.cut_penalty(pick)
+
+#     bd_start = datetime.now()
+#     bd = bonus_details.BonusDtl(espn, t)
+#     bd_big = bd.best_in_group(big, pick)
+#     #if big.get(pick.playerName.golfer.espn_number):
+#     if bd_big:
+#         score -= 10 
+#     if bd.winner(pick):
+#         score -= bd.winner_points(pick)
+
+#         #print ('db class dur: ', pick, datetime.now() - bd_start)
+#     for p in Picks.objects.filter(playerName__tournament=t, playerName__golfer__espn_number=pick.playerName.golfer.espn_number):
+#         d.get(p.user.username).update({'score': d.get(p.user.username).get('score') + score})
+    
+#     #print (d.get('jcarl62'), score)
+
+# if espn.tournament_complete():
+#     print ('a')
+#     ww_bd = bonus_details.BonusDtl(espn, t)
+#     winner_list = ww_bd.weekly_winner(d)
+#     print ('b', winner_list)
+#     for winner in winner_list:
+#         d.get(winner).update({'score': d.get(winner).get('score') - ww_bd.weekly_winner_points()})
+
+# print (d)
+# print ('calc score dur: ', datetime.now() - start_calc_score)
+# #print ('cut num ', espn.cut_num())
+# print ('total time: ', datetime.now() - start)
+
+# for ts in TotalScore.objects.filter(tournament=t):
+#     if ts.score == d.get(ts.user.username).get('score'):
+#         print (ts.user, ' : match')
+#     else:
+#         print (ts.user, ': mismatch : ', ts.score, d.get(ts.user.username).get('score'))
 
 exit()
 

@@ -46,8 +46,14 @@ $(document).ready(function () {
                     '<input id=sub_button type="submit" class="btn btn-secondary" value="Submit Picks" disabled>' 
                     )
                     //window.onscroll = function () {console.log('focus: ', document.activeElement.querySelector)}
+                    $('#jump_to').append('<a href=#tbl-group-1>' + 'next group' + '</a>' )
+                    var group_1 = document.getElementById('tbl-group-1')
+                    var group_2 = document.getElementById('tbl-group-2')
+                    $('#jump_to').on('click', function() {console.log(group_1.getBoundingClientRect(), group_2.getBoundingClientRect())}) 
                     
-                    $.each(info, function(group, picks) {if (group != "total"){ $('#jump_to').append('<a href=#tbl-group-' + group + '>' + group + '</a>' + ' ')}}) 
+                    //document.onscroll = function() { console.log('scrolling')}
+
+                   // $.each(info, function(group, picks) {if (group != "total"){ $('#jump_to').append('<a href=#tbl-group-' + group + '>' + group + '</a>' + ' ')}}) 
                    // $('#grp_6_buttons').append('<button id=show_6_button class="btn btn-primary btn-group-sm">My G-6 Picks</button>')
 
                     //trying to fix position small screen

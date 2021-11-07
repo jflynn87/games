@@ -455,12 +455,26 @@ class Group(models.Model):
         return self.number
 
     
-    def cut_count(self, score_dict=None):
+    def cut_count(self, score_dict=None, espn_api_data=None):
         if score_dict:
             return len([v for k, v in score_dict.items() if k != 'info' and v.get('group') == self.number and v.get('rank') in self.tournament.not_playing_list()])
-        else:
-            return 0  # add score dict lookup here and fix code
+        #else:
+        #    return 0  # add score dict lookup here and fix code
+        elif espn_api_data:
+            golfers = self.get_golfers()
+            return len([x for x in espn_api_data if x.get('id') in golfers and x.get('status').get('type').get('id') == '3'])
 
+
+    def get_golfers(self):
+        '''takes a group and returns a list of espn numbers'''
+        return Field.objects.filter(group=self).values_list('golfer__espn_number', flat=True)
+
+
+    def cut_penalty(self):
+        if self.number in [1, 2, 3]:
+            return True
+        else:
+            return False
 
 
 class Golfer(models.Model):
@@ -866,7 +880,7 @@ class Field(models.Model):
     def fedex_pick(self, user):
         if FedExPicks.objects.filter(user=user, pick__golfer=self.golfer):
             return True
-        return False
+        return False 
 
 
 class PGAWebScores(models.Model):

@@ -1347,3 +1347,5 @@ def calc_qb_ratings(stats):
 
 class PlayoffLogic(TemplateView):
     template_name='fb_app/playoff_about.html'
+
+

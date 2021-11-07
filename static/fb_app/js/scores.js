@@ -54,13 +54,13 @@ function get_picks() {
              $.each(data, function(player, pick) {
                  p =player.replace(filler, '')
                 if (pick['loser']) {
-                //$('#pick-' + p + num).text(pick['team']).removeClass('status').addClass('loser')
-                $('#pick-' + p + num).html('<img src=' + pick['logo'] + ' height=40 width=40 class=loser></img> <p>X</p>').addClass('loser').addClass('fs-2').removeClass('status')
+                $('#pick-' + p + num).text(pick['team']).removeClass('status').addClass('loser_abbr')
+                //$('#pick-' + p + num).html('<img src=' + pick['logo'] + ' height=40 width=40 class=loser></img> <p>X</p>').addClass('loser').addClass('fs-2').removeClass('status')
                 
                 }
                 else {
-                $('#pick-' + p + num).html('<img src=' + pick['logo'] + ' height=40 width=40">').addClass('tbl_center').removeClass('status')
-                //$('#pick-' + p + num).text(pick['team']).removeClass('status')
+                //$('#pick-' + p + num).html('<img src=' + pick['logo'] + ' height=40 width=40">').addClass('tbl_center').removeClass('status')
+                $('#pick-' + p + num).text(pick['team']).removeClass('status')
                 }
              })
         })

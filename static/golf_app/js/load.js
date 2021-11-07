@@ -41,9 +41,9 @@ function update_scores() {
 //$('#tournament_key').ready(function (){
 $.ajax({
   type: "GET",
-  url: "/golf_app/get_scores/",
-  data: {'tournament' : $('#tournament_key').text()},
-  dataType: 'json',
+  url: "/golf_app/get_scores/" + $('#tournament_key').text(),
+  //data: {'tournament' : $('#tournament_key').text()},
+  //dataType: 'json',
   success: function (json_update) {
     console.log('second load connected', typeof(json_update), $.isEmptyObject(json_update))
     if (!$.isEmptyObject(json_update)) {

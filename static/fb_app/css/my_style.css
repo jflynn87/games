@@ -45,6 +45,13 @@ body {
   text-align: center;
 }
 
+.loser_abbr {
+  color: red;
+  text-decoration: line-through;
+  font-weight: bold;
+  
+}
+
 .loser {
   position: relative;
   opacity: 75%;

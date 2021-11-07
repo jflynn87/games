@@ -14,7 +14,8 @@ urlpatterns= [
     url(r'^about/$',views.AboutView.as_view(),name='about'),
     #url(r'^ajax/get_picks/$', views.GetPicks.as_view(), name='get_picks'),
     url(r'^all_time/$', views.AllTime.as_view(), name='all_time'),
-    url(r'^get_scores/$', views.GetScores.as_view(), name='get_scores'),
+    #url(r'^get_scores/$', views.GetScores.as_view(), name='get_scores'),
+    path('get_scores/<int:tournament>', views.GetScores.as_view(), name='get_scores'),
     url(r'^get_db_scores/$', views.GetDBScores.as_view(), name='get_db_scores'),
     url(r'^new_scores/$', views.NewScoresView.as_view(), name='new_scores'),
     url(r'^new_scores/(?P<pk>\d+)/$',views.NewScoresView.as_view(),name='new_scores'),
@@ -55,6 +56,7 @@ urlpatterns= [
     path('fedex_picks_list/', views.FedExPicksListView.as_view(), name='fedex_picks_list'),
     path('ryder_cup_scores/', views.RyderCupScoresView.as_view(), name='ryder_cup_scores'),
     path('ryder_cup_score_api/', views.RyderCupScoresAPI.as_view(), name='ryder_cup_score_api'),
+    path('espn_api_scores/<int:pga_t_num>', views.EspnApiScores.as_view(), name='espn_api_scores')
 
     
 

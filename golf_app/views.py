@@ -19,7 +19,7 @@ import datetime
 #     populateMPField, mp_calc_scores, golf_serializers, utils, olympic_sd
 from golf_app import populateField, manual_score, scrape_masters, withdraw, scrape_espn, \
      populateMPField, mp_calc_scores, golf_serializers, utils, olympic_sd, espn_api, \
-     ryder_cup_scores, espn_ryder_cup
+     ryder_cup_scores, espn_ryder_cup, bonus_details
 
 
 from django.utils import timezone
@@ -489,10 +489,15 @@ class AllTime(TemplateView):
 
 class GetScores(APIView):
    
-    def get(self, num):
+    def get(self, request, tournament):
         
-        print ('GetScores API VIEW', self.request.GET.get('tournament'))
-        t = Tournament.objects.get(pk=self.request.GET.get('tournament'))
+        #print ('GetScores API VIEW', self.request.GET.get('tournament'))
+        #t = Tournament.objects.get(pk=self.request.GET.get('tournament'))
+        if tournament:
+            t = Tournament.objects.get(pk=tournament)
+        else:
+            t = Tournament.objects.get(current=True)
+
         sd = ScoreDict.objects.get(tournament=t)
         info = get_info(t)
 
@@ -1800,3 +1805,83 @@ class RyderCupScoresAPI(APIView):
             
         return JsonResponse(data, status=200, safe=False)
 
+class EspnApiScores(APIView):
+    def get(self, request, pga_t_num):
+        
+        start = datetime.datetime.now()
+
+        t = Tournament.objects.get(pga_tournament_num=pga_t_num, season__current=True)
+
+        if not t.started():
+            return JsonResponse({'msg': 'Tournament Not Started'}, status=200, safe=False)
+
+        espn = espn_api.ESPNData(t=t)
+        c_start = datetime.datetime.now()
+        cut_num = int(espn.cut_num())
+        print ('cut num duration: ', datetime.datetime.now() - c_start)
+
+        start_big = datetime.datetime.now()
+        big = espn.group_stats()
+        print ('big dur ', datetime.datetime.now() - start_big)
+
+        start_calc_score  = datetime.datetime.now()
+
+        d = {}
+        for u in t.season.get_users('obj'):
+            d[u.username] = {'score': 0}
+
+        for golfer in Picks.objects.filter(playerName__tournament=t).values('playerName__golfer__espn_number').distinct():
+            pick = Picks.objects.filter(playerName__tournament=t, playerName__golfer__espn_number=golfer.get('playerName__golfer__espn_number')).first()
+            if espn.golfer_data(pick.playerName.golfer.espn_number):
+                if espn.golfer_data(pick.playerName.golfer.espn_number).get('status').get('type').get('id') == "3":
+                    #print ('cut logic', pick.playerName)
+                    score = (int(espn.cut_num()) + 1) - int(pick.playerName.handi) + espn.cut_penalty(pick) 
+                elif t.has_cut and int(espn.get_round()) <= int(t.saved_cut_round) and int(espn.get_rank(pick.playerName.golfer.espn_number)) > cut_num:
+                    score = (cut_num - int(pick.playerName.handi))
+                else: 
+                    score = int(espn.get_rank(pick.playerName.golfer.espn_number)) - int(pick.playerName.handi)
+            else:
+                print ('WD? not found in espn: ', pick.playerName, pick.playerName.golfer.espn_number) 
+                score = (int(espn.cut_num()) + 1) - int(pick.playerName.handi) + espn.cut_penalty(pick)
+            #print (score)
+            bd_start = datetime.datetime.now()
+            bonus = 0
+            bd = bonus_details.BonusDtl(espn, t)
+            bd_big = bd.best_in_group(big, pick)
+            #if big.get(pick.playerName.golfer.espn_number):
+            if bd_big:
+               #score -= 10 
+               bonus += 10
+            if bd.winner(pick):
+                #score -= bd.winner_points(pick)
+                bonus += bd.winner_points(pick)
+
+                #print ('db class dur: ', pick, datetime.now() - bd_start)
+            for p in Picks.objects.filter(playerName__tournament=t, playerName__golfer__espn_number=pick.playerName.golfer.espn_number):
+                if PickMethod.objects.filter(user=p.user, method__in=[1,2], tournament=t).exists():
+                    d.get(p.user.username).update({'score': d.get(p.user.username).get('score') + (score - bonus)})
+                else:
+                    d.get(p.user.username).update({'score': (d.get(p.user.username).get('score') + score)})
+            
+            #print (d.get('john'), score)
+
+        if espn.tournament_complete():
+            ww_bd = bonus_details.BonusDtl(espn, t)
+            winner_list = ww_bd.weekly_winner(d)
+            print ('winners ', winner_list)
+            for winner in winner_list:
+                d.get(winner).update({'score': d.get(winner).get('score') - ww_bd.weekly_winner_points()})
+
+        print (d)
+        print ('calc score dur: ', datetime.datetime.now() - start_calc_score)
+        #print ('cut num ', espn.cut_num())
+        print ('total time: ', datetime.datetime.now() - start)
+
+        # for ts in TotalScore.objects.filter(tournament=t):
+        #     if ts.score == d.get(ts.user.username).get('score'):
+        #         print (ts.user, ' : match')
+        #     else:
+        #         print (ts.user, ': mismatch : ', ts.score, d.get(ts.user.username).get('score'))
+
+
+        return JsonResponse(d, status=200, safe=False)
