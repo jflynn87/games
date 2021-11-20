@@ -1,8 +1,9 @@
 from datetime import datetime, timedelta
 from requests import get
 import json
+
 from golf_app import utils
-from golf_app.models import Tournament, Field, Group
+from golf_app.models import Tournament, ScoreDict, Group, Field
 
 
 class ESPNData(object):
@@ -36,6 +37,10 @@ class ESPNData(object):
                     print ('tournament mismatch: espn name: ', t.name, 'DB name: ', self.t.name)
                     return {}
 
+            sd, created = ScoreDict.objects.get_or_create(tournament=self.t)
+            sd.espn_api_data = self.all_data
+            sd.save()
+
             #f = open('espn_api.json', "w")
             #f.write(json.dumps(self.all_data))
             #f.close()
@@ -65,9 +70,8 @@ class ESPNData(object):
 
 
     def started(self):
-        #  Try to change this is a positive check
         if self.event_data.get('status').get('type').get('state') != 'pre':
-            return True
+           return True
             
         return False
 
@@ -127,18 +131,24 @@ class ESPNData(object):
         return self.all_data
 
     def cut_num(self):
+        '''gives cut num wihtout group penalty.  returns an int and need to add group penalty seperately'''
+        if not self.started():
+            return self.t.saved_cut_num
+        
         if self.event_data.get('tournament').get('cutRound') == 0:
             print ('no cut')
-            return len([x for x in self.field_data if x.get('status').get('type').get('id') != '3'])
+            return len([x for x in self.field_data if x.get('status').get('type').get('id') != '3']) +1
+        
         if self.event_data.get('tournament').get('cutCount') != 0:
-            return self.event_data.get('tournament').get('cutCount')
+            return self.event_data.get('tournament').get('cutCount') + 1
         elif self.t.has_cut and int(self.get_round()) <= int(self.t.saved_cut_round):
-            return  min(int(x.get('status').get('position').get('id')) for x in self.field_data if int(x.get('status').get('position').get('id')) > int(self.t.saved_cut_num)) 
+            return  min(int(x.get('status').get('position').get('id')) for x in self.field_data \
+                     if int(x.get('status').get('position').get('id')) > int(self.t.saved_cut_num)) + 1
         else:
             cuts = [v for v in self.field_data if v.get('status').get('type').get('id') == '3']
-            return len(cuts)
+            return len(cuts) + 1  
 
-        #need to make this work pre-cut
+        
 
     def get_rank(self, espn_number):
         golfer_data = self.golfer_data(espn_number)
@@ -186,3 +196,26 @@ class ESPNData(object):
 
     def get_player_hole():
         pass
+
+    def pre_cut_wd(self):
+        return len([x.get('athlete').get('id') for x in self.field_data if x.get('status').get('type').get('id') == '3' and \
+             int(x.get('status').get('period')) <= self.t.saved_cut_round]) 
+    
+    def post_cut_wd(self):
+        l = self.t.not_playing_list()
+        l.remove('CUT')
+        return len([x.get('athlete').get('id') for x in self.field_data if x.get('status').get('type').get('id') == '3' \
+                and x.get('status').get('type').get('shortDetail') in l and int(x.get('status').get('period')) > self.t.saved_cut_round]) 
+
+    def first_tee_time(self):
+        #if self.get_round() in [1, 0]:
+        try:  #for pre-start and before round 1 completes
+            times = [datetime.strptime(x.get('linescores')[0].get('teeTime')[:-1], '%Y-%m-%dT%H:%M') for x in self.field() if x.get('status').get('period') == 1]
+            print ('times len: ', len(times))
+            return min(times)
+        except Exception as e:  # after round 1 completes
+            print ('first tee time exception logic')
+            times = [[datetime.strptime(t.get('teeTime')[:-1], '%Y-%m-%dT%H:%M') for t in x.get('linescores') if t.get('period') == 1][0] for x in self.field()]
+            print ('times len: ', len(times))
+            
+            return min(times)

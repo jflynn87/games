@@ -30,7 +30,6 @@ class BonusDtl(object):
                         big = True
                         big_bd, created = BonusDetails.objects.get_or_create(user=best.user, tournament=self.tournament, bonus_type='5')
                         big_bd.bonus_points += 10
-                        
                         #big_bd.save()
         return big
     

@@ -149,39 +149,43 @@ class Tournament(models.Model):
             return True
 
         try:
-            from golf_app import scrape_espn
+            from golf_app import espn_api 
+            return espn_api.ESPNData().started()
+
+            ## commented block below to use API
+            #from golf_app import scrape_espn
             #scores = scrape_espn.ScrapeESPN().get_data()
-            status = scrape_espn.ScrapeESPN().status_check()
-            if status == 'Tournament Field':
-                print ('not started based on tournamanet field in status')
-                print ('started check dur: ', datetime.now() - start)
-                return False
-            scores = scrape_espn.ScrapeESPN().get_data()
-            print ('started check info', scores.get('info'))
-            if scores.get('info').get('round') == 1 and scores.get('info').get('round_status') == 'Not Started':
-                print ('finishing started check B: ', datetime.now() - start)
-                return False
-            elif scores.get('info').get('round') == 1 and scores.get('info').get('round_status') in ['Round 1 - Play Complete', 'Round 1 - In Progress']:
-                print ('started based on Round 1 text')
-                print ('started check dur: ', datetime.now() - start)
-                return True
-            elif scores.get('info').get('round') == 1 and \
-                len([v for k, v in scores.items() if v.get('round_score') not in ['--', '-', None]]) == 0:
-                print ('finishing started check false based on scores in score dict')
-                print ('started check dur: ', datetime.now() - start)
-                return False      
-            elif scores.get('info').get('round') == 1 and \
-                len([v for k, v in scores.items() if v.get('round_score') not in ['--', '-', None]]) > 0:
-                print ('finishing started check - true based on scores on leaderboard: ')
-                print ('started check dur: ', datetime.now() - start)
-                return True      
-            elif int(scores.get('info').get('round')) > 1:
-                print ('******* round above 1')
-                print ('finishing started check E: ', datetime.now()- start)
-                return True
-            else:
-                print ('started check in model falling to else, check why')
-                return False
+            # status = scrape_espn.ScrapeESPN().status_check()
+            # if status == 'Tournament Field':
+            #     print ('not started based on tournamanet field in status')
+            #     print ('started check dur: ', datetime.now() - start)
+            #     return False
+            # scores = scrape_espn.ScrapeESPN().get_data()
+            # print ('started check info', scores.get('info'))
+            # if scores.get('info').get('round') == 1 and scores.get('info').get('round_status') == 'Not Started':
+            #     print ('finishing started check B: ', datetime.now() - start)
+            #     return False
+            # elif scores.get('info').get('round') == 1 and scores.get('info').get('round_status') in ['Round 1 - Play Complete', 'Round 1 - In Progress']:
+            #     print ('started based on Round 1 text')
+            #     print ('started check dur: ', datetime.now() - start)
+            #     return True
+            # elif scores.get('info').get('round') == 1 and \
+            #     len([v for k, v in scores.items() if v.get('round_score') not in ['--', '-', None]]) == 0:
+            #     print ('finishing started check false based on scores in score dict')
+            #     print ('started check dur: ', datetime.now() - start)
+            #     return False      
+            # elif scores.get('info').get('round') == 1 and \
+            #     len([v for k, v in scores.items() if v.get('round_score') not in ['--', '-', None]]) > 0:
+            #     print ('finishing started check - true based on scores on leaderboard: ')
+            #     print ('started check dur: ', datetime.now() - start)
+            #     return True      
+            # elif int(scores.get('info').get('round')) > 1:
+            #     print ('******* round above 1')
+            #     print ('finishing started check E: ', datetime.now()- start)
+            #     return True
+            # else:
+            #     print ('started check in model falling to else, check why')
+            #     return False
         except Exception as e:
             print ('started logic exception', e)
             print ('finishing started check', datetime.now())
@@ -1072,6 +1076,7 @@ class ScoreDict(models.Model):
     data = models.JSONField(null=True)
     pick_data = models.JSONField(null=True)
     cbs_data = models.JSONField(null=True)
+    espn_api_data = models.JSONField(null=True, blank=True)
     updated = models.DateTimeField(auto_now=True)
 
 
@@ -1260,3 +1265,8 @@ class FedExPicks(models.Model):
             return 0
             
 
+class Round(models.Model):
+    tournament = models.ForeignKey(Tournament, on_delete=models.CASCADE)
+    round_num = models.CharField(max_length=20, blank=True, null=True)
+    status = models.CharField(max_length=100, blank=True, null=True) 
+    espn_api_data = models.JSONField(null=True, blank=True)

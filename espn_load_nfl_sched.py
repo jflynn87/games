@@ -29,7 +29,7 @@ def load_sched(year):
     
     #week_cnt = current_week.week + 1
     season = Season.objects.get(current=True)
-    while week_cnt < 10:
+    while week_cnt < 19:
             try:
                 week, created = Week.objects.get_or_create(season_model=season, week=week_cnt)
                 #week.season = season.season

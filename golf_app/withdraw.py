@@ -28,7 +28,7 @@ class WDCheck(object):
         results = {}
         wd_list = []
         good_list = []
-
+        
         for golfer in Field.objects.filter(tournament = self.tournament):
             if [v for v in self.field.values() if v.get('pga_num') == golfer.golfer.espn_number]:
                 good_list.append(golfer.playerName)

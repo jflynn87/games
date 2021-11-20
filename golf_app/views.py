@@ -1818,7 +1818,8 @@ class EspnApiScores(APIView):
         espn = espn_api.ESPNData(t=t)
         c_start = datetime.datetime.now()
         cut_num = int(espn.cut_num())
-        print ('cut num duration: ', datetime.datetime.now() - c_start)
+
+        print ('cut num duration: ', datetime.datetime.now() - c_start, cut_num)
 
         start_big = datetime.datetime.now()
         big = espn.group_stats()
@@ -1834,10 +1835,13 @@ class EspnApiScores(APIView):
             pick = Picks.objects.filter(playerName__tournament=t, playerName__golfer__espn_number=golfer.get('playerName__golfer__espn_number')).first()
             if espn.golfer_data(pick.playerName.golfer.espn_number):
                 if espn.golfer_data(pick.playerName.golfer.espn_number).get('status').get('type').get('id') == "3":
-                    #print ('cut logic', pick.playerName)
-                    score = (int(espn.cut_num()) + 1) - int(pick.playerName.handi) + espn.cut_penalty(pick) 
+                    #and for prior line (int(espn.get_round()) <= int(t.saved_cut_round) or not t.has_cut):  #for pre cut or no cut WD/DQ
+                    #score = (int(espn.cut_num()) + 0) - int(pick.playerName.handi) + espn.cut_penalty(pick)  # pulling rank (not count) so don't need to add 1 
+                    score = (int(cut_num) - int(pick.playerName.handi)) + espn.cut_penalty(pick)
                 elif t.has_cut and int(espn.get_round()) <= int(t.saved_cut_round) and int(espn.get_rank(pick.playerName.golfer.espn_number)) > cut_num:
-                    score = (cut_num - int(pick.playerName.handi))
+                    score = (cut_num - int(pick.playerName.handi)) + espn.cut_penalty(pick)
+                elif espn.golfer_data(pick.playerName.golfer.espn_number).get('status').get('type').get('id') == "3":  
+                    score = (int(cut_num()) - int(pick.playerName.handi)) + espn.cut_penalty(pick)  
                 else: 
                     score = int(espn.get_rank(pick.playerName.golfer.espn_number)) - int(pick.playerName.handi)
             else:
@@ -1863,7 +1867,7 @@ class EspnApiScores(APIView):
                 else:
                     d.get(p.user.username).update({'score': (d.get(p.user.username).get('score') + score)})
             
-            #print (d.get('john'), score)
+            #print ('score check: ', d.get('Sam36'), pick, score)
 
         if espn.tournament_complete():
             ww_bd = bonus_details.BonusDtl(espn, t)

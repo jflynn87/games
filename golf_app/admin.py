@@ -5,7 +5,7 @@ from django.contrib import admin
 from golf_app.models import CountryPicks, FedExField, FedExPicks, FedExSeason, Season, Tournament, Field, Picks, Group, TotalScore, \
                 ScoreDetails, Name, BonusDetails, mpScores, PickMethod, PGAWebScores, \
                 Golfer, ScoreDict, UserProfile, AccessLog, AuctionPick, StatLinks, CountryPicks, \
-                FedExSeason, FedExField, FedExPicks
+                FedExSeason, FedExField, FedExPicks, Round
                 
 
 class GroupAdmin(admin.ModelAdmin):
@@ -86,7 +86,8 @@ class FedExPicksAdmin(admin.ModelAdmin):
     def get_username(self, obj):
         return obj.user.username
 
-
+class RoundAdmin(admin.ModelAdmin):
+    list_display = ['tournament', 'round_num', 'status']
 
 admin.site.register(Tournament)
 admin.site.register(Field, FieldAdmin)
@@ -110,4 +111,5 @@ admin.site.register(CountryPicks)
 admin.site.register(FedExSeason, FedExSeasonAdmin)
 admin.site.register(FedExField, FedExFieldAdmin)
 admin.site.register(FedExPicks, FedExPicksAdmin)
+admin.site.register(Round, RoundAdmin)
 

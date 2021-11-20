@@ -28,7 +28,7 @@ from selenium import webdriver
 import urllib
 import json
 from golf_app import views, manual_score, populateField, withdraw, scrape_scores_picks, utils, \
-                            scrape_masters, scrape_espn, espn_api, fedexData, espn_ryder_cup, ryder_cup_scores, bonus_details
+                            scrape_masters, scrape_espn, espn_api, fedexData, espn_ryder_cup, ryder_cup_scores, bonus_details, withdraw
 from unidecode import unidecode
 from django.core import serializers
 from golf_app.utils import formatRank, format_name, fix_name
@@ -44,6 +44,63 @@ import sys
  
 t = Tournament.objects.get(current=True)
 
+espn = espn_api.ESPNData()
+print ('round: ', espn.get_round())
+print ('complete: ', espn.tournament_complete())
+print ('pre cut wd: ', espn.pre_cut_wd())
+print ('post cut wd: ', espn.post_cut_wd())
+print ('cut num: ', espn.cut_num())
+start = datetime.now()
+print ('first tee time: ', espn.first_tee_time())
+print ('round: ', espn.get_round(), espn.get_round_status())
+print ('1: ', datetime.now() - start)
+g = Field.objects.get(playerName="Rory Sabbatini", tournament=t)
+print (g, espn.golfer_data(g.golfer.espn_number))
+
+exit()
+
+f = open('espn_api_r1_complete.json',)
+
+data = json.load(f)
+
+t_1 = Tournament.objects.get(pk=192)
+print (t_1)
+espn_1 = espn_api.ESPNData(t=t_1, data=data)
+print ('round: ', espn_1.get_round())
+print ('complete: ', espn_1.tournament_complete())
+start_1 = datetime.now()
+print ('first tee time: ', espn_1.first_tee_time())
+print ('round: ', espn_1.get_round(), espn_1.get_round_status())
+print ('2: ',datetime.now() - start_1)
+#print (datetime.now() > espn_1.first_tee_time())
+exit()
+
+for g in Golfer.objects.filter(golfer_name__in=['Sam Burns', 'Lee Westwood', 'Sung Kang', 'Francesco Molinari']):
+    print (g, espn.golfer_data(g.espn_number).get('status'))
+    print (len(espn.golfer_data(g.espn_number).get('linescores')))
+    for l in espn.golfer_data(g.espn_number).get('linescores'): 
+        print (l)
+    print ('xxxxxxxxxxxxxxxxxxxxxxxxxxxxx') 
+exit()
+
+f = open('espn_api_r1_started.json',)
+#print (type(f))
+data = json.load(f)
+
+espn = espn_api.ESPNData(t=t, data=data)
+print (espn.field()[0].get('linescores'))
+#times = [datetime.strptime(x.get('linescores')[0].get('teeTime'), '%Y-%m-%dT%H:%M%fZ') for x in espn.field() if x.get('status').get('period') == 1]
+times = [datetime.strptime(x.get('linescores')[0].get('teeTime')[:-1], '%Y-%m-%dT%H:%M') for x in espn.field() if x.get('status').get('period') == 1]
+raw_times = [x.get('linescores')[0].get('teeTime') for x in espn.field() if x.get('status').get('period') == 1]
+print (times[0])
+print (raw_times[0])
+#print (espn.field()[0].get('linescores'))
+print (min(times), type(min(times)))
+
+#print (datetime.strptime(espn.field()[0].get('linescores')[0].get('teeTime'), '%Y-%m-%dT%H:%M%fZ'))
+
+exit()
+
 if os.environ.get('DEBUG'):
     domain = '127.0.0.1:8000'
 else:
@@ -51,9 +108,9 @@ else:
 
 req = Request('http://' + domain + '/golf_app/espn_api_scores/' + t.pga_tournament_num)
 
-data = views.EspnApiScores().get(req, t.pga_tournament_num)
-d = json.loads(data.content)
-print (d)
+#data = views.EspnApiScores().get(req, t.pga_tournament_num)
+#d = json.loads(data.content)
+#print (d)
 
 for ts in TotalScore.objects.filter(tournament=t):
     if ts.score == d.get(ts.user.username).get('score'):

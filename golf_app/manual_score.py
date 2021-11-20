@@ -186,7 +186,7 @@ class Score(object):
                     score = cut_num + self.cut_penalty(pick)
                 elif data.get('rank') in ["WD", "DQ"] or (data.get('rank') in self.cut_indicators and data.get('total_score') in ['WD', 'DQ']):
                     print ('WD/DQ: ', pick, data)
-                    score = self.get_wd_score(pick) 
+                    score = self.get_wd_score(pick) + self.cut_penalty(pick)
                 else:
                     if self.tournament.has_cut and int(utils.formatRank(data.get('rank'))) > cut_num:
                          score=cut_num + self.cut_penalty(pick)
@@ -202,10 +202,10 @@ class Score(object):
                 
                 sd.gross_score = pick.score
                 if data.get('rank') == "CUT" or \
-                    data.get('rank') == "WD" and curr_round < 3:
+                    data.get('rank') in ["WD", 'DQ'] and curr_round < 3:
                     sd.today_score  = "CUT"
                     sd.thru  = "CUT"
-                elif data.get('rank') == "WD":
+                elif data.get('rank') in ["WD", 'DQ']:
                     sd.today_score = "WD"
                     sd.thru = "WD"
                 else:
