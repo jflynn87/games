@@ -41,7 +41,32 @@ import csv
 import random
 from operator import itemgetter
 import sys
- 
+
+
+d = {}
+s = Season.objects.get(current=True)
+for u in s.get_users('obj'):
+    d[u.username] = {'total': 0}
+
+#for t in Tournament.objects.filter(season__current=True):
+for t in Tournament.objects.all():
+    for i, ts in enumerate(TotalScore.objects.filter(tournament=t).order_by('score')):
+        try:
+            d.get(ts.user.username).update({i+1: d.get(ts.user.username).get(i+1) + 1,
+                                            'total': d.get(ts.user.username).get('total') + 1})
+
+        except Exception as e:
+            #print (e, ts.tournament, ts.user)
+            d.get(ts.user.username).update({i+1: 1,
+            'total': d.get(ts.user.username).get('total') + 1})
+        
+
+print (d)
+exit()
+
+
+
+
 t = Tournament.objects.get(current=True)
 
 espn = espn_api.ESPNData()
@@ -54,9 +79,16 @@ start = datetime.now()
 print ('first tee time: ', espn.first_tee_time())
 print ('round: ', espn.get_round(), espn.get_round_status())
 print ('1: ', datetime.now() - start)
-g = Field.objects.get(playerName="Rory Sabbatini", tournament=t)
-print (g, espn.golfer_data(g.golfer.espn_number))
+print ('winner: ', espn.winner())
+print ('second: ', espn.second_place())
+print ('third: ', espn.third_place())
 
+bd = bonus_details.BonusDtl(espn, t)
+
+tri_start = datetime.now()
+for u in t.season.get_users('obj'):
+    print ('trifecta: ', u, bd.trifecta(u))
+print ('tri dur: ', datetime.now() - start)
 exit()
 
 f = open('espn_api_r1_complete.json',)

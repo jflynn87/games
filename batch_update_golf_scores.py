@@ -33,7 +33,7 @@ if sd.espn_api_data:
         print ('before first tee time, exiting')
         exit()
     elif saved_espn.get_round_status() in ['pre', 'post'] and \
-        (sd.updated + timedelta(minutes = 0)) > datetime.utcnow().replace(tzinfo=pytz.utc):  #changed from 10 to 0 for testing
+        (sd.updated + timedelta(minutes = 10)) > datetime.utcnow().replace(tzinfo=pytz.utc):  #changed from 10 to 0 for testing
         print ('wait 10 mins to update before/after round') 
         exit()
 

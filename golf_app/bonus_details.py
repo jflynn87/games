@@ -1,5 +1,6 @@
+from re import search
 from django.db.models.expressions import F
-from golf_app.models import Picks, Tournament, BonusDetails, PickMethod
+from golf_app.models import Picks, Tournament, BonusDetails, PickMethod, Field, ScoreDetails
 
 class BonusDtl(object):
     
@@ -95,11 +96,42 @@ class BonusDtl(object):
             return True
         return False
 
-    def trifecta(self):
-        pass
- 
+    def trifecta(self, user):
+        '''takes and bd object and user object, returns a bool'''
+        if Field.objects.filter(tournament=self.tournament).count() < 71:
+            return False
+        elif not self.t_complete:
+            return False
+        
+        top_3 = self.espn_data.winner()+self.espn_data.second_place()+self.espn_data.third_place()
+        
+        if Picks.objects.filter(user=user, playerName__tournament=self.tournament, playerName__golfer__espn_number=self.espn_data.winner()[0]).exists() and \
+            Picks.objects.filter(user=user, playerName__tournament=self.tournament, playerName__golfer__espn_number__in=self.espn_data.second_place()).exists() and \
+            Picks.objects.filter(user=user, playerName__tournament=self.tournament, playerName__golfer__espn_number__in=top_3).count() >= 3:
+                    print ('Trifecta! : ', user)
+                    bd, created = BonusDetails.objects.get_or_create(user=user, tournament=self.tournament, bonus_type='6')
+                    bd.bonus_points = 50
+                    #bd.save()
+                    return True
+
+        return False
+                
+
 
     def no_cut(self):
-        pass
+        if not self.t.has_cut:
+            return None
+        
+        # if cuts == 0 an d len([v for (k,v) in self.score_dict.items() if k != 'info' and v.get('total_score') == "CUT"]) != 0:
+        #             print (player, 'no cut bonus')
+        #             post_cut_wd = len([v for k,v in self.score_dict.items() if k!= 'info' and v.get('total_score') in self.tournament.not_playing_list() and \
+        #                 v.get('r3') != '--'])
+
+        #             cut_bonus = (len(self.score_dict) -1) - (len([k for k,v in self.score_dict.items() if k != 'info' and v.get('rank') not in self.tournament.not_playing_list()]) + post_cut_wd)
+        #             print (cut_bonus)
+        #             bd, created = BonusDetails.objects.get_or_create(tournament=self.tournament, user=user, bonus_type='2')
+        #             bd.bonus_points = cut_bonus
+        #             bd.save()
+
 
     

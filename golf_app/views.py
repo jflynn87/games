@@ -1875,6 +1875,9 @@ class EspnApiScores(APIView):
             print ('winners ', winner_list)
             for winner in winner_list:
                 d.get(winner).update({'score': d.get(winner).get('score') - ww_bd.weekly_winner_points()})
+            for u in t.season.get_users('obj'):
+                if ww_bd.trifecta(u):
+                   d.get(u.username).update({'score': d.get(u.username).get('score') - 25})  # move 25 to db class somehow
 
         print (d)
         print ('calc score dur: ', datetime.datetime.now() - start_calc_score)

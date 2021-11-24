@@ -219,3 +219,16 @@ class ESPNData(object):
             print ('times len: ', len(times))
             
             return min(times)
+
+
+    def winner(self):
+        '''takes an espn api and returns a list'''
+        return [x.get('id') for x in self.field_data if x.get('status').get('position').get('id') == '1']
+
+    def second_place(self):
+        '''takes an espn api and returns a list'''
+        return [x.get('id') for x in self.field_data if x.get('status').get('position').get('id') == '2']
+
+    def third_place(self):
+        '''takes an espn api and returns a list'''
+        return [x.get('id') for x in self.field_data if x.get('status').get('position').get('id') == '3']
