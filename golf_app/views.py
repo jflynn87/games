@@ -375,16 +375,16 @@ class SeasonTotalView(ListView):
 
         for tournament in Tournament.objects.filter(season__current=True).order_by('-start_date'):
             score_list = []
-            #second_half_score_list = []  #added for Mark
+            second_half_score_list = []  #added for Mark
             for score in TotalScore.objects.filter(tournament=tournament).order_by('user_id'):
-                score_list.append(score)
-                total_score = total_scores.get(score.user)
-                total_scores[score.user] = total_score + score.score
-                #add second half for Mark
-                if tournament.start_date > mark_date.date():
-                    #second_half_score_list.append(score)
-                    second_half_score = second_half_scores.get(score.user)
-                    second_half_scores[score.user] = second_half_score + score.score
+                 score_list.append(score)
+                 total_score = total_scores.get(score.user)
+                 total_scores[score.user] = total_score + score.score
+                 #add second half for Mark
+                 if tournament.start_date > mark_date.date():
+                     #second_half_score_list.append(score)
+                     second_half_score = second_half_scores.get(score.user)
+                     second_half_scores[score.user] = second_half_score + score.score
 
             if tournament.complete:
                 for winner in tournament.winner():
@@ -415,7 +415,6 @@ class SeasonTotalView(ListView):
         for rank in second_half_ranks:
             second_half_rank_list.append(rank)
 
-        print ()
         print ('display_dict', display_dict)
         print ()
         print ('winner dict', winner_dict)
@@ -428,6 +427,7 @@ class SeasonTotalView(ListView):
         'user_list': user_list,
         'rank_list': rank_list,
         'totals_list': total_score_list,
+        #'totals_list': 
         'second_half_list': total_second_half_score_list,
         'prize_list': winner_dict,
         'second_half_rank_list': second_half_rank_list,
@@ -1248,8 +1248,9 @@ class PriorResultAPI(APIView):
         try:
             #g_num = group.split('-')[2]
             t= Tournament.objects.get(pk=request.data.get('tournament_key'), season__current=True)
+            print ('AAAAAAAA befor espn scrape' ) 
             espn_data = espn_api.ESPNData().get_all_data()
-
+            print ('XXXXXXX espn_data: ', len(espn_data))
             context = {'espn_data': espn_data, 'user': self.request.user}
             if request.data.get('group') == 'all':
                 data= golf_serializers.NewFieldSerializer(Field.objects.filter(tournament=t), context=context, many=True).data
@@ -1691,8 +1692,6 @@ class FedExPicksView(LoginRequiredMixin,TemplateView):
         return HttpResponse(json.dumps(response), content_type='application/json')
 
 
-
-
 class FedExFieldAPI(APIView):
     def get(self, request, filter):
 
@@ -1711,6 +1710,20 @@ class FedExFieldAPI(APIView):
             except Exception as e:
                 print ('FedEx Field API exception: ', e)
                 data = json.dumps({'msg': e})    
+            
+        return JsonResponse(data, status=200, safe=False)
+
+
+class  SeasonPointsAPI(APIView):
+    def get(self, request, season, filter):
+
+        s = Season.objects.get(pk=season)
+
+        if filter == 'all':
+            #data = s.player_points()
+            data = s.get_total_points()
+        else:            
+            data = s.player_points(self.request.user)
             
         return JsonResponse(data, status=200, safe=False)
 

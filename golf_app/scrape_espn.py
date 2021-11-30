@@ -337,7 +337,7 @@ class ScrapeESPN(object):
     def get_t_num(self, season=None):
         '''takes either a season object or none.  returns a string '''
         if season:
-            html = urllib.request.urlopen('https://www.espn.com/golf/schedule/_/season/' + season.season)
+            html = urllib.request.urlopen('https://www.espn.com/golf/schedule/_/season/' + str(season.season))
             soup = BeautifulSoup(html, 'html.parser')
             rows = soup.find_all('tr', {'class': 'Table__TR'})
             for row in rows:

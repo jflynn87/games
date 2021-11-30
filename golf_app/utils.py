@@ -151,12 +151,13 @@ def fix_name(player, owgr_rankings):
 
 def check_t_names(espn_t, t):
     '''Takes a string and a tournament object and returns a bool'''
+    print ('checking t name match espn: ', espn_t, ' pga: ', t.name)
     espn_name = espn_t.lower().split(' ')
     pga_name = t.name.lower().split(' ')
     #print ('espn name: ', espn_name)
     #print ('pga name: ', pga_name)
     matches = len([x for x in pga_name if x in espn_name])
-    #print ('matches: ', matches == len(espn_name) -1, espn_name[1])
+    print ('matches: ', matches == len(espn_name) -1, espn_name[1])
     if len(pga_name) < 4 and espn_name == pga_name:
         return True
     #added below for masters, could be better

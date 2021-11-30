@@ -63,7 +63,8 @@ def readSheet(file,numPlayers,override_week=None):
 
         sheet_scores = True
         print (len(sheet))
-        print (sheet)
+        print ('sheet len: ',  len(sheet))
+        print ('numPlayers :', numPlayers)
         if len(sheet)/numPlayers == app_week.game_cnt + 2:
             print ('full sheet')
         elif len(sheet)/numPlayers == app_week.game_cnt +1:
@@ -71,6 +72,7 @@ def readSheet(file,numPlayers,override_week=None):
             sheet_scores = False
         else:
             print ('bad sheet')
+            print ('expected: ', len(sheet)/numPlayers)
             exit()
 
         try:
@@ -151,3 +153,4 @@ def readSheet(file,numPlayers,override_week=None):
 
 
 readSheet('21-22 FOOTBALL FOOLS.xml', 25)
+

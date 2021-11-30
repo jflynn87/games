@@ -1,3 +1,4 @@
+from os import execv
 from django.core.exceptions import ImproperlyConfigured
 from django.db import models 
 from django.contrib.auth.models import Group, User
@@ -54,22 +55,23 @@ class Season(models.Model):
         score_dict = {}
         sorted_dict = {}
         if not tournament:
-            for user in self.get_users():
-                u = User.objects.get(pk=user.get('user'))
-                score_dict[u.username] = TotalScore.objects.filter(tournament__season=self, user=u).aggregate(Sum('score'))
+            for u in self.get_users('obj'):
+                #u = User.objects.get(pk=user.get('user'))
+                #score_dict[u.username] = TotalScore.objects.filter(tournament__season=self, user=u).aggregate(Sum('score'))
+                t_scores = TotalScore.objects.filter(tournament__season=self, user=u).aggregate(Sum('score'))
+                fed_ex_scores = FedExPicks.objects.filter(pick__season__season=self, user=u).aggregate(Sum('score'))
+                total_score = t_scores.get('score__sum') + fed_ex_scores.get('score__sum')
+                score_dict[u.username] = {'score__sum': total_score}
             min_score = min(score_dict.items(), key=lambda v: v[1].get('score__sum'))[1].get('score__sum')
             second = sorted(score_dict.items(), key=lambda v: v[1].get('score__sum'))[1][1].get('score__sum')
 
             for i, (user, data) in enumerate(sorted(score_dict.items(), key=lambda v: v[1].get('score__sum'))):
-                sorted_dict[user] = {'total': data.get('score__sum'), 'diff':  int(min_score) - int(data.get('score__sum')), 'rank': i+1, 
-                                    'points_behind_second': int(second) - int(data.get('score__sum'))}
+                #sorted_dict[user] = {'total': data.get('score__sum'), 'diff':  int(min_score) - int(data.get('score__sum')), 'rank': i+1, 
+                sorted_dict[user] = {'total': total_score, 'diff':  int(min_score) - int(data.get('score__sum')), 'rank': i+1, 
+                                    'points_behind_second': int(second) - int(data.get('score__sum')), 't_scores': t_scores.get('score__sum'),
+                                    'fed_ex_score': fed_ex_scores.get('score__sum')}
+                                    #add gross scores
                                     
-            #second = [v.get('total') for k,v in scores.items() if v.get('rank') in [2, 3]]
-        #if len(second) > 0:
-        #    for player, info in scores.items():
-        #        data[player] = {'behind_second': second[0] - info.get('total')}
-            
-        #    'points_behind_second': behind_second.get(user).get('behind_second')}
             return json.dumps(sorted_dict)
         else:
             for user in self.get_users():
@@ -82,18 +84,6 @@ class Season(models.Model):
                                                     'points_behind_second': int(second) - int(data.get('score__sum'))}
             return json.dumps(sorted_dict)
 
-    # def points_behind_second(self):
-    #     data = {}
-    #     scores = json.loads(self.get_total_points())
-        
-    #     second = [v.get('total') for k,v in scores.items() if v.get('rank') in [2, 3]]
-    #     if len(second) > 0:
-    #         for player, info in scores.items():
-    #             data[player] = {'behind_second': second[0] - info.get('total')}
-    #     else:
-    #         for player, info in scores.items():
-    #             data[player] = {'behind_second': 0}
-    #     return data
 
 class Tournament(models.Model):
     season = models.ForeignKey(Season, on_delete=models.CASCADE)
@@ -1186,29 +1176,28 @@ class FedExSeason(models.Model):
                                                 'points': points,
                                                 'picked_by': users,
                                                 'num_picks': len(users),
-                                                'score': score}
+                                                'score': score, 
+                                                'soy_owgr': pick.pick.soy_owgr}
         
         return d
 
-    def player_points(self):
+    def player_points(self, user=None):
+        start = datetime.now()
         fedex = self.current_fedex_data()
+        user_list = []
+        if user:
+            user_list.append(user)
+        else:
+            user_list = self.season.get_users('obj')
         d = {}
-        for user in self.season.get_users('obj'):
-            d[user.username] = {}
-            #total_score = 0
-        #for p in FedExPicks.objects.filter(pick__season=self, user=user).values('pick__golfer.espn_number').dictinct():
-            for p in FedExPicks.objects.filter(pick__season=self, user=user):
-                in_d = [v.get('score') for x in d.values()  for k, v in x.items() if k == p.pick.golfer.espn_number]
-                print ('in D: ', in_d)
-                if len(in_d) >= 1:
-                    score = in_d[0]
-                else:
-                    score = p.score(fedex)
-                total_score += score
-                d[user.username].update({p.pick.golfer.espn_number: {'score': score, 
-                                        'golfer': p.pick.golfer.golfer_name}})    
-            d[user.username].update({'total': total_score})
-
+       
+        for u in user_list:
+            total_score = 0
+            for pick in FedExPicks.objects.filter(user=u, pick__season=self):
+                total_score += pick.score
+            d[u.username] = {'score': total_score}
+        print ('fedex points calc Dur: ', datetime.now() - start)
+        
         return d
 
 
@@ -1234,35 +1223,44 @@ class FedExField(models.Model):
     def __str__(self):
         return str(self.season.season.season) + ' ' + str(self.golfer.golfer_name)
 
+
 class FedExPicks(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     pick = models.ForeignKey(FedExField, on_delete=models.CASCADE)
+    score = models.IntegerField(default=0)
 
     def __str__(self):
         return str(self.user.username) + ' ' + str(self.pick.golfer.golfer_name)
 
+
     def all_picks_view(self):
         print (FedExPicks.objects.filter(season__current=True).values('user__username').annotate('pick__golfer__golfer_name'))
 
-    def score(self, fedex):
-        '''takes a picks and dict of fedex data, returns an int'''
+
+    def calc_score(self):
+        '''takes a picks returns an int'''
+        fedex = self.pick.season.current_fedex_data()
         rank_data = utils.fix_name(self.pick.golfer.golfer_name, fedex)
+        score = 0 
         if rank_data[0]:
             rank = int(rank_data[1].get('rank'))
+            if rank < 31 and self.pick.soy_owgr < 31:
+                score = -30
+            elif rank < 31 and self.pick.soy_owgr > 30:
+                score = -80
+            elif rank > 31 and self.pick.soy_owgr < 31:
+                score = 20
+            else:
+                score = 0
         else:
             if self.pick.soy_owgr < 30:
-                return 20
-            else:
-                return 0
+                score = 20
+            #else:
+            #    score = 0
         
-        if rank < 31 and self.pick.soy_owgr < 31:
-            return -30
-        elif rank < 31 and self.pick.soy_owgr > 30:
-            return -80
-        elif rank > 31 and self.pick.soy_owgr < 31:
-            return 20
-        else:
-            return 0
+        self.score = score
+        self.save()
+        return score
             
 
 class Round(models.Model):

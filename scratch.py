@@ -36,9 +36,21 @@ from fb_app import views
 from django.http import HttpRequest
 from rest_framework.renderers import JSONRenderer
 from rest_framework.parsers import JSONParser
-import cProfile
 
-import io
+import tabula
+
+pdf = open('Football Fools week 12.pdf', 'rb')
+data = tabula.read_pdf('Football Fools week 12.pdf', pages=1)
+print (data)
+exit()
+pdfReader = PyPDF4.PdfFileReader(pdfFileObj)
+print (pdfReader.numPages)
+pageObj = pdfReader.getPage(0)
+#print (pageObj)
+print(pageObj.extractText())
+pdfFileObj.close()
+
+exit()
 
 
 for t in Teams.objects.all():

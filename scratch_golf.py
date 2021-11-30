@@ -43,13 +43,37 @@ from operator import itemgetter
 import sys
 
 
+start = datetime.now()
+espn_data = espn_api.ESPNData().get_all_data()
+print (espn_data)
+exit()
+
+s = Season.objects.get(current=True)
+print (s.get_total_points())
+print (datetime.now() - start)
+
+fedex_s  = FedExSeason.objects.get(season__current=True)
+#for p in FedExPicks.objects.filter(pick__season=fedex_s):
+#    p.calc_score()
+d = datetime.now()
+fedex = fedex_s.player_points()
+print (fedex)
+print (datetime.now() - d)
+#print (s.player_points())
+#print (s.player_points())
+#print (datetime.now() - start)
+exit()
+
+
+
 d = {}
 s = Season.objects.get(current=True)
 for u in s.get_users('obj'):
     d[u.username] = {'total': 0}
 
 #for t in Tournament.objects.filter(season__current=True):
-for t in Tournament.objects.all():
+print (Tournament.objects.all().order_by('pk')[:1])
+for t in Tournament.objects.all().order_by('pk'):
     for i, ts in enumerate(TotalScore.objects.filter(tournament=t).order_by('score')):
         try:
             d.get(ts.user.username).update({i+1: d.get(ts.user.username).get(i+1) + 1,

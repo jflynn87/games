@@ -391,12 +391,19 @@ function get_all_picks() {
         
         th0 = document.createElement('th')
         th0.innerHTML = 'Golfer'
+        th0a = document.createElement('th')
+        th0a.innerHTML = 'SoY OWGR'
+        th0b = document.createElement('th')
+        th0b.innerHTML = 'Points'
+
         th1 = document.createElement('th')
         th1.innerHTML = '# Picks'
         th2 = document.createElement('th')
         th2.innerHTML = 'Rank/Points'
 
         header.appendChild(th0)
+        header.appendChild(th0a)
+        header.appendChild(th0b)
         header.appendChild(th1)
         header.appendChild(th2)
 
@@ -418,10 +425,14 @@ function get_all_picks() {
 
         body = document.createElement('tbody')
         $.each(picks, function(espn_num, data) {
-
             tr = document.createElement('tr')
             tdA = document.createElement('td')
             tdA.innerHTML = data.golfer
+            tdA1 = document.createElement('td')
+            tdA1.innerHTML = data.soy_owgr
+            tdA10 = document.createElement('td')
+            tdA10.innerHTML = data.score
+
 
             tdB = document.createElement('td')
             tdB.innerHTML = data.num_picks
@@ -430,6 +441,8 @@ function get_all_picks() {
             {tdC.innerHTML = data.rank + ' / ' + data.points}
 
             tr.appendChild(tdA)
+            tr.appendChild(tdA1)
+            tr.appendChild(tdA10)
             tr.appendChild(tdB)
             tr.appendChild(tdC)
 
@@ -493,7 +506,7 @@ function get_all_picks() {
         pick_tbl.appendChild(body)
         picks_frag.appendChild(pick_tbl)
         document.getElementById('all_picks').appendChild(picks_frag)
-        sort_table($('#all_picks_tbl'), 1, 'asc')
+        sort_table($('#all_picks_tbl'), 3, 'asc')
         $('#loading_msg').hide()
         
 

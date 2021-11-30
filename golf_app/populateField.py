@@ -821,6 +821,7 @@ def prior_year_sd(t):
     if (not created and (not sd.data or len(sd.data) == 0 or len(pga_nums) == 0)) or created:
         print ('updating prior SD', prior_t)
         espn_t_num = scrape_espn.ScrapeESPN().get_t_num(prior_season)
+        print ('espn T num', espn_t_num)
         url = "https://www.espn.com/golf/leaderboard?tournamentId=" + espn_t_num
         score_dict = scrape_espn.ScrapeESPN(prior_t,url, True, True).get_data()
         sd.data = score_dict

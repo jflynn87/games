@@ -13,7 +13,7 @@ class ESPNData(object):
         competition_data varoius datat about  the tournament
         field_data is the actual golfers in the tournament'''
 
-    def __init__(self, t=None, data=None, mode='none', espn_t_num=None):
+    def __init__(self, t=None, data=None, mode='none'):
         if t:
             self.t = t 
         else:
@@ -31,15 +31,6 @@ class ESPNData(object):
                
             
             self.all_data = get(url, headers=headers).json()
-            if self.t.pga_tournament_num != '999' and self.all_data.get('name') != self.t.name and not self.t.ignore_name_mismatch:
-                match = utils.check_t_names(self.t.name, self.t)
-                if not match:
-                    print ('tournament mismatch: espn name: ', t.name, 'DB name: ', self.t.name)
-                    return {}
-
-            sd, created = ScoreDict.objects.get_or_create(tournament=self.t)
-            sd.espn_api_data = self.all_data
-            sd.save()
 
             #f = open('espn_api.json', "w")
             #f.write(json.dumps(self.all_data))
@@ -47,11 +38,32 @@ class ESPNData(object):
 
             #print (self.all_data)
 
+        found_event = False
         for event in self.all_data.get('events'):
             if event.get('id') == self.t.espn_t_num or mode == 'setup':
-                self.event_data = event 
-        
-        if self.t.pga_tournament_num == '468':
+                self.event_data = event
+                found_event = True
+                break 
+            #else:
+            #    self.event_data = {}
+
+        if not found_event:
+            print ('CANT FIND EVENT ID in ESPN')
+            self.field_data = {}
+            self.event_data = {}
+            return None
+
+        if self.t.pga_tournament_num != '999' and self.event_data.get('name') != self.t.name and not self.t.ignore_name_mismatch:
+            match = utils.check_t_names(self.event_data.get('name'), self.t)
+            if not match:
+                print ('tournament mismatch: espn name: ', t.name, 'DB name: ', self.t.name)
+                return None
+
+        sd, created = ScoreDict.objects.get_or_create(tournament=self.t)
+        sd.espn_api_data = self.all_data
+        sd.save()
+
+        if self.t.pga_tournament_num == '468' or len(self.event_data) == 0:
             self.field_data = {}
         else:
             for c in self.event_data.get('competitions'):
