@@ -1248,9 +1248,7 @@ class PriorResultAPI(APIView):
         try:
             #g_num = group.split('-')[2]
             t= Tournament.objects.get(pk=request.data.get('tournament_key'), season__current=True)
-            print ('AAAAAAAA befor espn scrape' ) 
             espn_data = espn_api.ESPNData().get_all_data()
-            print ('XXXXXXX espn_data: ', len(espn_data))
             context = {'espn_data': espn_data, 'user': self.request.user}
             if request.data.get('group') == 'all':
                 data= golf_serializers.NewFieldSerializer(Field.objects.filter(tournament=t), context=context, many=True).data

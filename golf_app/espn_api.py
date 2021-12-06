@@ -51,13 +51,16 @@ class ESPNData(object):
             print ('CANT FIND EVENT ID in ESPN')
             self.field_data = {}
             self.event_data = {}
-            return None
+            #return None
 
         if self.t.pga_tournament_num != '999' and self.event_data.get('name') != self.t.name and not self.t.ignore_name_mismatch:
             match = utils.check_t_names(self.event_data.get('name'), self.t)
             if not match:
-                print ('tournament mismatch: espn name: ', t.name, 'DB name: ', self.t.name)
-                return None
+                self.field_data = {}
+                self.event_data = {}
+
+                print ('tournament mismatch: espn name: ', self.event_data.get('name'), 'DB name: ', self.t.name)
+                #return None
 
         sd, created = ScoreDict.objects.get_or_create(tournament=self.t)
         sd.espn_api_data = self.all_data

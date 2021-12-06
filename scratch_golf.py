@@ -44,14 +44,43 @@ import sys
 
 
 start = datetime.now()
-espn_data = espn_api.ESPNData().get_all_data()
-print (espn_data)
-exit()
+
 
 s = Season.objects.get(current=True)
+for t in Tournament.objects.filter(season=s):
+    print ('XXXXXXXXXXXXXXXXXXXXXXXX')
+    print (t)
+    if t.fedex_data:
+        print (t.fedex_data.get('player_points'))
+    print(t.season.get_total_points(t))
+
+exit()
+fedex_season = FedExSeason.objects.get(season=s)
+print (fedex_season)
+fedex_season.update_player_points()
+#t = Tournament.objects.get(current=True)
+# context = {'espn_data': espn_api.ESPNData().get_all_data(),
+#             'user': User.objects.get(pk=1)}
+
+# data= golf_serializers.NewFieldSerializer(Field.objects.filter(tournament=t, group__number=1), context=context, many=True).data
+
+# print (data)
+# exit()
+for t in Tournament.objects.filter(season=s):
+    print ('XXXXXXXXXXXXXXXXXXXXX')
+    print (t)
+    if t.fedex_data:
+        print (t.fedex_data.get('player_points'))
+
+print (datetime.now() - start)
+exit()
+#for p in FedExPicks.objects.filter(pick__season__season=s):
+#    p.calc_score()
+
+print (FedExSeason.objects.get(season=s).player_points())
 print (s.get_total_points())
 print (datetime.now() - start)
-
+exit()
 fedex_s  = FedExSeason.objects.get(season__current=True)
 #for p in FedExPicks.objects.filter(pick__season=fedex_s):
 #    p.calc_score()

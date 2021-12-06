@@ -1,5 +1,6 @@
+#from gamesProj.golf_app.models import FedExSeason
 from golf_app.models import (Picks, Field, Group, Tournament, TotalScore,
-    ScoreDetails, Name, Season, User, BonusDetails, Golfer, ScoreDict, StatLinks)
+    ScoreDetails, Name, Season, User, BonusDetails, Golfer, ScoreDict, StatLinks, FedExSeason)
 import urllib3
 from django.core.exceptions import ObjectDoesNotExist
 from golf_app import scrape_cbs_golf, scrape_espn, utils, scrape_scores_picks, populateMPField, populateZurichField, espn_api
@@ -754,6 +755,8 @@ def get_fedex_data(tournament):
 
     tournament.fedex_data = data
     tournament.save()
+
+    fedex_season = FedExSeason.objects.get(season=tournament.season).update_player_points()
 
     return data
 
