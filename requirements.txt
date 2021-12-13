@@ -42,7 +42,7 @@ itemloaders==1.0.4
 jmespath==0.10.0
 lazy-object-proxy @ file:///C:/b/work
 line-bot-sdk==1.16.0
-lxml==4.6.3
+lxml==4.6.5
 mccabe==0.6.1
 mysqlclient==1.4.6
 numpy==1.18.1
