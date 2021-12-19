@@ -1,5 +1,7 @@
+from re import split
 from unidecode import unidecode as decode
 from datetime import datetime
+import os
 
 
 def format_score(score):
@@ -67,7 +69,7 @@ def format_name(name):
         return (name.strip(', Jr.').strip(',Jr ').strip('(a)').strip(',').strip('Jr.').strip('.'))
 
 
-def fix_name(player, owgr_rankings):
+def fix_name(player, owgr_rankings, log=None):
     '''takes a string and a dict and returns a dict?'''
 
     from golf_app.models import Name
@@ -78,13 +80,19 @@ def fix_name(player, owgr_rankings):
         return (player, owgr_rankings.get(player.replace('.', '').replace('-', '')))
 
     if owgr_rankings.get(decode(player)):
-        print ('unidecoded name dict match: ', player, owgr_rankings.get(decode(player)))
+        if log:
+            print ('unidecoded name dict match: ', player, owgr_rankings.get(decode(player)))
         return (player, owgr_rankings.get(decode(player)))
 
+    if log:
+        print (['player', player])
     if Name.objects.filter(PGA_name=player).exists():
+        if log:
+            print ('player mathc')
         name = Name.objects.get(PGA_name=player)
         if owgr_rankings.get(name.OWGR_name):
-            print ('returning based on name table lookup: ', player, owgr_rankings.get(name.OWGR_name))
+            if log:
+                print ('returning based on name table lookup: ', player, owgr_rankings.get(name.OWGR_name))
             return (player, owgr_rankings.get(name.OWGR_name))
 
     last = player.split(' ')
@@ -95,7 +103,8 @@ def fix_name(player, owgr_rankings):
         last_name = last[len(last)-1]
     
     possible_matches = {k:v for k,v in owgr_rankings.items() if decode(last_name.strip(',')) in decode(k)}
-    print ('player: ', player)
+    if log:
+        print ('player: ', player)
     #print ('possible name mathces: ', player, possible_matches)
 
     pga_name = player.replace(' (a)', '').replace(',', '').replace('.', '').replace('-', '').split(' ')
@@ -104,14 +113,17 @@ def fix_name(player, owgr_rankings):
     for k, v in possible_matches.items():
         
         owgr_name = k.replace(',', '').split(' ')
-        print (pga_name, owgr_name)
+        if log:
+            print ('looping thru possible: ', pga_name, owgr_name)
         if owgr_name == pga_name:
-            print ('names equal after strip spec chars', player, owgr_name)
+            if log:
+                print ('names equal after strip spec chars', player, owgr_name)
             return player, v
 
         if len(owgr_name) == 3 and len(pga_name) == 3 and decode(owgr_name[0]) == decode(pga_name[0]) \
             and decode(owgr_name[2].replace('.', '')) == decode(pga_name[2].replace('.', '')) and owgr_name[1][0] == pga_name[1][0]:
-                print ('last name, first name match, middle first intial match', player, owgr_name)
+                if log:
+                    print ('last name, first name match, middle first intial match', player, owgr_name)
                 return k, v
         #elif len(owgr_name) - 1 == len(pga_name) or len(owgr_name) == len(pga_name) - 1 \
         #    and (owgr_name[0] == pga_name[0] \
@@ -121,8 +133,11 @@ def fix_name(player, owgr_rankings):
 
 
         elif decode(owgr_name[len(owgr_name)-2]) == decode(pga_name[len(pga_name)-1]) \
-            and k[0:1] == player[0:1]:
-            print ('last name, first initial match, cut owgr suffix', player, owgr_name)
+            and k.split(' ')[0] == player.split(' ')[0]:
+            #and k[0:1] == player[0:1]:  initial logic checks for charaacter of first name so causing false positives
+            if log:
+                print ('XXXXX fix this for dru love')
+                print ('last name, first initial match, cut owgr suffix', k, v, player, owgr_name)
             return k, v
         #elif len(owgr_name) == 3 and len(pga_name) == 3 and unidecode.unidecode(owgr_name[len(owgr_name)-2]) == unidecode.unidecode(pga_name[len(pga_name)-2]) \
         #    and unidecode.unidecode(owgr_name[0]) == unidecode.unidecode(pga_name[0]):
@@ -130,11 +145,13 @@ def fix_name(player, owgr_rankings):
         #    return k, v
         elif decode(owgr_name[0].replace('-', '')) == decode(pga_name[len(pga_name)-1].replace('-', '')) \
             and decode(owgr_name[len(owgr_name)-1].replace('-', '')) == decode(pga_name[0].replace('-', '')):
-            print ('names reversed', player, owgr_name)
+            if log:
+                print ('names reversed', player, owgr_name)
             return k, v
         elif decode(owgr_name[len(owgr_name)-1]) == decode(pga_name[len(pga_name)-1]) \
            and k[0:2] == player[0:2]:
-            print ('last name, first two letter match', player, owgr_name)
+            if log:
+                print ('last name, first two letter match', player, owgr_name)
             return k, v
 
 
@@ -145,12 +162,16 @@ def fix_name(player, owgr_rankings):
 
     
 
-    print ('didnt find match', player)
+    if log or os.environ.get("DEBUG") != "True":
+        print ('fix names didnt find match', player)
     return None, [9999, 9999, 9999]
 
 
 def check_t_names(espn_t, t):
     '''Takes a string and a tournament object and returns a bool'''
+    if espn_t == t.name:
+        return True
+        
     print ('checking t name match espn: ', espn_t, ' pga: ', t.name)
     espn_name = espn_t.lower().split(' ')
     pga_name = t.name.lower().split(' ')
@@ -206,3 +227,9 @@ def save_access_log(request, screen):
     except Exception as e:
         print ('save access log issue: ', e)
     return
+
+
+    
+    
+        
+

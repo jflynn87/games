@@ -1,3 +1,4 @@
+from re import T
 from django.db.models.query_utils import RegisterLookupMixin
 from django.shortcuts import render, get_object_or_404, redirect
 from django.views.generic import View, TemplateView, ListView, DetailView, CreateView, UpdateView, FormView
@@ -481,10 +482,6 @@ def setup(request):
 
 class AboutView(TemplateView):
     template_name='golf_app/about.html'
-
-
-class AllTime(TemplateView):
-    template_name='golf_app/all_time.html'
 
 
 class GetScores(APIView):
@@ -1409,8 +1406,8 @@ class TrendDataAPI(APIView):
             
             season = Season.objects.get(pk=season_pk)
 
-            for user in season.get_users():
-                u = User.objects.get(pk=user.get('user'))
+            for u in season.get_users('obj'):
+                #u = User.objects.get(pk=user.get('user'))
                 diff_dict[u.username] = []
 
             if num_of_t == "all":
@@ -1419,21 +1416,23 @@ class TrendDataAPI(APIView):
                 t_qs = reversed(Tournament.objects.filter(season__pk=season.pk).order_by('-pk')[:int(num_of_t)])
 
             for t in t_qs:
+                print (t)
                 labels.append(t.name[0:8])
                 totals = json.loads(t.season.get_total_points(t))
-                
+                print ('past totals')
                 for user, stats in totals.items():
-                    #print (user, stats)
+                    print (user, stats)
                     l = diff_dict[user]
                     l.append(stats['diff'])
                     diff_dict[user] = l
+                    
 
             #diff_dict['min_scale'] = min([min(v) for v in diff_dict.values()])
-
+            print ('diff_dict')
             return JsonResponse(data={'labels': labels, 'data': diff_dict, 'min_scale': min([min(v) for v in diff_dict.values()])}, status=200)
         except Exception as e:
             print ('Trend Data API failed: ', e)
-            return JsonResponse({'key': 'Trend data error'}, status=401)
+            return JsonResponse({'key': 'Trend data error'}, status=200)
 
         
 class SeasonStats(APIView):
@@ -1903,3 +1902,220 @@ class EspnApiScores(APIView):
 
 
         return JsonResponse(d, status=200, safe=False)
+
+
+class AllTimeView(TemplateView):
+    template_name='golf_app/all_time.html'
+
+    def get_context_data(self, **kwargs):
+        context = super(AllTimeView, self).get_context_data(**kwargs)
+        utils.save_access_log(self.request, 'all time')
+        context.update({
+            'users': Season.objects.get(current=True).get_users('obj'),
+            'seasons': Season.objects.all()
+        })
+
+        return context
+ 
+
+class TotalPlayedAPI(APIView):
+    def get(self, request, season):
+        
+        start = datetime.datetime.now()
+        d = {}
+
+        if season == 'all':
+            s = Season.objects.get(current=True)
+        else:
+            s = Season.objects.get(pk=season)
+        try:
+            for u in s.get_users('obj'):
+                if season == 'all':
+                    d[u.username] = {'played': TotalScore.objects.filter(user=u).exclude(score=999).count()}
+                else:
+                    d[u.username] = {'played': TotalScore.objects.filter(user=u, tournament__season=s).exclude(score=999).count()}
+        except Exception as e:
+            print ('total played API error: ', e)
+            d['error'] = {'msg': e}
+        
+        print ('total played API time: ', datetime.datetime.now() - start)
+
+        return JsonResponse(json.dumps(d), status=200, safe=False)
+
+
+class TWinsAPI(APIView):
+    def get(self, request, season):
+        
+        start = datetime.datetime.now()
+        d = {}
+        try:
+            if season == 'all':
+                tournaments = Tournament.objects.all()
+            else:
+                tournaments = Tournament.objects.filter(season__pk=season)
+            
+            for t in tournaments:
+                for ts in t.winner():
+                    try: 
+                       d.get(ts.user.username).update({'weekly_winner': d.get(ts.user.username).get('weekly_winner') + 1,
+                         })
+                    except Exception as a:
+                         d[ts.user.username] = {'weekly_winner': 1,
+                         }
+        
+        except Exception as e:
+            print ('T wins API error: ', e)
+            d['error'] = {'msg': str(e)}
+
+        print ('t wins API time: ', datetime.datetime.now() - start)
+
+        return JsonResponse(json.dumps(d), status=200, safe=False)
+
+
+class PickedWinnerCountAPI(APIView):
+    def get(self, request, season):
+        
+        start = datetime.datetime.now()
+        d = {}
+
+        if season == 'all':
+            s = Season.objects.get(current=True)
+        else:
+            s = Season.objects.get(pk=season)
+
+        try:
+            if season == 'all':
+                for u in s.get_users('obj'):
+                    d[u.username] = {'winner_count': ScoreDetails.objects.filter(user=u, score=1).count()}
+            else:
+                for u in s.get_users('obj'):
+                    d[u.username] = {'winner_count': ScoreDetails.objects.filter(user=u, score=1, pick__playerName__tournament__season=s).count()}
+
+        except Exception as e:
+            print ('Picked winner count API error: ', e)
+            d['error'] = {'msg': str(e)}
+
+        print ('picked winner count API time: ', datetime.datetime.now() - start)
+
+        return JsonResponse(json.dumps(d), status=200, safe=False)
+
+
+class AvgPointsAPI(APIView):
+    def get(self, request, season):
+        
+        start = datetime.datetime.now()
+        d = {}
+        try:
+            if season == 'all':
+                tournaments = Tournament.objects.all().order_by('pk')
+            else:
+                tournaments = Tournament.objects.filter(season=Season.objects.get(pk=season)).order_by('pk')
+            for t in tournaments:
+                for ts in TotalScore.objects.filter(tournament=t).order_by('score'):
+                    if ts.score != 999:
+                        try:
+                            d.get(ts.user.username).update({'played': d.get(ts.user.username).get('played') + 1,
+                                                'total_score': d.get(ts.user.username).get('total_score') + ts.score,
+                                 })
+
+                        except Exception as e:
+
+                            d[ts.user.username] = {'played': 1,
+                            'total_score':ts.score,
+                            }
+
+            #print (d)
+            for user, data in d.items():
+                d.get(user).update({'average': round(d.get(user).get('total_score')/d.get(user).get('played'), 0)})
+
+        except Exception as e:
+            print ('Avg points API error: ', e)
+            d['error'] = {'msg': str(e)}
+
+        print ('avg points API time: ', datetime.datetime.now() - start)
+
+        return JsonResponse(json.dumps(d), status=200, safe=False)
+
+
+class AvgCutsAPI(APIView):
+    def get(self, request, season):
+        
+        start = datetime.datetime.now()
+        d = {}
+
+        try:
+            if season == 'all':
+                s = Season.objects.get(current=True)
+                tournaments = Tournament.objects.filter(has_cut=True).order_by('pk')
+            else:
+                s = Season.objects.get(pk=season)
+                tournaments = Tournament.objects.filter(season=s, has_cut=True).order_by('pk')
+
+            for u in s.get_users('obj'):
+                d[u.username] = {'played': 0,
+                                'cuts': 0,
+                                }
+
+            for t in tournaments:
+                if not TotalScore.objects.filter(tournament=t, cut_count__gte=1).exists():
+                    continue
+                else:
+                    for ts in TotalScore.objects.filter(tournament=t).order_by('score'):
+                        if ts.score != 999 and ts.cut_count:
+                            d.get(ts.user.username).update({'played': d.get(ts.user.username).get('played') + 1,
+                                                'cuts': d.get(ts.user.username).get('cuts') + ts.cut_count,
+                                })
+
+            for user, data in d.items():
+                if d.get(user).get('played') != 0 and d.get(user).get('cuts') !=0:
+                    d.get(user).update({'average_cuts': round(d.get(user).get('cuts')/d.get(user).get('played'), 2)})
+
+        except Exception as e:
+            print ('Avg points API error: ', e)
+            d['error'] = {'msg': str(e)}
+        print (d)
+        print ('avg points API time: ', datetime.datetime.now() - start)
+
+        return JsonResponse(json.dumps(d), status=200, safe=False)
+
+
+class MostPickedAPI(APIView):
+    def get(self, request, season):
+        
+        start = datetime.datetime.now()
+        d = {}
+        try:
+            if season == 'all':
+                s = Season.objects.get(current=True)
+            else:
+                s = Season.objects.get(pk=season)
+            for u in s.get_users('obj'):
+                if season == 'all':
+                    picks = Picks.objects.filter(user=u).order_by().values('playerName__golfer__golfer_name').annotate(c=Count('playerName__golfer__golfer_name'))
+                    if picks:
+                        most_picked = max(picks, key=lambda x:x['c'])
+                    else:
+                        most_picked = {'c': 'None'}
+                else:
+                    picks = Picks.objects.filter(user=u, playerName__tournament__season=s).order_by().values('playerName__golfer__golfer_name').annotate(c=Count('playerName__golfer__golfer_name'))
+                    print (picks)
+                    if picks:
+                        most_picked = max(picks, key=lambda x:x['c'])
+                    else:
+                        most_picked = {'c': 'None'}
+
+
+                d[u.username] = {'most_picked_golfer': most_picked.get('playerName__golfer__golfer_name'),
+                                'times_picked': most_picked.get('c'),
+
+                                }
+
+        except Exception as e:
+            print ('Most Picked API error: ', e)
+            d['error'] = {'msg': str(e)}
+        print (d)
+        print ('most picked API time: ', datetime.datetime.now() - start)
+
+        return JsonResponse(json.dumps(d), status=200, safe=False)
+
+

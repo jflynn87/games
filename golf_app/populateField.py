@@ -289,7 +289,7 @@ def get_field(t, owgr_rankings):
                                     'sow_owgr': ranks[1][1]}
         except Exception as e:
             print ('pga scrape failed: ', e)   #to use this need to update to key everything from espn_num
-            data = espn_api.ESPNData(mode='setup').field()
+            data = espn_api.ESPNData().field()
 
             for golfer in data:
                 name = golfer.get('athlete').get('displayName')

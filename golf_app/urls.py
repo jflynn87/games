@@ -13,7 +13,7 @@ urlpatterns= [
     url(r'^setup/$',views.setup,name='setup'),
     url(r'^about/$',views.AboutView.as_view(),name='about'),
     #url(r'^ajax/get_picks/$', views.GetPicks.as_view(), name='get_picks'),
-    url(r'^all_time/$', views.AllTime.as_view(), name='all_time'),
+    url(r'^all_time/$', views.AllTimeView.as_view(), name='all_time'),
     #url(r'^get_scores/$', views.GetScores.as_view(), name='get_scores'),
     path('get_scores/<int:tournament>', views.GetScores.as_view(), name='get_scores'),
     url(r'^get_db_scores/$', views.GetDBScores.as_view(), name='get_db_scores'),
@@ -57,9 +57,14 @@ urlpatterns= [
     path('season_points/<str:season>/<str:filter>', views.SeasonPointsAPI.as_view(), name='season_points'),
     path('ryder_cup_scores/', views.RyderCupScoresView.as_view(), name='ryder_cup_scores'),
     path('ryder_cup_score_api/', views.RyderCupScoresAPI.as_view(), name='ryder_cup_score_api'),
-    path('espn_api_scores/<int:pga_t_num>', views.EspnApiScores.as_view(), name='espn_api_scores')
-
-    
+    path('espn_api_scores/<int:pga_t_num>', views.EspnApiScores.as_view(), name='espn_api_scores'),
+    path('total_played_api/<str:season>', views.TotalPlayedAPI.as_view(), name='total_played_api'),
+    path('t_wins_api/<str:season>', views.TWinsAPI.as_view(), name='t_wins_api'),
+    path('picked_winner_count_api/<str:season>', views.PickedWinnerCountAPI.as_view(), name='picked_winner_count_api'),
+    path('avg_points_api/<str:season>', views.AvgPointsAPI.as_view(), name='avg_points_api'),
+    path('avg_cuts_api/<str:season>', views.AvgCutsAPI.as_view(), name='avg_cuts_api'),
+    path('most_picked_api/<str:season>', views.MostPickedAPI.as_view(), name='most_pickd_api'),
+   
 
     
 

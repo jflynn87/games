@@ -165,9 +165,10 @@ $.each(picks_data, function(player, data) {
     p = player.replace(filler, '')
     $('#rank-' + p).text(data['rank'])
     $('#score-' + p).text(data['score'])
-    $('#proj-' + p).text(data['proj_score'])
+    $('#proj_score-' + p).text(data['proj_score'])
     $('#proj_rank-' +p).text(data['proj_rank'])
-})    
+}) 
+
 
 $.each(picks_data, function(player, data) {
     p = player.replace(filler, '')

@@ -3,29 +3,62 @@
 
 {% block body_block %}
 <script type="text/javascript" src="{%static 'golf_app/js/all_time.js'%}"></script>
-<link rel="stylesheet" href={%static "golf_app/css/load.css"%}></link>
-<div class='load'>
-<label class="pulse" id='pulse'>
-    <progress class="pulse-progress"></progress>
-    しばらくお待ちください。
-</label>
 
-<div class="data" id='data'>
-    <table id="score-tbl" class="table table-bordered">
-        <thead class='thead-dark'>
-        <th>Player</th>
-        <th>Score</th>
-        <th>Num of Cuts</th>
+<div id='msg'></div>
+<div id='year_stats' class="input-group mb-3">
+    <div class="input-group-prepend">
+        <label for="season" class='input-group-text'>Choose Season</label>
+    </div>
+
+    <select name="season" id="season" class='custom-select'>
+        <option value="all" selected>All</option>
+        {%for s in seasons%}
+        <option value="{{s.pk}}">{{s.season}}</option>
+        {%endfor%}
+    </select>
+</div>
+
+<div id='status'>
+    <p> Loading Status</p>
+    <ul class="list-group small">
+        <li class='list-group-item' >Played: <span id='played_status'>loading....</span></li>
+        <li class='list-group-item' >Tournament Wins: <span id='t_wins_status'>loading....</span></li>
+        <li class='list-group-item' >Winning Golfer: <span id='winner_picked_status'>loading....</span></li>
+        <li class='list-group-item' >Average Points: <span id='avg_points_status'>loading....</span></li>
+        <li class='list-group-item' >Average Cuts: <span id='avg_cuts_status'>loading....</span></li>
+        <li class='list-group-item' >Most Frequent Picked: <span id='most_frequent_status'>loading....</span></li>
+    </ul>
+</div>
+
+<div id='stats_sect'>
+    <table class='table table-bordered'>
+        <thead>
+            <th>Player</th>
+            <th>Played</th>
+            <th>Tournament Wins</th>
+            <th>Winning Golfer Picked</th>
+            <th>Average Points</th>
+            <th>Average Cuts</th>
+            <th>Most Frequent Pick</th>
         </thead>
-        <tbody>
+        <tbody id='stats_body'>
+            {%for u in users%}
+            <tr id='{{u.username}}_stats_row'>
+            <th>{{u.username}}</th>
+            <td id='played_{{u.username}}'>...</td>
+            <td id='t_wins_{{u.username}}'>...</td>
+            <td id='winner_picked_{{u.username}}'>...</td>
+            <td id='avg_points_{{u.username}}'>...</td>
+            <td id='avg_cuts_{{u.username}}'>...</td>
+            <td id='most_picked_{{u.username}}'>...</td>
+            </tr>
+            {%endfor%}
+                
         </tbody>
     </table>
-    <p></p>
-    <h3 class="p-3 mb-2 bg-secondary text-white">Tournament Info:</h3>
-    <p><a href='https://www.pgatour.com/leaderboard.html' target="_blank">Click for Full Leaderboard</a></p>
-    <p id='leaders'></p>
-    <p id='cut-data'></p>
 
 </div>
+
 </div>
+
 {%endblock%}

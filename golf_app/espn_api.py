@@ -13,7 +13,7 @@ class ESPNData(object):
         competition_data varoius datat about  the tournament
         field_data is the actual golfers in the tournament'''
 
-    def __init__(self, t=None, data=None, mode='none'):
+    def __init__(self, t=None, data=None):
         if t:
             self.t = t 
         else:
@@ -38,42 +38,56 @@ class ESPNData(object):
 
             #print (self.all_data)
 
-        found_event = False
+        self.event_data = {}
+        self.field_data = {}
+        event_found = False
         for event in self.all_data.get('events'):
-            if event.get('id') == self.t.espn_t_num or mode == 'setup':
-                self.event_data = event
-                found_event = True
+            if event.get('id') == self.t.espn_t_num:
+                event_found = True
+                if utils.check_t_names(event.get('name'), self.t) or self.t.ignore_name_mismatch: 
+                    self.event_data = event
+                    sd, created = ScoreDict.objects.get_or_create(tournament=self.t)
+                    sd.espn_api_data = self.all_data
+                    sd.save()
+                    if self.t.pga_tournament_num not in ['468', '999', '470']:
+                       for c in self.event_data.get('competitions'):
+                            self.competition_data = c
+                            self.field_data = c.get('competitors')
+                else:
+                    print ('tournament mismatch: espn name: ', event.get('name'), 'DB name: ', self.t.name)
                 break 
+        
+        if not event_found:
+            print ('ESPN API didnt find event, PGA T num: ', self.t.pga_tournament_num)
+
+        print ('espn API Init complete, field len: ', len(self.field_data))
+
             #else:
             #    self.event_data = {}
 
-        if not found_event:
-            print ('CANT FIND EVENT ID in ESPN')
-            self.field_data = {}
-            self.event_data = {}
-            #return None
+#        if not found_event:
+#            print ('CANT FIND EVENT ID in ESPN')
+#            self.field_data = {}
+#            self.event_data = {}
 
-        if self.t.pga_tournament_num != '999' and self.event_data.get('name') != self.t.name and not self.t.ignore_name_mismatch:
-            match = utils.check_t_names(self.event_data.get('name'), self.t)
-            if not match:
-                self.field_data = {}
-                self.event_data = {}
+        # if self.t.pga_tournament_num != '999' and self.event_data.get('name') != self.t.name and not self.t.ignore_name_mismatch:
+        #     match = utils.check_t_names(self.event_data.get('name'), self.t)
+        #     if not match:
+        #         self.field_data = {}
+        #         self.event_data = {}
 
-                print ('tournament mismatch: espn name: ', self.event_data.get('name'), 'DB name: ', self.t.name)
-                #return None
+        #         print ('tournament mismatch: espn name: ', self.event_data.get('name'), 'DB name: ', self.t.name)
+        #         #return None
 
-        sd, created = ScoreDict.objects.get_or_create(tournament=self.t)
-        sd.espn_api_data = self.all_data
-        sd.save()
 
-        if self.t.pga_tournament_num == '468' or len(self.event_data) == 0:
-            self.field_data = {}
-        else:
-            for c in self.event_data.get('competitions'):
+        # if self.t.pga_tournament_num == '468' or len(self.event_data) == 0:
+        #     self.field_data = {}
+        # else:
+        #     for c in self.event_data.get('competitions'):
                 
-                if c.get('id') == self.t.espn_t_num or mode == 'setup': 
-                    self.competition_data = c
-                    self.field_data = c.get('competitors')
+        #         if c.get('id') == self.t.espn_t_num or mode == 'setup': 
+        #             self.competition_data = c
+        #             self.field_data = c.get('competitors')
 
 
     def get_round(self):

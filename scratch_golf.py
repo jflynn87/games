@@ -1,4 +1,5 @@
 import os
+from re import split
 os.environ.setdefault("DJANGO_SETTINGS_MODULE","gamesProj.settings")
 
 import django
@@ -9,7 +10,7 @@ from golf_app.models import Tournament, TotalScore, ScoreDetails, Picks, PickMet
 from django.contrib.auth.models import User
 from datetime import date, datetime, timedelta
 import sqlite3
-from django.db.models import Min, Q, Count, Sum, Max
+from django.db.models import Min, Q, Count, Sum, Max, Avg
 from django.db.models.functions import ExtractWeek, ExtractYear
 import time
 from requests import get
@@ -42,79 +43,119 @@ import random
 from operator import itemgetter
 import sys
 
+print ('pre update Null : ', Field.objects.filter(golfer__isnull=True).count())
 
 start = datetime.now()
+c = 0
+d = {}
+for g in Golfer.objects.all(): 
+    d[g.golfer_name] = g.golfer_pga_num
 
+for f in Field.objects.filter(golfer__isnull=True):
+#t = Tournament.objects.first()
+#for f in Field.objects.filter(tournament=t):
+    if f.golfer:
+        continue
+    elif f.playerID:
+        try:
+            g = Golfer.objects.get(golfer_pga_num=f.playerID)
+            f.golfer = g
+            f.save()
+        except Exception as e:
+            g, created = Golfer.objects.get_or_create(golfer_name = f.playerName)
+            g.golfer_pga_num = f.playerID
+            g.save()
+            f.golfer = g
+            f.save()
+            #print ('PLAYER ID but NO GOLFER  ', f.tournament, f)
+    else:
+        #print (f, 'in first else')
+        # not checking if linked, need to check that
+        #print (f.playerName)
+        if Golfer.objects.filter(golfer_name=f.playerName).exists():
+            g = Golfer.objects.get(golfer_name=f.playerName)
+            #print (('in if', f, g))
+        elif Golfer.objects.filter(golfer_name=f.playerName.title()).exists():
+            g = Golfer.objects.get(golfer_name=f.playerName.title())
+            print ('in elif', f, g)
+        else:
+            found = utils.fix_name(f.playerName.title().rstrip(' '), d)
+            if not found[0]:
+                g, created = Golfer.objects.get_or_create(golfer_name=f.playerName)
+                g.save()
+                #print (f.tournament.season, f.tournament, f.playerName, f.playerName.title(), Picks.objects.filter(playerName=f))  
+                c += 1
+                #print ( 'in not found', f, found)
+            else:
+                print ( 'in else 2', f.tournament, f.tournament.season, f, found)
+                g = Golfer.objects.get(golfer_pga_num=found[1])
+        f.golfer = g
+        f.save()
 
-s = Season.objects.get(current=True)
-for t in Tournament.objects.filter(season=s):
-    print ('XXXXXXXXXXXXXXXXXXXXXXXX')
-    print (t)
-    if t.fedex_data:
-        print (t.fedex_data.get('player_points'))
-    print(t.season.get_total_points(t))
+#print (c)
+print ('orphan field count: ', Field.objects.filter(golfer__isnull=True).count())
+total_score = 0
+for t in Tournament.objects.filter(season__current=True):
+     avg_score = TotalScore.objects.filter(tournament=t).aggregate(Avg('score'))
+     print (t, avg_score)
+     #total_score += avg_score.get('score__avg')
+     ts, created = TotalScore.objects.get_or_create(user=User.objects.get(username="Hiro"), tournament=t)
+     ts.score = avg_score.get('score__avg')
+     ts.save()
 
+# for p in FedExPicks.objects.filter(user__username='john'):
+#     print (p.pick.golfer)
+#     fedex = FedExPicks()
+#     fedex.user = User.objects.get(username="Hiro")
+#     fedex.pick = p.pick 
+#     fedex.save()
+#print (total_score)
 exit()
-fedex_season = FedExSeason.objects.get(season=s)
-print (fedex_season)
-fedex_season.update_player_points()
-#t = Tournament.objects.get(current=True)
-# context = {'espn_data': espn_api.ESPNData().get_all_data(),
-#             'user': User.objects.get(pk=1)}
-
-# data= golf_serializers.NewFieldSerializer(Field.objects.filter(tournament=t, group__number=1), context=context, many=True).data
-
-# print (data)
-# exit()
-for t in Tournament.objects.filter(season=s):
-    print ('XXXXXXXXXXXXXXXXXXXXX')
-    print (t)
-    if t.fedex_data:
-        print (t.fedex_data.get('player_points'))
-
-print (datetime.now() - start)
-exit()
-#for p in FedExPicks.objects.filter(pick__season__season=s):
-#    p.calc_score()
-
-print (FedExSeason.objects.get(season=s).player_points())
-print (s.get_total_points())
-print (datetime.now() - start)
-exit()
-fedex_s  = FedExSeason.objects.get(season__current=True)
-#for p in FedExPicks.objects.filter(pick__season=fedex_s):
-#    p.calc_score()
-d = datetime.now()
-fedex = fedex_s.player_points()
-print (fedex)
-print (datetime.now() - d)
-#print (s.player_points())
-#print (s.player_points())
-#print (datetime.now() - start)
-exit()
-
 
 
 d = {}
 s = Season.objects.get(current=True)
 for u in s.get_users('obj'):
-    d[u.username] = {'total': 0}
+    winner_picks = ScoreDetails.objects.filter(user=u, score=1).count()
+    d[u.username] = {'played': 0,
+                    'total_score': 0,
+                    'winner_picks': winner_picks}
+    
 
-#for t in Tournament.objects.filter(season__current=True):
-print (Tournament.objects.all().order_by('pk')[:1])
+for s in Season.objects.all():
+    score = TotalScore.objects.filter(tournament__season=s).aggregate(Sum('score'))
+    print (s.season,  round((score.get('score__sum') / Tournament.objects.filter(season=s).count())/len(s.get_users()),0))
+
 for t in Tournament.objects.all().order_by('pk'):
-    for i, ts in enumerate(TotalScore.objects.filter(tournament=t).order_by('score')):
-        try:
-            d.get(ts.user.username).update({i+1: d.get(ts.user.username).get(i+1) + 1,
-                                            'total': d.get(ts.user.username).get('total') + 1})
+    #print (t.winner())
+#for t in Tournament.objects.filter(season__season__gte=2020).order_by('pk'):
+    for ts in TotalScore.objects.filter(tournament=t).order_by('score'):
+        if ts.score != 999:
+            if ts in t.winner():
+                ww = 1
+            else:
+                ww = 0
+           
+            try:
+                d.get(ts.user.username).update({'played': d.get(ts.user.username).get('played') + 1,
+                                                'total_score': d.get(ts.user.username).get('total_score') + ts.score,
+                                                'weekly_winner': d.get(ts.user.username).get('weekly_winner') + ww,
+                 })
 
-        except Exception as e:
-            #print (e, ts.tournament, ts.user)
-            d.get(ts.user.username).update({i+1: 1,
-            'total': d.get(ts.user.username).get('total') + 1})
-        
+            except Exception as e:
+                #print (e, ts.tournament, ts.user)
+                d.get(ts.user.username).update({'played': 1,
+                'total_score':ts.score,
+                'weekly_winner': ww,
+                 })
 
-print (d)
+for user, data in d.items():
+    d.get(user).update({'average': round(d.get(user).get('total_score')/d.get(user).get('played'), 0)})
+
+
+print (sorted(d.items(), key=lambda v:v[1].get('average')))
+
+print (datetime.now() - start)
 exit()
 
 

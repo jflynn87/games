@@ -1,95 +1,147 @@
 $(document).ready (function() { 
-  console.log('first step');
-  $('#data').hide()
-  
-  $.ajax({
-    
-    type: "GET",
-    url: "/golf_app/ajax/get_scores/",
-    dataType: 'json',
-    success: function (json) {
-      console.log('connected', json, json.length);
-      
-      addTotals(json[0])
-      addLeaders(json[1])
-      addCut(json[2])
-     /* for (i = 0; i < json.length; ++i) {
-        console.log(json[i])
-        $('#score-tbl').find('tbody')
-        .append($('<tr>')
-        .append($('<td>').text((json[i][0])))
-        .append($('<td>').text((json[i][1])))
-        .append($('<td>').text((json[i][2])))
-                                             )}
-   */
-          
-          $('#pulse').hide()
-          $('#data').show()
-
-                                          },
-    failure: function(json) {
-      console.log('fail');
-      console.log(json);
-    }
-  })
-
-  $.ajax({
-    
-    type: "GET",
-    url: "/golf_app/ajax/get_leader/",
-    dataType: 'json',
-    success: function (json) {
-      console.log('connected', json, json.length);
-      
-     /* for (i = 0; i < json.length; ++i) {
-        console.log(json[i])
-        $('#score-tbl').find('tbody')
-        .append($('<tr>')
-        .append($('<td>').text((json[i][0])))
-        .append($('<td>').text((json[i][1])))
-        .append($('<td>').text((json[i][2])))
-                                             )}
-   */
-          
-          $('#pulse').hide()
-          $('#data').show()
-
-                                          },
-    failure: function(json) {
-      console.log('fail');
-      console.log(json);
-    }
-  })
-
-
-
-function addTotals(scores) {
-  
-  for (i = 0; i < scores.length; ++i) {
-    $('#score-tbl').find('tbody')
-    .append($('<tr>')
-    .append($('<td>').text((scores[i][0])))
-    .append($('<td>').text((scores[i][1])))
-    .append($('<td>').text((scores[i][2])))
-                                         )}
-}
-
-function addLeaders(leaders) {
-  console.log('leaders', leaders)
-   if (leaders.length == 1) {
-     $('#leaders').text('Leader: ' + leaders[0][0] + ':  ' + leaders[0][1])
-   }
-   else {
-   for (j=0; j < leaders.length; ++j) {
-     $('#leaders').append($('p').text('Leader:' + leaders[j][0] + ':  ' + leaders[j][1]))
-   }
- }
-}
-
-function addCut(cutData) {
-  console.log('cutData', cutData)
-  $('#cut-data').text('Cut Status:  ' + cutData[0][0] + ':  ' + cutData[0][1])
-}
+  add_seasons()
+  update_all('all')
 
 })
 
+function update_all(season) {
+
+  
+  weekly_winner(season)
+  events_played(season)
+  picked_winner(season)
+  avg_points(season)
+  avg_cuts(season)
+  most_picked(season) 
+  
+}
+
+  
+function events_played(season) {
+  fetch('/golf_app/total_played_api/' + season)
+  .then((response) => response.json())
+  .then((responseJSON) => {
+  played = $.parseJSON(responseJSON)
+  $.each(played, function(player, count) {
+    $('#played_' + player).text(count.played)
+  })
+  $('#played_status').html('<i class="fas fa-check"></i>').css('color', 'green')
+  show_hide_rows(played)  //kind of a hack but do it here as it is fast/early loading.
+  
+})
+
+}
+
+function weekly_winner(season) {
+  $('#t_wins_status').text('loading...').css('color', 'black')
+  fetch('/golf_app/t_wins_api/' + season)
+  .then((response) => response.json())
+  .then((responseJSON) => {
+  wins = $.parseJSON(responseJSON)
+  if (wins.error) {
+      $('#msg').append('<p class=alert-danger>Error caclulating Tournament Wins: ' + wins.error.msg + '<p>')
+    
+  }
+  else {
+  $.each(wins, function(player, count) {
+    $('#t_wins_' + player).text(count.weekly_winner)
+  })
+  }
+  $('#t_wins_status').html('<i class="fas fa-check"></i>').css('color', 'green')
+})
+
+}
+
+function picked_winner(season) {
+  $('#winner_picked_status').text('loading...').css('color', 'black')
+  fetch('/golf_app/picked_winner_count_api/' + season)
+  .then((response) => response.json())
+  .then((responseJSON) => {
+  wins = $.parseJSON(responseJSON)
+  if (wins.error) {
+      $('#msg').append('<p class=alert-danger>Error caclulating Picked Winners: ' + wins.error.msg + '<p>')
+    
+  }
+  else {
+  $.each(wins, function(player, count) {
+    $('#winner_picked_' + player).text(count.winner_count)
+  })
+  }
+  $('#winner_picked_status').html('<i class="fas fa-check"></i>').css('color', 'green')
+})
+}
+
+function avg_points(season) {
+  $('#avg_points_status').text('loading...').css('color', 'black')
+  fetch('/golf_app/avg_points_api/' + season)
+  .then((response) => response.json())
+  .then((responseJSON) => {
+  wins = $.parseJSON(responseJSON)
+  if (wins.error) {
+      $('#msg').append('<p class=alert-danger>Error caclulating Average Points: ' + wins.error.msg + '<p>')
+    
+  }
+  else {
+  $.each(wins, function(player, avg) {
+    $('#avg_points_' + player).text(avg.average)
+  })
+  }
+  $('#avg_points_status').html('<i class="fas fa-check"></i>').css('color', 'green')
+})
+}
+
+function avg_cuts(season) {
+  $('#avg_cuts_status').text('loading...').css('color', 'black')
+  fetch('/golf_app/avg_cuts_api/' + season)
+  .then((response) => response.json())
+  .then((responseJSON) => {
+  cuts = $.parseJSON(responseJSON)
+  if (cuts.error) {
+      $('#msg').append('<p class=alert-danger>Error caclulating Average Cuts: ' + cuts.error.msg + '<p>')
+    
+  }
+  else {
+  $.each(cuts, function(player, avg) {
+    $('#avg_cuts_' + player).text(avg.average_cuts)
+  })
+  }
+  $('#avg_cuts_status').html('<i class="fas fa-check"></i>').css('color', 'green')
+})
+}
+
+
+function most_picked(season) {
+  $('#most_frequent_status').text('loading...').css('color', 'black')
+  fetch('/golf_app/most_picked_api/' + season)
+  .then((response) => response.json())
+  .then((responseJSON) => {
+  most = $.parseJSON(responseJSON)
+  if (most.error) {
+      $('#msg').append('<p class=alert-danger>Error caclulating Most Picked: ' + most.error.msg + '<p>')
+    
+  }
+  else {
+  $.each(most, function(player, data) {
+    $('#most_picked_' + player).text(data.most_picked_golfer + ' : ' + data.times_picked + ' times')
+  })
+  }
+  $('#most_frequent_status').html('<i class="fas fa-check"></i>').css('color', 'green')
+})
+
+}
+
+function add_seasons() {
+  $('#year_stats select').on('change', function() {
+    console.log('click caught', $('#year_stats select').val())
+    $('#stats_body td').html('...')
+    update_all($('#year_stats select').val())
+  })
+}
+
+function show_hide_rows(played)  {
+  $('#stats_body tr').hide()
+  $.each(played, function(user, data) {
+    $('#' + user + '_stats_row').show()
+
+  })
+}
