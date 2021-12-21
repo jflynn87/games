@@ -82,7 +82,7 @@ function user_picks() {
              h_1.colSpan = 2
              h_2 = document.createElement('th')
              h_2.id = 'curr_owgr'
-             h_2.innerHTML = 'Current OWGR'
+             h_2.innerHTML = 'Start of Year OWGR'
              h_2_i = document.createElement('i')
              h_2_i.classList.add("fas", "fa-sort")
              h_2.appendChild(h_2_i)

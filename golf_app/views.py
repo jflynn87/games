@@ -1702,7 +1702,20 @@ class FedExFieldAPI(APIView):
         else:            
             context = {'user': self.request.user}
             try:
-                data= golf_serializers.FedExFieldSerializer(FedExField.objects.filter(season=s).order_by('soy_owgr'), context=context, many=True).data
+                if s.season.season == 2022 and self.request.user.username == "Hiro":
+                    t = Tournament.objects.get(season__season='2022', name='Hero World Challenge')
+                    top_30 = {k:v for k,v in t.fedex_data.items() if k != 'player_points' and int(v.get('rank')) <= 30}
+                    exclude_rank = 50
+
+                    exclude_list = []
+                    for k, v in top_30.items():
+                        if FedExField.objects.filter(golfer__golfer_name=k, soy_owgr__gte=exclude_rank).exists():
+                            f = FedExField.objects.get(golfer__golfer_name=k)
+                            exclude_list.append(f.pk)
+
+                    data= golf_serializers.FedExFieldSerializer(FedExField.objects.filter(season=s).exclude(pk__in=exclude_list).order_by('soy_owgr'), context=context, many=True).data
+                else:
+                    data= golf_serializers.FedExFieldSerializer(FedExField.objects.filter(season=s).order_by('soy_owgr'), context=context, many=True).data
                 #data= golf_serializers.FedExFieldSerializer(FedExField.objects.filter(season=s).order_by('soy_owgr'), many=True).data
             except Exception as e:
                 print ('FedEx Field API exception: ', e)
