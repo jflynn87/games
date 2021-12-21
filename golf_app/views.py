@@ -273,6 +273,28 @@ def email_picks(tournament, user):
     return
 
 
+def fedex_email_picks(user):
+    try:
+        mail_picks = "\r"
+        for pick in FedExPicks.objects.filter(pick__season__season__current=True, user=user):
+            mail_picks = mail_picks + 'Group: ' + str(pick.pick.golfer.golfer_name) + "\r"
+
+        mail_sub = "Golf Game FEDEX Picks Submittted: " + user.username
+        mail_t = "Old FedEx Picks: " + user.username + "\r"
+        
+
+        mail_url = "Website to make changes or picks: " + "http://jflynn87.pythonanywhere.com"
+        mail_content = mail_t + "\r" + "\r" +mail_picks + "\r"+ mail_url
+        mail_recipients = ["jflynn87@hotmail.com"]
+        send_mail(mail_sub, mail_content, 'jflynn87g@gmail.com', mail_recipients)  #add fail silently
+    except Exception as e:
+        print ('FEDEX Email picks error', e)
+    
+    return
+
+
+
+
 class ScoreGetPicks(ListAPIView):
     serializer_class = golf_serializers.ScoreDetailsSerializer
 
@@ -1675,6 +1697,12 @@ class FedExPicksView(LoginRequiredMixin,TemplateView):
 
      @transaction.atomic
      def post(self, request):
+        if FedExPicks.objects.filter(user=self.request.user, pick__season__season__current=True).exists():
+            print ('CHANGING FEDEX Picks', self.request.user)
+            print ('old picks: ')
+            for p in FedExPicks.objects.filter(user=self.request.user, pick__season__season__current=True):
+                print (p, p.pick.golfer.golfer_name)
+            fedex_email_picks(self.request.user)
         FedExPicks.objects.filter(user=self.request.user, pick__season__season__current=True).delete()
         data = json.loads(self.request.body)
         print ('pick list', data.get('pick_list'))
