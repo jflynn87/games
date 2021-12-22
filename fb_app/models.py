@@ -76,7 +76,7 @@ class Week(models.Model):
             print ('future week, not started')
             return False
         else:
-            print ('checking if stated on cbs scores')
+            print ('checking if stated on espn api  ')
             #web = scrape_cbs.ScrapeCBS(self).get_data()
             games = espn_data.ESPNData().get_data()
             #games = web['games']

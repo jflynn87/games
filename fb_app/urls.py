@@ -1,6 +1,6 @@
 from django.contrib import admin
-from django.urls import path
-from django.conf.urls import include, url
+from django.urls import path, re_path as url
+from django.conf.urls import include
 from fb_app import views
 
 app_name = 'fb_app'

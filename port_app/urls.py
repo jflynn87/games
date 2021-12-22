@@ -1,5 +1,5 @@
-from django.conf.urls import url
-from django.urls import path
+#from django.conf.urls import re_path as url
+from django.urls import path, re_path as url
 from port_app import views
 
 #Template tagging

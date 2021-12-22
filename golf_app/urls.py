@@ -1,5 +1,5 @@
-from django.conf.urls import url
-from django.urls import path, include
+#from django.conf.urls import re_path as url
+from django.urls import path, include, re_path as url
 from golf_app import views
 from rest_framework import routers
 
