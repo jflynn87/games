@@ -37,7 +37,14 @@ from django.http import HttpRequest
 from rest_framework.renderers import JSONRenderer
 from rest_framework.parsers import JSONParser
 
-import tabula
+#import tabula
+
+espn = espn_data.ESPNData().get_orig_data()
+
+with open('data.txt', 'w') as outfile:
+    json.dump(espn, outfile)
+exit()
+
 
 pdf = open('Football Fools week 12.pdf', 'rb')
 data = tabula.read_pdf('Football Fools week 12.pdf', pages=1)
