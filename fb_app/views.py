@@ -86,10 +86,10 @@ class GetSpreads(generics.ListAPIView):
                             else:
                                 games_dict.append((game.eid, game.fav.nfl_abbr.lower(), str(fav_obj.get_record()), game.dog.nfl_abbr, str(dog_obj.get_record()), spread))
                         else:
-                            print ('game not found:', fav, dog)
+                            print ('game not found:', home_team, away_team)
                             
                 except Exception as e:
-                            print ('spread look up error', e, game, fav, dog)
+                            print ('spread look up error', e, game, home_team, away_team)
             except Exception as f:
                     print ('NY Post error', f)
                     games_dict = {}

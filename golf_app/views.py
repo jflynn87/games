@@ -285,6 +285,7 @@ def fedex_email_picks(user):
 
         mail_url = "Website to make changes or picks: " + "http://jflynn87.pythonanywhere.com"
         mail_content = mail_t + "\r" + "\r" +mail_picks + "\r"+ mail_url
+        # change address to user if they want it
         mail_recipients = ["jflynn87@hotmail.com"]
         send_mail(mail_sub, mail_content, 'jflynn87g@gmail.com', mail_recipients)  #add fail silently
     except Exception as e:
