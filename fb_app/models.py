@@ -517,26 +517,30 @@ class Picks(models.Model):
         except ObjectDoesNotExist:
             return False
 
-    def is_proj_loser(self):
-        try:
-            game = Games.objects.get(Q(final=False), Q(week=self.week), (Q(home=self.team) | Q(away=self.team)))
-            if game.home_score == game.away_score:
-                return False
-            elif game.home == self.team:
-                if home_score < away_score:
-                    return True
-                else:
-                    return False
-            elif game.away == self.team:
-                if away_score < home_score:
-                    return True
-                else:
-                    return False
-            else:
-                return False
-                print ('projected issue', game)
-        except ObjectDoesNotExist:
-            return False
+    # def is_proj_loser(self):
+    #     try:
+    #         game = Games.objects.get(Q(final=False), Q(week=self.week), (Q(home=self.team) | Q(away=self.team)))
+    #         if game.home_score == game.away_score:
+    #             return False
+    #         elif game.home == self.team:
+    #             if home_score < away_score:
+    #                 return True
+    #             else:
+    #                 return False
+    #         elif game.away == self.team:
+    #             if away_score < home_score:
+    #                 return True
+    #             else:
+    #                 return False
+    #         else:
+    #             return False
+    #             print ('projected issue', game)
+    #     except ObjectDoesNotExist:
+    #         return False
+
+
+    def lock(self):
+        pass
 
 
 
