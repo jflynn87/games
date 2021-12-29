@@ -799,19 +799,23 @@ def get_espn_players():
     return espn_data
 
 
-def prior_year_sd(t):
-    '''takes a tournament and returns nothing'''
-    try:
-        prior_season = Season.objects.get(season=int(t.season.season)-1)
-        prior_t = Tournament.objects.get(pga_tournament_num=t.pga_tournament_num, season=prior_season)
-    except Exception as e:
-        print ('no prior tournament, getting 2 years ago', e)
+def prior_year_sd(t, current=None):
+    '''takes a tournament and bool, returns nothing.  Current skips prior year and resets the SD for that tournament'''
+    if not current:
         try:
-            prior_season = Season.objects.get(season=int(t.season.season)-2)
+            prior_season = Season.objects.get(season=int(t.season.season)-1)
             prior_t = Tournament.objects.get(pga_tournament_num=t.pga_tournament_num, season=prior_season)
-        except Exception as f:
-            print ('no prior 2 years ago, returning nothing', f)
-            return {}
+        except Exception as e:
+            print ('no prior tournament, getting 2 years ago', e)
+            try:
+                prior_season = Season.objects.get(season=int(t.season.season)-2)
+                prior_t = Tournament.objects.get(pga_tournament_num=t.pga_tournament_num, season=prior_season)
+            except Exception as f:
+                print ('no prior 2 years ago, returning nothing', f)
+                return {}
+    else:
+        prior_season = t.season
+        prior_t = t
 
     print ('proir T: ', prior_t, prior_t.season)
     sd, created = ScoreDict.objects.get_or_create(tournament=prior_t)
@@ -823,10 +827,11 @@ def prior_year_sd(t):
 
     if (not created and (not sd.data or len(sd.data) == 0 or len(pga_nums) == 0)) or created:
         print ('updating prior SD', prior_t)
-        espn_t_num = scrape_espn.ScrapeESPN().get_t_num(prior_season)
+        espn_t_num = scrape_espn.ScrapeESPN(prior_t).get_t_num(prior_season)
         print ('espn T num', espn_t_num)
         url = "https://www.espn.com/golf/leaderboard?tournamentId=" + espn_t_num
         score_dict = scrape_espn.ScrapeESPN(prior_t,url, True, True).get_data()
+        print ('saving prior SD,  SD data len: ', prior_t, len(score_dict))
         sd.data = score_dict
         sd.save()
     return sd.data

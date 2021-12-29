@@ -1199,43 +1199,43 @@ class ScoresByPlayerView(LoginRequiredMixin,TemplateView):
 class ESPNScoreDict(APIView):
     def get(self, request, pk):
         return JsonResponse(scrape_espn.ScrapeESPN().get_data(), status=200)
-        try:
-            data = {}
-            data['users'] = {}
-            user_list = []
-            t = Tournament.objects.get(pk=pk)
-            #t = Tournament.objects.get(current=True)
-            users = t.season.get_users()
-            for user in users:
-                data['users'].update({
-                                     user.get('user'): str(User.objects.get(pk=user.get('user')))
-                })
-                user_list.append(user.get('user'))
-            #data['users'] = user_list
-            score_dict = scrape_espn.ScrapeESPN().get_data()            
-            optimal_picks = {}
-            score = manual_score.Score(score_dict, t)
-            for g in Group.objects.filter(tournament=t):
-                opt = score.optimal_picks(g.number)
-                optimal_picks[str(g.number)] = {
-                                                'golfer': opt[0],
-                                                'rank': opt[1],
-                                                'cuts': opt[2],
-                                                'total_golfers': g.playerCnt
-                } 
+        # try:
+        #     data = {}
+        #     data['users'] = {}
+        #     user_list = []
+        #     t = Tournament.objects.get(pk=pk)
+        #     #t = Tournament.objects.get(current=True)
+        #     users = t.season.get_users()
+        #     for user in users:
+        #         data['users'].update({
+        #                              user.get('user'): str(User.objects.get(pk=user.get('user')))
+        #         })
+        #         user_list.append(user.get('user'))
+        #     #data['users'] = user_list
+        #     score_dict = scrape_espn.ScrapeESPN().get_data()            
+        #     optimal_picks = {}
+        #     score = manual_score.Score(score_dict, t)
+        #     for g in Group.objects.filter(tournament=t):
+        #         opt = score.optimal_picks(g.number)
+        #         optimal_picks[str(g.number)] = {
+        #                                         'golfer': opt[0],
+        #                                         'rank': opt[1],
+        #                                         'cuts': opt[2],
+        #                                         'total_golfers': g.playerCnt
+        #         } 
 
-            data['optimal_picks'] = optimal_picks
-            data['score_dict'] = score_dict
-            data['t_data'] = serializers.serialize("json", [t, ])
-            data['info'] = get_info(t)
-            data['season_totals'] = Season.objects.get(season=t.season).get_total_points()
-            data['leaders'] = score.get_leader()
-            #print (type(data))
-        except Exception as e:
-            print ('espn score dict api error: ', e)
-            data['msg'] = {'msg': str(e)}
+        #     data['optimal_picks'] = optimal_picks
+        #     data['score_dict'] = score_dict
+        #     data['t_data'] = serializers.serialize("json", [t, ])
+        #     data['info'] = get_info(t)
+        #     data['season_totals'] = Season.objects.get(season=t.season).get_total_points()
+        #     data['leaders'] = score.get_leader()
+        #     #print (type(data))
+        # except Exception as e:
+        #     print ('espn score dict api error: ', e)
+        #     data['msg'] = {'msg': str(e)}
                 
-        return JsonResponse(data, status=200)
+        # return JsonResponse(data, status=200)
 
 
 class ScoresByPlayerAPI(APIView):

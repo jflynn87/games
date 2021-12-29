@@ -440,6 +440,12 @@ class Tournament(models.Model):
         else:
             return "weak"
 
+    def special_field(self):
+        if self.pga_tournament_num in ['999', '470', '468', '018']:
+            return True
+        else:
+            return False
+
 
 class Group(models.Model):
     tournament= models.ForeignKey(Tournament, on_delete=models.CASCADE)

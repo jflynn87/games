@@ -125,6 +125,7 @@ class ScrapeESPN(object):
             
             for i, row in enumerate(table):
                 td = row.find_all('td')
+                #print ('TD len: ', len(td))
                 #print (row['class'], len(row.find_all('td')))
                 #print (row.a['href'].split('/'))
                 #print (len(row.find_all('td')))
@@ -149,7 +150,8 @@ class ScrapeESPN(object):
                                                 'pos': td[1].text,
                                                 'change': ''
                     }
-                elif len(td) == 11:  #afer round 1  
+                #elif len(td) == 11:  #afer round 1  
+                elif len(td) == 11 and not score_dict.get('info').get('complete'):
                     if td[3].text in self.tournament.not_playing_list():
                         rank = td[3].text 
                     else:
@@ -168,7 +170,8 @@ class ScrapeESPN(object):
                                         'r4': td[9].text,  
                                         'tot_strokes': td[10].text,
                     }
-                elif len(td) == 10 and score_dict.get('info').get('round') != 1:  #tournament complete 
+                elif (len(td) == 10 and score_dict.get('info').get('round') != 1):  #tournament complete - doesn't work when complete
+                    print ('espn scrape in len 10 logic')
                     if td[2].text in self.tournament.not_playing_list():
                        rank = td[2].text 
                     else:
@@ -213,6 +216,31 @@ class ScrapeESPN(object):
                                         'r4': td[6].text,  
                                         'tot_strokes': td[7].text,
                     }
+                elif score_dict.get('info').get('complete'):
+                    
+                    #print (td[1].text, td[2].text, td[3].text, td[4].text)
+                    if td[3].text in self.tournament.not_playing_list():
+                       #print (td[1].text, td[2].text, td[3].text, td[4].text)
+                       rank = td[3].text 
+                    else:
+                       rank = td[1].text
+
+                    score_dict[row.a.text] = {
+                                        'pga_num': row.a['href'].split('/')[7],
+                                        'rank': rank,
+                                        #'change': str(td[1].span),
+                                        'change': '',
+                                        'round_score': '',
+                                        'total_score': td[3].text,
+                                        'thru': "F",
+                                        'r1': td[4].text,
+                                        'r2': td[5].text,
+                                        'r3': td[6].text,
+                                        'r4': td[7].text,  
+                                        'tot_strokes': td[8].text,
+                    }
+
+
                 else: #round 1 make this fit that
                     score_dict[row.a.text] = {
                                         'pga_num': row.a['href'].split('/')[7],

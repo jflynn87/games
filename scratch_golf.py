@@ -29,7 +29,8 @@ from selenium import webdriver
 import urllib
 import json
 from golf_app import views, manual_score, populateField, withdraw, scrape_scores_picks, utils, \
-                            scrape_masters, scrape_espn, espn_api, fedexData, espn_ryder_cup, ryder_cup_scores, bonus_details, withdraw
+                            scrape_masters, scrape_espn, espn_api, fedexData, espn_ryder_cup, ryder_cup_scores, bonus_details, withdraw, \
+                                calc_leaderboard
 from unidecode import unidecode
 from django.core import serializers
 from golf_app.utils import formatRank, format_name, fix_name
@@ -43,23 +44,138 @@ import random
 from operator import itemgetter
 import sys
 
+
+for t in Tournament.objects.all():
+    if not t.special_field():
+        sd = ScoreDict.objects.get(tournament=t)
+        if abs(Field.objects.filter(tournament=t).count() - (len(sd.data.keys()) -1)) > 10:
+            field = Field.objects.filter(tournament=t).values_list('playerName', flat=True)
+            sd_names = [k for k,v in sd.data.items() if k != 'info']
+            print (t.season, t)
+            print ('Field len: ', Field.objects.filter(tournament=t).count())
+            print ('SD length: ', len(sd.data.keys()))
+            print ('In SD, not in field: ', {k for k,v in sd.data.items() if k != 'info' and k not in field})
+            print ("In Field, not in SD: ", Field.objects.filter(tournament=t).exclude(playerName__in=sd_names))
+
+for t in Tournament.objects.all():
+    if not t.special_field():
+        if ScoreDict.objects.filter(tournament=t).exists():
+            sd = ScoreDict.objects.get(tournament=t)
+            if sd.data.get('info'):
+                continue
+                #print ('OK: ', t.season, t.name)
+            else:
+                try:
+                    print ('SD but no info: ', t.season, t.name, t.espn_t_num, Tournament.objects.filter(season__season='2021', pga_tournament_num=t.pga_tournament_num).values('espn_t_num'))
+                    populateField.prior_year_sd(t, True)
+                    sd = ScoreDict.objects.get(tournament=t)
+                except Exception as e:
+                    print (t, e)
+                #populateField.prior_year_sd(t)
+        else:
+            try:
+                print ('No SD: ', t.season, t.name, t.espn_t_num, Tournament.objects.filter(season__season='2021', pga_tournament_num=t.pga_tournament_num).values('espn_t_num'))
+                populateField.prior_year_sd(t, True)
+                sd = ScoreDict.objects.get(tournament=t)
+            except Exception as e:
+                print (t, e)
+        #print('CUTS: ', len({k:v for k,v in sd.data.items() if v.get('rank') == 'CUT'}))
+        #print ('INFO and winner: ', sd.data.get('info'), {k:v for k,v in sd.data.items() if v.get('rank') == '1'})
+                  
+            
+exit()
+d = {}
+leaders_d = {}
+optimal_picks = {}
+for u in Season.objects.get(current=True).get_users('obj'):
+    leaders_d[u.username] = {'lead': 0}
+start = datetime.now()
+for t in Tournament.objects.filter(season__current=True).exclude(pga_tournament_num='468'):
+#for t in Tournament.objects.filter(current=True).exclude(pga_tournament_num='468'):
+   
+    print (t)
+    d[t.name] = {}
+    lb = calc_leaderboard.LeaderBoard(t, 4).get_leaderboard()
+    if int(t.season.season) > 2019:
+        optimal_start = datetime.now()
+        score = manual_score.Score(lb, t)
+        for g in Group.objects.filter(tournament=t):
+            opt = score.optimal_picks(g.number)
+            optimal_picks[str(g.number)] = {
+                                                'golfer': opt[0],
+                                                'rank': opt[1],
+                                                'cuts': opt[2],
+                                                'total_golfers': g.playerCnt
+                } 
+ 
+      
+            #print (g, opt)
+        print ('optimal duration: ', datetime.now() - optimal_start)
+    for u in t.season.get_users('obj'):
+        if Picks.objects.filter(playerName__tournament=t, user=u).exists():
+            for pick in Picks.objects.filter(playerName__tournament=t, user=u):
+                if d.get(t.name).get(u.username):
+                    d.get(t.name).get(u.username).update({'score': d.get(t.name).get(u.username).get('score') + \
+                      [v.get('rank') - pick.playerName.handi for v in lb.values() if v.get('espn_num') == pick.playerName.golfer.espn_number][0]})
+                else:
+                    d[t.name][u.username] = {'score': [v.get('rank') - pick.playerName.handi for v in lb.values() if v.get('espn_num') == pick.playerName.golfer.espn_number][0]}
+
+    low_score = min(d.get(t.name).items(), key=lambda v: v[1].get('score'))[1]
+    leaders = {k:v for k,v in d.get(t.name).items() if v.get('score') == low_score.get('score')}
+    #print (leaders)
+    for l, s in leaders.items():
+        leaders_d[l].update({'lead': leaders_d[l].get('lead') + 1})        
+
+print ('dur: ', datetime.now() - start)
+print (d)
+print (leaders_d)
+
+exit()
+
+#r1_leaderboard = {k:v.get('r1') for k,v in sd.data.items() if k != 'info'}
+#r2_leaderboard = {k:score(v.get('r1')) + int(v.get('r2')) for k,v in sd.data.items() if k != 'info'}
+#print (r2_leaderboard)
+
+print ('befor loop', datetime.now() - start)
+
+def score(pick, score_dict, t_round):
+    if t_round == 1:
+        return [int(v.get('r1')) for k,v in sd.data.items() if v.get('pga_num') == pick.playerName.golfer.espn_number][0]
+    elif t_round == 2:
+        return [int(v.get('r2')) for k,v in sd.data.items() if v.get('pga_num') == pick.playerName.golfer.espn_number][0]
+    elif t_round == 3:
+        return [int(v.get('r3')) for k,v in sd.data.items() if v.get('pga_num') == pick.playerName.golfer.espn_number][0]
+    elif t_round == 4:
+        return [int(v.get('r4')) for k,v in sd.data.items() if v.get('pga_num') == pick.playerName.golfer.espn_number][0]
+
+def leaderboard(score_dict, r):
+    for g in score_dict:
+        p = Picks.objects.get()
+        s = score()
+
 t = Tournament.objects.get(current=True)
+sd = ScoreDict.objects.get(tournament=t)
 
-print ('Full Field: ', FedExField.objects.all().count())
+#for u in t.season.get_users('obj').exclude(username='Hiro'):
+for u in User.objects.filter(pk=1):
+    r1_score = 0
+    r2_score = 0
+    r3_score = 0
+    r4_score = 0
+    for pick in Picks.objects.filter(user=u, playerName__tournament=t):
+        pick_start = datetime.now()
+        #r1_scores = {k:v.get('r1') for k,v in sd.data.items() if v.get('pga_num') == pick.playerName.golfer.espn_number}
+        #r1_scores = [v.get('r1') for k,v in sd.data.items() if v.get('pga_num') == pick.playerName.golfer.espn_number][0]
+        r1_score = score(pick, sd, 1)
+        r2_score = score(pick, sd, 2) + r1_score
+        r3_score = score(pick, sd, 3) + r2_score
+        r4_score = score(pick, sd, 4) + r3_score
 
+        print (r1_score, r2_score, r3_score, r4_score)
+        print ('pick loop duration: ', datetime.now() - pick_start)
 
-top_30 = {k:v for k,v in t.fedex_data.items() if k != 'player_points' and int(v.get('rank')) <= 30}
-exclude_rank = 50
+print ('duration: ', datetime.now() - start)
 
-exclude_list = []
-for k, v in top_30.items():
-    if FedExField.objects.filter(golfer__golfer_name=k, soy_owgr__gte=exclude_rank).exists():
-        f = FedExField.objects.get(golfer__golfer_name=k)
-        exclude_list.append(f.pk)
-
-print (exclude_list)
-eligible_golfers = FedExField.objects.filter(season__season__current=True).exclude(pk__in=exclude_list)
-print ('Eligible field: ', eligible_golfers.count())
 
 exit()
 

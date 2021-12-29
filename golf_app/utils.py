@@ -171,7 +171,11 @@ def check_t_names(espn_t, t):
     '''Takes a string and a tournament object and returns a bool'''
     if espn_t == t.name:
         return True
-        
+    
+    if espn_t[:3] == "WGC":
+        espn_t = "world golf championships" + espn_t[3:]
+        print ('correcting WGC', espn_t, t)
+
     print ('checking t name match espn: ', espn_t, ' pga: ', t.name)
     espn_name = espn_t.lower().split(' ')
     pga_name = t.name.lower().split(' ')
