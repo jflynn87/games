@@ -825,7 +825,7 @@ def prior_year_sd(t, current=None):
     else:
         print ('created score dict')
 
-    if (not created and (not sd.data or len(sd.data) == 0 or len(pga_nums) == 0)) or created:
+    if (not created and (not sd.data or len(sd.data) == 0 or not sd.data.get('info'))) or created:  #added info check to update if not from espn
         print ('updating prior SD', prior_t)
         espn_t_num = scrape_espn.ScrapeESPN(prior_t).get_t_num(prior_season)
         print ('espn T num', espn_t_num)

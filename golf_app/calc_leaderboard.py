@@ -49,6 +49,11 @@ class LeaderBoard(object):
                         'handicap': data.get('handicap'),
                         'group': data.get('group')}
 
+        d['info'] = self.score_dict.get('info')
+        d.get('info').update({'leaderboard': True, 
+                    'round': self.t_round})
+
+
         #print (d)
         return d
 

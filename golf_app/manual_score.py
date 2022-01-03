@@ -333,8 +333,8 @@ class Score(object):
                             big_bd.bonus_points += 10
                             big_bd.save()
 
-
         return
+
 
     def olympic_medals(self, user):
         print ('OLYMPIC MEDAL calcs', self.score_dict.get('info').get('mens_complete'), self.score_dict.get('info').get('womens_complete'))

@@ -4,39 +4,81 @@ from golf_app.models import Picks, Tournament, BonusDetails, PickMethod, Field, 
 
 class BonusDtl(object):
     
-    def __init__(self, espn_data, tournament=None):
-    
+    def __init__(self, espn_api=None, espn_scrape_data=None, tournament=None, inquiry=False):
+        '''takes an optional espn api object or score dict and optional tournament.  source="scrape for non api data'''
         if tournament:
             self.tournament = tournament
         else:
             self.tournament = Tournament.objects.get(current=True)
 
-        self.espn_data = espn_data
+        if not espn_api and not espn_scrape_data:
+            raise Exception('must provide either an espn_api object or a score_dict from scraping')
+
+        self.espn_api = espn_api  #only used for API object
+        self.espn_scrape_data= espn_scrape_data
+
+
         #self.field = espn_data.field()
         #print (type(self.field), len(self.field))
 
-        self.t_complete = self.espn_data.tournament_complete()
-        self.t_playoff = self.espn_data.playoff()
+        if tournament.complete:
+            self.t_complete = True
+        elif espn_api:
+            self.t_complete = self.espn_api.tournament_complete()
+        elif espn_scrape_data:
+            self.t_complete = self.espn_scrape_data.get('info').get('complete')
+            
+        if espn_api:
+            self.t_playoff = self.espn_api.playoff()
+        elif espn_scrape_data:
+            self.t_playoff = self.espn_scrape_data.get('info').get('playoff')
+        elif tournament.playoff:
+            self.t_playoff = True
+        elif tournament.complete and not tournament.playoff:
+            self.t_playoff = False
+        else:
+            tournament.playoff
+            
+
+        self.inquiry = inquiry  #use to just check and not update DB.  default to update/save
         
     
     def best_in_group(self, optimal_picks, pick):
-        '''takes a dict of optimal picks and a pick object, updates DB, returns a bool'''
+        '''takes a dict of optimal picks (for a single group only) and a pick object, optionally updates DB, returns a bool'''
+        
+        #print ('checking BIG', pick, optimal_picks.keys())
         big = False
         if pick.playerName.golfer.espn_number in optimal_picks.keys():
             for best in Picks.objects.filter(playerName__golfer__espn_number=pick.playerName.golfer.espn_number, playerName__tournament=self.tournament):
-                if not PickMethod.objects.filter(user=best.user, method=3, tournament=best.playerName.tournament).exists() \
-                    and not self.winner(best) \
-                    and not self.playoff_loser(best) \
-                    and best.playerName.group.playerCnt > 4:
-                        big = True
+                #if not PickMethod.objects.filter(user=best.user, method=3, tournament=best.playerName.tournament).exists() \
+                #    and not self.winner(best) \
+                #    and not self.playoff_loser(best) \
+                #    and best.playerName.group.playerCnt > 4:
+                if self.big_eligible(best):
+                    big = True
+                    if not self.inquiry:
                         big_bd, created = BonusDetails.objects.get_or_create(user=best.user, tournament=self.tournament, bonus_type='5')
                         big_bd.bonus_points += 10
                         #big_bd.save()
         return big
     
+    def big_eligible(self, pick):
+        '''takes a pick and returns a bool'''
+        if not PickMethod.objects.filter(user=pick.user, method=3, tournament=pick.playerName.tournament).exists() \
+            and not self.winner(pick) \
+            and not self.playoff_loser(pick) \
+            and pick.playerName.group.playerCnt > 4:
+                return True
+        else:
+            return False
+        
+
     def winner(self, pick):
         '''takes an api object and pick, saves the bonus details and returns a bool'''
-        if self.t_complete and self.espn_data.get_rank(pick.playerName.golfer.espn_number) == '1':
+        if self.t_complete and self.espn_scrape_data:
+            return bool([v for k,v in self.espn_scrape_data.items() if k != 'info' and v.get('pga_num') == pick.playerName.golfer.espn_number and v.get('rank') in [1, '1']])
+            
+        if self.t_complete and self.espn_api.get_rank(pick.playerName.golfer.espn_number) == '1':
             print ('winner: ', pick, pick.user)
             for winner in Picks.objects.filter(playerName=pick.playerName):
                 if not PickMethod.objects.filter(user=winner.user, method=3, tournament=winner.playerName.tournament).exists():
@@ -86,7 +128,10 @@ class BonusDtl(object):
 
     
     def playoff_loser(self, pick):
-        if self.t_complete and self.t_playoff and self.espn_data.get_rank(pick.playerName.golfer.espn_number) == '2':
+        if self.espn_scrape_data and self.espn_scrape_data.get('info').get('playoff'):
+            return [v for k,v in self.espn_scrape_data.items() if k != 'info' and v.get('rank') in [2, '2', 'T2']]
+
+        if self.t_complete and self.t_playoff and self.espn_api.get_rank(pick.playerName.golfer.espn_number) == '2':
             print ('playoff', pick, pick.user)
             for loser in Picks.objects.filter(playerName=pick.playerName):
                 if not PickMethod.objects.filter(user=loser.user, method=3, tournament=loser.playerName.tournament).exists():
@@ -103,10 +148,10 @@ class BonusDtl(object):
         elif not self.t_complete:
             return False
         
-        top_3 = self.espn_data.winner()+self.espn_data.second_place()+self.espn_data.third_place()
+        top_3 = self.espn_api.winner()+self.espn_api.second_place()+self.espn_api.third_place()
         
-        if Picks.objects.filter(user=user, playerName__tournament=self.tournament, playerName__golfer__espn_number=self.espn_data.winner()[0]).exists() and \
-            Picks.objects.filter(user=user, playerName__tournament=self.tournament, playerName__golfer__espn_number__in=self.espn_data.second_place()).exists() and \
+        if Picks.objects.filter(user=user, playerName__tournament=self.tournament, playerName__golfer__espn_number=self.espn_api.winner()[0]).exists() and \
+            Picks.objects.filter(user=user, playerName__tournament=self.tournament, playerName__golfer__espn_number__in=self.espn_api.second_place()).exists() and \
             Picks.objects.filter(user=user, playerName__tournament=self.tournament, playerName__golfer__espn_number__in=top_3).count() >= 3:
                     print ('Trifecta! : ', user)
                     bd, created = BonusDetails.objects.get_or_create(user=user, tournament=self.tournament, bonus_type='6')

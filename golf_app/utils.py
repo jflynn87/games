@@ -84,6 +84,17 @@ def fix_name(player, owgr_rankings, log=None):
             print ('unidecoded name dict match: ', player, owgr_rankings.get(decode(player)))
         return (player, owgr_rankings.get(decode(player)))
 
+    #lower = {k:v for k,v in owgr_rankings.items() if player.lower() == k.lower()}
+    lower = [v for k,v in owgr_rankings.items() if player.lower() == k.lower()]
+    if len(lower) > 0:
+        return (player, lower[0])
+
+    replace_list = ['-', "'"]
+    for char in replace_list:
+        strip  = [v for k,v in owgr_rankings.items() if player.replace(char, '').lower() == k.replace(char, '').lower()]
+        if len(strip) > 0:
+            return (player, strip[0])
+
     if log:
         print (['player', player])
     if Name.objects.filter(PGA_name=player).exists():
@@ -176,17 +187,21 @@ def check_t_names(espn_t, t):
         espn_t = "world golf championships" + espn_t[3:]
         print ('correcting WGC', espn_t, t)
 
-    print ('checking t name match espn: ', espn_t, ' pga: ', t.name)
+    if '@' in espn_t:
+        print ('stripping @ from espn t name', espn_t)
+        espn_t = espn_t.split('@')[0].strip()
+
+    #print ('checking t name match espn: ', espn_t, ' pga: ', t.name)
     espn_name = espn_t.lower().split(' ')
     pga_name = t.name.lower().split(' ')
     #print ('espn name: ', espn_name)
     #print ('pga name: ', pga_name)
     matches = len([x for x in pga_name if x in espn_name])
-    print ('matches: ', matches == len(espn_name) -1, espn_name[1])
+    #print ('matches: ', matches == len(espn_name) -1, espn_name[1])
     if len(pga_name) < 4 and espn_name == pga_name:
         return True
     #added below for masters, could be better
-    elif espn_name[0] == '2021' and matches == len(espn_name) -1:
+    elif espn_name[0] == str(t.season.season) and matches == len(espn_name) -1:
         print ('returning true match by removing year from espn')
         return True
     elif len(pga_name) > 3 and matches > len(pga_name)/2:

@@ -142,6 +142,7 @@ class Tournament(models.Model):
     espn_t_num = models.CharField(max_length=100, null=True, blank=True)
     auction = models.BooleanField(default=False)
     fedex_data = models.JSONField(null=True, blank=True)
+    round_data = models.JSONField(null=True, blank=True)
 
 
     #def get_queryset(self):t
@@ -484,6 +485,21 @@ class Group(models.Model):
 
     def natural_key(self):
         return self.number
+
+    
+    def optimal_pick(self, score_dict):
+        '''takes a dict returns a list'''
+        if score_dict.get('info'):   #check if espn scrape dict
+            best_score = min(utils.formatRank(x.get('rank')) - x.get('handicap') for k, x in score_dict.items() if k != 'info' and x.get('group') == self.number) 
+            best_list = {v['pga_num']:k for (k,v) in score_dict.items() if v.get('group') == self.number and utils.formatRank(v.get('rank')) - v.get('handicap') == best_score}
+            #print ('best: ', best_list, best_score)
+            return best_list
+
+    #def num_of_cuts(self, score_dict):
+    #    '''takes a dict returns an int'''
+    #    if score_dict.get('info'):   #check if espn scrape dict
+    #        cuts = len([v for v in self.score_dict.values() if v.get('group') == self.number and v.get('rank') in self.not_playing_list])
+    #        return cuts
 
     
     def cut_count(self, score_dict=None, espn_api_data=None):
