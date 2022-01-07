@@ -14,10 +14,12 @@ from unidecode import unidecode as decode
 
 #t = Tournament.objects.first()
 
-espn = scrape_espn.ScrapeESPN().get_data()
-print (espn)
+#espn = scrape_espn.ScrapeESPN().get_data()
+#print (espn)
 
-# t = Tournament.objects.get(current=True)
+t = Tournament.objects.get(current=True)
+t.missing_picks()
+
 
 # for f in Field.objects.filter(tournament=t, playerName="Sam Burns"):
 #     f.withdrawn=True

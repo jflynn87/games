@@ -125,7 +125,7 @@ class ScrapeESPN(object):
             
             for i, row in enumerate(table):
                 td = row.find_all('td')
-                print ('TD len: ', len(td), td)
+                #print ('TD len: ', len(td), td)
                 #print (row['class'], len(row.find_all('td')))
                 #print (row.a['href'].split('/'))
                 #print (len(row.find_all('td')))
