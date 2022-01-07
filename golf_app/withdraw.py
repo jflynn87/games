@@ -29,12 +29,14 @@ class WDCheck(object):
         wd_list = []
         good_list = []
         
-        for golfer in Field.objects.filter(tournament = self.tournament):
+        for golfer in Field.objects.filter(tournament = self.tournament).exclude(withdrawn=True):
             if [v for v in self.field.values() if v.get('pga_num') == golfer.golfer.espn_number]:
                 good_list.append(golfer.playerName)
             else:
                # print ('missed look up', golfer.playerName, self.field.get(golfer.playerName))
                 wd_list.append(golfer.playerName)
+        for WD in Field.objects.filter(withdrawn=True, tournament=self.tournament):
+            wd_list.append(WD.playerName)
         results['wd_list'] = wd_list
         results['good_list'] = good_list
 

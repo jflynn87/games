@@ -248,6 +248,21 @@ def save_access_log(request, screen):
     return
 
 
+def post_cut_wd_count(t, sd=None, api_data=None):
+    '''takes a tournament and optional score dict or espn api field data(must have 1 of them), returns an int'''
+    if not sd and not api_data:
+        raise Exception('utils post cut WD requires a score dict or api data')
+    
+    if sd:
+        return len([v for k,v in sd.items() if k!= 'info' and v.get('total_score') in t.not_playing_list() and \
+                    v.get('r3') != '--'])
+
+    if api_data:
+        l = t.not_playing_list()
+        l.remove('CUT')
+        return len([x.get('athlete').get('id') for x in api_data if x.get('status').get('type').get('id') == '3' \
+                and x.get('status').get('type').get('shortDetail') in l and int(x.get('status').get('period')) > t.saved_cut_round]) 
+
     
     
         

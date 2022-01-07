@@ -1,4 +1,4 @@
-from re import T
+from re import T, template
 from django.db.models.query_utils import RegisterLookupMixin
 from django.shortcuts import render, get_object_or_404, redirect
 from django.views.generic import View, TemplateView, ListView, DetailView, CreateView, UpdateView, FormView
@@ -705,10 +705,10 @@ class GetDBScores(APIView):
             #GetScores().get(self.request)
             #return Response({}, 200)
 
-class NewScoresView(LoginRequiredMixin,ListView):
+class NewScoresView(LoginRequiredMixin,TemplateView):  #changed from ListView 1/5/2022
     login_url = 'login'
     template_name = 'golf_app/scores.html'
-    queryset = Picks.objects.filter(playerName__tournament__current=True) 
+    #queryset = Picks.objects.filter(playerName__tournament__current=True) 
 
     def get_context_data(self, **kwargs):
         context = super(NewScoresView, self).get_context_data(**kwargs)
@@ -724,11 +724,11 @@ class NewScoresView(LoginRequiredMixin,ListView):
         
         if not tournament.started():
            user_dict = {}
-           for user in Picks.objects.filter(playerName__tournament=tournament).values('user__username').annotate(Count('playerName')):
-               user_dict[user.get('user__username')]=user.get('playerName__count')
-               #if tournament.pga_tournament_num == '470': #special logic for match player
-               #   scores = (None, None, None, None,None)
-               #else:  scores=calc_score.calc_score(self.kwargs, request)
+           for user in tournament.season.get_users('obj'):
+               count = Picks.objects.filter(playerName__tournament=tournament, user=user).aggregate(Count('playerName'))
+               print ('count: ', count)
+               user_dict[user.username]=count.get('playerName__count')
+
            self.template_name = 'golf_app/pre_start.html'
 
            context.update({'user_dict': user_dict,
@@ -1857,13 +1857,57 @@ class RyderCupScoresAPI(APIView):
             
         return JsonResponse(data, status=200, safe=False)
 
+
+class ApiScoresView(LoginRequiredMixin, TemplateView):
+    login_url = 'login'
+    template_name= 'golf_app/scores_api.html'
+
+    def get_context_data(self, **kwargs):
+        context = super(ApiScoresView, self).get_context_data(**kwargs)
+        start = datetime.datetime.now()
+        if self.request.user.is_authenticated:
+            utils.save_access_log(self.request, 'API current week scores')
+
+        if self.kwargs.get('pk') != None:
+            print (self.kwargs)
+            tournament = Tournament.objects.get(pk=self.kwargs.get('pk'))
+        else:
+            tournament = Tournament.objects.get(current=True)
+        
+        if not tournament.started():
+           user_dict = {}
+           for user in tournament.season.get_users('obj'):
+               count = Picks.objects.filter(playerName__tournament=tournament, user=user).aggregate(Count('playerName'))
+               print ('count: ', count)
+               user_dict[user.username]=count.get('playerName__count')
+
+           self.template_name = 'golf_app/pre_start.html'
+
+           context.update({'user_dict': user_dict,
+                           'tournament': tournament,
+                                                    })
+
+           return context
+
+        ## from here all logic should only happen if tournament has started
+        if not tournament.picks_complete():
+               print ('picks not complete')
+               tournament.missing_picks()
+
+        context.update({'t': tournament, 
+                                    })
+        print ('scores context duration', datetime.datetime.now() -start)
+        return context        
+
+
+
 class EspnApiScores(APIView):
-    def get(self, request, pga_t_num):
+    def get(self, request, pk):
         
         start = datetime.datetime.now()
 
-        t = Tournament.objects.get(pga_tournament_num=pga_t_num, season__current=True)
-
+        #t = Tournament.objects.get(pga_tournament_num=pga_t_num, season__current=True)
+        t = Tournament.objects.get(pk=pk)
         if not t.started():
             return JsonResponse({'msg': 'Tournament Not Started'}, status=200, safe=False)
 

@@ -1,0 +1,46 @@
+{%extends 'golf_app/golf_app_base.html'%}
+{%load golf_extras%}
+{%load static%}
+{%load compress%}
+
+
+{%block body_block%}
+{%compress css%}
+<link rel="stylesheet" href={%static 'golf_app/css/scores.css' %}>
+{%endcompress%}
+<link href="https://fonts.googleapis.com/css?family=Anton&display=swap" rel="stylesheet">
+
+
+<p hidden id='tournament_key'>{{t.pk}}</p>
+
+{%if lookup_errors%}
+  <h4>The following picks have withdrawn or have name lookup issues:</h4>
+  {%for key, values in lookup_errors.items%}
+  <p>{{key}}:  {{values}}</p>
+  {%endfor%}
+{%endif%}
+
+
+<h4>{{t.name}}</h4>
+
+<p id='leader'></p>
+<p id='cut_line'></p>
+<p id='issues'></p>
+
+<div id='picks_summary'></div>
+<div id='picks_info'></div>
+
+<p><a href='https://www.pgatour.com/leaderboard.html' target="_blank">Click for PGA.com Leaderboard</a></p>
+
+<div id='det-list'></div>
+ 
+{%compress js%}
+  {%if tournament.pga_tournament_num == '470'%}
+  <script type="text/javascript" src="{%static 'golf_app/js/mp_load.js'%}"></script> 
+  {%else%}
+  <script type="text/javascript" src="{%static 'golf_app/js/api_scores.js'%}"></script>
+  {%endif%} 
+  <script type="text/javascript" src="{%static 'golf_app/js/getPicksSummary.js'%}"></script> 
+{%endcompress%}
+
+{%endblock%}

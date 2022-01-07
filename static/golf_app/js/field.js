@@ -400,9 +400,9 @@ $(document).on("click", "#download_excel", function() {
 
     var createXLSXFieldObj = [];
     ws2_name = "Current Week Field";
-    field_header = ['PGA ID', 'Golfer',	'Group ID',	'currentWGR',	'sow_WGR',	'soy_WGR',	'prior year finish',	'handicap',	
-     'Season Played',	'Season Won',	'Season 2-10',	'Season 11-29',	'Season 30 - 49',	'Season > 50',	'Season Cut', 'FedEx Rank',
-     'FedEx Points', 'SG Off Tee Rank', 'SG Off Tee', 'SG Approach Rank', 'SG Approach', 'SG Around Green Rank', 
+    field_header = ['PGA ID', 'Golfer',	'Group ID',	'currentWGR',	'sow_WGR',	'soy_WGR',	'prior year finish',	'handicap',	'FedEx Rank',
+    'FedEx Points', 'Season Played',	'Season Won',	'Season 2-10',	'Season 11-29',	'Season 30 - 49',	'Season > 50',	'Season Cut',
+     'SG Off Tee Rank', 'SG Off Tee', 'SG Approach Rank', 'SG Approach', 'SG Around Green Rank', 
      'SG Around Green', 'SG Putting Rank', 'SG Putting']
     fieldRows = []
     $.each(field, function(i, golfer) {
@@ -416,6 +416,8 @@ $(document).on("click", "#download_excel", function() {
         row['soy_wgr'] = golfer['fields']['soy_WGR']
         row['prior_year'] = golfer.fields.prior_year
         row['handi'] = golfer['fields']['handi']
+        row['fedex_rank'] = golfer.fields.season_stats.fed_ex_rank
+        row['fedex_points'] = golfer.fields.season_stats.fed_ex_points
         row['played'] = golfer.fields.season_stats.played 
         row['won'] = golfer.fields.season_stats.won
         row['top10'] = golfer.fields.season_stats.top10
@@ -423,8 +425,6 @@ $(document).on("click", "#download_excel", function() {
         row['bet30_49'] = golfer.fields.season_stats.bet30_49
         row['over50'] = golfer.fields.season_stats.over50
         row['cuts'] = golfer.fields.season_stats.cuts
-        row['fedex_rank'] = golfer.fields.season_stats.fed_ex_rank
-        row['fedex_points'] = golfer.fields.season_stats.fed_ex_points
         try {
           row['sg_off_tee_rank'] = golfer.fields.season_stats.off_tee.rank
         }

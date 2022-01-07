@@ -39,7 +39,7 @@ const e = React.createElement;
       render() {
          //console.log(this.state)
          var {loaded, error, placeholder, data} = this.state;
-         //console.log(data)
+         console.log('WD Check data: ', data)
           if (!loaded) {
             return (React.createElement(
             'p',
@@ -64,6 +64,8 @@ const e = React.createElement;
             }
             else {
                 var wds = data
+                var wd_picks = data.wd_picks
+                console.log(wd_picks, typeof(wd_picks))
                 
             }
             return (React.createElement(
@@ -71,10 +73,11 @@ const e = React.createElement;
               {className: 'bg-warning'},
               //key: 'items'},
               'Withdraws: ',
-               wds.wd_list.map(wd => <li>{wd}</li>),
-               //'Picks:',
-               //wds.wd_picks.forEach(data => <li>{data[0]}{data[1]}</li>)
-               )) 
+              
+              wds.wd_list.map(wd => <li>{wd}, Picked by: {wd_picks[wd]}</li>),
+              
+
+              )) 
                  
             }}
             }

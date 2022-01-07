@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta
+from django.core.exceptions import SynchronousOnlyOperation
 from requests import get
 import json
 
@@ -19,8 +20,12 @@ class ESPNData(object):
         else:
             self.t = Tournament.objects.get(current=True)
         
+
         if data:
             self.all_data = data 
+        elif self.t.complete:
+            sd = ScoreDict.objects.get(tournament=self.t)
+            self.all_data = sd.espn_api_data
         else:
             headers = {'User-Agent': 'Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.149 Mobile Safari/537.36'}
             #print (espn_t_num)
@@ -116,6 +121,8 @@ class ESPNData(object):
             return True
 
     def player_started(self, espn_num):
+        if self.t.complete:  #required as api data may not exist between tournaments
+            return True
         if Field.objects.filter(tournament=self.t, golfer__espn_number=espn_num, withdrawn=True).exists():
             return False
         player = [x for x in self.field_data if x.get('id') == espn_num]
@@ -211,7 +218,7 @@ class ESPNData(object):
             return 0
 
         #golfers = Field.objects.filter(group=p.playerName.group).values_list('golfer__espn_number', flat=True)
-        golfers = p.playerName.group.get_golfers()
+        #golfers = p.playerName.group.get_golfers()
         #cuts = len([x for x in self.field_data if x.get('id') in golfers and x.get('status').get('type').get('id') == '3'])
         cuts = p.playerName.group.cut_count(espn_api_data=self.field_data)
         if cuts == 0:

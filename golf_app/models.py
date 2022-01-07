@@ -448,6 +448,10 @@ class Tournament(models.Model):
             return False
 
 
+    def hiro_filter(self):
+        if self.pk == 1:
+            pass
+
 class Group(models.Model):
     tournament= models.ForeignKey(Tournament, on_delete=models.CASCADE)
     number = models.PositiveIntegerField()
@@ -503,6 +507,9 @@ class Group(models.Model):
 
     
     def cut_count(self, score_dict=None, espn_api_data=None):
+        if not score_dict and not espn_api_data:
+            raise Exception('cut count requires either a score dict or api data')
+
         if score_dict:
             return len([v for k, v in score_dict.items() if k != 'info' and v.get('group') == self.number and v.get('rank') in self.tournament.not_playing_list()])
         #else:
@@ -522,6 +529,18 @@ class Group(models.Model):
             return True
         else:
             return False
+
+
+    def cut_penalty_score(self, score_dict=None, espn_api_data=None):
+        if not score_dict and not espn_api_data:
+            raise Exception('cut penalty score requires either a score dict or api data')
+        
+        if not self.cut_penalty():
+            return 0
+        elif score_dict:
+            cut_count = self.cut_count(score_dict, espn_api_data)
+            return self.playerCnt - cut_count
+
 
 
 class Golfer(models.Model):
@@ -927,6 +946,55 @@ class Field(models.Model):
     def fedex_pick(self, user):
         if FedExPicks.objects.filter(user=user, pick__golfer=self.golfer):
             return True
+        return False 
+
+    def calc_score(self, sd=None, api_data=None):
+        if not sd and not api_data:
+            raise Exception('field calc score requires either a score dict or api data')
+        
+        if self.handi:  #need this check for fields before handi logic
+            handi = self.handi
+        else: 
+            handi = 0
+
+        if sd: 
+            rank = [v.get('rank') for k,v in sd.items() if k != 'info' and v.get('pga_num') == self.golfer.espn_number][0]
+
+            if rank in self.tournament.not_playing_list():
+                post_cut_wd_count = utils.post_cut_wd_count(self.tournament, sd)
+                if post_cut_wd_count > 0 and self.post_cut_wd():
+                    score = len(v for k,v in sd.items() if k != 'info' and v.get(rank) not in self.tournament.not_playing_list())
+                else:                
+                    score = (int(sd.get('info').get('cut_num')) + self.group.cut_penalty_score(sd) + post_cut_wd_count) - handi
+            else:
+                score = [v.get('rank') - handi for v in sd.values() if v.get('espn_num') == self.golfer.espn_number][0]
+        
+        
+        if api_data:
+            score = 0  #need to complete this code (get from views api calc score)
+                    
+        return score
+
+
+    def post_cut_wd(self, sd=None, api_data=None):
+        if not sd and not api_data:
+            raise Exception('field post cut wd requires either a score dict or api data')
+        
+        if sd and len([v for k,v in sd.items() if k!= 'info' and v.get('pga_num')  == self.golfer.espn_number and \
+            v.get('r3') != '--']) > 0:
+            return True
+        elif sd:
+            return False
+
+        if api_data:
+            l = self.t.not_playing_list()
+            l.remove('CUT')
+            if len([x.get('athlete').get('id') for x in self.field_data if x.get('status').get('type').get('id') == '3' \
+                and x.get('status').get('type').get('shortDetail') in l and int(x.get('status').get('period')) > self.t.saved_cut_round]) >0:
+                return True
+            else:
+                return False
+
         return False 
 
 

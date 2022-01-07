@@ -8,78 +8,38 @@ from golf_app.models import Tournament, TotalScore, ScoreDetails, Picks, PickMet
          FedExSeason, FedExField, FedExPicks
 from django.contrib.auth.models import User
 from datetime import datetime, timedelta
-from golf_app import populateField, calc_leaderboard, manual_score, bonus_details, espn_api, round_by_round, scrape_espn, utils, historica_data
+from golf_app import populateField, calc_leaderboard, manual_score, bonus_details, espn_api, round_by_round, scrape_espn, utils
 from django.db.models import Count
 from unidecode import unidecode as decode
 
+#t = Tournament.objects.first()
 
-historical = historica_data.update_score_dicts()
-checks = historica_data.check_sd()        
+espn = scrape_espn.ScrapeESPN().get_data()
+print (espn)
 
+# t = Tournament.objects.get(current=True)
 
-print (Golfer.objects.filter(espn_number__isnull=True).count())
-#espn_players = scrape_espn.ScrapeESPN().get_espn_players()
-
-# good = Golfer.objects.get(golfer_name='K.H. Lee')
-# print ('1 good fields: ', Field.objects.filter(golfer=good).count())
-# bad = Golfer.objects.get(golfer_name='Kyoung-Hoon Lee')
-# print ('1 bad fields: ', Field.objects.filter(golfer=bad).count())
-
-# for f in Field.objects.filter(golfer=bad):
-#     f.golfer = good
+# for f in Field.objects.filter(tournament=t, playerName="Sam Burns"):
+#     f.withdrawn=True
 #     f.save()
-
-# print ('2 good fields: ', Field.objects.filter(golfer=good).count())
-# print ('2 bad fields: ', Field.objects.filter(golfer=bad).count())
-
-# print (good)
-# print (bad)
-# exit()
-
-for g in Golfer.objects.filter(espn_number__isnull=True):
-    #name = utils.fix_name(g.golfer_name, espn_players)
-    #print (name, type(name[1]), len(name[1]))
-    #if (len(name[1]) == 3):
-    #print (g)
-    f = Field.objects.filter(golfer=g).last()
-    #print (g, f)
-    sd = ScoreDict.objects.get(tournament=f.tournament)
-    #print (f.playerName, g.golfer_name, f.tournament, f.tournament.season)
-    #print (sd.data.keys())
-    data = utils.fix_name(g.golfer_name, sd.data)
-    #data = {k:v for k,v in sd.data.items() if k != 'info' and k.lower() == g.golfer_name.lower()}
-    #print (g, data.get('espn_num'))
-    if data[0]:
-        #print('found : ', g, data[1].get('pga_num'))
-        g.espn_number = data[1].get('pga_num')
-        g.save()
-    
-    elif not data[0]:
-        #print ('data: ', data, f.playerName, g.golfer_name, f.tournament, f.tournament.season)
-        if Field.objects.filter(golfer=g).count() >1:
-            for f in Field.objects.filter(golfer=g):
-                sd = ScoreDict.objects.get(tournament=f.tournament)
-                data = utils.fix_name(g.golfer_name, sd.data)
-                if data[0]:
-                   #print ('fixed: ', g, f.tournament, data[1].get('pga_num'))
-                    g.espn_number = data[1].get('pga_num')
-                    g.save()
-
-                    break
-            #print ('cant fix: ', g)
-    else:
-        print ("XXXXXX", g)
-
-print (Golfer.objects.filter(espn_number__isnull=True).count())
-print (Golfer.objects.filter(espn_number__isnull=True))
-
+#     print (f, f.recent)
 
 exit()
 
-#t = Tournament.objects.filter(current=True)
-t = Tournament.objects.first()
-#t = Tournament.objects.get(name="The RSM Classic", season__current=True)
-print (round_by_round.RoundData(t).update_data())
+t = Tournament.objects.get(name="The RSM Classic", season__current=True)
+#print (calc_leaderboard.LeaderBoard(t, 4).get_leaderboard().get('Louis Oosthuizen'))
+#exit()
+d = round_by_round.RoundData(t).update_data()
+
+r4 = d.get('round_4')
+db = d.get('db_scores')
+bd = d.get('bonuses')
+print (bd)
+for u, score in db.items():
+    if bd.get(u):
+        print (u, db.get(u), r4.get('scores').get(u) - bd.get(u))
+    else:
+        print (u, db.get(u), r4.get('scores').get(u))
 
 exit()
 

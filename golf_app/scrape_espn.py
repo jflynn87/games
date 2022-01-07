@@ -125,7 +125,7 @@ class ScrapeESPN(object):
             
             for i, row in enumerate(table):
                 td = row.find_all('td')
-                #print ('TD len: ', len(td))
+                print ('TD len: ', len(td), td)
                 #print (row['class'], len(row.find_all('td')))
                 #print (row.a['href'].split('/'))
                 #print (len(row.find_all('td')))
@@ -135,11 +135,12 @@ class ScrapeESPN(object):
                     else:
                         score_dict['info'].update({'cut_line': 'Cut Line: ' + td[0].text[-2:]})
 
-                elif len(row.find_all('td')) == 2:  # before start
+                #elif len(row.find_all('td')) == 2:  # before start
+                elif len(row.find_all('td')) == 3:  # before start  changed from 2 - 3 for Sentry 2022
                     if self.tournament.pga_tournament_num == '999':
                         score_dict[row.a.text] =  {
                                                     'pga_num': row.a['href'].split('/')[7],
-                                                    'pos': td[1].text,
+                                                    'pos': td[2].text,
                                                     'flag': td[0].img.get('src'),
                                                     'change': '',
                                                     
@@ -147,7 +148,7 @@ class ScrapeESPN(object):
                     else:
                         score_dict[row.a.text] =  {
                                                 'pga_num': row.a['href'].split('/')[7],
-                                                'pos': td[1].text,
+                                                'pos': td[2].text,
                                                 'change': ''
                     }
                 #elif len(td) == 11:  #afer round 1  
@@ -155,7 +156,7 @@ class ScrapeESPN(object):
                     if td[3].text in self.tournament.not_playing_list():
                         rank = td[3].text 
                     else:
-                        rank = td[0].text
+                        rank = td[1].text
 
                     score_dict[row.a.text] = {
                                         'pga_num': row.a['href'].split('/')[7],

@@ -6,6 +6,9 @@ class BonusDtl(object):
     
     def __init__(self, espn_api=None, espn_scrape_data=None, tournament=None, inquiry=False):
         '''takes an optional espn api object or score dict and optional tournament.  source="scrape for non api data'''
+        if not espn_api and not espn_scrape_data:
+            raise Exception('bonus detail class requires either an espn api or score dict')
+            
         if tournament:
             self.tournament = tournament
         else:
@@ -21,7 +24,7 @@ class BonusDtl(object):
         #self.field = espn_data.field()
         #print (type(self.field), len(self.field))
 
-        if tournament.complete:
+        if self.tournament.complete:
             self.t_complete = True
         elif espn_api:
             self.t_complete = self.espn_api.tournament_complete()

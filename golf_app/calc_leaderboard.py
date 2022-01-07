@@ -43,9 +43,9 @@ class LeaderBoard(object):
                 #if g != 'info':
                 s = self.score_dict.get('info').get('cut_num')
                 d[g] = {'espn_num': data.get('pga_num'),
-                        'pga__num': data.get('pga_num'),  #hack for optimal pick, fix 
+                        'pga_num': data.get('pga_num'),  #hack for optimal pick, fix 
                         'score': s,
-                        'rank': s,
+                        'rank': data.get('rank'),
                         'handicap': data.get('handicap'),
                         'group': data.get('group')}
 
