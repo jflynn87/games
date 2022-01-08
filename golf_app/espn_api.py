@@ -198,7 +198,7 @@ class ESPNData(object):
     def group_stats(self):
         '''takes a espn api obj, returns a dict with best in group and group cut counts'''
         d = {}
-
+        best_list = []
         for g in Group.objects.filter(tournament=self.t):
             #golfers = Field.objects.filter(group=g).values_list('golfer__espn_number', flat=True)
             golfers = g.get_golfers()
@@ -206,10 +206,11 @@ class ESPNData(object):
             best = [x.get('athlete').get('id') for x in self.field_data if x.get('id') in golfers and int(x.get('status').get('position').get('id')) - Field.objects.values('handi').get(tournament=self.t, golfer__espn_number=x.get('id')).get('handi') == min_score]
             cuts = len([x.get('athlete').get('id') for x in self.field_data if x.get('id') in golfers and x.get('status').get('type').get('id') == '3'])
             for b in best:
-                d[b] = {'group': g}
-            d[g] = {'cuts': cuts}
+                d[b] = {'group': g.number}
+            d[g.number] = {'cuts': cuts}
             g.cutCount = cuts
-            g.save()                        
+            g.save()
+
         return d
            
     def cut_penalty(self, p):

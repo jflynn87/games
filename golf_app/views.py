@@ -1,4 +1,6 @@
-from re import T, template
+#from re import T, template
+
+from django.db.models.fields import IntegerField
 from django.db.models.query_utils import RegisterLookupMixin
 from django.shortcuts import render, get_object_or_404, redirect
 from django.views.generic import View, TemplateView, ListView, DetailView, CreateView, UpdateView, FormView
@@ -1859,6 +1861,7 @@ class RyderCupScoresAPI(APIView):
 
 
 class ApiScoresView(LoginRequiredMixin, TemplateView):
+
     login_url = 'login'
     template_name= 'golf_app/scores_api.html'
 
@@ -1894,7 +1897,20 @@ class ApiScoresView(LoginRequiredMixin, TemplateView):
                print ('picks not complete')
                tournament.missing_picks()
 
+        picks_dict= {}
+        picks_list = []
+        for pick in Picks.objects.filter(playerName__tournament=tournament).order_by('playerName__group__number'):
+            print (pick.user, pick.playerName)
+            if picks_dict.get(pick.user):
+                picks_dict.get(pick.user).update({pick})
+            else:
+                picks_dict[pick.user] = {pick}
+        print (picks_dict)
+
         context.update({'t': tournament, 
+                        'groups': Group.objects.filter(tournament=tournament),
+                        'picks_dict': picks_dict,
+                        
                                     })
         print ('scores context duration', datetime.datetime.now() -start)
         return context        
@@ -1929,21 +1945,22 @@ class EspnApiScores(APIView):
 
         for golfer in Picks.objects.filter(playerName__tournament=t).values('playerName__golfer__espn_number').distinct():
             pick = Picks.objects.filter(playerName__tournament=t, playerName__golfer__espn_number=golfer.get('playerName__golfer__espn_number')).first()
-            if espn.golfer_data(pick.playerName.golfer.espn_number):
-                if espn.golfer_data(pick.playerName.golfer.espn_number).get('status').get('type').get('id') == "3":
-                    #and for prior line (int(espn.get_round()) <= int(t.saved_cut_round) or not t.has_cut):  #for pre cut or no cut WD/DQ
-                    #score = (int(espn.cut_num()) + 0) - int(pick.playerName.handi) + espn.cut_penalty(pick)  # pulling rank (not count) so don't need to add 1 
-                    score = (int(cut_num) - int(pick.playerName.handi)) + espn.cut_penalty(pick)
-                elif t.has_cut and int(espn.get_round()) <= int(t.saved_cut_round) and int(espn.get_rank(pick.playerName.golfer.espn_number)) > cut_num:
-                    score = (cut_num - int(pick.playerName.handi)) + espn.cut_penalty(pick)
-                elif espn.golfer_data(pick.playerName.golfer.espn_number).get('status').get('type').get('id') == "3":  
-                    score = (int(cut_num()) - int(pick.playerName.handi)) + espn.cut_penalty(pick)  
-                else: 
-                    score = int(espn.get_rank(pick.playerName.golfer.espn_number)) - int(pick.playerName.handi)
-            else:
-                print ('WD? not found in espn: ', pick.playerName, pick.playerName.golfer.espn_number) 
-                score = (int(espn.cut_num()) + 1) - int(pick.playerName.handi) + espn.cut_penalty(pick)
-            #print (score)
+            score = pick.playerName.calc_score(api_data=espn)
+            # if espn.golfer_data(pick.playerName.golfer.espn_number):
+            #     if espn.golfer_data(pick.playerName.golfer.espn_number).get('status').get('type').get('id') == "3":
+            #         #and for prior line (int(espn.get_round()) <= int(t.saved_cut_round) or not t.has_cut):  #for pre cut or no cut WD/DQ
+            #         #score = (int(espn.cut_num()) + 0) - int(pick.playerName.handi) + espn.cut_penalty(pick)  # pulling rank (not count) so don't need to add 1 
+            #         score = (int(cut_num) - int(pick.playerName.handi)) + espn.cut_penalty(pick)
+            #     elif t.has_cut and int(espn.get_round()) <= int(t.saved_cut_round) and int(espn.get_rank(pick.playerName.golfer.espn_number)) > cut_num:
+            #         score = (cut_num - int(pick.playerName.handi)) + espn.cut_penalty(pick)
+            #     elif espn.golfer_data(pick.playerName.golfer.espn_number).get('status').get('type').get('id') == "3":  
+            #         score = (int(cut_num()) - int(pick.playerName.handi)) + espn.cut_penalty(pick)  
+            #     else: 
+            #         score = int(espn.get_rank(pick.playerName.golfer.espn_number)) - int(pick.playerName.handi)
+            # else:
+            #     print ('WD? not found in espn: ', pick.playerName, pick.playerName.golfer.espn_number) 
+            #     score = (int(espn.cut_num()) + 1) - int(pick.playerName.handi) + espn.cut_penalty(pick)
+
             bd_start = datetime.datetime.now()
             bonus = 0
             bd = bonus_details.BonusDtl(espn, t)

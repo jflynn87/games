@@ -235,15 +235,13 @@ class Tournament(models.Model):
 
     def picks_complete(self):
         if self.started():
-            t = Tournament.objects.filter(season__current=True).earliest('pk')
-            c=  len(Picks.objects.filter(playerName__tournament=t).values('user').annotate(unum=Count('user')))
-            #expected_picks = Group.objects.filter(tournament=self).aggregate(Max('number'))
+            c = len(self.season.get_users())
             expected_picks = 0
             for group in Group.objects.filter(tournament=self):
                 expected_picks += group.num_of_picks()
-            print ('expected', expected_picks, expected_picks * c)
-            print ('pick count', Picks.objects.filter(playerName__tournament=self).count())
-            print ('actual', Picks.objects.filter(playerName__tournament=self).count() - (expected_picks * c))
+            print ('expected per player and total', expected_picks, expected_picks * c)
+            print ('total pick count', Picks.objects.filter(playerName__tournament=self).count())
+            print ('missing picks', Picks.objects.filter(playerName__tournament=self).count() - (expected_picks * c))
             if Picks.objects.filter(playerName__tournament=self).count() \
             == (expected_picks * c):
                 return True
@@ -251,14 +249,13 @@ class Tournament(models.Model):
                 return False
 
     def missing_picks(self):
-        #changed  this to use the season obj user list 8/30/2020
-        #t = Tournament.objects.filter(season__current=True).earliest('pk')
-        #for user in TotalScore.objects.filter(tournament=t).values('user__username'):
         for user in Season.objects.get(current=True).get_users():
             if not Picks.objects.filter(playerName__tournament=self, \
                 user=User.objects.get(pk=user.get('user'))).exists():
                 print (User.objects.get(pk=user.get('user')), 'no picks so submit random')
                 self.create_picks(User.objects.get(pk=user.get('user')), 'missing')
+
+        return 
     
     def get_cut_round(self, sd=None):
         if sd == None:
@@ -971,7 +968,21 @@ class Field(models.Model):
         
         
         if api_data:
-            score = 0  #need to complete this code (get from views api calc score)
+            if api_data.golfer_data(self.golfer.espn_number):
+                if api_data.golfer_data(self.golfer.espn_number).get('status').get('type').get('id') == "3":
+                    score = (int(api_data.cut_num()) - int(self.handi)) + api_data.cut_penalty(self)
+                elif self.tournament.has_cut and int(api_data.get_round()) <= int(self.tournament.saved_cut_round) \
+                     and int(api_data.get_rank(self.golfer.espn_number)) > api_data.cut_num():
+                    score = (api_data.cut_num() - int(self.handi)) + api_data.cut_penalty(self)
+                elif api_data.golfer_data(self.golfer.espn_number).get('status').get('type').get('id') == "3":  
+                    score = (int(api_data.cut_num()) - int(self.handi)) + api_data.cut_penalty(self)  
+                else: 
+                    score = int(api_data.get_rank(self.golfer.espn_number)) - int(self.handi)
+
+            else:
+                print ('WD? not found in espn: ',  self.playerName, self.golfer.espn_number) 
+                score = ((int(api_data.cut_num()) - int(self.handi))) + api_data.cut_penalty(self)
+
                     
         return score
 

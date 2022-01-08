@@ -126,6 +126,8 @@ class ScrapeESPN(object):
             for i, row in enumerate(table):
                 td = row.find_all('td')
                 #print ('TD len: ', len(td), td)
+                #for t in td:
+                #    print (t)
                 #print (row['class'], len(row.find_all('td')))
                 #print (row.a['href'].split('/'))
                 #print (len(row.find_all('td')))
@@ -161,7 +163,8 @@ class ScrapeESPN(object):
                     score_dict[row.a.text] = {
                                         'pga_num': row.a['href'].split('/')[7],
                                         'rank': rank,
-                                        'change': str(td[1].span),
+                                        #'change': str(td[1].span),
+                                        'change': '',
                                         'round_score': td[4].text,
                                         'total_score': td[3].text,
                                         'thru': td[5].text,
@@ -171,6 +174,28 @@ class ScrapeESPN(object):
                                         'r4': td[9].text,  
                                         'tot_strokes': td[10].text,
                     }
+                elif len(td) == 12 and not score_dict.get('info').get('complete'):
+                    print ("in len 12")
+                    if td[3].text in self.tournament.not_playing_list():
+                        rank = td[3].text 
+                    else:
+                        rank = td[1].text
+
+                    score_dict[row.a.text] = {
+                                        'pga_num': row.a['href'].split('/')[7],
+                                        'rank': rank,
+                                        'change': str(td[2].span),
+                                        #'change': '',
+                                        'round_score': td[5].text,
+                                        'total_score': td[4].text,
+                                        'thru': td[6].text,
+                                        'r1': td[7].text,
+                                        'r2': td[8].text,
+                                        'r3': td[9].text,
+                                        'r4': td[10].text,  
+                                        'tot_strokes': td[11].text,
+                    }
+
                 elif (len(td) == 10 and score_dict.get('info').get('round') != 1):  #tournament complete - doesn't work when complete
                     print ('espn scrape in len 10 logic')
                     if td[2].text in self.tournament.not_playing_list():

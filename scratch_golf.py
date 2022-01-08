@@ -12,14 +12,37 @@ from golf_app import populateField, calc_leaderboard, manual_score, bonus_detail
 from django.db.models import Count
 from unidecode import unidecode as decode
 
-#t = Tournament.objects.first()
 
-#espn = scrape_espn.ScrapeESPN().get_data()
-#print (espn)
+espn = scrape_espn.ScrapeESPN(setup=True).get_data()
+print (espn)
+exit()
+
 
 t = Tournament.objects.get(current=True)
-t.missing_picks()
+start = datetime.now()
+espn = espn_api.ESPNData()
+group_stats = espn.group_stats()
+print (group_stats)
 
+for u in t.season.get_users('obj'):
+    #print (u)
+    u_score = 0
+    for pick in Picks.objects.filter(playerName__tournament=t, user=u):
+        score = pick.playerName.calc_score(api_data=espn)
+        #print (pick, score)
+        u_score += score
+        bd_start = datetime.now()
+        bd = bonus_details.BonusDtl(espn_api=espn, espn_scrape_data=None, tournament=t, inquiry=True)
+        big = bd.best_in_group(group_stats, pick)
+        if big:
+           print ('big', pick)
+        print ('bd dur: ', pick, datetime.now() - bd_start)
+
+
+    print (u, u_score)
+
+print ('dur: ', datetime.now() - start)
+exit()
 
 # for f in Field.objects.filter(tournament=t, playerName="Sam Burns"):
 #     f.withdrawn=True

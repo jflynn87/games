@@ -28,7 +28,35 @@
 <p id='issues'></p>
 
 <div id='picks_summary'></div>
-<div id='picks_info'></div>
+<div id='picks_info'>
+    <table id='totals-table' class='table table-bordered table-sm '>
+      <thead>
+        <tr style="background-color: lightblue;">
+        <th>Player</th>
+        <th>Bonus</th>
+        {%for g in groups%}
+          <th colspan="{{g.num_of_picks}}">{{g.number}}</th>
+        {%endfor%}
+        </tr>
+      </thead>
+      <tbody>
+        {%for user, picks in picks_dict.items %}
+        <tr id=totals{{user.username}} class="small">
+          <td id=ts_{{user.username}} style="font-weight: bold;">{{user.username}}</td>
+          <td id=msg_{{user.username}}>Test</td>
+          {%for p in picks%}
+            <td id={{user.username}}{{p.playerName.golfer.espn_number}}><img src="{{p.playerName.golfer.pic_link}}">{{p.playerName}}</i></td>
+          {%endfor%}
+        {%endfor%}
+        </tr>
+      </tbody>
+
+
+
+    </table>
+
+
+</div>
 
 <p><a href='https://www.pgatour.com/leaderboard.html' target="_blank">Click for PGA.com Leaderboard</a></p>
 
