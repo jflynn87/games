@@ -12,6 +12,7 @@ from django.contrib.auth.models import User
 from django.contrib.auth.forms import UserCreationForm
 from user_app.forms import UserCreateForm
 from golf_app import utils
+from django.db.models import Q, Max
 
 
 class SignUp(CreateView):
@@ -59,6 +60,8 @@ def index(request):
                 game = None
         except Exception as e:
             game = None
+            week = Week.objects.filter(season_model__current=True).last()
+            print ('week', week)
     
         try:
             if PlayoffPicks.objects.filter(player__name=request.user, game=game).exists():
