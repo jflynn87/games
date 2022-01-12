@@ -63,15 +63,16 @@ class BonusDtl(object):
         '''takes a dict of optimal picks (for a single group only) and a pick object, optionally updates DB, returns a bool'''
         
         big = False
-        if pick.playerName.golfer.espn_number in optimal_picks.keys():
+        optimal = [v.get('golfer_espn_num') for k,v in optimal_picks.items()]
+        #print (self.big_eligible(pick))
+        if pick.playerName.golfer.espn_number in optimal and self.big_eligible(pick):
             exclude_users = PickMethod.objects.filter(tournament=self.tournament, method='3').values('user')
             for best in Picks.objects.filter(playerName__golfer__espn_number=pick.playerName.golfer.espn_number, playerName__tournament=self.tournament).exclude(user__pk__in=exclude_users):
-                if self.big_eligible(best):
-                    big = True
-                    if not self.inquiry:
-                        big_bd, created = BonusDetails.objects.get_or_create(user=best.user, tournament=self.tournament, bonus_type='5')
-                        big_bd.bonus_points += 10
-                        #big_bd.save()
+                big = True
+                if not self.inquiry:
+                    big_bd, created = BonusDetails.objects.get_or_create(user=best.user, tournament=self.tournament, bonus_type='5')
+                    big_bd.bonus_points += 10
+                    #big_bd.save()
         return big
     
     def big_eligible(self, pick):
@@ -92,8 +93,8 @@ class BonusDtl(object):
         if self.t_complete and self.espn_scrape_data:
             return bool([v for k,v in self.espn_scrape_data.items() if k != 'info' and v.get('pga_num') == pick.playerName.golfer.espn_number and v.get('rank') in [1, '1']])
             
-        if self.t_complete and self.espn_api.get_rank(pick.playerName.golfer.espn_number) == '1':
-            print ('winner: ', pick, pick.user)
+        if self.t_complete and self.espn_api.get_rank(pick.playerName.golfer.espn_number) in ['1', 1]:
+            print ('winner: ', pick, pick.user, self.espn_api.get_rank(pick.playerName.golfer.espn_number))
             for winner in Picks.objects.filter(playerName=pick.playerName):
                 if not PickMethod.objects.filter(user=winner.user, method=3, tournament=winner.playerName.tournament).exists():
                     if self.tournament.pga_tournament_num == '999':
@@ -102,9 +103,10 @@ class BonusDtl(object):
                         else:
                             group = winner.playerName.group.number
                 #winner_bonus =  50 + (group * 2)
-                bd, created = BonusDetails.objects.get_or_create(user=winner.user, tournament=winner.playerName.tournament, bonus_type='1')
-                bd.bonus_points = self.winner_points(pick)
-                #bd.save()
+                if not self.inquiry:
+                    bd, created = BonusDetails.objects.get_or_create(user=winner.user, tournament=winner.playerName.tournament, bonus_type='1')
+                    bd.bonus_points = self.winner_points(pick)
+                    #bd.save()
             return True
         else: 
             return False

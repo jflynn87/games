@@ -4,6 +4,7 @@ from django.db.models.fields import IntegerField
 from django.db.models.query_utils import RegisterLookupMixin
 from django.shortcuts import render, get_object_or_404, redirect
 from django.views.generic import View, TemplateView, ListView, DetailView, CreateView, UpdateView, FormView
+
 #from extra_views import ModelFormSetView
 from golf_app.models import CountryPicks, Field, Tournament, Picks, Group, TotalScore, ScoreDetails, \
            mpScores, BonusDetails, PickMethod, PGAWebScores, ScoreDict, UserProfile, \
@@ -303,13 +304,17 @@ class ScoreGetPicks(ListAPIView):
 
     def get_queryset(self, *args, **kwargs):
         start = datetime.datetime.now()
+        t = Tournament.objects.get(pk=self.kwargs.get('pk'))
         if self.kwargs.get('username') == 'all':
-            t = Tournament.objects.get(pk=self.kwargs.get('pk'))
+            #t = Tournament.objects.get(pk=self.kwargs.get('pk'))
             #u = User.objects.get(username=self.kwargs.get('username'))
             #queryset = ScoreDetails.objects.filter(pick__playerName__tournament=t, user=u)
             queryset = ScoreDetails.objects.filter(pick__playerName__tournament=t)
+        elif self.kwargs.get('username') == 'only':
+            self.serializer_class = golf_serializers.SDOnlySerializer
+            queryset = ScoreDetails.objects.filter(pick__playerName__tournament=t)
         else:
-            t = Tournament.objects.get(pk=self.kwargs.get('pk'))
+            #t = Tournament.objects.get(pk=self.kwargs.get('pk'))
             u = User.objects.get(username=self.kwargs.get('username'))
             queryset = ScoreDetails.objects.filter(pick__playerName__tournament=t, user=u)
 
@@ -740,7 +745,7 @@ class NewScoresView(LoginRequiredMixin,TemplateView):  #changed from ListView 1/
 
            return context
         ## from here all logic should only happen if tournament has started
-        if not tournament.picks_complete():
+        if not tournament.complete and not tournament.picks_complete():
                print ('picks not complete')
                tournament.missing_picks()
 
@@ -1870,7 +1875,7 @@ class ApiScoresView(LoginRequiredMixin, TemplateView):
         start = datetime.datetime.now()
         if self.request.user.is_authenticated:
             utils.save_access_log(self.request, 'API current week scores')
-
+        print (self.kwargs)
         if self.kwargs.get('pk') != None:
             print (self.kwargs)
             tournament = Tournament.objects.get(pk=self.kwargs.get('pk'))
@@ -1893,26 +1898,31 @@ class ApiScoresView(LoginRequiredMixin, TemplateView):
            return context
 
         ## from here all logic should only happen if tournament has started
-        if not tournament.picks_complete():
+        if not tournament.complete and not tournament.picks_complete():
                print ('picks not complete')
                tournament.missing_picks()
 
-        picks_dict= {}
-        picks_list = []
-        for pick in Picks.objects.filter(playerName__tournament=tournament).order_by('playerName__group__number'):
-            print (pick.user, pick.playerName)
-            if picks_dict.get(pick.user):
-                picks_dict.get(pick.user).update({pick})
-            else:
-                picks_dict[pick.user] = {pick}
-        print (picks_dict)
+        new_lines = []
+        picks_c = Picks.objects.filter(playerName__tournament=tournament).count()
+        users = Picks.objects.filter(playerName__tournament=tournament).values('user__username').distinct().count()
+        
+        cells_per_row = picks_c / users
+        #print (cells_per_row)
 
+        for i in range(picks_c):
+    
+            if i % cells_per_row == 1:
+                new_lines.append(i)
+        #ts = TotalScore.objects.filter(tournament=tournament).values('user').order_by('score')    
+        #print ('TOTAL SCORES: ', Picks.objects.filter(playerName__tournament=tournament).order_by(ts, 'playerName__group__number'))
         context.update({'t': tournament, 
                         'groups': Group.objects.filter(tournament=tournament),
-                        'picks_dict': picks_dict,
+                        'picks': Picks.objects.filter(playerName__tournament=tournament).order_by('user', 'playerName__group__number'),
+                        
+                        'new_lines': new_lines,
                         
                                     })
-        print ('scores context duration', datetime.datetime.now() -start)
+        print ('api scores context duration', datetime.datetime.now() -start)
         return context        
 
 
@@ -1927,11 +1937,11 @@ class EspnApiScores(APIView):
         if not t.started():
             return JsonResponse({'msg': 'Tournament Not Started'}, status=200, safe=False)
 
-        espn = espn_api.ESPNData(t=t)
-        c_start = datetime.datetime.now()
-        cut_num = int(espn.cut_num())
+        espn = espn_api.ESPNData(t=t, force_refresh=True)
+        #c_start = datetime.datetime.now()
+        #cut_num = int(espn.cut_num())
 
-        print ('cut num duration: ', datetime.datetime.now() - c_start, cut_num)
+        #print ('cut num duration: ', datetime.datetime.now() - c_start, cut_num)
 
         start_big = datetime.datetime.now()
         big = espn.group_stats()
@@ -1941,46 +1951,34 @@ class EspnApiScores(APIView):
 
         d = {}
         for u in t.season.get_users('obj'):
-            d[u.username] = {'score': 0}
+            d[u.username] = {'score': 0,
+                             'cuts': 0}
 
         for golfer in Picks.objects.filter(playerName__tournament=t).values('playerName__golfer__espn_number').distinct():
             pick = Picks.objects.filter(playerName__tournament=t, playerName__golfer__espn_number=golfer.get('playerName__golfer__espn_number')).first()
             score = pick.playerName.calc_score(api_data=espn)
-            # if espn.golfer_data(pick.playerName.golfer.espn_number):
-            #     if espn.golfer_data(pick.playerName.golfer.espn_number).get('status').get('type').get('id') == "3":
-            #         #and for prior line (int(espn.get_round()) <= int(t.saved_cut_round) or not t.has_cut):  #for pre cut or no cut WD/DQ
-            #         #score = (int(espn.cut_num()) + 0) - int(pick.playerName.handi) + espn.cut_penalty(pick)  # pulling rank (not count) so don't need to add 1 
-            #         score = (int(cut_num) - int(pick.playerName.handi)) + espn.cut_penalty(pick)
-            #     elif t.has_cut and int(espn.get_round()) <= int(t.saved_cut_round) and int(espn.get_rank(pick.playerName.golfer.espn_number)) > cut_num:
-            #         score = (cut_num - int(pick.playerName.handi)) + espn.cut_penalty(pick)
-            #     elif espn.golfer_data(pick.playerName.golfer.espn_number).get('status').get('type').get('id') == "3":  
-            #         score = (int(cut_num()) - int(pick.playerName.handi)) + espn.cut_penalty(pick)  
-            #     else: 
-            #         score = int(espn.get_rank(pick.playerName.golfer.espn_number)) - int(pick.playerName.handi)
-            # else:
-            #     print ('WD? not found in espn: ', pick.playerName, pick.playerName.golfer.espn_number) 
-            #     score = (int(espn.cut_num()) + 1) - int(pick.playerName.handi) + espn.cut_penalty(pick)
+            #print ('score: ',  score)
 
             bd_start = datetime.datetime.now()
             bonus = 0
-            bd = bonus_details.BonusDtl(espn, t)
+            bd = bonus_details.BonusDtl(espn_api=espn, espn_scrape_data=None, tournament=t, inquiry=True)  #make inquiry false when swtiching to this 
             bd_big = bd.best_in_group(big, pick)
-            #if big.get(pick.playerName.golfer.espn_number):
             if bd_big:
-               #score -= 10 
                bonus += 10
             if bd.winner(pick):
-                #score -= bd.winner_points(pick)
                 bonus += bd.winner_points(pick)
 
                 #print ('db class dur: ', pick, datetime.now() - bd_start)
             for p in Picks.objects.filter(playerName__tournament=t, playerName__golfer__espn_number=pick.playerName.golfer.espn_number):
+                if score.get('cut'):
+                    d.get(p.user.username).update({'cuts': d.get(p.user.username).get('cuts') + 1})
                 if PickMethod.objects.filter(user=p.user, method__in=[1,2], tournament=t).exists():
-                    d.get(p.user.username).update({'score': d.get(p.user.username).get('score') + (score - bonus)})
+                    d.get(p.user.username).update({'score': d.get(p.user.username).get('score') + (score.get('score') - bonus)})
+
                 else:
-                    d.get(p.user.username).update({'score': (d.get(p.user.username).get('score') + score)})
+                    d.get(p.user.username).update({'score': (d.get(p.user.username).get('score') + score.get('score'))})
             
-            #print ('score check: ', d.get('Sam36'), pick, score)
+            #print ('score check: ', d.get('john'), pick, score)
 
         if espn.tournament_complete():
             ww_bd = bonus_details.BonusDtl(espn, t)
@@ -1992,6 +1990,8 @@ class EspnApiScores(APIView):
                 if ww_bd.trifecta(u):
                    d.get(u.username).update({'score': d.get(u.username).get('score') - 25})  # move 25 to db class somehow
 
+        d['group_stats'] = {}
+        d.get('group_stats').update(big)
         print (d)
         print ('calc score dur: ', datetime.datetime.now() - start_calc_score)
         #print ('cut num ', espn.cut_num())
@@ -2220,5 +2220,108 @@ class MostPickedAPI(APIView):
         print ('most picked API time: ', datetime.datetime.now() - start)
 
         return JsonResponse(json.dumps(d), status=200, safe=False)
+
+
+
+class MostPickedAPI(APIView):
+    def get(self, request, season):
+        
+        start = datetime.datetime.now()
+        d = {}
+        try:
+            if season == 'all':
+                s = Season.objects.get(current=True)
+            else:
+                s = Season.objects.get(pk=season)
+            for u in s.get_users('obj'):
+                if season == 'all':
+                    picks = Picks.objects.filter(user=u).order_by().values('playerName__golfer__golfer_name').annotate(c=Count('playerName__golfer__golfer_name'))
+                    if picks:
+                        most_picked = max(picks, key=lambda x:x['c'])
+                    else:
+                        most_picked = {'c': 'None'}
+                else:
+                    picks = Picks.objects.filter(user=u, playerName__tournament__season=s).order_by().values('playerName__golfer__golfer_name').annotate(c=Count('playerName__golfer__golfer_name'))
+                    print (picks)
+                    if picks:
+                        most_picked = max(picks, key=lambda x:x['c'])
+                    else:
+                        most_picked = {'c': 'None'}
+
+
+                d[u.username] = {'most_picked_golfer': most_picked.get('playerName__golfer__golfer_name'),
+                                'times_picked': most_picked.get('c'),
+
+                                }
+
+        except Exception as e:
+            print ('Most Picked API error: ', e)
+            d['error'] = {'msg': str(e)}
+        print (d)
+        print ('most picked API time: ', datetime.datetime.now() - start)
+
+        return JsonResponse(json.dumps(d), status=200, safe=False)
+
+
+
+class MostPickedAPI(APIView):
+    def get(self, request, season):
+        
+        start = datetime.datetime.now()
+        d = {}
+        try:
+            if season == 'all':
+                s = Season.objects.get(current=True)
+            else:
+                s = Season.objects.get(pk=season)
+            for u in s.get_users('obj'):
+                if season == 'all':
+                    picks = Picks.objects.filter(user=u).order_by().values('playerName__golfer__golfer_name').annotate(c=Count('playerName__golfer__golfer_name'))
+                    if picks:
+                        most_picked = max(picks, key=lambda x:x['c'])
+                    else:
+                        most_picked = {'c': 'None'}
+                else:
+                    picks = Picks.objects.filter(user=u, playerName__tournament__season=s).order_by().values('playerName__golfer__golfer_name').annotate(c=Count('playerName__golfer__golfer_name'))
+                    print (picks)
+                    if picks:
+                        most_picked = max(picks, key=lambda x:x['c'])
+                    else:
+                        most_picked = {'c': 'None'}
+
+
+                d[u.username] = {'most_picked_golfer': most_picked.get('playerName__golfer__golfer_name'),
+                                'times_picked': most_picked.get('c'),
+
+                                }
+
+        except Exception as e:
+            print ('Most Picked API error: ', e)
+            d['error'] = {'msg': str(e)}
+        print (d)
+        print ('most picked API time: ', datetime.datetime.now() - start)
+
+        return JsonResponse(json.dumps(d), status=200, safe=False)
+
+
+class PGALeaderboard(APIView):
+    def get(self, request, pk):
+        
+        start = datetime.datetime.now()
+        d = {}
+        try:
+            t = Tournament.objects.get(pk=pk)
+            espn = espn_api.ESPNData(force_refresh=True)
+            d['leaderboard'] = espn.get_leaderboard()
+
+        except Exception as e:
+            print ('PGA Leaderboard API error: ', e)
+            d['error'] = {'msg': str(e)}
+        print (d)
+        print ('PGA leaderboard API time: ', datetime.datetime.now() - start)
+
+        return JsonResponse(json.dumps(d), status=200, safe=False)
+
+
 
 

@@ -341,6 +341,9 @@ class Week(models.Model):
 def update_analyitcs(sender, **kwargs):
     print (kwargs.get('instance'))
     week = kwargs.get('instance')
+    if week.week > 19:
+        return
+
     if week.current:
         print ('current week, updating stats')
         season = Season.objects.get(current=True)

@@ -1,5 +1,5 @@
 from datetime import datetime, timedelta
-from django.core.exceptions import SynchronousOnlyOperation
+
 from requests import get
 import json
 
@@ -14,7 +14,7 @@ class ESPNData(object):
         competition_data varoius datat about  the tournament
         field_data is the actual golfers in the tournament'''
 
-    def __init__(self, t=None, data=None):
+    def __init__(self, t=None, data=None, force_refresh=None):
         if t:
             self.t = t 
         else:
@@ -23,7 +23,7 @@ class ESPNData(object):
 
         if data:
             self.all_data = data 
-        elif self.t.complete:
+        elif self.t.complete and not force_refresh:
             sd = ScoreDict.objects.get(tournament=self.t)
             self.all_data = sd.espn_api_data
         else:
@@ -67,32 +67,6 @@ class ESPNData(object):
 
         print ('espn API Init complete, field len: ', len(self.field_data))
 
-            #else:
-            #    self.event_data = {}
-
-#        if not found_event:
-#            print ('CANT FIND EVENT ID in ESPN')
-#            self.field_data = {}
-#            self.event_data = {}
-
-        # if self.t.pga_tournament_num != '999' and self.event_data.get('name') != self.t.name and not self.t.ignore_name_mismatch:
-        #     match = utils.check_t_names(self.event_data.get('name'), self.t)
-        #     if not match:
-        #         self.field_data = {}
-        #         self.event_data = {}
-
-        #         print ('tournament mismatch: espn name: ', self.event_data.get('name'), 'DB name: ', self.t.name)
-        #         #return None
-
-
-        # if self.t.pga_tournament_num == '468' or len(self.event_data) == 0:
-        #     self.field_data = {}
-        # else:
-        #     for c in self.event_data.get('competitions'):
-                
-        #         if c.get('id') == self.t.espn_t_num or mode == 'setup': 
-        #             self.competition_data = c
-        #             self.field_data = c.get('competitors')
 
 
     def get_round(self):
@@ -198,16 +172,28 @@ class ESPNData(object):
     def group_stats(self):
         '''takes a espn api obj, returns a dict with best in group and group cut counts'''
         d = {}
-        best_list = []
+        
         for g in Group.objects.filter(tournament=self.t):
-            #golfers = Field.objects.filter(group=g).values_list('golfer__espn_number', flat=True)
             golfers = g.get_golfers()
             min_score = min([int(x.get('status').get('position').get('id')) - Field.objects.values('handi').get(tournament=self.t, golfer__espn_number=x.get('id')).get('handi') for x in self.field_data if x.get('id') in golfers])
+            #print (g, golfers, min_score)
             best = [x.get('athlete').get('id') for x in self.field_data if x.get('id') in golfers and int(x.get('status').get('position').get('id')) - Field.objects.values('handi').get(tournament=self.t, golfer__espn_number=x.get('id')).get('handi') == min_score]
             cuts = len([x.get('athlete').get('id') for x in self.field_data if x.get('id') in golfers and x.get('status').get('type').get('id') == '3'])
+            #print (g.number, best)
+            
+            golfer_list = []
+            golfer_espn_num_list = []
+            
             for b in best:
-                d[b] = {'group': g.number}
-            d[g.number] = {'cuts': cuts}
+                golfer_list.append(self.golfer_data(b).get('athlete').get('displayName'))
+                golfer_espn_num_list.append(b)
+                 
+            d[str(g.number)] = {'golfers': golfer_list,
+                                    'golfer_espn_nums': golfer_espn_num_list,
+                                    'cuts': cuts,
+                                    'total_golfers': g.playerCnt
+                 }
+
             g.cutCount = cuts
             g.save()
 
@@ -260,7 +246,8 @@ class ESPNData(object):
 
     def winner(self):
         '''takes an espn api and returns a list'''
-        return [x.get('id') for x in self.field_data if x.get('status').get('position').get('id') == '1']
+        #return [x.get('id') for x in self.field_data if x.get('status').get('position').get('id') == '1']
+        return [x.get('id') for x in self.field_data if self.get_rank(x.get('id')) == '1']  #change the rest if this works
 
     def second_place(self):
         '''takes an espn api and returns a list'''
@@ -269,3 +256,29 @@ class ESPNData(object):
     def third_place(self):
         '''takes an espn api and returns a list'''
         return [x.get('id') for x in self.field_data if x.get('status').get('position').get('id') == '3']
+
+    def get_leaderboard(self):
+        d = {}
+        #print (self.golfer_data('9780'))
+        for data in self.field_data:
+            golfer_data = self.golfer_data(data.get('id'))
+            d[golfer_data.get('sortOrder')] = {
+                                    'rank': self.get_rank(data.get('id')),
+                                    'r1': self.get_round_score(data.get('id'), 1),
+                                    'r2': self.get_round_score(data.get('id'), 2),
+                                    'r3': self.get_round_score(data.get('id'), 3),
+                                    'r4': self.get_round_score(data.get('id'), 4),
+                                    'total_score': golfer_data.get('score').get('displayValue'),
+                                    'change': golfer_data.get('movement'),
+                                    'thru': golfer_data.get('status').get('type').get('shortDetail'),
+                                    'curr_round_score': '',
+                                    'golfer_name': golfer_data.get('athlete').get('displayName'),
+                                    'espn_num': data.get('id') 
+
+            }
+        
+        return d
+
+
+    def get_round_score(self, espn_num, r):
+        return [int(x.get('value')) for x in self.golfer_data(espn_num).get('linescores') if x.get('period') == r][0]

@@ -50,9 +50,9 @@ def index(request):
         if request.user.is_authenticated:
             utils.save_access_log(request, 'home page')
 
-        week = Week.objects.get(current=True)
+        
         try:
-                
+            week = Week.objects.get(current=True)        
             if Games.objects.filter(week=week, playoff_picks=True).exists():
                 game = Games.objects.get(week=week, playoff_picks=True)
             else:
@@ -79,10 +79,10 @@ def index(request):
         print ('picks', picks)
         return render(request, 'index.html', {
             'fb_week': week,
-            #'sb_users': User.objects.filter(username__in=['john', 'jcarl62']),
+            'sb_user_list': User.objects.filter(username__in=['john', 'jcarl62']),
             'game': game,
             'picks': picks,
-            'sb_user_list': sb_user_list,
+            #'sb_user_list': sb_user_list,
             'golf_auction_user_list': golf_auction_user_list,
             't': t,
 

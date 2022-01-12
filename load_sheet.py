@@ -52,7 +52,7 @@ def readSheet(file,numPlayers,override_week=None):
         #create a sheet with just players, picks and totals (totals assumes that the total is 2 digits and more than 16).
 
         for tag in soup.findAll('t'):
-            if tag.text not in (' ', '1','2','3','4','5','6','7','8','9','10','11','12','13','14','15','16', '17'):
+            if tag.text not in (' ', '1','2','3','4','5','6','7','8','9','10','11','12','13','14','15','16', '17', '18'):
                 if len(tag.text) > 1:
                     if tag.text == "LiL":
                         sheet.append("LiL B")

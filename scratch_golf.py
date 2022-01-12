@@ -13,8 +13,41 @@ from django.db.models import Count
 from unidecode import unidecode as decode
 
 
-espn = scrape_espn.ScrapeESPN(setup=True).get_data()
-print (espn)
+#espn = scrape_espn.ScrapeESPN(setup=True).get_data()
+#print (espn)
+t = Tournament.objects.get(current=True)
+espn =  espn_api.ESPNData(force_refresh=True)
+#print (espn.golfer_data('9780'))
+print (espn.get_leaderboard())
+#print (espn.get_round_status())
+#group_stats = espn.group_stats()
+#print (group_stats)
+#pick = Picks.objects.get(playerName__playerName="Jon Rahm", playerName__tournament__current=True, user__pk=1)
+#bd = bonus_details.BonusDtl(espn_api=espn, espn_scrape_data=None, tournament=t, inquiry=True)  #make inquiry false when swtiching to this 
+#bd_big = bd.best_in_group(group_stats, pick)
+#print (bd_big)
+
+exit()
+
+cells_per_row = picks_c / users
+print (cells_per_row)
+l = []
+i = 0 
+#while i < picks_c:
+for i in range(picks_c):
+    #print (i, i / cells_per_row)
+    if i % cells_per_row == 1:
+        l.append(i)
+    #i += 1 
+print (l)
+#    print (pick.user, pick.playerName, pick.playerName.group.number)
+
+t = Tournament.objects.get(pk=198)
+for sd in ScoreDetails.objects.filter(pick__playerName__tournament=t, user__username="Hiro"):
+    print(sd, sd.score)
+
+
+
 exit()
 
 

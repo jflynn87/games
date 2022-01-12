@@ -1,6 +1,6 @@
 from django import template
 from golf_app.models import Picks, mpScores, Field, Tournament, Group
-from django.db.models import Count
+from django.db.models import Count, Sum
 from string import ascii_letters
 import re
 import urllib
@@ -56,53 +56,3 @@ def partner(partner):
     name = (regex.sub('', partner))
     return (name)
 
-
-#
-# @register.filter
-# def get_pic(playerID):
-#     if playerID != None:
-#         return "https://pga-tour-res.cloudinary.com/image/upload/c_fill,d_headshots_default.png,f_auto,g_face:center,h_85,q_auto,r_max,w_85/headshots_" + playerID + ".png"
-#     else:
-#         return None
-#
-# @register.filter
-# def get_flag(playerID):
-#
-#     if playerID != None:
-#         json_url = 'https://www.pgatour.com/players.html'
-#         html = urllib.request.urlopen("https://www.pgatour.com/players.html")
-#         soup = BeautifulSoup(html, 'html.parser')
-#
-#
-#         players =  (soup.find("div", {'class': 'directory-select'}).find_all('option'))
-#         golfer_dict = {}
-#
-#         for p in players:
-#         #    if first< 2:
-#                 link = ''
-#                 p_text = str(p)[47:]
-#                 for char in p_text:
-#                     if char == '"':
-#                         break
-#                     else:
-#                         link = link + char
-#                 golfer_dict[link[:5]]=link
-#         #print(golfer_dict)
-#
-#         #for golfer in Field.objects.filter(tournament__pga_tournament_num='026'):
-#
-#         link_text = golfer_dict.get(playerID)
-#
-#         if link_text != None:
-#
-#             link = "https://www.pgatour.com/players/player." + link_text
-#             player_html = urllib.request.urlopen(link)
-#             player_soup = BeautifulSoup(player_html, 'html.parser')
-#             country = (player_soup.find('img', {'class': 's-flag'}))
-#             flag = country.get('src')
-#             print (playerID, flag)
-#             return  "https://www.pgatour.com" + flag
-#         else:
-#             return None
-#     else:
-#         return None

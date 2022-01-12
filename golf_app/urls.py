@@ -59,13 +59,14 @@ urlpatterns= [
     path('ryder_cup_score_api/', views.RyderCupScoresAPI.as_view(), name='ryder_cup_score_api'),
     path('get_api_scores/<int:pk>', views.EspnApiScores.as_view(), name='get_api_scores'),
     path('api_scores_view/', views.ApiScoresView.as_view(), name='api_scores_view'),
-    path('api_scores_view/<int:pga_t_num>', views.ApiScoresView.as_view(), name='api_scores_view'),
+    path('api_scores_view/<int:pk>', views.ApiScoresView.as_view(), name='api_scores_view'),
     path('total_played_api/<str:season>', views.TotalPlayedAPI.as_view(), name='total_played_api'),
     path('t_wins_api/<str:season>', views.TWinsAPI.as_view(), name='t_wins_api'),
     path('picked_winner_count_api/<str:season>', views.PickedWinnerCountAPI.as_view(), name='picked_winner_count_api'),
     path('avg_points_api/<str:season>', views.AvgPointsAPI.as_view(), name='avg_points_api'),
     path('avg_cuts_api/<str:season>', views.AvgCutsAPI.as_view(), name='avg_cuts_api'),
     path('most_picked_api/<str:season>', views.MostPickedAPI.as_view(), name='most_pickd_api'),
+    path('get_pga_leaderboard/<int:pk>', views.PGALeaderboard.as_view(), name='get_pga_leaderboard'),
    
 
     

@@ -954,10 +954,13 @@ class Field(models.Model):
         else: 
             handi = 0
 
+        cut = False
+        
         if sd: 
             rank = [v.get('rank') for k,v in sd.items() if k != 'info' and v.get('pga_num') == self.golfer.espn_number][0]
 
             if rank in self.tournament.not_playing_list():
+                cut = True
                 post_cut_wd_count = utils.post_cut_wd_count(self.tournament, sd)
                 if post_cut_wd_count > 0 and self.post_cut_wd():
                     score = len(v for k,v in sd.items() if k != 'info' and v.get(rank) not in self.tournament.not_playing_list())
@@ -970,21 +973,24 @@ class Field(models.Model):
         if api_data:
             if api_data.golfer_data(self.golfer.espn_number):
                 if api_data.golfer_data(self.golfer.espn_number).get('status').get('type').get('id') == "3":
+                    cut = True
                     score = (int(api_data.cut_num()) - int(self.handi)) + api_data.cut_penalty(self)
                 elif self.tournament.has_cut and int(api_data.get_round()) <= int(self.tournament.saved_cut_round) \
                      and int(api_data.get_rank(self.golfer.espn_number)) > api_data.cut_num():
+                    cut = True
                     score = (api_data.cut_num() - int(self.handi)) + api_data.cut_penalty(self)
-                elif api_data.golfer_data(self.golfer.espn_number).get('status').get('type').get('id') == "3":  
-                    score = (int(api_data.cut_num()) - int(self.handi)) + api_data.cut_penalty(self)  
+                #elif api_data.golfer_data(self.golfer.espn_number).get('status').get('type').get('id') == "3":  
+                #    score = (int(api_data.cut_num()) - int(self.handi)) + api_data.cut_penalty(self)  
                 else: 
                     score = int(api_data.get_rank(self.golfer.espn_number)) - int(self.handi)
 
             else:
                 print ('WD? not found in espn: ',  self.playerName, self.golfer.espn_number) 
+                cut = True
                 score = ((int(api_data.cut_num()) - int(self.handi))) + api_data.cut_penalty(self)
 
                     
-        return score
+        return {'score': score, 'cut': cut}
 
 
     def post_cut_wd(self, sd=None, api_data=None):

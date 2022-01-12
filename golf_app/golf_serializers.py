@@ -91,7 +91,15 @@ class ScoreDetailsSerializer(serializers.ModelSerializer):
     class Meta:
         model = ScoreDetails
         fields = '__all__'
-        depth = 3
+        depth = 3  
+
+class SDOnlySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ScoreDetails
+        fields = '__all__'
+        #depth = 3  commented on 1/8/22 as part of testing api scores
+        depth = 1
+
 
 class GolferSerializer(serializers.ModelSerializer):
     #season_results = serializers.SerializerMethodField('get_season_results')

@@ -1,4 +1,6 @@
 import os
+
+
 os.environ.setdefault("DJANGO_SETTINGS_MODULE","gamesProj.settings")
 
 import django
@@ -21,15 +23,18 @@ import pytz
 def load_sched(year):
 
     #changing weeks to load preseason weeks (make week 0 and cnt 1)
+    season = Season.objects.get(current=True)
     if Week.objects.filter(current=True).exists():
         current_week = Week.objects.get(current=True)
         week_cnt = current_week.week + 1
+    elif Week.objects.filter(season_model=season).exists():   #hack for playoffs, figure out the max week and use that
+        week_cnt = 18
     else:
         week_cnt = 1
     
     #week_cnt = current_week.week + 1
-    season = Season.objects.get(current=True)
-    while week_cnt < 19:
+    
+    while week_cnt < 20:
             try:
                 week, created = Week.objects.get_or_create(season_model=season, week=week_cnt)
                 #week.season = season.season
@@ -42,17 +47,21 @@ def load_sched(year):
                 week.game_cnt = 0
                 week.save()
 
-                if week_cnt > 17:
-                    url_week = 'post' + str(week_cnt - 17)
-                else:
-                    url_week = 'reg' + str(week_cnt)
+                #if week_cnt > 17:
+                #    url_week = 'post' + str(week_cnt - 17)
+                #else:
+                #    url_week = 'reg' + str(week_cnt)
 
                 headers = {'User-Agent': 'Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.149 Mobile Safari/537.36'}
                 url = "http://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard"
                 
-                payload = {'week': str(week_cnt)}
-                print ('payload ', payload)
-                #payload = {}  #works for pre season/current week?
+                if week.week < 19:
+                
+                    payload = {'week': str(week_cnt)}
+                    print ('payload ', payload)
+                    #payload = {}  #works for pre season/current week?
+                else:
+                    payload = {}  #works for preseason and post season
                 json_data = requests.get(url, headers=headers, params=payload).json()
                 print (json_data)
                 print (json_data.keys())

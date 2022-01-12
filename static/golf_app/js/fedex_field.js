@@ -28,7 +28,7 @@ function user_picks() {
     .then((responseJSON) => {
          field = responseJSON
          console.log(field)
-         get_all_picks()
+         //get_all_picks()
          
          const frag = new DocumentFragment()
          top_30 = document.createElement('div')
@@ -379,8 +379,15 @@ function get_all_picks() {
         picks = responseJSON.picks
         users = $.parseJSON(responseJSON.users)
 
-        console.log(picks)
-        console.log(users)
+        //console.log(picks)
+        //console.log(users)
+        console.log('get_all_picks')
+        console.log($('#allow_picks').text())
+        if ($('#allow_picks').text() == "true") {
+            console.log('if')
+            //new logic
+        }
+        else {
 
         const picks_frag = new DocumentFragment()
 
@@ -499,8 +506,12 @@ function get_all_picks() {
             }
 
             body.appendChild(tr)
-        })
         
+        
+        })
+       
+    
+    
 
         pick_tbl.appendChild(header)
         pick_tbl.appendChild(body)
@@ -508,7 +519,8 @@ function get_all_picks() {
         document.getElementById('all_picks').appendChild(picks_frag)
         sort_table($('#all_picks_tbl'), 3, 'asc')
         $('#loading_msg').hide()
-        
+    
+}
 
 })
 }

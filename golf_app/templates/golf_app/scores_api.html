@@ -12,6 +12,7 @@
 
 
 <p hidden id='tournament_key'>{{t.pk}}</p>
+<p hidden id='season_key'>{{t.season.pk}}</p>
 
 {%if lookup_errors%}
   <h4>The following picks have withdrawn or have name lookup issues:</h4>
@@ -28,7 +29,11 @@
 <p id='issues'></p>
 
 <div id='picks_summary'></div>
-<div id='picks_info'>
+<div id='picks_info'></div>
+
+<div id='status'><h4>updating scores <span class='status' style="size: 200%;">....</span></h4></div>
+<!-- <div id='picks_info'> -->
+  <div id=scores-div hidden>
     <table id='totals-table' class='table table-bordered table-sm '>
       <thead>
         <tr style="background-color: lightblue;">
@@ -40,22 +45,42 @@
         </tr>
       </thead>
       <tbody>
-        {%for user, picks in picks_dict.items %}
-        <tr id=totals{{user.username}} class="small">
-          <td id=ts_{{user.username}} style="font-weight: bold;">{{user.username}}</td>
-          <td id=msg_{{user.username}}>Test</td>
-          {%for p in picks%}
-            <td id={{user.username}}{{p.playerName.golfer.espn_number}}><img src="{{p.playerName.golfer.pic_link}}">{{p.playerName}}</i></td>
-          {%endfor%}
+        {%for p in picks %}
+        {%if forloop.counter in new_lines %}
+        <tr id=totals{{p.user.username}} class="small">
+          <td id=ts_{{p.user.username}} style="font-weight: bold;">{{p.user.username}}</td>
+          <td id=msg_{{p.user.username}}>Test</td>
+            <td id={{p.pk}} class='{{p.playerName.golfer.espn_number}}'><p><img src="{{p.playerName.golfer.pic_link}}"></img>
+            <img height='20' src="{{p.playerName.golfer.flag_link}}" alt=""></img></p>
+            <p style="font-weight: bold;">{{p.playerName}}</p>
+            <p id='{{p.pk}}-score'>....</p>
+          </td>
+
+          {%else%}
+
+            <td id={{p.pk}} class='{{p.playerName.golfer.espn_number}}'><p><img src="{{p.playerName.golfer.pic_link}}"></img>
+            <img height='20' src="{{p.playerName.golfer.flag_link}}" alt=""></img></p>
+            <p style="font-weight: bold;">{{p.playerName}}</p>
+            <p id='{{p.pk}}-score'>....</p>
+          </td>
+          {%endif%}
         {%endfor%}
+        <tr id="big">
+          <th>Best Picks</th>
+          <td></td>
+          {%for g in groups%}
+          <td id='big-{{g.number}}'>....</td>
+          {%endfor%}
+        </tr>
+        <tr id="cuts">
+          <th>Cuts</th>
+          <td></td>
+          {%for g in groups%}
+          <td id='cuts-{{g.number}}'>....</td>
+          {%endfor%}
         </tr>
       </tbody>
-
-
-
     </table>
-
-
 </div>
 
 <p><a href='https://www.pgatour.com/leaderboard.html' target="_blank">Click for PGA.com Leaderboard</a></p>
@@ -63,6 +88,7 @@
 <div id='det-list'></div>
  
 {%compress js%}
+
   {%if tournament.pga_tournament_num == '470'%}
   <script type="text/javascript" src="{%static 'golf_app/js/mp_load.js'%}"></script> 
   {%else%}
