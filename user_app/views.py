@@ -76,16 +76,17 @@ def index(request):
         except Exception as e:
             t = None
 
-        sb_user_list = ['john', 'jcarl62', 'BigDipper', 'shishmeister', 'JoeLong', 'Laroqm']
+        #sb_user_list = ['john', 'jcarl62', 'BigDipper', 'shishmeister', 'JoeLong', 'Laroqm']
+        sb_user_list = ['john', 'jcarl62']
         golf_auction_user_list = ['john', 'jcarl62', 'ryosuke']
         print ('game', game)
         print ('picks', picks)
         return render(request, 'index.html', {
             'fb_week': week,
-            'sb_user_list': User.objects.filter(username__in=['john', 'jcarl62']),
+            #'sb_user_list': User.objects.filter(username__in=['john', 'jcarl62']),
             'game': game,
             'picks': picks,
-            #'sb_user_list': sb_user_list,
+            'sb_user_list': sb_user_list,
             'golf_auction_user_list': golf_auction_user_list,
             't': t,
 
