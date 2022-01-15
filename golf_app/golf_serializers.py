@@ -41,7 +41,8 @@ class NewFieldSerializer(serializers.ModelSerializer):
     class Meta:
         model = Field
         fields = '__all__'
-        depth = 2
+        depth = 1  #changed from 2 to speed up field load
+        
 
     def get_espn_link(self, field):
         return field.golfer.espn_link()
@@ -50,13 +51,9 @@ class NewFieldSerializer(serializers.ModelSerializer):
         return field.golfer.get_pga_player_link()
 
     def get_started(self, field):
-        #used for testing, delete
-        #if Picks.objects.filter(user=self.context.get('user'), playerName__playerName=field.playerName, playerName__tournament=field.tournament).exists():
-        #if field.playerName in ["Jon Rahm", "Charley Hoffman", "Troy Merritt"] : 
-        #        print ('started check A ', field.playerName, True)
-        #        return True 
-        obj = espn_api.ESPNData(data=self.context.get('espn_data'))
-        started = obj.player_started(field.golfer.espn_number)
+        #obj = espn_api.ESPNData(data=self.context.get('espn_data'))
+        espn = self.context.get('espn_data')
+        started = espn.player_started(field.golfer.espn_number)
         #print ('started check ', field.playerName, started)
         return started
 

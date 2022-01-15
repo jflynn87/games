@@ -8,6 +8,7 @@ $(document).ready(function() {
       const fn1 = totalScores()
       const fn2 = seasonPoints()
       const fn3 = udatePickData()
+      summary_data()
       
       Promise.all([fn1, fn2, fn3]).then((response) => 
       {
@@ -108,7 +109,9 @@ function bestInGroup(data) {
                   $('#big-' + group).html($('#big-' + group).html()  + ', ' + golfer) 
                   }
                                                     })
-            
+            colspan = $('#grp-colspan-' + group).attr('colspan')
+
+            $('#big-' + group).attr('colspan', colspan).addClass('small').attr('align', 'center')
       })
 }
 
@@ -116,8 +119,11 @@ function bestInGroup(data) {
 function cuts(data) {
       $.each(data, function(group, info) {
           $('#cuts-' + group).html(info.cuts + '/' + info.total_golfers) 
-                                           })
+
+            colspan = $('#grp-colspan-' + group).attr('colspan')
             
+            $('#cuts-' + group).attr('colspan', colspan).addClass('small').attr('align', 'center')
+      })            
 }
 
 function updateBigPicks(group_stats, picks) {
@@ -125,5 +131,27 @@ function updateBigPicks(group_stats, picks) {
             $.each(stats.golfer_espn_nums, function(i, espn_num) {
                   $('.' + espn_num).addClass('best')
             })
+      })
+}
+
+function summary_data() {
+      fetch("/golf_app/get_summary_stats/" + $('#tournament_key').text(),
+      {method: "GET",
+      }
+            )
+      .then((response) => response.json())
+      .then((responseJSON) => {
+            console.log('summary stats api returned')
+            data = $.parseJSON(responseJSON)
+            console.log(data)
+            console.log(data.leaders)
+            $.each(data.leaders, function(i, leader) {
+              if (i == 0) {$('#leader').text(leader)}
+              else {$('#leader').text($('#leader').text() + ', ' + leader)}
+            })
+
+            $('#leader').text($('#leader').text() + ' : ' + data.leader_score)
+
+            $('#cut_line').text('Round ' + data.curr_round + ' - ' + data.round_status)
       })
 }

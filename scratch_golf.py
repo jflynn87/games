@@ -8,43 +8,68 @@ from golf_app.models import Tournament, TotalScore, ScoreDetails, Picks, PickMet
          FedExSeason, FedExField, FedExPicks
 from django.contrib.auth.models import User
 from datetime import datetime, timedelta
-from golf_app import populateField, calc_leaderboard, manual_score, bonus_details, espn_api, round_by_round, scrape_espn, utils
+from golf_app import populateField, calc_leaderboard, manual_score, bonus_details, espn_api, round_by_round, scrape_espn, utils, golf_serializers
 from django.db.models import Count
 from unidecode import unidecode as decode
+import json
 
 
-#espn = scrape_espn.ScrapeESPN(setup=True).get_data()
-#print (espn)
-t = Tournament.objects.get(current=True)
-espn =  espn_api.ESPNData(force_refresh=True)
-#print (espn.golfer_data('9780'))
-print (espn.get_leaderboard())
-#print (espn.get_round_status())
-#group_stats = espn.group_stats()
-#print (group_stats)
-#pick = Picks.objects.get(playerName__playerName="Jon Rahm", playerName__tournament__current=True, user__pk=1)
-#bd = bonus_details.BonusDtl(espn_api=espn, espn_scrape_data=None, tournament=t, inquiry=True)  #make inquiry false when swtiching to this 
-#bd_big = bd.best_in_group(group_stats, pick)
-#print (bd_big)
+sony = scrape_espn.ScrapeESPN(setup=True).get_data()
+rsm_t = Tournament.objects.get(pk=196)
+rsm_sd = ScoreDict.objects.get(tournament=rsm_t)
+print ("RSM: ", rsm_sd.data.get('Alex Smalley'))
+print ('Sony: ', sony.get('Abraham Ancer'))
+exit()
+
+espn = espn_api.ESPNData()
+#print (espn.field())
+print (espn.leaders())
+print (espn.leader_score())
+print (espn.cut_line())
+exit()
+
+
+
+espn = espn_api.ESPNData().all_data
+with open('Sony_mid_r2.json', 'w') as outfile:
+    json.dump(espn, outfile)
+
+with open('Sony_mid_r2.json') as json_file:
+    data = json.load(json_file)
+
+
+espn_1 = espn_api.ESPNData(data=data)
+print (espn_1.field())
 
 exit()
 
-cells_per_row = picks_c / users
-print (cells_per_row)
-l = []
-i = 0 
-#while i < picks_c:
-for i in range(picks_c):
-    #print (i, i / cells_per_row)
-    if i % cells_per_row == 1:
-        l.append(i)
-    #i += 1 
-print (l)
-#    print (pick.user, pick.playerName, pick.playerName.group.number)
 
-t = Tournament.objects.get(pk=198)
-for sd in ScoreDetails.objects.filter(pick__playerName__tournament=t, user__username="Hiro"):
-    print(sd, sd.score)
+t= Tournament.objects.get(pk=199, season__current=True)
+owgr = populateField.get_worldrank()
+field = populateField.get_field(t, owgr)
+groups = populateField.configure_groups(field, t)
+
+for g in Group.objects.filter(tournament=t):
+    print (g.number, g.playerCnt)
+    print ('field cnt: ', Field.objects.filter(tournament=t, group=g).count())
+exit()
+
+
+
+espn_data = espn_api.ESPNData()
+group_stats = espn_data.group_stats()
+#print (group_stats)
+start = datetime.now()
+big = [v.get('golfer_espn_nums') for k,v in group_stats.items()]
+
+print ([num for sublist in big for num in sublist])
+print (datetime.now() - start)
+# context = {'espn_data': espn_data, 'user': User.objects.get(pk=1)}
+# for g in Group.objects.filter(tournament=t):
+#     data= golf_serializers.NewFieldSerializer(Field.objects.filter(tournament=t, group__number=g.number), context=context, many=True).data
+
+# print (datetime.now() - start)
+
 
 
 

@@ -63,7 +63,12 @@ class BonusDtl(object):
         '''takes a dict of optimal picks (for a single group only) and a pick object, optionally updates DB, returns a bool'''
         
         big = False
-        optimal = [v.get('golfer_espn_num') for k,v in optimal_picks.items()]
+        #if self.espn_scrape_data:
+        big_lists = [v.get('golfer_espn_nums') for k,v in optimal_picks.items()]
+        optimal = [num for sublist in big_lists for num in sublist]
+        #elif self.espn_api:
+        #    optimal = [v.get('golfer_espn')]
+        
         #print (self.big_eligible(pick))
         if pick.playerName.golfer.espn_number in optimal and self.big_eligible(pick):
             exclude_users = PickMethod.objects.filter(tournament=self.tournament, method='3').values('user')

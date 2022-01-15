@@ -24,7 +24,7 @@ function format_move(score) {
   function sort_table(tableId) {
     var table, rows, swtiching, i, x, y, shouldSwitch;
     table = $('#' + tableId)
-    console.log(table[0], table[0].rows.length)
+    
     switching = true;
     
     while(switching) {
@@ -64,7 +64,7 @@ function buildLeaderboard(t) {
     .then((response) => response.json())
     .then((responseJSON) => {
           data = $.parseJSON(responseJSON).leaderboard
-
+          
           $('#det-list').empty()
           $('#det-list').append('<table id="det-table" class="table">' + '</table>');
         
@@ -107,7 +107,7 @@ function buildLeaderboard(t) {
                 
                 row_cells[j].innerHTML = row_fields[j]
                 if (j == 1) {arrow = format_move(row_fields[j])
-                          console.log(arrow)
+                          
                           row_cells[j].innerHTML == row_fields[j]
                         row_cells[j].innerHTML = arrow}
                 if (j == 2) {row_cells[j].style.fontWeight = 'bold' }

@@ -329,7 +329,11 @@ def configure_groups(field_list, tournament):
                 group_cnt += 1
 
             group_size = int(round((len(field_list) - 50)/4, 0))
-            remainder =  int(len(field_list) % (50 + (group_size *4)))
+            print ('group size 6-8: ', group_size)
+            if (group_size * 4) + 50 >= len(field_list):
+                remainder = len(field_list) - (50 + 4*group_size)
+            else:
+                remainder =  int(len(field_list) % (50 + (group_size *4)))
             print ('remainder ', remainder)
             while group_cnt > 5 and group_cnt < 9:
                 groups[group_cnt] = group_size

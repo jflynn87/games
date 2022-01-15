@@ -67,6 +67,7 @@ urlpatterns= [
     path('avg_cuts_api/<str:season>', views.AvgCutsAPI.as_view(), name='avg_cuts_api'),
     path('most_picked_api/<str:season>', views.MostPickedAPI.as_view(), name='most_pickd_api'),
     path('get_pga_leaderboard/<int:pk>', views.PGALeaderboard.as_view(), name='get_pga_leaderboard'),
+    path('get_summary_stats/<int:pk>', views.SummaryStatsAPI.as_view(), name='get_summary_stats'),
    
 
     

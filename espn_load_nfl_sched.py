@@ -27,8 +27,9 @@ def load_sched(year):
     if Week.objects.filter(current=True).exists():
         current_week = Week.objects.get(current=True)
         week_cnt = current_week.week + 1
-    elif Week.objects.filter(season_model=season).exists():   #hack for playoffs, figure out the max week and use that
-        week_cnt = 18
+    elif Week.objects.filter(season_model=season).exists():  #figure out if this is best way , especially for playoffs
+        w = Week.objects.filter(season_model=season).last()
+        week_cnt = w.week + 1
     else:
         week_cnt = 1
     

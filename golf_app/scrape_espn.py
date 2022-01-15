@@ -175,9 +175,9 @@ class ScrapeESPN(object):
                                         'tot_strokes': td[10].text,
                     }
                 elif len(td) == 12 and not score_dict.get('info').get('complete'):
-                    print ("in len 12")
-                    if td[3].text in self.tournament.not_playing_list():
-                        rank = td[3].text 
+                    print (row.a.text, td[1].text)
+                    if td[4].text in self.tournament.not_playing_list():
+                        rank = td[4].text 
                     else:
                         rank = td[1].text
 

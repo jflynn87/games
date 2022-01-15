@@ -40,7 +40,7 @@
         <th>Player</th>
         <th>Bonus</th>
         {%for g in groups%}
-          <th colspan="{{g.num_of_picks}}">{{g.number}}</th>
+          <th id="grp-colspan-{{g.number}}" colspan="{{g.num_of_picks}}">{{g.number}}</th>
         {%endfor%}
         </tr>
       </thead>

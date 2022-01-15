@@ -40,12 +40,12 @@
 
 
       <div id=withdraw></div>
-      {%if tournament.pga_tournament_num != "470" and tournament.pga_tournament_num != "018" and tournament.pga_tournament_num != "468"%}
+      <!-- {%if tournament.pga_tournament_num != "470" and tournament.pga_tournament_num != "018" and tournament.pga_tournament_num != "468"%}
       <script type="text/babel" src="{%static 'test_app/src/withdraw.js'%}"></script> 
-      {%endif%} 
+      {%endif%}  -->
 
       <div id='espn_missing'></div>
-      <script type="text/babel" src="{%static 'test_app/src/check_espn_num.js'%}"></script> 
+      <!-- <script type="text/babel" src="{%static 'test_app/src/check_espn_num.js'%}"></script>  -->
 
 <!-- 
       {%if not tournament.started or tournament.late_picks%}
@@ -101,6 +101,12 @@
 {%compress css%}
 <link rel="stylesheet" href='{%static "golf_app/css/load.css"%}'> 
 {%endcompress%}
+
+{%if tournament.pga_tournament_num != "470" and tournament.pga_tournament_num != "018" and tournament.pga_tournament_num != "468"%}
+<script type="text/babel" src="{%static 'test_app/src/withdraw.js'%}"></script> 
+{%endif%} 
+<script type="text/babel" src="{%static 'test_app/src/check_espn_num.js'%}"></script> 
+
 
 
 

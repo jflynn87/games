@@ -213,6 +213,8 @@ function checkStarted() {
 
     if (!started.started || started.late_picks) {
         $('#random_btn').removeAttr('disabled').attr('class', 'btn btn-primary');
+        $('#random_line').attr('hidden', false)
+        $('#status').text("Ready for Picks")
         for (let i=0; i < checkbox_l; i++){
             checkbox_input[i].disabled = false
             }
@@ -248,6 +250,8 @@ function checkStarted() {
             }
 
     }
+    done  = new Date
+    console.log(start, done, start - done)
 })
 }
 
@@ -270,7 +274,9 @@ function buildHeader() {
     '<form id="random_form" name="random_form" method="post">' +
     '<input type="hidden" name="csrfmiddlewaretoken" value=' + $.cookie('csrftoken') +  '>' +
     //'<input type="text" name="random" value="random" hidden>' +
-    '<p id=random_line>or click for random picks  <input id=random_btn type="submit" class="btn btn-secondary" value="Random" disabled> </p>' +
+    '<h5 id=status>Loading Golfers, please wait for all to load <span class=status style="font-size:large;">...</span></h5> <br>' + 
+    '<p id=random_line hidden>Click for random picks  <input id=random_btn type="submit" class="btn btn-secondary" value="Random" disabled></p>' +
+    
     '</form>')
 
     $('#top_sect').append('<div id=too_late hidden><br> <p>Tournament Started, too late for picks</p></div>')

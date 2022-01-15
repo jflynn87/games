@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta
+from http.client import MOVED_PERMANENTLY
 
 from requests import get
 import json
@@ -15,6 +16,7 @@ class ESPNData(object):
         field_data is the actual golfers in the tournament'''
 
     def __init__(self, t=None, data=None, force_refresh=None):
+        start = datetime.now()
         if t:
             self.t = t 
         else:
@@ -65,7 +67,7 @@ class ESPNData(object):
         if not event_found:
             print ('ESPN API didnt find event, PGA T num: ', self.t.pga_tournament_num)
 
-        print ('espn API Init complete, field len: ', len(self.field_data))
+        print ('espn API Init complete, field len: ', len(self.field_data), ' dur: ', datetime.now() - start)
 
 
 
@@ -74,7 +76,8 @@ class ESPNData(object):
         return self.competition_data.get('status').get('period')
 
     def get_round_status(self):
-        return self.competition_data.get('status').get('type').get('state')
+        #return self.competition_data.get('status').get('type').get('state')
+        return self.competition_data.get('status').get('type').get('description')
 
 
     def started(self):
@@ -144,7 +147,14 @@ class ESPNData(object):
         '''gives cut num wihtout group penalty.  returns an int and need to add group penalty seperately'''
         if not self.started():
             return self.t.saved_cut_num
-        
+
+        #clean this up, added for round 1 based on espn not having a cut round or score.  they have cutRound == 0 
+        if self.t.has_cut and int(self.get_round()) < int(self.t.saved_cut_round) and self.event_data.get('tournament').get('cutRound') == 0:
+            #move this to be the cut_line funciton
+            return  min(int(x.get('status').get('position').get('id')) for x in self.field_data \
+                     if int(x.get('status').get('position').get('id')) > int(self.t.saved_cut_num)) 
+            
+
         if self.event_data.get('tournament').get('cutRound') == 0:
             print ('no cut')
             return len([x for x in self.field_data if x.get('status').get('type').get('id') != '3']) +1
@@ -153,7 +163,7 @@ class ESPNData(object):
             return self.event_data.get('tournament').get('cutCount') + 1
         elif self.t.has_cut and int(self.get_round()) <= int(self.t.saved_cut_round):
             return  min(int(x.get('status').get('position').get('id')) for x in self.field_data \
-                     if int(x.get('status').get('position').get('id')) > int(self.t.saved_cut_num)) + 1
+                     if int(x.get('status').get('position').get('id')) > int(self.t.saved_cut_num)) 
         else:
             cuts = [v for v in self.field_data if v.get('status').get('type').get('id') == '3']
             return len(cuts) + 1  
@@ -201,17 +211,17 @@ class ESPNData(object):
            
     def cut_penalty(self, p):
         '''takes a pick obj and a score obj, returns an int'''
-        if not p.playerName.group.cut_penalty():
+        if not p.group.cut_penalty():
             return 0
 
         #golfers = Field.objects.filter(group=p.playerName.group).values_list('golfer__espn_number', flat=True)
         #golfers = p.playerName.group.get_golfers()
         #cuts = len([x for x in self.field_data if x.get('id') in golfers and x.get('status').get('type').get('id') == '3'])
-        cuts = p.playerName.group.cut_count(espn_api_data=self.field_data)
+        cuts = p.group.cut_count(espn_api_data=self.field_data)
         if cuts == 0:
             return 0
         else:
-            return p.playerName.group.playerCnt - cuts
+            return p.group.playerCnt - cuts
 
         
     def get_movement(self, golfer_data):
@@ -261,7 +271,13 @@ class ESPNData(object):
         d = {}
         #print (self.golfer_data('9780'))
         for data in self.field_data:
+            #print ('LB DATA: ', self.get_round_score(data.get('id'), 2))
             golfer_data = self.golfer_data(data.get('id'))
+            if golfer_data.get('status').get('type').get('shortDetail') == 'Scheduled':
+                thru = "F"
+            else:
+                thru = golfer_data.get('status').get('type').get('shortDetail')
+
             d[golfer_data.get('sortOrder')] = {
                                     'rank': self.get_rank(data.get('id')),
                                     'r1': self.get_round_score(data.get('id'), 1),
@@ -270,15 +286,44 @@ class ESPNData(object):
                                     'r4': self.get_round_score(data.get('id'), 4),
                                     'total_score': golfer_data.get('score').get('displayValue'),
                                     'change': golfer_data.get('movement'),
-                                    'thru': golfer_data.get('status').get('type').get('shortDetail'),
+                                    #'thru': golfer_data.get('status').get('type').get('shortDetail'),
+                                    'thru': thru,
                                     'curr_round_score': '',
                                     'golfer_name': golfer_data.get('athlete').get('displayName'),
                                     'espn_num': data.get('id') 
 
             }
-        
+        #print ('leaderboard: ', d)
         return d
 
 
     def get_round_score(self, espn_num, r):
-        return [int(x.get('value')) for x in self.golfer_data(espn_num).get('linescores') if x.get('period') == r][0]
+        try:
+            return [int(x.get('value')) for x in self.golfer_data(espn_num).get('linescores') if x.get('period') == r][0]
+        except Exception as e:
+            return '--'
+
+    def leaders(self):
+        try:
+            return [v.get('athlete').get('displayName') for v in self.field_data if self.get_rank(v.get('id')) == '1']
+        except Exception as e:
+            print ('espn api leaders exception: ', e)
+            return None
+
+    def leader_score(self):
+        try:
+            return [v.get('score').get('displayValue') for v in self.field_data if self.get_rank(v.get('id')) == '1'][0]
+        except Exception as e:
+            print ('espn api leader score exception: ', e)
+            return None
+
+    def cut_line(self):
+        cut_info = {'line_type': None,
+                    'cut_score': None}
+        if self.t.has_cut and int(self.get_round()) <= int(self.t.saved_cut_round) and self.event_data.get('tournament').get('cutRound') == 0:
+            max_rank = max(int(x.get('status').get('position').get('id')) for x in self.field_data \
+                     if int(x.get('status').get('position').get('id')) < int(self.t.saved_cut_num)) 
+            cut_score = [x.get('score').get('displayValue') for x in self.field_data if self.get_rank(x.get('id')) == str(max_rank)][0]
+            cut_info.update({'line_type': 'Projected', 'cut_score': cut_score})
+
+        return cut_info

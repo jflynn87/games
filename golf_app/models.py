@@ -537,6 +537,8 @@ class Group(models.Model):
         elif score_dict:
             cut_count = self.cut_count(score_dict, espn_api_data)
             return self.playerCnt - cut_count
+       # elif espn_api_data:
+       #     cut_count = self.cut_count(espn)
 
 
 
@@ -973,15 +975,19 @@ class Field(models.Model):
         if api_data:
             if api_data.golfer_data(self.golfer.espn_number):
                 if api_data.golfer_data(self.golfer.espn_number).get('status').get('type').get('id') == "3":
+                    #print ('A')
                     cut = True
                     score = (int(api_data.cut_num()) - int(self.handi)) + api_data.cut_penalty(self)
                 elif self.tournament.has_cut and int(api_data.get_round()) <= int(self.tournament.saved_cut_round) \
                      and int(api_data.get_rank(self.golfer.espn_number)) > api_data.cut_num():
+                    #print ('B')
                     cut = True
                     score = (api_data.cut_num() - int(self.handi)) + api_data.cut_penalty(self)
+                    #print (score, api_data.cut_num(), int(self.handi), api_data.cut_penalty(self))
                 #elif api_data.golfer_data(self.golfer.espn_number).get('status').get('type').get('id') == "3":  
                 #    score = (int(api_data.cut_num()) - int(self.handi)) + api_data.cut_penalty(self)  
                 else: 
+                    #print ('C', api_data.get_rank(self.golfer.espn_number), self.handi)
                     score = int(api_data.get_rank(self.golfer.espn_number)) - int(self.handi)
 
             else:

@@ -1275,7 +1275,8 @@ class PriorResultAPI(APIView):
         try:
             #g_num = group.split('-')[2]
             t= Tournament.objects.get(pk=request.data.get('tournament_key'), season__current=True)
-            espn_data = espn_api.ESPNData().get_all_data()
+            #espn_data = espn_api.ESPNData().get_all_data()
+            espn_data = espn_api.ESPNData()
             context = {'espn_data': espn_data, 'user': self.request.user}
             if request.data.get('group') == 'all':
                 data= golf_serializers.NewFieldSerializer(Field.objects.filter(tournament=t), context=context, many=True).data
@@ -1932,16 +1933,11 @@ class EspnApiScores(APIView):
         
         start = datetime.datetime.now()
 
-        #t = Tournament.objects.get(pga_tournament_num=pga_t_num, season__current=True)
         t = Tournament.objects.get(pk=pk)
         if not t.started():
             return JsonResponse({'msg': 'Tournament Not Started'}, status=200, safe=False)
 
         espn = espn_api.ESPNData(t=t, force_refresh=True)
-        #c_start = datetime.datetime.now()
-        #cut_num = int(espn.cut_num())
-
-        #print ('cut num duration: ', datetime.datetime.now() - c_start, cut_num)
 
         start_big = datetime.datetime.now()
         big = espn.group_stats()
@@ -1970,15 +1966,17 @@ class EspnApiScores(APIView):
 
                 #print ('db class dur: ', pick, datetime.now() - bd_start)
             for p in Picks.objects.filter(playerName__tournament=t, playerName__golfer__espn_number=pick.playerName.golfer.espn_number):
+                print (p, bonus)
                 if score.get('cut'):
                     d.get(p.user.username).update({'cuts': d.get(p.user.username).get('cuts') + 1})
                 if PickMethod.objects.filter(user=p.user, method__in=[1,2], tournament=t).exists():
-                    d.get(p.user.username).update({'score': d.get(p.user.username).get('score') + (score.get('score') - bonus)})
-
+                    d.get(p.user.username).update({'score': d.get(p.user.username).get('score') + ((score.get('score') - bonus))})
                 else:
                     d.get(p.user.username).update({'score': (d.get(p.user.username).get('score') + score.get('score'))})
             
-            #print ('score check: ', d.get('john'), pick, score)
+
+
+            print ('score check: ', d.get('jcarl62'), pick, score)
 
         if espn.tournament_complete():
             ww_bd = bonus_details.BonusDtl(espn, t)
@@ -2313,15 +2311,39 @@ class PGALeaderboard(APIView):
             t = Tournament.objects.get(pk=pk)
             espn = espn_api.ESPNData(force_refresh=True)
             d['leaderboard'] = espn.get_leaderboard()
+            
 
         except Exception as e:
             print ('PGA Leaderboard API error: ', e)
             d['error'] = {'msg': str(e)}
-        print (d)
+        #print (d)
         print ('PGA leaderboard API time: ', datetime.datetime.now() - start)
 
         return JsonResponse(json.dumps(d), status=200, safe=False)
 
+
+class SummaryStatsAPI(APIView):
+    def get(self, request, pk):
+        
+        start = datetime.datetime.now()
+        d = {}
+        try:
+            t = Tournament.objects.get(pk=pk)
+            espn = espn_api.ESPNData(force_refresh=True)
+            d['cut_num'] = espn.cut_num()
+            d['cut_info'] = espn.cut_line()
+            d['leaders'] = espn.leaders()
+            d['leader_score'] = espn.leader_score()
+            d['curr_round'] = espn.get_round()
+            d['round_status'] = espn.get_round_status()
+
+        except Exception as e:
+            print ('Summart Stats API error: ', e)
+            d['error'] = {'msg': str(e)}
+        #print (d)
+        print ('Summary Stats API time: ', datetime.datetime.now() - start)
+
+        return JsonResponse(json.dumps(d), status=200, safe=False)
 
 
 
