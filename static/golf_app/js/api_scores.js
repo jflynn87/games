@@ -4,24 +4,40 @@ $(document).ready(function() {
     
       var start = new Date()
       console.log(start)
-      $.getScript('/static/golf_app/js/common_scores.js')
+      
+      //$.getScript('/static/golf_app/js/common_scores.js')
+      const common = load_common()
+      common.then((response) => $('#totals-table').ready(function() {sort_table('totals-table');
+                                                                     $('#scores-div').attr('hidden', false)}))
+      
       const fn1 = totalScores()
       const fn2 = seasonPoints()
-      const fn3 = udatePickData()
-      summary_data()
       
-      Promise.all([fn1, fn2, fn3]).then((response) => 
+
+      
+      Promise.all([fn1, fn2]).then((response) => 
       {
+
       sort_table('totals-table')
+      udatePickData()
       updateBigPicks(response[0].group_stats, response[2])
       $('#status').html('<h5>Scores Updated</h5>')
       $('#scores-div').attr('hidden', false)
+      summary_data()
+      msgs()
       buildLeaderboard($('#tournament_key').text())
       var done = new Date()
       console.log('load duration: ', done - start)}
       )      
 
 })
+
+function load_common() {
+      return new Promise(function (resolve,reject) {
+            common = $.getScript('/static/golf_app/js/common_scores.js')
+            resolve(common)
+      })
+}
 
 
 function totalScores( ) {
@@ -34,13 +50,17 @@ function totalScores( ) {
       .then((responseJSON) => {
             console.log('ts api returned')
             data = responseJSON
+
+            if (data.error) {
+                  $('#issues').html('<h4>Errors: ' + data.error.source + ' : ' + data.error.msg + '</h4>')
+            }
             bestInGroup(data.group_stats)
             cuts(data.group_stats)
 
             $.each(data, function(user, score) {
             if (Object.keys(score) != 'group_stats'){
             //$('#ts_' + user).text($('#ts_' + user).text() + '  '  + score.score + ' / ' + score.cuts)
-            $('#ts_' + user).append('<p>'  + score.score + ' / ' + score.cuts + '</p>')
+            $('#score_' + user).html(score.score + ' / ' + score.cuts)
             }
 
             } )
@@ -61,7 +81,7 @@ function seasonPoints() {
             console.log('sp api returned')
             data = $.parseJSON(responseJSON)
             $.each(data, function(user, info) {
-            $('#ts_' + user).text($('#ts_' + user).text() + '  ('  + info.diff + ' / ' + info.points_behind_second + ')')
+            $('#name_' + user).html(user + '  ('  + info.diff + ' / ' + info.points_behind_second + ')')
       resolve(data)})
       })
 })
@@ -78,14 +98,22 @@ function udatePickData() {
                   console.log('picks data api returned')
                   data = responseJSON
                   $.each(data, function(i, pick) {
-                  if (pick.sod_position) {sod = format_move(pick.sod_position) + pick.sod_position.replace(filler, '')}
+                  //if (pick.sod_position) {sod = format_move(pick.sod_position) + pick.sod_position.replace(filler, '')}
+                  if (pick.sod_position) {sod = format_move(parseInt(pick.sod_position))}
                   else {sod = ''}
+                  
+                  if (pick.thru.slice(-1) == 'Z') {
+                        var utcDate = pick.thru;
+                        thru = new Date (utcDate).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})
+                  }
+                  else {thru = pick.thru}
+                  
                   $('#' + pick.pick.id + '-score').html(
                   '<p>' + pick.score + 
                   '<span > <a id=tt-' + pick.id + 
                   ' data-toggle="tooltip" > <i class="fa fa-info-circle" style="color:blue;"></i> </a> </span>' +
                   '  ' + sod + '</p>' + 
-                  '<p>' + pick.toPar + '  (' + pick.thru + ')</p>')                  
+                  '<p>' + pick.toPar + '  (' + thru + ')</p>')                  
         
                   $('#tt-' + pick.id + '[data-toggle="tooltip"]').tooltip({trigger:"hover",
                   delay:{"show":400,"hide":800}, "title": 'gross score: ' + pick.gross_score})
@@ -94,8 +122,6 @@ function udatePickData() {
             resolve(data)})
             })
       })
-      
-      
 }
 
 
@@ -143,15 +169,40 @@ function summary_data() {
       .then((responseJSON) => {
             console.log('summary stats api returned')
             data = $.parseJSON(responseJSON)
-            console.log(data)
-            console.log(data.leaders)
             $.each(data.leaders, function(i, leader) {
               if (i == 0) {$('#leader').text(leader)}
               else {$('#leader').text($('#leader').text() + ', ' + leader)}
             })
 
             $('#leader').text($('#leader').text() + ' : ' + data.leader_score)
+            if (data.cut_info.line_type == 'Actual') {c_type = ''}
+            else (c_type = data.cut_info.line_type)
+            $('#cut_line').text('Round ' + data.curr_round + ' - ' + data.round_status + ', ' + c_type + 'Cut Line: ' + data.cut_info.cut_score)
+            $('#cut_line').append('<br>')
+            $('#cut_line').append('<p> Base cut penalty: ' + data.cut_num + '</p>')
+      })
+}
 
-            $('#cut_line').text('Round ' + data.curr_round + ' - ' + data.round_status)
+function msgs() {
+      fetch("/golf_app/get_msgs/" + $('#tournament_key').text(),
+      {method: "GET",
+      }
+            )
+      .then((response) => response.json())
+      .then((responseJSON) => {
+            console.log('get msgs api returned')
+            data = $.parseJSON(responseJSON)
+             $.each(data.handicap, function(user, handi) {
+                   $('#msg_' + user).text('h/c: ' + handi.total)
+             })
+            
+            $.each(data.pick_method, function(i, info) {
+                  if (info.method == '3'){
+                        $('#msg_'+ info.user.username).append('<p>Auto Picks - no bonuses')
+                  }
+            })
+            $.each(data.bonus_dtl, function(i, info) {
+                  $('#msg_' + info.user.username).append('<p>' + info.bonus_type_desc + ': -' + info.bonus_points + '</p>')
+            })
       })
 }

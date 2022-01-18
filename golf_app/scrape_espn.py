@@ -4,7 +4,7 @@ import urllib
 import json
 from bs4 import BeautifulSoup
 from golf_app import utils
-from golf_app.models import Tournament, Field, Golfer, ScoreDict
+from golf_app.models import Tournament, Field, Golfer, ScoreDict, ScoreDetails
 from collections import OrderedDict
 
 
@@ -518,4 +518,5 @@ def get_espn_num(row):
     '''takes a sting formatted as an a tag href and returns a string'''
     #return row.a['href'].split('/')[7]
     return row.split('/')[7]
+
 

@@ -24,9 +24,9 @@
 
 <h4>{{t.name}}</h4>
 
-<p id='leader'></p>
-<p id='cut_line'></p>
-<p id='issues'></p>
+<p id='leader'> </p>
+<p id='cut_line'> </p>
+<p id='issues'> </p>
 
 <div id='picks_summary'></div>
 <div id='picks_info'></div>
@@ -48,20 +48,27 @@
         {%for p in picks %}
         {%if forloop.counter in new_lines %}
         <tr id=totals{{p.user.username}} class="small">
-          <td id=ts_{{p.user.username}} style="font-weight: bold;">{{p.user.username}}</td>
-          <td id=msg_{{p.user.username}}>Test</td>
-            <td id={{p.pk}} class='{{p.playerName.golfer.espn_number}}'><p><img src="{{p.playerName.golfer.pic_link}}"></img>
-            <img height='20' src="{{p.playerName.golfer.flag_link}}" alt=""></img></p>
-            <p style="font-weight: bold;">{{p.playerName}}</p>
-            <p id='{{p.pk}}-score'>....</p>
+          <td id=ts_{{p.user.username}} style="font-weight: bold;">
+            <p id='name_{{p.user.username}}'> {{p.user.username}}</p>
+            <p id='score_{{p.user.username}}'>{{p.user|total_score}} / ...</p>
+          </td>
+          <td id=msg_{{p.user.username}}></td>
+            <td id={{p.pk}} class='{{p.playerName.golfer.espn_number}}'>
+              <span class=watermark><p> {{p.user.username}} : {{p.playerName.group.number}} </p> </span>
+              <p><img src="{{p.playerName.golfer.pic_link}}"></img>
+              <img height='20' src="{{p.playerName.golfer.flag_link}}" alt=""></img></p>
+              <p style="font-weight: bold;">{{p.playerName}}</p>
+              <p id='{{p.pk}}-score'>....</p>
           </td>
 
           {%else%}
 
-            <td id={{p.pk}} class='{{p.playerName.golfer.espn_number}}'><p><img src="{{p.playerName.golfer.pic_link}}"></img>
-            <img height='20' src="{{p.playerName.golfer.flag_link}}" alt=""></img></p>
-            <p style="font-weight: bold;">{{p.playerName}}</p>
-            <p id='{{p.pk}}-score'>....</p>
+            <td id={{p.pk}} class='{{p.playerName.golfer.espn_number}}'>
+              <span class=watermark><p> {{p.user.username}} : {{p.playerName.group.number}} </p> </span>
+              <p><img src="{{p.playerName.golfer.pic_link}}"></img>
+              <img height='20' src="{{p.playerName.golfer.flag_link}}" alt=""></img></p>
+             <p style="font-weight: bold;">{{p.playerName}}</p>
+             <p id='{{p.pk}}-score'>....</p>
           </td>
           {%endif%}
         {%endfor%}

@@ -9,16 +9,52 @@ from golf_app.models import Tournament, TotalScore, ScoreDetails, Picks, PickMet
 from django.contrib.auth.models import User
 from datetime import datetime, timedelta
 from golf_app import populateField, calc_leaderboard, manual_score, bonus_details, espn_api, round_by_round, scrape_espn, utils, golf_serializers
-from django.db.models import Count
+from django.db.models import Count, Sum
 from unidecode import unidecode as decode
 import json
 
 
-sony = scrape_espn.ScrapeESPN(setup=True).get_data()
-rsm_t = Tournament.objects.get(pk=196)
-rsm_sd = ScoreDict.objects.get(tournament=rsm_t)
-print ("RSM: ", rsm_sd.data.get('Alex Smalley'))
-print ('Sony: ', sony.get('Abraham Ancer'))
+
+
+
+for t in Tournament.objects.filter(pk=198):
+    print (t)
+    if not t.special_field():
+        print (t)
+        sd = ScoreDict.objects.get(tournament=t)
+        if not sd.validate_sd():
+            print (sd.update_sd_data())
+exit()
+
+
+with open('Sony_mid_r2.json') as json_file:
+    data = json.load(json_file)
+
+espn = espn_api.ESPNData(t=t, data=data)
+start = datetime.now()
+#stats = espn.group_stats()
+print (espn.tournament_complete(), espn.cut_num())
+
+exit()
+print ('api dur: ', datetime.now() - start)
+
+
+optimal_picks = {}
+sd = ScoreDict.objects.get(tournament=t)
+score_dict = sd.data
+scores = manual_score.Score(score_dict, t, 'json')
+start_old = datetime.now()
+for g in Group.objects.filter(tournament=t):
+    opt = scores.optimal_picks(g.number)
+    optimal_picks[str(g.number)] = {
+                                    'golfer': opt[0],
+                                    'rank': opt[1],
+                                    'cuts': opt[2],
+                                    'total_golfers': g.playerCnt
+    } 
+
+print ('scrape dur: ', datetime.now() - start_old)
+
 exit()
 
 espn = espn_api.ESPNData()
@@ -29,12 +65,11 @@ print (espn.cut_line())
 exit()
 
 
-
 espn = espn_api.ESPNData().all_data
-with open('Sony_mid_r2.json', 'w') as outfile:
+with open('Sony_mid_r4.json', 'w') as outfile:
     json.dump(espn, outfile)
 
-with open('Sony_mid_r2.json') as json_file:
+with open('Sony_mid_r4.json') as json_file:
     data = json.load(json_file)
 
 

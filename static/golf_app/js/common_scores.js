@@ -1,6 +1,7 @@
+//let not_playing = ['CUT', 'WD', 'DQ']
 
 function format_move(score) {
-  
+
     if (score == null) {
       return '  '} 
       else if (Number.isInteger(score) && score > 0) {
@@ -36,8 +37,8 @@ function format_move(score) {
         //console.log('for loop', i)
         shouldSwitch = false;
         
-        x = rows[i].getElementsByTagName('td')[0].getElementsByTagName('p')[0].innerHTML.split('/')[0].replace(/\s/g, '');
-        y = rows[i + 1].getElementsByTagName('td')[0].getElementsByTagName('p')[0].innerHTML.split('/')[0].replace(/\s/g, '');
+        x = rows[i].getElementsByTagName('td')[0].getElementsByTagName('p')[1].innerHTML.split('/')[0].replace(/\s/g, '');
+        y = rows[i + 1].getElementsByTagName('td')[0].getElementsByTagName('p')[1].innerHTML.split('/')[0].replace(/\s/g, '');
         //console.log(x, y)
         
         if (Number(x) > Number(y)) {
@@ -64,7 +65,6 @@ function buildLeaderboard(t) {
     .then((response) => response.json())
     .then((responseJSON) => {
           data = $.parseJSON(responseJSON).leaderboard
-          
           $('#det-list').empty()
           $('#det-list').append('<table id="det-table" class="table">' + '</table>');
         
@@ -92,7 +92,7 @@ function buildLeaderboard(t) {
           const c = new DocumentFragment();
           data_l = Object.keys(data).length;
           values = Object.values(data)
-          for (let i=1; i < data_l; i++) {
+          for (let i=1; i <= data_l; i++) {
             let d = data[i]
             let row_fields = [d.rank, d.change, d.golfer_name, d.total_score, d.thru, d.curr_round_score, 
                                 d.r1, d.r2, d.r3, d.r4]
@@ -103,6 +103,7 @@ function buildLeaderboard(t) {
         
               row_cells = []
               for (let j=0; j< row_fields_l; j++) {
+
                 row_cells.push(document.createElement('td'))
                 
                 row_cells[j].innerHTML = row_fields[j]
@@ -111,6 +112,12 @@ function buildLeaderboard(t) {
                           row_cells[j].innerHTML == row_fields[j]
                         row_cells[j].innerHTML = arrow}
                 if (j == 2) {row_cells[j].style.fontWeight = 'bold' }
+                if (j == 4 && toString(row_fields[j]).slice(-1) == 'Z') {
+                      var utcDate = row_fields[j];
+                      thru = new Date (utcDate).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})
+                    }
+                else {thru = row_fields[j]}
+  
                 row.append(row_cells[j])
                                                   }
               c.appendChild(row)

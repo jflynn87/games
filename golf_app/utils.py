@@ -37,7 +37,7 @@ def score_as_int(score, t=None, sd=None):
 
 def formatRank(rank, tournament=None):
     from golf_app.models import Tournament
-    '''takes in a sting and returns an int'''
+    '''takes in a sting and optional tournament object, returns an int'''
 
     try:
         t = Tournament.objects.get(current=True)

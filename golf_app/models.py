@@ -1,4 +1,4 @@
-from os import execv
+#from os import execv
 from django.core.exceptions import ImproperlyConfigured
 from django.db import models 
 from django.contrib.auth.models import Group, User
@@ -17,9 +17,6 @@ import urllib
 import unidecode 
 from collections import OrderedDict
 from bs4 import BeautifulSoup
-
-
-
 
 
 # Create your models here.
@@ -174,40 +171,6 @@ class Tournament(models.Model):
             from golf_app import espn_api 
             return espn_api.ESPNData().started()
 
-            ## commented block below to use API
-            #from golf_app import scrape_espn
-            #scores = scrape_espn.ScrapeESPN().get_data()
-            # status = scrape_espn.ScrapeESPN().status_check()
-            # if status == 'Tournament Field':
-            #     print ('not started based on tournamanet field in status')
-            #     print ('started check dur: ', datetime.now() - start)
-            #     return False
-            # scores = scrape_espn.ScrapeESPN().get_data()
-            # print ('started check info', scores.get('info'))
-            # if scores.get('info').get('round') == 1 and scores.get('info').get('round_status') == 'Not Started':
-            #     print ('finishing started check B: ', datetime.now() - start)
-            #     return False
-            # elif scores.get('info').get('round') == 1 and scores.get('info').get('round_status') in ['Round 1 - Play Complete', 'Round 1 - In Progress']:
-            #     print ('started based on Round 1 text')
-            #     print ('started check dur: ', datetime.now() - start)
-            #     return True
-            # elif scores.get('info').get('round') == 1 and \
-            #     len([v for k, v in scores.items() if v.get('round_score') not in ['--', '-', None]]) == 0:
-            #     print ('finishing started check false based on scores in score dict')
-            #     print ('started check dur: ', datetime.now() - start)
-            #     return False      
-            # elif scores.get('info').get('round') == 1 and \
-            #     len([v for k, v in scores.items() if v.get('round_score') not in ['--', '-', None]]) > 0:
-            #     print ('finishing started check - true based on scores on leaderboard: ')
-            #     print ('started check dur: ', datetime.now() - start)
-            #     return True      
-            # elif int(scores.get('info').get('round')) > 1:
-            #     print ('******* round above 1')
-            #     print ('finishing started check E: ', datetime.now()- start)
-            #     return True
-            # else:
-            #     print ('started check in model falling to else, check why')
-            #     return False
         except Exception as e:
             print ('started logic exception', e)
             print ('finishing started check', datetime.now())
@@ -362,7 +325,7 @@ class Tournament(models.Model):
            group_cuts = Field.objects.filter(group=group, rank__in=self.not_playing_list()).count()
 
            group_min = group.min_score(mode='full')
-           print (group_min)
+           #print (group_min)
            for gm in group_min:
                f = Field.objects.get(pk=gm[0])
                golfer_list.append(f.playerName)
@@ -445,7 +408,7 @@ class Tournament(models.Model):
             return False
 
 
-    def hiro_filter(self):
+    def users_playing(self):
         if self.pk == 1:
             pass
 
@@ -1243,6 +1206,41 @@ class ScoreDict(models.Model):
 
     def clean_dict(self):
         return  {key.replace('(a)', '').strip(): v for key, v in self.data.items()}
+    
+    
+    def validate_sd(self):
+        good = True
+        field_len = Field.objects.filter(tournament=self.tournament).count()
+        sd_len = len(self.data) - 1  #minus 1 for the info entry
+
+        if sd_len - field_len == 0:
+            pass
+        elif abs(sd_len - field_len) < 5:
+            print ("SD Match with diffs less than 5")
+        else:
+            good = False
+            print ("BAD SD based on counts: ", self.tournament, ' SD Len: ', sd_len, ' Field Len: ', field_len)
+
+        best = ScoreDetails.objects.filter(pick__playerName__tournament=self.tournament).exclude(gross_score__isnull=True).order_by('gross_score').first()
+        print (best)
+        
+        match = {k:v for k,v in self.data.items() if k != 'info' and v.get('pga_num') == \
+            best.pick.playerName.golfer.espn_number and utils.formatRank(v.get('rank'), self.tournament) == best.gross_score}
+        
+        if not match:
+            print ('not match match: ', match)
+            good = False
+        
+        return good
+
+
+    def update_sd_data(self):
+        from golf_app import scrape_espn
+        espn = scrape_espn.ScrapeESPN(tournament=self.tournament, url='https://www.espn.com/golf/leaderboard?tournamentId=' + self.tournament.espn_t_num, setup=True)
+        sd = espn.get_data()
+        self.data = sd
+        self.save()        
+        return (sd)
 
 class UserProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)

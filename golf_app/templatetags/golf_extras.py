@@ -1,5 +1,6 @@
 from django import template
-from golf_app.models import Picks, mpScores, Field, Tournament, Group
+
+from golf_app.models import Picks, mpScores, Field, Tournament, Group, TotalScore
 from django.db.models import Count, Sum
 from string import ascii_letters
 import re
@@ -56,3 +57,7 @@ def partner(partner):
     name = (regex.sub('', partner))
     return (name)
 
+@register.filter
+def total_score(user):
+    ts = TotalScore.objects.get(tournament__current=True, user=user)
+    return ts.score

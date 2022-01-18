@@ -1,5 +1,6 @@
 from rest_framework import serializers
-from golf_app.models import Field, ScoreDetails, Golfer, CountryPicks, Picks, Tournament, FedExField, Season, FedExPicks
+
+from golf_app.models import Field, ScoreDetails, Golfer, CountryPicks, Picks, Tournament, FedExField, Season, FedExPicks, BonusDetails, PickMethod
 from golf_app import espn_api
 from datetime import datetime
 
@@ -121,21 +122,6 @@ class CountryPicks(serializers.ModelSerializer):
         return countrypick.get_flag()
 
 
-# class PlayerStartedSerializer(serializers.ModelSerializer):
-#     started = serializers.SerializerMethodField('get_started')
-#     #espn_number = serializers.PrimaryKeyRelatedField(many=True, read_only=True)
-
-#     class Meta:
-#         model = Field
-#         fields = ('golfer__espn_number', 'started')
-#         depth = 2
-
-#     def get_started(self, field):
-#         obj = espn_api.ESPNData(data=self.context.get('espn_data'))
-#         started = obj.player_started(field.golfer.espn_number)
-#         return started
-
-
 class PicksSerializer(serializers.ModelSerializer):
     
     class Meta:
@@ -175,3 +161,21 @@ class FedExPicksSerializer(serializers.ModelSerializer):
         model = FedExPicks
         fields = '__all__'
         depth = 2
+
+class BonusDetailSerializer(serializers.ModelSerializer):
+    bonus_type_desc = serializers.SerializerMethodField('get_desc')
+
+    class Meta:
+        model = BonusDetails
+        fields = '__all__'
+        depth = 2
+
+    def get_desc(self, bd):
+        return bd.get_bonus_type_display()
+
+class PickMethodSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = PickMethod
+        fields = '__all__'
+        depth = 1
