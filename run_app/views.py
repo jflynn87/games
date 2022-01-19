@@ -5,13 +5,13 @@ from django.views.generic import (View,TemplateView,
                                 ListView,DetailView,
                                 CreateView,DeleteView,
                                 UpdateView)
-from braces.views import SelectRelatedMixin
+
 from run_app.models import Shoes, Run, Schedule, Plan
 from run_app.forms import CreateRunForm
 from django.db.models import Sum, Count, Max
 import datetime
 from datetime import timedelta
-from dateutil.relativedelta import relativedelta
+
 from django.db.models.functions import ExtractWeek, ExtractYear
 from django.core.exceptions import ObjectDoesNotExist
 from django.db.models import Q
