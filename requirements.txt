@@ -36,7 +36,7 @@ idna==2.8
 incremental==17.5.0
 jmespath==0.10.0
 lxml==4.7.1
-mysqlclient==2.0.1
+mysqlclient
 numpy==1.22.1
 parsel==1.5.2
 pathspec==0.5.9
