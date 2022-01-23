@@ -14,7 +14,38 @@ from unidecode import unidecode as decode
 import json
 
 
+scrape = scrape_espn.ScrapeESPN(setup=True)
+print (scrape.get_data().get('info'))
+exit()
 
+espn = espn_api.ESPNData()
+print (espn.cut_line)
+exit()
+
+season = Season.objects.get(current=True)
+
+start_ts = datetime.now()
+d = {}
+
+for p in FedExPicks.objects.filter(pick__season__season=season):
+    if d.get(p.user.username):
+        d.get(p.user.username).update({p.pick.golfer.espn_number: {'golfer_name': p.pick.golfer.golfer_name,
+                                                            'score': p.score}})
+    else:
+        d[p.user.username] = {p.pick.golfer.espn_number: {'golfer_name': p.pick.golfer.golfer_name,
+                                                            'score': p.score}}
+print ('ts duration: ', datetime.now() - start_ts)
+print (d)
+exit()
+
+total_scores = json.loads(season.get_total_points())
+for user in total_scores.keys():
+    user_start = datetime.now()
+    data = golf_serializers.FedExPicksSerializer(FedExPicks.objects.filter(pick__season__season=season, user=User.objects.get(username=user)), many=True).data
+    print ('user end ', user, '  ', datetime.now() - user_start, len(data))
+
+
+exit()
 
 
 for t in Tournament.objects.filter(pk=198):

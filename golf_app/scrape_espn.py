@@ -175,7 +175,7 @@ class ScrapeESPN(object):
                                         'tot_strokes': td[10].text,
                     }
                 elif len(td) == 12 and not score_dict.get('info').get('complete'):
-                    print (row.a.text, td[1].text)
+                    #print (row.a.text, td[1].text)
                     if td[4].text in self.tournament.not_playing_list():
                         rank = td[4].text 
                     else:
@@ -297,7 +297,8 @@ class ScrapeESPN(object):
                     cut_num = self.tournament.saved_cut_num
                 elif self.tournament.has_cut:
                     post_cut_wd = len([v for k,v in score_dict.items() if k!= 'info' and v.get('total_score') in self.tournament.not_playing_list() and \
-                        v.get('r3') != '--'])
+                        v.get('r' + str(self.tournament.saved_cut_round + 1)) != '--'])
+                    print ('post cut WD ', post_cut_wd)
                     #if score_dict.get('info').get('cut_line') == None:
                         #print ('no cut line exists')
                         #print (len([v for (k,v) in score_dict.items() if k != 'info' and v.get('total_score') == "CUT"]))

@@ -104,7 +104,7 @@ function udatePickData() {
                   
                   if (pick.thru.slice(-1) == 'Z') {
                         var utcDate = pick.thru;
-                        thru = new Date (utcDate).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})
+                        thru = new Date (utcDate).toLocaleTimeString([], {hour: 'numeric', minute:'2-digit'})
                   }
                   else {thru = pick.thru}
                   

@@ -65,6 +65,7 @@ function buildLeaderboard(t) {
     .then((response) => response.json())
     .then((responseJSON) => {
           data = $.parseJSON(responseJSON).leaderboard
+          //console.log(data)
           $('#det-list').empty()
           $('#det-list').append('<table id="det-table" class="table">' + '</table>');
         
@@ -106,17 +107,21 @@ function buildLeaderboard(t) {
 
                 row_cells.push(document.createElement('td'))
                 
-                row_cells[j].innerHTML = row_fields[j]
+                //row_cells[j].innerHTML = row_fields[j]
                 if (j == 1) {arrow = format_move(row_fields[j])
-                          
                           row_cells[j].innerHTML == row_fields[j]
                         row_cells[j].innerHTML = arrow}
-                if (j == 2) {row_cells[j].style.fontWeight = 'bold' }
-                if (j == 4 && toString(row_fields[j]).slice(-1) == 'Z') {
+                else if (j == 2) {row_cells[j].innerHTML = row_fields[j]
+                              row_cells[j].style.fontWeight = 'bold' }
+                else if (j==4 && row_cells[j].toString().length >  4){
+                  row_cells[j].innerHTML = row_fields[j]
+                }
+                else if (j == 4 && row_fields[j].slice(-1) == 'Z') {
                       var utcDate = row_fields[j];
-                      thru = new Date (utcDate).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})
+                      row_cells[j].innerHTML = new Date (utcDate).toLocaleTimeString([], {hour: 'numeric', minute:'2-digit'})
+                      
                     }
-                else {thru = row_fields[j]}
+                else {row_cells[j].innerHTML = row_fields[j]}
   
                 row.append(row_cells[j])
                                                   }

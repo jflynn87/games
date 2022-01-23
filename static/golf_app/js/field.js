@@ -404,6 +404,9 @@ $(document).on("click", "#download_excel", function() {
     'FedEx Points', 'Season Played',	'Season Won',	'Season 2-10',	'Season 11-29',	'Season 30 - 49',	'Season > 50',	'Season Cut',
      'SG Off Tee Rank', 'SG Off Tee', 'SG Approach Rank', 'SG Approach', 'SG Around Green Rank', 
      'SG Around Green', 'SG Putting Rank', 'SG Putting']
+    
+     for (let k=0; k<5; k++) {field_header.push(golfers[0].results[order[k]].t_name)}
+     
     fieldRows = []
     $.each(field, function(i, golfer) {
       row = {}
@@ -458,7 +461,16 @@ $(document).on("click", "#download_excel", function() {
         }
         catch (e) {row['sg_putting'] = 'n/a'}
 
-
+        // console.log('G ', golfer.fields.golfer)
+        // console.log(golfers)
+        
+        // console.log(Object.values(golfers).Object.values()['golfer_pga_num'])
+        // console.log(Object.values(golfers.golfer_pga_num[golfer.fields.golfer]))
+        // console.log(golfers)
+        // row['t0'] = golfers.golfer_pga_num[golfer.fields.golfer].results[0].rank
+        // row['t1'] = golfers.golfer_pga_num[golfer.fields.golfer].results[1].rank
+        // row['t2'] = golfers.golfer_pga_num[golfer.fields.golfer].results[2].rank
+        // row['t3'] = golfers.golfer_pga_num[golfer.fields.golfer].results[3].rank
 
 
 

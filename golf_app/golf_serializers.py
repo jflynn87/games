@@ -160,7 +160,7 @@ class FedExPicksSerializer(serializers.ModelSerializer):
     class Meta:
         model = FedExPicks
         fields = '__all__'
-        depth = 2
+        depth = 1
 
 class BonusDetailSerializer(serializers.ModelSerializer):
     bonus_type_desc = serializers.SerializerMethodField('get_desc')

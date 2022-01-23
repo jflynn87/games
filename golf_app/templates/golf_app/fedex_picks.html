@@ -5,13 +5,18 @@
 {%load golf_extras%}
 
 {% block body_block %}
+<p id='fedex_season_key' hidden>{{season.pk}}</p>
+<p id='season_key' hidden>{{season.season.pk}}</p>
+
 <h1>{{season.season}} FedEx Cup Season Picks {%if not season.allow_picks%} - Picks Closed {%endif%}</h1>
 
 
 <p id='allow_picks' hidden>{{ season.allow_picks|yesno:"true,false,none" }}</p>
 <div id='intro'></div>
-<div id='field'></div>
-<div id='all_picks'></div>
+<div id='status'><h4>Loading....</h4></div>
+<div id='field' hidden></div>
+<div id='all_picks' hidden></div>
+<div id='scores' hidden></div>
 <div id='bottom_sect' class='field_stats_display'></div>
 {%compress js%}
 <script type="text/javascript" src="{%static 'golf_app/js/fedex_field.js'%}"></script> 

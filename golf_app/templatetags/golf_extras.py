@@ -59,5 +59,9 @@ def partner(partner):
 
 @register.filter
 def total_score(user):
-    ts = TotalScore.objects.get(tournament__current=True, user=user)
-    return ts.score
+    try:
+        ts = TotalScore.objects.get(tournament__current=True, user=user)
+        return ts.score
+    except Exception:
+        return 0
+    

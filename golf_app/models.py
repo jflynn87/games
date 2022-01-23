@@ -54,8 +54,6 @@ class Season(models.Model):
         fed_ex_scores= {}
         if not tournament:
             for u in self.get_users('obj'):
-                #u = User.objects.get(pk=user.get('user'))
-                #score_dict[u.username] = TotalScore.objects.filter(tournament__season=self, user=u).aggregate(Sum('score'))
                 t_scores = TotalScore.objects.filter(tournament__season=self, user=u).aggregate(Sum('score'))
                 user_fed_ex = FedExPicks.objects.filter(pick__season__season=self, user=u).aggregate(Sum('score'))
                 if not user_fed_ex.get('score__sum'):

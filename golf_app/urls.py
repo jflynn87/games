@@ -54,6 +54,7 @@ urlpatterns= [
     path('fedex_picks_view/', views.FedExPicksView.as_view(), name='fedex_picks_view'),
     path('fedex_field/<str:filter>', views.FedExFieldAPI.as_view(), name='fedex_field'),
     path('fedex_picks_list/', views.FedExPicksListView.as_view(), name='fedex_picks_list'),
+    path('fedex_picks_api/<int:fedex_season>/<str:filter>', views.FedExPicksAPI.as_view(), name='fedex_picks_api'),
     path('season_points/<str:season>/<str:filter>', views.SeasonPointsAPI.as_view(), name='season_points'),
     path('ryder_cup_scores/', views.RyderCupScoresView.as_view(), name='ryder_cup_scores'),
     path('ryder_cup_score_api/', views.RyderCupScoresAPI.as_view(), name='ryder_cup_score_api'),

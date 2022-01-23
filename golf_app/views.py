@@ -1595,7 +1595,7 @@ class GetGolfers(APIView):
             data = {'golfers': golfers.data,
                     'field': field}
 
-            return Response(data, status=200)
+            return JsonResponse(data, status=200)
         except Exception as e:
             print ('get golfers data exception: ', e)
             return JsonResponse({'msg': e})
@@ -1757,6 +1757,34 @@ class FedExPicksListView(LoginRequiredMixin,ListView):
          'picks_list': FedExPicks.objects.filter(user=self.request.user, pick__season__season__current=True),
                         })
         return context
+
+
+class FedExPicksAPI(APIView):
+    def get(self, request, fedex_season, filter):
+        start = datetime.datetime.now()
+        fedex_season = FedExSeason.objects.get(pk=fedex_season)
+
+        d = {}
+
+        try:
+            for p in FedExPicks.objects.filter(pick__season=fedex_season):
+                if d.get(p.user.username):
+                    d.get(p.user.username).update({p.pick.golfer.espn_number: {'golfer_name': p.pick.golfer.golfer_name,
+                                                                                'score': p.score}})
+                else:
+                    d[p.user.username] = {p.pick.golfer.espn_number: {'golfer_name': p.pick.golfer.golfer_name,
+                                                                'score': p.score}}
+        except Exception as e:
+            d['error'] = {'msg': str(e)}
+        
+        
+        print ('duration FEDEXpicks API: ', datetime.datetime.now() - start)
+        return JsonResponse(d, status=200, safe=False)
+
+
+
+
+
 
 
 class PriorYearStatsAPI(APIView):
@@ -2237,86 +2265,6 @@ class MostPickedAPI(APIView):
         print ('most picked API time: ', datetime.datetime.now() - start)
 
         return JsonResponse(json.dumps(d), status=200, safe=False)
-
-
-# class MostPickedAPI(APIView):
-#     def get(self, request, season):
-        
-#         start = datetime.datetime.now()
-#         d = {}
-#         try:
-#             if season == 'all':
-#                 s = Season.objects.get(current=True)
-#             else:
-#                 s = Season.objects.get(pk=season)
-#             for u in s.get_users('obj'):
-#                 if season == 'all':
-#                     picks = Picks.objects.filter(user=u).order_by().values('playerName__golfer__golfer_name').annotate(c=Count('playerName__golfer__golfer_name'))
-#                     if picks:
-#                         most_picked = max(picks, key=lambda x:x['c'])
-#                     else:
-#                         most_picked = {'c': 'None'}
-#                 else:
-#                     picks = Picks.objects.filter(user=u, playerName__tournament__season=s).order_by().values('playerName__golfer__golfer_name').annotate(c=Count('playerName__golfer__golfer_name'))
-#                     print (picks)
-#                     if picks:
-#                         most_picked = max(picks, key=lambda x:x['c'])
-#                     else:
-#                         most_picked = {'c': 'None'}
-
-
-#                 d[u.username] = {'most_picked_golfer': most_picked.get('playerName__golfer__golfer_name'),
-#                                 'times_picked': most_picked.get('c'),
-
-#                                 }
-
-#         except Exception as e:
-#             print ('Most Picked API error: ', e)
-#             d['error'] = {'msg': str(e)}
-#         print (d)
-#         print ('most picked API time: ', datetime.datetime.now() - start)
-
-#         return JsonResponse(json.dumps(d), status=200, safe=False)
-
-
-# class MostPickedAPI(APIView):
-#     def get(self, request, season):
-        
-#         start = datetime.datetime.now()
-#         d = {}
-#         try:
-#             if season == 'all':
-#                 s = Season.objects.get(current=True)
-#             else:
-#                 s = Season.objects.get(pk=season)
-#             for u in s.get_users('obj'):
-#                 if season == 'all':
-#                     picks = Picks.objects.filter(user=u).order_by().values('playerName__golfer__golfer_name').annotate(c=Count('playerName__golfer__golfer_name'))
-#                     if picks:
-#                         most_picked = max(picks, key=lambda x:x['c'])
-#                     else:
-#                         most_picked = {'c': 'None'}
-#                 else:
-#                     picks = Picks.objects.filter(user=u, playerName__tournament__season=s).order_by().values('playerName__golfer__golfer_name').annotate(c=Count('playerName__golfer__golfer_name'))
-#                     print (picks)
-#                     if picks:
-#                         most_picked = max(picks, key=lambda x:x['c'])
-#                     else:
-#                         most_picked = {'c': 'None'}
-
-
-#                 d[u.username] = {'most_picked_golfer': most_picked.get('playerName__golfer__golfer_name'),
-#                                 'times_picked': most_picked.get('c'),
-
-#                                 }
-
-#         except Exception as e:
-#             print ('Most Picked API error: ', e)
-#             d['error'] = {'msg': str(e)}
-#         print (d)
-#         print ('most picked API time: ', datetime.datetime.now() - start)
-
-#         return JsonResponse(json.dumps(d), status=200, safe=False)
 
 
 class PGALeaderboard(APIView):

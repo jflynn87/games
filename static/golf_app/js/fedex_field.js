@@ -1,24 +1,22 @@
 $(document).ready(function () {
     start = new Date()
 
-    $('#intro').append('<p>Pick 30 the golfers who will make the Tour Championship</p> \
-     <p>-30 points for any correct pick</p><p>Additional -50 for any pick that was outside the top 30 OWGR as of the start of the season</p> \
-     <p>+20 for any pick that was in the top 30 OWGR but doesn' + "'" + 't make it</p> \
-     <p>Total points included in season total like a regular tournament.</p> <br>')
-
-    // $('#intro').append('<p><i id=picks_toggle class="fas fa-toggle-on large">Show All Picks</i></p>')
-    // $('#picks_toggle').on('click', function() {toggle_picks()})
 
     if ($('#allow_picks').text() == 'true') {
-        $('#field').append('<div><h4 id=loading_msg>Loading .... </h4></div>')
+        $('#intro').append('<p>Pick 30 the golfers who will make the Tour Championship</p>')
+        //$('#field').append('<div><h4 id=loading_msg>Loading .... </h4></div>')
         $('#all_picks').hide()
         user_picks()
     }
     else {
         $('#field').hide()
-        $('#all_picks').append('<div><h4 id=loading_msg>Loading .... </h4></div>')
-        get_all_picks()
+        //$('#all_picks').append('<div><h4 id=loading_msg>Loading .... </h4></div>')
+        //get_all_picks()  maybe figure out how to toggle to this 
+        score_view()
     }
+    $('#intro').append('<p>-30 points for any correct pick</p><p>Additional -50 for any pick that was outside the top 30 OWGR as of the start of the season</p> \
+    <p>+20 for any pick that was in the top 30 OWGR but doesn' + "'" + 't make it</p> \
+    <p>Total points included in season total like a regular tournament.</p> <br>')
 
 })
     
@@ -257,7 +255,8 @@ function user_picks() {
             
             frag.appendChild(form)
             
-            document.getElementById('loading_msg').hidden = true
+            //document.getElementById('loading_msg').hidden = true
+            document.getElementById('status').hidden = true
             document.getElementById('field').appendChild(frag);
             document.getElementById('field').append(curr_owgr_sort)
             document.getElementById('field').append(prior_fedex_sort)
@@ -348,6 +347,7 @@ function sort_table(table, cell_i, order) {
         var ascending = true
         if (order != 'asc') {var ascending = false}
         return ascending ? ( xNum - yNum ) : ( yNum - xNum );
+
     })
         
     for( let row of tRows ) {
@@ -518,9 +518,125 @@ function get_all_picks() {
         picks_frag.appendChild(pick_tbl)
         document.getElementById('all_picks').appendChild(picks_frag)
         sort_table($('#all_picks_tbl'), 3, 'asc')
+        $('#status').attr('hidden', true)
+        $('#all+picks_tbl').attr('hidden', false)
         $('#loading_msg').hide()
     
 }
 
 })
+}
+
+function score_view() {
+    start = new Date()
+    //fetch('/golf_app/season_points/' + $('#season_key').text() + '/all')
+    Promise.all([
+        fetch('/golf_app/season_points/' + $('#season_key').text() + '/all').then(response=>response.json()),
+        fetch('/golf_app/fedex_picks_api/' + $('#fedex_season_key').text() + '/all').then(response=>response.json())
+    ])
+    //.then(response=> response.json())
+    .then((responseJSON) => {
+        total_points = $.parseJSON(responseJSON[0])
+        picks = responseJSON[1]
+        console.log('points', total_points)
+        console.log('picks', picks)
+        
+        const score_frag = new DocumentFragment()
+
+        score_tbl = document.createElement('table')
+        score_tbl.classList.add('table', 'table-sm', 'table-bordered', 'table-stripped')
+        score_tbl.id = 'score_tbl'
+        header = document.createElement('thead')
+        
+        th0 = document.createElement('th')
+        th0.innerHTML = 'Player'
+        th0a = document.createElement('th')
+        th0a.innerHTML = 'Total Points'
+        th0b = document.createElement('th')
+        th0b.innerHTML = '-80 point picks'
+        th1 = document.createElement('th')
+        th1.innerHTML = '-30 point picks'
+        th2 = document.createElement('th')
+        th2.innerHTML = '+20 point picks '
+        th3 = document.createElement('th')
+        th3.innerHTML = '0 point picks '
+
+        header.appendChild(th0)
+        header.appendChild(th0a)
+        header.appendChild(th0b)
+        header.appendChild(th1)
+        header.appendChild(th2)
+        header.appendChild(th3)
+
+        score_tbl.appendChild(header)
+        score_frag.appendChild(score_tbl)
+
+        user_l = Object.keys(total_points).length
+        
+        for (let i=0; i < user_l; i++) {
+            var row = document.createElement('tr')
+            row.id = 'user_' + Object.keys(total_points)[i]
+            row.classList.add('small')
+            userCell = document.createElement('th')
+            userCell.innerHTML = Object.keys(total_points)[i]
+            pointsCell = document.createElement('td')
+            pointsCell.innerHTML = Object.values(total_points)[i].fed_ex_score
+            row.appendChild(userCell)
+            row.appendChild(pointsCell)
+            score_tbl.appendChild(row)    
+
+        }
+        document.getElementById('scores').appendChild(score_frag)
+        
+        $.each(picks, function(user, pick_data) {
+            cell80 = document.createElement('td')
+            cell30 = document.createElement('td')
+            cell20 = document.createElement('td')
+            cell0 = document.createElement('td')
+            
+            $.each(pick_data, function(id, pick){
+               
+                if (pick.score == -80) {
+                    if (cell80.innerHTML == '') {
+                        cell80.append(pick.golfer_name)
+                    }
+                    else {cell80.append(', ' + pick.golfer_name)}
+                }
+                else if (pick.score == -30) {
+                    if (cell30.innerHTML == '') {
+                    cell30.append(pick.golfer_name)}
+                    else {cell30.append(', ' + pick.golfer_name)}
+                }   
+                else if (pick.score == 20) {
+                    if (cell20.innerHTML == '') {
+                        cell20.append(pick.golfer_name)
+                    }
+                    else
+                        {cell20.append(', ' + pick.golfer_name)}
+                }
+                else if (pick.score == 0) {
+                    if (cell0.innerHTML == '') {
+                        cell0.append(pick.golfer_name)
+                    }
+                    else {cell0.append(', ' + pick.golfer_name)}
+                    
+                }
+            })
+            
+            document.getElementById('user_' + user).appendChild(cell80)
+            document.getElementById('user_' + user).appendChild(cell30)
+            document.getElementById('user_' + user).appendChild(cell20)
+            document.getElementById('user_' + user).appendChild(cell0)
+        })
+        
+        
+        sort_table($('#score_tbl'), 2, 'dsc')
+        $('#status').attr('hidden', true)
+        $('#scores').attr('hidden', false)
+        finish = new Date()
+        console.log('duration: ', finish - start)
+    })
+
+
+
 }

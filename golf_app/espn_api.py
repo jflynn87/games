@@ -329,14 +329,14 @@ class ESPNData(object):
             return None
 
     def cut_line(self):
-        cut_info = {'line_type': None,
-                    'cut_score': None}
+        cut_info = {'line_type': '',
+                    'cut_score': 'No Cut Line'}
 
-        if self.event_data.get('tournament').get('cutRound') and int(self.event_data.get('tournament').get('cutRound')) <= int(self.get_round()):
+        if self.event_data.get('tournament').get('cutRound') and int(self.event_data.get('tournament').get('cutRound')) < int(self.get_round()):
             cut_info.update({'line_type': 'Actual',
                             'cut_score': self.event_data.get('tournament').get('cutScore')})
 
-        elif self.t.has_cut and int(self.get_round()) <= int(self.t.saved_cut_round) and self.event_data.get('tournament').get('cutRound') == 0:
+        elif self.t.has_cut and int(self.get_round()) <= int(self.t.saved_cut_round): #and self.event_data.get('tournament').get('cutRound') == 0:
             max_rank = max(int(x.get('status').get('position').get('id')) for x in self.field_data \
                      if int(x.get('status').get('position').get('id')) < int(self.t.saved_cut_num)) 
             cut_score = [x.get('score').get('displayValue') for x in self.field_data if self.get_rank(x.get('id')) == str(max_rank)][0]
