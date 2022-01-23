@@ -19,7 +19,8 @@
         <a href="{% url 'golf_app:new_field_list' %}"> <button class="btn btn-primary">Make Picks</button></a>
         <br>
         <br>
-        <a href="{% url 'golf_app:new_scores'%}"> <button class="btn btn-primary">Current Week Scores</button></a>
+        <!-- <a href="{% url 'golf_app:new_scores'%}"> <button class="btn btn-primary">Current Week Scores</button></a> -->
+        <a href="{% url 'golf_app:api_scores_view'%}"> <button class="btn btn-primary">Current Week Scores</button></a>
         <br>
         <br>
         <a href="{% url 'golf_app:total_score'%}"> <button class="btn btn-primary">Season Totals</button></a>

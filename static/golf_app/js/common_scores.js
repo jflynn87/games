@@ -113,7 +113,7 @@ function buildLeaderboard(t) {
                         row_cells[j].innerHTML = arrow}
                 else if (j == 2) {row_cells[j].innerHTML = row_fields[j]
                               row_cells[j].style.fontWeight = 'bold' }
-                else if (j==4 && row_cells[j].toString().length >  4){
+                else if (j==4 && row_cells[j].toString().length <  4){
                   row_cells[j].innerHTML = row_fields[j]
                 }
                 else if (j == 4 && row_fields[j].slice(-1) == 'Z') {
