@@ -553,7 +553,7 @@ class GetScores(APIView):
                 score_dict = olympic_sd.OlympicScores().get_sd()
                 print ('Olympic score dict: ', score_dict)
             else:
-                score_dict = scrape_espn.ScrapeESPN().get_data()
+                score_dict = scrape_espn.ScrapeESPN(setup=True).get_data()
         else:
             print ('not scraping')
             try:
@@ -1587,18 +1587,18 @@ class GetGolfers(APIView):
         start = datetime.datetime.now()
         
         try:
-            golfers = golf_serializers.GolferSerializer(Golfer.objects.all(), many=True)
-            #golfers = golf_serializers.GolferSerializer(Golfer.objects.filter(golfer_name__in=['Justin Thomas', 'Jon Rahm']), many=True)
+            golfers = golf_serializers.GolferSerializer(Golfer.objects.all(), many=True).data
+            #golfers = serializers.serialize('json', Golfer.objects.all(), use_natural_foreign_keys=True)
             field = serializers.serialize('json', Field.objects.filter(tournament__current=True),  use_natural_foreign_keys=True)
             
-            #print ('DATA ', request.data)
-            data = {'golfers': golfers.data,
+            #data = {'golfers': golfers.data,
+            data = {'golfers': golfers,
                     'field': field}
 
             return JsonResponse(data, status=200)
         except Exception as e:
-            print ('get golfers data exception: ', e)
-            return JsonResponse({'msg': e})
+            print ('get golfers data exception: ', str(e))
+            return JsonResponse({'msg': str(e)})
 
 
 class PicksSummaryData(APIView):
@@ -2002,7 +2002,7 @@ class EspnApiScores(APIView):
                     today_score = 'find'  #fix this, but does it matter?
                     gross_score = rank
                 thru = espn.get_thru(pick.playerName.golfer.espn_number)
-                to_par = golfer_data.get('score').get('displayValue')
+                to_par = golfer_data.get('statistics')[0].get('displayValue')
                 sod_position = golfer_data.get('movement')
 
                 sd = ScoreDetails.objects.filter(pick__playerName__tournament=t, pick__playerName=pick.playerName).update(  #this is just 1 pick. fix the filter to get all picks

@@ -106,14 +106,12 @@ function buildLeaderboard(t) {
               for (let j=0; j< row_fields_l; j++) {
 
                 row_cells.push(document.createElement('td'))
-                
-                //row_cells[j].innerHTML = row_fields[j]
                 if (j == 1) {arrow = format_move(row_fields[j])
                           row_cells[j].innerHTML == row_fields[j]
                         row_cells[j].innerHTML = arrow}
                 else if (j == 2) {row_cells[j].innerHTML = row_fields[j]
                               row_cells[j].style.fontWeight = 'bold' }
-                else if (j==4 && row_cells[j].toString().length <  4){
+                else if (j==4 && row_fields[j].toString().length <  4){
                   row_cells[j].innerHTML = row_fields[j]
                 }
                 else if (j == 4 && row_fields[j].slice(-1) == 'Z') {

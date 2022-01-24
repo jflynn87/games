@@ -14,8 +14,18 @@ from unidecode import unidecode as decode
 import json
 
 
-scrape = scrape_espn.ScrapeESPN(setup=True)
-print (scrape.get_data().get('info'))
+
+espn = espn_api.ESPNData().all_data
+with open('amex_mid_r4.json', 'w') as outfile:
+    json.dump(espn, outfile)
+
+with open('amex_mid_r4.json') as json_file:
+    data = json.load(json_file)
+
+
+espn_1 = espn_api.ESPNData(data=data)
+print (espn_1.field())
+
 exit()
 
 espn = espn_api.ESPNData()

@@ -330,7 +330,7 @@ $(document).on("click", "#download_excel", function() {
         golfers = json.golfers
         field = $.parseJSON(json.field)
         var createXLSLFormatObj = [];
-
+        
         //use order to sort from most recent tournament to first
         order = Object.keys(golfers[0].results).sort(function(a,b) {return b - a})
 
@@ -405,7 +405,7 @@ $(document).on("click", "#download_excel", function() {
      'SG Off Tee Rank', 'SG Off Tee', 'SG Approach Rank', 'SG Approach', 'SG Around Green Rank', 
      'SG Around Green', 'SG Putting Rank', 'SG Putting']
     
-     for (let k=0; k<5; k++) {field_header.push(golfers[0].results[order[k]].t_name)}
+     for (let k=0; k<4; k++) {field_header.push(golfers[0].results[order[k]].t_name)}
      
     fieldRows = []
     $.each(field, function(i, golfer) {
@@ -461,13 +461,10 @@ $(document).on("click", "#download_excel", function() {
         }
         catch (e) {row['sg_putting'] = 'n/a'}
 
-        // console.log('G ', golfer.fields.golfer)
-        // console.log(golfers)
-        
-        // console.log(Object.values(golfers).Object.values()['golfer_pga_num'])
-        // console.log(Object.values(golfers.golfer_pga_num[golfer.fields.golfer]))
-        // console.log(golfers)
-        // row['t0'] = golfers.golfer_pga_num[golfer.fields.golfer].results[0].rank
+        row['t0'] = Object.values(golfer.fields.recent)[3].rank
+        row['t1'] = Object.values(golfer.fields.recent)[2].rank
+        row['t2'] = Object.values(golfer.fields.recent)[2].rank
+        row['t3'] = Object.values(golfer.fields.recent)[0].rank
         // row['t1'] = golfers.golfer_pga_num[golfer.fields.golfer].results[1].rank
         // row['t2'] = golfers.golfer_pga_num[golfer.fields.golfer].results[2].rank
         // row['t3'] = golfers.golfer_pga_num[golfer.fields.golfer].results[3].rank

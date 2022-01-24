@@ -337,6 +337,7 @@ class Week(models.Model):
             return True
         else:
             return False
+
 @receiver(post_save, sender=Week)
 def update_analyitcs(sender, **kwargs):
     print (kwargs.get('instance'))
