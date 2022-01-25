@@ -188,6 +188,21 @@ class NewFieldListView(LoginRequiredMixin,TemplateView):
                     response = {'status': 0, 'message': msg} 
                     return HttpResponse(json.dumps(response), content_type='application/json')
 
+        if tournament.started() and not tournament.late_picks:
+            espn = espn_api.ESPNData()
+            msg = 'Golfer already palying: '
+            error = False
+            for p in pick_list:
+                f = Field.objects.get(pk=p)
+                if espn.player_started(f.golfer.espn_number):
+                    print ('picked started golfer: ', self.request.user, f)
+                    msg = msg + ' ' + f.playerName 
+                    error = True
+            if error:
+                response = {'status': 0, 'message': msg} 
+                return HttpResponse(json.dumps(response), content_type='application/json')
+            
+        
         print ('user', user)
         print ('started', tournament.started())
 
@@ -488,7 +503,9 @@ def setup(request):
            return HttpResponse('Not Authorized')
     if request.method == "POST":
         url_number = request.POST.get('tournament_number')
+        espn_num = request.POST.get('espn_t_num')
         print (url_number, type(url_number))
+        print ('espn_t_num: ', espn_num)
         #if url_number == '470':  #Match Play special logic
         #    populateMPField.create_groups(url_number)
         #    return HttpResponseRedirect(reverse('golf_app:field'))
@@ -498,11 +515,11 @@ def setup(request):
                 return render(request, 'golf_app/setup.html', {'error_msg': error_msg})
             else:
                 print ('creating field A')
-                populateField.create_groups(url_number)
+                populateField.create_groups(url_number, espn_num)
                 return HttpResponseRedirect(reverse('golf_app:new_field_list'))
         except ObjectDoesNotExist:
             print ('obj does not exist exept - creating field')
-            populateField.create_groups(url_number)
+            populateField.create_groups(url_number, espn_num)
             return HttpResponseRedirect(reverse('golf_app:new_field_list'))
         except Exception as e:
             print ('error', e)
@@ -1244,23 +1261,28 @@ class PriorResultAPI(APIView):
         try:
             #g_num = group.split('-')[2]
             t= Tournament.objects.get(pk=request.data.get('tournament_key'), season__current=True)
-            #espn_data = espn_api.ESPNData().get_all_data()
-            espn_data = espn_api.ESPNData()
-            context = {'espn_data': espn_data, 'user': self.request.user}
-            if request.data.get('group') == 'all':
-                data= golf_serializers.NewFieldSerializer(Field.objects.filter(tournament=t), context=context, many=True).data
-            elif len(request.data.get('golfer_list')) == 0:
-                data= golf_serializers.NewFieldSerializer(Field.objects.filter(tournament=t, group__number=request.data.get('group')), context=context, many=True).data
+            if not t.started():  #skip golfer started data/checks
+                if request.data.get('group') == 'all':
+                    data= golf_serializers.PreStartFieldSerializer(Field.objects.filter(tournament=t), many=True).data
+                elif len(request.data.get('golfer_list')) == 0:
+                    data= golf_serializers.PreStartFieldSerializer(Field.objects.filter(tournament=t, group__number=request.data.get('group')), many=True).data
+                else:
+                    data = golf_serializers.PreStartFieldSerializer(Field.objects.filter(tournament=t, golfer__espn_number__in=request.data.get('golfer_list')), many=True).data
             else:
-                data = golf_serializers.NewFieldSerializer(Field.objects.filter(tournament=t, golfer__espn_number__in=request.data.get('golfer_list')), context=context, many=True).data
-            #data = serializers.serialize("json", Field.objects.filter(tournament=t, golfer__espn_number__in=request.data.get('golfer_list')), use_natural_foreign_keys=True)
-            #print(data)
+                espn_data = espn_api.ESPNData()
+                context = {'espn_data': espn_data, 'user': self.request.user}
+                if request.data.get('group') == 'all':
+                    data= golf_serializers.NewFieldSerializer(Field.objects.filter(tournament=t), context=context, many=True).data
+                elif len(request.data.get('golfer_list')) == 0:
+                    data= golf_serializers.NewFieldSerializer(Field.objects.filter(tournament=t, group__number=request.data.get('group')), context=context, many=True).data
+                else:
+                    data = golf_serializers.NewFieldSerializer(Field.objects.filter(tournament=t, golfer__espn_number__in=request.data.get('golfer_list')), context=context, many=True).data
         except Exception as e:
             print ('prior result api error: ', e) 
             data = json.dumps({'msg': str(e)})
                 
         #return JsonResponse(data, status=200)
-        print ('prior result duration: ', datetime.datetime.now() - start)
+        print ('prior result duration Group: ', request.data.get('group'), datetime.datetime.now() - start)
         return JsonResponse(data, status=200, safe=False)
 
 

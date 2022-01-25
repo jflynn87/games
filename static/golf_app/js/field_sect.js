@@ -200,11 +200,6 @@ function checkStarted() {
 .then((responseJSON) => {
     started = $.parseJSON(responseJSON)
     console.log('started ', started, started.started, started.late_picks)
-//    if (started.started  && ! started.late_picks) {        
-        //$("#make_picks").attr('hidden', '')
-        //$('#too_late').removeAttr('hidden')
-        //$('#sub_button').remove()
-//    }
     checkbox_input = document.getElementsByClassName('my-checkbox')
     var checkbox_l = checkbox_input.length
     radio_input = document.getElementsByClassName('my-radio')
@@ -223,6 +218,7 @@ function checkStarted() {
             }
                                                 }
     else if(started.started && ! started.late_picks) {
+        $('#status').text("Ready for Picks")
         for (let i=0; i < checkbox_l; i++){
             //console.log(checkbox_input[i].parentElement.parentElement.classList)
             //if (pick_array.indexOf(field.id) != -1) {
@@ -414,6 +410,7 @@ function create_post() {
      else {
          console.log(d.message)
          $('#error_msg').text(d.message).addClass('alert alert-danger')
+         clear_submitting()
          window.scrollTo(0,0);
      }
      console.log(d)
@@ -446,6 +443,7 @@ function create_post_random() {
      else {
          console.log(d.message)
          $('#error_msg').text(d.message).addClass('alert alert-danger')
+         clear_submitting()
          window.scrollTo(0,0);
      }
      console.log(d)
@@ -462,6 +460,19 @@ function toggle_submitting() {
     $('#bottom').append('<p class=status style="text-align:center;"> Submitting picks, one moment....')
 
 }
+
+
+function clear_submitting() {
+    $('#sub_button').removeAttr('disabled').attr('class', 'btn btn-primary')
+    $('#sub_button').prop('value', 'Submit Picks')
+    $('#random_btn').removeAttr('disabled').attr('class', 'btn btn-primary')
+    $('#random_btn').prop('value', 'Random')
+    $('.status').empty()
+    //$('#top_sect').append('<p class=status style="text-align:center;"> Submitting picks, one moment....')
+    //$('#bottom').append('<p class=status style="text-align:center;"> Submitting picks, one moment....')
+
+}
+
 
 function formatMenMedals(data) {
 

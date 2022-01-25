@@ -15,18 +15,27 @@ import json
 
 
 
-espn = espn_api.ESPNData().all_data
-with open('amex_mid_r4.json', 'w') as outfile:
-    json.dump(espn, outfile)
-
-with open('amex_mid_r4.json') as json_file:
-    data = json.load(json_file)
+t = Tournament.objects.get(current=True)
+start = datetime.now()
 
 
-espn_1 = espn_api.ESPNData(data=data)
-print (espn_1.field())
+for g in Group.objects.filter(tournament=t):
+    loop_start = datetime.now()
+    espn_data = espn_api.ESPNData()
+    context = {'espn_data': espn_data, 'user': User.objects.get(pk=1)}
 
-exit()
+    ser = golf_serializers.NewFieldSerializer(Field.objects.filter(tournament=t, group__number=g.number), context=context, many=True).data
+    #print (g, datetime.now() - loop_start)
+
+print ('loop duraion ', datetime.now() - start)
+
+all_start = datetime.now()
+espn_data = espn_api.ESPNData()
+context = {'espn_data': espn_data, 'user': User.objects.get(pk=1)}
+
+ser = golf_serializers.NewFieldSerializer(Field.objects.filter(tournament=t), context=context, many=True).data
+print ('all option dur: ', datetime.now() - all_start)
+exit() 
 
 espn = espn_api.ESPNData()
 print (espn.cut_line)

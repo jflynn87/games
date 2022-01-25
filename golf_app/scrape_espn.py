@@ -17,7 +17,9 @@ class ScrapeESPN(object):
             self.tournament=tournament
         
         if not url:
-            self.url = "https://www.espn.com/golf/leaderboard"
+            #self.url = "https://www.espn.com/golf/leaderboard"
+            t_num = self.tournament.espn_t_num
+            self.url = 'https://www.espn.com/golf/leaderboard?tournamentId=' + str(t_num)
         else:
             self.url = url
 

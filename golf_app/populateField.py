@@ -19,10 +19,10 @@ from operator import itemgetter
 
 
 @transaction.atomic
-def create_groups(tournament_number):
+def create_groups(tournament_number, espn_t_num=None):
 
-    '''takes in a tournament number for pgatour.com to get json files for the field and score.  initializes all tables for the tournament'''
-    print ('increate groups')
+    '''takes in 2 tournament numbers for pgatour.com and espn.com to get json files for the field and score.  initializes all tables for the tournament'''
+
     season = Season.objects.get(current=True)
 
     if Tournament.objects.filter(season=season).count() > 0 and tournament_number != '999':  #skip for olympics
@@ -39,7 +39,7 @@ def create_groups(tournament_number):
         print ('setting up first tournament of season')
 
     print ('going to get_field')
-    tournament = setup_t(tournament_number)
+    tournament = setup_t(tournament_number, espn_t_num)
     owgr_rankings =  get_worldrank()
     field = get_field(tournament, owgr_rankings)
     print ('field length: ', len(field))
@@ -133,7 +133,7 @@ def get_worldrank():
     
     return ranks
 
-def setup_t(tournament_number):
+def setup_t(tournament_number, espn_t_num=None):
     '''takes a t number as a string, returns a tournament object'''
     season = Season.objects.get(current=True)
     print ('getting field')
@@ -169,7 +169,10 @@ def setup_t(tournament_number):
         tourny.saved_cut_num = 65
         tourny.saved_round = 1
         tourny.saved_cut_round = 2
-        tourny.espn_t_num = scrape_espn.ScrapeESPN(tourny).get_t_num()
+        if espn_t_num:
+            tourny.espn_t_num = espn_t_num
+        else:    
+            tourny.espn_t_num = scrape_espn.ScrapeESPN(tourny).get_t_num()
         tourny.save()
     elif tournament_number == '999':
         json_url = ''
@@ -423,7 +426,7 @@ def configure_ryder_cup_groups(tournment):
 def create_field(field, tournament):
     '''takes a dict and tournament object, updates creates field database, returns a dict'''
     sorted_field = {}
-    espn_data = get_espn_players()
+    espn_data = get_espn_players(tournament)
     if tournament.pga_tournament_num == '470':
         sorted_field = field
     elif tournament.pga_tournament_num == '018':
@@ -596,7 +599,7 @@ def create_olympic_field(field, tournament):
 def create_ryder_cup_field(field, tournament):
     '''takes a dict and tournament object, updates creates field database, returns a dict'''
     sorted_field = {}
-    espn_data = get_espn_players()
+    espn_data = get_espn_players(tournament)
     intl_d = {k:v for k,v in field.items() if v.get('team') == "INTL"}
     sorted_intl = OrderedDict({k:v for k,v in sorted(intl_d.items(), key=lambda item: int(item[1].get('curr_owgr')))})
     usa_d = {k:v for k,v in field.items() if v.get('team') == "USA"}
@@ -798,8 +801,8 @@ def get_espn_num(player, espn_data):
     return
 
 
-def get_espn_players():
-    espn_data = scrape_espn.ScrapeESPN(None, None, True, True).get_data()
+def get_espn_players(t):
+    espn_data = scrape_espn.ScrapeESPN(t, None, True, True).get_data()
     return espn_data
 
 

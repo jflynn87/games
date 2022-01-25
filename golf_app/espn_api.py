@@ -103,6 +103,8 @@ class ESPNData(object):
             return True
         if Field.objects.filter(tournament=self.t, golfer__espn_number=espn_num, withdrawn=True).exists():
             return False
+        if self.get_round > 1:
+            return True
         player = [x for x in self.field_data if x.get('id') == espn_num]
 
 

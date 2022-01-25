@@ -38,7 +38,7 @@ else:
    DEBUG = False
 
 
-ALLOWED_HOSTS = ['jflynn87.pythonanywhere.com', '127.0.0.1', 'localhost']
+ALLOWED_HOSTS = ['jflynn87.pythonanywhere.com', '127.0.0.1', 'localhost', 'games-env.eba-pwmj8abz.us-west-2.elasticbeanstalk.com']
 
 
 # Application definition
