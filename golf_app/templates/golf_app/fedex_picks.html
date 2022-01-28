@@ -8,7 +8,12 @@
 <p id='fedex_season_key' hidden>{{season.pk}}</p>
 <p id='season_key' hidden>{{season.season.pk}}</p>
 
-<h1>{{season.season}} FedEx Cup Season Picks {%if not season.allow_picks%} - Picks Closed {%endif%}</h1>
+{%if season.allow_picks%}
+<h1>{{season.season}} FedEx Cup Season Picks</h1>
+{%else%}
+<h1>FedEx Season Scores</h1>
+<h4><a href="https://www.pgatour.com/fedexcup.html" target="_blank">Official FedEx Scores</a></h4>
+{%endif%}
 
 
 <p id='allow_picks' hidden>{{ season.allow_picks|yesno:"true,false,none" }}</p>

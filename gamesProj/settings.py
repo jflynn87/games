@@ -140,7 +140,7 @@ WSGI_APPLICATION = 'gamesProj.wsgi.application'
 # for more information
 #import pymysql  # noqa: 402
 #pymysql.install_as_MySQLdb()
-import MySQLdb
+#import MySQLdb
 #
 # # [START db_setup]
 #

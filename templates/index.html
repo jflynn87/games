@@ -74,7 +74,7 @@
         <br>
         <a href="{% url 'fb_app:about'%}"> <button class="btn btn-primary">About</button></a>
 
-        {%if request.user.username in sb_user_list%}
+
         {%if game%}
 
         {%if picks%}
@@ -88,7 +88,7 @@
         <br>
         <a href="{% url 'fb_app:playoff_score' %}"> <button class="btn btn-primary">Super Bowl Score</button></a>
         {%endif%}
-        {%endif%}
+
     
 
 

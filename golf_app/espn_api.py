@@ -299,13 +299,15 @@ class ESPNData(object):
 
     def get_thru(self, espn_num):
         golfer_data = self.golfer_data(espn_num)
-        if golfer_data.get('status').get('type').get('id') == '1':
-            thru = golfer_data.get('status').get('hole')
-        elif golfer_data.get('status').get('type').get('id') == '0':
-            thru = golfer_data.get('status').get('teeTime')
+        if golfer_data:
+            if golfer_data.get('status').get('type').get('id') == '1':
+                thru = golfer_data.get('status').get('hole')
+            elif golfer_data.get('status').get('type').get('id') == '0':
+                thru = golfer_data.get('status').get('teeTime')
+            else:
+                thru = golfer_data.get('status').get('type').get('shortDetail')
         else:
-            thru = golfer_data.get('status').get('type').get('shortDetail')
-
+            thru = "WD"
         return thru
 
 

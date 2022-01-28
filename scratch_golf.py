@@ -15,30 +15,13 @@ import json
 
 
 
+
+
 t = Tournament.objects.get(current=True)
-start = datetime.now()
-
-
-for g in Group.objects.filter(tournament=t):
-    loop_start = datetime.now()
-    espn_data = espn_api.ESPNData()
-    context = {'espn_data': espn_data, 'user': User.objects.get(pk=1)}
-
-    ser = golf_serializers.NewFieldSerializer(Field.objects.filter(tournament=t, group__number=g.number), context=context, many=True).data
-    #print (g, datetime.now() - loop_start)
-
-print ('loop duraion ', datetime.now() - start)
-
-all_start = datetime.now()
-espn_data = espn_api.ESPNData()
-context = {'espn_data': espn_data, 'user': User.objects.get(pk=1)}
-
-ser = golf_serializers.NewFieldSerializer(Field.objects.filter(tournament=t), context=context, many=True).data
-print ('all option dur: ', datetime.now() - all_start)
-exit() 
+g = Golfer.objects.get(golfer_name="Brooks Koepka")
 
 espn = espn_api.ESPNData()
-print (espn.cut_line)
+print (espn.get_rank(g.espn_number))
 exit()
 
 season = Season.objects.get(current=True)

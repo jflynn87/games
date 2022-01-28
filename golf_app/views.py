@@ -1996,7 +1996,7 @@ class EspnApiScores(APIView):
                 #print (pick, score)
 
                 bonus = 0
-                
+
                 bd = bonus_details.BonusDtl(espn_api=espn, espn_scrape_data=None, tournament=t, inquiry=False)  
                 bd_big = bd.best_in_group(big, pick)
                 if bd_big:
@@ -2017,16 +2017,23 @@ class EspnApiScores(APIView):
 
                 rank = espn.get_rank(pick.playerName.golfer.espn_number)
                 golfer_data = espn.golfer_data(pick.playerName.golfer.espn_number)
+                
                 if rank in t.not_playing_list():
                     today_score = rank
-                    gross_score = cut_num
+                    gross_score = cut_num  #should just use the score from model calc_score i think
                 else:
-                    today_score = 'find'  #fix this, but does it matter?
+                    today_score = ''  #fix this, but does it matter?
                     gross_score = rank
+                
                 thru = espn.get_thru(pick.playerName.golfer.espn_number)
-                to_par = golfer_data.get('statistics')[0].get('displayValue')
-                sod_position = golfer_data.get('movement')
-
+                
+                if golfer_data:
+                    to_par = golfer_data.get('statistics')[0].get('displayValue')
+                    sod_position = golfer_data.get('movement')
+                else:
+                    to_par = ''
+                    sod_position = ''
+                
                 sd = ScoreDetails.objects.filter(pick__playerName__tournament=t, pick__playerName=pick.playerName).update(  #this is just 1 pick. fix the filter to get all picks
                                     today_score=today_score,
                                     thru = thru,
