@@ -29,6 +29,7 @@ class ESPNData(object):
             sd = ScoreDict.objects.get(tournament=self.t)
             self.all_data = sd.espn_api_data
         else:
+            pre_data = datetime.now()
             headers = {'User-Agent': 'Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.149 Mobile Safari/537.36'}
             #print (espn_t_num)
             #if espn_t_num:
@@ -38,12 +39,16 @@ class ESPNData(object):
                
             
             self.all_data = get(url, headers=headers).json()
-
+            print ('post refresh data dur: ', datetime.now() - pre_data)
             #f = open('espn_api.json', "w")
             #f.write(json.dumps(self.all_data))
             #f.close()
 
             #print (self.all_data)
+        
+
+        sd = ScoreDict.objects.get(tournament=self.t)
+        self.saved_data = sd.espn_api_data
 
         self.event_data = {}
         self.field_data = {}
@@ -51,24 +56,23 @@ class ESPNData(object):
         for event in self.all_data.get('events'):
             if event.get('id') == self.t.espn_t_num:
                 event_found = True
-                if utils.check_t_names(event.get('name'), self.t) or self.t.ignore_name_mismatch: 
-                    self.event_data = event
-                    sd, created = ScoreDict.objects.get_or_create(tournament=self.t)
-                    sd.espn_api_data = self.all_data
-                    sd.save()
-                    if self.t.pga_tournament_num not in ['468', '999', '470']:
-                       for c in self.event_data.get('competitions'):
-                            self.competition_data = c
-                            self.field_data = c.get('competitors')
-                else:
-                    print ('tournament mismatch: espn name: ', event.get('name'), 'DB name: ', self.t.name)
-                break 
-        
+                #pre_name_check = datetime.now()
+                #if utils.check_t_names(event.get('name'), self.t) or self.t.ignore_name_mismatch: 
+                self.event_data = event
+                sd, created = ScoreDict.objects.get_or_create(tournament=self.t)
+                sd.espn_api_data = self.all_data
+                sd.save()
+                if self.t.pga_tournament_num not in ['468', '999', '470']:
+                    for c in self.event_data.get('competitions'):
+                        self.competition_data = c
+                        self.field_data = c.get('competitors')
+                #else:
+                #    print ('tournament mismatch: espn name: ', event.get('name'), 'DB name: ', self.t.name)
+                #break 
         if not event_found:
             print ('ESPN API didnt find event, PGA T num: ', self.t.pga_tournament_num)
 
         print ('espn API Init complete, field len: ', len(self.field_data), ' dur: ', datetime.now() - start)
-
 
 
     def get_round(self):
@@ -347,3 +351,29 @@ class ESPNData(object):
             cut_info.update({'line_type': 'Projected', 'cut_score': cut_score})
 
         return cut_info
+
+    def needs_update(self):
+        #sd = ScoreDict.objects.get(tournament=self.t)
+        saved_data = ESPNData(t=self.t, data=self.saved_data)
+
+        c_data = self.event_data.get('competitions')[0].get('competitors')
+        saved_d = saved_data.event_data
+
+        for k, v in self.event_data.items():
+            saved = saved_data.event_data.get(k)
+            if v != saved:
+                for i, course in enumerate(v):
+                    if course != saved_d.get('courses')[i]:
+                        print (course.get('weather'))
+                        print ('----------------')
+                        print (saved_d.get('courses')[i].get('weather'))
+                        
+                        print (course.get('weather') == saved_d.get('courses')[i].get('weather'))
+
+            else:
+                print ('equal', k)
+
+        if saved_data.event_data == self.event_data:
+            return False
+        
+        return True

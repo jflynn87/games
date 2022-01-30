@@ -18,10 +18,14 @@ import json
 
 
 t = Tournament.objects.get(current=True)
-g = Golfer.objects.get(golfer_name="Brooks Koepka")
 
-espn = espn_api.ESPNData()
-print (espn.get_rank(g.espn_number))
+espn = espn_api.ESPNData(t=t, force_refresh=True)
+
+print (espn.needs_update())
+
+sd = ScoreDict.objects.get(tournament=t)
+print (sd.updated)
+
 exit()
 
 season = Season.objects.get(current=True)

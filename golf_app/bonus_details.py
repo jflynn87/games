@@ -203,7 +203,7 @@ class BonusDtl(object):
                     print ('Trifecta! : ', user)
                     bd, created = BonusDetails.objects.get_or_create(user=user, tournament=self.tournament, bonus_type='6')
                     bd.bonus_points = 50
-                    #bd.save()
+                    bd.save()
                     return True
 
         return False

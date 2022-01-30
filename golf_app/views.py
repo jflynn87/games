@@ -1964,22 +1964,24 @@ class EspnApiScores(APIView):
 
             if t.complete:
                 print ("Tournament Complete")
-                for ts in TotalScore.objects.filter(tournament=t):
-                    d.get(ts.user.username).update({'score': ts.score, 'cuts': ts.cut_count})
+                data = return_sd_data(t,d)
+                return JsonResponse(data, status=200, safe=False)
+                # for ts in TotalScore.objects.filter(tournament=t):
+                #     d.get(ts.user.username).update({'score': ts.score, 'cuts': ts.cut_count})
                 
-                sd = ScoreDict.objects.get(tournament=t)
-                espn_data = sd.espn_api_data
-                espn = espn_api.ESPNData(t=t, data=espn_data)
-                d['group_stats'] = espn.group_stats()
-                print (d)
-                return JsonResponse(d, status=200, safe=False)
+                # sd = ScoreDict.objects.get(tournament=t)
+                # espn_data = sd.espn_api_data
+                # espn = espn_api.ESPNData(t=t, data=espn_data)
+                # d['group_stats'] = espn.group_stats()
+                # print (d)
+                # return JsonResponse(d, status=200, safe=False)
 
-            #### For Testing uncomment espn below for prod ###
-            #with open('Sony_mid_r2.json') as json_file:
-            #    data = json.load(json_file)
-            #espn = espn_api.ESPNData(t=t, data=data)
-            
             espn = espn_api.ESPNData(t=t, force_refresh=True)
+
+            #if not espn.needs_update():
+            #    print ('API update not required, returning SD data')
+            #    data = return_sd_data(t,d)
+            #    return JsonResponse(data, status=200, safe=False)
 
             start_big = datetime.datetime.now()
             big = espn.group_stats()
@@ -2050,15 +2052,16 @@ class EspnApiScores(APIView):
                 t.complete = True
                 t.save()
                 overall_bd = bonus_details.BonusDtl(espn, t)
+
+                for username in d.keys():
+                    u = User.objects.get(username=username)
+                    if overall_bd.trifecta(u):
+                        d.get(username).update({'score': d.get(username).get('score') - 50})   
+
                 winner_list = overall_bd.weekly_winner(d)
                 print ('winners ', winner_list)
                 for winner in winner_list:
                     d.get(winner).update({'score': d.get(winner).get('score') - overall_bd.weekly_winner_points()})
-                #for u in t.season.get_users('obj'):
-                for username in d.keys():
-                    u = User.objects.get(username=username)
-                    if overall_bd.trifecta(u):
-                        d.get(u.username).update({'score': d.get(u.username).get('score') - 25})   
 
             for username in d.keys():
                 user = User.objects.get(username=username)
@@ -2079,6 +2082,21 @@ class EspnApiScores(APIView):
         print (d)    
         print ('total time: ', datetime.datetime.now() - start)
         return JsonResponse(d, status=200, safe=False)
+
+def return_sd_data(t,d):
+    start = datetime.datetime.now()
+    for ts in TotalScore.objects.filter(tournament=t):
+        d.get(ts.user.username).update({'score': ts.score, 'cuts': ts.cut_count})
+    
+    sd = ScoreDict.objects.get(tournament=t)
+    espn_data = sd.espn_api_data
+    espn = espn_api.ESPNData(t=t, data=espn_data)
+    d['group_stats'] = espn.group_stats()
+    print (d)
+    print ('return SD data dur: ', datetime.datetime.now() - start)
+    return d
+    
+
 
 
 class AllTimeView(TemplateView):
@@ -2297,13 +2315,13 @@ class MostPickedAPI(APIView):
 
 
 class PGALeaderboard(APIView):
-    def get(self, request, pk):
+    def get(self, request, pk, refresh=None):
         
         start = datetime.datetime.now()
         d = {}
         try:
             t = Tournament.objects.get(pk=pk)
-            if t.complete:
+            if t.complete or not refresh:
                 sd = ScoreDict.objects.get(tournament=t)
                 data = sd.espn_api_data
                 espn = espn = espn_api.ESPNData(t=t, data=data)
@@ -2322,13 +2340,13 @@ class PGALeaderboard(APIView):
 
 
 class SummaryStatsAPI(APIView):
-    def get(self, request, pk):
+    def get(self, request, pk, refresh=None):
         
         start = datetime.datetime.now()
         d = {}
         try:
             t = Tournament.objects.get(pk=pk)
-            if t.complete:
+            if t.complete or not refresh:
                 sd = ScoreDict.objects.get(tournament=t)
                 data = sd.espn_api_data
                 espn = espn = espn_api.ESPNData(t=t, data=data)
@@ -2375,7 +2393,7 @@ class GetMsgsAPI(APIView):
             print ('Get Msgs API error: ', e)
             d['error'] = {'msg': str(e)}
         #print (d)
-        print ('Summary Stats API time: ', datetime.datetime.now() - start)
+        print ('Messages API time: ', datetime.datetime.now() - start)
 
         return JsonResponse(json.dumps(d), status=200, safe=False)
 
