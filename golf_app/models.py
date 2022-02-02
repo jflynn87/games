@@ -140,6 +140,10 @@ class Tournament(models.Model):
     round_data = models.JSONField(null=True, blank=True)
 
 
+    class Meta():
+        unique_together = ('season', 'pga_tournament_num')
+
+
     #def get_queryset(self):t
     #    return self.objects.filter().first()
 
