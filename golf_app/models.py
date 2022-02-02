@@ -807,7 +807,6 @@ class Field(models.Model):
         try:
             #for t in Tournament.objects.all().order_by('-pk')[1:5]):
             for t in Tournament.objects.all().order_by('pk').exclude(pga_tournament_num='468').reverse()[1:5]:  # excld ryder cup
-                print (t, t.season, type(t))
                 #if Field.objects.filter(tournament=t, golfer__espn_number=self.golfer.espn_number).exclude(withdrawn=True).exclude(golfer__espn_number__isnull=True).exists():
                 if Field.objects.filter(tournament=t, golfer=self.golfer).exclude(withdrawn=True).exclude(golfer__espn_number__isnull=True).exists():
                     sd = ScoreDict.objects.get(tournament=t)
