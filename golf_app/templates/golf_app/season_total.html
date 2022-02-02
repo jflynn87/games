@@ -88,7 +88,8 @@
   {%if t.pga_tournament_num == '468'%}
   <td> <a href="{%url 'golf_app:ryder_cup_scores'%}">{{t.name}}</td>
   {%else%}
-  <td> <a href="{%url 'golf_app:new_scores' pk=t.pk %}">{{t.name}}</td>
+  <!-- <td> <a href="{%url 'golf_app:new_scores' pk=t.pk %}">{{t.name}}</td> -->
+  <td> <a href="{%url 'golf_app:api_scores_view' pk=t.pk %}">{{t.name}}</td>
   {%endif%}
   {%endif%}
   {%for s in score%}

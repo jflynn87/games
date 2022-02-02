@@ -406,9 +406,11 @@ class Tournament(models.Model):
             return False
 
 
-    def users_playing(self):
-        if self.pk == 1:
-            pass
+    def good_api_data(self):
+        if self.pk >= 201:
+            return True
+        else:
+            return False
 
 class Group(models.Model):
     tournament= models.ForeignKey(Tournament, on_delete=models.CASCADE)
@@ -805,9 +807,13 @@ class Field(models.Model):
         try:
             #for t in Tournament.objects.all().order_by('-pk')[1:5]):
             for t in Tournament.objects.all().order_by('pk').exclude(pga_tournament_num='468').reverse()[1:5]:  # excld ryder cup
-                if Field.objects.filter(tournament=t, golfer__espn_number=self.golfer.espn_number).exclude(withdrawn=True).exclude(golfer__espn_number__isnull=True).exists():
+                print (t, t.season, type(t))
+                #if Field.objects.filter(tournament=t, golfer__espn_number=self.golfer.espn_number).exclude(withdrawn=True).exclude(golfer__espn_number__isnull=True).exists():
+                if Field.objects.filter(tournament=t, golfer=self.golfer).exclude(withdrawn=True).exclude(golfer__espn_number__isnull=True).exists():
                     sd = ScoreDict.objects.get(tournament=t)
-                    f = Field.objects.get(tournament=t, golfer__espn_number=self.golfer.espn_number)
+                    #f = Field.objects.get(tournament=t, golfer__espn_number=self.golfer.espn_number)
+                    f = Field.objects.get(tournament=t, golfer=self.golfer)
+                    
                     if t.pga_tournament_num != '470':
                         x = [v.get('rank') for k, v in sd.data.items() if k !='info' and v.get('pga_num') in [self.golfer.espn_number, self.golfer.golfer_pga_num]]
                         if len(x) > 0:
@@ -829,7 +835,7 @@ class Field(models.Model):
                 
 
         except Exception as e:
-            print ('recent results exception', e)
+            print ('recent results exception', e, self, self.golfer.golfer_pga_num)
             data.update({t.pk:{'name': t.name, 'rank': 'DNP'}})
         #print ('recent results: ', datetime.now() - start)
         return data
@@ -1205,7 +1211,7 @@ class ScoreDict(models.Model):
         return  {key.replace('(a)', '').strip(): v for key, v in self.data.items()}
     
     
-    def validate_sd(self):
+    def data_valid(self):
         good = True
         field_len = Field.objects.filter(tournament=self.tournament).count()
         sd_len = len(self.data) - 1  #minus 1 for the info entry

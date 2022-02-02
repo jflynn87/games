@@ -168,7 +168,13 @@ function summary_data() {
       .then((response) => response.json())
       .then((responseJSON) => {
             console.log('summary stats api returned')
+            
             data = $.parseJSON(responseJSON)
+            console.log(data)
+            if (data.source == 'espn_scrape') {
+                  console.log('espn_scrape')
+            }
+            else {
             $.each(data.leaders, function(i, leader) {
               if (i == 0) {$('#leader').text(leader)}
               else {$('#leader').text($('#leader').text() + ', ' + leader)}
@@ -180,6 +186,7 @@ function summary_data() {
             $('#cut_line').text('Round ' + data.curr_round + ' - ' + data.round_status + ', ' + c_type + 'Cut Line: ' + data.cut_info.cut_score)
             $('#cut_line').append('<br>')
             $('#cut_line').append('<p> Base cut penalty: ' + data.cut_num + '</p>')
+      }
       })
 }
 

@@ -16,6 +16,7 @@ from collections import OrderedDict
 import csv
 import string
 from operator import itemgetter
+from requests import get
 
 
 @transaction.atomic
@@ -140,17 +141,23 @@ def setup_t(tournament_number, espn_t_num=None):
     if tournament_number != '999': #olympics
         json_url = 'https://statdata-api-prod.pgatour.com/api/clientfile/Field?T_CODE=r&T_NUM=' + str(tournament_number) +  '&YEAR=' + str(season) + '&format=json'
         print (json_url)
-
-        req = Request(json_url, headers={'User-Agent': 'Mozilla/5.0'})
-        data = json.loads(urlopen(req).read())
-        
-        print (data["Tournament"]["T_ID"][1:5], str(season))
-        if data["Tournament"]["T_ID"][1:5] != str(season):
-            print ('check field, looks bad!')
-            raise LookupError('Tournament season mismatch: ', data["Tournament"]["T_ID"]) 
-
         tourny = Tournament()    
-        tourny.name = data["Tournament"]["TournamentName"]
+        try:
+                
+            req = Request(json_url, headers={'User-Agent': 'Mozilla/5.0'})
+            data = json.loads(urlopen(req).read())
+            
+            print (data["Tournament"]["T_ID"][1:5], str(season))
+            if data["Tournament"]["T_ID"][1:5] != str(season):
+                print ('check field, looks bad!')
+                raise LookupError('Tournament season mismatch: ', data["Tournament"]["T_ID"]) 
+            tourny.name = data["Tournament"]["TournamentName"]
+        except Exception as e:
+            print ('PGA lookup issue, going to espn', e)
+            url = 'https://www.espn.com/golf/leaderboard?tournamentId=' + str(espn_t_num)
+            espn = scrape_espn.ScrapeESPN(tournament=tourny, setup=True, url=url)
+            print ('espn T Name: ', espn.get_t_name())
+            tourny.name = espn.get_t_name()
 
         tourny.season = season
         start_date = datetime.date.today()
@@ -177,11 +184,6 @@ def setup_t(tournament_number, espn_t_num=None):
     elif tournament_number == '999':
         json_url = ''
   
-        #req = Request(json_url, headers={'User-Agent': 'Mozilla/5.0'})
-        #data = json.loads(urlopen(req).read())
-        
-        #print (data["Tournament"]["T_ID"][1:5], str(season))
-        
         tourny = Tournament()    
         tourny.name = "Olympic Golf"
 
@@ -210,8 +212,6 @@ def setup_t(tournament_number, espn_t_num=None):
 
     else:
         raise Exception('Unknown T Num logic, pls check')
-
-    
         
     return tourny
 
@@ -259,14 +259,9 @@ def get_field(t, owgr_rankings):
     else:
         try:
             headers = {'User-Agent': 'Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.149 Mobile Safari/537.36'}
-            
-            
-
             json_url = 'https://statdata-api-prod.pgatour.com/api/clientfile/Field?T_CODE=r&T_NUM=' + str(t.pga_tournament_num) +  '&YEAR=' + str(t.season.season) + '&format=json'
-
             print (json_url)
 
-            #req = Request(json_url, headers={'User-Agent': 'Mozilla/5.0'})
             req = Request(json_url, headers=headers)
             data = json.loads(urlopen(req).read())
             print ('data', len(data))
@@ -292,14 +287,27 @@ def get_field(t, owgr_rankings):
                                     'sow_owgr': ranks[1][1]}
         except Exception as e:
             print ('pga scrape failed: ', e)   #to use this need to update to key everything from espn_num
-            data = espn_api.ESPNData().field()
+            data = espn_api.ESPNData(t=t, force_refresh=True, setup=True).field()
 
             for golfer in data:
                 name = golfer.get('athlete').get('displayName')
                 ranks = utils.fix_name(name, owgr_rankings)
                 #need this for now, fix rest of code to use ESPN
-                g_obj = Golfer.objects.get(espn_number=golfer.get('athlete').get('id'))
+                try:
+                    g_obj = Golfer.objects.get(espn_number=golfer.get('athlete').get('id'))
+                    print ('build field found golfer', g_obj)
+                except Exception as f:
+                    print ('build field cant find: ', name, ' trying setup')
+                    pga_num = find_pga_num(name)
+                    
+                    if not pga_num:
+                        g_obj = get_golfer(player=name, pga_num=None, espn_num=golfer.get('athlete').get('id'))
+                    elif len(pga_num) == 1:
+                        g_obj = get_golfer(player=name, pga_num=pga_num[0], espn_num=golfer.get('athlete').get('id') )
+                    else:
+                        g_obj = get_golfer(player=name, pga_num=None, espn_num=golfer.get('athlete').get('id'))
 
+                ranks = utils.fix_name(name, owgr_rankings)
                 field_dict[name] = {'pga_num': g_obj.golfer_pga_num, 
                                     'team': None,
                                     'curr_owgr': ranks[1][0],
@@ -767,19 +775,70 @@ def get_fedex_data(tournament):
 
     return data
 
-def get_golfer(player, pga_num, espn_data):
+def get_golfer(player, pga_num=None, espn_data=None, espn_num=None):
     '''takes a pga_num string, returns a golfer object.  creates golfer if it doesnt exist'''
+    if not pga_num:
+        pga_num = player
     golfer, created = Golfer.objects.get_or_create(golfer_pga_num=pga_num)
     golfer.golfer_name = player
     golfer.pic_link = golfer.get_pic_link()
     if golfer.flag_link in [' ', None]:
         golfer.flag_link = golfer.get_flag()
-    if golfer.espn_number in [' ', None]:
+    if espn_num:
+        golfer.espn_num = espn_num
+    elif golfer.espn_number in [' ', None] and espn_data:
         golfer.espn_number = get_espn_num(player, espn_data)
+    #else:
+    #    golfer.espn_number = ''
 
     golfer.save() 
     
     return golfer
+
+
+def find_pga_num(golfer_name):
+    '''takes a string returns a string'''
+    start = datetime.datetime.now()
+    names = golfer_name.split(' ')
+    last_name = names[len(names)-1]
+    first_name = names[0]
+    print (last_name)
+    print (first_name)
+    headers = {'User-Agent': 'Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.149 Mobile Safari/537.36'}
+    url =  "https://statdata.pgatour.com/players/player.json"
+    data = get(url, headers=headers).json()
+    
+    players = [v.get('pid') for v in data.get('plrs') if v.get('nameL') == last_name and v.get('nameF') == first_name] 
+
+    if len(players) > 1:
+        print ("Multiple possible PGA numbers ", golfer_name)
+        print (players)
+        return None
+    elif len(players) == 1:
+        print ('found player pga num: ', golfer_name, players)
+        return players[0]
+    else:
+        print ("FInd PGA numbers found none", golfer_name)
+        return None
+
+    
+    ## This is incomplete, but complete and use if you need to scrape
+    # start = datetime.datetime.now()
+    # link = 'https://www.pgatour.com/players.html'
+    # players_html = urllib.request.urlopen(link)
+    # players_soup = BeautifulSoup(players_html, 'html.parser')
+    # rows = players_soup.find_all('li', {'class': 'player-card'})
+    # d = {}
+    # for r in rows:
+    #     #print (r.find('span', {'class', 'player-surname'}).text)
+    #     #print (r.find('span', {'class', 'player-firstname'}).text)
+    #     pga_num = str(r.find('a', {'class', 'player-link'}).get('href').split('/')[2].split('.')[1])
+    #     full_name = r.find('span', {'class', 'player-firstname'}).text + ' ' + r.find('span', {'class', 'player-surname'}).text
+    #     d[pga_num] = {'golfer': full_name}
+    #     #d[r.find('a', {'class', 'player-link'}).get('href').split('/')[2].split('.')[1]] = {'golfer': r.find('span', {'class', 'player-firstname'}).text + ' ' + r.find('span', {'class', 'player-surname'}).text}
+    # print ('find pga dur: ', datetime.datetime.now() - start)
+    # print (d.get('01006'))
+    return
 
 
 def get_espn_num(player, espn_data):

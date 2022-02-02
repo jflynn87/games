@@ -1,4 +1,5 @@
 {%extends 'golf_app/golf_app_base.html'%}
+{%load static%}
 {%block body_block%}
 
 
@@ -14,17 +15,54 @@
 <form  method="post">
   {%csrf_token%}
   <label for="tournament_number">PGATour.com Tournament Number:  </label>
-  <input type="text" class="input-group-text" name="tournament_number">
+  <input id='pga_t_num' type="text" class="input-group-text" name="tournament_number" value={{pga_t_num}}>
   <p></p>
   <label for="espn_t_num">ESPN.com Tournament Number:  </label>
-  <input type="text" class="input-group-text" name="espn_t_num">
+  <input type="text" class="input-group-text" name="espn_t_num" value={{espn_t_num}}>
   <p></p>
   <input type="submit" class="btn btn-primary" value="Run Setup">
 </form>
 <br>
-<p>Current Tournament Number:  {{tournament.pga_tournament_num}}</p>
+<p>Current Tournament Number:  <span  id='db_t_num'>{{tournament.pga_tournament_num}}</span></p>
 <p>PGA Status file:  {{status}}</p>
+<br>
 
 
+<h5>Current Event</h5>
+
+<table class='table'>
+  <thead>
+    <th>Name</th>
+    <th>Start Date</th>
+    <th>Status</th>
+    <th>Link</th>
+  </thead>
+  <tr>
+    <td>{{curr_event.name}}</td>
+    <td>{{curr_event.startDate}}</td>
+    <td>{{curr_event.status}}</td>
+    <td><a href="{{curr_event.link}}">{{espn_t_num}}</a></td>
+  </tr>
+</table>
+<br>
+<h5>ESPN Full Schedule</h5>
+<table class='table'>
+  <thead>
+    <th>Name</th>
+    <th>Start Date</th>
+    <th>Status</th>
+    <th>Link</th>
+  </thead>
+{%for t, data in espn_sched.items%}
+  <tr>
+    <td>{{t}}</td>
+    <td>{{data.start_date}}</td>
+    <td>{{data.status}}</td>
+    <td><a href="{{data.link}}">{{data.link}}</a></td>
+  </tr>
+
+{%endfor%}
+</table>
+<script type="text/javascript" src="{%static 'golf_app/js/setup.js'%}"></script> 
 
 {%endblock%}

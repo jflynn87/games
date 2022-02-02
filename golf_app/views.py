@@ -23,7 +23,7 @@ import datetime
 #     populateMPField, mp_calc_scores, golf_serializers, utils, olympic_sd
 from golf_app import populateField, manual_score, scrape_masters, withdraw, scrape_espn, \
      populateMPField, mp_calc_scores, golf_serializers, utils, olympic_sd, espn_api, \
-     ryder_cup_scores, espn_ryder_cup, bonus_details
+     ryder_cup_scores, espn_ryder_cup, bonus_details, espn_schedule
 
 
 from django.utils import timezone
@@ -497,8 +497,19 @@ def setup(request):
             with urllib.request.urlopen(json_url) as field_json_url:
                 data = json.loads(field_json_url.read().decode())
 
+            pga_t_num = data.get('tid')
+
+            espn_data = espn_schedule.ESPNSchedule()
+            espn_sched = espn_data.get_event_list()
+            espn_curr_event = espn_data.current_event()[0]
+            espn_t_num = espn_curr_event.get('link').split('=')[1]
+
             return render(request, 'golf_app/setup.html', {'status': data,
-                                                            'tournament': t})
+                                                            'tournament': t,
+                                                            'espn_sched': espn_sched,
+                                                            'curr_event': espn_curr_event,
+                                                            'espn_t_num': espn_t_num,
+                                                            'pga_t_num': pga_t_num})
         else:
            return HttpResponse('Not Authorized')
     if request.method == "POST":
@@ -1963,25 +1974,16 @@ class EspnApiScores(APIView):
                                 'cuts': 0}
 
             if t.complete:
-                print ("Tournament Complete")
                 data = return_sd_data(t,d)
+                print ("Tournament Complete dur: ", datetime.datetime.now() - start)
                 return JsonResponse(data, status=200, safe=False)
-                # for ts in TotalScore.objects.filter(tournament=t):
-                #     d.get(ts.user.username).update({'score': ts.score, 'cuts': ts.cut_count})
-                
-                # sd = ScoreDict.objects.get(tournament=t)
-                # espn_data = sd.espn_api_data
-                # espn = espn_api.ESPNData(t=t, data=espn_data)
-                # d['group_stats'] = espn.group_stats()
-                # print (d)
-                # return JsonResponse(d, status=200, safe=False)
 
             espn = espn_api.ESPNData(t=t, force_refresh=True)
 
-            #if not espn.needs_update():
-            #    print ('API update not required, returning SD data')
-            #    data = return_sd_data(t,d)
-            #    return JsonResponse(data, status=200, safe=False)
+            if not espn.needs_update():
+                data = return_sd_data(t,d)
+                print ('API update not required, returning SD data dur: ', datetime.datetime.now() - start)
+                return JsonResponse(data, status=200, safe=False)
 
             start_big = datetime.datetime.now()
             big = espn.group_stats()
@@ -2036,7 +2038,7 @@ class EspnApiScores(APIView):
                     to_par = ''
                     sod_position = ''
                 
-                sd = ScoreDetails.objects.filter(pick__playerName__tournament=t, pick__playerName=pick.playerName).update(  #this is just 1 pick. fix the filter to get all picks
+                sd = ScoreDetails.objects.filter(pick__playerName__tournament=t, pick__playerName=pick.playerName).update(  
                                     today_score=today_score,
                                     thru = thru,
                                     gross_score=gross_score,
@@ -2080,7 +2082,7 @@ class EspnApiScores(APIView):
             d['error'] = {'source': 'EspnApiScores',
                           'msg': str(e)} 
         print (d)    
-        print ('total time: ', datetime.datetime.now() - start)
+        print ('update scores full process total time: ', datetime.datetime.now() - start)
         return JsonResponse(d, status=200, safe=False)
 
 def return_sd_data(t,d):
@@ -2088,12 +2090,33 @@ def return_sd_data(t,d):
     for ts in TotalScore.objects.filter(tournament=t):
         d.get(ts.user.username).update({'score': ts.score, 'cuts': ts.cut_count})
     
-    sd = ScoreDict.objects.get(tournament=t)
-    espn_data = sd.espn_api_data
-    espn = espn_api.ESPNData(t=t, data=espn_data)
-    d['group_stats'] = espn.group_stats()
-    print (d)
+    if t.good_api_data():  #espn api data is good from the Amex
+        sd = ScoreDict.objects.get(tournament=t)
+        espn_data = sd.espn_api_data
+        espn = espn_api.ESPNData(t=t, data=espn_data)
+        d['group_stats'] = espn.group_stats()
+    else:
+        sd = ScoreDict.objects.get(tournament=t)
+        if not sd.data_valid():
+            sd.update_sd_data()
+
+        data =json.loads(sd.pick_data)
+        optimal = json.loads(data.get('display_data').get('optimal'))
+        d['group_stats'] = {}
+
+        for k, v in optimal.items():
+            d.get('group_stats').update({str(k): {'golfers': [],
+                        'golfer_espn_nums': [],
+                        'cuts': v.get('cuts'),
+                        'total_golfers': v.get('total_golfers')}
+                        })
+            print (v.get('golfer'))
+            for num, name in v.get('golfer').items():
+                d.get('group_stats').get(str(k)).get('golfer_espn_nums').append(num)
+                d.get('group_stats').get(str(k)).get('golfers').append(name)
+
     print ('return SD data dur: ', datetime.datetime.now() - start)
+
     return d
     
 
@@ -2340,30 +2363,45 @@ class PGALeaderboard(APIView):
 
 
 class SummaryStatsAPI(APIView):
-    def get(self, request, pk, refresh=None):
+    #def get(self, request, pk, refresh=None):
+    def get(self, request, pk):
         
         start = datetime.datetime.now()
         d = {}
         try:
             t = Tournament.objects.get(pk=pk)
-            if t.complete or not refresh:
-                sd = ScoreDict.objects.get(tournament=t)
-                data = sd.espn_api_data
-                espn = espn = espn_api.ESPNData(t=t, data=data)
+            sd = ScoreDict.objects.get(tournament=t)
+            if t.good_api_data():
+                if t.complete:
+                    #sd = ScoreDict.objects.get(tournament=t)
+                    data = sd.espn_api_data
+                    espn = espn = espn_api.ESPNData(t=t, data=data)
+                else:
+                    espn = espn_api.ESPNData(force_refresh=True)
+                
+                d['source'] = 'espn_api'
+                d['cut_num'] = espn.cut_num()
+                d['cut_info'] = espn.cut_line()
+                d['leaders'] = espn.leaders()
+                d['leader_score'] = espn.leader_score()
+                d['curr_round'] = espn.get_round()
+                d['round_status'] = espn.get_round_status()
             else:
-                espn = espn_api.ESPNData(force_refresh=True)
+                #this section doesn't work, need to adjust
+                web_data = json.loads(sd.pick_data).get('display_data')
+                d['source'] = 'espn_scrape'
+                d['cut_num'] = ''
+                d['cut_info'] = web_data.get('cut_line')
+                d['leaders'] = web_data.get('leaders')
+                d['leader_score'] = ''
+                d['curr_round'] = ''
+                d['round_status'] = web_data.get('round_status')
 
-            d['cut_num'] = espn.cut_num()
-            d['cut_info'] = espn.cut_line()
-            d['leaders'] = espn.leaders()
-            d['leader_score'] = espn.leader_score()
-            d['curr_round'] = espn.get_round()
-            d['round_status'] = espn.get_round_status()
 
         except Exception as e:
             print ('Summart Stats API error: ', e)
             d['error'] = {'msg': str(e)}
-        #print (d)
+        print ('summary stats dict: ', d)
         print ('Summary Stats API time: ', datetime.datetime.now() - start)
 
         return JsonResponse(json.dumps(d), status=200, safe=False)

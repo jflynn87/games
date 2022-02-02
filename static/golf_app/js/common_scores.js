@@ -1,8 +1,8 @@
 //let not_playing = ['CUT', 'WD', 'DQ']
 
 function format_move(score) {
-
-    if (score == null) {
+    try {
+    if (score == null || score == '' || isNaN(score)) {
       return '  '} 
       else if (Number.isInteger(score) && score > 0) {
         return '<i class="fa fa-arrow-down text-danger">'+ score + '</i>'  
@@ -19,7 +19,9 @@ function format_move(score) {
       else if (score.includes('up')) {
       return '<i class="fa fa-arrow-up text-success"></i>'
        } 
-      else {return "  "}
+      else {return "  "} 
+    }
+    catch {return ''}
   }
   
   function sort_table(tableId) {
@@ -127,7 +129,7 @@ function buildLeaderboard(t) {
           
                                 }
                                           
-         
+            $('#lb_status').empty()
             document.getElementById('det-table').appendChild(top_header)
             document.getElementById('det-table').appendChild(second_header)
             document.getElementById('det-table').appendChild(c)

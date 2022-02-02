@@ -15,13 +15,13 @@ class ESPNData(object):
         competition_data varoius datat about  the tournament
         field_data is the actual golfers in the tournament'''
 
-    def __init__(self, t=None, data=None, force_refresh=None):
+    def __init__(self, t=None, data=None, force_refresh=False, setup=False):
         start = datetime.now()
+
         if t:
             self.t = t 
         else:
             self.t = Tournament.objects.get(current=True)
-        
 
         if data:
             self.all_data = data 
@@ -31,24 +31,17 @@ class ESPNData(object):
         else:
             pre_data = datetime.now()
             headers = {'User-Agent': 'Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.149 Mobile Safari/537.36'}
-            #print (espn_t_num)
-            #if espn_t_num:
-            #    url = 'http://sports.core.api.espn.com/v2/sports/golf/leagues/pga/events/' + espn_t_num 
-            #else:
             url =  "https://site.web.api.espn.com/apis/site/v2/sports/golf/leaderboard?league=pga"
-               
             
             self.all_data = get(url, headers=headers).json()
             print ('post refresh data dur: ', datetime.now() - pre_data)
-            #f = open('espn_api.json', "w")
-            #f.write(json.dumps(self.all_data))
-            #f.close()
 
-            #print (self.all_data)
-        
 
-        sd = ScoreDict.objects.get(tournament=self.t)
-        self.saved_data = sd.espn_api_data
+        if not setup:
+            sd = ScoreDict.objects.get(tournament=self.t)
+            self.saved_data = sd.espn_api_data
+        else:
+            sd = ScoreDict()
 
         self.event_data = {}
         self.field_data = {}
@@ -75,6 +68,9 @@ class ESPNData(object):
         print ('espn API Init complete, field len: ', len(self.field_data), ' dur: ', datetime.now() - start)
 
 
+    def get_t_name(self):  #need to test this to confirm it works
+        return self.event_data.get('name')
+    
     def get_round(self):
         
         return self.competition_data.get('status').get('period')

@@ -514,7 +514,12 @@ class ScrapeESPN(object):
         
         return status
 
-        
+
+    def get_t_name(self):
+        html = urllib.request.urlopen(self.url)
+        soup = BeautifulSoup(html, 'html.parser')
+
+        return soup.find('h1', {'class': 'Leaderboard__Event__Title'}).text
 
 
 def get_espn_num(row):

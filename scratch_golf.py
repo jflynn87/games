@@ -8,23 +8,61 @@ from golf_app.models import Tournament, TotalScore, ScoreDetails, Picks, PickMet
          FedExSeason, FedExField, FedExPicks
 from django.contrib.auth.models import User
 from datetime import datetime, timedelta
-from golf_app import populateField, calc_leaderboard, manual_score, bonus_details, espn_api, round_by_round, scrape_espn, utils, golf_serializers
+from golf_app import populateField, calc_leaderboard, manual_score, bonus_details, espn_api, round_by_round, scrape_espn, utils, golf_serializers, espn_schedule
 from django.db.models import Count, Sum
 from unidecode import unidecode as decode
 import json
+from requests import get
 
+for sd in ScoreDict.objects.filter(tournament__season__current=True):
+    if not sd.tournament.special_field():
+        if not sd.data_valid():
+            print ('fixing SD data', sd.tournament)
+            sd.update_sd_data()
 
-
-
+for f in Field.objects.filter(tournament__current=True, playerName="Patrick Cantlay"):
+    print (f, f.golfer, f.recent_results())
+exit()
 
 t = Tournament.objects.get(current=True)
+owgr = populateField.get_worldrank()
+field = populateField.get_field(t, owgr)
 
-espn = espn_api.ESPNData(t=t, force_refresh=True)
+print (field)
 
-print (espn.needs_update())
+exit()
+
+t = Tournament.objects.get(pk=198)
+print (t)
 
 sd = ScoreDict.objects.get(tournament=t)
-print (sd.updated)
+print (json.loads(sd.pick_data).get('display_data').keys())
+exit()
+
+
+if not sd.validate_sd():
+    sd.update_sd_data()
+
+data =json.loads(sd.pick_data)
+optimal = json.loads(data.get('display_data').get('optimal'))
+d = {}
+
+for k, v in optimal.items():
+    d[str(k)] = {'golfers': [],
+                'golfer_espn_nums': [],
+                'cuts': v.get('cuts'),
+                'total_golfers': v.get('total_golfers')}
+    print (v.get('golfer'))
+    for num, name in v.get('golfer').items():
+        d.get(str(k)).get('golfer_espn_nums').append(num)
+        d.get(str(k)).get('golfers').append(name)
+
+espn = espn_api.ESPNData(t=t)
+print (espn.group_stats() == d)
+
+print (espn.group_stats())
+print('-------------------------------')
+print (d)
 
 exit()
 
