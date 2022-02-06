@@ -13,15 +13,76 @@ from django.db.models import Count, Sum
 from unidecode import unidecode as decode
 import json
 from requests import get
+from collections import OrderedDict
+from urllib.request import Request, urlopen
+from bs4 import BeautifulSoup
 
-for sd in ScoreDict.objects.filter(tournament__season__current=True):
-    if not sd.tournament.special_field():
-        if not sd.data_valid():
-            print ('fixing SD data', sd.tournament)
-            sd.update_sd_data()
+start = datetime.now()
+t = Tournament.objects.get(current=True)
+#sd = ScoreDict.objects.get(tournament=t)
 
-for f in Field.objects.filter(tournament__current=True, playerName="Patrick Cantlay"):
-    print (f, f.golfer, f.recent_results())
+#espn = espn_api.ESPNData(t=t, data=sd.espn_api_data)
+espn = espn_api.ESPNData()
+
+#print ('espn cut round: ', espn.event_data.get('tournament').get('cutRound'))
+print (espn.get_round())
+print (espn.competition_data.get('status').get('type').get('state'))
+print (espn.cut_line())
+
+exit()
+for p in Picks.objects.filter(playerName__tournament=t, user__pk=1):
+    print (p.playerName.calc_score(api_data=espn))
+
+exit()
+
+
+
+pre_fedex = datetime.now()
+fed_ex = populateField.get_fedex_data(tournament)
+print ('post fedex: ', datetime.now() - pre_fedex)
+
+pre_indiv = datetime.now()
+individual_stats = populateField.get_individual_stats()
+print ('post individual: ', datetime.now() - pre_indiv)
+
+pre_recent = datetime.now()
+for f in Field.objects.filter(tournament=tournament):
+    
+    if tournament.pga_tournament_num not in ['470', '018']:
+        f.handi = f.handicap()
+    else:
+        f.handi = 0
+    
+    f.prior_year = f.prior_year_finish()
+    recent = OrderedDict(sorted(f.recent_results().items(), reverse=True))
+    f.recent = recent
+    f.season_stats = f.golfer.summary_stats(tournament.season) 
+
+    #print (fed_ex)
+    if fed_ex.get(f.playerName):
+        f.season_stats.update({'fed_ex_points': fed_ex.get(f.playerName).get('points'),
+                                'fed_ex_rank': fed_ex.get(f.playerName).get('rank')})
+    else:
+        f.season_stats.update({'fed_ex_points': 'n/a',
+                                'fed_ex_rank': 'n/a'})
+
+    if individual_stats.get(f.playerName):
+        player_s = individual_stats.get(f.playerName)
+        for k, v in player_s.items():
+            if k != 'pga_num':
+                f.season_stats.update({k: v})
+    
+    f.save()
+
+print ('post recent : ', datetime.now() - pre_recent )    
+pre_season_results = datetime.now()
+
+for g in Golfer.objects.all():
+    g.results = g.get_season_results()
+    g.save()
+
+print ('post season results: ', datetime.now() - pre_season_results)
+
 exit()
 
 t = Tournament.objects.get(current=True)

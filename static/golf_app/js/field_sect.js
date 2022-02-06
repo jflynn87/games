@@ -936,11 +936,15 @@ function build_stats_row(field) {
                     stats_rowE.appendChild(sg_cellF)
 
                 let sg_cellG = document.createElement('td')
-                    sg_cellG.innerHTML = field.season_stats.putting.rank
+                    try {
+                    sg_cellG.innerHTML = field.season_stats.putting.rank } 
+                    catch {sg_cellG.innerHTML = 'error'}
                     stats_rowE.appendChild(sg_cellG)
 
                 let sg_cellH = document.createElement('td')
-                    sg_cellH.innerHTML = field.season_stats.putting.average
+                    try {
+                        sg_cellH.innerHTML = field.season_stats.putting.average}
+                    catch {sg_cellH.innerHTML = '0'}
                     stats_rowE.appendChild(sg_cellH)
        
             }

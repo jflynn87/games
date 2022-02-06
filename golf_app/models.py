@@ -339,7 +339,7 @@ class Tournament(models.Model):
 
     def not_playing_list(self):
         #ordered to appear correctly in leaderboard
-        return ['WD', 'DQ', 'CUT']
+        return ['WD', 'DQ', 'CUT', 'MDF']
 
     def tournament_complete(self, sd=None):
         if sd == None:
@@ -809,9 +809,7 @@ class Field(models.Model):
         data = {}
         start = datetime.now()
         try:
-            #for t in Tournament.objects.all().order_by('-pk')[1:5]):
             for t in Tournament.objects.all().order_by('pk').exclude(pga_tournament_num='468').reverse()[1:5]:  # excld ryder cup
-                #if Field.objects.filter(tournament=t, golfer__espn_number=self.golfer.espn_number).exclude(withdrawn=True).exclude(golfer__espn_number__isnull=True).exists():
                 if Field.objects.filter(tournament=t, golfer=self.golfer).exclude(withdrawn=True).exclude(golfer__espn_number__isnull=True).exists():
                     sd = ScoreDict.objects.get(tournament=t)
                     #f = Field.objects.get(tournament=t, golfer__espn_number=self.golfer.espn_number)
@@ -835,12 +833,10 @@ class Field(models.Model):
                         data.update({t.pk:{'name': t.name, 'rank': 'DNP'}})    
                 else:
                     data.update({t.pk:{'name': t.name, 'rank': 'DNP'}})
-                
-
         except Exception as e:
             print ('recent results exception', e, self, self.golfer.golfer_pga_num)
             data.update({t.pk:{'name': t.name, 'rank': 'DNP'}})
-        #print ('recent results: ', datetime.now() - start)
+        #print ('recent results: ', self, datetime.now() - start)
         return data
 
     def get_mp_result(self, t):
@@ -945,26 +941,20 @@ class Field(models.Model):
         if api_data:
             if api_data.golfer_data(self.golfer.espn_number):
                 if api_data.golfer_data(self.golfer.espn_number).get('status').get('type').get('id') == "3":
-                    #print ('A')
                     cut = True
                     score = (int(api_data.cut_num()) - int(self.handi)) + api_data.cut_penalty(self)
                 elif self.tournament.has_cut and int(api_data.get_round()) <= int(self.tournament.saved_cut_round) \
-                     and int(api_data.get_rank(self.golfer.espn_number)) > api_data.cut_num():
-                    #print ('B')
+                     and int(api_data.get_rank(self.golfer.espn_number)) >= int(api_data.cut_num()):
                     cut = True
                     score = (api_data.cut_num() - int(self.handi)) + api_data.cut_penalty(self)
-                    #print (score, api_data.cut_num(), int(self.handi), api_data.cut_penalty(self))
-                #elif api_data.golfer_data(self.golfer.espn_number).get('status').get('type').get('id') == "3":  
-                #    score = (int(api_data.cut_num()) - int(self.handi)) + api_data.cut_penalty(self)  
                 else: 
-                    #print ('C', api_data.get_rank(self.golfer.espn_number), self.handi)
                     score = int(api_data.get_rank(self.golfer.espn_number)) - int(self.handi)
 
             else:
                 print ('WD? not found in espn: ',  self.playerName, self.golfer.espn_number) 
                 cut = True
                 score = (int(api_data.cut_num()) - int(self.handi)) + api_data.cut_penalty(self)
-        
+        #print ('score ', score, 'cut ', cut)
         return {'score': score, 'cut': cut}
 
 

@@ -35,10 +35,13 @@ class ESPNSchedule(object):
         return d
 
     def current_event(self):
+        if [v for v in self.schedule.get('events') if v.get('status')  == 'in']:
+            return [v for v in self.schedule.get('events') if v.get('status') == 'in']
+
         end_date = datetime.now() + timedelta(days=5)
         start_date = datetime.utcnow()
-
-        event = [v for v in self.schedule.get('events') if datetime.strptime(v.get('startDate')[:-1], '%Y-%m-%dT%H:%M') > start_date \
+        
+        event = [v for v in self.schedule.get('events') if datetime.strptime(v.get('startDate')[:-1], '%Y-%m-%dT%H:%M') >= start_date \
                     and  datetime.strptime(v.get('startDate')[:-1], '%Y-%m-%dT%H:%M') < end_date]
         return event
 

@@ -1,5 +1,5 @@
 let filler = /[\s\.\,\']/g;
-let not_playing = ['CUT', 'WD', 'DQ']
+let not_playing = ['CUT', 'WD', 'DQ', 'MDF']
 $(document).ready(function() {
     
       var start = new Date()
@@ -101,7 +101,7 @@ function udatePickData() {
                   //if (pick.sod_position) {sod = format_move(pick.sod_position) + pick.sod_position.replace(filler, '')}
                   if (pick.sod_position) {sod = format_move(parseInt(pick.sod_position))}
                   else {sod = ''}
-                  
+
                   if (pick.thru.slice(-1) == 'Z') {
                         var utcDate = pick.thru;
                         thru = new Date (utcDate).toLocaleTimeString([], {hour: 'numeric', minute:'2-digit'})
@@ -117,7 +117,8 @@ function udatePickData() {
         
                   $('#tt-' + pick.id + '[data-toggle="tooltip"]').tooltip({trigger:"hover",
                   delay:{"show":400,"hide":800}, "title": 'gross score: ' + pick.gross_score})
-                  if (not_playing.indexOf(pick.today_score) != -1) {$('#' + pick.pick.id).addClass('cut')}  
+                  //if (not_playing.indexOf(pick.today_score) != -1) {$('#' + pick.pick.id).addClass('cut')}  
+                  if (not_playing.indexOf(pick.thru) != -1) {$('#' + pick.pick.id).addClass('cut')}  
                   
             resolve(data)})
             })

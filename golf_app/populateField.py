@@ -17,6 +17,7 @@ import csv
 import string
 from operator import itemgetter
 from requests import get
+import time
 
 
 @transaction.atomic
@@ -478,40 +479,41 @@ def create_field(field, tournament):
             player_cnt = 1
 
     #need to do this after full field is saved for the calcs to work.  No h/c in MP
-    fed_ex = get_fedex_data(tournament)
-    individual_stats = get_individual_stats()
+    # Move to separate functions for performance
+    # fed_ex = get_fedex_data(tournament)
+    # individual_stats = get_individual_stats()
 
-    for f in Field.objects.filter(tournament=tournament):
+    # for f in Field.objects.filter(tournament=tournament):
         
-        if tournament.pga_tournament_num not in ['470', '018']:
-            f.handi = f.handicap()
-        else:
-            f.handi = 0
+    #     if tournament.pga_tournament_num not in ['470', '018']:
+    #         f.handi = f.handicap()
+    #     else:
+    #         f.handi = 0
         
-        f.prior_year = f.prior_year_finish()
-        recent = OrderedDict(sorted(f.recent_results().items(), reverse=True))
-        f.recent = recent
-        f.season_stats = f.golfer.summary_stats(tournament.season) 
+    #     f.prior_year = f.prior_year_finish()
+    #     recent = OrderedDict(sorted(f.recent_results().items(), reverse=True))
+    #     f.recent = recent
+    #     f.season_stats = f.golfer.summary_stats(tournament.season) 
 
-        #print (fed_ex)
-        if fed_ex.get(f.playerName):
-           f.season_stats.update({'fed_ex_points': fed_ex.get(f.playerName).get('points'),
-                                  'fed_ex_rank': fed_ex.get(f.playerName).get('rank')})
-        else:
-           f.season_stats.update({'fed_ex_points': 'n/a',
-                                  'fed_ex_rank': 'n/a'})
+    #     #print (fed_ex)
+    #     if fed_ex.get(f.playerName):
+    #        f.season_stats.update({'fed_ex_points': fed_ex.get(f.playerName).get('points'),
+    #                               'fed_ex_rank': fed_ex.get(f.playerName).get('rank')})
+    #     else:
+    #        f.season_stats.update({'fed_ex_points': 'n/a',
+    #                               'fed_ex_rank': 'n/a'})
 
-        if individual_stats.get(f.playerName):
-            player_s = individual_stats.get(f.playerName)
-            for k, v in player_s.items():
-                if k != 'pga_num':
-                    f.season_stats.update({k: v})
+    #     if individual_stats.get(f.playerName):
+    #         player_s = individual_stats.get(f.playerName)
+    #         for k, v in player_s.items():
+    #             if k != 'pga_num':
+    #                 f.season_stats.update({k: v})
         
-        f.save()
+    #     f.save()
 
-    for g in Golfer.objects.all():
-        g.results = g.get_season_results()
-        g.save()
+    # for g in Golfer.objects.all():
+    #     g.results = g.get_season_results()
+    #     g.save()
 
 
     print ('saved field objects')
@@ -714,12 +716,14 @@ def create_ryder_cup_field(field, tournament):
 
 
 def get_individual_stats():
+    start = datetime.datetime.now()
     d = {}
-    try: 
-        for stat in StatLinks.objects.all():
+    for stat in StatLinks.objects.all():
+        print (stat.link)
+        try: 
             html = urllib.request.urlopen(stat.link)
             soup = BeautifulSoup(html, 'html.parser')
-                    
+
             for row in soup.find('table', {'id': 'statsTable'}).find_all('tr')[1:]:
                 if d.get(row.find('td', {'class': 'player-name'}).text.strip()):
                     d[row.find('td', {'class': 'player-name'}).text.strip()].update({stat.name: {
@@ -742,9 +746,9 @@ def get_individual_stats():
                                                                         #'measured_rounds': row.find_all('td')[6].text
                                                                         }})
 
-    except Exception as e:
-        print ('get_individual_stats exception ', e)
-
+        except Exception as e:
+            print ('get_individual_stats exception ', stat.link, e)
+    print ('individual stats calc duraion: ', datetime.datetime.now() - start)
     return d
 
 

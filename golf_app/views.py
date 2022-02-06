@@ -501,7 +501,11 @@ def setup(request):
 
             espn_data = espn_schedule.ESPNSchedule()
             espn_sched = espn_data.get_event_list()
-            espn_curr_event = espn_data.current_event()[0]
+            try:
+                espn_curr_event = espn_data.current_event()[0]
+            except Exception as e:
+                print ('setup current event exception', e)
+                espn_curr_event = []
             espn_t_num = espn_curr_event.get('link').split('=')[1]
 
             return render(request, 'golf_app/setup.html', {'status': data,
@@ -512,6 +516,7 @@ def setup(request):
                                                             'pga_t_num': pga_t_num})
         else:
            return HttpResponse('Not Authorized')
+    #moving this to separate API functinos to break apart 
     if request.method == "POST":
         url_number = request.POST.get('tournament_number')
         espn_num = request.POST.get('espn_t_num')
@@ -1980,10 +1985,10 @@ class EspnApiScores(APIView):
 
             espn = espn_api.ESPNData(t=t, force_refresh=True)
 
-            if not espn.needs_update():
-                data = return_sd_data(t,d)
-                print ('API update not required, returning SD data dur: ', datetime.datetime.now() - start)
-                return JsonResponse(data, status=200, safe=False)
+            #if not espn.needs_update():
+            #    data = return_sd_data(t,d)
+            #    print ('API update not required, returning SD data dur: ', datetime.datetime.now() - start)
+            #    return JsonResponse(data, status=200, safe=False)
 
             start_big = datetime.datetime.now()
             big = espn.group_stats()
@@ -2432,6 +2437,83 @@ class GetMsgsAPI(APIView):
             d['error'] = {'msg': str(e)}
         #print (d)
         print ('Messages API time: ', datetime.datetime.now() - start)
+
+        return JsonResponse(json.dumps(d), status=200, safe=False)
+
+
+class BuildFieldAPI(APIView):
+    def post(self, request):
+        start = datetime.datetime.now()
+        d = {}
+
+        try:
+            print (request.data, type(request.data))
+            
+            pga_t_num = request.data.get('pga_t_num')
+            espn_t_num = request.data.get('espn_t_num')
+            if Tournament.objects.filter(season__current=True, pga_tournament_num=pga_t_num).exists():
+                d['error'] = {'msg': 'Tournament for that pga t number and season already exists'}
+            else:
+                populateField.create_groups(pga_t_num, espn_t_num)
+                d['status'] = {'msg': 'complete'}
+
+
+        except Exception as e:
+            print ('Build Field API error: ', e)
+            d['error'] = {'msg': str(e)}
+        #print (d)
+        print ('Build Field API time: ', datetime.datetime.now() - start)
+
+        return JsonResponse(json.dumps(d), status=200, safe=False)
+
+
+class FieldUpdatesAPI(APIView):
+    def get(self, request):
+        
+        start = datetime.datetime.now()
+        t = Tournament.objects.get(current=True)
+        d = {}
+        try:
+            fed_ex = populateField.get_fedex_data(t)
+            individual_stats = populateField.get_individual_stats()
+
+            for f in Field.objects.filter(tournament=t):
+                if t.pga_tournament_num not in ['470', '018']:
+                    f.handi = f.handicap()
+                else:
+                    f.handi = 0
+        
+                f.prior_year = f.prior_year_finish()
+                recent = OrderedDict(sorted(f.recent_results().items(), reverse=True))
+                f.recent = recent
+                f.season_stats = f.golfer.summary_stats(t.season) 
+
+                
+                if fed_ex.get(f.playerName):
+                    f.season_stats.update({'fed_ex_points': fed_ex.get(f.playerName).get('points'),
+                                           'fed_ex_rank': fed_ex.get(f.playerName).get('rank')})
+                else:
+                    f.season_stats.update({'fed_ex_points': 'n/a',
+                                           'fed_ex_rank': 'n/a'})
+
+                if individual_stats.get(f.playerName):
+                    player_s = individual_stats.get(f.playerName)
+                    for k, v in player_s.items():
+                        if k != 'pga_num':
+                            f.season_stats.update({k: v})
+        
+                f.save()
+
+            for g in Golfer.objects.all():
+                g.results = g.get_season_results()
+                g.save()
+
+            d['status'] = {'msg': 'Updated Field Complete'}
+        except Exception as e:
+            print ('Update Field API error: ', e)
+            d['error'] = {'msg': str(e)}
+        
+        print ('Update Field API time: ', datetime.datetime.now() - start)
 
         return JsonResponse(json.dumps(d), status=200, safe=False)
 

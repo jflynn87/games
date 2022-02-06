@@ -17,8 +17,10 @@ urlpatterns= [
     #url(r'^get_scores/$', views.GetScores.as_view(), name='get_scores'),
     path('get_scores/<int:tournament>', views.GetScores.as_view(), name='get_scores'),
     url(r'^get_db_scores/$', views.GetDBScores.as_view(), name='get_db_scores'),
-    url(r'^new_scores/$', views.NewScoresView.as_view(), name='new_scores'),
-    url(r'^new_scores/(?P<pk>\d+)/$',views.NewScoresView.as_view(),name='new_scores'),
+    #url(r'^new_scores/$', views.NewScoresView.as_view(), name='new_scores'),
+    #url(r'^new_scores/(?P<pk>\d+)/$',views.NewScoresView.as_view(),name='new_scores'),
+    path('new_scores/', views.ApiScoresView.as_view(), name='new_scores'),
+    path('new_scores/<int:pk>', views.ApiScoresView.as_view(), name='new_scores'),
     url(r'^started/$', views.CheckStarted.as_view(), name='started'),
     url(r'^optimal_picks/$',views.OptimalPicks.as_view(),name='optimal_picks'),
     #url(r'^get_info/$',views.GetInfo.as_view(),name='get_info'),
@@ -70,6 +72,8 @@ urlpatterns= [
     path('get_pga_leaderboard/<int:pk>', views.PGALeaderboard.as_view(), name='get_pga_leaderboard'),
     path('get_summary_stats/<int:pk>', views.SummaryStatsAPI.as_view(), name='get_summary_stats'),
     path('get_msgs/<int:pk>', views.GetMsgsAPI.as_view(), name='get_msgs'),
+    path('build_field/', views.BuildFieldAPI.as_view(), name='build_field'),
+    path('field_updates/', views.FieldUpdatesAPI.as_view(), name='field_updates'),
    
 
     

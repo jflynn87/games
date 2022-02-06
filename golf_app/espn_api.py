@@ -103,7 +103,7 @@ class ESPNData(object):
             return True
         if Field.objects.filter(tournament=self.t, golfer__espn_number=espn_num, withdrawn=True).exists():
             return False
-        if self.get_round > 1:
+        if self.get_round() > 1:
             return True
         player = [x for x in self.field_data if x.get('id') == espn_num]
 
@@ -175,9 +175,10 @@ class ESPNData(object):
     def get_rank(self, espn_number):
         golfer_data = self.golfer_data(espn_number)
         if not golfer_data:
-            return "WD"
+            return self.cut_num()
         if golfer_data.get('status').get('type').get('id') in ['3']:
-           return golfer_data.get('status').get('type').get('shortDetail')
+           return self.cut_num()
+           #return golfer_data.get('status').get('type').get('shortDetail')
         else:
            return golfer_data.get('status').get('position').get('id')
 
@@ -301,7 +302,7 @@ class ESPNData(object):
         golfer_data = self.golfer_data(espn_num)
         if golfer_data:
             if golfer_data.get('status').get('type').get('id') == '1':
-                thru = golfer_data.get('status').get('hole')
+                thru = golfer_data.get('status').get('displayThru')
             elif golfer_data.get('status').get('type').get('id') == '0':
                 thru = golfer_data.get('status').get('teeTime')
             else:
@@ -309,7 +310,6 @@ class ESPNData(object):
         else:
             thru = "WD"
         return thru
-
 
 
     def get_round_score(self, espn_num, r):
@@ -340,6 +340,11 @@ class ESPNData(object):
             cut_info.update({'line_type': 'Actual',
                             'cut_score': self.event_data.get('tournament').get('cutScore')})
 
+        elif self.event_data.get('tournament').get('cutRound') and int(self.event_data.get('tournament').get('cutRound')) == int(self.get_round()) \
+            and self.competition_data.get('status').get('type').get('state') == "post":
+            cut_info.update({'line_type': 'Actual',
+                            'cut_score': self.event_data.get('tournament').get('cutScore')})
+
         elif self.t.has_cut and int(self.get_round()) <= int(self.t.saved_cut_round): #and self.event_data.get('tournament').get('cutRound') == 0:
             max_rank = max(int(x.get('status').get('position').get('id')) for x in self.field_data \
                      if int(x.get('status').get('position').get('id')) < int(self.t.saved_cut_num)) 
@@ -353,23 +358,14 @@ class ESPNData(object):
         saved_data = ESPNData(t=self.t, data=self.saved_data)
 
         c_data = self.event_data.get('competitions')[0].get('competitors')
-        saved_d = saved_data.event_data
-
-        for k, v in self.event_data.items():
-            saved = saved_data.event_data.get(k)
-            if v != saved:
-                for i, course in enumerate(v):
-                    if course != saved_d.get('courses')[i]:
-                        print (course.get('weather'))
-                        print ('----------------')
-                        print (saved_d.get('courses')[i].get('weather'))
-                        
-                        print (course.get('weather') == saved_d.get('courses')[i].get('weather'))
-
-            else:
-                print ('equal', k)
+        saved_c = saved_data.event_data.get('competitions')[0].get('competitors')
 
         if saved_data.event_data == self.event_data:
+            print ('NO UPDATE required')
             return False
         
+        if c_data == saved_c:
+            print ("Competition data same but other diffs skipping calculating scores")
+            return False
+
         return True

@@ -12,17 +12,23 @@
 
         {%endif%}
 
-<form  method="post">
+<form  method="post" onsubmit='event.preventDefault();'>
   {%csrf_token%}
   <label for="tournament_number">PGATour.com Tournament Number:  </label>
   <input id='pga_t_num' type="text" class="input-group-text" name="tournament_number" value={{pga_t_num}}>
   <p></p>
   <label for="espn_t_num">ESPN.com Tournament Number:  </label>
-  <input type="text" class="input-group-text" name="espn_t_num" value={{espn_t_num}}>
+  <input id='espn_t_num' type="text" class="input-group-text" name="espn_t_num" value={{espn_t_num}}>
   <p></p>
-  <input type="submit" class="btn btn-primary" value="Run Setup">
+  <input type="submit" class="btn btn-primary" value="Run Setup" id='sub-button'>
 </form>
 <br>
+
+<button class='btn btn-primary' id='update_stats' onclick="fieldUpdates()">Update Stats</button>
+<br>
+<br>
+<div id='status'><h4>Status</h4></div>
+
 <p>Current Tournament Number:  <span  id='db_t_num'>{{tournament.pga_tournament_num}}</span></p>
 <p>PGA Status file:  {{status}}</p>
 <br>

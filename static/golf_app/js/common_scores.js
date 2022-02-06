@@ -8,7 +8,7 @@ function format_move(score) {
         return '<i class="fa fa-arrow-down text-danger">'+ score + '</i>'  
       }
       else if (Number.isInteger(score) && score < 0) {
-        return '<i class="fa fa-arrow-up text-success">' + score +'</i>'  
+        return '<i class="fa fa-arrow-up text-success">' + score.toString().replace('-', '') +'</i>'  
       }
       else if (Number.isInteger(score) && score == 0) {
         return '--'  
