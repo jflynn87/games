@@ -11,7 +11,8 @@ $(document).ready(function () {
         const field = buildField();
         field.then((response) => {$('#field_status').text("Field Loaded");
                                 
-                                fieldUpdates()}
+                                fieldUpdates()
+                                golferResultsUpdates()}
                                 //need a promise here 
                                 //summaryStats()}
         )
@@ -56,12 +57,30 @@ function fieldUpdates() {
     .then((responseJSON) => {
           data = responseJSON
           console.log(data)
+          //$('#field-updates').text("Updates complete, Field complete")
+
+
+})
+}
+
+function golferResultsUpdates() {
+    console.log('golfer update')
+    $('#status').append('<p id=field-updates>Updating Golfer Results....</p>');
+    fetch("/golf_app/golfer_results_updates/", 
+    {method: "GET",
+    }
+          )
+    .then((response) => response.json())
+    .then((responseJSON) => {
+          data = responseJSON
+          console.log(data)
           $('#field-updates').text("Updates complete, Field complete")
 
 
 })
 }
-    
+
+
 function summaryStats() {
     $('#status').append('<p id=field-updates>Getting Summary data....</p>');
     fetch("/golf_app/setup_summary_data/", 

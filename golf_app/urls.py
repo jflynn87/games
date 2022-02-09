@@ -74,6 +74,7 @@ urlpatterns= [
     path('get_msgs/<int:pk>', views.GetMsgsAPI.as_view(), name='get_msgs'),
     path('build_field/', views.BuildFieldAPI.as_view(), name='build_field'),
     path('field_updates/', views.FieldUpdatesAPI.as_view(), name='field_updates'),
+    path('golfer_results_updates/', views.UpdateGolferResultsAPI.as_view(), name='golfer_results_update'),
     path('setup_summary_stats/<str:pga_t_num>/<str:espn_t_num>', views.SetupStatsAPI.as_view(), name='setup_summary_stats'),
    
 

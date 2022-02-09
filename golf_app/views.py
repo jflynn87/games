@@ -2470,7 +2470,7 @@ class BuildFieldAPI(APIView):
 
 class FieldUpdatesAPI(APIView):
     def get(self, request):
-        
+        print ('updateing field data')
         start = datetime.datetime.now()
         t = Tournament.objects.get(current=True)
         d = {}
@@ -2504,11 +2504,11 @@ class FieldUpdatesAPI(APIView):
                             f.season_stats.update({k: v})
         
                 f.save()
-            print ('updated field objects results, dur: ', datetime.datetime.now() - start)
-            print ('starting golfer results update')
-            for g in Golfer.objects.all():
-                g.results = g.get_season_results()
-                g.save()
+            #print ('updated field objects results, dur: ', datetime.datetime.now() - start)
+            # print ('starting golfer results update')
+            # for g in Golfer.objects.all():
+            #     g.results = g.get_season_results()
+            #     g.save()
 
             d['status'] = {'msg': 'Updated Field Complete'}
         except Exception as e:
@@ -2516,6 +2516,27 @@ class FieldUpdatesAPI(APIView):
             d['error'] = {'msg': str(e)}
         
         print ('Update Field API time: ', datetime.datetime.now() - start)
+
+        return JsonResponse(json.dumps(d), status=200, safe=False)
+
+
+class UpdateGolferResultsAPI(APIView):
+    def get(self, request):
+        print ('starting golfer results update')
+        start = datetime.datetime.now()
+        t = Tournament.objects.get(current=True)
+        d = {}
+        try:
+            for g in Golfer.objects.all():
+                g.results = g.get_season_results()
+                g.save()
+
+            d['status'] = {'msg': 'Golfer Results Updates Complete'}
+        except Exception as e:
+            print ('Update Field API error: ', e)
+            d['error'] = {'msg': str(e)}
+        
+        print ('Update Golfer Results API time: ', datetime.datetime.now() - start)
 
         return JsonResponse(json.dumps(d), status=200, safe=False)
 
