@@ -44,9 +44,11 @@ class ESPNData(object):
             sd = ScoreDict()
 
         self.event_data = {}
+        self.competition_data = {}
         self.field_data = {}
         event_found = False
         for event in self.all_data.get('events'):
+            print (event.get('id'), self.t.espn_t_num)
             if event.get('id') == self.t.espn_t_num:
                 event_found = True
                 #pre_name_check = datetime.now()
@@ -81,7 +83,7 @@ class ESPNData(object):
 
 
     def started(self):
-        if self.event_data.get('status').get('type').get('state') != 'pre':
+        if self.event_data and self.event_data.get('status').get('type').get('state') != 'pre':
            return True
             
         return False

@@ -47,6 +47,7 @@ from django.core import serializers
 from collections import OrderedDict
 
 
+
 class FieldListView(LoginRequiredMixin,TemplateView):
     login_url = 'login'
     template_name = 'golf_app/field_list.html'
@@ -2503,7 +2504,8 @@ class FieldUpdatesAPI(APIView):
                             f.season_stats.update({k: v})
         
                 f.save()
-
+            print ('updated field objects results, dur: ', datetime.datetime.now() - start)
+            print ('starting golfer results update')
             for g in Golfer.objects.all():
                 g.results = g.get_season_results()
                 g.save()
@@ -2517,5 +2519,38 @@ class FieldUpdatesAPI(APIView):
 
         return JsonResponse(json.dumps(d), status=200, safe=False)
 
+
+class SetupStatsAPI(APIView):
+    def get(self, request, pga_t_num, espn_t_num):
+        
+        start = datetime.datetime.now()
+        d = {}
+        t = Tournament.objects.get(current=True)
+        if t.espn_t_num != espn_t_num or t.pga_tournament_num != pga_t_num:
+            d['error'] = {'msg': 'Tnums not equal for current T'}
+            return JsonResponse(json.dumps(d), status=200, safe=False)
+
+        try:
+            field_db_count = Field.objects.filter(tournament=t).count()
+            espn_count = len(espn_api.ESPNData().field())
+
+            #should centralize this code somewhere, duplicated wiht populateField.get_field()
+            headers = {'User-Agent': 'Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.149 Mobile Safari/537.36'}
+            json_url = 'https://statdata-api-prod.pgatour.com/api/clientfile/Field?T_CODE=r&T_NUM=' + str(t.pga_tournament_num) +  '&YEAR=' + str(t.season.season) + '&format=json'
+            req = urllib.request.Request(json_url, headers=headers)
+            data = json.loads(urllib.request.urlopen(req).read())
+
+            pga_count = len([x for x in data["Tournament"]["Players"] if x.get('isAlternate') == "No"])
+
+            d['status'] = {'espn_count': espn_count, 
+                           'pga_count': pga_count, 
+                            'field_db_count': field_db_count}
+        except Exception as e:
+            print ('Setup Summary Stats API error: ', e)
+            d['error'] = {'msg': str(e)}
+        
+        print ('Setup Summary Status API time: ', datetime.datetime.now() - start)
+
+        return JsonResponse(json.dumps(d), status=200, safe=False)
 
 

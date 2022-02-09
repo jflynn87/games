@@ -19,15 +19,18 @@ from bs4 import BeautifulSoup
 
 start = datetime.now()
 t = Tournament.objects.get(current=True)
-#sd = ScoreDict.objects.get(tournament=t)
-
-#espn = espn_api.ESPNData(t=t, data=sd.espn_api_data)
+print (t.started())
+exit()
 espn = espn_api.ESPNData()
 
-#print ('espn cut round: ', espn.event_data.get('tournament').get('cutRound'))
-print (espn.get_round())
-print (espn.competition_data.get('status').get('type').get('state'))
-print (espn.cut_line())
+print (espn.started())
+
+exit()
+
+for f in Field.objects.filter(tournament=t, group__number=3):
+    e_num = f.golfer.espn_number
+    print (f, espn.get_rank(e_num))
+
 
 exit()
 for p in Picks.objects.filter(playerName__tournament=t, user__pk=1):
