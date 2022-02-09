@@ -11,7 +11,7 @@ $(document).ready(function () {
         const field = buildField();
         field.then((response) => {$('#field_status').text("Field Loaded");
                                 
-                                fieldUpdates()
+                                fieldUpdates()}
                                 //need a promise here 
                                 //summaryStats()}
         )
