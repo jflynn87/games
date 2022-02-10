@@ -18,8 +18,14 @@ from urllib.request import Request, urlopen
 from bs4 import BeautifulSoup
 
 start = datetime.now()
-t = Tournament.objects.get(current=True)
-print (t.started())
+t = Tournament.objects.filter(season__current=True).exclude(current=True).last()
+#sd = ScoreDict.objects.get(tournament=t)
+#sd.update_sd_data()
+#print (sd.data.get('info'))
+#print (len({k:v for k,v in sd.data.items() if k != 'info' and v.get('rank') == '-'}))
+
+f = Field.objects.get(tournament=t, playerName='Brian Harman')
+print (f.golfer.results)
 exit()
 espn = espn_api.ESPNData()
 

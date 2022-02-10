@@ -24,7 +24,7 @@ class ScrapeCBS(object):
             try:
                 print ('url', 'https://www.cbssports.com/nfl/gametracker/live/NFL_' + str(game.game_time.date()).replace('-', '') + '_' + game.away.nfl_abbr + '@' + game.home.nfl_abbr + '/')
                 html = urllib.request.urlopen('https://www.cbssports.com/nfl/gametracker/live/NFL_' + str(game.game_time.date()).replace('-', '') + '_' + game.away.nfl_abbr + '@' + game.home.nfl_abbr + '/')
-                                                
+                
             except Exception:
 
                 try:

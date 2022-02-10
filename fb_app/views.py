@@ -1064,8 +1064,8 @@ class TeamOffStatsView(APIView):
         for data in stats:
             row = data.find_all('td')
             team = row[0].a['href'].split('/')[3]
-            if team == 'LAR':
-                team = "LA"
+            #if team == 'LAR':
+            #    team = "LA"
             gp = row[1].text.strip()
             yards = row[2].text.strip()
             yards_per_game = row[3].text .strip()
@@ -1108,8 +1108,8 @@ class TeamDefStatsView(APIView):
         for data in stats:
             row = data.find_all('td')
             team = row[0].a['href'].split('/')[3]
-            if team == 'LAR':
-                team = "LA"
+            #if team == 'LAR':
+            #    team = "LA"
             stats_dict[team] = {
                                     'solo tackles': row[2].text.strip(),
                                     'assisted tackles': row[3].text.strip(),
@@ -1144,8 +1144,8 @@ class TeamOppStatsView(APIView):
         for data in stats:
             row = data.find_all('td')
             team = row[0].a['href'].split('/')[3]
-            if team == 'LAR':
-                team = "LA"
+            #if team == 'LAR':
+            #    team = "LA"
             # gp = row[1].text.strip()
             # yards = row[2].text.strip()
             # yards_per_game = row[3].text .strip()
