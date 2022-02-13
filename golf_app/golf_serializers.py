@@ -54,13 +54,11 @@ class PreStartFieldSerializer(serializers.ModelSerializer):
 
 class NewFieldSerializer(serializers.ModelSerializer):
 
-    #recent = serializers.SerializerMethodField('get_recent')
     espn_link = serializers.SerializerMethodField('get_espn_link')
     pga_link = serializers.SerializerMethodField('get_pga_link')
     started = serializers.SerializerMethodField('get_started')
     lock_group = serializers.SerializerMethodField('get_group_lock')
     fedex_pick = serializers.SerializerMethodField('get_fedex')
-    #user = serializers.SerializerMethodField('get_user')
 
     class Meta:
         model = Field
@@ -76,35 +74,22 @@ class NewFieldSerializer(serializers.ModelSerializer):
 
     def get_started(self, field):
         start = datetime.now()
-        #obj = espn_api.ESPNData(data=self.context.get('espn_data'))
         espn = self.context.get('espn_data')
         started = espn.player_started(field.golfer.espn_number)
-        #print ('started check ', field.playerName, started)
-        #print ('get_started dur', datetime.now() - start)
         return started
 
     def get_group_lock(self, field):
         start = datetime.now()
-        #group = field.group
+
         if Picks.objects.filter(user=self.context.get('user'), playerName__group=field.group).exists():
-            #if group.num_of_picks == 1 and self.get_started(field):
-            #    return True
-            #elif group.num_of_picks() > 1:
                 started_count = 0
                 for p in Picks.objects.filter(user=self.context.get('user'), playerName__group=field.group, playerName__tournament=field.tournament):
                     if self.get_started(Field.objects.get(playerName=p.playerName, tournament=p.playerName.tournament)):
                         started_count += 1
                 if started_count == Picks.objects.filter(user=self.context.get('user'), playerName__group=field.group).count():
-                    #print ('get_group_lock True dur: ', datetime.now() - start)
                     return True
                 else:
-                    #print ('get_group_lock False dur: ', datetime.now() - start)
                     return False
-            #elif group.num_of_picks() == 1:
-            #    pick = Picks.objects.get(user=self.context.get('user'), playerName__group=field.group)
-            #    if self.get_started(field):
-            #        return True
-        #print ('get_group_lock default dur: ', datetime.now() - start)
         return False
 
 

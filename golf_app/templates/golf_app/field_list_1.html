@@ -1,0 +1,114 @@
+{% extends "golf_app/golf_app_base.html" %}
+{%load static%}
+{%load golf_extras%}
+{%load compress%}
+{% block body_block %}
+
+
+<script>
+
+    function formatGolfer() {
+        console.log('new func ')
+    }
+</script>
+
+
+<div class='load'>
+
+
+<p hidden id='tournament_key'>{{tournament.pk}}</p>
+<p hidden id='pga_t_num'>{{tournament.pga_tournament_num}}</p>
+
+{%if tournament.pga_tournament_num == '999'%}
+<script type="text/javascript" src="{%static 'golf_app/js/olympic_countries.js'%}"></script> 
+{%endif%}
+
+<h4 id="t-name">{{tournament.name}}</h4>
+
+{%if tournament.field_quality == 'major'%}
+<h3>Major - 150 bonus points for the winning picks</h3>
+{%elif tournament.field_quality == 'strong'%}
+<h3>Strong Field - 100 bonus points for the winning picks</h3>
+{%elif tournament.field_quality == 'weak'%}
+<h3>Weak Field - 50 bonus points for the winning picks</h3>
+{%else%}
+<h3>Field Quality Not Available</h3>
+{%endif%}
+
+
+<div id=withdraw></div>
+<div id='espn_missing'></div>
+
+{%if not tournament.started or tournament.late_picks%}
+<p>Please make 1 pick for each group below</p>
+
+<form name="random" method="post">
+    {%csrf_token%}
+    <input type="text" name="random" value="random" hidden>
+    <p>or click for random picks  <input type="submit" class="btn btn-primary" value="Random"> </p>
+</form>
+
+<span style="float: right;" >
+    <a href="#" id="download" >
+    <i class="fas fa-file-download" title="Download CSV" data-toggle="tooltip"> Download Data</i>
+    </a>
+</span>
+{%else%}
+<p>
+    <span style="text-align:left;">Tournament Started - too late to make picks</span>
+    <span style="float: right;  ">  
+    <a href="#" id="download">
+    <i class="fas fa-file-download" title="Download CSV" data-toggle="tooltip"> Download Data</i>
+    </a>
+    </span>
+</p>
+{%endif%} 
+
+        <!-- <div class="alert alert-danger"></div> -->
+        <h2 id='error_msg'></h2>
+        <!-- </div> -->
+<form action="post">
+<table class="table table-bordered">
+{%for group, data in field_dict.items%}
+    <tr class="total_score"> <th>Group  {{group}} - Pick {{data.num_of_picks}} Golfers</th></tr>
+        {%for espn_num, field_d in data.items%}
+        {%if espn_num != 'num_of_picks'%}
+            <tr onload="formatGolfer()"><td>{{field_d.field.playerName}}</td>  <td>{{field_d.started}}</td></tr>
+        {%endif%}
+        {%endfor%}
+{%endfor%}
+</table>
+</form>
+
+<div id='groups_div' hidden>
+    <ul id=groups_list>
+    {%for g in groups%}
+    <li>{{g.number}}</li>
+    {%endfor%}
+    </ul>
+
+</div>
+<div id='top_sect'></div>
+      <!-- Start of Picks Area -->
+<div id='field_sect'>
+<!-- <div id='bottom_sect'></div> -->
+</div>
+
+
+
+<!-- {%compress js%}
+<script type="text/javascript" src="{%static 'golf_app/js/field_sect.js'%}"></script> 
+{%endcompress%}
+<script type="text/javascript" src="//unpkg.com/xlsx/dist/xlsx.full.min.js"></script>
+{%compress css%}
+<link rel="stylesheet" href='{%static "golf_app/css/load.css"%}'> 
+{%endcompress%}
+
+{%if tournament.pga_tournament_num != "470" and tournament.pga_tournament_num != "018" and tournament.pga_tournament_num != "468"%}
+<script type="text/babel" src="{%static 'test_app/src/withdraw.js'%}"></script> 
+{%endif%} 
+<script type="text/babel" src="{%static 'test_app/src/check_espn_num.js'%}"></script> 
+ -->
+
+
+{%endblock%}

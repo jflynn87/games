@@ -166,8 +166,12 @@ class ESPNData(object):
         if self.event_data.get('tournament').get('cutCount') != 0:
             return self.event_data.get('tournament').get('cutCount') + 1
         elif self.t.has_cut and int(self.get_round()) <= int(self.t.saved_cut_round):
-            return  min(int(x.get('status').get('position').get('id')) for x in self.field_data \
-                     if int(x.get('status').get('position').get('id')) > int(self.t.saved_cut_num)) 
+            try:
+                return  min(int(x.get('status').get('position').get('id')) for x in self.field_data \
+                        if int(x.get('status').get('position').get('id')) > int(self.t.saved_cut_num)) 
+            except Exception as e:
+                print ('issue wiht cut num, returning saved model num', e)
+                return self.t.saved_cut_num
         else:
             cuts = [v for v in self.field_data if v.get('status').get('type').get('id') == '3']
             return len(cuts) + 1  
@@ -183,6 +187,14 @@ class ESPNData(object):
            #return golfer_data.get('status').get('type').get('shortDetail')
         else:
            return golfer_data.get('status').get('position').get('id')
+
+    def get_rank_display(self, espn_number):
+        golfer_data = self.golfer_data(espn_number)
+        if not golfer_data:
+            return "WD"
+        else:
+           return golfer_data.get('status').get('position').get('displayName')
+
 
     def group_stats(self):
         '''takes a espn api obj, returns a dict with best in group and group cut counts'''
@@ -282,12 +294,14 @@ class ESPNData(object):
             golfer_data = self.golfer_data(data.get('id'))
             thru = self.get_thru(data.get('id'))
             d[golfer_data.get('sortOrder')] = {
-                                    'rank': self.get_rank(data.get('id')),
+                                    #'rank': self.get_rank(data.get('id')),
+                                    'rank': self.get_rank_display(data.get('id')),
                                     'r1': self.get_round_score(data.get('id'), 1),
                                     'r2': self.get_round_score(data.get('id'), 2),
                                     'r3': self.get_round_score(data.get('id'), 3),
                                     'r4': self.get_round_score(data.get('id'), 4),
-                                    'total_score': golfer_data.get('score').get('displayValue'),
+                                    #'total_score': golfer_data.get('score').get('displayValue'),
+                                    'total_score': self.to_par(data.get('id')),
                                     'change': golfer_data.get('movement'),
                                     #'thru': golfer_data.get('status').get('type').get('shortDetail'),
                                     'thru': thru,
@@ -313,6 +327,8 @@ class ESPNData(object):
             thru = "WD"
         return thru
 
+    def to_par(self, espn_num):
+        return self.golfer_data(espn_num).get('statistics')[0].get('displayValue')
 
     def get_round_score(self, espn_num, r):
         try:
@@ -329,7 +345,8 @@ class ESPNData(object):
 
     def leader_score(self):
         try:
-            return [v.get('score').get('displayValue') for v in self.field_data if self.get_rank(v.get('id')) == '1'][0]
+            return [self.to_par(v.get('id')) for v in self.field_data if self.get_rank(v.get('id')) == '1'][0]
+            #return [v.get('score').get('displayValue') for v in self.field_data if self.get_rank(v.get('id')) == '1'][0]
         except Exception as e:
             print ('espn api leader score exception: ', e)
             return None

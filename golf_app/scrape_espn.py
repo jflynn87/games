@@ -58,11 +58,12 @@ class ScrapeESPN(object):
             t_name = soup.find('h1', {'class', 'Leaderboard__Event__Title'}).text
             start = datetime.now()
             
-            if self.tournament.pga_tournament_num != '999' and t_name != self.tournament.name and not self.tournament.ignore_name_mismatch and not self.ignore_name_mismatch:
-                match = utils.check_t_names(t_name, self.tournament)
-                if not match:
-                    print ('tournament mismatch: espn name: ', t_name, 'DB name: ', self.tournament.name)
-                    return {}
+            #using T numb for URL construction so can trust the data
+            #if self.tournament.pga_tournament_num != '999' and t_name != self.tournament.name and not self.tournament.ignore_name_mismatch and not self.ignore_name_mismatch:
+            #    match = utils.check_t_names(t_name, self.tournament)
+            #    if not match:
+            #        print ('tournament mismatch: espn name: ', t_name, 'DB name: ', self.tournament.name)
+            #        return {}
 
 
             print ('espn T Name: ', t_name)

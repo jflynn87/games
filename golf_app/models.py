@@ -617,21 +617,19 @@ class Golfer(models.Model):
         #    t = Tournament.objects.get(current=True)
 
         #data = {}
-        if self.results:
-            missing_t = Tournament.objects.filter(season__season__gte='2021').exclude(current=True).exclude(pga_tournament_num='468').count() - len(self.results)
-        else:
-            missing_t = Tournament.objects.filter(season__season__gte='2021').exclude(current=True).exclude(pga_tournament_num='468').count()
+        #if self.results:
+        #    missing_t = Tournament.objects.filter(season__season__gte='2021').exclude(current=True).exclude(pga_tournament_num='468').count() - len(self.results)
+        #else:
+        #    missing_t = Tournament.objects.filter(season__season__gte='2021').exclude(current=True).exclude(pga_tournament_num='468').count()
         #print ('results counts ', missing_t)
- 
+        pre_t = datetime.now()
         if self.results and not rerun:
-            #tournaments = Tournament.objects.filter(season=season).exclude(pk__in=list(self.results.keys())).exclude(current=True).exclude(pga_tournament_num='468') #ryder cup
             tournaments = Tournament.objects.filter(season__season__gte='2021').exclude(pk__in=list(self.results.keys())).exclude(current=True).exclude(pga_tournament_num='468') #ryder cup
         else:
-            #tournaments = Tournament.objects.filter(season=season).exclude(current=True).exclude(pga_tournament_num='468')
             tournaments = Tournament.objects.filter(season__season__gte='2021').exclude(current=True).exclude(pga_tournament_num='468')
             self.results = {}
         
-        #print (tournaments)
+        print ('golfer results post t : ', self, datetime.now() - pre_t, tournaments)
         for t in tournaments:
             sd = ScoreDict.objects.get(tournament=t)
             score = [v for k, v in sd.data.items() if k != 'info' and v.get('pga_num') == self.espn_number] 

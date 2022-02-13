@@ -18,14 +18,45 @@ from urllib.request import Request, urlopen
 from bs4 import BeautifulSoup
 
 start = datetime.now()
-t = Tournament.objects.filter(season__current=True).exclude(current=True).last()
-#sd = ScoreDict.objects.get(tournament=t)
-#sd.update_sd_data()
-#print (sd.data.get('info'))
-#print (len({k:v for k,v in sd.data.items() if k != 'info' and v.get('rank') == '-'}))
+t = Tournament.objects.get(current=True)
+espn = espn_api.ESPNData()
 
-f = Field.objects.get(tournament=t, playerName='Brian Harman')
-print (f.golfer.results)
+context = {'espn_data': espn, 'user': User.objects.get(pk=1)}
+data= golf_serializers.NewFieldSerializer(Field.objects.filter(tournament=t, group__number=9), context=context, many=True).data
+
+print ('dur',  datetime.now() - start)
+
+exit()
+
+
+
+for g in Golfer.objects.filter(golfer_name__in=['Jon Rahm', 'Justin Thomas']):
+    g.get_season_results()
+
+print ('duration: ', datetime.now() - start)
+exit()
+
+t = Tournament.objects.filter(season__current=True).exclude(current=True).last()
+sd = ScoreDict.objects.get(tournament=t)
+print (sd.data.get('Brian Harman'))
+mdf_golfers = ([v.get('pga_num') for k,v in sd.data.items() if k != 'info' and v.get('rank') in ['-']])
+
+sd.update_sd_data()
+
+for g in Golfer.objects.filter(espn_number__in=mdf_golfers):
+    print (g)
+    start_loop = datetime.now()
+    g.get_season_results(rerun=True)
+    print ('dur: ', datetime.now() - start_loop)    
+
+
+for x in Golfer.objects.filter(espn_number__in=mdf_golfers):
+    print (x, len(x.results), x.results.get('206'))
+
+exit()
+
+res = g.get_season_results()
+print (res)
 exit()
 espn = espn_api.ESPNData()
 

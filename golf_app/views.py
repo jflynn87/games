@@ -48,93 +48,105 @@ from collections import OrderedDict
 
 
 
-class FieldListView(LoginRequiredMixin,TemplateView):
-    login_url = 'login'
-    template_name = 'golf_app/field_list.html'
-    model = Field
-    #redirect_field_name = 'next'
+# class FieldListView(LoginRequiredMixin,TemplateView):
+#     login_url = 'login'
+#     template_name = 'golf_app/field_list.html'
+#     model = Field
 
-    def get_context_data(self,**kwargs):
-        context = super(FieldListView, self).get_context_data(**kwargs)
-        tournament = Tournament.objects.get(current=True)
-        # print (tournament.started())
-        # #check for withdrawls and create msg if there is any
-        # try:
-        #     score_file = calc_score.getRanks({'pk': tournament.pk})
-        #     wd_list = []
-        #     print ('score file', score_file[0])
-        #     if score_file[0] == "score lookup fail":
-        #         wd_list = []
-        #         error_message = ''
-        #     else:
-        #         for golfer in Field.objects.filter(tournament=tournament):
-        #             if golfer.playerName not in score_file[0]:
-        #                 print ('debug')
-        #                 wd_list.append(golfer.playerName)
-        #                 #print ('wd list', wd_list)
-        #         if len(wd_list) > 0:
-        #             error_message = 'The following golfers have withdrawn:' + str(wd_list)
-        #             for wd in wd_list:
-        #                 Field.objects.filter(tournament=tournament, playerName=wd).update(withdrawn=True)
-        #         else:
-        #             error_message = None
-        # except Exception as e:
-        #     print ('score file lookup issue', e)
-        #     error_message = None
+#     def get_context_data(self,**kwargs):
+#         context = super(FieldListView, self).get_context_data(**kwargs)
+#         tournament = Tournament.objects.get(current=True)
+
+#         context.update({
+#         'field_list': Field.objects.filter(tournament=Tournament.objects.get(current=True)),
+#         'tournament': tournament,
+#         })
+#         return context
+
+#     @transaction.atomic
+#     def post(self, request):
+#         tournament = Tournament.objects.get(current=True)
+#         group = Group.objects.filter(tournament=tournament)
+#         user = User.objects.get(username=request.user)
+
+#         print ('user', user)
+#         print ('started', tournament.started())
+
+#         if tournament.started() and tournament.late_picks is False:
+#             print ('picks too late', user, datetime.datetime.now())
+#             print (timezone.now())
+#             return HttpResponse ("Sorry it is too late to submit picks.")
+        
+#         if Picks.objects.filter(playerName__tournament=tournament, user=user).count()>0:
+#             Picks.objects.filter(playerName__tournament=tournament, user=user).delete()
+#             ScoreDetails.objects.filter(pick__playerName__tournament=tournament, user=user).delete()
+
+#         if request.POST.get('random') == 'random':
+#             picks = tournament.create_picks(user, 'random')    
+#             print ('random picks submitted', user, datetime.datetime.now(), picks)
+#         else:
+#             form = request.POST
+#             if tournament.last_group_multi_pick():
+#                 #hard coding to 6, should i change to dynamic?
+#                 last_group = form.getlist('multi-group-6')
+#             pick_list = []
+            
+#             for k, v in form.items():
+#                 if k != 'csrfmiddlewaretoken' and k!= 'userid' \
+#                    and k != 'multi-group-6':
+#                     pick_list.append(Field.objects.get(pk=v))
+#                 elif k == 'multi-group-6':
+#                     for pick in last_group:
+#                         pick_list.append(Field.objects.get(pk=pick))
+
+#             tournament.save_picks(pick_list, user, 'self')
+
+#             print ('user submitting picks', datetime.datetime.now(), request.user, pick_list)
+        
+#         if UserProfile.objects.filter(user=user).exists():
+#             profile = UserProfile.objects.get(user=user)
+#             if profile.email_picks:
+#                 email_picks(tournament, user)
+
+#         return redirect('golf_app:picks_list')
+
+class FieldListView1(LoginRequiredMixin, TemplateView):
+    login_url = 'login'
+    template_name = 'golf_app/field_list_1.html'
+
+    def get_context_data(self, **kwargs):
+        context = super(FieldListView1, self).get_context_data(**kwargs)
+        start = datetime.datetime.now()
+        #utils.save_access_log(self.request, 'new_picks')
+        try:
+            tournament = Tournament.objects.get(current=True)
+        except Exception:
+            t = Tournament.objects.all().order_by('-pk').first()
+            if t.pga_tournament_num == '999':
+                tournament=Tournament.objects.get(season__current=True, pga_tournament_num='999')
+            else: tournament = None
+
+        d = {}
+        espn = espn_api.ESPNData()
+        for f in Field.objects.filter(tournament=tournament):
+            if d.get(f.group.number):
+                d.get(f.group.number).update({f.golfer.espn_number: {'field': f,
+                                                'started': espn.player_started(f.golfer.espn_number)}})
+            else:
+                d[f.group.number] = {f.golfer.espn_number: {'field': f,
+                                                            'started': espn.player_started(f.golfer.espn_number)},
+                                    'num_of_picks': f.group.num_of_picks()}
 
         context.update({
-        'field_list': Field.objects.filter(tournament=Tournament.objects.get(current=True)),
+        'field_list': Field.objects.filter(tournament=tournament),
         'tournament': tournament,
+        'groups': Group.objects.filter(tournament=tournament),
+        'field_dict': d
         #'error_message': error_message
         })
+        print ('new field 1 context dur: ', datetime.datetime.now() - start)
         return context
 
-    @transaction.atomic
-    def post(self, request):
-        tournament = Tournament.objects.get(current=True)
-        group = Group.objects.filter(tournament=tournament)
-        user = User.objects.get(username=request.user)
-
-        print ('user', user)
-        print ('started', tournament.started())
-
-        if tournament.started() and tournament.late_picks is False:
-            print ('picks too late', user, datetime.datetime.now())
-            print (timezone.now())
-            return HttpResponse ("Sorry it is too late to submit picks.")
-        
-        if Picks.objects.filter(playerName__tournament=tournament, user=user).count()>0:
-            Picks.objects.filter(playerName__tournament=tournament, user=user).delete()
-            ScoreDetails.objects.filter(pick__playerName__tournament=tournament, user=user).delete()
-
-        if request.POST.get('random') == 'random':
-            picks = tournament.create_picks(user, 'random')    
-            print ('random picks submitted', user, datetime.datetime.now(), picks)
-        else:
-            form = request.POST
-            if tournament.last_group_multi_pick():
-                #hard coding to 6, should i change to dynamic?
-                last_group = form.getlist('multi-group-6')
-            pick_list = []
-            
-            for k, v in form.items():
-                if k != 'csrfmiddlewaretoken' and k!= 'userid' \
-                   and k != 'multi-group-6':
-                    pick_list.append(Field.objects.get(pk=v))
-                elif k == 'multi-group-6':
-                    for pick in last_group:
-                        pick_list.append(Field.objects.get(pk=pick))
-
-            tournament.save_picks(pick_list, user, 'self')
-
-            print ('user submitting picks', datetime.datetime.now(), request.user, pick_list)
-        
-        if UserProfile.objects.filter(user=user).exists():
-            profile = UserProfile.objects.get(user=user)
-            if profile.email_picks:
-                email_picks(tournament, user)
-
-        return redirect('golf_app:picks_list')
 
 class NewFieldListView(LoginRequiredMixin,TemplateView):
     login_url = 'login'
@@ -2384,7 +2396,7 @@ class SummaryStatsAPI(APIView):
                     espn = espn = espn_api.ESPNData(t=t, data=data)
                 else:
                     espn = espn_api.ESPNData(force_refresh=True)
-                
+
                 d['source'] = 'espn_api'
                 d['cut_num'] = espn.cut_num()
                 d['cut_info'] = espn.cut_line()

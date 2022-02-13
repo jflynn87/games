@@ -7,7 +7,8 @@ from rest_framework import routers
 app_name = 'golf_app'
 
 urlpatterns= [
-    url(r'^field/$',views.FieldListView.as_view(),name='field'),
+    #url(r'^field/$',views.FieldListView.as_view(),name='field'),
+    path('new_field_list_1', views.FieldListView1.as_view(), name='new_field_list_1'),
     url(r'^picks_list/$',views.PicksListView.as_view(),name='picks_list'),
     url(r'^total_score/$',views.SeasonTotalView.as_view(),name='total_score'),
     url(r'^setup/$',views.setup,name='setup'),
