@@ -629,7 +629,7 @@ class Golfer(models.Model):
             tournaments = Tournament.objects.filter(season__season__gte='2021').exclude(current=True).exclude(pga_tournament_num='468')
             self.results = {}
         
-        print ('golfer results post t : ', self, datetime.now() - pre_t, tournaments)
+        #print ('golfer results post t : ', self, datetime.now() - pre_t, tournaments)
         for t in tournaments:
             sd = ScoreDict.objects.get(tournament=t)
             score = [v for k, v in sd.data.items() if k != 'info' and v.get('pga_num') == self.espn_number] 
@@ -1179,20 +1179,6 @@ class ScoreDict(models.Model):
         d = self.data
         for k, v in d.items():
             v.update({'sort_rank': utils.formatRank(v.get('rank'))})
-            # if Field.objects.filter(tournament=self.tournament, playerName=k).exists():
-            #     f = Field.objects.get(tournament=self.tournament, playerName=k)
-            #     v.update({'sort_rank': f.rank_as_int()})
-            # else:
-
-
-                # if v.get('rank') != None and v.get('rank') not in self.tournament.not_playing_list(): 
-                #     if type(v.get('rank')) == int:
-                #         v.update({'sort_rank': v.get('rank')})
-                #     else:
-                #         v.update({'sort_rank': int(v.get('rank')[1:])})
-                # else:
-                #     v.update({'sort_rank': 999})
-
         
         sorted_score_dict = {k:v for k, v in sorted(d.items(), key=lambda item: item[1].get('sort_rank'))}
         
@@ -1210,10 +1196,16 @@ class ScoreDict(models.Model):
         if sd_len - field_len == 0:
             pass
         elif abs(sd_len - field_len) < 5:
-            print ("SD Match with diffs less than 5")
+            print ("SD Match with diffs less than 5", self.tournament)
         else:
-            good = False
+            #good = False
             print ("BAD SD based on counts: ", self.tournament, ' SD Len: ', sd_len, ' Field Len: ', field_len)
+            return False
+
+        #if self.data.get('info').get('complete') == "False" or self.data.get('info').get('round_status') != 'Final':
+        if self.data.get('info').get('round_status') != 'Final':
+            print ("T not complete", self.tournament, self.data.get('info'))
+            return False
 
         best = ScoreDetails.objects.filter(pick__playerName__tournament=self.tournament).exclude(gross_score__isnull=True).order_by('gross_score').first()
         print (best)

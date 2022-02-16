@@ -2587,3 +2587,22 @@ class SetupStatsAPI(APIView):
         return JsonResponse(json.dumps(d), status=200, safe=False)
 
 
+class SDStatusAPI(APIView):
+    def get(self, request):
+        
+        start = datetime.datetime.now()
+        d = {}
+        try:
+            for t in Tournament.objects.filter(season__current=True).exclude(current=True).order_by('-pk'):
+                sd = ScoreDict.objects.get(tournament=t)
+                d[t.name] = {'sd_valid': sd.data_valid()}
+
+        except Exception as e:
+            print ('SD Status API error: ', e)
+            d['error'] = {'msg': str(e)}
+        
+        print ('SD Status API time: ', datetime.datetime.now() - start)
+
+        return JsonResponse(json.dumps(d), status=200, safe=False)
+
+

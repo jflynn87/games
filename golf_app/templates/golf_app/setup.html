@@ -34,6 +34,39 @@
 <p>PGA Status file:  {{status}}</p>
 <br>
 
+<div id="setup_div" >
+  <table id="setup_table" class="table">
+    <thead>
+      <th>Step</th>
+      <th>Status</th>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Field Setup</td>
+        <td id="field_setup_status">....</td>
+      </tr>
+      <tr>
+        <td>Field Stats Updates</td>
+        <td id="field_stats_update_status">....</td>
+      </tr>
+      <tr>
+        <td>Golfer Stats Updates</td>
+        <td id="golfer_stats_update_status">....</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <table id="sd_status_table" class="table">
+    <thead>
+      <th>Tournament</th>
+      <th>SD Valid?</th>
+    </thead>
+    <tbody id="sd_status_tbody">
+
+    </tbody>
+  </table>
+</div>
+
 
 <h5>Current Event</h5>
 
@@ -51,6 +84,8 @@
     <td><a href="{{curr_event.link}}">{{espn_t_num}}</a></td>
   </tr>
 </table>
+
+
 <br>
 <h5>ESPN Full Schedule</h5>
 <table class='table'>

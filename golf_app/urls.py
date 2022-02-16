@@ -77,6 +77,7 @@ urlpatterns= [
     path('field_updates/', views.FieldUpdatesAPI.as_view(), name='field_updates'),
     path('golfer_results_updates/', views.UpdateGolferResultsAPI.as_view(), name='golfer_results_update'),
     path('setup_summary_stats/<str:pga_t_num>/<str:espn_t_num>', views.SetupStatsAPI.as_view(), name='setup_summary_stats'),
+    path('sds_status/', views.SDStatusAPI.as_view(), name='sds_status'),
    
 
     

@@ -32,10 +32,13 @@ def create_groups(tournament_number, espn_t_num=None):
             last_tournament = Tournament.objects.get(current=True, complete=True, season=season)
             last_tournament.current = False
             last_tournament.save()
-            last_sd = ScoreDict.objects.get(tournamnet=last_tournament)
-            last_sd.update_sd_data()
             key = {}
             key['pk']=last_tournament.pk
+
+            for sd in ScoreDict.objects.filter(tournament__season=season):
+                if not sd.data_valid():
+                    sd.update_sd_data()
+
 
         except ObjectDoesNotExist:
             print ('no current tournament')

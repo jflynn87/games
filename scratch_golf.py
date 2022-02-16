@@ -17,8 +17,23 @@ from collections import OrderedDict
 from urllib.request import Request, urlopen
 from bs4 import BeautifulSoup
 
-start = datetime.now()
-t = Tournament.objects.get(current=True)
+
+t = Tournament.objects.get(pk=206)
+sd = ScoreDict.objects.get(tournament=t)
+sd.update_sd_data()
+
+#print (sd.data.get('Brian Harman'))
+mdf = [v.get('pga_num') for k,v in sd.data.items() if k != 'info' and v.get('rank') in ['T65', '-']] 
+
+
+for g in Golfer.objects.filter(espn_number__in=mdf):
+    g.get_season_results(rerun=True)
+
+for x in Golfer.objects.filter(espn_number__in=mdf):
+    print (x, x.results.get('206'))
+
+exit()
+
 espn = espn_api.ESPNData()
 
 context = {'espn_data': espn, 'user': User.objects.get(pk=1)}
