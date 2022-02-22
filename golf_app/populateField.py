@@ -771,7 +771,7 @@ def get_fedex_data(tournament):
                 #    print (tds[2].text.strip())
                     data[tds[2].text.replace(u'\xa0', u' ')] = {'rank': tds[0].text, 
                                          'last_week_rank': tds[1].text,
-                                        'points': tds[4].text.strip()}
+                                        'points': tds[4].text.strip().replace(',', '')}
         except Exception as e:
             print ('fedex mapping issue ', e)
     except Exception as ex:

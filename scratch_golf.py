@@ -17,8 +17,18 @@ from collections import OrderedDict
 from urllib.request import Request, urlopen
 from bs4 import BeautifulSoup
 
+sd = ScoreDict.objects.get(tournament__current=True)
+espn = espn_api.ESPNData(data=sd.espn_api_data)
+for pick in Picks.objects.filter(playerName__tournament__current=True, user__username='john'):
+    print (pick.playerName.calc_score(api_data=espn))
+exit()
 
-t = Tournament.objects.get(pk=206)
+t = Tournament.objects.get(current=True)
+
+fed = populateField.get_fedex_data(t)
+print (fed.get('Hideki Matsuyama'))
+
+exit()
 sd = ScoreDict.objects.get(tournament=t)
 sd.update_sd_data()
 

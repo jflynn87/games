@@ -64,4 +64,3 @@ def total_score(user):
         return ts.score
     except Exception:
         return 0
-    

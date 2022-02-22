@@ -1,5 +1,6 @@
 #from re import T, template
 
+from errno import ESOCKTNOSUPPORT
 from django.db.models.fields import IntegerField
 from django.db.models.query_utils import RegisterLookupMixin
 from django.shortcuts import render, get_object_or_404, redirect
@@ -127,21 +128,33 @@ class FieldListView1(LoginRequiredMixin, TemplateView):
             else: tournament = None
 
         d = {}
+        info = {}
         espn = espn_api.ESPNData()
-        for f in Field.objects.filter(tournament=tournament):
-            if d.get(f.group.number):
-                d.get(f.group.number).update({f.golfer.espn_number: {'field': f,
-                                                'started': espn.player_started(f.golfer.espn_number)}})
-            else:
-                d[f.group.number] = {f.golfer.espn_number: {'field': f,
-                                                            'started': espn.player_started(f.golfer.espn_number)},
-                                    'num_of_picks': f.group.num_of_picks()}
+        d['t_started'] = espn.started()
+        # if tournament.started:
+        #     context = {'espn_data': espn, 'user': self.request.user}
+        #     data= golf_serializers.NewFieldSerializer(Field.objects.filter(tournament=tournament), context=context, many=True).data
+        # else:
+        #     data= golf_serializers.PreStartFieldSerializer(Field.objects.filter(tournament=t), many=True).data
 
+        for f in Field.objects.filter(tournament=tournament):
+           if d.get(f.group.number):
+               d.get(f.group.number).update({f.golfer.espn_number: {'field': f,
+                                               'started': espn.player_started(f.golfer.espn_number)}})
+           else:
+               d[f.group.number] = {f.golfer.espn_number: {'field': f,
+                                                           'started': espn.player_started(f.golfer.espn_number)},
+                                   'num_of_picks': f.group.num_of_picks()}
+               
+
+        
         context.update({
-        'field_list': Field.objects.filter(tournament=tournament),
+        #'field_list': Field.objects.filter(tournament=tournament),
+        #'field_list': data,
         'tournament': tournament,
         'groups': Group.objects.filter(tournament=tournament),
-        'field_dict': d
+        'field_dict': d,
+        'info':  json.dumps(get_info(tournament)), 
         #'error_message': error_message
         })
         print ('new field 1 context dur: ', datetime.datetime.now() - start)
@@ -992,7 +1005,7 @@ def get_info(t):
             total_picks += g.num_of_picks()
         info_dict['total'] = total_picks
 
-        info_dict['complete'] = t.complete
+        #info_dict['complete'] = t.complete
         print ('info dict function', info_dict)
         return info_dict
     except Exception as e:
@@ -1284,13 +1297,27 @@ class ScoresByPlayerAPI(APIView):
 
 
 class PriorResultAPI(APIView):
+    def get(self, request):
+        start = datetime.datetime.now()
+        #context = {'espn_data': espn_data, 'user': self.request.user}
+        try:
+            t= Tournament.objects.get(current=True)
+            data= golf_serializers.PreStartFieldSerializer(Field.objects.filter(tournament=t), many=True).data
+        except Exception as e:
+            print ('prior res get API error; ', e)
+            data = json.dumps({'msg': str(e)})
+
+        print ('prior result GET duration: ', datetime.datetime.now() - start)
+        return JsonResponse(data, status=200, safe=False)
+
+    
     def post(self, request):
         start = datetime.datetime.now()
         print ('PROIR RESULT api DATA: ', request.data)
         try:
             #g_num = group.split('-')[2]
             t= Tournament.objects.get(pk=request.data.get('tournament_key'), season__current=True)
-            if not t.started():  #skip golfer started data/checks
+            if not t.started() or request.data.get('no_api'):  #skip golfer started data/checks
                 if request.data.get('group') == 'all':
                     data= golf_serializers.PreStartFieldSerializer(Field.objects.filter(tournament=t), many=True).data
                 elif len(request.data.get('golfer_list')) == 0:
@@ -2082,12 +2109,11 @@ class EspnApiScores(APIView):
                 print ('winners ', winner_list)
                 for winner in winner_list:
                     d.get(winner).update({'score': d.get(winner).get('score') - overall_bd.weekly_winner_points()})
-
             for username in d.keys():
                 user = User.objects.get(username=username)
                 ts, created = TotalScore.objects.get_or_create(user=user, tournament=t)
                 ts.score = d.get(ts.user.username).get('score')
-                ts.cuts = d.get(ts.user.username).get('cuts')
+                ts.cut_count = d.get(ts.user.username).get('cuts')
                 ts.save()
 
             d['group_stats'] = {}
@@ -2397,9 +2423,13 @@ class SummaryStatsAPI(APIView):
                 else:
                     espn = espn_api.ESPNData(force_refresh=True)
 
+                cut_line = espn.cut_line()
+                if cut_line.get('cut_score') == 0:
+                    cut_line.update({'cut_score': 'E'})
+                
                 d['source'] = 'espn_api'
                 d['cut_num'] = espn.cut_num()
-                d['cut_info'] = espn.cut_line()
+                d['cut_info'] = cut_line
                 d['leaders'] = espn.leaders()
                 d['leader_score'] = espn.leader_score()
                 d['curr_round'] = espn.get_round()
@@ -2516,11 +2546,6 @@ class FieldUpdatesAPI(APIView):
                             f.season_stats.update({k: v})
         
                 f.save()
-            #print ('updated field objects results, dur: ', datetime.datetime.now() - start)
-            # print ('starting golfer results update')
-            # for g in Golfer.objects.all():
-            #     g.results = g.get_season_results()
-            #     g.save()
 
             d['status'] = {'msg': 'Updated Field Complete'}
         except Exception as e:

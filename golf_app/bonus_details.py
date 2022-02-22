@@ -83,7 +83,7 @@ class BonusDtl(object):
     
     def big_eligible(self, pick):
         '''takes a pick and returns a bool'''
-        #if not PickMethod.objects.filter(user=pick.user, method=3, tournament=pick.playerName.tournament).exists() \
+        #if not PickMethod.objects.filter(user=pick.user, method='3', tournament=pick.playerName.tournament).exists() \
         if not self.winner(pick) \
             and not self.playoff_loser(pick) \
             and pick.playerName.group.playerCnt > 4:
@@ -101,7 +101,7 @@ class BonusDtl(object):
             
         if self.t_complete and self.espn_api.get_rank(pick.playerName.golfer.espn_number) in ['1', 1]:
             for winner in Picks.objects.filter(playerName=pick.playerName):
-                if not PickMethod.objects.filter(user=winner.user, method=3, tournament=winner.playerName.tournament).exists():
+                if not PickMethod.objects.filter(user=winner.user, method='3', tournament=winner.playerName.tournament).exists():
                     print ('winner: ', winner, winner.user, self.espn_api.get_rank(winner.playerName.golfer.espn_number))
                     # note prints 2 times because of best in group check
                     if self.tournament.pga_tournament_num == '999':
@@ -133,7 +133,7 @@ class BonusDtl(object):
             
             for winner in weekly_winner:
                 print (winner, type(winner))
-                if not PickMethod.objects.filter(user__username=winner, method=3, tournament=self.tournament).exists():
+                if not PickMethod.objects.filter(user__username=winner, method='3', tournament=self.tournament).exists():
                     w = User.objects.get(username=winner)
                     bd, created = BonusDetails.objects.get_or_create(user=w, tournament=self.tournament, bonus_type='3')
                     bd.bonus_points = self.weekly_winner_points()
@@ -168,7 +168,7 @@ class BonusDtl(object):
             if self.t_complete and self.t_playoff and self.espn_api.get_rank(pick.playerName.golfer.espn_number) == '2':
                 print ('playoff', pick, pick.user)
                 for loser in Picks.objects.filter(playerName=pick.playerName):
-                    if not PickMethod.objects.filter(user=loser.user, method=3, tournament=loser.playerName.tournament).exists():
+                    if not PickMethod.objects.filter(user=loser.user, method='3', tournament=loser.playerName.tournament).exists():
                         bd, created = BonusDetails.objects.get_or_create(user=loser.user, tournament=loser.playerName.tournament, bonus_type='4')
                         bd.bonus_points = 25
                         bd.save()
@@ -180,7 +180,7 @@ class BonusDtl(object):
             
             if self.espn_api.get_rank(pick.playerName.golfer.espn_number) in ['2', 'T2', 2]:
                 for loser in Picks.objects.filter(playerName=pick.playerName):
-                    if not PickMethod.objects.filter(user=loser.user, method=3, tournament=loser.playerName.tournament).exists():
+                    if not PickMethod.objects.filter(user=loser.user, method='3', tournament=loser.playerName.tournament).exists():
                         bd, created = BonusDetails.objects.get_or_create(user=loser.user, tournament=loser.playerName.tournament, bonus_type='4')
                         bd.bonus_points = 25
                         bd.save()

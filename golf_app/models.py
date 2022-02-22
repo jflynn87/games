@@ -527,13 +527,13 @@ class Golfer(models.Model):
         else:
             return self.golfer_name.split(' ')[0] + '-' + self.golfer_name.split(' ')[1]
 
-    def golfer_link(self):
+    # def golfer_link(self):
         
-        if  self.golfer_name[1]=='.' and self.golfer_name[3] =='.':
-            name = str(self.golfer_pga_num) + '.' + self.pga_web_name_format()
-        else:
-            name = str(self.golfer_pga_num) + '.' + self.pga_web_name_format()
-        return 'https://www.pgatour.com/players/player.' + unidecode(name) + '.html'
+    #     if  self.golfer_name[1]=='.' and self.golfer_name[3] =='.':
+    #         name = str(self.golfer_pga_num) + '.' + self.pga_web_name_format()
+    #     else:
+    #         name = str(self.golfer_pga_num) + '.' + self.pga_web_name_format()
+    #     return 'https://www.pgatour.com/players/player.' + unidecode(name) + '.html'
 
     def espn_link(self):
         if not self.espn_number:

@@ -181,15 +181,21 @@ $(function () {
 
 
 function get_info(info, ele) {
+    if (typeof(info) == 'string') {var info = $.parseJSON(info)}
+
     if (ele) {
       group = ele.name.split('-')[1]
-      picks = info[ele.name.split('-')[1]]
-      
+      if (parseInt(info)) {picks = info}
+      else {picks = info[ele.name.split('-')[1]]}
+
       if($("#tbl-group-" + group + ' input:checked').length > parseInt(picks)) {
         ele.checked = false;
         alert (picks.toString() + ' picks already selected.  Deselect a pick first to change your picks')
                   }
-    
+      //console.log(picks, 'group: ', group)
+      //console.log('checked: ', $("#tbl-group-" + group + ' input:checked').length)
+      //adjust this section to take an int of the picks from the event handler rather than api
+                  
     //else {
       
     //  $('#pick-status').empty()
@@ -535,3 +541,47 @@ $(document).on("click", "#download_excel", function() {
   })
 })
 
+function togglePick(ele) {
+  var start = new Date()
+ //$('#' + ele.id).css('background-color', 'lightblue')
+}
+
+
+function showStats(field_id, golfer_id) {
+  row = document.getElementById('stats_row-' + field_id)
+  
+  if (row.hidden) {
+
+    
+    fetch("/golf_app/get_prior_result/",         
+    {method: "POST",
+    headers: {
+    'Accept': 'application/json',
+    'Content-Type': 'application/json',
+    'X-CSRFToken': $.cookie('csrftoken')
+            },
+    body: JSON.stringify({'tournament_key': $('#tournament_key').text(),
+                        'golfer_list': [golfer_id],
+                        'group': '',
+                        'no_api': true})
+  })
+  .then((response) => response.json())
+  .then((responseJSON) => {
+  data = responseJSON
+
+  var stats = build_stats_row(data[0])
+  console.log(row)
+  row.appendChild(stats)
+  row.hidden = false
+
+  })
+}
+else {
+      console.log('row in else : ', row)
+      row.innerHTML = ''
+      row.hidden = true}
+
+console.log('dur: ', new Date() - start)
+
+
+}
