@@ -17,10 +17,12 @@ from collections import OrderedDict
 from urllib.request import Request, urlopen
 from bs4 import BeautifulSoup
 
-sd = ScoreDict.objects.get(tournament__current=True)
-espn = espn_api.ESPNData(data=sd.espn_api_data)
-for pick in Picks.objects.filter(playerName__tournament__current=True, user__username='john'):
-    print (pick.playerName.calc_score(api_data=espn))
+u = User.objects.get(pk=1)
+t = Tournament.objects.get(current=True)
+espn = espn_api.ESPNData(t=t)
+
+for g in Group.objects.filter(tournament=t):
+    print (g, g.lock_group(espn, u))
 exit()
 
 t = Tournament.objects.get(current=True)

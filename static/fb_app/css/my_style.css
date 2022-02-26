@@ -164,7 +164,7 @@ body {
 }
 
 .stats_row {
-  width: 100%;
+  /*width: 25%;*/
   column-span: 8;
   background-color: lightblue;
 
@@ -231,6 +231,10 @@ form #sub_button {
   left: 0%;
 
 }
+.adj_font_size {
+  font-size: xx-small;
+}
+
 }
 
 /* all screens */

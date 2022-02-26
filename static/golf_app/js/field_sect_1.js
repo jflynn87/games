@@ -1,18 +1,17 @@
 $(document).ready(function () {
     start = new Date()
-    Promise.all([
-    fetch("/golf_app/get_info/" + $('#tournament_key').text()).then(response => response.json()),
-    fetch("/golf_app/field_get_picks").then(response=> response.json())
-     ])
-     .then((responseJSON) => {
-         info = $.parseJSON(responseJSON[0])
-         picks = $.parseJSON(responseJSON[1])
-        console.log('picks: ', picks)
-        var pick_array = [];
-        for (let i=0; i < picks.length; i++) {
+   
+    fetch("/golf_app/get_info/" + $('#tournament_key').text())
+    .then(response => response.json())
+    .then((responseJSON) => {
+         info = $.parseJSON(responseJSON)
+         
+        //console.log('picks: ', picks)
+        //var pick_array = [];
+        //for (let i=0; i < picks.length; i++) {
             //pick_array.push(picks[i].playerName.id)
-            $('#' + picks[i].playerName.id + ':input').attr('checked', true)
-        }
+        //    $('#' + picks[i].playerName.id + ':input').attr('checked', true)
+       // }
 
         //buildHeader()
         //groups = []
@@ -46,10 +45,10 @@ $(document).ready(function () {
                     '<input id=sub_button type="submit" class="btn btn-secondary" value="Submit Picks" disabled>' 
                     )
 
-                    $('#jump_to').append('<a href=#tbl-group-1>' + 'next group' + '</a>' )
-                    var group_1 = document.getElementById('tbl-group-1')
-                    var group_2 = document.getElementById('tbl-group-2')
-                    $('#jump_to').on('click', function() {console.log(group_1.getBoundingClientRect(), group_2.getBoundingClientRect())}) 
+                    // $('#jump_to').append('<a href=#tbl-group-1>' + 'next group' + '</a>' )
+                    // var group_1 = document.getElementById('tbl-group-1')
+                    // var group_2 = document.getElementById('tbl-group-2')
+                    // $('#jump_to').on('click', function() {console.log(group_1.getBoundingClientRect(), group_2.getBoundingClientRect())}) 
                     
                     //trying to fix position small screen
                     $('#pick_form').on('submit', function(event){
@@ -57,9 +56,10 @@ $(document).ready(function () {
                         console.log("form submitted!")  
                         create_post();
                     });
-
+                    $('#status').html("<h5><span style='color:green;'><i class='fas fa-check'></i></span> Ready for Picks</h5>")
+                    
                     //there should be a faster way to check started and deal with buttons
-                    checkStarted()
+                    //checkStarted()
 
               
 
@@ -95,71 +95,71 @@ function formatSG(field) {
 
 
 
-function checkStarted() {
-    fetch("/golf_app/started/",         
-    {method: "POST",
-    headers: {
-    'Accept': 'application/json',
-    'Content-Type': 'application/json',
-    'X-CSRFToken': $.cookie('csrftoken')
-            },
-    body: JSON.stringify({'key': $('#tournament_key').text(),
-                            })
-})
-.then((response) => response.json())
-.then((responseJSON) => {
-    started = $.parseJSON(responseJSON)
-    console.log('started ', started, started.started, started.late_picks)
-    checkbox_input = document.getElementsByClassName('my-checkbox')
-    var checkbox_l = checkbox_input.length
-    radio_input = document.getElementsByClassName('my-radio')
-    var radio_l = radio_input.length
-    lock_classes = ['started', 'lock']
+// function checkStarted() {
+//     fetch("/golf_app/started/",         
+//     {method: "POST",
+//     headers: {
+//     'Accept': 'application/json',
+//     'Content-Type': 'application/json',
+//     'X-CSRFToken': $.cookie('csrftoken')
+//             },
+//     body: JSON.stringify({'key': $('#tournament_key').text(),
+//                             })
+// })
+// .then((response) => response.json())
+// .then((responseJSON) => {
+//     started = $.parseJSON(responseJSON)
+//     console.log('started ', started, started.started, started.late_picks)
+//     checkbox_input = document.getElementsByClassName('my-checkbox')
+//     var checkbox_l = checkbox_input.length
+//     radio_input = document.getElementsByClassName('my-radio')
+//     var radio_l = radio_input.length
+//     lock_classes = ['started', 'lock']
 
-    if (!started.started || started.late_picks) {
-        $('#random_btn').removeAttr('disabled').attr('class', 'btn btn-primary');
-        $('#random_line').attr('hidden', false)
-        $('#status').text("Ready for Picks")
-        for (let i=0; i < checkbox_l; i++){
-            checkbox_input[i].disabled = false
-            }
-        for (let i=0; i < radio_l; i++){
-            radio_input[i].disabled = false
-            }
-                                                }
-    else if(started.started && ! started.late_picks) {
-        $('#status').text("Ready for Picks")
-        for (let i=0; i < checkbox_l; i++){
-            //console.log(checkbox_input[i].parentElement.parentElement.classList)
-            //if (pick_array.indexOf(field.id) != -1) {
-            if (checkbox_input[i].parentElement.parentElement.classList.contains('started') || checkbox_input[i].parentElement.parentElement.classList.contains('lock')) {
-                checkbox_input[i].disabled = true
-            }
-            else {checkbox_input[i].disabled = false}
-        }
-        for (let i=0; i < radio_l; i++){
-            if (radio_input[i].parentElement.parentElement.classList.contains('started') || radio_input[i].parentElement.parentElement.classList.contains('lock')) {
-                //console.log('lock check started ', radio_input[i], radio_input[i].parentElement.parentElement.classList, radio_input[i].parentElement.parentElement.classList.contains('started', 'lock'))
-                radio_input[i].disabled = true
-                        }
-            else {radio_input[i].disabled = false}
-        }
+//     if (!started.started || started.late_picks) {
+//         $('#random_btn').removeAttr('disabled').attr('class', 'btn btn-primary');
+//         $('#random_line').attr('hidden', false)
+//         $('#status').text("Ready for Picks")
+//         for (let i=0; i < checkbox_l; i++){
+//             checkbox_input[i].disabled = false
+//             }
+//         for (let i=0; i < radio_l; i++){
+//             radio_input[i].disabled = false
+//             }
+//                                                 }
+//     else if(started.started && ! started.late_picks) {
+//         $('#status').text("Ready for Picks")
+//         for (let i=0; i < checkbox_l; i++){
+//             //console.log(checkbox_input[i].parentElement.parentElement.classList)
+//             //if (pick_array.indexOf(field.id) != -1) {
+//             if (checkbox_input[i].parentElement.parentElement.classList.contains('started') || checkbox_input[i].parentElement.parentElement.classList.contains('lock')) {
+//                 checkbox_input[i].disabled = true
+//             }
+//             else {checkbox_input[i].disabled = false}
+//         }
+//         for (let i=0; i < radio_l; i++){
+//             if (radio_input[i].parentElement.parentElement.classList.contains('started') || radio_input[i].parentElement.parentElement.classList.contains('lock')) {
+//                 //console.log('lock check started ', radio_input[i], radio_input[i].parentElement.parentElement.classList, radio_input[i].parentElement.parentElement.classList.contains('started', 'lock'))
+//                 radio_input[i].disabled = true
+//                         }
+//             else {radio_input[i].disabled = false}
+//         }
 
-        }
-    else {
-        console.log('unexpected started condiiton, check')
-        for (let i=0; i < checkbox_l; i++){
-            checkbox_input[i].disabled = false
-            }
-        for (let i=0; i < radio_l; i++){
-            radio_input[i].disabled = false
-            }
+//         }
+//     else {
+//         console.log('unexpected started condiiton, check')
+//         for (let i=0; i < checkbox_l; i++){
+//             checkbox_input[i].disabled = false
+//             }
+//         for (let i=0; i < radio_l; i++){
+//             radio_input[i].disabled = false
+//             }
 
-    }
-    done  = new Date
-    console.log(start, done, start - done)
-})
-}
+//     }
+//     done  = new Date
+//     console.log(start, done, start - done)
+// })
+// }
 
 
 function buildHeader() {
@@ -421,211 +421,215 @@ function formatWomenMedals(date) {
 
 }
 
-function build_golfer_row(field, pick_array) {
+// function build_golfer_row(field, pick_array) {
 
-    //console.log(field.playerName, field.started, field.tournament.late_picks, field.lock_group)
-    let golfer_row = document.createElement('tr')
-        golfer_row.id = 'golfer-' + field.id
+//     //console.log(field.playerName, field.started, field.tournament.late_picks, field.lock_group)
+//     let golfer_row = document.createElement('tr')
+//         golfer_row.id = 'golfer-' + field.id
 
-    let golfer = document.createElement('td')
-    golfer.colSpan =1
+//     let golfer = document.createElement('td')
+//     //golfer.colSpan =1
     
-    golfer.id = 'playerInfo' + field.golfer.espn_number
-    var status = ' '
+//     golfer.id = 'playerInfo' + field.golfer.espn_number
+//     var status = ' '
 
-    if(field.withdrawn) {
-        var status = 'WD' + ' '
-        golfer_row.classList.add('started')
-        }
+//     if(field.withdrawn) {
+//         var status = 'WD' + ' '
+//         golfer_row.classList.add('started')
+//         }
 
-    else if (! field.started || field.tournament.late_picks) {
-        let inputA =  document.createElement('input');
-            inputA.type = 'hidden';
-            inputA.name = "csrfmiddlewaretoken";
-            inputA.value  = $.cookie('csrftoken')
-        golfer.appendChild(inputA)
+//     else if (! field.started || field.tournament.late_picks) {
+//         let inputA =  document.createElement('input');
+//             inputA.type = 'hidden';
+//             inputA.name = "csrfmiddlewaretoken";
+//             inputA.value  = $.cookie('csrftoken')
+//         golfer.appendChild(inputA)
 
-        let inputB =  document.createElement('input');
-            inputB.id = field.id
-            inputB.type = input_type
-            inputB.classList.add(input_class)
-            inputB.name= "group-" + field.group.number
-            inputB.value = field.id
-            inputB.disabled = true
-            inputB.addEventListener('change', function(evt) {
-                        $('#pick-status').empty()
-                        get_info(info, this);
-                                                            });
+//         let inputB =  document.createElement('input');
+//             inputB.id = field.id
+//             inputB.type = input_type
+//             inputB.classList.add(input_class)
+//             inputB.name= "group-" + field.group.number
+//             inputB.value = field.id
+//             inputB.disabled = true
+//             inputB.addEventListener('change', function(evt) {
+//                         $('#pick-status').empty()
+//                         get_info(info, this);
+//                                                             });
 
-            if (pick_array.indexOf(field.id) != -1) {
-                inputB.checked = true
-            }
+//             if (pick_array.indexOf(field.id) != -1) {
+//                 inputB.checked = true
+//             }
              
-            golfer.appendChild(inputB)
-            golfer_row.classList.add('border', 'rounded', 'border-2')
-            if (field.lock_group) {
-                golfer_row.classList.add('lock')    
-            }
+//             golfer.appendChild(inputB)
+//             golfer_row.classList.add('border', 'rounded', 'border-2')
+//             if (field.lock_group) {
+//                 golfer_row.classList.add('lock')    
+//             }
 
-                                                                }
-    else if(field.started) {
+//                                                                 }
+//     else if(field.started) {
 
-        //clean this up, duplicte from above if
-        let inputA =  document.createElement('input');
-        inputA.type = 'hidden';
-        inputA.name = "csrfmiddlewaretoken";
-        inputA.value  = $.cookie('csrftoken')
-    golfer.appendChild(inputA)
+//         //clean this up, duplicte from above if
+//         let inputA =  document.createElement('input');
+//         inputA.type = 'hidden';
+//         inputA.name = "csrfmiddlewaretoken";
+//         inputA.value  = $.cookie('csrftoken')
+//     golfer.appendChild(inputA)
 
-    let inputB =  document.createElement('input');
-        inputB.id = field.id
-        inputB.type = input_type
-        inputB.classList.add(input_class)
-        inputB.disabled = true
-        inputB.name= "group-" + field.group.number
-        inputB.value = field.id
-        //inputB.addEventListener('change', function(evt) {
-        //            $('#pick-status').empty()
-        //            get_info(info, this);
-        //                                                });
+//     let inputB =  document.createElement('input');
+//         inputB.id = field.id
+//         inputB.type = input_type
+//         inputB.classList.add(input_class)
+//         inputB.disabled = true
+//         inputB.name= "group-" + field.group.number
+//         inputB.value = field.id
+//         //inputB.addEventListener('change', function(evt) {
+//         //            $('#pick-status').empty()
+//         //            get_info(info, this);
+//         //                                                });
 
-        if (pick_array.indexOf(field.id) != -1) {
-            inputB.checked = true
-        }
+//         if (pick_array.indexOf(field.id) != -1) {
+//             inputB.checked = true
+//         }
                                                             
-        golfer.appendChild(inputB)
+//         golfer.appendChild(inputB)
 
-        var status = 'Started' + ' '
-        golfer_row.classList.add('started')
-                           // }
-        if (field.lock_group) {
-           golfer_row.classList.add('lock')    
-                        }
-    }
-    else {
-        var status = 'Problem' + ' '
-        golfer_row.classList.add('started')
-        }
+//         var status = 'Started' + ' '
+//         golfer_row.classList.add('started')
+//                            // }
+//         if (field.lock_group) {
+//            golfer_row.classList.add('lock')    
+//                         }
+//     }
+//     else {
+//         var status = 'Problem' + ' '
+//         golfer_row.classList.add('started')
+//         }
         
-    img = document.createElement('img')
-    img.src = field.golfer.pic_link
-    flag = document.createElement('img')
-    flag.src = field.golfer.flag_link
-    google = document.createElement('a')
-    google.href = 'https://www.google.com/search?q=' + field.playerName
-    google.target =  '_blank'
-    google.innerHTML = " Google"
-    espn = document.createElement('a')
-    espn.href = field.espn_link
-    espn.innerHTML = "/ESPN"
-    espn.target =  '_blank'
-    pga = document.createElement('a')
-    pga.href = field.pga_link
-    pga.innerHTML = "/PGA"
-    pga.target =  '_blank'
+//     img = document.createElement('img')
+//     img.src = field.golfer.pic_link
+//     flag = document.createElement('img')
+//     flag.src = field.golfer.flag_link
+//     google = document.createElement('a')
+//     google.href = 'https://www.google.com/search?q=' + field.playerName
+//     google.target =  '_blank'
+//     google.innerHTML = " Google"
+//     espn = document.createElement('a')
+//     espn.href = field.espn_link
+//     espn.innerHTML = "/ESPN"
+//     espn.target =  '_blank'
+//     pga = document.createElement('a')
+//     pga.href = field.pga_link
+//     pga.innerHTML = "/PGA"
+//     pga.target =  '_blank'
 
-    golfer.appendChild(img)
-    if (field.withdrawn) {
-        t = ' ' + field.playerName.strike() + ' ' + status}
-    else if (field.started && ! field.tournament.late_picks) {
-        t = ' ' + field.playerName.strike() + ' ' + status
-                                                           }
-    else {
-        t = ' ' + field.playerName + ' ' + status
-    }
+//     golfer.appendChild(img)
+//     if (field.withdrawn) {
+//         t = ' ' + field.playerName.strike() + ' ' + status}
+//     else if (field.started && ! field.tournament.late_picks) {
+//         t = ' ' + field.playerName.strike() + ' ' + status
+//                                                            }
+//     else {
+//         t = ' ' + field.playerName + ' ' + status
+//     }
 
-    if (field.fedex_pick) {
-        fedex = document.createElement('img')
-        fedex.src = '/static/img/fedex.jpg'
-        fedex.style.width = '30px'
-        //fedex.style.border='1px solid lightblue';
-        golfer.appendChild(fedex)
-    }
+//     if (field.fedex_pick) {
+//         fedex = document.createElement('img')
+//         fedex.src = '/static/img/fedex.jpg'
+//         fedex.style.width = '30px'
+//         //fedex.style.border='1px solid lightblue';
+//         golfer.appendChild(fedex)
+//     }
 
-    text = document.createElement('b')
-    text.innerHTML = t
-    //golfer.append(text)
+//     text = document.createElement('b')
+//     text.innerHTML = t
+//     //golfer.append(text)
     
-    //golfer.appendChild(flag)
-    //golfer.appendChild(google)
-    //golfer.appendChild(espn)
-    //golfer.appendChild(pga)
+//     //golfer.appendChild(flag)
+//     //golfer.appendChild(google)
+//     //golfer.appendChild(espn)
+//     //golfer.appendChild(pga)
 
-    fed_ex_data = ''
-    if (field.season_stats.fed_ex_rank == 'n/a') {
-        fed_ex_data = 'n/a'
-    }
-    else {
-        fed_ex_data = field.season_stats.fed_ex_rank + ' / ' + field.season_stats.fed_ex_points + ' pts.'
-    }
+//     fed_ex_data = ''
+//     if (field.season_stats.fed_ex_rank == 'n/a') {
+//         fed_ex_data = 'n/a'
+//     }
+//     else {
+//         fed_ex_data = field.season_stats.fed_ex_rank + ' / ' + field.season_stats.fed_ex_points + ' pts.'
+//     }
 
-    t1 = document.createElement('b')
-    //t1.innerHTML = '      ' + 'OWGR: ' + field.currentWGR + ' ;  ' + 'Handicap: ' + field.handi + ' ; ' +  "Prior Year: " + field.prior_year
+//     t1 = document.createElement('b')
+//     //t1.innerHTML = '      ' + 'OWGR: ' + field.currentWGR + ' ;  ' + 'Handicap: ' + field.handi + ' ; ' +  "Prior Year: " + field.prior_year
 
-    expand = document.createElement('i')
-        expand.classList.add('fa', 'fa-plus-circle', 'expand')
-        //expand.style.color = 'white'
-        expand.style.float= 'right'
-        expand.innerHTML = 'Show Golfer Stats'
-        expand.id = 'expand-' + field.id
-        expand.addEventListener('click', function() {toggle_golfer_stats(field.id)})
+//     expand = document.createElement('i')
+//         expand.classList.add('fa', 'fa-plus-circle', 'expand')
+//         //expand.style.color = 'white'
+//         expand.style.float= 'right'
+//         expand.innerHTML = 'Show Golfer Stats'
+//         expand.id = 'expand-' + field.id
+//         expand.addEventListener('click', function() {toggle_golfer_stats(field.id)})
 
 
-    if ($(window).width() < 650) {
-        p1 = document.createElement('p')
-        p1.innerHTML = 'OWGR: ' + field.currentWGR + " ; Prior Year: " + field.prior_year
-        p2 = document.createElement('p')
-        p2.innerHTML = 'Handicap: ' + field.handi + ' ; FedEx: ' + fed_ex_data
-        t1.appendChild(p1)
-        t1.appendChild(p2)
-        golfer.append(text)
+//     if ($(window).width() < 650) {
+//         p1 = document.createElement('p')
+//         p1.innerHTML = 'OWGR: ' + field.currentWGR + " ; Prior Year: " + field.prior_year
+//         p2 = document.createElement('p')
+//         p2.innerHTML = 'Handicap: ' + field.handi + ' ; FedEx: ' + fed_ex_data
+//         t1.appendChild(p1)
+//         t1.appendChild(p2)
+//         golfer.append(text)
     
-        golfer.appendChild(flag)
-        golfer.appendChild(google)
-        golfer.appendChild(espn)
-        golfer.appendChild(pga)
-        golfer.appendChild(expand)
+//         golfer.appendChild(flag)
+//         golfer.appendChild(google)
+//         golfer.appendChild(espn)
+//         golfer.appendChild(pga)
+//         golfer.appendChild(expand)
 
-                            }
-    else {
-        golfer.append(text)
+//                             }
+//     else {
+//         golfer.append(text)
     
-        golfer.appendChild(flag)
-        golfer.appendChild(google)
-        golfer.appendChild(espn)
-        golfer.appendChild(pga)
-        golfer.appendChild(expand)
+//         golfer.appendChild(flag)
+//         golfer.appendChild(google)
+//         golfer.appendChild(espn)
+//         golfer.appendChild(pga)
+//         golfer.appendChild(expand)
 
-        t1.innerHTML = '      ' + 'OWGR: ' + field.currentWGR + ' ;  ' + 'Handicap: ' + field.handi + ' ; ' + "FedEx: " +
-        fed_ex_data + 
-         ' ; ' + "Prior Year: " + field.prior_year
-    }
+//         t1.innerHTML = '      ' + 'OWGR: ' + field.currentWGR + ' ;  ' + 'Handicap: ' + field.handi + ' ; ' + "FedEx: " +
+//         fed_ex_data + 
+//          ' ; ' + "Prior Year: " + field.prior_year
+//     }
 
-    golfer.appendChild(t1)
+//     golfer.appendChild(t1)
     
     
         
     
-    //    $('#expand-' + g).on('click', function() {
-    //    toggle_stats_display(this, $('#tbl-group-' +g))
-    //})
+//     //    $('#expand-' + g).on('click', function() {
+//     //    toggle_stats_display(this, $('#tbl-group-' +g))
+//     //})
 
 
-    golfer_row.appendChild(golfer)
+//     golfer_row.appendChild(golfer)
     
-    return golfer_row
-}
+//     return golfer_row
+// }
 
 function build_stats_row(field) {
+    
     let stats_row = document.createElement('tr');
     stats_row.id = 'stats_row-' + field.id
-    stats_row.style.width = '100%'
+    stats_row.style.width = 100%
+    //stats_row.style.maxWidth = 100%
     stats_row.classList.add('stats_row')
     stats_row.setAttribute('hidden', true)
     stats_cell = document.createElement('td')
+    stats_cell.colSpan = 2
+    stats_cell.classList = ['adj_font_size']
     stats_row.appendChild(stats_cell)
     let stats_table = document.createElement('table');
-        stats_table.style.width = '100%'
+        stats_table.style.width = '85%'
         stats_table.classList.add('table',  'stats-row')
 
         let rowA_header_fields = ['Current OWGR', 'Last Week OWGR', 'Last Season OWGR', 'FedEx Cup']
@@ -869,6 +873,7 @@ function build_stats_row(field) {
 
 function  toggle_stats_display(ele, table) {
     t_id = table[0].id
+    
     var toggle_ind = document.getElementById(ele.id).innerHTML.trim()
     
     if (toggle_ind == 'Show Group Stats') {

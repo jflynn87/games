@@ -128,35 +128,37 @@ class FieldListView1(LoginRequiredMixin, TemplateView):
             else: tournament = None
 
         d = {}
-        info = {}
+
         espn = espn_api.ESPNData()
         d['t_started'] = espn.started()
-        # if tournament.started:
-        #     context = {'espn_data': espn, 'user': self.request.user}
-        #     data= golf_serializers.NewFieldSerializer(Field.objects.filter(tournament=tournament), context=context, many=True).data
-        # else:
-        #     data= golf_serializers.PreStartFieldSerializer(Field.objects.filter(tournament=t), many=True).data
 
         for f in Field.objects.filter(tournament=tournament):
+           pick_ind = False
+           if Picks.objects.filter(playerName=f, user=self.request.user).exists():
+               pick_ind = True
+           
            if d.get(f.group.number):
                d.get(f.group.number).update({f.golfer.espn_number: {'field': f,
-                                               'started': espn.player_started(f.golfer.espn_number)}})
+                                               'started': espn.player_started(f.golfer.espn_number),
+                                               'pick_ind': pick_ind,
+                                               'fedex_pick': f.fedex_pick(self.request.user)}})
            else:
                d[f.group.number] = {f.golfer.espn_number: {'field': f,
-                                                           'started': espn.player_started(f.golfer.espn_number)},
-                                   'num_of_picks': f.group.num_of_picks()}
+                                                           'started': espn.player_started(f.golfer.espn_number),
+                                                           'pick_ind': pick_ind,
+                                                           'fedex_pick': f.fedex_pick(self.request.user)},  #end of pick info, next is group level data
+                                                           'num_of_picks': f.group.num_of_picks(),
+                                                           'lock_group': f.group.lock_group(espn, self.request.user)}
                
-
         
         context.update({
-        #'field_list': Field.objects.filter(tournament=tournament),
-        #'field_list': data,
+        'keys_to_skip': ['pick_ind', 'num_of_picks', 'lock_group', 'fedex_pick'],
         'tournament': tournament,
         'groups': Group.objects.filter(tournament=tournament),
         'field_dict': d,
         'info':  json.dumps(get_info(tournament)), 
-        #'error_message': error_message
         })
+        #print (d)
         print ('new field 1 context dur: ', datetime.datetime.now() - start)
         return context
 
@@ -219,11 +221,12 @@ class NewFieldListView(LoginRequiredMixin,TemplateView):
             msg = 'Golfer already palying: '
             error = False
             for p in pick_list:
-                f = Field.objects.get(pk=p)
-                if espn.player_started(f.golfer.espn_number):
-                    print ('picked started golfer: ', self.request.user, f)
-                    msg = msg + ' ' + f.playerName 
-                    error = True
+                if not Picks.objects.filter(playerName__pk=p).exists():  #only check new picks, front end should prevent new picks so just a saftey net
+                    f = Field.objects.get(pk=p)
+                    if espn.player_started(f.golfer.espn_number):
+                        print ('picked started golfer: ', self.request.user, f)
+                        msg = msg + ' ' + f.playerName 
+                        error = True
             if error:
                 response = {'status': 0, 'message': msg} 
                 return HttpResponse(json.dumps(response), content_type='application/json')

@@ -45,19 +45,19 @@
     <form name="random" method="post">
         {%csrf_token%}
         <input type="text" name="random" value="random" hidden>
-        <h5>Click for random picks  <input type="submit" class="btn btn-primary" value="Random"> </h5>
+        <h5>Click for random picks  <input onclick="create_post_random()" class="btn btn-primary" value="Random Picks"></h5>
     </form>
 
     <span style="float: right;" >
-        <a href="#" id="download" >
-        <i class="fas fa-file-download" title="Download CSV" data-toggle="tooltip"> Download Data</i>
+        <a href="#" id="download_excel" >
+        <i class="fas fa-file-download" title="Download Excel" data-toggle="tooltip"> Download Excel</i>
         </a>
     </span>
 {%else%}
 <p>
     <span style="float: right;">  
-    <a href="#" id="download">
-    <i class="fas fa-file-download" title="Download CSV" data-toggle="tooltip"> Download Data</i>
+    <a href="#" id="download_excel">
+    <i class="fas fa-file-download" title="Download Excel" data-toggle="tooltip"> Download Excel</i>
     </a>
     </span>
 </p>
@@ -66,18 +66,18 @@
 <h2 id='error_msg'></h2>
 
 </div>
-
+<div id="status"><h4>Loading Data <span class="status">....</span></h4></div>
 
 <div id="field_sect">
 <form action="post" name="pick_form" id="pick_form">
 
 {%for group, data in field_dict.items%}
     {%if group != 't_started'%}
-    <table class="table"  id="tbl-group-{{group}}">
+    <table class="table"  id="tbl-group-{{group}}" >
         <thead class="total_score">
         <tr>
-            <th colspan="3"><p>Group  {{group}} - Pick {{data.num_of_picks}} Golfers</p> 
-                        <span style="font-size: smaller;"><p>Click select box to pick, click player info for stats</p></span>
+            <th colspan="2"><p>Group  {{group}} - Pick {{data.num_of_picks}} Golfers</p> 
+                        <span style="font-size: smaller;"><p>Click select box to pick, click anywhere on player info for stats</p></span>
             </th>
         </tr>
         </thead>
@@ -85,30 +85,42 @@
     
     {%for espn_num, field_d in data.items%}
 
-        {%if espn_num != 'num_of_picks'%}
+        {%if espn_num not in keys_to_skip%}
         
         <tr id="golfer-{{field_d.field.pk}}" class="border rounded border-2" >
-            <td id="input-{{field_d.field.pk}}" style="width: 3px;"></td>
-
-            <!-- {%if field_d.started and not t.allow_late_picks%}
-                <td style="width: 3px; background-color: darkgray;" class="started"><p>Started</p></td>
-            {%elif field_d.field.withdrawn%}
-                <td style="width: 3px; background-color: darkgray;" class="started"><p>WD</p></td>
-            {%else%}
-                <td style="width: 3px; background-color: darkgray;"><p> </p></td>
-            {%endif%} -->
-
-            <!-- <td style="width: 2px; float: right">
-                <input type="hidden" name="csrfmiddlewaretoken" value="{{csrf_token}}">
-                {%if data.num_of_picks == 1%}
-                    <input id="{{field_d.field.pk}}" type="radio" class="my-checkbox form-check-input" name="group-{{group}}" value="{{field_d.field.pk}}" onchange="get_info('{{info}}', this)">
-                {%else%}
-                    <input id="{{field_d.field.pk}}" type="checkbox" class="my-checkbox form-check-input" name="group-{{group}}" value="{{field_d.field.pk}}" onchange="get_info('{{info}}', this)">
-                {%endif%}
-            </td> -->
+            <td id="input-{{field_d.field.pk}}" width='2%'>
+            <script type="text/javascript">
+                var ele = $('#input-' + '{{field_d.field.pk}}')
+                var num_of_picks = '{{data.num_of_picks}}'
+                
+                ele.html('<p id=input_msg-{{field_d.field.pk}}></p> <p><input type="hidden" name="csrfmiddlewaretoken" value="{{csrf_token}}"></p>')
+                               
+                if (num_of_picks == 1)
+                    {ele.html(ele.html() + '<p style="float:right;"><input id="{{field_d.field.pk}}" type="radio" class="my-checkbox form-check-input" name="group-{{group}}" value="{{field_d.field.pk}}" onchange="get_info({{info}}, this)"></p>')}           
+                else                    
+                    {ele.html(ele.html() + '<p style="float:right;"><input id="{{field_d.field.pk}}" type="checkbox" class="my-checkbox form-check-input" name="group-{{group}}" value="{{field_d.field.pk}}" onchange="get_info({{info}}, this)"></p>')}
+    
+                
+                if ('{{field_d.field.withdrawn}}' == 'True') {$('#input_msg-{{field_d.field.pk}}').text('WD');
+                                                              $('#golfer-{{field_d.field.pk}}').css('background-color', 'lightgray')
+                                                              $('#{{field_d.field.pk}}').prop('disabled', true)}
+                else if (('{{field_d.started}}' == "True" || '{{data.lock_group}}'  == "True") && '{{tournament.late_picks}}' != 'True') {
+                                                                            $('#input_msg-{{field_d.field.pk}}').text('Started');
+                                                                            $('#golfer-{{field_d.field.pk}}').addClass('started')
+                                                                            $('#{{field_d.field.pk}}').prop('disabled', true)
+                                                                                                                                }
+                
+                if ('{{field_d.pick_ind}}' == "True") {$('#{{field_d.field.pk}}').prop('checked', true)}
+               
+            </script>
+    </td>
 
             <td id="playerInfo{{field_d.field.golfer.espn_number}}" onclick="showStats('{{field_d.field.pk}}', '{{field_d.field.golfer.espn_number}}')">
+                
                 <p>
+                    {%if field_d.fedex_pick %} 
+                        <span><img style='width:50px;' src="{%static '/img/fedex.jpg'%}" alt=""></span>
+                    {%endif%}
                     <img src="{{field_d.field.golfer.pic_link}}">
                     <span style="font-weight: bold;">{{field_d.field.playerName}} </span>
                     <img src="{{field_d.field.golfer.flag_link}}" alt="">
@@ -117,6 +129,7 @@
                     <a href="https://www.google.com/search?q={{field_d.field.playerName}}" target="_blank">Google</a>
                     <a href="{{field_d.field.golfer.espn_link}}" target="_blank">/ESPN</a>
                     <a href="{{field_d.field.golfer.get_pga_player_link}}" target="_blank">/PGA</a>
+                    <i id="expand-{{field_d.field.pk}}" class='fa fa-plus-circle expand' style="float:right;">Show Golfer Stats</i></span>
                 </p>    
                 <p style="font-weight: bold;">
                         OWGR: {{field_d.field.currentWGR}} ;
@@ -130,18 +143,8 @@
                 </p>
             </td>
         </tr>
-        <script type="text/javascript">
-            var ele = $('#input-' + '{{field_d.field.pk}}')
-
-            if ('{{field_d.field.withdrawn}}' == 'True') {ele.text('WD'); ele.css('background-color', 'darkgray')}
-            
-            else {ele.text('add input')}
-            
-           
-        </script>
-            
-       
-        <tr id="stats_row-{{field_d.field.pk}}" class="stats_row" hidden> <td></td></tr>
+      
+        <tr id="stats_row-{{field_d.field.pk}}" class="stats_row" hidden><td colspan="2">Loading data....</td></tr>
         
         {%endif%}
     {%endfor%}    

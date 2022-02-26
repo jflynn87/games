@@ -280,6 +280,9 @@ class Tournament(models.Model):
             pm.method = '1'
         pm.save()
 
+        if PickMethod.objects.filter(user=user, tournament=self, method='3').exists():
+            PickMethod.objects.filter(user=user, tournament=self, method='3').update(method='4')
+
         #bd, created = BonusDetails.objects.get_or_create(tournament=self, user=user)
         #bd.winner_bonus = 0
         #bd.cut_bonus = 0
@@ -463,13 +466,7 @@ class Group(models.Model):
             #print ('best: ', best_list, best_score)
             return best_list
 
-    #def num_of_cuts(self, score_dict):
-    #    '''takes a dict returns an int'''
-    #    if score_dict.get('info'):   #check if espn scrape dict
-    #        cuts = len([v for v in self.score_dict.values() if v.get('group') == self.number and v.get('rank') in self.not_playing_list])
-    #        return cuts
 
-    
     def cut_count(self, score_dict=None, espn_api_data=None):
         if not score_dict and not espn_api_data:
             raise Exception('cut count requires either a score dict or api data')
@@ -506,6 +503,20 @@ class Group(models.Model):
             return self.playerCnt - cut_count
        # elif espn_api_data:
        #     cut_count = self.cut_count(espn)
+
+    def lock_group(self, espn_api, user):
+        if Picks.objects.filter(user=user, playerName__group=self).exists():
+            started_count = 0
+        for p in Picks.objects.filter(user=user, playerName__group=self, playerName__tournament=self.tournament):
+            #if self.get_started(Field.objects.get(playerName=p.playerName, tournament=p.playerName.tournament)):
+            if espn_api.player_started(p.playerName.golfer.espn_number):
+                started_count += 1
+                #if started_count == Picks.objects.filter(user=self.context.get('user'), playerName__group=self).count():
+                if started_count == self.num_of_picks():
+                    return True
+                else:
+                    return False
+        return False
 
 
 
@@ -1038,7 +1049,7 @@ class Picks(models.Model):
 
 
 class PickMethod(models.Model):
-    CHOICES = (('1', 'player'), ('2', 'random'), ('3', 'auto'))
+    CHOICES = (('1', 'player'), ('2', 'random'), ('3', 'auto'), ('4', 'fixed_auto'))
 
     method = models.CharField(max_length=20, choices=CHOICES)
     tournament = models.ForeignKey(Tournament, on_delete=models.CASCADE)
