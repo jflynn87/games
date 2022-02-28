@@ -1,5 +1,4 @@
 import os
-
 os.environ.setdefault("DJANGO_SETTINGS_MODULE","gamesProj.settings")
 import django
 django.setup()
@@ -16,13 +15,21 @@ from requests import get
 from collections import OrderedDict
 from urllib.request import Request, urlopen
 from bs4 import BeautifulSoup
+from golf_app import views
 
 u = User.objects.get(pk=1)
-t = Tournament.objects.get(current=True)
-espn = espn_api.ESPNData(t=t)
+#t = Tournament.objects.get(current=True)
+t = Tournament.objects.get(pk=207)
+with open('wm_mid_r1.json') as json_file:
+    data = json.load(json_file)
 
+espn = espn_api.ESPNData(t=t, data=data)
+print (len(espn.started_golfers_list()))
+start = datetime.now()
 for g in Group.objects.filter(tournament=t):
     print (g, g.lock_group(espn, u))
+
+print ('dur: ', datetime.now()- start)
 exit()
 
 t = Tournament.objects.get(current=True)

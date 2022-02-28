@@ -508,14 +508,10 @@ class Group(models.Model):
         if Picks.objects.filter(user=user, playerName__group=self).exists():
             started_count = 0
         for p in Picks.objects.filter(user=user, playerName__group=self, playerName__tournament=self.tournament):
-            #if self.get_started(Field.objects.get(playerName=p.playerName, tournament=p.playerName.tournament)):
             if espn_api.player_started(p.playerName.golfer.espn_number):
                 started_count += 1
-                #if started_count == Picks.objects.filter(user=self.context.get('user'), playerName__group=self).count():
                 if started_count == self.num_of_picks():
                     return True
-                else:
-                    return False
         return False
 
 

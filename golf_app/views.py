@@ -48,69 +48,6 @@ from django.core import serializers
 from collections import OrderedDict
 
 
-
-# class FieldListView(LoginRequiredMixin,TemplateView):
-#     login_url = 'login'
-#     template_name = 'golf_app/field_list.html'
-#     model = Field
-
-#     def get_context_data(self,**kwargs):
-#         context = super(FieldListView, self).get_context_data(**kwargs)
-#         tournament = Tournament.objects.get(current=True)
-
-#         context.update({
-#         'field_list': Field.objects.filter(tournament=Tournament.objects.get(current=True)),
-#         'tournament': tournament,
-#         })
-#         return context
-
-#     @transaction.atomic
-#     def post(self, request):
-#         tournament = Tournament.objects.get(current=True)
-#         group = Group.objects.filter(tournament=tournament)
-#         user = User.objects.get(username=request.user)
-
-#         print ('user', user)
-#         print ('started', tournament.started())
-
-#         if tournament.started() and tournament.late_picks is False:
-#             print ('picks too late', user, datetime.datetime.now())
-#             print (timezone.now())
-#             return HttpResponse ("Sorry it is too late to submit picks.")
-        
-#         if Picks.objects.filter(playerName__tournament=tournament, user=user).count()>0:
-#             Picks.objects.filter(playerName__tournament=tournament, user=user).delete()
-#             ScoreDetails.objects.filter(pick__playerName__tournament=tournament, user=user).delete()
-
-#         if request.POST.get('random') == 'random':
-#             picks = tournament.create_picks(user, 'random')    
-#             print ('random picks submitted', user, datetime.datetime.now(), picks)
-#         else:
-#             form = request.POST
-#             if tournament.last_group_multi_pick():
-#                 #hard coding to 6, should i change to dynamic?
-#                 last_group = form.getlist('multi-group-6')
-#             pick_list = []
-            
-#             for k, v in form.items():
-#                 if k != 'csrfmiddlewaretoken' and k!= 'userid' \
-#                    and k != 'multi-group-6':
-#                     pick_list.append(Field.objects.get(pk=v))
-#                 elif k == 'multi-group-6':
-#                     for pick in last_group:
-#                         pick_list.append(Field.objects.get(pk=pick))
-
-#             tournament.save_picks(pick_list, user, 'self')
-
-#             print ('user submitting picks', datetime.datetime.now(), request.user, pick_list)
-        
-#         if UserProfile.objects.filter(user=user).exists():
-#             profile = UserProfile.objects.get(user=user)
-#             if profile.email_picks:
-#                 email_picks(tournament, user)
-
-#         return redirect('golf_app:picks_list')
-
 class FieldListView1(LoginRequiredMixin, TemplateView):
     login_url = 'login'
     template_name = 'golf_app/field_list_1.html'
@@ -127,38 +64,33 @@ class FieldListView1(LoginRequiredMixin, TemplateView):
                 tournament=Tournament.objects.get(season__current=True, pga_tournament_num='999')
             else: tournament = None
 
-        d = {}
-
         espn = espn_api.ESPNData()
-        d['t_started'] = espn.started()
 
-        for f in Field.objects.filter(tournament=tournament):
-           pick_ind = False
-           if Picks.objects.filter(playerName=f, user=self.request.user).exists():
-               pick_ind = True
-           
-           if d.get(f.group.number):
-               d.get(f.group.number).update({f.golfer.espn_number: {'field': f,
-                                               'started': espn.player_started(f.golfer.espn_number),
-                                               'pick_ind': pick_ind,
-                                               'fedex_pick': f.fedex_pick(self.request.user)}})
-           else:
-               d[f.group.number] = {f.golfer.espn_number: {'field': f,
-                                                           'started': espn.player_started(f.golfer.espn_number),
-                                                           'pick_ind': pick_ind,
-                                                           'fedex_pick': f.fedex_pick(self.request.user)},  #end of pick info, next is group level data
-                                                           'num_of_picks': f.group.num_of_picks(),
-                                                           'lock_group': f.group.lock_group(espn, self.request.user)}
-               
-        
+        started_golfers = []
+        lock_groups = []
+        if not espn.started() or tournament.late_picks:
+            t_started = False
+        else:
+            t_started = espn.started()
+            started_golfers = espn.started_golfers_list()
+            for g in Group.objects.filter(tournament=tournament):
+                if g.lock_group(espn, self.request.user):
+                    lock_groups.append(g.number) 
+
+
+        picks = Picks.objects.filter(playerName__tournament=tournament, user=self.request.user).values_list('playerName__pk', flat=True)
+
+        print ('locked groups: ', lock_groups)
         context.update({
-        'keys_to_skip': ['pick_ind', 'num_of_picks', 'lock_group', 'fedex_pick'],
-        'tournament': tournament,
-        'groups': Group.objects.filter(tournament=tournament),
-        'field_dict': d,
-        'info':  json.dumps(get_info(tournament)), 
+            'tournament': tournament,
+            't_started': t_started,
+            'picks': picks,
+            'started_golfers': started_golfers,
+            'field': Field.objects.filter(tournament=tournament),
+            'info':  json.dumps(get_info(tournament)),
+            'lock_groups': lock_groups,
         })
-        #print (d)
+
         print ('new field 1 context dur: ', datetime.datetime.now() - start)
         return context
 
@@ -975,8 +907,8 @@ class OptimalPicks(APIView):
 class GetInfo(APIView):
 
     def get(self, request, pk):
-        print ('PK :: ', pk)
-        print (self.request.GET)
+        #print ('PK :: ', pk)
+        #print (self.request.GET)
         try:
             info_dict = {}
             #t = Tournament.objects.get(pk=self.request.GET.get('tournament'))
@@ -991,7 +923,7 @@ class GetInfo(APIView):
 
             #info_dict['complete'] = t.complete
 
-            print ('info dict class', info_dict)
+            #print ('info dict class', info_dict)
             return Response(json.dumps(info_dict), 200)
         except Exception as e:
             print ('exception', e)

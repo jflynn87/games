@@ -124,7 +124,9 @@ class ESPNData(object):
         print ('cant tell if started, return False: ', espn_num, player[0].get('status'))
         return False
 
-
+    def started_golfers_list(self):
+        return [v.get('id') for v in self.field_data if self.player_started(v.get('id'))]
+    
     def field(self):
         return self.field_data
 

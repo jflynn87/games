@@ -38,7 +38,7 @@ $(document).ready(function () {
                     
                     '<div id=pick-status></div>' + 
                     '<div id=grp_6_buttons class=grp_6_buttons>' + 
-                    '<p id=jump_to style="background-color:lightgray; color:white; font-weight:bold;"> Jump to: ' +
+                    //'<p id=jump_to style="background-color:lightgray; color:white; font-weight:bold;"> Jump to: ' +
                     '</p>' +
                     
                     '</div>' +

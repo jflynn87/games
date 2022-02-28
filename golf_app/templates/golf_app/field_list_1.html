@@ -39,7 +39,7 @@
 <div id=withdraw></div>
 <div id='espn_missing'></div>
 
-{%if not field_dict.t_started or tournament.late_picks%}
+{%if not t_started or tournament.late_picks%}
     <div id="'top-sect">
     <br>
     <form name="random" method="post">
@@ -70,83 +70,86 @@
 
 <div id="field_sect">
 <form action="post" name="pick_form" id="pick_form">
+{% regroup field by group as ordered_field_list %}
 
-{%for group, data in field_dict.items%}
-    {%if group != 't_started'%}
-    <table class="table"  id="tbl-group-{{group}}" >
+{%for group in ordered_field_list%}
+    
+    <table class="table"  id="tbl-group-{{group.grouper.number}}" >
         <thead class="total_score">
         <tr>
-            <th colspan="2"><p>Group  {{group}} - Pick {{data.num_of_picks}} Golfers</p> 
+            <th colspan="2"><p>Group  {{group.grouper.number}} - Pick {{group.grouper.num_of_picks}} Golfers</p> 
                         <span style="font-size: smaller;"><p>Click select box to pick, click anywhere on player info for stats</p></span>
             </th>
         </tr>
         </thead>
-    {%endif%}
     
-    {%for espn_num, field_d in data.items%}
-
-        {%if espn_num not in keys_to_skip%}
+    
+    {%for f in group.list%}
         
-        <tr id="golfer-{{field_d.field.pk}}" class="border rounded border-2" >
-            <td id="input-{{field_d.field.pk}}" width='2%'>
+        <tr id="golfer-{{f.pk}}" class="border rounded border-2" >
+            <td id="input-{{f.pk}}" width='2%'>
+            
             <script type="text/javascript">
-                var ele = $('#input-' + '{{field_d.field.pk}}')
-                var num_of_picks = '{{data.num_of_picks}}'
+                var ele = $('#input-' + '{{f.pk}}')
+                var num_of_picks = '{{group.grouper.num_of_picks}}'
+                var started_golfers = '{{started_golfers}}'
+                var picks = '{{picks}}'
+                var lock_groups
                 
-                ele.html('<p id=input_msg-{{field_d.field.pk}}></p> <p><input type="hidden" name="csrfmiddlewaretoken" value="{{csrf_token}}"></p>')
+                ele.html('<p id=input_msg-{{f.pk}}></p> <p><input type="hidden" name="csrfmiddlewaretoken" value="{{csrf_token}}"></p>')
                                
                 if (num_of_picks == 1)
-                    {ele.html(ele.html() + '<p style="float:right;"><input id="{{field_d.field.pk}}" type="radio" class="my-checkbox form-check-input" name="group-{{group}}" value="{{field_d.field.pk}}" onchange="get_info({{info}}, this)"></p>')}           
+                    {ele.html(ele.html() + '<p style="float:right;"><input id="{{f.pk}}" type="radio" class="my-checkbox form-check-input" name="group-{{group.grouper.number}}" value="{{f.pk}}" onchange="get_info({{info}}, this)"></p>')}           
                 else                    
-                    {ele.html(ele.html() + '<p style="float:right;"><input id="{{field_d.field.pk}}" type="checkbox" class="my-checkbox form-check-input" name="group-{{group}}" value="{{field_d.field.pk}}" onchange="get_info({{info}}, this)"></p>')}
+                    {ele.html(ele.html() + '<p style="float:right;"><input id="{{f.pk}}" type="checkbox" class="my-checkbox form-check-input" name="group-{{group.grouper.number}}" value="{{f.pk}}" onchange="get_info({{info}}, this)"></p>')}
     
                 
-                if ('{{field_d.field.withdrawn}}' == 'True') {$('#input_msg-{{field_d.field.pk}}').text('WD');
-                                                              $('#golfer-{{field_d.field.pk}}').css('background-color', 'lightgray')
-                                                              $('#{{field_d.field.pk}}').prop('disabled', true)}
-                else if (('{{field_d.started}}' == "True" || '{{data.lock_group}}'  == "True") && '{{tournament.late_picks}}' != 'True') {
-                                                                            $('#input_msg-{{field_d.field.pk}}').text('Started');
-                                                                            $('#golfer-{{field_d.field.pk}}').addClass('started')
-                                                                            $('#{{field_d.field.pk}}').prop('disabled', true)
+                if ('{{f.withdrawn}}' == 'True') {$('#input_msg-{{f.pk}}').text('WD');
+                                                              $('#golfer-{{f.pk}}').css('background-color', 'lightgray')
+                                                              $('#{{f.pk}}').prop('disabled', true)}
+                else if ((started_golfers.indexOf('{{f.golfer.espn_number}}' != -1) || lock_groups.indexOf('{{group.grouper.number}}') != -1)  && '{{tournament.late_picks}}' != 'True') {
+                                                                            $('#input_msg-{{f.pk}}').text('Started');
+                                                                            $('#golfer-{{f.pk}}').addClass('started')
+                                                                            $('#{{f.pk}}').prop('disabled', true)
                                                                                                                                 }
                 
-                if ('{{field_d.pick_ind}}' == "True") {$('#{{field_d.field.pk}}').prop('checked', true)}
+                if (picks.indexOf('{{f.pk}}') != -1) {$('#{{f.pk}}').prop('checked', true)}
                
             </script>
     </td>
 
-            <td id="playerInfo{{field_d.field.golfer.espn_number}}" onclick="showStats('{{field_d.field.pk}}', '{{field_d.field.golfer.espn_number}}')">
+            <td id="playerInfo{{f.golfer.espn_number}}" onclick="showStats('{{f.pk}}', '{{f.golfer.espn_number}}')">
                 
                 <p>
                     {%if field_d.fedex_pick %} 
                         <span><img style='width:50px;' src="{%static '/img/fedex.jpg'%}" alt=""></span>
                     {%endif%}
-                    <img src="{{field_d.field.golfer.pic_link}}">
-                    <span style="font-weight: bold;">{{field_d.field.playerName}} </span>
-                    <img src="{{field_d.field.golfer.flag_link}}" alt="">
+                    <img src="{{f.golfer.pic_link}}">
+                    <span style="font-weight: bold;">{{f.playerName}} </span>
+                    <img src="{{f.golfer.flag_link}}" alt="">
                 </p>
                 <p>
-                    <a href="https://www.google.com/search?q={{field_d.field.playerName}}" target="_blank">Google</a>
-                    <a href="{{field_d.field.golfer.espn_link}}" target="_blank">/ESPN</a>
-                    <a href="{{field_d.field.golfer.get_pga_player_link}}" target="_blank">/PGA</a>
-                    <i id="expand-{{field_d.field.pk}}" class='fa fa-plus-circle expand' style="float:right;">Show Golfer Stats</i></span>
+                    <a href="https://www.google.com/search?q={{f.playerName}}" target="_blank">Google</a>
+                    <a href="{{f.golfer.espn_link}}" target="_blank">/ESPN</a>
+                    <a href="{{f.golfer.get_pga_player_link}}" target="_blank">/PGA</a>
+                    <i id="expand-{{f.pk}}" class='fa fa-plus-circle expand' style="float:right;">Show Golfer Stats</i></span>
                 </p>    
                 <p style="font-weight: bold;">
-                        OWGR: {{field_d.field.currentWGR}} ;
-                        Handicap: {{field_d.field.handi}} ;
-                        {%if field_d.field.season_stats.fed_ex_rank != 'n/a' %}
-                        FedEx: {{field_d.field.season_stats.fed_ex_rank}} / {{field_d.field.season_stats.fed_ex_points}} ;
+                        OWGR: {{f.currentWGR}} ;
+                        Handicap: {{f.handi}} ;
+                        {%if f.season_stats.fed_ex_rank != 'n/a' %}
+                        FedEx: {{f.season_stats.fed_ex_rank}} / {{f.season_stats.fed_ex_points}} ;
                         {%else%}
                         FedEx: n/a ;
                         {%endif%}
-                        Prior Year: {{field_d.field.prior_year}}
+                        Prior Year: {{f.prior_year}}
                 </p>
             </td>
         </tr>
       
-        <tr id="stats_row-{{field_d.field.pk}}" class="stats_row" hidden><td colspan="2">Loading data....</td></tr>
+        <tr id="stats_row-{{f.pk}}" class="stats_row" hidden><td colspan="2">Loading data....</td></tr>
         
-        {%endif%}
+    
     {%endfor%}    
         
     
