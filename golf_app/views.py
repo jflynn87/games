@@ -1,10 +1,9 @@
 #from re import T, template
-
-from errno import ESOCKTNOSUPPORT
-from django.db.models.fields import IntegerField
-from django.db.models.query_utils import RegisterLookupMixin
-from django.shortcuts import render, get_object_or_404, redirect
-from django.views.generic import View, TemplateView, ListView, DetailView, CreateView, UpdateView, FormView
+#from errno import ESOCKTNOSUPPORT
+#from django.db.models.fields import IntegerField
+#from django.db.models.query_utils import RegisterLookupMixin
+from django.shortcuts import render, redirect
+from django.views.generic import TemplateView, ListView
 
 #from extra_views import ModelFormSetView
 from golf_app.models import CountryPicks, Field, Tournament, Picks, Group, TotalScore, ScoreDetails, \
@@ -12,18 +11,18 @@ from golf_app.models import CountryPicks, Field, Tournament, Picks, Group, Total
            Season, AccessLog, Golfer, AuctionPick, CountryPicks, FedExField, FedExSeason, FedExPicks
 from golf_app.forms import  CreateManualScoresForm, FieldForm, FieldFormSet, AuctionPicksFormSet
 from django.contrib.auth.decorators import login_required
-from django.http import HttpResponseRedirect, HttpResponse, Http404
+from django.http import HttpResponseRedirect, HttpResponse
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.views.generic.base import TemplateResponseMixin
+#from django.views.generic.base import TemplateResponseMixin
 from django.urls import reverse, reverse_lazy
 from django.contrib.auth.models import User
 import datetime
 #from golf_app import populateField, calc_score, optimal_picks,\
 #     manual_score, scrape_scores_picks, scrape_cbs_golf, scrape_masters, withdraw, scrape_espn, \
 #     populateMPField, mp_calc_scores, golf_serializers, utils, olympic_sd
-from golf_app import populateField, manual_score, scrape_masters, withdraw, scrape_espn, \
-     populateMPField, mp_calc_scores, golf_serializers, utils, olympic_sd, espn_api, \
+from golf_app import populateField, manual_score, withdraw, scrape_espn, \
+     mp_calc_scores, golf_serializers, utils, olympic_sd, espn_api, \
      ryder_cup_scores, espn_ryder_cup, bonus_details, espn_schedule
 
 
@@ -36,7 +35,7 @@ import json
 import random
 from django.db import transaction
 import urllib.request
-from selenium.webdriver import Chrome
+#from selenium.webdriver import Chrome
 import csv
 from rest_framework.views import APIView 
 from rest_framework.response import Response
@@ -48,9 +47,14 @@ from django.core import serializers
 from collections import OrderedDict
 
 
+#class FieldListView1(LoginRequiredMixin, ListView):
 class FieldListView1(LoginRequiredMixin, TemplateView):
     login_url = 'login'
     template_name = 'golf_app/field_list_1.html'
+    #template_name = 'golf_app/field_list_2.html'
+    #paginate_by = 1
+    #model = Group
+    #queryset = Group.objects.filter(tournament__current=True).order_by('number')
 
     def get_context_data(self, **kwargs):
         context = super(FieldListView1, self).get_context_data(**kwargs)
@@ -79,14 +83,19 @@ class FieldListView1(LoginRequiredMixin, TemplateView):
 
 
         picks = Picks.objects.filter(playerName__tournament=tournament, user=self.request.user).values_list('playerName__pk', flat=True)
-
+        #field = serializers.serialize('json', Field.objects.filter(tournament=tournament), fields = ('playerName', 'golfer', 'group__number'))
+        field = serializers.serialize('json', Field.objects.filter(tournament=tournament))
+        
+        #print ('group 1: ', [x for x in json.loads(field) if x.get('fields').get('group') == 1696])
+        
         print ('locked groups: ', lock_groups)
         context.update({
             'tournament': tournament,
             't_started': t_started,
             'picks': picks,
             'started_golfers': started_golfers,
-            'field': Field.objects.filter(tournament=tournament),
+            'field': Field.objects.filter(tournament=tournament, group__number=1),
+            #'field': field,
             'info':  json.dumps(get_info(tournament)),
             'lock_groups': lock_groups,
         })
@@ -1473,9 +1482,12 @@ class GetGolferLinks(APIView):
             data = {}
             #print ('DATA ', request.data)
             g = Golfer.objects.get(pk=pk)
-            data.update({'pga_link': g.golfer_link(),
-                        'espn_link': g.espn_link()})
-            
+            data.update({'pga_link': g.get_pga_player_link(),
+                        'espn_link': g.espn_link(),
+                        'pic_link': g.pic_link,
+                        'flag_link': g.flag_link
+                        })
+            print (data)
             return JsonResponse(data, status=200)
         except Exception as e:
             print ('get golfer link exception: ', e)

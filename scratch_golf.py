@@ -16,13 +16,15 @@ from collections import OrderedDict
 from urllib.request import Request, urlopen
 from bs4 import BeautifulSoup
 from golf_app import views
+from django.core import serializers
 
+start = datetime.now()
 u = User.objects.get(pk=1)
-#t = Tournament.objects.get(current=True)
-t = Tournament.objects.get(pk=207)
-with open('wm_mid_r1.json') as json_file:
-    data = json.load(json_file)
-
+t = Tournament.objects.get(current=True)
+f = Field.objects.filter(tournament=t)
+data = serializers.serialize("json", f)
+print (datetime.now() - start)
+exit()
 espn = espn_api.ESPNData(t=t, data=data)
 print (len(espn.started_golfers_list()))
 start = datetime.now()

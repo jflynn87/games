@@ -27,7 +27,8 @@ $(document).ready(function() {
       msgs()
       buildLeaderboard($('#tournament_key').text())
       var done = new Date()
-      console.log('load duration: ', done - start)}
+      console.log('load duration: ', done - start)
+      }
       )      
 
 })
