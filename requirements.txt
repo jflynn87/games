@@ -56,7 +56,7 @@ rcssmin==1.1.0
 requests==2.26.0
 rjsmin==1.2.0
 scipy==1.7.3
-Scrapy==1.8.0
+Scrapy==1.8.2
 selenium==3.141.0
 semantic-version==2.8.5
 service-identity==18.1.0
