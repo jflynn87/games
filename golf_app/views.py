@@ -47,57 +47,50 @@ from django.core import serializers
 from collections import OrderedDict
 
 
-#class FieldListView1(LoginRequiredMixin, ListView):
 class FieldListView1(LoginRequiredMixin, TemplateView):
     login_url = 'login'
     template_name = 'golf_app/field_list_1.html'
-    #template_name = 'golf_app/field_list_2.html'
-    #paginate_by = 1
-    #model = Group
-    #queryset = Group.objects.filter(tournament__current=True).order_by('number')
 
     def get_context_data(self, **kwargs):
         context = super(FieldListView1, self).get_context_data(**kwargs)
         start = datetime.datetime.now()
-        #utils.save_access_log(self.request, 'new_picks')
+        utils.save_access_log(self.request, 'new_picks')
         try:
             tournament = Tournament.objects.get(current=True)
         except Exception:
-            t = Tournament.objects.all().order_by('-pk').first()
-            if t.pga_tournament_num == '999':
-                tournament=Tournament.objects.get(season__current=True, pga_tournament_num='999')
-            else: tournament = None
+            tournament = None
 
-        espn = espn_api.ESPNData()
+        # espn = espn_api.ESPNData(update_sd=False)
 
-        started_golfers = []
-        lock_groups = []
-        if not espn.started() or tournament.late_picks:
-            t_started = False
-        else:
-            t_started = espn.started()
-            started_golfers = espn.started_golfers_list()
-            for g in Group.objects.filter(tournament=tournament):
-                if g.lock_group(espn, self.request.user):
-                    lock_groups.append(g.number) 
+        # started_golfers = []
+        # lock_groups = []
+        # if not espn.started() or tournament.late_picks:
+        #     t_started = False
+        # else:
+        #     t_started = espn.started()
+        #     started_golfers = espn.started_golfers_list()
+        #     for g in Group.objects.filter(tournament=tournament):
+        #         if g.lock_group(espn, self.request.user):
+        #             lock_groups.append(g.number) 
 
+        # picks = Picks.objects.filter(playerName__tournament=tournament, user=self.request.user).values_list('playerName__pk', flat=True)
+        # field = serializers.serialize('json', Field.objects.filter(tournament=tournament))
+        # espn_nums = Field.objects.filter(tournament=tournament).values_list('golfer__espn_number', flat=True)
+        # golfers = serializers.serialize('json', Golfer.objects.filter(espn_number__in=espn_nums))        
 
-        picks = Picks.objects.filter(playerName__tournament=tournament, user=self.request.user).values_list('playerName__pk', flat=True)
-        #field = serializers.serialize('json', Field.objects.filter(tournament=tournament), fields = ('playerName', 'golfer', 'group__number'))
-        field = serializers.serialize('json', Field.objects.filter(tournament=tournament))
-        
-        #print ('group 1: ', [x for x in json.loads(field) if x.get('fields').get('group') == 1696])
-        
-        print ('locked groups: ', lock_groups)
         context.update({
             'tournament': tournament,
-            't_started': t_started,
-            'picks': picks,
-            'started_golfers': started_golfers,
-            'field': Field.objects.filter(tournament=tournament, group__number=1),
+            'fedex_season': FedExSeason.objects.get(season=tournament.season)
+            #'t_started': t_started,
+            #'picks': picks,
+            #'started_golfers': started_golfers,
+            #'field': Field.objects.filter(tournament=tournament, group__number=1),
             #'field': field,
-            'info':  json.dumps(get_info(tournament)),
-            'lock_groups': lock_groups,
+            #'golfers': golfers,
+            #'info':  json.dumps(get_info(tournament)),
+            #'lock_groups': lock_groups,
+            #'groups': Group.objects.filter(tournament=tournament),
+            
         })
 
         print ('new field 1 context dur: ', datetime.datetime.now() - start)
@@ -310,31 +303,13 @@ class GetPicks(APIView):
     
     def get(self, num):
         start = datetime.datetime.now()
-        # adding d and transforiming reply to a dict with original pick list and started indicator
-        # d = {}
-        # s = {}
         t = Tournament.objects.get(current=True)
         try: 
-            #pick_list = []
-            #added WD exclued 8/12
-            #for pick in Picks.objects.filter(user__username=self.request.user, playerName__tournament=t).exclude(playerName__withdrawn=True):
-            #    pick_list.append(pick.playerName.pk)
-            #print ('getting picks API response', self.request.user, json.dumps(pick_list), datetime.datetime.now() - start)
-            #d['picks'] = pick_list
-            picks = golf_serializers.PicksSerializer(Picks.objects.filter(user__username=self.request.user, playerName__tournament=t).exclude(playerName__withdrawn=True), many=True).data
-            #espn_data = espn_api.ESPNData().get_all_data()
-            #if not t.started():
-            #    d['started'] = {}
-                #for f in Field.objects.filter(tournament__current=True):
-                #    s[f.pk] = {'started': espn_data.player_started(f.golfer.espn_number)}
-            #    s = golf_serializers.PlayerStartedSerializer(Field.objects.filter(tournament__current=True), context={'espn_data': espn_data}, many=True).data
-            #    d['player_started_info'] = s
-            #else:
-            #    d.update({'start': {}})
-
-            print ('get picks duration: ', datetime.datetime.now() - start)
-            
-            return Response(json.dumps(picks), 200)
+            #picks = golf_serializers.PicksSerializer(Picks.objects.filter(user__username=self.request.user, playerName__tournament=t).exclude(playerName__withdrawn=True), many=True).data
+            picks = serializers.serialize('json', Picks.objects.filter(user__username=self.request.user, playerName__tournament=t).exclude(playerName__withdrawn=True))
+            print ('get picks duration: ', datetime.datetime.now() - start)            
+            #return Response(json.dumps(picks), 200)
+            return Response(picks, 200)
             #return Response(json.dumps(pick_list), 200)
         except Exception as e:
             print ('Get Picks API exception', e)
@@ -1787,19 +1762,26 @@ class FedExPicksListView(LoginRequiredMixin,ListView):
 class FedExPicksAPI(APIView):
     def get(self, request, fedex_season, filter):
         start = datetime.datetime.now()
-        fedex_season = FedExSeason.objects.get(pk=fedex_season)
+        f_season = FedExSeason.objects.get(pk=fedex_season)
 
         d = {}
-
+        print (filter)
         try:
-            for p in FedExPicks.objects.filter(pick__season=fedex_season):
-                if d.get(p.user.username):
-                    d.get(p.user.username).update({p.pick.golfer.espn_number: {'golfer_name': p.pick.golfer.golfer_name,
-                                                                                'score': p.score}})
-                else:
-                    d[p.user.username] = {p.pick.golfer.espn_number: {'golfer_name': p.pick.golfer.golfer_name,
-                                                                'score': p.score}}
+            if filter == 'by_user':
+                print ('IN BY USER')
+                data = list(FedExPicks.objects.filter(pick__season=f_season, user=self.request.user).values_list('pick__golfer__pk', flat=True))
+                d['data'] = data
+                print ('FEDEX: ', d)
+            else:
+                for p in FedExPicks.objects.filter(pick__season=fedex_season):
+                    if d.get(p.user.username):
+                        d.get(p.user.username).update({p.pick.golfer.espn_number: {'golfer_name': p.pick.golfer.golfer_name,
+                                                                                    'score': p.score}})
+                    else:
+                        d[p.user.username] = {p.pick.golfer.espn_number: {'golfer_name': p.pick.golfer.golfer_name,
+                                                                    'score': p.score}}
         except Exception as e:
+            print ('FedExPicksAPI error: ', e)
             d['error'] = {'msg': str(e)}
         
         
@@ -1970,7 +1952,7 @@ class EspnApiScores(APIView):
                 print ("Tournament Complete dur: ", datetime.datetime.now() - start)
                 return JsonResponse(data, status=200, safe=False)
 
-            espn = espn_api.ESPNData(t=t, force_refresh=True)
+            espn = espn_api.ESPNData(t=t, force_refresh=True, update_sd=False)
 
             #if not espn.needs_update():
             #    data = return_sd_data(t,d)
@@ -2577,4 +2559,84 @@ class SDStatusAPI(APIView):
 
         return JsonResponse(json.dumps(d), status=200, safe=False)
 
+
+
+class GetFieldAPI(APIView):
+    def get(self, request, pk):
+        
+        start = datetime.datetime.now()
+        d = {}
+        try:
+            t = Tournament.objects.get(pk=pk)
+            f = Field.objects.filter(tournament=t)
+            field = serializers.serialize('json', f)
+            groups = serializers.serialize('json', Group.objects.filter(tournament=t))
+            d['field'] = field
+            d['groups'] =  groups
+
+        except Exception as e:
+            print ('GetFieldAPI error: ', e)
+            d['error'] = {'msg': str(e)}
+        
+        print ('GetFieldAPI time: ', datetime.datetime.now() - start)
+
+        return JsonResponse(json.dumps(d), status=200, safe=False)
+
+
+class GetGolfersOBJAPI(APIView):
+    def get(self, request, pk):
+        
+        start = datetime.datetime.now()
+        d = {}
+        try:
+            t = Tournament.objects.get(pk=pk)
+            g_keys = Field.objects.filter(tournament=t).values_list('golfer__pk', flat=True)
+            #golfers = serializers.serialize('json', Golfer.objects.filter(pk__in=g_keys))
+            golfers = golf_serializers.GolferSerializer(Golfer.objects.filter(pk__in=g_keys), many=True).data
+            d['golfers'] =  golfers
+
+        except Exception as e:
+            print ('GetGolferOBJAPI error: ', e)
+            d['error'] = {'msg': str(e)}
+        
+        print ('GetGolferOBJAPI time: ', datetime.datetime.now() - start)
+
+        return JsonResponse(json.dumps(d), status=200, safe=False)
+
+class StartedDataAPI(APIView):
+    def get(self, request, pk):
+        
+        start = datetime.datetime.now()
+        d = {}
+        try:
+            t = Tournament.objects.get(pk=pk)
+            started_golfers = []
+            lock_groups = []  
+            espn = espn_api.ESPNData()
+            after_espn_start = datetime.datetime.now()
+            if not espn.started() or t.late_picks:
+                t_started = False
+            else:
+                t_started = espn.started()
+                started_golfers = espn.started_golfers_list()
+                for g in Group.objects.filter(tournament=t):
+                      if g.lock_group(espn, self.request.user):
+                         lock_groups.append(g.pk) 
+
+            d['t_started'] =  t_started
+            d['started_golfers'] = started_golfers
+            d['lock_groups'] = lock_groups
+            print ('GetStertedDataAPI after espn time: ', datetime.datetime.now() - after_espn_start)
+        except Exception as e:
+            d['t_started'] =  False
+            d['started_golfers'] = []
+            d['lock_groups'] = []
+
+            print ('GetStartedDataAPI error: ', e)
+            d['error'] = {'msg': str(e)}
+        
+        
+        print ('GetStertedDataAPI time: ', datetime.datetime.now() - start)
+
+        return JsonResponse(json.dumps(d), status=200, safe=False)
 

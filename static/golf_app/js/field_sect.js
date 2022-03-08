@@ -9,10 +9,13 @@ $(document).ready(function () {
          picks = $.parseJSON(responseJSON[1])
  
         var pick_array = [];
+        
         for (let i=0; i < picks.length; i++) {
-            pick_array.push(picks[i].playerName.id)
+            //pick_array.push(picks[i].playerName.id)
+            pick_array.push(picks[i].fields.playerName)
         }
 
+        console.log(pick_array)
         buildHeader()
         groups = []
         $.each($('#groups_list li'), function(i, g) {

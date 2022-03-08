@@ -71,7 +71,8 @@
 
 <!-- NEW CODE -->
 
-{%for group in page_obj%}
+{%for group in groups%} 
+
 <table class="table"  id="tbl-group-{{group.number}}" >
     <thead class="total_score">
     <tr>
@@ -83,21 +84,33 @@
 
 
 <script type="text/javascript">
-    field_list = '{{field|escapejs}}'
-    //f = JSON.parse(field)
-    f = $.parseJSON(field_list)
-   
-    f_len = f.length
+    start = new Date()
+    field_list = $.parseJSON('{{field|escapejs}}')
+    golfers = $.parseJSON('{{golfers|escapejs}}')
+    
     table =  document.getElementById('tbl-group-' + '{{group.number}}')
+   
+    var group_field = field_list.filter(f => {
+        //console.log(f.fields.group)
+        //console.log('{{group.pk}}')
+        return Number(f.fields.group) == Number('{{group.pk}}')})
+    
+    console.log(group_field)
+    f_len = group_field.length
 
     for (var i=0; i < f_len; i++) {
-        //console.log(f[i].fields.group, Number('{{group.number}}'))
-        if (f[i].fields.group == Number('{{group.pk}}')) {
-        buildFieldRow(f[i])
-    }
+        buildFieldRow(group_field[i])
     }
 
+
+    // for (var i=0; i < f_len; i++) {
+    //     if (f[i].fields.group == Number('{{group.pk}}')) {
+    //        buildFieldRow(f[i])
+    // }
+    // }
+
 function buildFieldRow(field) {
+    console.log(field)
     
     frag = new DocumentFragment()
     row = document.createElement('tr')
@@ -134,20 +147,18 @@ function buildFieldRow(field) {
 
     tdGolfer = document.createElement('td')
     tdGolfer.id = 'playerInfo' + field.fields.golfer
+
+    var golfer = golfers.filter(g => {
+        return g.pk == Number(field.fields.golfer)})
+    
     golferP1 = document.createElement('p')
-    golferP1.innerHtml = field.fields.playerName 
+    golfer_pic = document.createElement('img')
+    golfer_pic.src = golfer[0].fields.pic_link
+    golfer_pic.innerHTML = 'TTTT'
+    tdGolfer.appendChild(golfer_pic)
+    golferP1.innerHTML = field.fields.playerName 
+    golferP1.style.fontWeight = 'bold'
     
-    // var golferData = getGolfer(field.fields.golfer)
-    
-    // golferData.then((response) => {
-    //     console.log('golfer data 1 ')
-    // golfer = response
-    // pic = document.createElement('i')
-    // pic.src = golfer.pic_link
-    // golferP1.append(pic)
-    
-
-
     tdGolfer.append(golferP1)
     row.appendChild(tdInput)
     row.appendChild(tdGolfer)
@@ -156,29 +167,12 @@ function buildFieldRow(field) {
     table.appendChild(frag)
     
     
-    
-    
-//})
     }
 
+    finish = new Date()
 
-    
-
-function getGolfer(key) {
-    return new Promise(function (resolve, reject) {
-    console.log('get golfer', key)
-    fetch("/golf_app/get_golfer_links/" + key,         
-        {method: "GET",
-        })
-    .then((response) => response.json())
-    .then((responseJSON) => {
-        console.log('get fgolfer returned')
-        golfer = responseJSON
-        console.log('resolving golfer');
-        resolve(golfer)})  
-    
-})
-}
+    dur = Math.abs(finish - start)
+    console.log('Group ', '{{group.number}}', dur)
 
 </script>    
   
@@ -189,7 +183,7 @@ function getGolfer(key) {
 
 {%endfor%}    
 
-<div class="pagination">
+<!-- <div class="pagination">
     <span class="step-links">
         {% if page_obj.has_previous %}
             <a href="?page=1">&laquo; first</a>
@@ -205,7 +199,7 @@ function getGolfer(key) {
             <a href="?page={{ page_obj.paginator.num_pages }}">last &raquo;</a>
         {% endif %}
     </span>
-</div>
+</div> -->
 
 
 

@@ -109,13 +109,19 @@ function udatePickData() {
                   }
                   else {thru = pick.thru}
                   
+                  // $('#' + pick.pick.id + '-score').html(
+                  // '<p>' + pick.score + 
+                  // '<span > <a id=tt-' + pick.id + 
+                  // ' data-toggle="tooltip" > <i class="fa fa-info-circle" style="color:blue;"></i> </a> </span>' +
+                  // '  ' + sod + '</p>' + 
+                  // '<p>' + pick.toPar + '  (' + thru + ')</p>')                  
                   $('#' + pick.pick.id + '-score').html(
-                  '<p>' + pick.score + 
-                  '<span > <a id=tt-' + pick.id + 
-                  ' data-toggle="tooltip" > <i class="fa fa-info-circle" style="color:blue;"></i> </a> </span>' +
-                  '  ' + sod + '</p>' + 
-                  '<p>' + pick.toPar + '  (' + thru + ')</p>')                  
-        
+                         '<p>' + pick.score + 
+                         '<span > <a id=tt-' + pick.id + 
+                         ' data-toggle="tooltip" > <i class="fa fa-info-circle" style="color:blue;"></i> </a> </span>' +
+                         '  ' + sod + '</p>') 
+                  $('#' + pick.pick.id + '-p2').html('<p>' + pick.toPar + ' (' + thru + ')</p>')
+
                   $('#tt-' + pick.id + '[data-toggle="tooltip"]').tooltip({trigger:"hover",
                   delay:{"show":400,"hide":800}, "title": 'gross score: ' + pick.gross_score})
                   //if (not_playing.indexOf(pick.today_score) != -1) {$('#' + pick.pick.id).addClass('cut')}  
@@ -134,7 +140,7 @@ function bestInGroup(data) {
                   $('#big-' + group).html(golfer) 
                         }
             else {
-                  $('#big-' + group).html($('#big-' + group).html()  + ', ' + golfer) 
+                  $('#big-' + group).append('<p>' + golfer + '</p>')
                   }
                                                     })
             colspan = $('#grp-colspan-' + group).attr('colspan')

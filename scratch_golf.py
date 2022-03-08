@@ -19,19 +19,104 @@ from golf_app import views
 from django.core import serializers
 
 start = datetime.now()
+tournament = Tournament.objects.get(current=True)
 u = User.objects.get(pk=1)
-t = Tournament.objects.get(current=True)
-f = Field.objects.filter(tournament=t)
-data = serializers.serialize("json", f)
-print (datetime.now() - start)
-exit()
-espn = espn_api.ESPNData(t=t, data=data)
-print (len(espn.started_golfers_list()))
-start = datetime.now()
-for g in Group.objects.filter(tournament=t):
-    print (g, g.lock_group(espn, u))
+sd = ScoreDict.objects.get(tournament=tournament)
+all_data = sd.espn_api_data
 
-print ('dur: ', datetime.now()- start)
+espn = espn_api.ESPNData(data=all_data)
+print (espn.current_round_to_par('4364873'))
+
+exit()
+
+
+# print ('espn all: ',  type(espn.all_data))
+# print ('espn event: ',  type(espn.event_data))
+# print ('espn field: ',  type(espn.field_data))
+# print ('espn competition: ',  type(espn.competition_data))
+
+pre_data = datetime.now()
+#headers = {'User-Agent': 'Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.149 Mobile Safari/537.36'}
+#url =  "https://site.web.api.espn.com/apis/site/v2/sports/golf/leaderboard?league=pga"
+
+#all_data = get(url, headers=headers).json()
+
+sd = ScoreDict.objects.get(tournament=tournament)
+all_data = sd.espn_api_data
+#print ('post refresh data dur: ', datetime.now() - pre_data)
+field_start = datetime.now()
+#print ('all data: ', len(all_data), type(all_data), len(all_data.get('events')))
+#event_data = [v for k,v in all_data.items() if k == 'events' and [v for x in v if x.get('id') == tournament.espn_t_num]]         # self.event_data = {}
+event_data = [v for v in all_data.get('events') if v.get('id') == tournament.espn_t_num][0]         # self.event_data = {}
+#print ('event data: ', len(event_data), type(event_data))
+#comp_data = [c.get('competitions') for c in event_data]
+comp_data = event_data.get('competitions')[0]
+#print ('comp data: ', len(comp_data), type(comp_data))
+field_data = comp_data.get('competitors')
+print ('field ', len(field_data), type(field_data))
+
+ 
+print ('field dur: ', datetime.now() - pre_data)
+espn = espn_api.ESPNData()
+exit()
+        # self.competition_data = {}
+        # self.field_data = {}
+        # event_found = False
+        # for event in self.all_data.get('events'):
+        #     print (event.get('id'), self.t.espn_t_num)
+        #     if event.get('id') == self.t.espn_t_num:
+        #         event_found = True
+        #         #pre_name_check = datetime.now()
+        #         #if utils.check_t_names(event.get('name'), self.t) or self.t.ignore_name_mismatch: 
+        #         self.event_data = event
+        #         sd, created = ScoreDict.objects.get_or_create(tournament=self.t)
+        #         sd.espn_api_data = self.all_data
+        #         sd.save()
+        #         if self.t.pga_tournament_num not in ['468', '999', '470']:
+        #             for c in self.event_data.get('competitions'):
+        #                 self.competition_data = c
+        #                 self.field_data = c.get('competitors')
+        #         #else:
+        #         #    print ('tournament mismatch: espn name: ', event.get('name'), 'DB name: ', self.t.name)
+        #         #break 
+        # if not event_found:
+        #     print ('ESPN API didnt find event, PGA T num: ', self.t.pga_tournament_num)
+
+
+
+
+
+
+
+espn = espn_api.ESPNData()
+
+started_golfers = []
+lock_groups = []
+
+if not espn.started() or tournament.late_picks:
+    t_started = False
+else:
+    t_started = espn.started()
+    started_golfers = espn.started_golfers_list()
+    for g in Group.objects.filter(tournament=tournament):
+        if g.lock_group(espn, u):
+            lock_groups.append(g.number) 
+
+p_s = datetime.now()
+picks = Picks.objects.filter(playerName__tournament=tournament, user=u).values_list('playerName__pk', flat=True)
+print ('p dur: ', datetime.now() - p_s)
+f_s = datetime.now()
+field = serializers.serialize('json', Field.objects.filter(tournament=tournament))
+print ('f dur: ', datetime.now() - f_s)
+e_s = datetime.now()
+#espn_nums = Field.objects.filter(tournament=tournament).values_list('golfer__espn_number', flat=True)
+espn_nums = Field.objects.filter(tournament=tournament).values_list('golfer__pk', flat=True)
+print ('e dur: ', datetime.now() - e_s)
+g_s = datetime.now()
+#golfers = serializers.serialize('json', Golfer.objects.filter(espn_number__in=espn_nums))        
+golfers = serializers.serialize('json', Golfer.objects.filter(pk__in=espn_nums))        
+print ('g dur: ', datetime.now() - g_s)
+print ('duration: ', datetime.now() - start)
 exit()
 
 t = Tournament.objects.get(current=True)

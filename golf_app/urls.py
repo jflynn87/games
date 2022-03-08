@@ -78,7 +78,9 @@ urlpatterns= [
     path('golfer_results_updates/', views.UpdateGolferResultsAPI.as_view(), name='golfer_results_update'),
     path('setup_summary_stats/<str:pga_t_num>/<str:espn_t_num>', views.SetupStatsAPI.as_view(), name='setup_summary_stats'),
     path('sds_status/', views.SDStatusAPI.as_view(), name='sds_status'),
-   
+    path('get_field/<int:pk>', views.GetFieldAPI.as_view(), name='get_field'),
+    path('get_golfers_obj/<int:pk>', views.GetGolfersOBJAPI.as_view(), name='get_golfers_obj'),
+    path('get_started_data/<int:pk>', views.StartedDataAPI.as_view(), name='get_started_data'),
 
     
 

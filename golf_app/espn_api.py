@@ -15,7 +15,7 @@ class ESPNData(object):
         competition_data varoius datat about  the tournament
         field_data is the actual golfers in the tournament'''
 
-    def __init__(self, t=None, data=None, force_refresh=False, setup=False):
+    def __init__(self, t=None, data=None, force_refresh=False, setup=False, update_sd=True):
         start = datetime.now()
 
         if t:
@@ -43,30 +43,44 @@ class ESPNData(object):
         else:
             sd = ScoreDict()
 
+        data_start = datetime.now()
+
         self.event_data = {}
         self.competition_data = {}
         self.field_data = {}
-        event_found = False
-        for event in self.all_data.get('events'):
-            print (event.get('id'), self.t.espn_t_num)
-            if event.get('id') == self.t.espn_t_num:
-                event_found = True
-                #pre_name_check = datetime.now()
-                #if utils.check_t_names(event.get('name'), self.t) or self.t.ignore_name_mismatch: 
-                self.event_data = event
-                sd, created = ScoreDict.objects.get_or_create(tournament=self.t)
-                sd.espn_api_data = self.all_data
-                sd.save()
-                if self.t.pga_tournament_num not in ['468', '999', '470']:
-                    for c in self.event_data.get('competitions'):
-                        self.competition_data = c
-                        self.field_data = c.get('competitors')
-                #else:
-                #    print ('tournament mismatch: espn name: ', event.get('name'), 'DB name: ', self.t.name)
-                #break 
-        if not event_found:
-            print ('ESPN API didnt find event, PGA T num: ', self.t.pga_tournament_num)
+        # event_found = False
+        # for event in self.all_data.get('events'):
+        #     print (event.get('id'), self.t.espn_t_num)
+        #     if event.get('id') == self.t.espn_t_num:
+        #         event_found = True
+        #         #pre_name_check = datetime.now()
+        #         #if utils.check_t_names(event.get('name'), self.t) or self.t.ignore_name_mismatch: 
+        #         self.event_data = event
+        #         sd, created = ScoreDict.objects.get_or_create(tournament=self.t)
+        #         sd.espn_api_data = self.all_data
+        #         sd.save()
+        #         if self.t.pga_tournament_num not in ['468', '999', '470']:
+        #             for c in self.event_data.get('competitions'):
+        #                 self.competition_data = c
+        #                 self.field_data = c.get('competitors')
+        #         #else:
+        #         #    print ('tournament mismatch: espn name: ', event.get('name'), 'DB name: ', self.t.name)
+        #         #break 
+        # if not event_found:
+        #     print ('ESPN API didnt find event, PGA T num: ', self.t.pga_tournament_num)
 
+        self.event_data = [v for v in self.all_data.get('events') if v.get('id') == self.t.espn_t_num][0]         # self.event_data = {}
+        self.competition_data = self.event_data.get('competitions')[0]
+        self.field_data = self.competition_data.get('competitors')
+
+        pre_sd = datetime.now()
+        if len(self.field_data) >0 and update_sd and not data:
+            sd, created = ScoreDict.objects.get_or_create(tournament=self.t)
+            sd.espn_api_data = self.all_data
+            sd.save()
+
+        print ('sd save dur: ', datetime.now() - pre_sd)
+        print ('data set up: ', datetime.now() - data_start)
         print ('espn API Init complete, field len: ', len(self.field_data), ' dur: ', datetime.now() - start)
 
 
@@ -141,12 +155,7 @@ class ESPNData(object):
             print ('espnApi golfer_data issue, espn_num: ', espn_num, e)
             return None
 
-        ## fix this to have more options, all or other extracts?
-        #golfers = list(Picks.objects.filter(playerName__tournament=self.t).values_list('playerName__golfer__espn_number', flat=True))
-        
-        #return [x.get('athlete').get('displayName') for x in self.field_data if x.get('id') in golfers]
-
-    
+   
     def get_all_data(self):
         return self.all_data
 
@@ -307,7 +316,7 @@ class ESPNData(object):
                                     'change': golfer_data.get('movement'),
                                     #'thru': golfer_data.get('status').get('type').get('shortDetail'),
                                     'thru': thru,
-                                    'curr_round_score': '',
+                                    'curr_round_score': self.current_round_to_par(data.get('id')),
                                     'golfer_name': golfer_data.get('athlete').get('displayName'),
                                     'espn_num': data.get('id') 
 
@@ -390,3 +399,11 @@ class ESPNData(object):
             return False
 
         return True
+
+    def current_round_to_par(self, espn_num):
+        data = self.golfer_data(espn_num)
+        curr_round = self.get_round()
+        try:
+            return [x.get('displayValue') for x in self.golfer_data(espn_num).get('linescores') if x.get('period') == curr_round][0]
+        except Exception as e:
+            return '-'

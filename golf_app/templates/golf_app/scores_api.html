@@ -24,8 +24,8 @@
 
 <h4>{{t.name}}</h4>
 
-<p id='leader'> </p>
-<p id='cut_line'> </p>
+<p id='leader'>leaders ... </p>
+<p id='cut_line'>cut info ... </p>
 <p id='issues'> </p>
 
 <div id='picks_summary'></div>
@@ -52,23 +52,24 @@
             <p id='name_{{p.user.username}}'> {{p.user.username}}</p>
             <p id='score_{{p.user.username}}'>{{p.user|total_score}} / ...</p>
           </td>
-          <td id=msg_{{p.user.username}}></td>
+          <td id=msg_{{p.user.username}}>updating info......</td>
             <td id={{p.pk}} class='{{p.playerName.golfer.espn_number}}'>
               <span class=watermark><p> {{p.user.username}} : {{p.playerName.group.number}} </p> </span>
               <p><img src="{{p.playerName.golfer.pic_link}}"></img>
               <img height='20' src="{{p.playerName.golfer.flag_link}}" alt=""></img></p>
               <p style="font-weight: bold;">{{p.playerName}}</p>
               <p id='{{p.pk}}-score'>....</p>
+              <p id="{{p.pk}}-p2">...</p>
+             
           </td>
-
           {%else%}
-
             <td id={{p.pk}} class='{{p.playerName.golfer.espn_number}}'>
               <span class=watermark><p> {{p.user.username}} : {{p.playerName.group.number}} </p> </span>
               <p><img src="{{p.playerName.golfer.pic_link}}"></img>
               <img height='20' src="{{p.playerName.golfer.flag_link}}" alt=""></img></p>
              <p style="font-weight: bold;">{{p.playerName}}</p>
              <p id='{{p.pk}}-score'>....</p>
+             <p id="{{p.pk}}-p2"></p>
           </td>
           {%endif%}
         {%endfor%}

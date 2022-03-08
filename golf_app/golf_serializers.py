@@ -114,14 +114,20 @@ class SDOnlySerializer(serializers.ModelSerializer):
 
 class GolferSerializer(serializers.ModelSerializer):
     #season_results = serializers.SerializerMethodField('get_season_results')
+    espn_link = serializers.SerializerMethodField('get_espn_link')
+    pga_link =  serializers.SerializerMethodField('get_pga_link')
 
     class Meta:
         model = Golfer
         fields = '__all__'
         depth = 1
     
-    #def get_season_results(self, golfer):
-    #    return golfer.results.
+    def get_espn_link(self, golfer):
+        return golfer.espn_link()
+
+    def get_pga_link(self, golfer):
+        return golfer.get_pga_player_link()
+
 
 class CountryPicks(serializers.ModelSerializer):
     get_flag = serializers.SerializerMethodField('get_flag_link')
