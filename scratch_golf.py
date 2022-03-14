@@ -17,15 +17,31 @@ from urllib.request import Request, urlopen
 from bs4 import BeautifulSoup
 from golf_app import views
 from django.core import serializers
+from django.db.models import  Q, Min
+
 
 start = datetime.now()
-tournament = Tournament.objects.get(current=True)
-u = User.objects.get(pk=1)
-sd = ScoreDict.objects.get(tournament=tournament)
-all_data = sd.espn_api_data
+t = Tournament.objects.get(current=True)
+sd = ScoreDict.objects.get(tournament=t)
+espn = espn_api.ESPNData(data=sd.espn_api_data, t=t)
+bd = bonus_details.BonusDtl(espn_api=espn, tournament=t)
+d = bd.update_cut_bonus()
+print (d)
+print ('dur: ', datetime.now() - start)
+#min_key = 310
+#max_key = 510
 
-espn = espn_api.ESPNData(data=all_data)
-print (espn.current_round_to_par('4364873'))
+#print (Golfer.objects.filter(pk__gte=min_key, pk__lte=max_key))
+
+exit()
+first_g = Golfer.objects.first()
+print (first_g, first_g.pk)
+
+last_g = Golfer.objects.last()
+print (last_g, last_g.pk)
+
+
+print (datetime.now() - start)
 
 exit()
 

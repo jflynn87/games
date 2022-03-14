@@ -613,23 +613,14 @@ class Golfer(models.Model):
     def get_season_results(self, season=None, rerun=False):
         '''takes a golfer and an optional season object, returns a dict with only the updated data'''
         # fix so this runs from 2021 and beyond
+        start = datetime.now()
         if not season:
             curr_s = Season.objects.get(current=True)
             if Tournament.objects.filter(season=curr_s).count() > 1:
                 season = Season.objects.get(current=True)
             else:
                 season = Season.objects.get(season=str(int(curr_s.season)-1))
-        
-        #if not t:
-        #    t = Tournament.objects.get(current=True)
 
-        #data = {}
-        #if self.results:
-        #    missing_t = Tournament.objects.filter(season__season__gte='2021').exclude(current=True).exclude(pga_tournament_num='468').count() - len(self.results)
-        #else:
-        #    missing_t = Tournament.objects.filter(season__season__gte='2021').exclude(current=True).exclude(pga_tournament_num='468').count()
-        #print ('results counts ', missing_t)
-        pre_t = datetime.now()
         if self.results and not rerun:
             tournaments = Tournament.objects.filter(season__season__gte='2021').exclude(pk__in=list(self.results.keys())).exclude(current=True).exclude(pga_tournament_num='468') #ryder cup
         else:
@@ -644,7 +635,6 @@ class Golfer(models.Model):
                 rank = score[0].get('rank')
             else:
                 rank = 'n/a'
-            #data.update({t.pk: {'rank': rank,
             self.results.update({t.pk: {'rank': rank,
                                 't_name': t.name,
                                 'season': t.season.season
@@ -653,7 +643,7 @@ class Golfer(models.Model):
         #self.results.update(data)
         self.save()
         #print (data)
-
+        #print (self.golfer_name, datetime.now() - start)
         return self.results
 
     def get_pga_player_link(self):

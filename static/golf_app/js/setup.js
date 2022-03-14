@@ -73,21 +73,41 @@ return new Promise(function (resolve,reject) {
 }
 
 function golferResultsUpdates() {
-    console.log('golfer update')
-    return new Promise (function (resolve, reject) {
-      $('#golfer_stats_update_status').text('Updating....')
-    fetch("/golf_app/golfer_results_updates/", 
-    {method: "GET",
-    }
-          )
-    .then((response) => response.json())
-    .then((responseJSON) => {
-          data = responseJSON
-          console.log(data)
-          $('#golfer_stats_update_status').text('Complete')
-            resolve()
-    })
-
+    console.log('golfer update', $('#total_golfers').text())
+    return new Promise (function (resolve, reject) { 
+          var firstGolfer = Number($('#first_golfer_key').text())
+          var lastGolfer = Number($('#last_golfer_key').text())
+          console.log(lastGolfer, firstGolfer)
+          var loops =  Math.floor(Number(lastGolfer-firstGolfer)/200)
+          remainder = Number(lastGolfer-firstGolfer)%200
+          console.log('loops: ', loops, remainder)
+          $('#setup_table tr:last').after('<tr id=all_golfers_status><td>Updating all golfers</td><td>' + 0 + '</td></tr>')
+          for (let i=1; i <= loops; i++) {
+            //var updateRange = []  
+            if (i == 1) {
+                  updateRange = [firstGolfer, firstGolfer + 200]
+            }
+            else if (i == loops) {
+                  updateRange = [firstGolfer + (200 *(i-1)+1), lastGolfer]}
+            else {updateRange = [firstGolfer + (200 *(i-1)+1), firstGolfer + (200 * i)]}
+            console.log(i, updateRange)        
+            console.log(typeof(updateRange[0].toString()), updateRange[0].toString().length, updateRange[1].toString())
+              
+            fetch("/golf_app/golfer_results_updates/" + updateRange[0].toString() + "/" + updateRange[1].toString(), 
+            {method: "GET",
+                  }
+                  )
+            .then((response) => response.json())
+            .then((responseJSON) => {
+            data = responseJSON
+            console.log(data)
+            //$('#golfer_stats_update_status').text('Complete')
+           
+            })
+      }
+          console.log('resolving golfer update')
+          resolve()
+    
 })
 }
 

@@ -448,17 +448,21 @@ def setup(request):
             espn_sched = espn_data.get_event_list()
             try:
                 espn_curr_event = espn_data.current_event()[0]
+                espn_t_num = espn_curr_event.get('link').split('=')[1]
             except Exception as e:
                 print ('setup current event exception', e)
                 espn_curr_event = []
-            espn_t_num = espn_curr_event.get('link').split('=')[1]
+                espn_t_num = ''
+            
 
             return render(request, 'golf_app/setup.html', {'status': data,
                                                             'tournament': t,
                                                             'espn_sched': espn_sched,
                                                             'curr_event': espn_curr_event,
                                                             'espn_t_num': espn_t_num,
-                                                            'pga_t_num': pga_t_num})
+                                                            'pga_t_num': pga_t_num,
+                                                            'first_golfer': Golfer.objects.first(),
+                                                            'last_golfer': Golfer.objects.last()})
         else:
            return HttpResponse('Not Authorized')
     #moving this to separate API functinos to break apart 
@@ -2023,6 +2027,10 @@ class EspnApiScores(APIView):
 
 
                 #print ('score check: ', d.get('jcarl62'), pick, score)
+            if bd.no_cut_exists():
+                no_cuts = bd.update_cut_bonus()
+                for u, b in no_cuts.items():
+                    d.get(u.username).update({'score': d.get(u.username).get('score') - b})   
 
             if espn.tournament_complete():
                 t.complete = True
@@ -2487,22 +2495,23 @@ class FieldUpdatesAPI(APIView):
 
 
 class UpdateGolferResultsAPI(APIView):
-    def get(self, request):
+    def get(self, request, min_key, max_key):
         print ('starting golfer results update')
         start = datetime.datetime.now()
-        t = Tournament.objects.get(current=True)
         d = {}
+  
         try:
-            for g in Golfer.objects.all():
+            for g in Golfer.objects.filter(pk__gte=min_key, pk__lte=max_key):
                 g.results = g.get_season_results()
                 g.save()
 
-            d['status'] = {'msg': 'Golfer Results Updates Complete'}
+            d['status'] = {'msg': 'Golfer Results Updates Complete range pks: ' + str(min_key) + ' - ' + str(max_key)}
+        
         except Exception as e:
             print ('Update Field API error: ', e)
             d['error'] = {'msg': str(e)}
         
-        print ('Update Golfer Results API time: ', datetime.datetime.now() - start)
+        print ('Update Golfer Results API time: ', datetime.datetime.now() - start, 'range: ', str(min_key), ' - ', str(max_key))
 
         return JsonResponse(json.dumps(d), status=200, safe=False)
 

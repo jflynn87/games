@@ -1,6 +1,8 @@
-from re import search
-from django.db.models.expressions import F
-from golf_app.models import Picks, Tournament, BonusDetails, PickMethod, Field, ScoreDetails
+
+#from re import search
+#from django.db.models.expressions import F
+
+from golf_app.models import Picks, Tournament, BonusDetails, PickMethod, Field, ScoreDetails, TotalScore
 from django.contrib.auth.models import User
 
 class BonusDtl(object):
@@ -210,10 +212,34 @@ class BonusDtl(object):
                 
 
 
-    def no_cut(self):
-        if not self.t.has_cut:
+    def no_cut_exists(self):
+        if not self.tournament.has_cut:
             return None
         
+        if self.espn_api:
+            #if int(self.espn_api.get_round()) > int(self.t.saved_cut_round) and self.espn_api.event_data.get('tournament').get('cutRound') != 0:
+            cut_round = self.espn_api.event_data.get('tournament').get('cutRound')
+            if int(self.espn_api.get_round()) > cut_round and cut_round != 0:
+                return True
+        
+        return False
+
+    def no_cut_bonus(self):
+        if self.espn_api:
+            return len(self.espn_api.field_data) - (self.espn_api.cut_num() - 1)
+
+    def update_cut_bonus(self):
+        no_cut_points = self.no_cut_bonus()
+        d = {}
+        if self.espn_api and self.no_cut_exists():
+            for ts in TotalScore.objects.filter(tournament=self.tournament, cut_count=0):
+                bd, created = BonusDetails.objects.get_or_create(user=ts.user, tournament=self.tournament, bonus_type='2')
+                bd.bonus_points = no_cut_points
+                bd.save()
+                d[ts.user] = no_cut_points
+        return d
+
+
         # if cuts == 0 an d len([v for (k,v) in self.score_dict.items() if k != 'info' and v.get('total_score') == "CUT"]) != 0:
         #             print (player, 'no cut bonus')
         #             post_cut_wd = len([v for k,v in self.score_dict.items() if k!= 'info' and v.get('total_score') in self.tournament.not_playing_list() and \

@@ -28,6 +28,8 @@
 <button class='btn btn-primary' id='update_stats' onclick="golferResultsUpdates()">Update Golfer Results</button>
 <br>
 <br>
+<p id="first_golfer_key" hidden>{{first_golfer.pk}}</p>
+<p id="last_golfer_key" hidden>{{last_golfer.pk}}</p>
 <div id='status'><h4>Status</h4></div>
 
 <p>Current Tournament Number:  <span  id='db_t_num'>{{tournament.pga_tournament_num}}</span></p>
@@ -49,10 +51,10 @@
         <td>Field Stats Updates</td>
         <td id="field_stats_update_status">....</td>
       </tr>
-      <tr>
+      <!-- <tr>
         <td>Golfer Stats Updates</td>
         <td id="golfer_stats_update_status">....</td>
-      </tr>
+      </tr> -->
     </tbody>
   </table>
 
