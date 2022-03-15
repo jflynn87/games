@@ -936,8 +936,12 @@ class Field(models.Model):
         if api_data:
             if api_data.golfer_data(self.golfer.espn_number):
                 if api_data.golfer_data(self.golfer.espn_number).get('status').get('type').get('id') == "3":
-                    cut = True
-                    score = (int(api_data.cut_num()) - int(self.handi)) + api_data.cut_penalty(self)
+                    if self.post_cut_wd(api_data=api_data):
+                        cut = False
+                        score = int(api_data.post_cut_wd_score()) - int(self.handi)
+                    else:
+                        cut = True
+                        score = (int(api_data.cut_num()) - int(self.handi)) + api_data.cut_penalty(self)
                 elif self.tournament.has_cut and int(api_data.get_round()) <= int(self.tournament.saved_cut_round) \
                      and int(api_data.get_rank(self.golfer.espn_number)) >= int(api_data.cut_num()):
                     cut = True
@@ -964,10 +968,10 @@ class Field(models.Model):
             return False
 
         if api_data:
-            l = self.t.not_playing_list()
+            l = self.tournament.not_playing_list()
             l.remove('CUT')
-            if len([x.get('athlete').get('id') for x in self.field_data if x.get('status').get('type').get('id') == '3' \
-                and x.get('status').get('type').get('shortDetail') in l and int(x.get('status').get('period')) > self.t.saved_cut_round]) >0:
+            if api_data.golfer_data(self.golfer.espn_number).get('status').get('type').get('id')  == '3' and api_data.get_round_score(self.golfer.espn_number, 3) and \
+               api_data.golfer_data(self.golfer.espn_number).get('status').get('type').get('shortDetail') in l:
                 return True
             else:
                 return False

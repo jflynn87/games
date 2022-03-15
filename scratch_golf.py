@@ -23,10 +23,20 @@ from django.db.models import  Q, Min
 start = datetime.now()
 t = Tournament.objects.get(current=True)
 sd = ScoreDict.objects.get(tournament=t)
-espn = espn_api.ESPNData(data=sd.espn_api_data, t=t)
-bd = bonus_details.BonusDtl(espn_api=espn, tournament=t)
-d = bd.update_cut_bonus()
-print (d)
+espn = espn_api.ESPNData(force_refresh=True)
+print (espn.post_cut_wd_score())
+
+#print (data.get('status').get('type').get('id'))
+#print (data.get('linescores').get('period'))
+#print (data.get('status').get('type').get('shortDetail'))
+#print (data)
+#ls = data.get('status')
+#print (ls)
+#print (espn.get_thru('1651'))
+#for f in Field.objects.filter(tournament=t).exclude(withdrawn=True):
+    #print (f, f.calc_score(api_data=espn), [x for x in espn.golfer_data(f.golfer.espn_number).get('linescores') if x.get('period') == 3])
+#    print (f, f.calc_score(api_data=espn), f.post_cut_wd(sd=None, api_data=espn))
+
 print ('dur: ', datetime.now() - start)
 #min_key = 310
 #max_key = 510

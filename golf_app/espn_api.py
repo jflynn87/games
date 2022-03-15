@@ -270,6 +270,10 @@ class ESPNData(object):
         return len([x.get('athlete').get('id') for x in self.field_data if x.get('status').get('type').get('id') == '3' \
                 and x.get('status').get('type').get('shortDetail') in l and int(x.get('status').get('period')) > self.t.saved_cut_round]) 
 
+    def post_cut_wd_score(self):
+        return len([x for x in self.field_data if x.get('status').get('type').get('id') != '3']) + 1
+
+
     def first_tee_time(self):
         #if self.get_round() in [1, 0]:
         try:  #for pre-start and before round 1 completes
