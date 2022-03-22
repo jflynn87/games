@@ -15,6 +15,7 @@ class ESPNData(object):
         competition_data varoius datat about  the tournament
         field_data is the actual golfers in the tournament'''
 
+    #only use event_data for match play events, other data not reliable.
     def __init__(self, t=None, data=None, force_refresh=False, setup=False, update_sd=True):
         start = datetime.now()
 
@@ -32,10 +33,9 @@ class ESPNData(object):
             pre_data = datetime.now()
             headers = {'User-Agent': 'Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.149 Mobile Safari/537.36'}
             url =  "https://site.web.api.espn.com/apis/site/v2/sports/golf/leaderboard?league=pga"
-            
+            #url = 'https://site.web.api.espn.com/apis/site/v2/sports/golf/leaderboard?event=401243007'  #match play 2021 for testing
             self.all_data = get(url, headers=headers).json()
             print ('post refresh data dur: ', datetime.now() - pre_data)
-
 
         if not setup:
             sd = ScoreDict.objects.get(tournament=self.t)
@@ -48,30 +48,19 @@ class ESPNData(object):
         self.event_data = {}
         self.competition_data = {}
         self.field_data = {}
-        # event_found = False
-        # for event in self.all_data.get('events'):
-        #     print (event.get('id'), self.t.espn_t_num)
-        #     if event.get('id') == self.t.espn_t_num:
-        #         event_found = True
-        #         #pre_name_check = datetime.now()
-        #         #if utils.check_t_names(event.get('name'), self.t) or self.t.ignore_name_mismatch: 
-        #         self.event_data = event
-        #         sd, created = ScoreDict.objects.get_or_create(tournament=self.t)
-        #         sd.espn_api_data = self.all_data
-        #         sd.save()
-        #         if self.t.pga_tournament_num not in ['468', '999', '470']:
-        #             for c in self.event_data.get('competitions'):
-        #                 self.competition_data = c
-        #                 self.field_data = c.get('competitors')
-        #         #else:
-        #         #    print ('tournament mismatch: espn name: ', event.get('name'), 'DB name: ', self.t.name)
-        #         #break 
-        # if not event_found:
-        #     print ('ESPN API didnt find event, PGA T num: ', self.t.pga_tournament_num)
 
-        self.event_data = [v for v in self.all_data.get('events') if v.get('id') == self.t.espn_t_num][0]         # self.event_data = {}
+        try:
+            self.event_data = [v for v in self.all_data.get('events') if v.get('id') == self.t.espn_t_num][0]
+        except Exception as e:
+            print ('ERROR espn api didnt find tournament: ', self.t.name, self.t.espn_t_num)
+            raise Exception('ESPN API failed to initialize, tournamant number not in events')         
+        
         self.competition_data = self.event_data.get('competitions')[0]
-        self.field_data = self.competition_data.get('competitors')
+        
+        if self.t.pga_tournament_num == '470':
+            self.field_data = self.competition_data[0].get('competitors')
+        else:
+            self.field_data = self.competition_data.get('competitors')
 
         pre_sd = datetime.now()
         if len(self.field_data) >0 and update_sd and not data:
@@ -169,11 +158,7 @@ class ESPNData(object):
             #move this to be the cut_line funciton
             return  min(int(x.get('status').get('position').get('id')) for x in self.field_data \
                      if int(x.get('status').get('position').get('id')) > int(self.t.saved_cut_num)) 
-            
 
-        #if self.event_data.get('tournament').get('cutRound') == 0:
-        #    return len([x for x in self.field_data if x.get('status').get('type').get('id') != '3']) +1
-        
         if self.event_data.get('tournament').get('cutCount') != 0:
             return self.event_data.get('tournament').get('cutCount') + 1
         elif self.t.has_cut and int(self.get_round()) <= int(self.t.saved_cut_round):
@@ -186,7 +171,6 @@ class ESPNData(object):
         else:
             cuts = [v for v in self.field_data if v.get('status').get('type').get('id') == '3']
             return len(cuts) + 1  
-
         
 
     def get_rank(self, espn_number):
@@ -198,6 +182,7 @@ class ESPNData(object):
            #return golfer_data.get('status').get('type').get('shortDetail')
         else:
            return golfer_data.get('status').get('position').get('id')
+
 
     def get_rank_display(self, espn_number):
         golfer_data = self.golfer_data(espn_number)
@@ -257,12 +242,15 @@ class ESPNData(object):
     def get_movement(self, golfer_data):
         return golfer_data.get('movement')
 
-    def get_player_hole():
-        pass
+
+    #def get_player_hole():
+    #    pass
+
 
     def pre_cut_wd(self):
         return len([x.get('athlete').get('id') for x in self.field_data if x.get('status').get('type').get('id') == '3' and \
              int(x.get('status').get('period')) <= self.t.saved_cut_round]) 
+    
     
     def post_cut_wd(self):
         l = self.t.not_playing_list()
@@ -270,6 +258,7 @@ class ESPNData(object):
         return len([x.get('athlete').get('id') for x in self.field_data if x.get('status').get('type').get('id') == '3' \
                 and x.get('status').get('type').get('shortDetail') in l and int(x.get('status').get('period')) > self.t.saved_cut_round]) 
 
+    
     def post_cut_wd_score(self):
         return len([x for x in self.field_data if x.get('status').get('type').get('id') != '3']) + 1
 
@@ -411,3 +400,28 @@ class ESPNData(object):
             return [x.get('displayValue') for x in self.golfer_data(espn_num).get('linescores') if x.get('period') == curr_round][0]
         except Exception as e:
             return '-'
+
+    ## match play functions ##
+
+    def mp_golfers_per_round(self):
+        d = {}
+        for matches in self.event_data.get('competitions'):
+            for match in matches:
+                if not d.get(match.get('description')):
+                    d[match.get('description')] = []
+                for golfer in match.get('competitors'):
+                    d.get(match.get('description')).append(golfer.get('athlete').get('id'))
+                    if match.get('description') == 'Third Place':
+                        print ('thrird: ', golfer.get('score').get('winner'))
+                    if match.get('description') == 'Third Place' and golfer.get('score').get('winner'):
+                        d['third'] = golfer.get('athlete').get('id')
+                    elif match.get('description') == 'Third Place' and not golfer.get('score').get('winner'):
+                        d['fourth'] = golfer.get('athlete').get('id')
+                    elif match.get('description') == 'Championship' and golfer.get('score').get('winner'):
+                        d['first'] = golfer.get('athlete').get('id')
+                    elif match.get('description') == 'Championship' and golfer.get('score').get('winner') == False:
+                        d['second'] = golfer.get('athlete').get('id')
+
+        return d
+
+  

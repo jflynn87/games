@@ -1,7 +1,4 @@
 
-#from re import search
-#from django.db.models.expressions import F
-
 from golf_app.models import Picks, Tournament, BonusDetails, PickMethod, Field, ScoreDetails, TotalScore
 from django.contrib.auth.models import User
 
@@ -239,17 +236,3 @@ class BonusDtl(object):
                 d[ts.user] = no_cut_points
         return d
 
-
-        # if cuts == 0 an d len([v for (k,v) in self.score_dict.items() if k != 'info' and v.get('total_score') == "CUT"]) != 0:
-        #             print (player, 'no cut bonus')
-        #             post_cut_wd = len([v for k,v in self.score_dict.items() if k!= 'info' and v.get('total_score') in self.tournament.not_playing_list() and \
-        #                 v.get('r3') != '--'])
-
-        #             cut_bonus = (len(self.score_dict) -1) - (len([k for k,v in self.score_dict.items() if k != 'info' and v.get('rank') not in self.tournament.not_playing_list()]) + post_cut_wd)
-        #             print (cut_bonus)
-        #             bd, created = BonusDetails.objects.get_or_create(tournament=self.tournament, user=user, bonus_type='2')
-        #             bd.bonus_points = cut_bonus
-        #             bd.save()
-
-
-    

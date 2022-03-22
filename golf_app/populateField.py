@@ -227,7 +227,7 @@ def get_field(t, owgr_rankings):
     field_dict = {}
     if t.pga_tournament_num == '470':
         print ('match play')
-        mp_dict = scrape_scores_picks.ScrapeScores(t, 'https://www.pgatour.com/competition/2021/wgc-dell-technologies-match-play/group-stage.html').mp_brackets()
+        mp_dict = scrape_scores_picks.ScrapeScores(t, 'https://www.pgatour.com/competition/' + str(t.season.season) + '/wgc-dell-technologies-match-play/group-stage.html').mp_brackets()
         for player, data in mp_dict.items():
             ranks = utils.fix_name(player, owgr_rankings)
             field_dict[player] = {'pga_num': data.get('pga_num'),
@@ -235,6 +235,7 @@ def get_field(t, owgr_rankings):
                                   'soy_owgr': ranks[1][2],
                                   'sow_owgr': ranks[1][1]
                                 }
+        print ('mp field dict: ', field_dict)
     elif t.pga_tournament_num == '999': #Olympics
         # update this to use the class from olympics_sd.py
         mens_field = scrape_espn.ScrapeESPN(tournament=t, url='https://www.espn.com/golf/leaderboard?tournamentId=401285309', setup=True).get_data()    

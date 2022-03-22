@@ -13,19 +13,27 @@ $(document).ready(function() {
       const fn1 = totalScores()
       const fn2 = seasonPoints()
       
-
-      
       Promise.all([fn1, fn2]).then((response) => 
       {
 
       sort_table('totals-table')
       udatePickData()
+      if ($('#pga_t_num').text() != '470')
+      {
+
       updateBigPicks(response[0].group_stats, response[2])
-      $('#status').html('<h5>Scores Updated</h5>')
+      //$('#status').html('<h5>Scores Updated</h5>')
       $('#scores-div').attr('hidden', false)
       summary_data()
+
+
+      buildLeaderboard($('#tournament_key').text())}
       msgs()
-      buildLeaderboard($('#tournament_key').text())
+
+      //if ($('#pga_t_num').text() == '470') {
+      //      get_records()
+     // }
+     $('#status').html('<h5>Scores Updated</h5>')
       var done = new Date()
       console.log('load duration: ', done - start)
       }
@@ -43,10 +51,14 @@ function load_common() {
 
 function totalScores( ) {
       return new Promise (function (resolve, reject) {
-      fetch("/golf_app/get_api_scores/" + $('#tournament_key').text(),
-      {method: "GET",
+      if ($('#pga_t_num').text() == '470') {
+            url = "/golf_app/mp_scores/" + $('#tournament_key').text()
       }
-            )
+      else {url = "/golf_app/get_api_scores/" + $('#tournament_key').text()}
+
+      fetch(url,
+      {method: "GET",
+      })
       .then((response) => response.json())
       .then((responseJSON) => {
             console.log('ts api returned')
@@ -60,7 +72,6 @@ function totalScores( ) {
 
             $.each(data, function(user, score) {
             if (Object.keys(score) != 'group_stats'){
-            //$('#ts_' + user).text($('#ts_' + user).text() + '  '  + score.score + ' / ' + score.cuts)
             $('#score_' + user).html(score.score + ' / ' + score.cuts)
             }
 
@@ -99,32 +110,29 @@ function udatePickData() {
                   console.log('picks data api returned')
                   data = responseJSON
                   $.each(data, function(i, pick) {
-                  //if (pick.sod_position) {sod = format_move(pick.sod_position) + pick.sod_position.replace(filler, '')}
+
                   if (pick.sod_position) {sod = format_move(parseInt(pick.sod_position))}
                   else {sod = ''}
 
-                  if (pick.thru.slice(-1) == 'Z') {
+                  try {if (pick.thru.slice(-1) == 'Z') {
                         var utcDate = pick.thru;
                         thru = new Date (utcDate).toLocaleTimeString([], {hour: 'numeric', minute:'2-digit'})
                   }
-                  else {thru = pick.thru}
+                  else {thru = pick.thru}}
+                  catch {thru = ''}
                   
-                  // $('#' + pick.pick.id + '-score').html(
-                  // '<p>' + pick.score + 
-                  // '<span > <a id=tt-' + pick.id + 
-                  // ' data-toggle="tooltip" > <i class="fa fa-info-circle" style="color:blue;"></i> </a> </span>' +
-                  // '  ' + sod + '</p>' + 
-                  // '<p>' + pick.toPar + '  (' + thru + ')</p>')                  
                   $('#' + pick.pick.id + '-score').html(
                          '<p>' + pick.score + 
                          '<span > <a id=tt-' + pick.id + 
                          ' data-toggle="tooltip" > <i class="fa fa-info-circle" style="color:blue;"></i> </a> </span>' +
                          '  ' + sod + '</p>') 
-                  $('#' + pick.pick.id + '-p2').html('<p>' + pick.toPar + ' (' + thru + ')</p>')
+
+                  if ($('#pga_t_num').text() != '470')
+                         {$('#' + pick.pick.id + '-p2').html('<p>' + pick.toPar + ' (' + thru + ')</p>')}
 
                   $('#tt-' + pick.id + '[data-toggle="tooltip"]').tooltip({trigger:"hover",
                   delay:{"show":400,"hide":800}, "title": 'gross score: ' + pick.gross_score})
-                  //if (not_playing.indexOf(pick.today_score) != -1) {$('#' + pick.pick.id).addClass('cut')}  
+
                   if (not_playing.indexOf(pick.thru) != -1) {$('#' + pick.pick.id).addClass('cut')}  
                   
             resolve(data)})
@@ -221,3 +229,41 @@ function msgs() {
             })
       })
 }
+
+// get_records used for match play to display group stage results
+function get_records() {
+      fetch("/golf_app/get_mp_records/" + $('#tournament_key').text(),
+      {method: "GET",
+       })
+      .then((response) => response.json())
+      .then((responseJSON) => {
+        record_data = responseJSON
+        console.log(record_data)
+        r_len = record_data.length
+      for (let i=0; i < r_len; i++) {
+            picks = document.getElementsByClassName(Object.keys(record_data[i]))
+            console.log(picks)
+      }
+
+
+
+        $('#totals-table tbody tr').each(function() {
+          var player = $(this)[0].id.replace('totals', '')
+          //var player = $(this)[0].id
+          $(this).find('td').each (function(i, data) {
+            if (i >1 ) {
+            console.log(i, data)
+            
+              //pick_id = data.id.replace(player, '')
+              pick_id = data.id.toString()
+              console.log(pick_id, typeof(pick_id))
+              console.log(record_data[pick_id])
+              record = record_data[pick_id]
+              $(this).append('<p> Pos: ' + record['pos'] + ' </p> <p> W: ' + record['won'] + '</p> <p> L: ' + record['lost'] + '</p>' +
+              '<p> H: ' + record['tie'] + '</p> <p> Tot: ' + record['total'] + '</p>')  
+            }
+        })
+    })
+    })
+    }
+    

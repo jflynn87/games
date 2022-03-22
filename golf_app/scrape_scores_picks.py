@@ -470,9 +470,10 @@ class ScrapeScores(object):
                 #field = Field.objects.get(tournament=self.tournament, playerName=r.find('span', {'class': 'name'}).text.split('(')[0].rstrip())
                 #web site doesn't have pga num, assume the field has played in other tornaments.  
                 golfer_obj = Golfer.objects.get(golfer_name=r.find('span', {'class': 'name'}).text.split('(')[0].rstrip())
-
+                #field = Field.objects.get(tournament=self.tournament, golfer=golfer_obj)
                 #bracket_dict[field.golfer.espn_number] = {'group': g_num.text,
                 bracket_dict[r.find('span', {'class': 'name'}).text.split('(')[0].rstrip()] = {'group': g_num.text,
+                #bracket_dict[field.pk] = {'group': g_num.text,
                                             'pos': pos,
                                             'won': won,
                                             'lost': lost,
@@ -480,7 +481,8 @@ class ScrapeScores(object):
                                             'total': total,
                                             #'golfer': r.find('span', {'class': 'name'}).text.split('(')[0].rstrip(),
                                             'espn_num': golfer_obj.espn_number,
-                                            'pga_num': golfer_obj.golfer_pga_num}
+                                            'pga_num': golfer_obj.golfer_pga_num,
+                                            'golfer_name': r.find('span', {'class': 'name'}).text.split('(')[0].rstrip()}
 
             for g in other_groups.find_all('div', {'class': 'group-stage-section'}):
                 g_num = g.find('div', {'class': 'group-section-title'})
@@ -498,16 +500,19 @@ class ScrapeScores(object):
                     pos = r.find('td', {'class': 't-cell position'}).text.lstrip('\n').rstrip('\n')
                     #field = Field.objects.get(tournament=self.tournament, playerName=r.find('span', {'class': 'name'}).text.split('(')[0].rstrip())
                     golfer_obj = Golfer.objects.get(golfer_name=r.find('span', {'class': 'name'}).text.split('(')[0].rstrip())
+                    #field = Field.objects.get(tournament=self.tournament, golfer=golfer_obj)
                     bracket_dict[r.find('span', {'class': 'name'}).text.split('(')[0].rstrip()] = {'group': g_num.text,
                     #bracket_dict[field.golfer.espn_number] = {'group': g_num.text,
-                                                                            'pos': pos,
-                                                                            'won': won,
-                                                                            'lost': lost,
-                                                                            'tie': tie,
-                                                                            'total': total,
-                                                                            'golfer': r.find('span', {'class': 'name'}).text.split('(')[0].rstrip(),
-                                                                            'espn_num': golfer_obj.espn_number,
-                                                                            'pga_num': golfer_obj.golfer_pga_num}
+                    #bracket_dict[field.pk] = {'group': g_num.text,
+                                            'pos': pos,
+                                            'won': won,
+                                            'lost': lost,
+                                            'tie': tie,
+                                            'total': total,
+                                            'golfer': r.find('span', {'class': 'name'}).text.split('(')[0].rstrip(),
+                                            'espn_num': golfer_obj.espn_number,
+                                            'pga_num': golfer_obj.golfer_pga_num, 
+                                            'golfer_name': r.find('span', {'class': 'name'}).text.split('(')[0].rstrip()}
             
             return bracket_dict
 

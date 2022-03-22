@@ -9,7 +9,7 @@ from django.db import transaction
 import urllib
 import json
 from golf_app.templatetags import golf_extras
-from golf_app import utils
+from golf_app import utils, bonus_details
 
 @transaction.atomic
 def mp_calc_scores(tournament, request=None):
@@ -312,18 +312,25 @@ def espn_calc(sd):
                                                 score=1,
                                                 gross_score=1,
                                                 today_score=None,
-                                                thru=None,
+                                                thru='',
                                                 toPar=None,
                                                 sod_position=None
                                             )
+                        
+                       
                         for winner in Picks.objects.filter(playerName__tournament=t, playerName__playerName=match.get('winner')):
                             if not PickMethod.objects.filter(user=winner.user, method=3, tournament=winner.playerName.tournament).exists():
-                                BonusDetails.objects.filter(user=winner.user, tournament=winner.playerName.tournament).update(winner_bonus=50)
+                                #BonusDetails.objects.filter(user=winner.user, tournament=winner.playerName.tournament).update(winner_bonus=50)
+                                bd, created = BonusDetails.objects.get_or_create(user=winner.user, tournament=winner.playerName.tournament, bonus_type='1')
+                                bd.bonus_points = 50
+                                bd.save()
 
                         for loser in Picks.objects.filter(playerName__tournament=t, playerName__playerName=match.get('loser')):
                             if not PickMethod.objects.filter(user=loser.user, method=3, tournament=loser.playerName.tournament).exists():
-                                BonusDetails.objects.filter(user=loser.user, tournament=loser.playerName.tournament).update(playoff_bonus=25)
-
+                                #BonusDetails.objects.filter(user=loser.user, tournament=loser.playerName.tournament).update(playoff_bonus=25)
+                                bd, created = BonusDetails.objects.get_or_create(user=loser.user, tournament=loser.playerName.tournament, bonus_type='4')
+                                bd.bonus_points = 25
+                                bd.save()
 
 
                 if round == '3rd Place':
@@ -335,7 +342,7 @@ def espn_calc(sd):
                                                 score=3,
                                                 gross_score=3,
                                                 today_score=None,
-                                                thru=None,
+                                                thru='',
                                                 toPar=None,
                                                 sod_position=None
                                             )
@@ -381,32 +388,34 @@ def total_scores():
 
 
 
-    if t.complete and t.major: 
+    
+    for ts in TotalScore.objects.filter(tournament=t):
+        #bd = BonusDetails.objects.filter(tournament=ts.tournament, user=ts.user)
+        for bd in BonusDetails.objects.filter(tournament=ts.tournament, user=ts.user):
+            ts.score -= bd.bonus_points
+            #ts.score -= bd.playoff_bonus
+            ts.save()
+        #ts_dict[ts.user.username].update({'total_score': ts.score, 'winner_bonus': bd.winner_bonus, 'major_bonus': bd.major_bonus, 'cut_bonus': bd.cut_bonus,
+        #'best_in_group': bd.best_in_group_bonus, 'playoff_bonus': bd.playoff_bonus, 'handicap': ts.total_handicap()})
+
+    if t.complete: 
         winning_score = TotalScore.objects.filter(tournament=t).aggregate(Min('score'))
         print ('MP winning score: ', winning_score)
         winner = TotalScore.objects.filter(tournament=t, score=winning_score.get('score__min'))
-        print ('major', winner)
+        print ('match play', winner)
         for w in winner:
             if not PickMethod.objects.filter(tournament=t, user=w.user, method=3).exists():
-                bd, created = BonusDetails.objects.get_or_create(user=w.user, tournament=t)
-                bd.major_bonus = 100/t.num_of_winners()
-                w.score -= bd.major_bonus
-                #w.score -= bd.winner_bonus
-                #w.score -= bd.playoff_bonus
+                bd, created = BonusDetails.objects.get_or_create(user=w.user, tournament=t, bonus_type='3')
+                bd.bonus_points = 100/t.num_of_winners()
                 bd.save()
+                w.score = w.score - (100/t.num_of_winners())
                 w.save()
-    
-    for ts in TotalScore.objects.filter(tournament=t):
-        bd = BonusDetails.objects.get(tournament=ts.tournament, user=ts.user)
-        ts.score -= bd.winner_bonus
-        ts.score -= bd.playoff_bonus
-        ts.save()
-        ts_dict[ts.user.username].update({'total_score': ts.score, 'winner_bonus': bd.winner_bonus, 'major_bonus': bd.major_bonus, 'cut_bonus': bd.cut_bonus,
-        'best_in_group': bd.best_in_group_bonus, 'playoff_bonus': bd.playoff_bonus, 'handicap': ts.total_handicap()})
+
     
     
-    sorted_ts_dict = sorted(ts_dict.items(), key=lambda v: v[1].get('total_score'))
-    print (ts_dict)
+    #sorted_ts_dict = sorted(ts_dict.items(), key=lambda v: v[1].get('total_score'))
+    #print (ts_dict)
     print ('total_scores duration', datetime.now() - start)
-    return json.dumps(dict(sorted_ts_dict))
+    return {}
+    #return json.dumps(dict(sorted_ts_dict))
 

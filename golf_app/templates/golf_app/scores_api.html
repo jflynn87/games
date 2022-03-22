@@ -13,6 +13,7 @@
 
 <p hidden id='tournament_key'>{{t.pk}}</p>
 <p hidden id='season_key'>{{t.season.pk}}</p>
+<p hidden id="pga_t_num">{{t.pga_tournament_num}}</p>
 
 {%if lookup_errors%}
   <h4>The following picks have withdrawn or have name lookup issues:</h4>
@@ -91,20 +92,18 @@
     </table>
 </div>
 
-<p><a href='https://www.pgatour.com/leaderboard.html' target="_blank">Click for PGA.com Leaderboard</a></p>
 
+<p><a href='https://www.pgatour.com/leaderboard.html' target="_blank">Click for PGA.com Leaderboard</a></p>
+{%if t.special_field == False%}
 <div id='det-list'>
     <h4 id='lb_status'>Loading Leaderboard...</h4>
 </div>
- 
-{%compress js%}
+{%endif%}
 
-  {%if tournament.pga_tournament_num == '470'%}
-  <script type="text/javascript" src="{%static 'golf_app/js/mp_load.js'%}"></script> 
-  {%else%}
+
   <script type="text/javascript" src="{%static 'golf_app/js/api_scores.js'%}"></script>
-  {%endif%} 
+
   <script type="text/javascript" src="{%static 'golf_app/js/getPicksSummary.js'%}"></script> 
-{%endcompress%}
+
 
 {%endblock%}

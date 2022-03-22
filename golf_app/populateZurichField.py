@@ -1,15 +1,12 @@
 from golf_app.models import BonusDetails, Tournament, Field, Picks, Group, TotalScore, ScoreDetails, Season, Golfer
 #from datetime import datetime, timedelta
 import datetime
-import sqlite3
 from django.db.models import Min, Q, Count
-from golf_app import calc_score
 import json
 from golf_app import populateField
 import urllib
 from django.db import transaction
 from django.core.exceptions import ObjectDoesNotExist
-import urllib3
 from urllib.request import Request, urlopen
 from golf_app import utils
 import unidecode

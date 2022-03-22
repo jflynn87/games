@@ -30,6 +30,21 @@ let not_playing = ['CUT', 'WD', 'DQ']
 //     })
 // })
 
+console.log('MP SCORES Loaded')
+$(document).ready(function () {
+const common = load_common()
+common.then((response) => $('#totals-table').ready(function() {sort_table('totals-table');
+                                                               $('#scores-div').attr('hidden', false)}))
+})
+
+
+function load_common() {
+      return new Promise(function (resolve,reject) {
+            common = $.getScript('/static/golf_app/js/common_scores.js')
+            resolve(common)
+      })
+}
+                                                          
 
 $('#tournament_key').ready(function (){
 

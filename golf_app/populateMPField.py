@@ -63,7 +63,7 @@ def create_groups(tournament_number):
     tournament = Tournament.objects.get(current=True, season=season)
     print ('d')
 
-    bracket = scrape_scores_picks.ScrapeScores(tournament, 'https://www.pgatour.com/competition/2021/wgc-dell-technologies-match-play/group-stage.html').mp_brackets()
+    bracket = scrape_scores_picks.ScrapeScores(tournament, 'https://www.pgatour.com/competition/' + str(season.season) + '/wgc-dell-technologies-match-play/group-stage.html').mp_brackets()
     #prior_year_sd(tournament)
 
     #print (len(field))

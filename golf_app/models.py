@@ -269,6 +269,9 @@ class Tournament(models.Model):
             sd, created = ScoreDetails.objects.get_or_create(pick=pick, user=user)
             sd.save()
 
+        if PickMethod.objects.filter(user=user, tournament=self, method='3').exists() and mode != 'missing':
+            PickMethod.objects.filter(user=user, tournament=self, method='3').update(method='4')
+
         pm = PickMethod()
         pm.user = user
         pm.tournament = self
@@ -279,9 +282,6 @@ class Tournament(models.Model):
         else:
             pm.method = '1'
         pm.save()
-
-        if PickMethod.objects.filter(user=user, tournament=self, method='3').exists():
-            PickMethod.objects.filter(user=user, tournament=self, method='3').update(method='4')
 
         #bd, created = BonusDetails.objects.get_or_create(tournament=self, user=user)
         #bd.winner_bonus = 0
@@ -835,6 +835,7 @@ class Field(models.Model):
         return data
 
     def get_mp_result(self, t):
+        #for PGA score file/dict.  new function for espn
         
         sd = ScoreDict.objects.get(tournament=t)
         if {k:v for k, v in sd.data.items() if k == 'Finals' and {num:match for num, match in v.items() if match.get('winner') == self.playerName}}:
@@ -977,6 +978,28 @@ class Field(models.Model):
                 return False
 
         return False 
+
+    def mp_calc_score(self, round_data):
+        '''used with espn api data'''
+
+        if not round_data.get('Rd of 16'):
+            return 0
+        elif self.golfer.espn_number not in round_data.get('Rd of 16'):
+            return 17
+        elif self.golfer.espn_number not in round_data.get('Quarterfinals'):
+            return 9
+        elif self.golfer.espn_number not in round_data.get('Semifinals'):
+            return 5
+        elif self.golfer.espn_number in round_data.get('fourth'):
+            return 4
+        elif self.golfer.espn_number in round_data.get('third'):
+            return 3
+        elif self.golfer.espn_number in round_data.get('second'):
+            return 2
+        elif self.golfer.espn_number in round_data.get('first'):
+            return 1
+
+        return 0
 
 
 class PGAWebScores(models.Model):

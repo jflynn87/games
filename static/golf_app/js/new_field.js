@@ -17,6 +17,7 @@ $(document).ready(function () {
          g_data = $.parseJSON(responseJSON[2])
          golfers = g_data.golfers
          s_data = $.parseJSON(responseJSON[3])
+         console.log(s_data)
          //g_links = $.parseJSON(responseJSON[4])
          startedGolfers = s_data.started_golfers
          tStarted = s_data.t_started
@@ -64,7 +65,9 @@ $(document).ready(function () {
                 console.log("form submitted!")  
                 create_post();
             });
-            $('#random_btn').attr('disabled', false)
+            if (s_data['t_started'] == false)
+                {$('#random_btn').attr('disabled', false)}
+
             $('#random_form').on('submit', function(event){
                 event.preventDefault();
                 console.log("form submitted!")  

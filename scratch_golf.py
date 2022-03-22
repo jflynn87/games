@@ -7,7 +7,7 @@ from golf_app.models import Tournament, TotalScore, ScoreDetails, Picks, PickMet
          FedExSeason, FedExField, FedExPicks
 from django.contrib.auth.models import User
 from datetime import datetime, timedelta
-from golf_app import populateField, calc_leaderboard, manual_score, bonus_details, espn_api, round_by_round, scrape_espn, utils, golf_serializers, espn_schedule
+from golf_app import populateField, calc_leaderboard, manual_score, bonus_details, espn_api, round_by_round, scrape_espn, utils, golf_serializers, espn_schedule, scrape_scores_picks
 from django.db.models import Count, Sum
 from unidecode import unidecode as decode
 import json
@@ -18,9 +18,33 @@ from bs4 import BeautifulSoup
 from golf_app import views
 from django.core import serializers
 from django.db.models import  Q, Min
-
+import urllib
+from pprint import pprint
 
 start = datetime.now()
+t = Tournament.objects.get(season__season='2022', pga_tournament_num='470') 
+print (t)
+mp_dict = scrape_scores_picks.ScrapeScores(t, 'https://www.pgatour.com/competition/' + str(t.season.season) + '/wgc-dell-technologies-match-play/group-stage.html').mp_brackets()
+
+print (mp_dict)
+
+
+exit()
+
+
+
+print ('complete: ', espn.tournament_complete())
+
+#pprint(rounds, indent=2)
+exit()
+
+
+
+
+espn = espn_api.ESPNData(t=t)
+print (len(espn.field_data))
+exit()
+
 t = Tournament.objects.get(current=True)
 sd = ScoreDict.objects.get(tournament=t)
 espn = espn_api.ESPNData(force_refresh=True)

@@ -1,11 +1,6 @@
-#from re import T, template
-#from errno import ESOCKTNOSUPPORT
-#from django.db.models.fields import IntegerField
-#from django.db.models.query_utils import RegisterLookupMixin
+from venv import create
 from django.shortcuts import render, redirect
 from django.views.generic import TemplateView, ListView
-
-#from extra_views import ModelFormSetView
 from golf_app.models import CountryPicks, Field, Tournament, Picks, Group, TotalScore, ScoreDetails, \
            mpScores, BonusDetails, PickMethod, PGAWebScores, ScoreDict, UserProfile, \
            Season, AccessLog, Golfer, AuctionPick, CountryPicks, FedExField, FedExSeason, FedExPicks
@@ -14,17 +9,12 @@ from django.contrib.auth.decorators import login_required
 from django.http import HttpResponseRedirect, HttpResponse
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.mixins import LoginRequiredMixin
-#from django.views.generic.base import TemplateResponseMixin
 from django.urls import reverse, reverse_lazy
 from django.contrib.auth.models import User
 import datetime
-#from golf_app import populateField, calc_score, optimal_picks,\
-#     manual_score, scrape_scores_picks, scrape_cbs_golf, scrape_masters, withdraw, scrape_espn, \
-#     populateMPField, mp_calc_scores, golf_serializers, utils, olympic_sd
 from golf_app import populateField, manual_score, withdraw, scrape_espn, \
      mp_calc_scores, golf_serializers, utils, olympic_sd, espn_api, \
-     ryder_cup_scores, espn_ryder_cup, bonus_details, espn_schedule
-
+     ryder_cup_scores, espn_ryder_cup, bonus_details, espn_schedule, scrape_scores_picks 
 
 from django.utils import timezone
 from django.core.exceptions import ObjectDoesNotExist
@@ -35,15 +25,12 @@ import json
 import random
 from django.db import transaction
 import urllib.request
-#from selenium.webdriver import Chrome
 import csv
 from rest_framework.views import APIView 
 from rest_framework.response import Response
 from rest_framework.generics import ListAPIView
 from django.core.mail import send_mail
-import time
 from django.core import serializers
-#from golf_app import golf_serializers
 from collections import OrderedDict
 
 
@@ -1346,40 +1333,98 @@ class GetGroupAPI(APIView):
             
 class MPScoresAPI(APIView):
 
-    def get(self, request):
+    def get(self, request, pk):
         print ('MP API ')
-        #t_key = request.data.get('tournament')
-        pk =self.request.GET.get('tournament')
+        start = datetime.datetime.now()
         t = Tournament.objects.get(pk=pk)
-        #score_dict = scrape_espn.ScrapeESPN().get_mp_data()
+        d = {}
+
         if t.complete:
-            sd = ScoreDict.objects.get(tournament=t)
-            score_dict = sd.data
-        elif t.saved_round == 1:
-            print ('MP round 1 scraping group sect')
-            score_dict = scrape_scores_picks.ScrapeScores(t, 'https://www.pgatour.com/competition/2021/wgc-dell-technologies-match-play/group-stage.html').mp_brackets()
+            #sd = ScoreDict.objects.get(tournament=t)
+            #score_dict = sd.data
+            for u in t.season.get_users('obj'):
+                total = TotalScore.objects.get(tournament=t, user=u)
+                d[u.username] = {'score': total.score,
+                                'cuts': 0}
+
+            return JsonResponse(d, status=200, safe=False)
+
+        # elif t.saved_round == 1:
+        #     print ('MP round 1 scraping group sect')
+        #     score_dict = scrape_scores_picks.ScrapeScores(t, 'https://www.pgatour.com/competition/2021/wgc-dell-technologies-match-play/group-stage.html').mp_brackets()
+        # else:
+        #     print ('MP round 2 scraping group sect')
+        #     score_dict = scrape_scores_picks.ScrapeScores(t, 'https://www.pgatour.com/competition/2021/wgc-dell-technologies-match-play/leaderboard.html').mp_final_16()
+        # print (score_dict)
+        # scores = mp_calc_scores.espn_calc(score_dict)
+        # ts = mp_calc_scores.total_scores()
+        # info = get_info(t)
+        # #totals = Season.objects.get(season=t.season).get_total_points()
+        # totals = t.season.get_total_points()
+        # print ('calc scores complete MP')
+        # ScoreDict.objects.filter(tournament=t).update(data=score_dict)
+
+        # d = {}
         else:
-            print ('MP round 2 scraping group sect')
-            score_dict = scrape_scores_picks.ScrapeScores(t, 'https://www.pgatour.com/competition/2021/wgc-dell-technologies-match-play/leaderboard.html').mp_final_16()
-        print (score_dict)
-        scores = mp_calc_scores.espn_calc(score_dict)
-        ts = mp_calc_scores.total_scores()
-        info = get_info(t)
-        totals = Season.objects.get(season=t.season).get_total_points()
-        print ('calc scores complete MP')
-        ScoreDict.objects.filter(tournament=t).update(data=score_dict)
+            #for testing
+            sd = ScoreDict.objects.get(tournament=t)
+            data = sd.espn_api_data
+            #end for testing
+            espn = espn_api.ESPNData(t=t,data=data)
+            round_data = espn.mp_golfers_per_round()
 
-        return Response(({'picks':  {'msg': 'no data'},
-                                'totals': ts,
-                                'leaders':  {'msg': 'no data'},
-                                'cut_line':  {'msg': 'no data'},
-                                'optimal': None,
-                                'scores': json.dumps(score_dict),
-                                'season_totals': totals,
-                                'info': json.dumps(info),
-                                't_data': serializers.serialize("json", [t])
-                }), 200)
+            TotalScore.objects.filter(tournament=t).update(score=0)
 
+            for pick in Picks.objects.filter(playerName__tournament=t).values('playerName__golfer__espn_number').distinct():
+                p = Picks.objects.filter(playerName__tournament=t, playerName__golfer__espn_number=pick.get('playerName__golfer__espn_number')).first()
+                score = p.playerName.mp_calc_score(round_data)
+
+                ScoreDetails.objects.filter(pick__playerName__tournament=t, pick__playerName__golfer__espn_number=pick.get('playerName__golfer__espn_number')).update(score=score)
+                for sd in ScoreDetails.objects.filter(pick__playerName__tournament=t, pick__playerName__golfer__espn_number=pick.get('playerName__golfer__espn_number')):
+                    ts = TotalScore.objects.get(user=sd.user, tournament=t)
+                    ts.score = ts.score + score
+                    ts.save()
+                if espn.tournament_complete():
+                    if score == 1:
+                        for w in  Picks.objects.filter(playerName__tournament=t, playerName__golfer__espn_number=pick.get('playerName__golfer__espn_number')):
+                            if not Picks.objects.filter(user=w.user, pick_method=3, tournamemt=w.playerName.tournament).exists():
+                                bd, created = BonusDetails.objects.get_or_create(user=w.user, tournament=w.playerName.tournament, bonus_type='1')
+                                bd.bonus_points = 50
+                                bd.save()
+                                ts = TotalScore.objects.get(user=w.user, tournament=w.playerName.tournament)
+                                ts.score = ts.score - 50
+                                ts.save()
+                    if score == 2:
+                        for s in Picks.objects.filter(playerName__tournament=t, playerName__golfer__espn_number=pick.get('playerName__golfer__espn_number')):
+                            if not Picks.objects.filter(user=s.user, pick_method=3, tournamemt=s.playerName.tournament).exists():
+                                bd, created = BonusDetails.objects.get_or_create(user=s.user, tournament=s.playerName.tournament, bonus_type='4')
+                                bd.bonus_points = 25
+                                bd.save()
+                                ts = TotalScore.objects.get(user=s.user, tournament=s.playerName.tournament)
+                                ts.score = ts.score - 25
+                                ts.save()
+
+            if espn.tournament_complete():
+                t.complete = True
+                t.save()
+                winning_score = TotalScore.objects.filter(tournament=t).aggregate(Min('score'))
+                print ('MP winning score: ', winning_score)
+                winner = TotalScore.objects.filter(tournament=t, score=winning_score.get('score__min'))
+                print ('match play', winner)
+                for w in winner:
+                    if not PickMethod.objects.filter(tournament=t, user=w.user, method=3).exists():
+                        bd, created = BonusDetails.objects.get_or_create(user=w.user, tournament=t, bonus_type='3')
+                        bd.bonus_points = 100/t.num_of_winners()
+                        bd.save()
+                        w.score = w.score - (100/t.num_of_winners())
+                        w.save()
+
+        for u in t.season.get_users('obj'):
+            total = TotalScore.objects.get(tournament=t, user=u)
+            d[u.username] = {'score': total.score,
+                             'cuts': 0}
+        print ("MP Scores duration: ", datetime.datetime.now() - start)
+        return JsonResponse(d, status=200, safe=False)
 
 class MPRecordsAPI(APIView):
     
@@ -1390,6 +1435,7 @@ class MPRecordsAPI(APIView):
            t = Tournament.objects.get(pk=pk)
            #t = Tournament.objects.get(season__current=True, pga_tournament_num='470')
            data = scrape_scores_picks.ScrapeScores(t, 'https://www.pgatour.com/competition/' + str(t.season.season) + '/wgc-dell-technologies-match-play/group-stage.html').mp_brackets()
+           print ('pm records: ', data)
            return JsonResponse(data, status=200)
         except Exception as e:
             print ('Get group API failed: ', e)
@@ -2623,7 +2669,16 @@ class StartedDataAPI(APIView):
             lock_groups = []  
             espn = espn_api.ESPNData()
             after_espn_start = datetime.datetime.now()
-            if not espn.started() or t.late_picks:
+            if t.special_field and t.set_started:
+                t_started = True
+                started_golfers = Field.objects.filter(tourament=t).values_list('golfer__espn_number', flat=True)
+            elif t.special_field and (t.set_notstarted or t.late_picks):
+                t_started = False
+            elif t.set_started:
+                t_started = True
+            elif t.set_notstarted:
+                t_started = False
+            elif not espn.started() or t.late_picks:
                 t_started = False
             else:
                 t_started = espn.started()
