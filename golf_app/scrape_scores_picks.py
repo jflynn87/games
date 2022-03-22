@@ -438,6 +438,7 @@ class ScrapeScores(object):
 
     def mp_brackets(self):
         try:
+            ## commented field as that breaks the field set up process.  Should not need since using espn
             start = datetime.now()
             bracket_dict = {}
             options = ChromeOptions()

@@ -25,6 +25,12 @@ class WDCheck(object):
         #print (self.field)
 
     def check_wd(self):
+        if len(self.field) == 0:
+            results = {}
+            results['wd_list'] = ['empty field']
+            results['good_list'] = ['empyt field']
+        return results
+
         results = {}
         wd_list = []
         good_list = []

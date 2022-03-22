@@ -38,7 +38,7 @@
   
 
 <script type="text/babel" src="{%static 'test_app/src/started.js'%}"></script>
-{%if tournament.pga_tournament_num != '468' %}
+{%if tournament.pga_tournament_num != "470" and tournament.pga_tournament_num != "018" and tournament.pga_tournament_num != "468"%}
   <script type="text/babel" src="{%static 'test_app/src/withdraw.js'%}"></script>
 {%endif%}
 <p hidden id="tournament_key">{{tournament.pk}}</p>
