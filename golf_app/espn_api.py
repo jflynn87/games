@@ -52,8 +52,16 @@ class ESPNData(object):
         try:
             self.event_data = [v for v in self.all_data.get('events') if v.get('id') == self.t.espn_t_num][0]
         except Exception as e:
-            print ('ERROR espn api didnt find tournament: ', self.t.name, self.t.espn_t_num)
-            raise Exception('ESPN API failed to initialize, tournamant number not in events')         
+            print ('ERROR espn api didnt find tournament, trying by espn num: ', self.t.name, self.t.espn_t_num)
+            try: 
+                url = 'https://site.web.api.espn.com/apis/site/v2/sports/golf/leaderboard?event=' + str(self.t.espn_t_num)
+                self.all_data = get(url, headers=headers).json()
+
+                print(url)
+                self.event_data = [v for v in self.all_data.get('events') if v.get('id') == self.t.espn_t_num][0]
+            except Exception as f:
+                print (print ('ERROR espn api didnt find t twice: ', self.t.name, self.t.espn_t_num))
+                raise Exception('ESPN API failed to initialize, tournamant number not in events')         
         
         self.competition_data = self.event_data.get('competitions')[0]
         

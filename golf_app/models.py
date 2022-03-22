@@ -756,7 +756,7 @@ class Field(models.Model):
                         t = Tournament.objects.get(pga_tournament_num='026', season__season='2021')
 
                 except Exception as e2:
-                    print ('cant find prior tournament ', e1)
+                    print ('cant find prior tournament ', e2)
                     return 'n/a'
         #print (t, t.season)
         try:
@@ -774,9 +774,9 @@ class Field(models.Model):
                         return rank[0]
 
             else:
-                return str(self.get_mp_result())
+                return str(self.get_mp_result(t))
         except Exception as e:
-            #print ('prior_year_exception', self, e)
+            print ('prior_year_exception', self, e)
             return 'n/a'
 
     def handicap(self):
@@ -836,8 +836,9 @@ class Field(models.Model):
 
     def get_mp_result(self, t):
         #for PGA score file/dict.  new function for espn
-        
+
         sd = ScoreDict.objects.get(tournament=t)
+
         if {k:v for k, v in sd.data.items() if k == 'Finals' and {num:match for num, match in v.items() if match.get('winner') == self.playerName}}:
             return 1 
         elif {k:v for k, v in sd.data.items() if k == 'Finals' and {num:match for num, match in v.items() if match.get('loser') == self.playerName}}:
@@ -846,12 +847,14 @@ class Field(models.Model):
             return 3
         elif {k:v for k, v in sd.data.items() if k == '3rd Place' and {num:match for num, match in v.items() if match.get('loser') == self.playerName}}:
             return 4
-        elif {k:v for k, v in sd.data.items() if k == 'Quaterfinals' and {num:match for num, match in v.items() if match.get('loser') == self.playerName}}:
+        elif {k:v for k, v in sd.data.items() if k == 'Quarterfinals' and {num:match for num, match in v.items() if match.get('loser') == self.playerName}}:
             return 5
         elif {k:v for k, v in sd.data.items() if k == 'Round of 16' and {num:match for num, match in v.items() if match.get('loser') == self.playerName}}:
             return 9
-        else:
+        elif Field.objects.filter(tournament=t, golfer=self.golfer).exists():
             return 17
+        else:
+            return 'n/a'
 
     def p1_owgr(self):
         return self.currentWGR - self.partner_owgr

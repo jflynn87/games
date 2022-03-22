@@ -22,12 +22,21 @@ import urllib
 from pprint import pprint
 
 start = datetime.now()
-t = Tournament.objects.get(season__season='2022', pga_tournament_num='470') 
+#t = Tournament.objects.get(season__season='2021', pga_tournament_num='470') 
+t = Tournament.objects.get(current=True) 
 print (t)
-mp_dict = scrape_scores_picks.ScrapeScores(t, 'https://www.pgatour.com/competition/' + str(t.season.season) + '/wgc-dell-technologies-match-play/group-stage.html').mp_brackets()
+sd = ScoreDict.objects.get(tournament=t)
+#for k, v in sd.data.items():
+#    print (k, v)
 
-print (mp_dict)
+#exit()
 
+for f in Field.objects.filter(tournament=t):
+    
+    f.prior_year = f.prior_year_finish()
+    f.save()
+    print (f, f.prior_year)
+#print (mp_dict)
 
 exit()
 
