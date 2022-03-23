@@ -23,20 +23,32 @@ from pprint import pprint
 
 start = datetime.now()
 #t = Tournament.objects.get(season__season='2021', pga_tournament_num='470') 
+
 t = Tournament.objects.get(current=True) 
 print (t)
 sd = ScoreDict.objects.get(tournament=t)
-#for k, v in sd.data.items():
-#    print (k, v)
+data = sd.espn_api_data
 
-#exit()
+espn = espn_api.ESPNData(t=t, data=data)
 
-for f in Field.objects.filter(tournament=t):
-    
-    f.prior_year = f.prior_year_finish()
-    f.save()
-    print (f, f.prior_year)
-#print (mp_dict)
+c  = espn.event_data.get('competitions')
+picks = list(Picks.objects.filter(playerName__tournament=t).order_by('playerName__golfer__espn_number').values_list('playerName__golfer__espn_number', flat=True).distinct())
+print ('picks: ', picks, len(picks))
+print ('picks cnt: ', Picks.objects.filter(playerName__golfer__espn_number__in=picks, playerName__tournament=t).values('playerName__golfer__espn_number').distinct().count())
+for p in Picks.objects.filter(playerName__golfer__espn_number__in=picks, playerName__tournament=t).values('playerName__golfer__espn_number').distinct():
+    print (p)
+    for o in c:
+        for m in o:
+            #print (m.get('status').get('type').get('id'))
+            for competitors in m.get('competitors'):
+                if competitors.get('athlete').get('id') == p.playerName.golfer.espn_number:
+                    print (m.get('competitors')[0].get('athlete').get('displayName'), m.get('competitors')[0].get('score').get('winner'))
+                    print (m.get('competitors')[1].get('athlete').get('displayName'), m.get('competitors')[1].get('score').get('winner'))
+
+
+
+
+print (datetime.now() - start)
 
 exit()
 

@@ -32,8 +32,8 @@ class ESPNData(object):
         else:
             pre_data = datetime.now()
             headers = {'User-Agent': 'Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.149 Mobile Safari/537.36'}
-            url =  "https://site.web.api.espn.com/apis/site/v2/sports/golf/leaderboard?league=pga"
-            #url = 'https://site.web.api.espn.com/apis/site/v2/sports/golf/leaderboard?event=401243007'  #match play 2021 for testing
+            #url =  "https://site.web.api.espn.com/apis/site/v2/sports/golf/leaderboard?league=pga"
+            url = 'https://site.web.api.espn.com/apis/site/v2/sports/golf/leaderboard?event=401243007'  #match play 2021 for testing
             self.all_data = get(url, headers=headers).json()
             print ('post refresh data dur: ', datetime.now() - pre_data)
 
@@ -432,4 +432,5 @@ class ESPNData(object):
 
         return d
 
-  
+    def get_record(self, golfer_id):
+        pass

@@ -1381,8 +1381,11 @@ class MPScoresAPI(APIView):
 
                 ScoreDetails.objects.filter(pick__playerName__tournament=t, pick__playerName__golfer__espn_number=pick.get('playerName__golfer__espn_number')).update(score=score)
                 for sd in ScoreDetails.objects.filter(pick__playerName__tournament=t, pick__playerName__golfer__espn_number=pick.get('playerName__golfer__espn_number')):
-                    ts = TotalScore.objects.get(user=sd.user, tournament=t)
-                    ts.score = ts.score + score
+                    ts, created = TotalScore.objects.get_or_create(user=sd.user, tournament=t)
+                    if created:
+                        ts.score = 0
+                    else:
+                        ts.score = ts.score + score
                     ts.save()
                 if espn.tournament_complete():
                     if score == 1:
