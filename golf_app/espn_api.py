@@ -101,6 +101,8 @@ class ESPNData(object):
 
     def tournament_complete(self):
         #print (self.event_data.get('status'))
+        if self.t.pga_tournament_num == '470':
+            return False
         return self.event_data.get('status').get('type').get('completed')
 
     def playoff(self):

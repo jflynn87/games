@@ -1367,10 +1367,11 @@ class MPScoresAPI(APIView):
         # d = {}
         else:
             #for testing
-            sd = ScoreDict.objects.get(tournament=t)
-            data = sd.espn_api_data
+            #sd = ScoreDict.objects.get(tournament=t)
+            #data = sd.espn_api_data
             #end for testing
-            espn = espn_api.ESPNData(t=t,data=data)
+            #espn = espn_api.ESPNData(t=t,data=data)
+            espn = espn_api.ESPNData(t=t, force_refresh=True)
             round_data = espn.mp_golfers_per_round()
 
             TotalScore.objects.filter(tournament=t).update(score=0)
