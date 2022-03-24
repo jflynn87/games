@@ -32,8 +32,8 @@ class ESPNData(object):
         else:
             pre_data = datetime.now()
             headers = {'User-Agent': 'Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.149 Mobile Safari/537.36'}
-            #url =  "https://site.web.api.espn.com/apis/site/v2/sports/golf/leaderboard?league=pga"
-            url = 'https://site.web.api.espn.com/apis/site/v2/sports/golf/leaderboard?event=401243007'  #match play 2021 for testing
+            url =  "https://site.web.api.espn.com/apis/site/v2/sports/golf/leaderboard?league=pga"
+            #url = 'https://site.web.api.espn.com/apis/site/v2/sports/golf/leaderboard?event=401243007'  #match play 2021 for testing
             self.all_data = get(url, headers=headers).json()
             print ('post refresh data dur: ', datetime.now() - pre_data)
 
@@ -432,5 +432,33 @@ class ESPNData(object):
 
         return d
 
-    def get_record(self, golfer_id):
-        pass
+    def get_mp_records(self):
+        c  = self.event_data.get('competitions')
+        d = {'Wednesday Group Play': {'winners': [], 'losers': [], 'draws': []},
+            'Thursday Group Play': {'winners': [], 'losers': [], 'draws': []},
+            'Friday Group Play': {'winners': [], 'losers': [], 'draws': []},
+            }
+
+        for s in c:
+            for m in s:
+                if m.get('competitors')[0].get('status').get('type').get('id') == '2' and m.get('competitors')[0].get('score').get('draw'):
+                    d.get(m.get('description')).get('draws').append(m.get('competitors')[0].get('athlete').get('id'))
+                    d.get(m.get('description')).get('draws').append(m.get('competitors')[1].get('athlete').get('id'))
+                elif m.get('competitors')[0].get('score').get('winner'):
+                    d.get(m.get('description')).get('winners').append(m.get('competitors')[0].get('athlete').get('id'))
+                    d.get(m.get('description')).get('losers').append(m.get('competitors')[1].get('athlete').get('id'))
+                elif m.get('competitors')[1].get('score').get('winner'):
+                    d.get(m.get('description')).get('winners').append(m.get('competitors')[1].get('athlete').get('id'))
+                    d.get(m.get('description')).get('losers').append(m.get('competitors')[0].get('athlete').get('id'))
+        return d
+
+    def mp_golfer_results(self, golfer, records=None, ):
+        if not records:
+            records = self.get_mp_records()
+        wins = len([v.get('winners') for k,v in records.items() if golfer.espn_number in v.get('winners')])
+        loss = len([v.get('losers') for k,v in records.items() if golfer.espn_number in v.get('losers')])
+        draw = len([v.get('draws') for k,v in records.items() if golfer.espn_number in v.get('draws')])
+
+        return [wins, loss, draw]
+
+

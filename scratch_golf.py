@@ -30,20 +30,62 @@ sd = ScoreDict.objects.get(tournament=t)
 data = sd.espn_api_data
 
 espn = espn_api.ESPNData(t=t, data=data)
+#espn = espn_api.ESPNData(t=t, force_refresh=True)
+records = espn.get_mp_records()
 
-c  = espn.event_data.get('competitions')
+for f in Field.objects.filter(tournament=t):
+    print (f.playerName, espn.mp_golfer_results(f.golfer, records))
+
+print (datetime.now() - start)
+exit()
+
 picks = list(Picks.objects.filter(playerName__tournament=t).order_by('playerName__golfer__espn_number').values_list('playerName__golfer__espn_number', flat=True).distinct())
-print ('picks: ', picks, len(picks))
-print ('picks cnt: ', Picks.objects.filter(playerName__golfer__espn_number__in=picks, playerName__tournament=t).values('playerName__golfer__espn_number').distinct().count())
-for p in Picks.objects.filter(playerName__golfer__espn_number__in=picks, playerName__tournament=t).values('playerName__golfer__espn_number').distinct():
-    print (p)
-    for o in c:
-        for m in o:
-            #print (m.get('status').get('type').get('id'))
-            for competitors in m.get('competitors'):
-                if competitors.get('athlete').get('id') == p.playerName.golfer.espn_number:
-                    print (m.get('competitors')[0].get('athlete').get('displayName'), m.get('competitors')[0].get('score').get('winner'))
-                    print (m.get('competitors')[1].get('athlete').get('displayName'), m.get('competitors')[1].get('score').get('winner'))
+#print ('picks: ', picks, len(picks))
+#print ('picks cnt: ', Picks.objects.filter(playerName__golfer__espn_number__in=picks, playerName__tournament=t).values('playerName__golfer__espn_number').distinct().count())
+
+# c = competition, s= session, m = match, 
+c  = espn.event_data.get('competitions')
+print (type(c))
+print (len(c))
+d = {'Wednesday Group Play': {'winners': [], 'losers': [], 'draws': []},
+    'Thursday Group Play': {'winners': [], 'losers': [], 'draws': []},
+    'Friday Group Play': {'winners': [], 'losers': [], 'draws': []},
+    }
+
+for s in c:
+    for m in s:
+        print (m.get('description'))
+        #print (m.get('score').get('draw'))
+        if m.get('competitors')[0].get('status').get('type').get('id') == '2' and m.get('competitors')[0].get('score').get('draw'):
+            d.get(m.get('description')).get('draws').append(m.get('competitors')[0].get('athlete').get('id'))
+            d.get(m.get('description')).get('draws').append(m.get('competitors')[1].get('athlete').get('id'))
+            #print (m.get('competitors')[0].get('athlete').get('displayName'), 'halved')
+            #print (m.get('competitors')[1].get('athlete').get('displayName'), 'halved')
+        elif m.get('competitors')[0].get('score').get('winner'):
+            d.get(m.get('description')).get('winners').append(m.get('competitors')[0].get('athlete').get('id'))
+            d.get(m.get('description')).get('losers').append(m.get('competitors')[1].get('athlete').get('id'))
+        elif m.get('competitors')[1].get('score').get('winner'):
+            d.get(m.get('description')).get('winners').append(m.get('competitors')[1].get('athlete').get('id'))
+            d.get(m.get('description')).get('losers').append(m.get('competitors')[0].get('athlete').get('id'))
+
+
+print (d)    
+print (datetime.now() - start)
+exit()        
+
+for pick in Picks.objects.filter(playerName__golfer__espn_number__in=picks, playerName__tournament=t).values('playerName__golfer__espn_number').distinct():
+    p = Picks.objects.filter(playerName__golfer__espn_number=pick.get('playerName__golfer__espn_number'), playerName__tournament=t).first()
+        # for m in o:
+        #     #print (len(m), type(m))
+        #     for competitors in m.get('competitors'):
+        #         #print (competitors.get('id'), competitors.get('score'))
+        #         if competitors.get('athlete').get('id') == p.playerName.golfer.espn_number:
+        #             if m.get('competitors')[0].get('status').get('type').get('id') == 2 and m.get('score').get('draw') == 'true':
+        #                 print (m.get('competitors')[0].get('athlete').get('displayName'), 'halved')
+        #                 print (m.get('competitors')[1].get('athlete').get('displayName'), 'halved')
+        #             else:         
+        #                 print (m.get('competitors')[0].get('athlete').get('displayName'), m.get('competitors')[0].get('score').get('winner'))
+        #                 print (m.get('competitors')[1].get('athlete').get('displayName'), m.get('competitors')[1].get('score').get('winner'))
 
 
 

@@ -1432,16 +1432,28 @@ class MPScoresAPI(APIView):
 class MPRecordsAPI(APIView):
     
     def get(self, request, pk):
+        #assumes that this is run after score api so no nee to re-get ESPN API
         try:
-           data = {}
-           #pk = request.GET.get('pk')
-           t = Tournament.objects.get(pk=pk)
-           #t = Tournament.objects.get(season__current=True, pga_tournament_num='470')
-           data = scrape_scores_picks.ScrapeScores(t, 'https://www.pgatour.com/competition/' + str(t.season.season) + '/wgc-dell-technologies-match-play/group-stage.html').mp_brackets()
-           print ('pm records: ', data)
-           return JsonResponse(data, status=200)
+            d = {}
+            t= Tournament.objects.get(pk=pk)
+            sd = ScoreDict.objects.get(tournament=t)
+            data = sd.espn_api_data
+            espn = espn_api.ESPNData(t=t, data=data)
+            for p in Picks.objects.filter(playerName__tournament=t):
+                #p = Picks.objects.filter(playerName__golfer__espn_number=pick.get('playerName__golfer__espn_number'), playerName__tournament=t).first()
+                d [p.pk] = espn.mp_golfer_results(p.playerName.golfer)
+
+            return JsonResponse(d, status=200)
+        
+        #    data = {}
+        #    #pk = request.GET.get('pk')
+        #    t = Tournament.objects.get(pk=pk)
+        #    #t = Tournament.objects.get(season__current=True, pga_tournament_num='470')
+        #    data = scrape_scores_picks.ScrapeScores(t, 'https://www.pgatour.com/competition/' + str(t.season.season) + '/wgc-dell-technologies-match-play/group-stage.html').mp_brackets()
+        #    print ('pm records: ', data)
+        #    return JsonResponse(data, status=200)
         except Exception as e:
-            print ('Get group API failed: ', e)
+            print ('MP records API failed: ', e)
             return JsonResponse({'key': 'error'}, status=401)
 
 
