@@ -454,7 +454,8 @@ class ESPNData(object):
                     d.get(m.get('description')).get('losers').append(m.get('competitors')[0].get('athlete').get('id'))
         return d
 
-    def mp_golfer_results(self, golfer, records=None, ):
+    def mp_golfer_results(self, golfer, records=None):
+        '''takes a golfer object returns a list'''
         if not records:
             records = self.get_mp_records()
         wins = len([v.get('winners') for k,v in records.items() if golfer.espn_number in v.get('winners')])
@@ -462,5 +463,20 @@ class ESPNData(object):
         draw = len([v.get('draws') for k,v in records.items() if golfer.espn_number in v.get('draws')])
 
         return [wins, loss, draw]
+
+    def mp_group_rank(self, golfer, records=None):
+        '''takes a field object'''
+        if not records:
+            records = self.get_mp_records()
+        d = {}
+        for f in Field.objects.filter(group=golfer.group):
+            rec = self.mp_golfer_results(f.golfer, records)
+            ranking = rec[0] + (rec[2] * .5) - rec[1]
+            d[f.pk] = ranking
+
+        r = {key: rank for rank, key in enumerate(sorted(set(d.values()), reverse=True), 1)}
+        ranked_d = {k: r[v] for k,v in d.items()}
+
+        return ranked_d
 
 

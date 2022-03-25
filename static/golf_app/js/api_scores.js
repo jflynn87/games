@@ -32,6 +32,7 @@ $(document).ready(function() {
 
       if ($('#pga_t_num').text() == '470') {
             get_records()
+            get_ranks()
       }
      $('#status').html('<h5>Scores Updated</h5>')
       var done = new Date()
@@ -238,12 +239,6 @@ function get_records() {
       .then((response) => response.json())
       .then((responseJSON) => {
         record_data = responseJSON
-        console.log('records ', record_data)
-//        r_len = record_data.length
-//      for (let i=0; i < r_len; i++) {
-//            picks = document.getElementsByClassName(Object.keys(record_data[i]))
-//            console.log(picks)
-//      }
 
       $.each(record_data, function(golfer, record) {
             var rec = ''
@@ -257,24 +252,23 @@ function get_records() {
             $('#' + golfer + '-p2').html(rec)
       })
 
-
-      //   $('#totals-table tbody tr').each(function() {
-      //     var player = $(this)[0].id.replace('totals', '')
-      //     //var player = $(this)[0].id
-      //     $(this).find('td').each (function(i, data) {
-      //       if (i >1 ) {
-      //       console.log(i, data)
-            
-      //         //pick_id = data.id.replace(player, '')
-      //         pick_id = data.id.toString()
-      //         console.log(pick_id, typeof(pick_id))
-      //         console.log(record_data[pick_id])
-      //         record = record_data[pick_id]
-      //         $(this).append('<p> Pos: ' + record['pos'] + ' </p> <p> W: ' + record['won'] + '</p> <p> L: ' + record['lost'] + '</p>' +
-      //         '<p> H: ' + record['tie'] + '</p> <p> Tot: ' + record['total'] + '</p>')  
-      //       }
-      //  })
     })
-    //})
     }
+function get_ranks() {
+      fetch("/golf_app/get_mp_ranks/" + $('#tournament_key').text(),
+      {method: "GET",
+       })
+      .then((response) => response.json())
+      .then((responseJSON) => {
+        rankData = responseJSON
+        console.log(rankData)
+
+        $.each(rankData, function(field, rank) {
+              $('#' + field + '-p2').append('<p>grp rank: ' + rank + '</p>')
+        })
+      //$.each(record_data, function(golfer, record) {
+      //      var rec = ''
+      
+})
+}
     

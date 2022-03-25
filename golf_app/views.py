@@ -1348,29 +1348,7 @@ class MPScoresAPI(APIView):
                                 'cuts': 0}
 
             return JsonResponse(d, status=200, safe=False)
-
-        # elif t.saved_round == 1:
-        #     print ('MP round 1 scraping group sect')
-        #     score_dict = scrape_scores_picks.ScrapeScores(t, 'https://www.pgatour.com/competition/2021/wgc-dell-technologies-match-play/group-stage.html').mp_brackets()
-        # else:
-        #     print ('MP round 2 scraping group sect')
-        #     score_dict = scrape_scores_picks.ScrapeScores(t, 'https://www.pgatour.com/competition/2021/wgc-dell-technologies-match-play/leaderboard.html').mp_final_16()
-        # print (score_dict)
-        # scores = mp_calc_scores.espn_calc(score_dict)
-        # ts = mp_calc_scores.total_scores()
-        # info = get_info(t)
-        # #totals = Season.objects.get(season=t.season).get_total_points()
-        # totals = t.season.get_total_points()
-        # print ('calc scores complete MP')
-        # ScoreDict.objects.filter(tournament=t).update(data=score_dict)
-
-        # d = {}
         else:
-            #for testing
-            #sd = ScoreDict.objects.get(tournament=t)
-            #data = sd.espn_api_data
-            #end for testing
-            #espn = espn_api.ESPNData(t=t,data=data)
             espn = espn_api.ESPNData(t=t, force_refresh=True)
             round_data = espn.mp_golfers_per_round()
 
@@ -1378,7 +1356,7 @@ class MPScoresAPI(APIView):
 
             for pick in Picks.objects.filter(playerName__tournament=t).values('playerName__golfer__espn_number').distinct():
                 p = Picks.objects.filter(playerName__tournament=t, playerName__golfer__espn_number=pick.get('playerName__golfer__espn_number')).first()
-                score = p.playerName.mp_calc_score(round_data)
+                score = p.playerName.mp_calc_score(round_data, espn)
 
                 ScoreDetails.objects.filter(pick__playerName__tournament=t, pick__playerName__golfer__espn_number=pick.get('playerName__golfer__espn_number')).update(score=score)
                 for sd in ScoreDetails.objects.filter(pick__playerName__tournament=t, pick__playerName__golfer__espn_number=pick.get('playerName__golfer__espn_number')):
@@ -1442,7 +1420,7 @@ class MPRecordsAPI(APIView):
             espn = espn_api.ESPNData(t=t, data=data)
             for p in Picks.objects.filter(playerName__tournament=t):
                 #p = Picks.objects.filter(playerName__golfer__espn_number=pick.get('playerName__golfer__espn_number'), playerName__tournament=t).first()
-                d [p.pk] = espn.mp_golfer_results(p.playerName.golfer)
+                d[p.pk] = espn.mp_golfer_results(p.playerName.golfer)
 
             return JsonResponse(d, status=200)
         
@@ -1456,6 +1434,36 @@ class MPRecordsAPI(APIView):
         except Exception as e:
             print ('MP records API failed: ', e)
             return JsonResponse({'key': 'error'}, status=401)
+
+
+class MPRankInGroup(APIView):
+    
+    def get(self, request, pk):
+        #assumes that this is run after score api so no nee to re-get ESPN API
+        try:
+            d = {}
+            t= Tournament.objects.get(pk=pk)
+            sd = ScoreDict.objects.get(tournament=t)
+            data = sd.espn_api_data
+            espn = espn_api.ESPNData(t=t, data=data)
+            for p in Picks.objects.filter(playerName__tournament=t):
+                #p = Picks.objects.filter(playerName__golfer__espn_number=pick.get('playerName__golfer__espn_number'), playerName__tournament=t).first()
+                r = espn.mp_group_rank(p.playerName)
+                d[p.pk] = r.get(p.playerName.pk)
+
+            return JsonResponse(d, status=200)
+        
+        #    data = {}
+        #    #pk = request.GET.get('pk')
+        #    t = Tournament.objects.get(pk=pk)
+        #    #t = Tournament.objects.get(season__current=True, pga_tournament_num='470')
+        #    data = scrape_scores_picks.ScrapeScores(t, 'https://www.pgatour.com/competition/' + str(t.season.season) + '/wgc-dell-technologies-match-play/group-stage.html').mp_brackets()
+        #    print ('pm records: ', data)
+        #    return JsonResponse(data, status=200)
+        except Exception as e:
+            print ('MP rank API failed: ', e)
+            return JsonResponse({'key': 'error'}, status=400)
+
 
 
 class TrendDataAPI(APIView):

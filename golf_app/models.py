@@ -982,11 +982,16 @@ class Field(models.Model):
 
         return False 
 
-    def mp_calc_score(self, round_data):
+    def mp_calc_score(self, round_data, espn_data=None):
         '''used with espn api data'''
-
+        from golf_app import espn_api
         if not round_data.get('Rd of 16'):
-            return 0
+            sd = ScoreDict.objects.get(tournament=self.tournament)
+            if not espn_data:
+                espn_data = espn_api.ESPNData(t=self.tournament, data=sd.espn_api_data)
+            data = espn_data.mp_group_rank(self)
+            return data.get(self.pk)
+            #return 0
         elif self.golfer.espn_number not in round_data.get('Rd of 16'):
             return 17
         elif self.golfer.espn_number not in round_data.get('Quarterfinals'):

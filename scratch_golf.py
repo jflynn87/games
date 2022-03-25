@@ -30,11 +30,21 @@ sd = ScoreDict.objects.get(tournament=t)
 data = sd.espn_api_data
 
 espn = espn_api.ESPNData(t=t, data=data)
-#espn = espn_api.ESPNData(t=t, force_refresh=True)
-records = espn.get_mp_records()
 
-for f in Field.objects.filter(tournament=t):
-    print (f.playerName, espn.mp_golfer_results(f.golfer, records))
+## use this to get finals and determine t finish.  include semis and consolation
+for c in espn.event_data.get('competitions'):
+    print (c[0].get('description'))
+
+d = {}
+records = espn.get_mp_records()
+for u in t.season.get_users('obj'):
+    score = 0
+    for p in Picks.objects.filter(playerName__tournament=t, user=u):
+        score += espn.mp_group_rank(p.playerName, records).get(p.playerName.pk)
+    d[u.username] = score
+
+print (d)
+
 
 print (datetime.now() - start)
 exit()
