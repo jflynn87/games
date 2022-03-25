@@ -32,7 +32,7 @@ $(document).ready(function() {
 
       if ($('#pga_t_num').text() == '470') {
             get_records()
-            get_ranks()
+            //get_ranks()
       }
      $('#status').html('<h5>Scores Updated</h5>')
       var done = new Date()
@@ -254,21 +254,17 @@ function get_records() {
 
     })
     }
-function get_ranks() {
-      fetch("/golf_app/get_mp_ranks/" + $('#tournament_key').text(),
-      {method: "GET",
-       })
-      .then((response) => response.json())
-      .then((responseJSON) => {
-        rankData = responseJSON
-        console.log(rankData)
+// function get_ranks() {
+//       fetch("/golf_app/get_mp_ranks/" + $('#tournament_key').text(),
+//       {method: "GET",
+//        })
+//       .then((response) => response.json())
+//       .then((responseJSON) => {
+//         rankData = responseJSON
 
-        $.each(rankData, function(field, rank) {
-              $('#' + field + '-p2').append('<p>grp rank: ' + rank + '</p>')
-        })
-      //$.each(record_data, function(golfer, record) {
-      //      var rec = ''
-      
-})
-}
+//         $.each(rankData, function(field, rank) {
+//               $('#' + field + '-p2').append('<p>grp rank: ' + rank + '</p>')
+//         })
+//       })
+// }
     

@@ -34,8 +34,8 @@ $(document).ready(function () {
          //console.log(info)
          //console.log(field)
          //console.log(groups)
-         //console.log(tStarted)
-         //console.log(startedGolfers)
+         console.log(tStarted)
+         console.log(startedGolfers)
          //console.log(fedexPicks)
          //console.log(picks)
 

@@ -1366,6 +1366,7 @@ class MPScoresAPI(APIView):
                     else:
                         ts.score = ts.score + score
                     ts.save()
+
                 if espn.tournament_complete():
                     if score == 1:
                         for w in  Picks.objects.filter(playerName__tournament=t, playerName__golfer__espn_number=pick.get('playerName__golfer__espn_number')):
@@ -1405,6 +1406,7 @@ class MPScoresAPI(APIView):
             total = TotalScore.objects.get(tournament=t, user=u)
             d[u.username] = {'score': total.score,
                              'cuts': 0}
+        
         print ("MP Scores duration: ", datetime.datetime.now() - start)
         return JsonResponse(d, status=200, safe=False)
 
@@ -1463,7 +1465,6 @@ class MPRankInGroup(APIView):
         except Exception as e:
             print ('MP rank API failed: ', e)
             return JsonResponse({'key': 'error'}, status=400)
-
 
 
 class TrendDataAPI(APIView):
@@ -2695,7 +2696,7 @@ class StartedDataAPI(APIView):
             after_espn_start = datetime.datetime.now()
             if t.special_field and t.set_started:
                 t_started = True
-                started_golfers = Field.objects.filter(tourament=t).values_list('golfer__espn_number', flat=True)
+                started_golfers = list(Field.objects.filter(tournament=t).values_list('golfer__espn_number', flat=True))
             elif t.special_field and (t.set_notstarted or t.late_picks):
                 t_started = False
             elif t.set_started:
@@ -2715,6 +2716,7 @@ class StartedDataAPI(APIView):
             d['started_golfers'] = started_golfers
             d['lock_groups'] = lock_groups
             print ('GetStertedDataAPI after espn time: ', datetime.datetime.now() - after_espn_start)
+            print (d)
         except Exception as e:
             d['t_started'] =  False
             d['started_golfers'] = []

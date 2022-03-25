@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta
+from xmlrpc.client import FastMarshaller
 #from http.client import MOVED_PERMANENTLY
 
 from requests import get
@@ -102,7 +103,18 @@ class ESPNData(object):
     def tournament_complete(self):
         #print (self.event_data.get('status'))
         if self.t.pga_tournament_num == '470':
-            return False
+            completed = 0
+
+            for c in self.event_data.get('competitions'):
+                if c[0].get('description') in ["Third Place", "Championship"]:
+                    if c[0].get('competitors')[0].get('status').get('type').get('completed'): 
+                        completed += 1
+
+            if completed == 2:
+                return True
+            else:
+                return False
+
         return self.event_data.get('status').get('type').get('completed')
 
     def playoff(self):
@@ -207,7 +219,6 @@ class ESPNData(object):
         d = {}
         
         for g in Group.objects.filter(tournament=self.t):
-            big_start = datetime.now()
             golfers = g.get_golfers()
             min_score = min([int(x.get('status').get('position').get('id')) - Field.objects.values('handi').get(tournament=self.t, golfer__espn_number=x.get('id')).get('handi') for x in self.field_data if x.get('id') in golfers])
             #print (g, golfers, min_score)
@@ -230,7 +241,7 @@ class ESPNData(object):
 
             g.cutCount = cuts
             g.save()
-            #print ('big group ', g.number, ' dur: ', datetime.now() - big_start)
+
         return d
 
 
