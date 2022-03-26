@@ -135,6 +135,7 @@ function udatePickData() {
                   delay:{"show":400,"hide":800}, "title": 'gross score: ' + pick.gross_score})
 
                   if (not_playing.indexOf(pick.thru) != -1) {$('#' + pick.pick.id).addClass('cut')}  
+                  if ($('#pga_t_num').text() == '470' && pick.score == '17') {$('#' + pick.pick.id).addClass('cut')}
                   
             resolve(data)})
             })

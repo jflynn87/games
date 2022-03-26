@@ -1390,6 +1390,18 @@ class MPScoresAPI(APIView):
             if espn.tournament_complete():
                 t.complete = True
                 t.save()
+                for u in t.season.get_users('obj'):
+                    if ScoreDetails.objects.filter(pick__playerName__tournament=t, pick__user=u, score=1).exists() and \
+                        ScoreDetails.objects.filter(pick__playerName__tournament=t, pick__user=u, score=2).exists() and \
+                        ScoreDetails.objects.filter(pick__playerName__tournament=t, pick__user=u, score=3).exists():
+                        print ('MP Trifecta: ', u)
+                        bd, created = BonusDetails.objects.get_or_create(user=w.user, tournament=t, bonus_type='6')
+                        bd.bonus_points = 25
+                        bd.save()
+                        total = TotalScore.objects.get(tournament=t, user=u)
+                        total.score = total.score - 25
+                        total.save()
+
                 winning_score = TotalScore.objects.filter(tournament=t).aggregate(Min('score'))
                 print ('MP winning score: ', winning_score)
                 winner = TotalScore.objects.filter(tournament=t, score=winning_score.get('score__min'))
@@ -1403,9 +1415,10 @@ class MPScoresAPI(APIView):
                         w.save()
 
         for u in t.season.get_users('obj'):
+            cuts = ScoreDetails.objects.filter(pick__user=u, pick__playerName__tournament=t, score=17).count()
             total = TotalScore.objects.get(tournament=t, user=u)
             d[u.username] = {'score': total.score,
-                             'cuts': 0}
+                             'cuts': cuts}
         
         print ("MP Scores duration: ", datetime.datetime.now() - start)
         return JsonResponse(d, status=200, safe=False)
@@ -1420,9 +1433,10 @@ class MPRecordsAPI(APIView):
             sd = ScoreDict.objects.get(tournament=t)
             data = sd.espn_api_data
             espn = espn_api.ESPNData(t=t, data=data)
+            records = espn.get_mp_records()
             for p in Picks.objects.filter(playerName__tournament=t):
                 #p = Picks.objects.filter(playerName__golfer__espn_number=pick.get('playerName__golfer__espn_number'), playerName__tournament=t).first()
-                d[p.pk] = espn.mp_golfer_results(p.playerName.golfer)
+                d[p.pk] = espn.mp_golfer_results(p.playerName.golfer, records)
 
             return JsonResponse(d, status=200)
         
