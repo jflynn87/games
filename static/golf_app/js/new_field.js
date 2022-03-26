@@ -17,7 +17,7 @@ $(document).ready(function () {
          g_data = $.parseJSON(responseJSON[2])
          golfers = g_data.golfers
          s_data = $.parseJSON(responseJSON[3])
-         console.log(s_data)
+         //console.log(s_data)
          //g_links = $.parseJSON(responseJSON[4])
          startedGolfers = s_data.started_golfers
          tStarted = s_data.t_started
@@ -34,8 +34,8 @@ $(document).ready(function () {
          //console.log(info)
          //console.log(field)
          //console.log(groups)
-         console.log(tStarted)
-         console.log(startedGolfers)
+         //console.log(tStarted)
+         //console.log(startedGolfers)
          //console.log(fedexPicks)
          //console.log(picks)
 

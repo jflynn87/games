@@ -994,17 +994,17 @@ class Field(models.Model):
             #return 0
         elif self.golfer.espn_number not in round_data.get('Rd of 16'):
             return 17
-        elif self.golfer.espn_number not in round_data.get('Quarterfinals'):
+        elif round_data.get('Quarterfinals') and self.golfer.espn_number not in round_data.get('Quarterfinals'):
             return 9
-        elif self.golfer.espn_number not in round_data.get('Semifinals'):
+        elif round_data.get('Semifinals') and self.golfer.espn_number not in round_data.get('Semifinals'):
             return 5
-        elif self.golfer.espn_number in round_data.get('fourth'):
+        elif round_data.get('fourth') and self.golfer.espn_number in round_data.get('fourth'):
             return 4
-        elif self.golfer.espn_number in round_data.get('third'):
+        elif round_data.get('third') and self.golfer.espn_number in round_data.get('third'):
             return 3
-        elif self.golfer.espn_number in round_data.get('second'):
+        elif round_data.get('second') and self.golfer.espn_number in round_data.get('second'):
             return 2
-        elif self.golfer.espn_number in round_data.get('first'):
+        elif round_data.get('first') and self.golfer.espn_number in round_data.get('first'):
             return 1
 
         return 0
