@@ -1432,7 +1432,7 @@ class FedExPicks(models.Model):
                 score = -30
             elif rank < 31 and self.pick.soy_owgr > 30:
                 score = -80
-            elif rank > 31 and self.pick.soy_owgr < 31:
+            elif rank >= 31 and self.pick.soy_owgr <= 30:
                 score = 20
             else:
                 score = 0

@@ -1370,7 +1370,7 @@ class MPScoresAPI(APIView):
                 if espn.tournament_complete():
                     if score == 1:
                         for w in  Picks.objects.filter(playerName__tournament=t, playerName__golfer__espn_number=pick.get('playerName__golfer__espn_number')):
-                            if not Picks.objects.filter(user=w.user, pick_method=3, tournamemt=w.playerName.tournament).exists():
+                            if not PickMethod.objects.filter(user=w.user, method=3, tournament=w.playerName.tournament).exists():
                                 bd, created = BonusDetails.objects.get_or_create(user=w.user, tournament=w.playerName.tournament, bonus_type='1')
                                 bd.bonus_points = 50
                                 bd.save()
@@ -1379,7 +1379,7 @@ class MPScoresAPI(APIView):
                                 ts.save()
                     if score == 2:
                         for s in Picks.objects.filter(playerName__tournament=t, playerName__golfer__espn_number=pick.get('playerName__golfer__espn_number')):
-                            if not Picks.objects.filter(user=s.user, pick_method=3, tournamemt=s.playerName.tournament).exists():
+                            if not PickMethod.objects.filter(user=s.user, method=3, tournament=s.playerName.tournament).exists():
                                 bd, created = BonusDetails.objects.get_or_create(user=s.user, tournament=s.playerName.tournament, bonus_type='4')
                                 bd.bonus_points = 25
                                 bd.save()

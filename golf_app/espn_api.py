@@ -454,15 +454,16 @@ class ESPNData(object):
 
         for s in c:
             for m in s:
-                if m.get('competitors')[0].get('status').get('type').get('id') == '2' and m.get('competitors')[0].get('score').get('draw'):
-                    d.get(m.get('description')).get('draws').append(m.get('competitors')[0].get('athlete').get('id'))
-                    d.get(m.get('description')).get('draws').append(m.get('competitors')[1].get('athlete').get('id'))
-                elif m.get('competitors')[0].get('score').get('winner'):
-                    d.get(m.get('description')).get('winners').append(m.get('competitors')[0].get('athlete').get('id'))
-                    d.get(m.get('description')).get('losers').append(m.get('competitors')[1].get('athlete').get('id'))
-                elif m.get('competitors')[1].get('score').get('winner'):
-                    d.get(m.get('description')).get('winners').append(m.get('competitors')[1].get('athlete').get('id'))
-                    d.get(m.get('description')).get('losers').append(m.get('competitors')[0].get('athlete').get('id'))
+                if d.get(m.get('description')):
+                    if m.get('competitors')[0].get('status').get('type').get('id') == '2' and m.get('competitors')[0].get('score').get('draw'):
+                        d.get(m.get('description')).get('draws').append(m.get('competitors')[0].get('athlete').get('id'))
+                        d.get(m.get('description')).get('draws').append(m.get('competitors')[1].get('athlete').get('id'))
+                    elif m.get('competitors')[0].get('score').get('winner'):
+                        d.get(m.get('description')).get('winners').append(m.get('competitors')[0].get('athlete').get('id'))
+                        d.get(m.get('description')).get('losers').append(m.get('competitors')[1].get('athlete').get('id'))
+                    elif m.get('competitors')[1].get('score').get('winner'):
+                        d.get(m.get('description')).get('winners').append(m.get('competitors')[1].get('athlete').get('id'))
+                        d.get(m.get('description')).get('losers').append(m.get('competitors')[0].get('athlete').get('id'))
         return d
 
     def mp_golfer_results(self, golfer, records=None):

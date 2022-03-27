@@ -7,7 +7,7 @@ from golf_app.models import Tournament, TotalScore, ScoreDetails, Picks, PickMet
          FedExSeason, FedExField, FedExPicks
 from django.contrib.auth.models import User
 from datetime import datetime, timedelta
-from golf_app import populateField, calc_leaderboard, manual_score, bonus_details, espn_api, round_by_round, scrape_espn, utils, golf_serializers, espn_schedule, scrape_scores_picks
+from golf_app import populateField, calc_leaderboard, manual_score, bonus_details, espn_api, round_by_round, scrape_espn, utils, golf_serializers, espn_schedule, scrape_scores_picks, espn_ryder_cup
 from django.db.models import Count, Sum
 from unidecode import unidecode as decode
 import json
@@ -20,9 +20,61 @@ from django.core import serializers
 from django.db.models import  Q, Min
 import urllib
 from pprint import pprint
+import csv
 
 start = datetime.now()
+
+espn = espn_api.ESPNData()
+round_data = espn.mp_golfers_per_round()
+for f in Field.objects.filter(tournament=Tournament.objects.get(current=True)):
+    print (f, f.mp_calc_score(round_data, espn))
+
+print (round_data.get('first'))
+exit()
+
 #t = Tournament.objects.get(season__season='2021', pga_tournament_num='470') 
+
+#t = Tournament.objects.get(season__current=True, name="Ryder Cup")
+
+#score_dict = espn_ryder_cup.ESPNData(t=t).field()
+
+#print (score_dict)
+
+d = {}
+for u in Season.objects.get(current=True).get_users('obj'):
+    #d[u.username] = {}
+    picks =  AccessLog.objects.filter(user=u, page__in=['picks', 'new_picks']).values('page').annotate(Sum('views'))
+    p_total = picks[0].get('views__sum') + picks[1].get('views__sum')  
+    curr_scores = AccessLog.objects.filter(user=u, page__in=['current week scores', 'API current week scores']).values('page').annotate(Sum('views'))
+    c_total = curr_scores[0].get('views__sum') + curr_scores[1].get('views__sum')  
+    total_scores = AccessLog.objects.filter(user=u, page='total scores').values('page').annotate(Sum('views'))
+    print (total_scores[0])
+    d[u.username] = {'picks': p_total,
+                    'weekly_score': c_total,
+                    'total_score': total_scores[0].get('views__sum')}
+
+for k, v in d.items():
+    print (k, v)
+exit()
+
+
+for f in FedExField.objects.all().order_by('soy_owgr'):
+        print (f.golfer.golfer_name, f.soy_owgr)
+
+
+with open('fedex_baseline.csv', 'w', newline='') as csvfile:
+    csvwriter = csv.writer(csvfile, delimiter=',',
+                            quotechar='|', quoting=csv.QUOTE_MINIMAL)
+    for f in FedExField.objects.all().order_by('soy_owgr'):
+
+        csvwriter.writerow([f.golfer.golfer_name, f.soy_owgr])
+
+csvfile.close()
+
+
+exit()
+
+
 
 t = Tournament.objects.get(current=True) 
 print (t)
