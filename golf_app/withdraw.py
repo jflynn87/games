@@ -29,7 +29,7 @@ class WDCheck(object):
             results = {}
             results['wd_list'] = ['empty field']
             results['good_list'] = ['empyt field']
-        return results
+            return results
 
         results = {}
         wd_list = []

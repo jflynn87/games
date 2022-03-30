@@ -636,7 +636,6 @@ class Golfer(models.Model):
         for t in tournaments:
             sd = ScoreDict.objects.get(tournament=t)
             if not t.special_field():
-                print ('NOT special: ', t, t.special_field())
                 score = [v for k, v in sd.data.items() if k != 'info' and v.get('pga_num') == self.espn_number] 
                 if score:
                     rank = score[0].get('rank')

@@ -1,4 +1,5 @@
 import os
+
 os.environ.setdefault("DJANGO_SETTINGS_MODULE","gamesProj.settings")
 import django
 django.setup()
@@ -7,7 +8,7 @@ from golf_app.models import Tournament, TotalScore, ScoreDetails, Picks, PickMet
          FedExSeason, FedExField, FedExPicks
 from django.contrib.auth.models import User
 from datetime import datetime, timedelta
-from golf_app import populateField, calc_leaderboard, manual_score, bonus_details, espn_api, round_by_round, scrape_espn, utils, golf_serializers, espn_schedule, scrape_scores_picks, espn_ryder_cup
+from golf_app import populateField, calc_leaderboard, manual_score, bonus_details, espn_api, round_by_round, scrape_espn, utils, golf_serializers, espn_schedule, scrape_scores_picks, espn_ryder_cup, withdraw
 from django.db.models import Count, Sum
 from unidecode import unidecode as decode
 import json
@@ -25,6 +26,11 @@ import csv
 start = datetime.now()
 
 t = Tournament.objects.get(current=True)
+
+wd = withdraw.WDCheck().check_wd()
+print (wd)
+
+exit()
 
 for f in Field.objects.filter(tournament=t, playerName__in=["Bryson Dechambeau","Abraham Ancer", "Rory Mcilroy"]):
     #print (f, f.prior_year_finish(), f.recent_results(), type(f.recent_results()))

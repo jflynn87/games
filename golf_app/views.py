@@ -1067,7 +1067,7 @@ class Withdraw(APIView):
             print (wds)
 
         except Exception as e:
-            print ('error: ', e)
+            print ('WD Check error: ', e)
             wds = {'msg': str(e)}
                 
         return JsonResponse(wds, status=200)

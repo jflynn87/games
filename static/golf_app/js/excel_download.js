@@ -30,7 +30,7 @@ $('#download_excel').html('Preparing Data...')
         var row = {}
         var t_data = []
         //console.log('result: ', order.length, Object.keys(results.results).length)
-  
+
         if (Object.keys(results.results).length > 0) {
         //if (Object.keys(results.results).length == order.length) {
         //for (j=0; j < order.length; j++) {
