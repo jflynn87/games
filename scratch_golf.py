@@ -24,12 +24,18 @@ import csv
 
 start = datetime.now()
 
-espn = espn_api.ESPNData()
-round_data = espn.mp_golfers_per_round()
-for f in Field.objects.filter(tournament=Tournament.objects.get(current=True)):
-    print (f, f.mp_calc_score(round_data, espn))
+t = Tournament.objects.get(current=True)
 
-print (round_data.get('first'))
+for f in Field.objects.filter(tournament=t, playerName__in=["Bryson Dechambeau","Abraham Ancer", "Rory Mcilroy"]):
+    #print (f, f.prior_year_finish(), f.recent_results(), type(f.recent_results()))
+    print (f, f.golfer.summary_stats(t.season) 
+ )
+exit()
+
+
+for g in Golfer.objects.filter(pk__lte=511):
+    print (g, g.get_season_results())
+
 exit()
 
 #t = Tournament.objects.get(season__season='2021', pga_tournament_num='470') 

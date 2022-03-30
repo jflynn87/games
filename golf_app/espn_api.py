@@ -432,8 +432,8 @@ class ESPNData(object):
                     d[match.get('description')] = []
                 for golfer in match.get('competitors'):
                     d.get(match.get('description')).append(golfer.get('athlete').get('id'))
-                    if match.get('description') == 'Third Place':
-                        print ('thrird: ', golfer.get('score').get('winner'))
+                    #if match.get('description') == 'Third Place':
+                    #    print ('thrird: ', golfer.get('score').get('winner'))
                     if match.get('description') == 'Third Place' and golfer.get('score').get('winner'):
                         d['third'] = golfer.get('athlete').get('id')
                     elif match.get('description') == 'Third Place' and not golfer.get('score').get('winner'):

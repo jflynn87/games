@@ -578,39 +578,44 @@ class Golfer(models.Model):
         
         #for sd in ScoreDict.objects.filter(tournament__season=season).exclude(tournament__current=True):
         for sd in ScoreDict.objects.filter(tournament__pk__in=t_list):
-            x = [v.get('rank') for k, v in sd.data.items() if k !='info' and v.get('pga_num') in [self.espn_number, self.golfer_pga_num]]
-            if not x:
-                continue
-            elif x[0] in sd.tournament.not_playing_list():
-                played += 1
-                t = d.get('cuts') + 1
-                d.update({'cuts':  t})
-            elif utils.formatRank(x[0]) == 1:
-                played += 1
-                t = d.get('won') + 1
-                d.update({'won':  t})
-            elif utils.formatRank(x[0]) < 11:
-                played += 1
-                t = d.get('top10') + 1
-                d.update({'top10':  t})
-            elif utils.formatRank(x[0]) < 30:
-                played += 1
-                t = d.get('bet11_29') + 1
-                d.update({'bet11_29':  t})
-            elif utils.formatRank(x[0]) < 50:
-                played += 1
-                t = d.get('bet30_49') + 1
-                d.update({'bet30_49':  t})
-            elif utils.formatRank(x[0]) > 50:
-                played += 1
-                t = d.get('over50') + 1
-                d.update({'over50':  t})
-            #print (d)
+            #if sd.tournament.pga_tournament_num == '470':
+            try:
+                x = [v.get('rank') for k, v in sd.data.items() if k !='info' and v.get('pga_num') in [self.espn_number, self.golfer_pga_num]]
+                
+                if not x:
+                    continue
+                elif x[0] in sd.tournament.not_playing_list():
+                    played += 1
+                    t = d.get('cuts') + 1
+                    d.update({'cuts':  t})
+                elif utils.formatRank(x[0]) == 1:
+                    played += 1
+                    t = d.get('won') + 1
+                    d.update({'won':  t})
+                elif utils.formatRank(x[0]) < 11:
+                    played += 1
+                    t = d.get('top10') + 1
+                    d.update({'top10':  t})
+                elif utils.formatRank(x[0]) < 30:
+                    played += 1
+                    t = d.get('bet11_29') + 1
+                    d.update({'bet11_29':  t})
+                elif utils.formatRank(x[0]) < 50:
+                    played += 1
+                    t = d.get('bet30_49') + 1
+                    d.update({'bet30_49':  t})
+                elif utils.formatRank(x[0]) > 50:
+                    played += 1
+                    t = d.get('over50') + 1
+                    d.update({'over50':  t})
+                #print (d)
+            except Exception as e:
+                print ('summary stats issue: ', sd.tournament, e)
         d.update({'played': played})
         #print (self, d, datetime.now() - start)
         return d
 
-    def get_season_results(self, season=None, rerun=False):
+    def get_season_results(self, season=None, rerun=False, espn_api=None):
         '''takes a golfer and an optional season object, returns a dict with only the updated data'''
         # fix so this runs from 2021 and beyond
         start = datetime.now()
@@ -630,16 +635,31 @@ class Golfer(models.Model):
         #print ('golfer results post t : ', self, datetime.now() - pre_t, tournaments)
         for t in tournaments:
             sd = ScoreDict.objects.get(tournament=t)
-            score = [v for k, v in sd.data.items() if k != 'info' and v.get('pga_num') == self.espn_number] 
-            if score:
-                rank = score[0].get('rank')
+            if not t.special_field():
+                print ('NOT special: ', t, t.special_field())
+                score = [v for k, v in sd.data.items() if k != 'info' and v.get('pga_num') == self.espn_number] 
+                if score:
+                    rank = score[0].get('rank')
+                else:
+                    rank = 'n/a'
+            #elif t.pga_tournament_num == '470':
+            #    from golf_app import espn_api
+            #    if Field.objects.filter(golfer=self, tournament=t).exists():
+            #        if not espn_api:
+            #            espn = espn_api.ESPNData(t=f.tournament, data=sd.espn_api_data)
+            #       f = Field.objects.get(golfer=self, tournament=t)
+            #        rank = str(f.mp_calc_score(espn.mp_golfers_per_round(), espn))
+            #    else:
+            #        rank = 'n/a'
             else:
                 rank = 'n/a'
+
             self.results.update({t.pk: {'rank': rank,
                                 't_name': t.name,
                                 'season': t.season.season
-            }})
-            
+                }})
+
+
         #self.results.update(data)
         self.save()
         #print (data)
@@ -776,7 +796,7 @@ class Field(models.Model):
             else:
                 return str(self.get_mp_result(t))
         except Exception as e:
-            print ('prior_year_exception', self, e)
+            #print ('prior_year_exception', self, e)
             return 'n/a'
 
     def handicap(self):
@@ -801,6 +821,7 @@ class Field(models.Model):
             return int(self.rank)
 
     def recent_results(self):
+        from golf_app import espn_api
         data = {}
         start = datetime.now()
         try:
@@ -817,7 +838,9 @@ class Field(models.Model):
                         else:
                             data.update({t.pk:{'name': t.name, 'rank': 'DNP'}})    
                     else:
-                        data.update({t.pk: {'name': t.name, 'rank': 'MP ' + str(self.get_mp_result(t))}})
+                        #data.update({t.pk: {'name': t.name, 'rank': 'MP ' + str(self.get_mp_result(t))}})  #for 2021 using pga data
+                        espn = espn_api.ESPNData(t=f.tournament, data=sd.espn_api_data)
+                        data.update({t.pk: {'name': t.name, 'rank': 'MP ' + str(self.mp_calc_score(espn.mp_golfers_per_round(), espn))}})
                 elif Field.objects.filter(tournament=t, partner_golfer__espn_number=self.golfer.espn_number).exclude(withdrawn=True).exclude(partner_golfer__espn_number__isnull=True).exists():
                     sd = ScoreDict.objects.get(tournament=t)
                     f = Field.objects.get(tournament=t, partner_golfer__espn_number=self.golfer.espn_number)
@@ -1221,6 +1244,10 @@ class ScoreDict(models.Model):
     
     
     def data_valid(self):
+        
+        if self.tournament.special_field():
+            return True
+
         good = True
         field_len = Field.objects.filter(tournament=self.tournament).count()
         sd_len = len(self.data) - 1  #minus 1 for the info entry
@@ -1254,10 +1281,14 @@ class ScoreDict(models.Model):
 
     def update_sd_data(self):
         from golf_app import scrape_espn
-        espn = scrape_espn.ScrapeESPN(tournament=self.tournament, url='https://www.espn.com/golf/leaderboard?tournamentId=' + self.tournament.espn_t_num, setup=True)
-        sd = espn.get_data()
-        self.data = sd
-        self.save()        
+        sd = {}
+        try:
+            espn = scrape_espn.ScrapeESPN(tournament=self.tournament, url='https://www.espn.com/golf/leaderboard?tournamentId=' + self.tournament.espn_t_num, setup=True)
+            sd = espn.get_data()
+            self.data = sd
+            self.save()        
+        except Exception as e:
+            print ('update sd data exception: ', e)
         return (sd)
 
 class UserProfile(models.Model):

@@ -2547,13 +2547,14 @@ class FieldUpdatesAPI(APIView):
                     f.handi = f.handicap()
                 else:
                     f.handi = 0
-        
+
                 f.prior_year = f.prior_year_finish()
+
                 recent = OrderedDict(sorted(f.recent_results().items(), reverse=True))
+
                 f.recent = recent
                 f.season_stats = f.golfer.summary_stats(t.season) 
 
-                
                 if fed_ex.get(f.playerName):
                     f.season_stats.update({'fed_ex_points': fed_ex.get(f.playerName).get('points'),
                                            'fed_ex_rank': fed_ex.get(f.playerName).get('rank')})
@@ -2566,7 +2567,7 @@ class FieldUpdatesAPI(APIView):
                     for k, v in player_s.items():
                         if k != 'pga_num':
                             f.season_stats.update({k: v})
-        
+
                 f.save()
 
             d['status'] = {'msg': 'Updated Field Complete'}
@@ -2584,7 +2585,7 @@ class UpdateGolferResultsAPI(APIView):
         print ('starting golfer results update')
         start = datetime.datetime.now()
         d = {}
-  
+ 
         try:
             for g in Golfer.objects.filter(pk__gte=min_key, pk__lte=max_key):
                 g.results = g.get_season_results()
@@ -2593,7 +2594,7 @@ class UpdateGolferResultsAPI(APIView):
             d['status'] = {'msg': 'Golfer Results Updates Complete range pks: ' + str(min_key) + ' - ' + str(max_key)}
         
         except Exception as e:
-            print ('Update Field API error: ', e)
+            print ('Update Golfer Results API error: ', e)
             d['error'] = {'msg': str(e)}
         
         print ('Update Golfer Results API time: ', datetime.datetime.now() - start, 'range: ', str(min_key), ' - ', str(max_key))
