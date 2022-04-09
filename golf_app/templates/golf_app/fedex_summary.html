@@ -1,0 +1,149 @@
+{% extends "golf_app/golf_app_base.html" %}
+{%load static%}
+{%load bootstrap%}
+{%load compress%}
+{%load golf_extras%}
+
+
+{% block body_block %}
+<h3 style="text-align:center;">Score Summary {{fedex_season}}</h3>
+<br>
+<br>
+<h5 style="text-align:center;">Summary Table</h5>
+<div class="center">
+
+    <table id="summary-table" class="table table-bordered">
+         <script type="text/javascript">
+             header = document.createElement('thead')
+             header.style.backgroundColor = 'lightgray'
+             row = document.createElement('tr')
+             firstCell = document.createElement('th')
+             row.appendChild(firstCell)
+            var orderList = $.parseJSON('{{order|js}}')
+            for (let i=0; i < orderList.length; i++) {
+                cell = document.createElement('th')
+                cell.innerHTML = orderList[i].substring(0,5)
+                row.appendChild(cell)
+            } 
+            header.appendChild(row)
+            document.getElementById('summary-table').appendChild(header)
+         </script>   
+
+    <tr id="total_score_row">
+        <th>Season Total</th>
+        <script type="text/javascript">
+            var data = $.parseJSON('{{fedex_season.season.get_total_points|escapejs}}')
+            var orderList = $.parseJSON('{{order|js}}')
+            order_l = orderList.length 
+            for (let i=0; i< order_l; i++) {
+                 $('#total_score_row').append('<td>' + data[orderList[i]].total + '</td>')
+                                }
+        </script>
+    </tr>
+    <tr id="total_rank_row">
+        <th>Season Rank</th>
+        <script type="text/javascript">
+            var data = $.parseJSON('{{fedex_season.season.get_total_points|escapejs}}')
+            var orderList = $.parseJSON('{{order|js}}')
+            order_l = orderList.length 
+            for (let i=0; i< order_l; i++) {
+                 $('#total_rank_row').append('<td>' + data[orderList[i]].rank + '</td>')
+                                }
+        </script>
+    </tr>
+    <tr id="fedex_total_row">
+        <th>Net Total Points</th>
+        <script type="text/javascript">
+            var data = $.parseJSON('{{fedex_season.player_points|js}}')
+            var orderList = $.parseJSON('{{order|js}}')
+            order_l = orderList.length 
+            for (let i=0; i< order_l; i++) {
+                 $('#fedex_total_row').append('<td>' + data[orderList[i]].score + '</td>')
+                                }
+        </script>
+    </tr>
+    <tr id="fedex_rank_row">
+        <th>Rank</th>
+        <script type="text/javascript">
+            var data = $.parseJSON('{{fedex_season.player_points|js}}')
+            var orderList = $.parseJSON('{{order|js}}')
+            order_l = orderList.length 
+            for (let i=0; i< order_l; i++) {
+                 $('#fedex_rank_row').append('<td>' + data[orderList[i]].rank + '</td>')
+                                }
+        </script>
+    </tr>
+    <tr id="in_top30_row">
+        <th>In Top 30</th>
+        <script type="text/javascript">
+            var data = $.parseJSON('{{stats|js}}')
+            var orderList = $.parseJSON('{{order|js}}')
+            order_l = orderList.length 
+            for (let i=0; i< order_l; i++) {
+                 $('#in_top30_row').append('<td>' + data[orderList[i]].in_top30 + '</td>')
+                                }
+        </script>
+    </tr>
+    <tr id="outside_top30_row">
+        <th>Outside Top 30</th>
+        <script type="text/javascript">
+            var data = $.parseJSON('{{stats|js}}')
+            var orderList = $.parseJSON('{{order|js}}')
+            order_l = orderList.length 
+            for (let i=0; i< order_l; i++) {
+                 $('#outside_top30_row').append('<td>' + data[orderList[i]].outside_top30 + '</td>')
+                                }
+        </script>
+    </tr>
+
+    <tr id="minus_80_row">
+        <th>-80 Picks</th>
+        <td id="status_80">calculating<span class="status">....</span></td>
+    </tr>
+    <tr id="plus_20_row">
+        <th>+20 Picks</th>
+        <td id="status_20">calculating<span class="status">....</span></td>
+    </tr>
+    <tr id="at_risk">
+        <th>At Risk</th>
+        <td id="status_at_risk">calculating<span class="status">....</span></td>
+    </tr>
+    <tr id="onthe_verge">
+        <th>+20 Picks</th>
+        <td id="status_verge">calculating<span class="status">....</span></td>
+    </tr>
+
+
+
+
+</table>
+</div>
+
+<script>
+    $('#summary-table').ready(function()  {
+        console.log('picks by score')
+        fetch("/golf_app/fedex_picks_by_score/" + '{{fedex_season.pk}}',         
+                {method: "GET",})
+        .then((response) => response.json())
+        .then((responseJSON) => {
+            
+            data = $.parseJSON(responseJSON)
+            var orderList = $.parseJSON('{{order|js}}')
+            order_l = orderList.length 
+            $('#status_20').remove()
+            $('#status_80').remove()
+            $('#status_at_risk').remove()
+            $('#status_verge').remove()
+            //$('#minus_80_row td')[1].remove()
+            for (let i=0; i< order_l; i++) {
+                
+                 $('#minus_80_row').append('<td>' + data[orderList[i]].minus_80 + '</td>')
+                 $('#plus_20_row').append('<td>' + data[orderList[i]].plus_20 + '</td>')
+                 $('#at_risk').append('<td>' + data[orderList[i]].at_risk + '</td>')
+                 $('#onthe_verge').append('<td>' + data[orderList[i]].onthe_verge + '</td>')
+            }
+            })
+        })
+</script>
+
+{%endblock%}

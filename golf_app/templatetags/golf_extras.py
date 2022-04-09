@@ -2,10 +2,12 @@ from django import template
 
 from golf_app.models import Picks, mpScores, Field, Tournament, Group, TotalScore
 from django.db.models import Count, Sum
-from string import ascii_letters
+#from string import ascii_letters
 import re
-import urllib
-from bs4 import BeautifulSoup
+#import urllib
+#from bs4 import BeautifulSoup
+from django.utils.safestring import mark_safe
+import json
 
 
 register = template.Library()
@@ -64,3 +66,7 @@ def total_score(user):
         return ts.score
     except Exception:
         return 0
+
+@register.filter(is_safe=True)
+def js(obj):
+    return mark_safe(json.dumps(obj))

@@ -7,7 +7,7 @@ from django.db.models import Min, Q, Count, Sum, Max, fields
 from datetime import datetime
 from django.db.models.base import Model
 
-from scipy.stats.stats import mode
+from scipy.stats.stats import rankdata
 from golf_app import utils
 from django.db import transaction
 from unidecode import unidecode
@@ -17,6 +17,7 @@ import urllib
 import unidecode 
 from collections import OrderedDict
 from bs4 import BeautifulSoup
+
 
 
 # Create your models here.
@@ -650,6 +651,15 @@ class Golfer(models.Model):
             #        rank = str(f.mp_calc_score(espn.mp_golfers_per_round(), espn))
             #    else:
             #        rank = 'n/a'
+            elif t.season.season >= 2022 and t.pga_tournament_num == '470' and Field.objects.filter(golfer=self, tournament=t).exists():
+                from golf_app import espn_api
+                sd = ScoreDict.objects.get(tournament=t)
+                espn = espn_api.ESPNData(t=t, data=sd.espn_api_data)
+                f = Field.objects.get(golfer=self, tournament=t)
+                rank = str(f.mp_calc_score(espn.mp_golfers_per_round(), espn))
+            elif t.season.season == 2021 and t.pga_tournament_num == '470' and Field.objects.filter(golfer=self, tournament=t).exists():
+                f = Field.objects.get(golfer=self, tournament=t)
+                rank = str(f.get_mp_result(t))
             else:
                 rank = 'n/a'
 
@@ -878,6 +888,7 @@ class Field(models.Model):
         else:
             return 'n/a'
 
+    
     def p1_owgr(self):
         return self.currentWGR - self.partner_owgr
 
@@ -963,6 +974,7 @@ class Field(models.Model):
             if api_data.golfer_data(self.golfer.espn_number):
                 if api_data.golfer_data(self.golfer.espn_number).get('status').get('type').get('id') == "3":
                     if self.post_cut_wd(api_data=api_data):
+                        print ('post cut WD', self)
                         cut = False
                         score = int(api_data.post_cut_wd_score()) - int(self.handi)
                     else:
@@ -996,7 +1008,8 @@ class Field(models.Model):
         if api_data:
             l = self.tournament.not_playing_list()
             l.remove('CUT')
-            if api_data.golfer_data(self.golfer.espn_number).get('status').get('type').get('id')  == '3' and api_data.get_round_score(self.golfer.espn_number, 3) and \
+            if api_data.golfer_data(self.golfer.espn_number).get('status').get('type').get('id')  == '3' and \
+               api_data.get_round_score(self.golfer.espn_number, 3) not in [None, '--'] and \
                api_data.golfer_data(self.golfer.espn_number).get('status').get('type').get('shortDetail') in l:
                 return True
             else:
@@ -1392,14 +1405,21 @@ class FedExSeason(models.Model):
         else:
             fedex = self.current_fedex_data()
         
-       
         for u in user_list:
             total_score = 0
             for pick in FedExPicks.objects.filter(user=u, pick__season=self):
                 total_score += pick.score
             d[u.username] = {'score': total_score}
-        print ('fedex points calc Dur: ', datetime.now() - start)
         
+        #ranks = rankdata([x.get('score') for x in d.values()], method='min'))
+        ranks = sorted([x.get('score') for x in d.values()])
+        #print (ranks)
+        
+        for k, v in d.items():
+            d.get(k).update({'rank': ranks.index(v.get('score')) + 1}) 
+        
+        print ('fedex points calc Dur: ', datetime.now() - start)
+
         return d
 
 
@@ -1423,7 +1443,55 @@ class FedExSeason(models.Model):
         
         return
 
+    def above_below_line(self, user, t=None):
+        '''takes a user obj, returns dict'''
+        #start = datetime.now()
+        d = {}
+        if not t:
+            t = Tournament.objects.get(current=True)
 
+        picks = list(FedExPicks.objects.filter(pick__season__season__current=True, user=user).values_list('pick__golfer__golfer_name', flat=True))
+        in_top30 = len([x.get('rank') for k, x in t.fedex_data.items() if k in picks and int(x.get('rank')) < 31])
+        above_top30 = len([x.get('rank') for k, x in t.fedex_data.items() if k in picks and int(x.get('rank')) >= 31])
+
+        d['in_top30'] = in_top30
+        d['outside_top30'] = above_top30
+       
+        #print (datetime.now() - start)
+        return d
+
+    def picks_at_risk(self, user, t=None):
+        d = {}
+        if not t:
+            t = Tournament.objects.get(current=True)
+
+        picks = list(FedExPicks.objects.filter(pick__season__season__current=True, user=user).values_list('pick__golfer__golfer_name', flat=True))
+        at_risk = len([x.get('rank') for k, x in t.fedex_data.items() if k in picks and int(x.get('rank')) >= 20 and int(x.get('rank')) < 31])
+        onthe_verge = len([x.get('rank') for k, x in t.fedex_data.items() if k in picks and int(x.get('rank')) >= 31 and int(x.get('rank')) < 75])
+
+        d['at_risk'] = at_risk
+        d['onthe_verge'] = onthe_verge
+       
+        #print (datetime.now() - start)
+        return d
+
+
+    def picks_by_score(self, user, t=None):
+        if not t:
+            t = Tournament.objects.get(current=True)
+        
+        d = {'minus_80': 0,
+            'plus_20': 0}
+        for p in FedExPicks.objects.filter(pick__season__season__current=True, user=user):
+            score = p.calc_score(t.fedex_data)
+            if score == -80:
+                d.update({'minus_80': d.get('minus_80') + 1})
+            elif score == 20:
+                d.update({'plus_20': d.get('plus_20') + 1})
+        return d
+
+
+        
 
 class FedExField(models.Model):
     season = models.ForeignKey(FedExSeason, on_delete=models.CASCADE)

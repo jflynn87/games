@@ -82,7 +82,9 @@ urlpatterns= [
     path('get_field/<int:pk>', views.GetFieldAPI.as_view(), name='get_field'),
     path('get_golfers_obj/<int:pk>', views.GetGolfersOBJAPI.as_view(), name='get_golfers_obj'),
     path('get_started_data/<int:pk>', views.StartedDataAPI.as_view(), name='get_started_data'),
-
+    path('fedex_summary/<int:pk>', views.FedExSummaryView.as_view(), name='fedex_summary'),
+    path('fedex_summary/', views.FedExSummaryView.as_view(), name='fedex_summary'),
+    path('fedex_picks_by_score/<int:pk>', views.FedExPicksByScore.as_view(), name='fedex_picks_by_score'),
     
 
 ]

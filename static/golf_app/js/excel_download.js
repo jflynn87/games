@@ -27,11 +27,14 @@ $('#download_excel').html('Preparing Data...')
       xlsRows = []
   
       $.each(golfers, function(i, results) {
+        //console.log(results.golfer_name, results.results)
         var row = {}
         var t_data = []
         //console.log('result: ', order.length, Object.keys(results.results).length)
+        row['pga_num'] = results.golfer_pga_num
+        row['golfer'] = results.golfer_name;
 
-        if (Object.keys(results.results).length > 0) {
+        if (results.results && Object.keys(results.results).length > 0) {
         //if (Object.keys(results.results).length == order.length) {
         //for (j=0; j < order.length; j++) {
           for (j=0; j < Object.keys(results.results).length; j++) {
@@ -39,9 +42,6 @@ $('#download_excel').html('Preparing Data...')
                       'rank': results.results[order[j]].rank})
         }
   
-        row['pga_num'] = results.golfer_pga_num
-        row['golfer'] = results.golfer_name;
-        
         $.each(t_data, function(idx, data) {
           if (data) {
             var t_name = data.t_name;
@@ -56,6 +56,8 @@ $('#download_excel').html('Preparing Data...')
       }
       })
     }
+      else {console.log('No results: ', results.golfer_name);
+            row[3] = 'no data'}
       xlsRows.push(row)
     
       })
@@ -145,7 +147,7 @@ $('#download_excel').html('Preparing Data...')
   
           row['t0'] = Object.values(golfer.fields.recent)[3].rank
           row['t1'] = Object.values(golfer.fields.recent)[2].rank
-          row['t2'] = Object.values(golfer.fields.recent)[2].rank
+          row['t2'] = Object.values(golfer.fields.recent)[1].rank
           row['t3'] = Object.values(golfer.fields.recent)[0].rank
               
         fieldRows.push(row)

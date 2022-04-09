@@ -24,12 +24,50 @@ from pprint import pprint
 import csv
 
 start = datetime.now()
+#t = Tournament.objects.get(current=True)
+#t = Tournament.objects.get(pga_tournament_num='470', season__current=True)
 
-t = Tournament.objects.get(current=True)
+for g in Golfer.objects.filter(golfer_name__in=['Tiger Woods', "Justin Thomas", "Billy Horschel"]):
+    print (g)
+    for k, v in g.results.items():
+        print (k, v)
 
-wd = withdraw.WDCheck().check_wd()
-print (wd)
+exit()
 
+t_list = [Tournament.objects.get(pga_tournament_num='470', season__season=2022), Tournament.objects.get(pga_tournament_num='470', season__season=2021)]
+
+
+mp_golfers = list(Field.objects.filter(tournament__in=t_list).values_list('golfer__pk', flat=True))
+g_list = list(set(mp_golfers))
+
+print (len(g_list), g_list)
+
+for g in Golfer.objects.filter(pk__in=g_list):
+    g.get_season_results(rerun=True)
+
+print (datetime.now() - start)
+exit()
+
+
+for f in Field.objects.filter(tournament=t):
+    #print (f.golfer)
+    f.golfer.get_season_results(rerun=True)
+    #print (f, f.get_mp_result(t))
+#for f in Field.objects.filter(tournament=t):
+#    print (f.golfer.results.get('153'))
+ 
+t1 = Tournament.objects.get(pga_tournament_num='470', season__season=2021)
+
+for f in Field.objects.filter(tournament=t1):
+    f.golfer.get_season_results(rerun=True)
+
+for g in Golfer.objects.all():
+    if g.results.get('153').get('rank') == None:
+        g.results.get('153').update({'rank': 'n/a',
+                                    'season': g.results.get('153').get('season'),
+                                    't_name': g.results.get('153').get('t_name')})
+
+print (datetime.now() - start)
 exit()
 
 for f in Field.objects.filter(tournament=t, playerName__in=["Bryson Dechambeau","Abraham Ancer", "Rory Mcilroy"]):

@@ -2745,3 +2745,55 @@ class StartedDataAPI(APIView):
 
         return JsonResponse(json.dumps(d), status=200, safe=False)
 
+
+class FedExSummaryView(LoginRequiredMixin, TemplateView):
+    login_url = 'login'
+    template_name = 'golf_app/fedex_summary.html'
+
+    def get_context_data(self, **kwargs):
+        context = super(FedExSummaryView, self).get_context_data(**kwargs)
+        if kwargs.get('pk'):
+            f_season = FedExSeason.objects.get(pk=kwargs.get('pk'))
+        else:
+            f_season = FedExSeason.objects.get(season__current=True)
+
+        order_list = []
+        stats = {}
+        if self.request.user:
+            order_list.append(self.request.user.username)
+        for u in f_season.season.get_users('obj') :
+            if u != self.request.user:
+                order_list.append(u.username)
+            stats[u.username] = f_season.above_below_line(u)
+
+        print (order_list)
+        context.update({
+            'fedex_season': f_season,
+            'users': f_season.season.get_users('obj'),
+            'order': order_list,
+            'stats': stats,
+        })
+        return context
+
+
+class FedExPicksByScore(APIView):
+    def get(self, request, pk):
+        
+        start = datetime.datetime.now()
+        d = {}
+        try:
+            fedex_season = FedExSeason.objects.get(pk=pk)
+
+            for u in fedex_season.season.get_users('obj'):
+                d[u.username] = fedex_season.picks_by_score(u)
+                d.get(u.username).update(fedex_season.picks_at_risk(u))
+                
+        except Exception as e:
+            print ('FedExPicksByScore error: ', e)
+            d['error'] = {'msg': str(e)}
+        
+        
+        print ('FedExGetPicksByScore time: ', datetime.datetime.now() - start)
+
+        return JsonResponse(json.dumps(d), status=200, safe=False)
+

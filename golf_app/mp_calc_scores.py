@@ -12,14 +12,16 @@ from golf_app.templatetags import golf_extras
 from golf_app import utils, bonus_details
 
 @transaction.atomic
-def mp_calc_scores(tournament, request=None):
+def mp_calc_scores(tournament, request=None, data=None):
     '''takes a tournament object and option request and returns a dict.  used to calculate
     scores for match play format tournaments'''
-    json_url = tournament.score_json_url
-    print (json_url)
+    if not data:
 
-    with urllib.request.urlopen(json_url) as field_json_url:
-        data = json.loads(field_json_url.read().decode())
+        json_url = tournament.score_json_url
+        print (json_url)
+
+        with urllib.request.urlopen(json_url) as field_json_url:
+            data = json.loads(field_json_url.read().decode())
 
     field = data['rounds']
     #print (field[3].get('roundNum'))
