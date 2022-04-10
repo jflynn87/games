@@ -136,6 +136,10 @@ function udatePickData() {
 
                   if (not_playing.indexOf(pick.thru) != -1) {$('#' + pick.pick.id).addClass('cut')}  
                   if ($('#pga_t_num').text() == '470' && pick.score == '17') {$('#' + pick.pick.id).addClass('cut')}
+                  if ($('#' + pick.pick.id).hasClass('best') && $('#' +pick.pick.id).hasClass('cut')) {
+                        $('#' + pick.pick.id).removeClass('cut').removeClass('best')
+                        $('#' + pick.pick.id).css('background-color', '#465945')
+                  }
                   
             resolve(data)})
             })

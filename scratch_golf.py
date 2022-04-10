@@ -24,9 +24,17 @@ from pprint import pprint
 import csv
 
 start = datetime.now()
-#t = Tournament.objects.get(current=True)
+t = Tournament.objects.get(current=True)
+sd = ScoreDict.objects.get(tournament=t)
+espn = espn_api.ESPNData(t=t, data=sd.espn_api_data)
+
+print (espn.group_stats())
 #t = Tournament.objects.get(pga_tournament_num='470', season__current=True)
 
+#for f in Field.objects.filter(tournament=t, group__number=9):
+#    print (f, f.handi)
+
+exit()
 for g in Golfer.objects.filter(golfer_name__in=['Tiger Woods', "Justin Thomas", "Billy Horschel"]):
     print (g)
     for k, v in g.results.items():

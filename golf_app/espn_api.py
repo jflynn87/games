@@ -6,7 +6,7 @@ from requests import get
 import json
 
 from golf_app import utils
-from golf_app.models import Tournament, ScoreDict, Group, Field
+from golf_app.models import Tournament, ScoreDict, Group, Field, Golfer
 
 
 class ESPNData(object):
@@ -220,9 +220,12 @@ class ESPNData(object):
         
         for g in Group.objects.filter(tournament=self.t):
             golfers = g.get_golfers()
-            min_score = min([int(x.get('status').get('position').get('id')) - Field.objects.values('handi').get(tournament=self.t, golfer__espn_number=x.get('id')).get('handi') for x in self.field_data if x.get('id') in golfers])
-            #print (g, golfers, min_score)
-            best = [x.get('athlete').get('id') for x in self.field_data if x.get('id') in golfers and int(x.get('status').get('position').get('id')) - Field.objects.values('handi').get(tournament=self.t, golfer__espn_number=x.get('id')).get('handi') == min_score]
+            
+            #min_score = min([int(x.get('status').get('position').get('id')) - Field.objects.values('handi').get(tournament=self.t, golfer__espn_number=x.get('id')).get('handi') for x in self.field_data if x.get('id') in golfers])
+            min_score = min([int(self.get_rank(x.get('id'))) - Field.objects.values('handi').get(tournament=self.t, golfer__espn_number=x.get('id')).get('handi') for x in self.field_data if x.get('id') in golfers])
+            #if g.number ==9: print (g, Golfer.objects.filter(espn_number__in=golfers), min_score)
+            #best = [x.get('athlete').get('id') for x in self.field_data if x.get('id') in golfers and int(x.get('status').get('position').get('id')) - Field.objects.values('handi').get(tournament=self.t, golfer__espn_number=x.get('id')).get('handi') == min_score]
+            best = [x.get('athlete').get('id') for x in self.field_data if x.get('id') in golfers and int(self.get_rank(x.get('id'))) - Field.objects.values('handi').get(tournament=self.t, golfer__espn_number=x.get('id')).get('handi') == min_score]
             cuts = len([x.get('athlete').get('id') for x in self.field_data if x.get('id') in golfers and x.get('status').get('type').get('id') == '3'])
             #print (g.number, best)
             

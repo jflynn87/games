@@ -2067,6 +2067,7 @@ class EspnApiScores(APIView):
                 bd = bonus_details.BonusDtl(espn_api=espn, espn_scrape_data=None, tournament=t, inquiry=False)  
                 bd_big = bd.best_in_group(big, pick)
                 if bd_big:
+                    print ('BIG: ', pick, bonus)
                     bonus += 10
                 if bd.winner(pick):
                     bonus += bd.winner_points(pick)
