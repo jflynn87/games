@@ -369,7 +369,7 @@ class SeasonTotalView(ListView):
                     score_list.append(winner.user)
                     
                     if tournament.major:
-                        winner_dict[winner.user] = winner_dict.get(winner.user) + 50/tournament.num_of_winners()
+                        winner_dict[winner.user] = winner_dict.get(winner.user) + 100/tournament.num_of_winners()
                     else:
                         winner_dict[winner.user] = winner_dict.get(winner.user) + 30/tournament.num_of_winners()
 

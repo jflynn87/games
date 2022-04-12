@@ -12,7 +12,7 @@
 <br>
 <div class="row">
 
-<div id="summary-section" class="column">
+<div id="summary-section" class="col">
     <h5 style="text-align:center;">Summary Data</h5>
     <table id="summary-table" class="table table-bordered table-sm">
          <script type="text/javascript">
@@ -186,7 +186,7 @@
 <br>
 <br>
 </div>
-<div id="detail_div" class="column">
+<div id="detail_div" class="col">
     <h5 style="text-align:center;">Detail</h5>
     <table id="detail-table" class="table table-bordered table-sm">
             <script type="text/javascript">
@@ -227,6 +227,7 @@
                         var row = document.createElement('tr')
                         var tdA = document.createElement('td')
                         tdA.innerHTML = Object.keys(data)[i]
+                        tdA.style.fontWeight = 'bold'
                         var tdB = document.createElement('td')
                         tdB.innerHTML = Object.values(data)[i].soy_owgr
                         var tdC = document.createElement('td')
