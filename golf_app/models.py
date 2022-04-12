@@ -1451,11 +1451,12 @@ class FedExSeason(models.Model):
             t = Tournament.objects.get(current=True)
 
         picks = list(FedExPicks.objects.filter(pick__season__season__current=True, user=user).values_list('pick__golfer__golfer_name', flat=True))
+        not_in_fedex = len([x for x in picks if x not in t.fedex_data.keys()]) 
         in_top30 = len([x.get('rank') for k, x in t.fedex_data.items() if k in picks and int(x.get('rank')) < 31])
         above_top30 = len([x.get('rank') for k, x in t.fedex_data.items() if k in picks and int(x.get('rank')) >= 31])
 
         d['in_top30'] = in_top30
-        d['outside_top30'] = above_top30
+        d['outside_top30'] = above_top30 + not_in_fedex
        
         #print (datetime.now() - start)
         return d

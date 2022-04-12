@@ -2803,25 +2803,27 @@ class FedExInOutAPI(APIView):
     def get(self, request):
         
         start = datetime.datetime.now()
-        d = {}
+        t = Tournament.objects.get(current=True)
+        d = {'into_top30': {},
+             'out_top30': {}}
         try:
-            t = Tournament.objects.get(current=True)
-
-            for u in t.season.get_users('obj'):
-                picks = {}
-                for p in FedExPicks.objects.filter(pick__season__season__current=True, user=u):
-                    picks.update({k:v for k,v in t.fedex_data.items() if k == p.pick.golfer.golfer_name})
-                    into_top30 = {k:v for k,v in picks.items() if int(v.get('rank')) < 31 and int(v.get('last_week_rank')) > 30}
-                    out_top30 = {k:v for k,v in picks.items() if int(v.get('rank')) > 30 and int(v.get('last_week_rank')) < 31}
-                    d[u.username] = {'into_top30': into_top30,
-                                     'out_top30': out_top30}
+            for pick in FedExPicks.objects.filter(pick__season__season__current=True).values('pick__golfer').distinct():
+                #print (pick)
+                p = FedExPicks.objects.filter(pick__season__season__current=True, pick__golfer=pick.get('pick__golfer')).first()
                 
+                rank_data = [v for k,v in t.fedex_data.items() if k == p.pick.golfer.golfer_name]
+                if len(rank_data) == 1:
+                    data = rank_data[0]
+                    if data.get('rank') and int(data.get('rank')) < 91 and int(data.get('last_week_rank')) > 90:
+                        d.get('into_top30').update({p.pick.golfer.golfer_name: list(FedExPicks.objects.filter(pick__season__season__current=True, pick__golfer=p.pick.golfer).values_list('user__username', flat=True))})
+                    elif data.get('rank') and int(data.get('rank')) > 30 and int(data.get('last_week_rank')) < 31:
+                        d.get('out_top30').update({p.pick.golfer.golfer_name: list(FedExPicks.objects.filter(pick__season__season__current=True, pick__golfer=p.pick.golfer).values_list('user__username', flat=True))})
         except Exception as e:
-            print ('FedExVergeAPI error: ', e)
+            print ('FedExInOutAPI error: ', e)
             d['error'] = {'msg': str(e)}
         
-        
-        print ('FedExVergeAPI time: ', datetime.datetime.now() - start)
+        print ('InOut d: ', d)
+        print ('FedExinOutAPI time: ', datetime.datetime.now() - start)
 
         return JsonResponse(json.dumps(d), status=200, safe=False)
 
@@ -2849,7 +2851,7 @@ class FedExDetailAPI(APIView):
                                                     }
 
             sorted_d = dict(sorted(d.items(), key=lambda x: int(x[1]['rank'])))
-            print (sorted_d, type(sorted_d))
+            #print (sorted_d, type(sorted_d))
         except Exception as e:
             print ('FedExPicksByScore error: ', e)
             sorted_d['error'] = {'msg': str(e)}

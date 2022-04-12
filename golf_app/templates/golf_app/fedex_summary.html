@@ -106,30 +106,30 @@
 
     <tr id="minus_80_row">
         <th>-80 Picks</th>
-        <td id="status_80">calculating<span class="status">....</span></td>
+        <td id="status_80"><span class="status">....</span></td>
     </tr>
     <tr id="plus_20_row">
         <th>+20 Picks</th>
-        <td id="status_20">calculating<span class="status">....</span></td>
+        <td id="status_20"><span class="status">....</span></td>
     </tr>
     <tr id="at_risk">
         <th>At Risk</th>
-        <td id="status_at_risk">calculating<span class="status">....</span></td>
+        <td id="status_at_risk"><span class="status">....</span></td>
     </tr>
     <tr id="onthe_verge">
         <th>On the Verge</th>
-        <td id="status_verge">calculating<span class="status">....</span></td>
+        <td id="status_verge"><span class="status">....</span></td>
     </tr>
     <tr>
         <td colspan="12" style="background-color: lightblue;"></td>
     </tr>
     <tr id="into_top30">
         <th>Player Moves into Top 30</th>
-        <td id="status_into_top30">calculating<span class="status">....</span></td>
+        <td id="status_into_top30">calc<span class="status">....</span></td>
     </tr>
     <tr id="out_top30">
         <th>Moves out of Top 30</th>
-        <td id="status_out_top30">calculating<span class="status">....</span></td>
+        <td id="status_out_top30">calc<span class="status">....</span></td>
     </tr>
 
 </table>
@@ -171,13 +171,41 @@
             var data = $.parseJSON(responseJSON)
             var orderList = $.parseJSON('{{order|js}}')
             order_l = orderList.length 
-            $('#status_into_top30').remove()
-            $('#status_out_top30').remove()
+            $('#into_top30').remove()
+            $('#out_top30').remove()
+            $('#summary-table').append('<tr><th colspan=12>Player Moves into Top 30</th></tr>')
+            for (let i=0; i < Object.keys(data.into_top30).length; i++) {
+                $('#summary-table').append('<tr id=into_top30-' + i +'><td> ' + Object.keys(data.into_top30)[i] + '</td></tr>')
+                $.each($.parseJSON('{{order|js}}'), function(j, user) {
+                            var td = document.createElement('td')
+                            if (Object.values(data.into_top30)[i].indexOf(user) != -1) {
+                               //td.innerHTML = 'X'
+                                check = document.createElement('i')
+                                check.classList = ["fas fa-check"]
+                                check.style.color = 'green'
+                                td.appendChild(check)
+                                                          }
+                            else {td.innerHTML = ""}
+                        document.getElementById('into_top30-' + i).appendChild(td)
+                    })
+                }
 
-            for (let i=0; i< order_l; i++) {
-                
-                 $('#into_top30').append('<td> ' + Object.keys(data[orderList[i]].into_top30) + '</td>')
-                 $('#out_top30').append('<td>' + Object.keys(data[orderList[i]].out_top30) + '</td>')
+            $('#summary-table').append('<tr><th colspan=12>Moves out of Top 30</th></tr>')
+            for (let i=0; i < Object.keys(data.out_top30).length; i++) {
+                $('#summary-table').append('<tr id=out_top30-' + i + '><td> ' + Object.keys(data.out_top30) + '</td></tr>')
+                $.each($.parseJSON('{{order|js}}'), function(j, user) {
+                            var td = document.createElement('td')
+                            if (Object.values(data.out_top30)[i].indexOf(user) != -1) {
+                                //td.innerHTML = 'X'
+                                check = document.createElement('i')
+                                check.classList = ["fas fa-times-circle"]
+                                check.style.color = 'red'
+                                td.appendChild(check)
+                                //.html('<i class="fas fa-check"></i>').css('color', 'green')
+                                                          }
+                            else {td.innerHTML = ""}
+                        document.getElementById('out_top30-' + i).appendChild(td)
+                    })
             }
             })
         })
@@ -220,7 +248,7 @@
             
                     var data = $.parseJSON(responseJSON)
                     var orderList = $.parseJSON('{{order|js}}')
-                    console.log(data)
+                    
                     data_l = Object.keys(data).length
                     $('#detail-table-status').remove()
                     for (let i=0; i< data_l; i++) {
@@ -239,9 +267,21 @@
 
                         $.each($.parseJSON('{{order|js}}'), function(j, user) {
                             var td = document.createElement('td')
+
                             if (Object.values(data)[i].user_list.indexOf(user) != -1) {
                                 //td.innerHTML = Object.values(data)[i].user
                                 td.innerHTML = Object.values(data)[i].score
+                                
+                                if (Object.values(data)[i].score.toString() == '-80') {
+                                    td.style.color = 'green'
+                                    td.style.fontWeight = 'bold'
+                                }
+                                else if (Object.values(data)[i].score.toString() == '-30') {
+                                    td.style.color = 'blue'
+                                }
+                                else if (Object.values(data)[i].score.toString() == '20') {
+                                    td.style.color = 'red'
+                                }
                             }
                             else {td.innerHTML = ''}
                             row.appendChild(td)
