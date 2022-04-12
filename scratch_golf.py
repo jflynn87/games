@@ -18,30 +18,30 @@ from urllib.request import Request, urlopen
 from bs4 import BeautifulSoup
 from golf_app import views
 from django.core import serializers
-from django.db.models import  Q, Min
+from django.db.models import  Q, Min, Max
 import urllib
 from pprint import pprint
 import csv
 
 start = datetime.now()
+
+
+
 t = Tournament.objects.get(current=True)
-sd = ScoreDict.objects.get(tournament=t)
-espn = espn_api.ESPNData(t=t, data=sd.espn_api_data)
+t = Tournament.objects.get(pga_tournament_num='010', season__season=2022)
+print (t)
+for u in t.season.get_users('obj'):
+    picks = {}
+    for p in FedExPicks.objects.filter(pick__season__season__current=True, user=u):
+        picks.update({k:v for k,v in t.fedex_data.items() if k == p.pick.golfer.golfer_name})
+    into_top30 = {k:v for k,v in picks.items() if int(v.get('rank')) < 31 and int(v.get('last_week_rank')) > 30}
+    out_top30 = {k:v for k,v in picks.items() if int(v.get('rank')) > 30 and int(v.get('last_week_rank')) < 31}
 
-print (espn.group_stats())
-#t = Tournament.objects.get(pga_tournament_num='470', season__current=True)
-
-#for f in Field.objects.filter(tournament=t, group__number=9):
-#    print (f, f.handi)
-
-exit()
-for g in Golfer.objects.filter(golfer_name__in=['Tiger Woods', "Justin Thomas", "Billy Horschel"]):
-    print (g)
-    for k, v in g.results.items():
-        print (k, v)
-
+print (datetime.now() - start)
 exit()
 
+
+# fix MP results data
 t_list = [Tournament.objects.get(pga_tournament_num='470', season__season=2022), Tournament.objects.get(pga_tournament_num='470', season__season=2021)]
 
 
@@ -55,7 +55,7 @@ for g in Golfer.objects.filter(pk__in=g_list):
 
 print (datetime.now() - start)
 exit()
-
+#end fix MP results data
 
 for f in Field.objects.filter(tournament=t):
     #print (f.golfer)

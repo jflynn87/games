@@ -6,13 +6,15 @@
 
 
 {% block body_block %}
+
 <h3 style="text-align:center;">Score Summary {{fedex_season}}</h3>
 <br>
 <br>
-<h5 style="text-align:center;">Summary Table</h5>
-<div class="center">
+<div class="row">
 
-    <table id="summary-table" class="table table-bordered">
+<div id="summary-section" class="column">
+    <h5 style="text-align:center;">Summary Data</h5>
+    <table id="summary-table" class="table table-bordered table-sm">
          <script type="text/javascript">
              header = document.createElement('thead')
              header.style.backgroundColor = 'lightgray'
@@ -22,12 +24,12 @@
             var orderList = $.parseJSON('{{order|js}}')
             for (let i=0; i < orderList.length; i++) {
                 cell = document.createElement('th')
-                cell.innerHTML = orderList[i].substring(0,5)
+                cell.innerHTML = orderList[i].substring(0,4)
                 row.appendChild(cell)
             } 
             header.appendChild(row)
             document.getElementById('summary-table').appendChild(header)
-         </script>   
+         </script>    
 
     <tr id="total_score_row">
         <th>Season Total</th>
@@ -51,8 +53,11 @@
                                 }
         </script>
     </tr>
+    <tr>
+        <td colspan="12" style="background-color: lightblue;"></td>
+    </tr>
     <tr id="fedex_total_row">
-        <th>Net Total Points</th>
+        <th>FedEx Points</th>
         <script type="text/javascript">
             var data = $.parseJSON('{{fedex_season.player_points|js}}')
             var orderList = $.parseJSON('{{order|js}}')
@@ -72,6 +77,9 @@
                  $('#fedex_rank_row').append('<td>' + data[orderList[i]].rank + '</td>')
                                 }
         </script>
+    </tr>
+    <tr>
+        <td colspan="12" style="background-color: lightblue;"></td>
     </tr>
     <tr id="in_top30_row">
         <th>In Top 30</th>
@@ -109,15 +117,23 @@
         <td id="status_at_risk">calculating<span class="status">....</span></td>
     </tr>
     <tr id="onthe_verge">
-        <th>+20 Picks</th>
+        <th>On the Verge</th>
         <td id="status_verge">calculating<span class="status">....</span></td>
     </tr>
-
-
-
+    <tr>
+        <td colspan="12" style="background-color: lightblue;"></td>
+    </tr>
+    <tr id="into_top30">
+        <th>Player Moves into Top 30</th>
+        <td id="status_into_top30">calculating<span class="status">....</span></td>
+    </tr>
+    <tr id="out_top30">
+        <th>Moves out of Top 30</th>
+        <td id="status_out_top30">calculating<span class="status">....</span></td>
+    </tr>
 
 </table>
-</div>
+
 
 <script>
     $('#summary-table').ready(function()  {
@@ -127,7 +143,7 @@
         .then((response) => response.json())
         .then((responseJSON) => {
             
-            data = $.parseJSON(responseJSON)
+            var data = $.parseJSON(responseJSON)
             var orderList = $.parseJSON('{{order|js}}')
             order_l = orderList.length 
             $('#status_20').remove()
@@ -144,6 +160,103 @@
             }
             })
         })
+
+        $('#summary-table').ready(function()  {
+        console.log('in/out top30')
+        fetch("/golf_app/fedex_in_out/",         
+                {method: "GET",})
+        .then((response) => response.json())
+        .then((responseJSON) => {
+            
+            var data = $.parseJSON(responseJSON)
+            var orderList = $.parseJSON('{{order|js}}')
+            order_l = orderList.length 
+            $('#status_into_top30').remove()
+            $('#status_out_top30').remove()
+
+            for (let i=0; i< order_l; i++) {
+                
+                 $('#into_top30').append('<td> ' + Object.keys(data[orderList[i]].into_top30) + '</td>')
+                 $('#out_top30').append('<td>' + Object.keys(data[orderList[i]].out_top30) + '</td>')
+            }
+            })
+        })
+
 </script>
+<br>
+<br>
+</div>
+<div id="detail_div" class="column">
+    <h5 style="text-align:center;">Detail</h5>
+    <table id="detail-table" class="table table-bordered table-sm">
+            <script type="text/javascript">
+                header = document.createElement('thead')
+                header.style.backgroundColor = 'lightgray'
+                row = document.createElement('tr')
+                firstCell = document.createElement('th')
+                secondCell = document.createElement('th')
+                secondCell.innerHTML = 'OWGR'
+                thirdCell = document.createElement('th')
+                thirdCell.innerHTML = 'FedEx Rank'
+                row.appendChild(firstCell)
+                row.appendChild(secondCell)
+                row.appendChild(thirdCell)
+               var orderList = $.parseJSON('{{order|js}}')
+               for (let i=0; i < orderList.length; i++) {
+                   cell = document.createElement('th')
+                   cell.innerHTML = orderList[i].substring(0,4)
+                   row.appendChild(cell)
+               } 
+               header.appendChild(row)
+               document.getElementById('detail-table').appendChild(header)
+               $('#detail-table').append('<tr id=detail-table-status><td>Loading<span class=status>...</span></td></tr>')
+
+               $('#detail-table').ready(function()  {
+
+                fetch("/golf_app/fedex_detail_api/" + '{{fedex_season.pk}}',         
+                {method: "GET",})
+                .then((response) => response.json())
+                .then((responseJSON) => {
+            
+                    var data = $.parseJSON(responseJSON)
+                    var orderList = $.parseJSON('{{order|js}}')
+                    console.log(data)
+                    data_l = Object.keys(data).length
+                    $('#detail-table-status').remove()
+                    for (let i=0; i< data_l; i++) {
+                        var row = document.createElement('tr')
+                        var tdA = document.createElement('td')
+                        tdA.innerHTML = Object.keys(data)[i]
+                        var tdB = document.createElement('td')
+                        tdB.innerHTML = Object.values(data)[i].soy_owgr
+                        var tdC = document.createElement('td')
+                        tdC.innerHTML = Object.values(data)[i].rank
+                        row.appendChild(tdA)
+                        row.appendChild(tdB)
+                        row.appendChild(tdC)
+                        //document.getElementById('detail-table').appendChild(row)
+
+                        $.each($.parseJSON('{{order|js}}'), function(j, user) {
+                            var td = document.createElement('td')
+                            if (Object.values(data)[i].user_list.indexOf(user) != -1) {
+                                //td.innerHTML = Object.values(data)[i].user
+                                td.innerHTML = Object.values(data)[i].score
+                            }
+                            else {td.innerHTML = ''}
+                            row.appendChild(td)
+                        })
+
+                        document.getElementById('detail-table').appendChild(row)
+                    // $('#into_top30').append('<td> ' + Object.keys(data[orderList[i]].into_top30) + '</td>')
+                    // $('#out_top30').append('<td>' + Object.keys(data[orderList[i]].out_top30) + '</td>')
+            }
+            })
+        })
+
+            </script>    
+
+    </table>
+</div>
+</div>
 
 {%endblock%}

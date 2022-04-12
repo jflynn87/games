@@ -2798,3 +2798,63 @@ class FedExPicksByScore(APIView):
 
         return JsonResponse(json.dumps(d), status=200, safe=False)
 
+
+class FedExInOutAPI(APIView):
+    def get(self, request):
+        
+        start = datetime.datetime.now()
+        d = {}
+        try:
+            t = Tournament.objects.get(current=True)
+
+            for u in t.season.get_users('obj'):
+                picks = {}
+                for p in FedExPicks.objects.filter(pick__season__season__current=True, user=u):
+                    picks.update({k:v for k,v in t.fedex_data.items() if k == p.pick.golfer.golfer_name})
+                    into_top30 = {k:v for k,v in picks.items() if int(v.get('rank')) < 31 and int(v.get('last_week_rank')) > 30}
+                    out_top30 = {k:v for k,v in picks.items() if int(v.get('rank')) > 30 and int(v.get('last_week_rank')) < 31}
+                    d[u.username] = {'into_top30': into_top30,
+                                     'out_top30': out_top30}
+                
+        except Exception as e:
+            print ('FedExVergeAPI error: ', e)
+            d['error'] = {'msg': str(e)}
+        
+        
+        print ('FedExVergeAPI time: ', datetime.datetime.now() - start)
+
+        return JsonResponse(json.dumps(d), status=200, safe=False)
+
+
+class FedExDetailAPI(APIView):
+    def get(self, request, pk):
+        
+        start = datetime.datetime.now()
+        d = {}
+        try:
+            fedex_season = FedExSeason.objects.get(pk=pk)
+            t = Tournament.objects.get(current=True)
+            for p in FedExPicks.objects.filter(pick__season=fedex_season).values('pick__golfer').distinct():
+                pick = FedExPicks.objects.filter(pick__season=fedex_season, pick__golfer__pk=p.get('pick__golfer')).first()
+                users = list(FedExPicks.objects.filter(pick__season=fedex_season, pick__golfer__pk=p.get('pick__golfer')).values_list('user__username', flat=True))
+                r =  [v.get('rank') for k,v in t.fedex_data.items() if k == pick.pick.golfer.golfer_name]
+                if len(r) != 1:
+                    rank = 999
+                else:
+                    rank = r[0]
+                d[pick.pick.golfer.golfer_name] = {'user_list': users,
+                                                    'score': pick.score,
+                                                    'soy_owgr': pick.pick.soy_owgr,
+                                                    'rank': rank
+                                                    }
+
+            sorted_d = dict(sorted(d.items(), key=lambda x: int(x[1]['rank'])))
+            print (sorted_d, type(sorted_d))
+        except Exception as e:
+            print ('FedExPicksByScore error: ', e)
+            sorted_d['error'] = {'msg': str(e)}
+        
+        
+        print ('FedExDetailsAPI time: ', datetime.datetime.now() - start)
+
+        return JsonResponse(json.dumps(sorted_d), status=200, safe=False)

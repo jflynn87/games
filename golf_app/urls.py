@@ -85,6 +85,8 @@ urlpatterns= [
     path('fedex_summary/<int:pk>', views.FedExSummaryView.as_view(), name='fedex_summary'),
     path('fedex_summary/', views.FedExSummaryView.as_view(), name='fedex_summary'),
     path('fedex_picks_by_score/<int:pk>', views.FedExPicksByScore.as_view(), name='fedex_picks_by_score'),
+    path('fedex_in_out/', views.FedExInOutAPI.as_view(), name='fedex_in_out'),
+    path('fedex_detail_api/<int:pk>', views.FedExDetailAPI.as_view(), name='fedex_detail_api'),
     
 
 ]
