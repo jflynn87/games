@@ -198,7 +198,8 @@ class BonusDtl(object):
         
         if Picks.objects.filter(user=user, playerName__tournament=self.tournament, playerName__golfer__espn_number=self.espn_api.winner()[0]).exists() and \
             Picks.objects.filter(user=user, playerName__tournament=self.tournament, playerName__golfer__espn_number__in=self.espn_api.second_place()).exists() and \
-            Picks.objects.filter(user=user, playerName__tournament=self.tournament, playerName__golfer__espn_number__in=top_3).count() >= 3:
+            Picks.objects.filter(user=user, playerName__tournament=self.tournament, playerName__golfer__espn_number__in=top_3).count() >= 3 and \
+            not PickMethod.objects.filter(user=user, method='3', tournament=self.tournament).exists():
                     print ('Trifecta! : ', user)
                     bd, created = BonusDetails.objects.get_or_create(user=user, tournament=self.tournament, bonus_type='6')
                     bd.bonus_points = 50
@@ -211,7 +212,7 @@ class BonusDtl(object):
 
     def no_cut_exists(self):
         if not self.tournament.has_cut:
-            return None
+            return False
         
         if self.espn_api:
             #if int(self.espn_api.get_round()) > int(self.t.saved_cut_round) and self.espn_api.event_data.get('tournament').get('cutRound') != 0:
@@ -230,9 +231,10 @@ class BonusDtl(object):
         d = {}
         if self.espn_api and self.no_cut_exists():
             for ts in TotalScore.objects.filter(tournament=self.tournament, cut_count=0):
-                bd, created = BonusDetails.objects.get_or_create(user=ts.user, tournament=self.tournament, bonus_type='2')
-                bd.bonus_points = no_cut_points
-                bd.save()
-                d[ts.user] = no_cut_points
+                if not PickMethod.objects.filter(user=ts.user, method='3', tournament=self.tournament).exists():
+                    bd, created = BonusDetails.objects.get_or_create(user=ts.user, tournament=self.tournament, bonus_type='2')
+                    bd.bonus_points = no_cut_points
+                    bd.save()
+                    d[ts.user] = no_cut_points
         return d
 

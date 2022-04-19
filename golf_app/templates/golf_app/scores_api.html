@@ -57,8 +57,18 @@
             <td id={{p.pk}} class='{{p.playerName.golfer.espn_number}}'>
               <span class=watermark><p> {{p.user.username}} : {{p.playerName.group.number}} </p> </span>
               <p><img src="{{p.playerName.golfer.pic_link}}"></img>
-              <img height='20' src="{{p.playerName.golfer.flag_link}}" alt=""></img></p>
-              <p style="font-weight: bold;">{{p.playerName}}</p>
+                  <img height='20' src="{{p.playerName.golfer.flag_link}}" alt=""></img>
+                  {%if p.playerName.partner%}
+                  <img src="{{p.playerName.partner_golfer.pic_link}}"></img>
+                  <img height='20' src="{{p.playerName.partner_golfer.flag_link}}" alt=""></img>
+                  {%endif%}
+              </p>
+              <p style="font-weight: bold;">{{p.playerName}}
+                {%if p.playerName.partner%}
+                <p style="font-weight: bold;">{{p.playerName.partner}}</p>
+                {%endif%}
+
+              </p>
               <p id='{{p.pk}}-score'>....</p>
               <p id="{{p.pk}}-p2">...</p>
              
@@ -67,8 +77,17 @@
             <td id={{p.pk}} class='{{p.playerName.golfer.espn_number}}'>
               <span class=watermark><p> {{p.user.username}} : {{p.playerName.group.number}} </p> </span>
               <p><img src="{{p.playerName.golfer.pic_link}}"></img>
-              <img height='20' src="{{p.playerName.golfer.flag_link}}" alt=""></img></p>
+              <img height='20' src="{{p.playerName.golfer.flag_link}}" alt=""></img>
+              {%if p.playerName.partner%}
+              <img src="{{p.playerName.partner_golfer.pic_link}}"></img>
+              <img height='20' src="{{p.playerName.partner_golfer.flag_link}}" alt=""></img>
+              {%endif%}
+            </p>
              <p style="font-weight: bold;">{{p.playerName}}</p>
+             {%if p.playerName.partner%}
+               <p style="font-weight: bold;">{{p.playerName.partner}}</p>
+             {%endif%}
+
              <p id='{{p.pk}}-score'>....</p>
              <p id="{{p.pk}}-p2"></p>
           </td>

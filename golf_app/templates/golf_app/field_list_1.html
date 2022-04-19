@@ -41,6 +41,18 @@
 <div id=withdraw></div>
 <div id='espn_missing'></div>
 
+{%if tournament.pga_tournament_num == '018' %}
+<h5>Zurich Notes</h5>
+<ul>
+    <li>Grouped/Sorted by combined team OWGR</li>
+    <li>Individual OWGR next to golfer name</li>
+    <li>Golfer stat data only available for better ranked member or the team</li>
+    <li>Prior year relates to better ranked golfer, they may have had a different partner prior year</li>
+
+</ul>
+{%endif%}
+
+
 {%if not t_started or tournament.late_picks%}
     <div id="'top-sect">
     <br>

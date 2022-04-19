@@ -6,7 +6,7 @@ from golf_app.models import CountryPicks, Field, Tournament, Picks, Group, Total
            Season, AccessLog, Golfer, AuctionPick, CountryPicks, FedExField, FedExSeason, FedExPicks
 from golf_app.forms import  CreateManualScoresForm, FieldForm, FieldFormSet, AuctionPicksFormSet
 from django.contrib.auth.decorators import login_required
-from django.http import HttpResponseRedirect, HttpResponse
+from django.http import FileResponse, HttpRequest, HttpResponseRedirect, HttpResponse
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.urls import reverse, reverse_lazy
@@ -14,7 +14,8 @@ from django.contrib.auth.models import User
 import datetime
 from golf_app import populateField, manual_score, withdraw, scrape_espn, \
      mp_calc_scores, golf_serializers, utils, olympic_sd, espn_api, \
-     ryder_cup_scores, espn_ryder_cup, bonus_details, espn_schedule, scrape_scores_picks 
+     ryder_cup_scores, espn_ryder_cup, bonus_details, espn_schedule, scrape_scores_picks, \
+     scrape_cbs_golf 
 
 from django.utils import timezone
 from django.core.exceptions import ObjectDoesNotExist
@@ -2667,6 +2668,7 @@ class GetFieldAPI(APIView):
             f = Field.objects.filter(tournament=t)
             field = serializers.serialize('json', f)
             groups = serializers.serialize('json', Group.objects.filter(tournament=t))
+                
             d['field'] = field
             d['groups'] =  groups
 
@@ -2690,6 +2692,10 @@ class GetGolfersOBJAPI(APIView):
             #golfers = serializers.serialize('json', Golfer.objects.filter(pk__in=g_keys))
             golfers = golf_serializers.GolferSerializer(Golfer.objects.filter(pk__in=g_keys), many=True).data
             d['golfers'] =  golfers
+            if t.pga_tournament_num == '018':  #Zurich 
+                p_keys = Field.objects.filter(tournament=t).values_list('partner_golfer__pk', flat=True)
+                partners = golf_serializers.GolferSerializer(Golfer.objects.filter(pk__in=p_keys), many=True).data
+                d['partners'] = partners
 
         except Exception as e:
             print ('GetGolferOBJAPI error: ', e)
@@ -2752,29 +2758,76 @@ class FedExSummaryView(LoginRequiredMixin, TemplateView):
     template_name = 'golf_app/fedex_summary.html'
 
     def get_context_data(self, **kwargs):
+        start = datetime.datetime.now()
         context = super(FedExSummaryView, self).get_context_data(**kwargs)
-        if kwargs.get('pk'):
-            f_season = FedExSeason.objects.get(pk=kwargs.get('pk'))
+        context.update(fedEx_summary_context_data(self.request.user, kwargs.get('pk')))
+        print ('fedex summary context duration', datetime.datetime.now() - start)
+        for k, v in context.items():
+            print (k,v)
+            print ('-------------')
+
+        return context
+
+
+class FedExSummaryEmail(TemplateView):
+    template_name = 'golf_app/fedex_summary_email.html'
+
+    def get_context_data(self, **kwargs):
+        start = datetime.datetime.now()
+        context = super(FedExSummaryEmail, self).get_context_data(**kwargs)
+        context.update(fedEx_summary_context_data())
+        season = FedExSeason.objects.get(season__current=True)  # make a param?
+        print ("AAAAAAAAA")
+        b_r = HttpRequest()
+        b_api = FedExPicksByScore()
+        by_score = json.loads(b_api.get(b_r, season.pk).content)
+        print ("BBBBBBBBBB")
+        i_r = HttpRequest()
+        i_api = FedExInOutAPI()
+        in_out = json.loads(i_api.get(i_r).content)
+        print ("CCCCCCCCCC")
+        d_r = HttpRequest()
+        d_api = FedExDetailAPI()
+        detail = json.loads(d_api.get(d_r, 1).content)
+
+        context.update({'by_score': by_score, 
+                        'in_out': in_out})
+                        #'detail': detail})
+
+        print ('fedex summary context duration', datetime.datetime.now() - start)
+        for k, v in context.items():
+            print (k,v)
+            print ('-------------')
+        return context
+
+
+def fedEx_summary_context_data(user=None, pk=None):
+        if pk:
+            f_season = FedExSeason.objects.get(pk=pk)
         else:
             f_season = FedExSeason.objects.get(season__current=True)
 
         order_list = []
         stats = {}
-        if self.request.user:
-            order_list.append(self.request.user.username)
+        d = {}
+        if user:
+            order_list.append(user.username)
         for u in f_season.season.get_users('obj') :
-            if u != self.request.user:
+            if u != user:
                 order_list.append(u.username)
             stats[u.username] = f_season.above_below_line(u)
 
-        print (order_list)
-        context.update({
+        #print (order_list)
+        d.update({
             'fedex_season': f_season,
             'users': f_season.season.get_users('obj'),
             'order': order_list,
             'stats': stats,
         })
-        return context
+        print ('fed ex summart func done')
+        return d
+
+
 
 
 class FedExPicksByScore(APIView):

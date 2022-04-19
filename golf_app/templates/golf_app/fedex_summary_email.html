@@ -16,44 +16,61 @@
 <div id="summary-section" class="col">
     <h5 style="text-align:center;">Summary Data</h5>
     <table id="summary-table" class="table table-bordered table-sm">
-        <script type="text/javascript">
-            header = document.createElement('thead')
-            header.style.backgroundColor = 'lightgray'
-            row = document.createElement('tr')
-            firstCell = document.createElement('th')
-            row.appendChild(firstCell)
-           var orderList = $.parseJSON('{{order|js}}')
-           for (let i=0; i < orderList.length; i++) {
-               cell = document.createElement('th')
-               cell.innerHTML = orderList[i].substring(0,4)
-               row.appendChild(cell)
-           } 
-           header.appendChild(row)
-           document.getElementById('summary-table').appendChild(header)
-        </script>    
+        <thead style="background-color: lightgray;">
+            <tr>
+                <th></th>
+                {%for u in users%}
+                <th>{{u.username|slice:"0:4"}}</th>
+                {%endfor%}
+            </tr>
+        </thead>
+         <!-- <script type="text/javascript">
+             header = document.createElement('thead')
+             header.style.backgroundColor = 'lightgray'
+             row = document.createElement('tr')
+             firstCell = document.createElement('th')
+             row.appendChild(firstCell)
+            var orderList = $.parseJSON('{{order|js}}')
+            for (let i=0; i < orderList.length; i++) {
+                cell = document.createElement('th')
+                cell.innerHTML = orderList[i].substring(0,4)
+                row.appendChild(cell)
+            } 
+            header.appendChild(row)
+            document.getElementById('summary-table').appendChild(header)
+         </script>     -->
 
-<tr id="total_score_row">
+    <tr id="total_score_row">
         <th>Season Total</th>
-     <script type="text/javascript">
+        {%for data in fedex_season.season.get_total_points|newjs%}
+            
+            {%for u, d in data.items%}
+                {%for k, v in d.items%}
+                {{k}}
+                <td>{{v.score}}</td>
+                {%endfor%}
+            {%endfor%}
+        {%endfor%}
+
+        <!-- <script type="text/javascript">
             var data = $.parseJSON('{{fedex_season.season.get_total_points|escapejs}}')
             var orderList = $.parseJSON('{{order|js}}')
             order_l = orderList.length 
             for (let i=0; i< order_l; i++) {
                  $('#total_score_row').append('<td>' + data[orderList[i]].total + '</td>')
                                 }
-        </script> 
-    </tr>
-
+        </script>
+    </tr> -->
     <tr id="total_rank_row">
         <th>Season Rank</th>
-     <script type="text/javascript">
+        <script type="text/javascript">
             var data = $.parseJSON('{{fedex_season.season.get_total_points|escapejs}}')
             var orderList = $.parseJSON('{{order|js}}')
             order_l = orderList.length 
             for (let i=0; i< order_l; i++) {
                  $('#total_rank_row').append('<td>' + data[orderList[i]].rank + '</td>')
                                 }
-        </script> 
+        </script>
     </tr>
     <tr>
         <td colspan="12" style="background-color: lightblue;"></td>

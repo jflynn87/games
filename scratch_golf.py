@@ -1,3 +1,4 @@
+
 import os
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE","gamesProj.settings")
@@ -8,7 +9,9 @@ from golf_app.models import Tournament, TotalScore, ScoreDetails, Picks, PickMet
          FedExSeason, FedExField, FedExPicks
 from django.contrib.auth.models import User
 from datetime import datetime, timedelta
-from golf_app import populateField, calc_leaderboard, manual_score, bonus_details, espn_api, round_by_round, scrape_espn, utils, golf_serializers, espn_schedule, scrape_scores_picks, espn_ryder_cup, withdraw
+from golf_app import populateField, calc_leaderboard, manual_score, bonus_details, espn_api, \
+                     round_by_round, scrape_espn, utils, golf_serializers, espn_schedule, \
+                     scrape_scores_picks, espn_ryder_cup, withdraw, fedex_email
 from django.db.models import Count, Sum
 from unidecode import unidecode as decode
 import json
@@ -22,9 +25,22 @@ from django.db.models import  Q, Min, Max
 import urllib
 from pprint import pprint
 import csv
+from rest_framework.request import Request
+from django.http import HttpRequest
 
 start = datetime.now()
 
+r = HttpRequest()
+s = views.FedExDetailAPI()
+
+print (json.loads(s.get(r, 1).content))
+
+exit()
+
+#context = req.get_context_data()
+#print (context)
+
+exit()
 
 
 t = Tournament.objects.get(current=True)

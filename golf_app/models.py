@@ -580,8 +580,12 @@ class Golfer(models.Model):
         #for sd in ScoreDict.objects.filter(tournament__season=season).exclude(tournament__current=True):
         for sd in ScoreDict.objects.filter(tournament__pk__in=t_list):
             #if sd.tournament.pga_tournament_num == '470':
+            if sd.tournament.special_field():
+                continue
+            
             try:
-                x = [v.get('rank') for k, v in sd.data.items() if k !='info' and v.get('pga_num') in [self.espn_number, self.golfer_pga_num]]
+                if sd.data:
+                    x = [v.get('rank') for k, v in sd.data.items() if k !='info' and v.get('pga_num') in [self.espn_number, self.golfer_pga_num]]
                 
                 if not x:
                     continue
@@ -611,7 +615,7 @@ class Golfer(models.Model):
                     d.update({'over50':  t})
                 #print (d)
             except Exception as e:
-                print ('summary stats issue: ', sd.tournament, e)
+                print ('summary stats issue: ', self, sd.tournament, e)
         d.update({'played': played})
         #print (self, d, datetime.now() - start)
         return d

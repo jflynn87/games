@@ -16,13 +16,14 @@ $(document).ready(function () {
          groups = $.parseJSON(f_data.groups)
          g_data = $.parseJSON(responseJSON[2])
          golfers = g_data.golfers
+         partners = g_data.partners
          s_data = $.parseJSON(responseJSON[3])
          //console.log(s_data)
          //g_links = $.parseJSON(responseJSON[4])
          startedGolfers = s_data.started_golfers
          tStarted = s_data.t_started
          lockedGroups = s_data.lock_groups
-
+         
          picksObjs = $.parseJSON(responseJSON[4])
          picks = []
          $.each(picksObjs, function(i, p) {
@@ -39,7 +40,7 @@ $(document).ready(function () {
          //console.log(fedexPicks)
          //console.log(picks)
 
-         const build = buildForm(info, groups, field, golfers, picks, tStarted, startedGolfers, lockedGroups, fedexPicks)
+         const build = buildForm(info, groups, field, golfers, partners, picks, tStarted, startedGolfers, lockedGroups, fedexPicks)
          build.then((response) => {
             $('#status').html('<h4>Ready for Picks</h4>');
             console.log('ready for picks; ', new Date() - start);
@@ -80,7 +81,7 @@ $(document).ready(function () {
 
 })
 
-function buildForm(info, groups, field, golfers, picks, tStarted, startedGolfers, lockedGroups, fedexPicks) {
+function buildForm(info, groups, field, golfers, partners, picks, tStarted, startedGolfers, lockedGroups, fedexPicks) {
     return new Promise(function (resolve) {
         fieldLen = field.length
 
@@ -203,7 +204,11 @@ function buildForm(info, groups, field, golfers, picks, tStarted, startedGolfers
             
             golferPic.src = golfer[0].pic_link
             
-            golferName.innerHTML = f.fields.playerName
+            
+            if (f.fields.partner) {
+                golferName.innerHTML = f.fields.playerName + '(' + (Number(f.fields.currentWGR) - Number(f.fields.partner_owgr)).toString() + ')'
+            }
+            else {golferName.innerHTML = f.fields.playerName}
             golferName.style.fontWeight = 'bold'
 
             golferFlag.src = golfer[0].flag_link
@@ -211,6 +216,37 @@ function buildForm(info, groups, field, golfers, picks, tStarted, startedGolfers
             golferP1.append(golferPic)
             golferP1.append(golferName)
             golferP1.append(golferFlag)
+
+            if (f.fields.partner) {
+                p = document.createElement('span')
+                
+                var partner = partners.filter(p => {
+                    return p.id == f.fields.partner_golfer})
+                if (fedexPicks.indexOf(partner[0].id) != -1) {
+                    p_fedex = document.createElement('img')
+                    p_fedex.src = '/static/img/fedex.jpg'
+                    p_fedex.style.width = '30px'
+                    p.appendChild(fedex)
+                    }
+                p_golferPic = document.createElement('img')
+                p_golferName = document.createElement('span')
+                p_golferFlag = document.createElement('img')
+                
+                p_golferPic.src = partner[0].pic_link
+                
+                p_golferName.innerHTML = partner[0].golfer_name + '('+ f.fields.partner_owgr + ')'
+                p_golferName.style.fontWeight = 'bold'
+    
+                p_golferFlag.src = partner[0].flag_link
+                p.append(' & ')
+                p.append(p_golferPic)
+                p.append(p_golferName)
+                p.append(p_golferFlag)
+                golferP1.append(p)      
+        
+                }
+
+
             golferTd.append(golferP1)
 
             golferP2 = document.createElement('p')

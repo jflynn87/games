@@ -70,3 +70,16 @@ def total_score(user):
 @register.filter(is_safe=True)
 def js(obj):
     return mark_safe(json.dumps(obj))
+    
+
+@register.filter(is_safe=True)
+def newjs(obj):
+    print ('converting: ', obj)
+    try:
+        d = dict(json.loads(obj))
+    except Exception:
+        d = list(json.loads(obj))
+    print (d)
+    print (type(d))
+    return d
+
