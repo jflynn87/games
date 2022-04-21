@@ -225,20 +225,33 @@ class ESPNData(object):
             try:
                 golfers = g.get_golfers()
                 
-                #min_score = min([int(x.get('status').get('position').get('id')) - Field.objects.values('handi').get(tournament=self.t, golfer__espn_number=x.get('id')).get('handi') for x in self.field_data if x.get('id') in golfers])
-                min_score = min([int(self.get_rank(x.get('id'))) - Field.objects.values('handi').get(tournament=self.t, golfer__espn_number=x.get('id')).get('handi') for x in self.field_data if x.get('id') in golfers])
-                #if g.number ==9: print (g, Golfer.objects.filter(espn_number__in=golfers), min_score)
-                #best = [x.get('athlete').get('id') for x in self.field_data if x.get('id') in golfers and int(x.get('status').get('position').get('id')) - Field.objects.values('handi').get(tournament=self.t, golfer__espn_number=x.get('id')).get('handi') == min_score]
-                best = [x.get('athlete').get('id') for x in self.field_data if x.get('id') in golfers and int(self.get_rank(x.get('id'))) - Field.objects.values('handi').get(tournament=self.t, golfer__espn_number=x.get('id')).get('handi') == min_score]
-                cuts = len([x.get('athlete').get('id') for x in self.field_data if x.get('id') in golfers and x.get('status').get('type').get('id') == '3'])
-                #print (g.number, best)
+                if self.t.pga_tournament_num == '018':
+                    #print (min([int(x.get('status').get('position').get('id')) for x in self.field_data if str(x.get('roster')[0].get('playerId')) in golfers or str(x.get('roster')[1].get('playerId')) in golfers]))
+                    min_score = min([int(x.get('status').get('position').get('id')) for x in self.field_data if str(x.get('roster')[0].get('playerId')) in golfers or str(x.get('roster')[1].get('playerId')) in golfers])
+                    best = [x.get('roster')[0].get('playerId') for x in self.field_data if str(x.get('roster')[0].get('playerId')) in golfers and int(x.get('status').get('position').get('id')) == min_score]
+                    if len(best) == 0:
+                        #print ('not best workgin')
+                        best = [x.get('roster')[1].get('playerId') for x in self.field_data if str(x.get('roster')[1].get('playerId')) in golfers and int(x.get('status').get('position').get('id')) == min_score]
+                    #print (best)
+                    #cuts = len([x.get('athlete').get('id') for x in self.field_data if x.get('id') in golfers and x.get('status').get('type').get('id') == '3'])
+                    cuts = 0  ## fix this
+                else:
+                    min_score = min([int(self.get_rank(x.get('id'))) - Field.objects.values('handi').get(tournament=self.t, golfer__espn_number=x.get('id')).get('handi') for x in self.field_data if x.get('id') in golfers])
+                    best = [x.get('athlete').get('id') for x in self.field_data if x.get('id') in golfers and int(self.get_rank(x.get('id'))) - Field.objects.values('handi').get(tournament=self.t, golfer__espn_number=x.get('id')).get('handi') == min_score]
+                    cuts = len([x.get('athlete').get('id') for x in self.field_data if x.get('id') in golfers and x.get('status').get('type').get('id') == '3'])
                 
                 golfer_list = []
                 golfer_espn_num_list = []
                 
                 for b in best:
-                    golfer_list.append(self.golfer_data(b).get('athlete').get('displayName'))
-                    golfer_espn_num_list.append(b)
+                    if self.t.pga_tournament_num == '018':
+                        g_name = [x.get('roster')[0].get('athlete').get('displayName') for x in self.field_data if str(x.get('roster')[0].get('playerId')) == str(b)][0]
+                        if len(g_name) == 0:
+                            g_name = [x.get('roster')[1].get('athlete').get('displayName') for x in self.field_data if str(x.get('roster')[1].get('playerId')) == str(b)][0]
+                        golfer_list.append(g_name)
+                    else:
+                        golfer_list.append(self.golfer_data(b).get('athlete').get('displayName'))
+                    golfer_espn_num_list.append(str(b))
                     
                 d[str(g.number)] = {'golfers': golfer_list,
                                         'golfer_espn_nums': golfer_espn_num_list,
@@ -249,6 +262,7 @@ class ESPNData(object):
                 g.cutCount = cuts
                 g.save()
             except Exception as e:
+                print ('espn api group stats issue: ', e)
                 d[str(g.number)] = {'golfers': [],
                                     'golfer_espn_nums': [],
                                     'cuts': 0,
@@ -330,7 +344,7 @@ class ESPNData(object):
         #print (self.golfer_data('9780'))
         if self.t.pga_tournament_num == '018':
             for data in self.field_data:
-                print ('data: ', data.get('status'))
+                #print ('data: ', data.get('status'))
                 d[data.get('sortOrder')] = {
                                         'rank': data.get('status').get('position').get('displayName'),
                                         'r1': '-', #self.get_round_score(data.get('id'), 1),
