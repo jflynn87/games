@@ -1,6 +1,4 @@
-
 import os
-
 os.environ.setdefault("DJANGO_SETTINGS_MODULE","gamesProj.settings")
 import django
 django.setup()
@@ -29,6 +27,18 @@ from rest_framework.request import Request
 from django.http import HttpRequest
 
 start = datetime.now()
+t = Tournament.objects.get(current=True)
+sd = ScoreDict.objects.get(tournament=t)
+
+
+espn = espn_api.ESPNData(t=t, data=sd.espn_api_data)
+#print (len(espn.field_data), type(espn.field_data))
+
+print (espn.get_leaderboard())
+print (datetime.now() - start)
+
+exit()
+
 
 r = HttpRequest()
 s = views.FedExDetailAPI()

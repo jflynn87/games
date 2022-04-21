@@ -163,6 +163,9 @@ class ESPNData(object):
             else:
                 return None
         except Exception as e:
+            if self.t.pga_tournament_num == '018':
+                return [x for x in self.field_data if str(espn_num) in [str(x.get('roster')[0].get('playerId')), str(x.get('roster')[1].get('playerId'))]][0]
+            
             print ('espnApi golfer_data issue, espn_num: ', espn_num, e)
             return None
 
@@ -219,31 +222,39 @@ class ESPNData(object):
         d = {}
         
         for g in Group.objects.filter(tournament=self.t):
-            golfers = g.get_golfers()
-            
-            #min_score = min([int(x.get('status').get('position').get('id')) - Field.objects.values('handi').get(tournament=self.t, golfer__espn_number=x.get('id')).get('handi') for x in self.field_data if x.get('id') in golfers])
-            min_score = min([int(self.get_rank(x.get('id'))) - Field.objects.values('handi').get(tournament=self.t, golfer__espn_number=x.get('id')).get('handi') for x in self.field_data if x.get('id') in golfers])
-            #if g.number ==9: print (g, Golfer.objects.filter(espn_number__in=golfers), min_score)
-            #best = [x.get('athlete').get('id') for x in self.field_data if x.get('id') in golfers and int(x.get('status').get('position').get('id')) - Field.objects.values('handi').get(tournament=self.t, golfer__espn_number=x.get('id')).get('handi') == min_score]
-            best = [x.get('athlete').get('id') for x in self.field_data if x.get('id') in golfers and int(self.get_rank(x.get('id'))) - Field.objects.values('handi').get(tournament=self.t, golfer__espn_number=x.get('id')).get('handi') == min_score]
-            cuts = len([x.get('athlete').get('id') for x in self.field_data if x.get('id') in golfers and x.get('status').get('type').get('id') == '3'])
-            #print (g.number, best)
-            
-            golfer_list = []
-            golfer_espn_num_list = []
-            
-            for b in best:
-                golfer_list.append(self.golfer_data(b).get('athlete').get('displayName'))
-                golfer_espn_num_list.append(b)
-                 
-            d[str(g.number)] = {'golfers': golfer_list,
-                                    'golfer_espn_nums': golfer_espn_num_list,
-                                    'cuts': cuts,
-                                    'total_golfers': g.playerCnt
-                 }
+            try:
+                golfers = g.get_golfers()
+                
+                #min_score = min([int(x.get('status').get('position').get('id')) - Field.objects.values('handi').get(tournament=self.t, golfer__espn_number=x.get('id')).get('handi') for x in self.field_data if x.get('id') in golfers])
+                min_score = min([int(self.get_rank(x.get('id'))) - Field.objects.values('handi').get(tournament=self.t, golfer__espn_number=x.get('id')).get('handi') for x in self.field_data if x.get('id') in golfers])
+                #if g.number ==9: print (g, Golfer.objects.filter(espn_number__in=golfers), min_score)
+                #best = [x.get('athlete').get('id') for x in self.field_data if x.get('id') in golfers and int(x.get('status').get('position').get('id')) - Field.objects.values('handi').get(tournament=self.t, golfer__espn_number=x.get('id')).get('handi') == min_score]
+                best = [x.get('athlete').get('id') for x in self.field_data if x.get('id') in golfers and int(self.get_rank(x.get('id'))) - Field.objects.values('handi').get(tournament=self.t, golfer__espn_number=x.get('id')).get('handi') == min_score]
+                cuts = len([x.get('athlete').get('id') for x in self.field_data if x.get('id') in golfers and x.get('status').get('type').get('id') == '3'])
+                #print (g.number, best)
+                
+                golfer_list = []
+                golfer_espn_num_list = []
+                
+                for b in best:
+                    golfer_list.append(self.golfer_data(b).get('athlete').get('displayName'))
+                    golfer_espn_num_list.append(b)
+                    
+                d[str(g.number)] = {'golfers': golfer_list,
+                                        'golfer_espn_nums': golfer_espn_num_list,
+                                        'cuts': cuts,
+                                        'total_golfers': g.playerCnt
+                    }
 
-            g.cutCount = cuts
-            g.save()
+                g.cutCount = cuts
+                g.save()
+            except Exception as e:
+                d[str(g.number)] = {'golfers': [],
+                                    'golfer_espn_nums': [],
+                                    'cuts': 0,
+                                    'total_golfers': g.playerCnt
+                    }
+
 
         return d
 
@@ -317,27 +328,45 @@ class ESPNData(object):
     def get_leaderboard(self):
         d = {}
         #print (self.golfer_data('9780'))
-        for data in self.field_data:
-            #print ('LB DATA: ', data.get('id'), self.get_thru(data.get('id')))
-            golfer_data = self.golfer_data(data.get('id'))
-            thru = self.get_thru(data.get('id'))
-            d[golfer_data.get('sortOrder')] = {
-                                    #'rank': self.get_rank(data.get('id')),
-                                    'rank': self.get_rank_display(data.get('id')),
-                                    'r1': self.get_round_score(data.get('id'), 1),
-                                    'r2': self.get_round_score(data.get('id'), 2),
-                                    'r3': self.get_round_score(data.get('id'), 3),
-                                    'r4': self.get_round_score(data.get('id'), 4),
-                                    #'total_score': golfer_data.get('score').get('displayValue'),
-                                    'total_score': self.to_par(data.get('id')),
-                                    'change': golfer_data.get('movement'),
-                                    #'thru': golfer_data.get('status').get('type').get('shortDetail'),
-                                    'thru': thru,
-                                    'curr_round_score': self.current_round_to_par(data.get('id')),
-                                    'golfer_name': golfer_data.get('athlete').get('displayName'),
-                                    'espn_num': data.get('id') 
+        if self.t.pga_tournament_num == '018':
+            for data in self.field_data:
+                #print ('data: ', data.get('status'))
+                d[data.get('sortOrder')] = {
+                                        'rank': data.get('status').get('position').get('displayName'),
+                                        'r1': '-', #self.get_round_score(data.get('id'), 1),
+                                        'r2': '-', #self.get_round_score(data.get('id'), 2),
+                                        'r3': '-', #self.get_round_score(data.get('id'), 3),
+                                        'r4': '-', #self.get_round_score(data.get('id'), 4),
+                                        'total_score': '-', #self.to_par(data.get('id')),
+                                        'change': '-', #golfer_data.get('movement'),
+                                        'thru': '-', #thru,
+                                        'curr_round_score': '-', #self.current_round_to_par(data.get('id')),
+                                        'golfer_name': data.get('team').get('displayName'), #golfer_data.get('athlete').get('displayName'),
+                                        'espn_num': '' #data.get('id') 
+                    
+                }            
+        else:
+            for data in self.field_data:
+                #print ('LB DATA: ', data.get('id'), self.get_thru(data.get('id')))
+                golfer_data = self.golfer_data(data.get('id'))
+                thru = self.get_thru(data.get('id'))
+                d[golfer_data.get('sortOrder')] = {
+                                        #'rank': self.get_rank(data.get('id')),
+                                        'rank': self.get_rank_display(data.get('id')),
+                                        'r1': self.get_round_score(data.get('id'), 1),
+                                        'r2': self.get_round_score(data.get('id'), 2),
+                                        'r3': self.get_round_score(data.get('id'), 3),
+                                        'r4': self.get_round_score(data.get('id'), 4),
+                                        #'total_score': golfer_data.get('score').get('displayValue'),
+                                        'total_score': self.to_par(data.get('id')),
+                                        'change': golfer_data.get('movement'),
+                                        #'thru': golfer_data.get('status').get('type').get('shortDetail'),
+                                        'thru': thru,
+                                        'curr_round_score': self.current_round_to_par(data.get('id')),
+                                        'golfer_name': golfer_data.get('athlete').get('displayName'),
+                                        'espn_num': data.get('id') 
 
-            }
+                }
         #print ('leaderboard: ', d)
         return d
 
@@ -369,7 +398,7 @@ class ESPNData(object):
             return [v.get('athlete').get('displayName') for v in self.field_data if self.get_rank(v.get('id')) == '1']
         except Exception as e:
             print ('espn api leaders exception: ', e)
-            return None
+            return ['No leaders available']
 
     def leader_score(self):
         try:
@@ -377,7 +406,7 @@ class ESPNData(object):
             #return [v.get('score').get('displayValue') for v in self.field_data if self.get_rank(v.get('id')) == '1'][0]
         except Exception as e:
             print ('espn api leader score exception: ', e)
-            return None
+            return ['']
 
     def cut_line(self):
         cut_info = {'line_type': '',

@@ -2055,7 +2055,7 @@ class EspnApiScores(APIView):
 
             start_calc_score  = datetime.datetime.now()
             cut_num = espn.cut_num()
-
+            
             BonusDetails.objects.filter(tournament=t, bonus_type='5').update(bonus_points=0)
 
             for golfer in Picks.objects.filter(playerName__tournament=t).values('playerName__golfer__espn_number').distinct():
@@ -2096,7 +2096,8 @@ class EspnApiScores(APIView):
                 
                 thru = espn.get_thru(pick.playerName.golfer.espn_number)
                 
-                if golfer_data:
+                #if golfer_data:
+                if golfer_data.get('statistics') and len(golfer_data.get('statistics')) >0:
                     to_par = golfer_data.get('statistics')[0].get('displayValue')
                     sod_position = golfer_data.get('movement')
                 else:
