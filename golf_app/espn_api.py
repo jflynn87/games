@@ -330,7 +330,7 @@ class ESPNData(object):
         #print (self.golfer_data('9780'))
         if self.t.pga_tournament_num == '018':
             for data in self.field_data:
-                #print ('data: ', data.get('status'))
+                print ('data: ', data.get('status'))
                 d[data.get('sortOrder')] = {
                                         'rank': data.get('status').get('position').get('displayName'),
                                         'r1': '-', #self.get_round_score(data.get('id'), 1),
@@ -398,6 +398,8 @@ class ESPNData(object):
             return [v.get('athlete').get('displayName') for v in self.field_data if self.get_rank(v.get('id')) == '1']
         except Exception as e:
             print ('espn api leaders exception: ', e)
+            if self.t.pga_tournament_num == '018':
+                return [v.get('team').get('displayName') for v in self.field_data if self.get_rank(v.get('id')) == '1']
             return ['No leaders available']
 
     def leader_score(self):

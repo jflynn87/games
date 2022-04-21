@@ -67,7 +67,7 @@ function buildLeaderboard(t) {
     .then((response) => response.json())
     .then((responseJSON) => {
           data = $.parseJSON(responseJSON).leaderboard
-          console.log(data)
+          // console.log(data)
           $('#det-list').empty()
           $('#det-list').append('<table id="det-table" class="table">' + '</table>');
         

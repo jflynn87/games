@@ -408,7 +408,7 @@ class Tournament(models.Model):
             return "weak"
 
     def special_field(self):
-        if self.pga_tournament_num in ['999', '470', '468']:
+        if self.pga_tournament_num in ['999', '470', '468', '018']:
             return True
         else:
             return False

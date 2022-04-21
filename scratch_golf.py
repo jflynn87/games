@@ -28,10 +28,11 @@ from django.http import HttpRequest
 
 start = datetime.now()
 t = Tournament.objects.get(current=True)
-sd = ScoreDict.objects.get(tournament=t)
+#sd = ScoreDict.objects.get(tournament=t)
 
 
-espn = espn_api.ESPNData(t=t, data=sd.espn_api_data)
+#espn = espn_api.ESPNData(t=t, data=sd.espn_api_data)
+espn = espn_api.ESPNData()
 #print (len(espn.field_data), type(espn.field_data))
 
 print (espn.get_leaderboard())

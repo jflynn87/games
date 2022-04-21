@@ -2717,7 +2717,7 @@ class StartedDataAPI(APIView):
             lock_groups = []  
             espn = espn_api.ESPNData()
             after_espn_start = datetime.datetime.now()
-            if t.special_field and t.set_started:
+            if t.special_field and (t.set_started or (t.started and not t.late_picks)):
                 t_started = True
                 started_golfers = list(Field.objects.filter(tournament=t).values_list('golfer__espn_number', flat=True))
             elif t.special_field and (t.set_notstarted or t.late_picks):
