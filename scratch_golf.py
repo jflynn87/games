@@ -33,7 +33,6 @@ t = Tournament.objects.get(current=True)
 
 #espn = espn_api.ESPNData(t=t, data=sd.espn_api_data)
 espn = espn_api.ESPNData()
-#print (len(espn.field_data), type(espn.field_data))
 
 print (espn.group_stats())
 print (datetime.now() - start)
