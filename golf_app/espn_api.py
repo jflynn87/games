@@ -234,14 +234,12 @@ class ESPNData(object):
                         best.append(zero)
                     for one in best_1:
                         best.append(one)
-                    #print (best)
-                    cuts = len([x for x in self.field_data if x.get('id') in golfers and x.get('status').get('type').get('id') == '3'])
-                    #cuts = 0  ## fix this
+                    cuts = self.cut_count(g)
                 else:
                     min_score = min([int(self.get_rank(x.get('id'))) - Field.objects.values('handi').get(tournament=self.t, golfer__espn_number=x.get('id')).get('handi') for x in self.field_data if x.get('id') in golfers])
                     best = [x.get('athlete').get('id') for x in self.field_data if x.get('id') in golfers and int(self.get_rank(x.get('id'))) - Field.objects.values('handi').get(tournament=self.t, golfer__espn_number=x.get('id')).get('handi') == min_score]
                     cuts = len([x.get('athlete').get('id') for x in self.field_data if x.get('id') in golfers and x.get('status').get('type').get('id') == '3'])
-                
+                    ## change cuts to use the function after testing
                 golfer_list = []
                 golfer_espn_num_list = []
                 
@@ -278,14 +276,12 @@ class ESPNData(object):
 
 
     def cut_penalty(self, p):
-        '''takes a pick obj and a score obj, returns an int'''
+        '''takes a field obj and a score obj, returns an int'''
         if not p.group.cut_penalty():
             return 0
 
-        #golfers = Field.objects.filter(group=p.playerName.group).values_list('golfer__espn_number', flat=True)
-        #golfers = p.playerName.group.get_golfers()
-        #cuts = len([x for x in self.field_data if x.get('id') in golfers and x.get('status').get('type').get('id') == '3'])
-        cuts = p.group.cut_count(espn_api_data=self.field_data)
+        #cuts = p.group.cut_count(espn_api_data=self.field_data)
+        cuts = p.group.cut_count(espn_api_data=self)
         if cuts == 0:
             return 0
         else:
@@ -349,7 +345,8 @@ class ESPNData(object):
         if self.t.pga_tournament_num == '018':
             for data in self.field_data:
                 #golfer_data = self.golfer_data(data.get('roster')[0].get('athlete').get('id'))
-                thru = self.get_thru(data.get('roster')[0].get('athlete').get('id'))
+                #thru = self.get_thru(data.get('roster')[0].get('athlete').get('id'))
+               
                 #print (golfer_data)
                 #print ('data: ', data.get('status'))
                 d[data.get('sortOrder')] = {
@@ -360,7 +357,7 @@ class ESPNData(object):
                                         'r4': self.get_round_score(data.get('roster')[0].get('athlete').get('id'), 4),
                                         'total_score': self.to_par(data.get('roster')[0].get('athlete').get('id')),
                                         'change': '-', #golfer_data.get('movement'),
-                                        'thru': thru,
+                                        'thru': '-', #thru,
                                         'curr_round_score': '-', #self.current_round_to_par(data.get('id')),
                                         'golfer_name': data.get('team').get('displayName'), #golfer_data.get('athlete').get('displayName'),
                                         'espn_num': '' #data.get('id') 
@@ -395,9 +392,9 @@ class ESPNData(object):
     def get_thru(self, espn_num):
         golfer_data = self.golfer_data(espn_num)
         if golfer_data:
-            if golfer_data.get('status').get('type').get('id') == '1':
+            if str(golfer_data.get('status').get('type').get('id')) == '1':
                 thru = golfer_data.get('status').get('displayThru')
-            elif golfer_data.get('status').get('type').get('id') == '0':
+            elif str(golfer_data.get('status').get('type').get('id')) == '0':
                 thru = golfer_data.get('status').get('teeTime')
             else:
                 thru = golfer_data.get('status').get('type').get('shortDetail')
@@ -546,4 +543,10 @@ class ESPNData(object):
 
         return ranked_d
 
+    def cut_count(self, group):
+        golfers = group.get_golfers()
+        if self.t.pga_tournament_num == '018':
+            return len([x for x in self.field_data if (str(x.get('roster')[0].get('playerId')) in golfers or str(x.get('roster')[1].get('playerId')) in golfers) and x.get('status').get('type').get('id') == '3'])
+        else:
+            return len([x for x in self.field_data if x.get('id') in golfers and x.get('status').get('type').get('id') == '3'])
 

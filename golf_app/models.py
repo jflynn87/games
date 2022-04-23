@@ -478,8 +478,12 @@ class Group(models.Model):
         #    return 0  # add score dict lookup here and fix code
         elif espn_api_data:
             golfers = self.get_golfers()
-            return len([x for x in espn_api_data if x.get('id') in golfers and x.get('status').get('type').get('id') == '3'])
-
+            if self.tournament.pga_tournament_num == '018':
+                return len([x.get('roster')[0].get('playerId') for x in espn_api_data.field_data if (str(x.get('roster')[0].get('playerId')) in golfers or str(x.get('roster')[1].get('playerId')) in golfers) and x.get('status').get('type').get('id') == '3'])
+            else:
+                return len([x for x in espn_api_data.field_data if x.get('id') in golfers and x.get('status').get('type').get('id') == '3'])
+            #print (type(espn_api_data))
+            #return espn_api_data.cut_count(self)
 
     def get_golfers(self):
         '''takes a group and returns a list of espn numbers'''
@@ -978,7 +982,6 @@ class Field(models.Model):
             if api_data.golfer_data(self.golfer.espn_number):
                 if api_data.golfer_data(self.golfer.espn_number).get('status').get('type').get('id') == "3":
                     if self.post_cut_wd(api_data=api_data):
-                        print ('post cut WD', self)
                         cut = False
                         score = int(api_data.post_cut_wd_score()) - int(self.handi)
                     else:
@@ -995,7 +998,7 @@ class Field(models.Model):
                 print ('WD? not found in espn: ',  self.playerName, self.golfer.espn_number) 
                 cut = True
                 score = (int(api_data.cut_num()) - int(self.handi)) + api_data.cut_penalty(self)
-        #print ('score ', score, 'cut ', cut)
+        print ('calc SCORE ', score, 'cut ', cut)
         return {'score': score, 'cut': cut}
 
 

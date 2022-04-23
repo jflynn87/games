@@ -108,6 +108,7 @@ function buildLeaderboard(t) {
               for (let j=0; j< row_fields_l; j++) {
 
                 row_cells.push(document.createElement('td'))
+                
                 if (j == 1) {arrow = format_move(row_fields[j])
                           row_cells[j].innerHTML == row_fields[j]
                         row_cells[j].innerHTML = arrow}
