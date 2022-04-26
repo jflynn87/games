@@ -259,7 +259,7 @@ class ESPNData(object):
                                         'golfer_espn_nums': golfer_espn_num_list,
                                         'cuts': cuts,
                                         'total_golfers': g.playerCnt
-                    }
+                            }
 
                 g.cutCount = cuts
                 g.save()
@@ -270,7 +270,6 @@ class ESPNData(object):
                                     'cuts': 0,
                                     'total_golfers': g.playerCnt
                     }
-
 
         return d
 

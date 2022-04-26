@@ -79,7 +79,7 @@ def newjs(obj):
         d = dict(json.loads(obj))
     except Exception:
         d = list(json.loads(obj))
-    print (d)
-    print (type(d))
+    print ('newjs returning: ', d)
+    print ('newjs type: ', type(d))
     return d
 

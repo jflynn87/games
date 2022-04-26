@@ -1,4 +1,3 @@
-{% extends "golf_app/golf_app_base.html" %}
 {%load static%}
 {%load bootstrap%}
 {%load compress%}
@@ -19,143 +18,110 @@
         <thead style="background-color: lightgray;">
             <tr>
                 <th></th>
-                {%for u in users%}
-                <th>{{u.username|slice:"0:4"}}</th>
+                {%for k, v in display_dict.user_data.items%}
+                    {%if k not in 'details, into_top30, out_top30'%}
+                <th>{{k|slice:"0:4"}}</th>
+                {%endif%}
                 {%endfor%}
             </tr>
         </thead>
-         <!-- <script type="text/javascript">
-             header = document.createElement('thead')
-             header.style.backgroundColor = 'lightgray'
-             row = document.createElement('tr')
-             firstCell = document.createElement('th')
-             row.appendChild(firstCell)
-            var orderList = $.parseJSON('{{order|js}}')
-            for (let i=0; i < orderList.length; i++) {
-                cell = document.createElement('th')
-                cell.innerHTML = orderList[i].substring(0,4)
-                row.appendChild(cell)
-            } 
-            header.appendChild(row)
-            document.getElementById('summary-table').appendChild(header)
-         </script>     -->
 
-    <tr id="total_score_row">
-        <th>Season Total</th>
-        {%for data in fedex_season.season.get_total_points|newjs%}
-            
-            {%for u, d in data.items%}
-                {%for k, v in d.items%}
-                {{k}}
-                <td>{{v.score}}</td>
-                {%endfor%}
+        <tr id="total_score_row">
+            <th style="text-align:left;">Season Total</th>
+            {%for user, data in display_dict.user_data.items%}
+                <td>{{data.total}}</td>
             {%endfor%}
+
+        </tr> 
+        <tr id="total_rank_row">
+            <th style="text-align:left;">Season Rank</th>
+            {%for user, data in display_dict.user_data.items%}
+                <td>{{data.rank}}</td>
+                
+            {%endfor%}
+        </tr>
+        <tr>
+            <td colspan="12" style="background-color: lightblue;"></td>
+        </tr>
+        <tr id="fedex_total_row">
+            <th style="text-align:left;">FedEx Points</th>
+            {%for user, data in display_dict.user_data.items%}
+            <td>{{data.fed_ex_score}}</td>
+            {%endfor%}
+        </tr>
+        <tr id="fedex_rank_row">
+            <th style="text-align:left;">Rank</th>
+            {%for user, data in display_dict.user_data.items%}
+            <td>{{data.fed_ex_rank}}</td>
+            {%endfor%}
+
+        </tr>
+        <tr>
+            <td colspan="12" style="background-color: lightblue;"></td>
+        </tr>
+        <tr id="in_top30_row">
+            <th style="text-align:left;">In Top 30</th>
+            {%for user, data in display_dict.user_data.items%}
+            <td>{{data.in_top30}}</td>
+            {%endfor%}
+
+        </tr>
+        <tr id="outside_top30_row">
+            <th style="text-align:left;">Outside Top 30</th>
+            {%for user, data in display_dict.user_data.items%}
+            <td>{{data.outside_top30}}</td>
+            {%endfor%}
+        </tr>
+        <tr id="minus_80_row">
+            <th style="text-align:left;">-80 Picks</th>
+            {%for user, data in display_dict.user_data.items%}
+            <td>{{data.minus_80}}</td>
+            {%endfor%}
+        </tr>
+        <tr id="plus_20_row">
+            <th style="text-align:left;">+20 Picks</th>
+            {%for user, data in display_dict.user_data.items%}
+            <td>{{data.plus_20}}</td>
+            {%endfor%}
+        </tr>
+        <tr id="at_risk">
+            <th style="text-align:left;">At Risk 
+                <a id="tt-risk" data-toggle="tooltip" title="FedEx Rank 20-30 >30"><i class="fa fa-info-circle" style="color:blue;"></i> </a></th>
+                {%for user, data in display_dict.user_data.items%}
+                <td>{{data.at_risk}}</td>
+                {%endfor%}
+        </tr>
+        <tr id="onthe_verge">
+            <th style="text-align:left;">On the Verge</th>
+                {%for user, data in display_dict.user_data.items%}
+                <td>{{data.onthe_verge}}</td>
+                {%endfor%}
+        </tr>
+        <tr>
+            <td colspan="12" style="background-color: lightblue;"></td>
+        </tr>
+        <tr id="into_top30">
+            <th style="text-align:left;">Player Moves into Top30</th>
+            {%for k, v in display_dict.into_top30.items%}
+            <tr>
+            <td>{{k}}</td>
+            </tr>
+            {%endfor%}
+    
+        </tr>
+        <tr id="out_top30">
+        <th style="text-align:left;">Player Moves out of Top30</th>
+        {%for k, v in display_dict.out_top30.items%}
+        <tr>
+        <td>{{k}}</td>
+        </tr>
         {%endfor%}
-
-        <!-- <script type="text/javascript">
-            var data = $.parseJSON('{{fedex_season.season.get_total_points|escapejs}}')
-            var orderList = $.parseJSON('{{order|js}}')
-            order_l = orderList.length 
-            for (let i=0; i< order_l; i++) {
-                 $('#total_score_row').append('<td>' + data[orderList[i]].total + '</td>')
-                                }
-        </script>
-    </tr> -->
-    <tr id="total_rank_row">
-        <th>Season Rank</th>
-        <script type="text/javascript">
-            var data = $.parseJSON('{{fedex_season.season.get_total_points|escapejs}}')
-            var orderList = $.parseJSON('{{order|js}}')
-            order_l = orderList.length 
-            for (let i=0; i< order_l; i++) {
-                 $('#total_rank_row').append('<td>' + data[orderList[i]].rank + '</td>')
-                                }
-        </script>
-    </tr>
-    <tr>
-        <td colspan="12" style="background-color: lightblue;"></td>
-    </tr>
-    <tr id="fedex_total_row">
-        <th>FedEx Points</th>
-        <script type="text/javascript">
-            var data = $.parseJSON('{{fedex_season.player_points|js}}')
-            var orderList = $.parseJSON('{{order|js}}')
-            order_l = orderList.length 
-            for (let i=0; i< order_l; i++) {
-                 $('#fedex_total_row').append('<td>' + data[orderList[i]].score + '</td>')
-                                }
-        </script>
-    </tr>
-    <tr id="fedex_rank_row">
-        <th>Rank</th>
-        <script type="text/javascript">
-            var data = $.parseJSON('{{fedex_season.player_points|js}}')
-            var orderList = $.parseJSON('{{order|js}}')
-            order_l = orderList.length 
-            for (let i=0; i< order_l; i++) {
-                 $('#fedex_rank_row').append('<td>' + data[orderList[i]].rank + '</td>')
-                                }
-        </script>
-    </tr>
-    <tr>
-        <td colspan="12" style="background-color: lightblue;"></td>
-    </tr>
-    <tr id="in_top30_row">
-        <th>In Top 30</th>
-        <script type="text/javascript">
-            var data = $.parseJSON('{{stats|js}}')
-            var orderList = $.parseJSON('{{order|js}}')
-            order_l = orderList.length 
-            for (let i=0; i< order_l; i++) {
-                 $('#in_top30_row').append('<td>' + data[orderList[i]].in_top30 + '</td>')
-                                }
-        </script>
-    </tr>
-    <tr id="outside_top30_row">
-        <th>Outside Top 30</th>
-        <script type="text/javascript">
-            var data = $.parseJSON('{{stats|js}}')
-            var orderList = $.parseJSON('{{order|js}}')
-            order_l = orderList.length 
-            for (let i=0; i< order_l; i++) {
-                 $('#outside_top30_row').append('<td>' + data[orderList[i]].outside_top30 + '</td>')
-                                }
-        </script>
-    </tr>
-
-    <tr id="minus_80_row">
-        <th>-80 Picks</th>
-        <td id="status_80"><span class="status">....</span></td>
-    </tr>
-    <tr id="plus_20_row">
-        <th>+20 Picks</th>
-        <td id="status_20"><span class="status">....</span></td>
-    </tr>
-    <tr id="at_risk">
-        <th>At Risk 
-            <a id="tt-risk" data-toggle="tooltip" title="FedEx Rank 20-30 >30"><i class="fa fa-info-circle" style="color:blue;"></i> </a></th>
-        <td id="status_at_risk"><span class="status">....</span></td>
-    </tr>
-    <tr id="onthe_verge">
-        <th>On the Verge</th>
-        <td id="status_verge"><span class="status">....</span></td>
-    </tr>
-    <tr>
-        <td colspan="12" style="background-color: lightblue;"></td>
-    </tr>
-    <tr id="into_top30">
-        <th>Player Moves into Top 30</th>
-        <td id="status_into_top30">calc<span class="status">....</span></td>
-    </tr>
-    <tr id="out_top30">
-        <th>Moves out of Top 30</th>
-        <td id="status_out_top30">calc<span class="status">....</span></td>
     </tr>
 
 </table>
 
 
-<script>
+<!-- <script>
 
 console.log('starting ')
 const pbs = picksByScore();
@@ -256,13 +222,41 @@ function inOut() {
 
 
 </script>
-<br>
-<br>
+ -->
 </div>
 <div id="detail_div" class="col">
     <h5 style="text-align:center;">Detail</h5>
     <table id="detail-table" class="table table-bordered table-sm">
-            <script type="text/javascript">
+        <thead>
+            <tr style="background-color: lightgray;">
+                <th>Golfer</th>
+                <th>FedEx Rank</th>
+                <th>SOY OWGR</th>
+                {%for k, v in display_dict.user_data.items%}
+                    <th>{{k|slice:"0:4"}}</th>
+                {%endfor%}
+            </tr>
+        </thead>
+        {%for golfer, data in display_dict.details.items%}
+            <tr>
+                <td>{{golfer}}</td>
+                <td>{{data.rank}}</td>
+                <td>{{data.soy_owgr}}</td>
+                {%for u, score in data.user_dict.items%}
+                    {%if score == -30%}
+                    <td style="color: blue;">{{score}}</td>
+                    {%elif score == -80%}
+                    <td style="color: green">{{score}}</td>
+                    {%elif score == 20%}
+                    <td style="color: red">{{score}}</td>
+                    {%else%}
+                    <td>{{score}}</td>
+                    {%endif%}
+                    
+                {%endfor%}
+            </tr>
+        {%endfor%}
+<!--             <script type="text/javascript">
                 header = document.createElement('thead')
                 header.style.backgroundColor = 'lightgray'
                 row = document.createElement('tr')
@@ -340,7 +334,7 @@ function inOut() {
         })
 
             </script>    
-        
+ -->        
 
     </table>
 </div>

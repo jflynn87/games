@@ -30,20 +30,7 @@ start = datetime.now()
 t = Tournament.objects.get(current=True)
 #sd = ScoreDict.objects.get(tournament=t)
 
-
-#espn = espn_api.ESPNData(t=t, data=sd.espn_api_data)
-espn = espn_api.ESPNData()
-
-#for f in Field.objects.filter(tournament=t):
-#    print (f, espn.get_thru(f.golfer.espn_number))
-
-
-print (espn.group_stats())
-
-for g in Group.objects.filter(tournament=t):
-    print (g.number, g.cut_count(espn_api_data=espn))
-print (datetime.now() - start)
-
+mail = fedex_email.send_summary_email()
 exit()
 
 
