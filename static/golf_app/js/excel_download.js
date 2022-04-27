@@ -144,11 +144,22 @@ $('#download_excel').html('Preparing Data...')
             row['sg_putting'] = golfer.fields.season_stats.putting.average
           }
           catch (e) {row['sg_putting'] = 'n/a'}
-  
-          row['t0'] = Object.values(golfer.fields.recent)[3].rank
-          row['t1'] = Object.values(golfer.fields.recent)[2].rank
-          row['t2'] = Object.values(golfer.fields.recent)[1].rank
-          row['t3'] = Object.values(golfer.fields.recent)[0].rank
+
+          try 
+            {row['t0'] = Object.values(golfer.fields.recent)[3].rank}
+          catch (e) {row['t0'] = 'error'}
+          
+          try
+            {row['t1'] = Object.values(golfer.fields.recent)[2].rank}
+          catch (e) {row['t1'] = 'error'}
+
+          try
+            {row['t2'] = Object.values(golfer.fields.recent)[1].rank}
+          catch (e) {row['t2'] = 'error'}
+
+          try 
+            {row['t3'] = Object.values(golfer.fields.recent)[0].rank}
+          catch (e) {row['t3'] = 'error'}
               
         fieldRows.push(row)
   

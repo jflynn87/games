@@ -624,7 +624,7 @@ class Golfer(models.Model):
         #print (self, d, datetime.now() - start)
         return d
 
-    def get_season_results(self, season=None, rerun=False, espn_api=None):
+    def get_season_results(self, season=None, rerun=False, espn_api=None, t_list=None):
         '''takes a golfer and an optional season object, returns a dict with only the updated data'''
         # fix so this runs from 2021 and beyond
         start = datetime.now()
@@ -635,7 +635,9 @@ class Golfer(models.Model):
             else:
                 season = Season.objects.get(season=str(int(curr_s.season)-1))
 
-        if self.results and not rerun:
+        if t_list:
+            tournaments=t_list
+        elif self.results and not rerun:
             tournaments = Tournament.objects.filter(season__season__gte='2021').exclude(pk__in=list(self.results.keys())).exclude(current=True).exclude(pga_tournament_num='468') #ryder cup
         else:
             tournaments = Tournament.objects.filter(season__season__gte='2021').exclude(current=True).exclude(pga_tournament_num='468')
@@ -644,7 +646,7 @@ class Golfer(models.Model):
         #print ('golfer results post t : ', self, datetime.now() - pre_t, tournaments)
         for t in tournaments:
             sd = ScoreDict.objects.get(tournament=t)
-            if not t.special_field():
+            if not t.special_field() or (t.season.season > 2021 and t.pga_tournament_num == '018'):
                 score = [v for k, v in sd.data.items() if k != 'info' and v.get('pga_num') == self.espn_number] 
                 if score:
                     rank = score[0].get('rank')
@@ -1302,13 +1304,62 @@ class ScoreDict(models.Model):
         from golf_app import scrape_espn
         sd = {}
         try:
-            espn = scrape_espn.ScrapeESPN(tournament=self.tournament, url='https://www.espn.com/golf/leaderboard?tournamentId=' + self.tournament.espn_t_num, setup=True)
-            sd = espn.get_data()
-            self.data = sd
-            self.save()        
+            if self.tournament.pga_tournament_num == '018':
+                data = build_zurich_data(self)
+                self.data = data
+                self.save()
+            else:
+                espn = scrape_espn.ScrapeESPN(tournament=self.tournament, url='https://www.espn.com/golf/leaderboard?tournamentId=' + self.tournament.espn_t_num, setup=True)
+                sd = espn.get_data()
+                self.data = sd
+                self.save()        
         except Exception as e:
             print ('update sd data exception: ', e)
         return (sd)
+
+
+def build_zurich_data(sd):
+    from golf_app import espn_api 
+    d = {}
+    espn = espn_api.ESPNData(t=sd.tournament, data=sd.espn_api_data)
+
+    d['info'] = {'round': espn.get_round(),
+                'source': 'espn',
+                'cut_num': espn.cut_num(),
+                'playoff': espn.playoff(),
+                'complete': espn.tournament_complete(),
+                'cut_line': espn.cut_line().get('cut_core'),
+                'round_status': espn.get_round_status()
+                }
+
+    for data in espn.field_data:
+        for r in data.get('roster'):
+            f = Field.objects.get(Q(golfer__espn_number=str(r.get('playerId'))) | Q(partner_golfer__espn_number=str(r.get('playerId'))), tournament=sd.tournament)
+            id = r.get('playerId')
+            d[r.get('athlete').get('displayName')] = {'pga_num': str(id),
+                                                      'r1': espn.get_round_score(id, 1),
+                                                      'r2': espn.get_round_score(id, 2),
+                                                      'r3': espn.get_round_score(id, 3),
+                                                      'r4': espn.get_round_score(id, 4),
+                                                      'rank': espn.get_rank(id),
+                                                      'thru': espn.get_thru(id),
+                                                      'group': f.group.number,
+                                                      'change': '',
+                                                      'handicap': f.handi,
+                                                      'round_score': '',
+                                                      'total_strokes': '',
+                                                      'total_score': espn.to_par(id)
+
+            
+            }
+
+    return d
+
+
+
+
+    
+
 
 class UserProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
@@ -1353,6 +1404,7 @@ class CountryPicks(models.Model):
     def get_flag(self):
         c = self.country.lower()
         return "https://a.espncdn.com/combiner/i?img=/i/teamlogos/countries/500/" + c + ".png&w=40&h=40&scale=crop"
+
 
 class FedExSeason(models.Model):
     season = models.ForeignKey(Season, on_delete=models.CASCADE)

@@ -26,9 +26,27 @@ import csv
 from rest_framework.request import Request
 from django.http import HttpRequest
 
+
 start = datetime.now()
+#sd = ScoreDict.objects.get(tournament__season__current=True, tournament__pga_tournament_num='018')
+#sd.update_sd_data()
+#exit()
+
 t = Tournament.objects.get(current=True)
-#sd = ScoreDict.objects.get(tournament=t)
+t_list = Tournament.objects.filter(season__current=True, pga_tournament_num='018')
+
+partners = list(Field.objects.filter(tournament__pga_tournament_num='018', tournament__season__current=True).values_list('partner_golfer__espn_number', flat=True))
+main = list(Field.objects.filter(tournament__pga_tournament_num='018', tournament__season__current=True).values_list('golfer__espn_number', flat=True))
+
+for g in Golfer.objects.filter(espn_number__in=partners):
+    g.get_season_results(season=t.season, rerun=True, t_list=t_list)
+
+for g in Golfer.objects.filter(espn_number__in=main):
+    g.get_season_results(season=t.season, rerun=True, t_list=t_list)
+
+exit()
+
+
 
 mail = fedex_email.send_summary_email()
 exit()
