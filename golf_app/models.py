@@ -675,10 +675,13 @@ class Golfer(models.Model):
             else:
                 rank = 'n/a'
 
-            self.results.update({t.pk: {'rank': rank,
+            res = self.results
+            #self.results.update({t.pk: {'rank': rank,
+            res.update({t.pk: {'rank': rank,
                                 't_name': t.name,
                                 'season': t.season.season
                 }})
+            self.results = res
 
 
         #self.results.update(data)
