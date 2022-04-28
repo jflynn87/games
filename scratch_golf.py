@@ -1,4 +1,5 @@
 import os
+
 os.environ.setdefault("DJANGO_SETTINGS_MODULE","gamesProj.settings")
 import django
 django.setup()
@@ -43,6 +44,14 @@ for g in Golfer.objects.filter(espn_number__in=partners):
 
 for g in Golfer.objects.filter(espn_number__in=main):
     g.get_season_results(season=t.season, rerun=True, t_list=t_list)
+
+g = Golfer.objects.get(espn_number='181')
+print (g.results)
+
+#sd = ScoreDict.objects.get(tournament__season__current=True, tournament__pga_tournament_num='018')
+
+#espn = espn_api.ESPNData(t=sd.tournament, data=sd.espn_api_data)
+#print (len(espn.field_data))
 
 exit()
 

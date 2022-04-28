@@ -1,7 +1,7 @@
 #from os import execv
 from django.core.exceptions import ImproperlyConfigured
 from django.db import models 
-from django.contrib.auth.models import Group, User
+from django.contrib.auth.models import User
 from django.conf import settings
 from django.db.models import Min, Q, Count, Sum, Max, fields
 from datetime import datetime
@@ -647,7 +647,9 @@ class Golfer(models.Model):
         for t in tournaments:
             sd = ScoreDict.objects.get(tournament=t)
             if not t.special_field() or (t.season.season > 2021 and t.pga_tournament_num == '018'):
+                print ('ZURICH', self)
                 score = [v for k, v in sd.data.items() if k != 'info' and v.get('pga_num') == self.espn_number] 
+                print (score[0].get('rank'))
                 if score:
                     rank = score[0].get('rank')
                 else:
