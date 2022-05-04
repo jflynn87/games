@@ -42,7 +42,7 @@ def send_summary_email():
     #print(msg)
     send_mail("Test Golf Game Update ",
     from_email = "jflynn87g.gmail.com",
-    #recipient_list = ['jflynn87@hotmail.com','jrc7825@gmail.com'],
+    #recipient_list = ['jflynn87@hotmail.com','jrc7825@gmail.com', 'ryosuke.aoki0406@gmail.com'],
     recipient_list = ['jflynn87@hotmail.com',],
     message = msg,
     html_message=msg,

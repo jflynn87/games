@@ -33,6 +33,7 @@ from rest_framework.generics import ListAPIView
 from django.core.mail import send_mail
 from django.core import serializers
 from collections import OrderedDict
+import numpy as np
 
 
 class FieldListView1(LoginRequiredMixin, TemplateView):
@@ -2662,7 +2663,6 @@ class SDStatusAPI(APIView):
         return JsonResponse(json.dumps(d), status=200, safe=False)
 
 
-
 class GetFieldAPI(APIView):
     def get(self, request, pk):
         
@@ -2709,6 +2709,7 @@ class GetGolfersOBJAPI(APIView):
         print ('GetGolferOBJAPI time: ', datetime.datetime.now() - start)
 
         return JsonResponse(json.dumps(d), status=200, safe=False)
+
 
 class StartedDataAPI(APIView):
     def get(self, request, pk):
@@ -2786,11 +2787,12 @@ class FedExSummaryEmail(TemplateView):
         b_api = FedExPicksByScore()
         by_score = dict(json.loads(b_api.get(b_r, season.pk).content))
         i_r = HttpRequest()
-        i_api = FedExInOutAPI()
-        in_out = dict(json.loads(i_api.get(i_r).content))
         
         display_dict = {}
         display_dict['user_data'] = json.loads(season.season.get_total_points())
+
+        i_api = FedExInOutAPI()
+        in_out = dict(json.loads(i_api.get(i_r, display_dict.get('user_data')).content))
 
         d_r = HttpRequest()
         d_api = FedExDetailAPI()
@@ -2817,7 +2819,80 @@ class FedExSummaryEmail(TemplateView):
         for k, v in detail.items():
             display_dict.get('details').update({k:v})
 
-        context.update({'display_dict': display_dict})
+        prior_tournaments = Tournament.objects.filter(season__current=True).exclude(current=True).order_by('pk')
+        last_t = prior_tournaments.last()
+        t = Tournament.objects.get(current=True)
+
+        t_3_ago = json.loads(prior_tournaments.reverse()[2].season.get_total_points(prior_tournaments.reverse()[2]))
+        t_5_ago = json.loads(prior_tournaments.reverse()[4].season.get_total_points(prior_tournaments.reverse()[4]))
+
+        #results = {}
+        prior_5 = Tournament.objects.filter(season__current=True).order_by('-pk')[:6]  #using 6 to include 5 old and the current
+
+        for u, data in t_5_ago.items():
+            y = []
+            for pt in [x for x in reversed(prior_5)]:
+                d = [x.get('diff') for k, x in json.loads(pt.season.get_total_points(pt)).items() if k== u]
+                y.append(d[0])
+    
+            coefficients, residuals, _, _, _ = np.polyfit(range(len(y)),y,1,full=True)
+            mse = residuals[0]/(len(y))
+            #print (max(y), min(y))
+            nrmse = np.sqrt(mse)/(max(y) - min(y))    
+
+            #print (coefficients, type(coefficients[0]))
+            if coefficients[0] < 0:
+                desc = 'Trending Down'
+            else:
+                desc = 'Trending Up'
+            #results[u.username] = {'slope': str(coefficients[0]), 'nrmse': str(nrmse), 'desc': desc}
+            #print('Slope ' + str(coefficients[0]))
+            #print('NRMSE: ' + str(nrmse))
+
+            c_total = [v.get('diff') for k, v in display_dict.get('user_data').items() if k == u][0]
+
+            display_dict.get('user_data').get(u).update({'trend':{
+                                                'current': c_total,
+                                                'five': int(c_total) - int([v.get('diff') for k, v in t_5_ago.items() if k == u][0]),
+                                                'three': int(c_total) - int([v.get('diff') for k, v in t_3_ago.items() if k == u][0]),
+                                                'slope': str(coefficients[0]),
+                                                'nrmse': str(nrmse),
+                                                'desc': desc
+                                                            }})
+            #print ('ccccc : ', u, c_total, int([v.get('diff') for k, v in t_5_ago.items() if k == u][0]))
+
+        d = json.loads(t.season.get_total_points())
+        last_d = json.loads(last_t.season.get_total_points(last_t))
+
+        current_wk_first = [k for k,v in d.items() if v.get('rank') == 1]
+        last_wk_first =  [k for k,v in last_d.items() if v.get('rank') == 1]
+
+        current_wk_second = [k for k,v in d.items() if v.get('rank') == 2]
+        last_wk_second = [k for k,v in last_d.items() if v.get('rank') == 2]
+
+        if len(current_wk_first) == 1 and len(last_wk_first) == 1:
+            if current_wk_first[0] != last_wk_first[0]:
+                msg1 = 'Congrats to ' + str(current_wk_first[0]) + 'for taking the overall lead. ' +   str(current_wk_second[0]) + ' leads the chasers, trailing by ' + \
+                    str([v.get('total') for v in d.values() if v.get('rank') == 1][0] - [v.get('total') for v in d.values() if v.get('rank') == 2][0]) 
+                    
+            elif [v.get('total') for v in d.values() if v.get('rank') == 1][0] - [v.get('total') for v in last_d.values() if v.get('rank') == 2][0] < 100:
+                msg1 = str(current_wk_first[0]) + ' remains in first, a tight race with ' + str(current_wk_second[0]) + ' only ' + \
+                    str([v.get('total') for v in d.values() if v.get('rank') == 1][0] - [v.get('total') for v in d.values() if v.get('rank') == 2][0]) + \
+                    ' points behind.'
+            elif [v.get('total') for v in d.values() if v.get('rank') == 1][0] - [v.get('total') for v in last_d.values() if v.get('rank') == 2][0] < 100:
+                msg1 = str(current_wk_first[0]) + 'remains in first with a solid lead of ' + str(current_wk_second[0]) + ' points over ' + \
+                    str([v.get('total') for v in d.values() if v.get('rank') == 1][0] - [v.get('total') for v in d.values() if v.get('rank') == 2][0]) + \
+                    '.'
+
+        sched = espn_schedule.ESPNSchedule()
+
+        context.update({'display_dict': display_dict, 
+                        'last_t': last_t,
+                        'msg1': msg1,
+                        'complete': sched.complete_events(),
+                        'remaining': sched.remaining_events()
+
+        })
         
         print ('fedex summary context duration', datetime.datetime.now() - start)
         return context
@@ -2850,8 +2925,6 @@ def fedEx_summary_context_data(user=None, pk=None):
         return d
 
 
-
-
 class FedExPicksByScore(APIView):
     def get(self, request, pk):
         
@@ -2876,7 +2949,7 @@ class FedExPicksByScore(APIView):
 
 
 class FedExInOutAPI(APIView):
-    def get(self, request):
+    def get(self, request, user_order=None):
         
         start = datetime.datetime.now()
         t = Tournament.objects.get(current=True)
@@ -2896,6 +2969,23 @@ class FedExInOutAPI(APIView):
             #             d.get('out_top30').update({p.pick.golfer.golfer_name: list(FedExPicks.objects.filter(pick__season__season__current=True, pick__golfer=p.pick.golfer).values_list('user__username', flat=True))})
             d.get('into_top30').update({k:v for k,v in t.fedex_data.items() if k != 'player_points' and int(v.get('rank')) < 31 and (v.get('last_week_rank') != '' and int(v.get('last_week_rank')) >30)})
             d.get('out_top30').update({k:v for k,v in t.fedex_data.items() if k != 'player_points' and int(v.get('rank')) > 30 and (v.get('last_week_rank') != '' and int(v.get('last_week_rank')) < 31)})
+
+            for k,v in d.get('into_top30').items():
+                d.get('into_top30').get(k).update({'picks': {}})
+                for u, data in user_order.items():
+                    if FedExPicks.objects.filter(pick__golfer__golfer_name=k, user__username=u).exists():
+                        d.get('into_top30').get(k).get('picks').update({u: True})
+                    else:
+                        d.get('into_top30').get(k).get('picks').update({u: False})
+
+            for k,v in d.get('out_top30').items():
+                d.get('out_top30').get(k).update({'picks': {}})
+                for u, data in user_order.items():
+                    if FedExPicks.objects.filter(pick__golfer__golfer_name=k, user__username=u).exists():
+                        d.get('out_top30').get(k).get('picks').update({u: True})
+                    else:
+                        d.get('out_top30').get(k).get('picks').update({u: False})
+
         except Exception as e:
             print ('FedExInOutAPI error: ', e)
             d['error'] = {'msg': str(e)}

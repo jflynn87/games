@@ -643,13 +643,13 @@ class Golfer(models.Model):
             tournaments = Tournament.objects.filter(season__season__gte='2021').exclude(current=True).exclude(pga_tournament_num='468')
             self.results = {}
         
+        # print ('Updating golfer results: ', self)
         #print ('golfer results post t : ', self, datetime.now() - pre_t, tournaments)
         for t in tournaments:
             sd = ScoreDict.objects.get(tournament=t)
             if not t.special_field() or (t.season.season > 2021 and t.pga_tournament_num == '018'):
-                print ('ZURICH', self)
                 score = [v for k, v in sd.data.items() if k != 'info' and v.get('pga_num') == self.espn_number] 
-                print (score[0].get('rank'))
+                #print (score[0].get('rank'))
                 if score:
                     rank = score[0].get('rank')
                 else:
@@ -876,7 +876,7 @@ class Field(models.Model):
                 else:
                     data.update({t.pk:{'name': t.name, 'rank': 'DNP'}})
         except Exception as e:
-            print ('recent results exception', e, self, self.golfer.golfer_pga_num)
+            print ('recent results exception', e, t, self, self.golfer.golfer_pga_num)
             data.update({t.pk:{'name': t.name, 'rank': 'DNP'}})
         #print ('recent results: ', self, datetime.now() - start)
         return data

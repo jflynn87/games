@@ -21,16 +21,17 @@ class ESPNSchedule(object):
         url = 'https://www.espn.com/golf/schedule/_/season/2022/tour/pga?_xhr=pageContent'
         self.schedule = get(url, headers=headers).json()
 
-
+        self.events_to_exclude = ['The Match', 'Corales Puntacana Championship', 'Puerto Rico Open', 'Barracuda Championship', 'Barbasol Championship']
 
     def get_event_list(self):
         d = {}
         for event in self.schedule.get('events'):
-            d[event.get('name')] = {
-                            'start_date': datetime.strptime(event.get('startDate')[:-1], '%Y-%m-%dT%H:%M').strftime('%Y-%m-%d'),
-                            'status': event.get('status'),
-                            'link': event.get('link')
-                            }
+            if event.get('name') not in self.events_to_exclude: 
+                d[event.get('name')] = {
+                                'start_date': datetime.strptime(event.get('startDate')[:-1], '%Y-%m-%dT%H:%M').strftime('%Y-%m-%d'),
+                                'status': event.get('status'),
+                                'link': event.get('link')
+                                }
 
         return d
 
@@ -45,4 +46,10 @@ class ESPNSchedule(object):
                     and  datetime.strptime(v.get('startDate')[:-1], '%Y-%m-%dT%H:%M') < end_date]
         return event
 
-    
+    def complete_events(self):
+        print ({k for k,v in self.get_event_list().items() if v.get('status') == 'post'})
+        return len([v for k,v in self.get_event_list().items() if v.get('status') == 'post'])
+
+    def remaining_events(self):
+        print ({k for k,v in self.get_event_list().items() if v.get('status') == 'pre'})
+        return len([v for k,v in self.get_event_list().items() if v.get('status') == 'pre'])

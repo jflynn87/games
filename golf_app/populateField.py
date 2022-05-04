@@ -787,13 +787,28 @@ def get_fedex_data(tournament):
 
 def get_golfer(player, pga_num=None, espn_data=None, espn_num=None):
     '''takes a pga_num string, returns a golfer object.  creates golfer if it doesnt exist'''
-    if not pga_num:
-        pga_num = player
-    golfer, created = Golfer.objects.get_or_create(golfer_pga_num=pga_num)
-    golfer.golfer_name = player
-    golfer.pic_link = golfer.get_pic_link()
+    #player is the golfer name
+    if pga_num and Golfer.objects.filter(golfer_pga_num=pga_num).exists():
+        golfer = Golfer.objects.get(golfer_pga_num=pga_num)
+    elif Golfer.objects.filter(golfer_name=player, golfer_pga_num__in=['', None]).exists():
+        golfer = Golfer.objects.get(golfer_name=player, golfer_pga_num__in=['', None])
+        golfer.golfer_pga_num = pga_num
+        golfer.save()
+    else:
+        g = Golfer()
+        g.golfer_pga_num=pga_num
+        g.golfer_name = player
+        g.save()
+        golfer = g
+    
+    if golfer.pic_link in [' ', None]:
+        golfer.pic_link = golfer.get_pic_link()
+        golfer.save()
+
     if golfer.flag_link in [' ', None]:
         golfer.flag_link = golfer.get_flag()
+        golfer.save()
+
     if espn_num:
         golfer.espn_num = espn_num
     elif golfer.espn_number in [' ', None] and espn_data:

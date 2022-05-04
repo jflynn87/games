@@ -26,28 +26,59 @@ from pprint import pprint
 import csv
 from rest_framework.request import Request
 from django.http import HttpRequest
+import numpy as np
 
 
 start = datetime.now()
 #sd = ScoreDict.objects.get(tournament__season__current=True, tournament__pga_tournament_num='018')
 #sd.update_sd_data()
 #exit()
+#mail = fedex_email.send_summary_email()
+#exit()
+
+no_pga_num = Golfer.objects.filter(golfer_pga_num__in=['', None])
+
+for g in no_pga_num:
+    names = Golfer.objects.filter(golfer_name=g.golfer_name)
+    if len(names) > 1:
+        bad = names.get(golfer_name=g.golfer_name, golfer_pga_num__in=['', None])
+        g = names.filter(golfer_name=g.golfer_name).exclude(golfer_pga_num__in=['', None])
+        if len(g) < 2:
+            good = g[0]
+        print ('good: ', good)
+        print ('bad: ', bad)
+ 
+        bad_field = Field.objects.filter(golfer=bad)
+        for f in bad_field:
+            f.golfer=good
+            f.save()
+        
+        print ('bad after update: ', Field.objects.filter(golfer=bad))
+        print ('good after update: ', Field.objects.filter(golfer=good))
+
+        print ('deleting bad golfer: ', bad)
+        bad.delete()
+
+        #print (n, Field.objects.filter(golfer=n).values('tournament__name', 'tournament__season__season', 'playerID'))
+#for f in Field.objects.filter(playerName='Ben Griffin'):
+#    print (f.playerName, f.tournament, f.tournament.season, f.golfer)
 
 t = Tournament.objects.get(current=True)
-t_list = Tournament.objects.filter(season__current=True, pga_tournament_num='018')
+#t_list = Tournament.objects.filter(season__current=True, pga_tournament_num='018')
 
 partners = list(Field.objects.filter(tournament__pga_tournament_num='018', tournament__season__current=True).values_list('partner_golfer__espn_number', flat=True))
 main = list(Field.objects.filter(tournament__pga_tournament_num='018', tournament__season__current=True).values_list('golfer__espn_number', flat=True))
 
 for g in Golfer.objects.filter(espn_number__in=partners):
-    g.get_season_results(season=t.season, rerun=True, t_list=t_list)
+    g.get_season_results(season=t.season, rerun=True)
 
 for g in Golfer.objects.filter(espn_number__in=main):
-    g.get_season_results(season=t.season, rerun=True, t_list=t_list)
+    g.get_season_results(season=t.season, rerun=True)
 
 g = Golfer.objects.get(espn_number='181')
 print (g.results)
 
+print (datetime.now() - start)
 #sd = ScoreDict.objects.get(tournament__season__current=True, tournament__pga_tournament_num='018')
 
 #espn = espn_api.ESPNData(t=sd.tournament, data=sd.espn_api_data)
@@ -57,8 +88,6 @@ exit()
 
 
 
-mail = fedex_email.send_summary_email()
-exit()
 
 
 r = HttpRequest()
