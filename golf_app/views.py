@@ -2594,6 +2594,12 @@ class UpdateGolferResultsAPI(APIView):
         start = datetime.datetime.now()
         d = {}
  
+        newest_g = Golfer.objects.all().last()
+        
+        if newest_g.pk - max_key < 25: 
+            print ('NEW golfers adding to max key', newest_g)
+            max_key = newest_g.pk
+
         try:
             for g in Golfer.objects.filter(pk__gte=min_key, pk__lte=max_key):
                 g.results = g.get_season_results()
