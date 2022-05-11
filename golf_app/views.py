@@ -436,7 +436,7 @@ def setup(request):
 
             if pga_t_num == t.pga_tournament_num:
                 first_field = Field.objects.filter(tournament=t).first().pk
-                last_field = Field.objects.filter(tournament=t).last().pk
+                last_field = Field.objects.filter(tournament=t).latest('pk').pk
             else:
                 first_field = 0
                 last_field = 0

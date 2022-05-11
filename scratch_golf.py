@@ -37,8 +37,8 @@ start = datetime.now()
 
 t = Tournament.objects.get(current=True)
 
-max = Field.objects.filter(tournament=t).last()
-
+max = Field.objects.filter(tournament=t).latest('pk')
+print (max.pk)
 print (max, max.recent)
 print (max.season_stats)
 
