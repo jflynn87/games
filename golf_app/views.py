@@ -433,6 +433,13 @@ def setup(request):
                 data = json.loads(field_json_url.read().decode())
 
             pga_t_num = data.get('tid')
+
+            if pga_t_num == t.pga_tournament_num:
+                first_field = Field.objects.filter(tournament=t).first().pk
+                last_field = Field.objects.filter(tournament=t).last().pk
+            else:
+                first_field = 0
+                last_field = 0
             
             try:
                 espn_data = espn_schedule.ESPNSchedule()
@@ -457,8 +464,9 @@ def setup(request):
                                                             'pga_t_num': pga_t_num,
                                                             'first_golfer': Golfer.objects.first(),
                                                             'last_golfer': Golfer.objects.last(),
-                                                            'first_field': Field.objects.filter(tournament=t).first(),
-                                                            'last_field': Field.objects.filter(tournament=t).last(),})
+                                                            'first_field': first_field,
+                                                            'last_field': last_field,
+                            })
         else:
            return HttpResponse('Not Authorized')
     #moving this to separate API functinos to break apart 
@@ -2555,7 +2563,7 @@ class FieldUpdatesAPI(APIView):
 
             #for f in Field.objects.filter(tournament=t):
             for f in Field.objects.filter(pk__gte=min_key, pk__lte=max_key):
-                print ('udpating field: ', f)
+                #print ('udpating field: ', f)
                 if t.pga_tournament_num not in ['470', '018']:
                     f.handi = f.handicap()
                 else:

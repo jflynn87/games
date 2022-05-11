@@ -36,11 +36,11 @@ start = datetime.now()
 #print (t)
 
 t = Tournament.objects.get(current=True)
-stats = populateField.get_individual_stats()
-fedex = populateField.get_fedex_data(t)
 
-print (len(t.individual_stats))
-print (len(t.fedex_data))
+max = Field.objects.filter(tournament=t).last()
+
+print (max, max.recent)
+print (max.season_stats)
 
 exit()
 
