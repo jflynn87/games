@@ -484,6 +484,11 @@ def create_field(field, tournament):
             group_num += 1
             player_cnt = 1
 
+    # doing here to save this data before updating the field by field records
+    fed_ex = get_fedex_data(tournament)
+    individual_stats = get_individual_stats()
+
+
     #need to do this after full field is saved for the calcs to work.  No h/c in MP
     # Move to separate functions for performance
     # fed_ex = get_fedex_data(tournament)
@@ -721,9 +726,15 @@ def create_ryder_cup_field(field, tournament):
     print ('saved Ryder Cup field objects')
 
 
-def get_individual_stats():
+def get_individual_stats(t=None):
     start = datetime.datetime.now()
     d = {}
+
+    if not t:
+        t= Tournament.objects.get(current=True)
+
+    if t.individual_stats and len(t.individual_stats) > 0:
+        return t.individual_stats
     for stat in StatLinks.objects.all():
         print (stat.link)
         try: 
@@ -752,6 +763,9 @@ def get_individual_stats():
                                                                         #'measured_rounds': row.find_all('td')[6].text
                                                                         }})
 
+            t.individual_stats = d
+            t.save()
+
         except Exception as e:
             print ('get_individual_stats exception ', stat.link, e)
     print ('individual stats calc duraion: ', datetime.datetime.now() - start)
@@ -759,6 +773,9 @@ def get_individual_stats():
 
 
 def get_fedex_data(tournament):
+    if tournament.fedex_data and len(tournament.fedex_data) > 0:
+        return tournament.fedex_data
+
     data = {}
     try:
         link = 'https://www.pgatour.com/fedexcup/official-standings.html'

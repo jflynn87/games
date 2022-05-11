@@ -456,7 +456,9 @@ def setup(request):
                                                             'espn_t_num': espn_t_num,
                                                             'pga_t_num': pga_t_num,
                                                             'first_golfer': Golfer.objects.first(),
-                                                            'last_golfer': Golfer.objects.last()})
+                                                            'last_golfer': Golfer.objects.last(),
+                                                            'first_field': Field.objects.filter(tournament=t).first(),
+                                                            'last_field': Field.objects.filter(tournament=t).last(),})
         else:
            return HttpResponse('Not Authorized')
     #moving this to separate API functinos to break apart 
@@ -2542,8 +2544,8 @@ class BuildFieldAPI(APIView):
 
 
 class FieldUpdatesAPI(APIView):
-    def get(self, request):
-        print ('updateing field data')
+    def get(self, request, min_key, max_key):
+        print ('updateing field data: ', min_key, '  ', max_key)
         start = datetime.datetime.now()
         t = Tournament.objects.get(current=True)
         d = {}
@@ -2551,7 +2553,9 @@ class FieldUpdatesAPI(APIView):
             fed_ex = populateField.get_fedex_data(t)
             individual_stats = populateField.get_individual_stats()
 
-            for f in Field.objects.filter(tournament=t):
+            #for f in Field.objects.filter(tournament=t):
+            for f in Field.objects.filter(pk__gte=min_key, pk__lte=max_key):
+                print ('udpating field: ', f)
                 if t.pga_tournament_num not in ['470', '018']:
                     f.handi = f.handicap()
                 else:
@@ -2576,10 +2580,10 @@ class FieldUpdatesAPI(APIView):
                     for k, v in player_s.items():
                         if k != 'pga_num':
                             f.season_stats.update({k: v})
-
+                print ('saving field: ', f)
                 f.save()
 
-            d['status'] = {'msg': 'Updated Field Complete'}
+            d['status'] = {'msg': 'Updated Field Records: ' + str(Field.objects.get(pk=min_key)) + str(Field.objects.get(pk=max_key))}
         except Exception as e:
             print ('Update Field API error: ', e)
             d['error'] = {'msg': str(e)}

@@ -147,6 +147,7 @@ class Tournament(models.Model):
     auction = models.BooleanField(default=False)
     fedex_data = models.JSONField(null=True, blank=True)
     round_data = models.JSONField(null=True, blank=True)
+    individual_stats = models.JSONField(null=True, blank=True)
 
 
     class Meta():

@@ -36,6 +36,13 @@ start = datetime.now()
 #print (t)
 
 t = Tournament.objects.get(current=True)
+stats = populateField.get_individual_stats()
+fedex = populateField.get_fedex_data(t)
+
+print (len(t.individual_stats))
+print (len(t.fedex_data))
+
+exit()
 
 for g in Group.objects.filter(tournament=t):
     r = HttpRequest()
