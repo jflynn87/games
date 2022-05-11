@@ -99,6 +99,14 @@ class Season(models.Model):
                                     
             return json.dumps(sorted_dict)
 
+    def regular_prize(self):
+        return 30
+
+    def major_prize(self):
+        return 100
+
+    def major_count(self):
+        return 4
 
         # 11/30/2021  - yes for the chart - changed above
         # else:
@@ -1531,12 +1539,50 @@ class FedExSeason(models.Model):
             t = Tournament.objects.get(current=True)
 
         picks = list(FedExPicks.objects.filter(pick__season__season__current=True, user=user).values_list('pick__golfer__golfer_name', flat=True))
-        at_risk = len([x.get('rank') for k, x in t.fedex_data.items() if k in picks and int(x.get('rank')) >= 20 and int(x.get('rank')) < 31])
-        onthe_verge = len([x.get('rank') for k, x in t.fedex_data.items() if k in picks and int(x.get('rank')) >= 31 and int(x.get('rank')) < 75])
+        #at_risk = len([x.get('rank') for k, x in t.fedex_data.items() if k in picks and int(x.get('rank')) >= 20 and int(x.get('rank')) < 31])
+        at_risk = {k:x.get('rank') for k, x in t.fedex_data.items() if k in picks and int(x.get('rank')) >= 20 and int(x.get('rank')) < 31}
+        #onthe_verge = len([x.get('rank') for k, x in t.fedex_data.items() if k in picks and int(x.get('rank')) >= 31 and int(x.get('rank')) < 51])
+        otv_data = {k:v for k, v in t.fedex_data.items() if k in picks and int(v.get('rank')) >= 31 and int(v.get('rank')) < 51}
+        top_70 = {k:x.get('rank') for k, x in t.fedex_data.items() if k in picks and int(x.get('rank')) >= 51 and int(x.get('rank')) < 71}
 
-        d['at_risk'] = at_risk
-        d['onthe_verge'] = onthe_verge
-       
+        d['at_risk'] = len(at_risk)
+        d['onthe_verge'] = len(otv_data)
+        d['top_70'] = len(top_70)
+
+
+        at_risk_potential_score = 0
+        for k,v in at_risk.items():
+            p = FedExPicks.objects.get(user=user, pick__golfer__golfer_name=k)
+            if p.pick.soy_owgr > 30:
+                at_risk_potential_score += 80
+            elif p.pick.soy_owgr < 30:
+                at_risk_potential_score += 30
+
+        d['at_risk_potential'] = at_risk_potential_score
+
+
+        potential_score = 0
+        for k,v in otv_data.items():
+            p = FedExPicks.objects.get(user=user, pick__golfer__golfer_name=k)
+            if p.pick.soy_owgr > 30:
+                potential_score += 80
+            elif p.pick.soy_owgr < 30:
+                potential_score += 30
+
+        d['otv_potential'] = potential_score
+
+        top70_potential_score = 0
+        for k,v in top_70.items():
+            p = FedExPicks.objects.get(user=user, pick__golfer__golfer_name=k)
+            if p.pick.soy_owgr > 30:
+                top70_potential_score += 80
+            elif p.pick.soy_owgr < 30:
+                top70_potential_score += 30
+
+        d['otv_potential'] = potential_score
+        d['top70_potential'] = top70_potential_score
+
+
         #print (datetime.now() - start)
         return d
 
@@ -1608,7 +1654,36 @@ class FedExPicks(models.Model):
         self.score = score
         self.save()
         return score
-            
+
+
+    def potential_score(self, fedex=None):
+        '''takes a picks returns an int'''
+        if not fedex:
+            fedex = self.pick.season.current_fedex_data()
+        #rank_data = utils.fix_name(self.pick.golfer.golfer_name, fedex)
+        score = 0
+        #print (rank_data) 
+        # if rank_data[0]:
+        #     rank = int(rank_data[1].get('rank'))
+        #     if rank < 31 and self.pick.soy_owgr < 31:
+        #         score = -30
+        #     elif rank < 31 and self.pick.soy_owgr > 30:
+        #         score = -80
+        #     elif rank >= 31 and self.pick.soy_owgr <= 30:
+        #         score = 20
+        #     else:
+        #         score = 0
+        # else:
+        #     if self.pick.soy_owgr < 30:
+        #         score = 20
+        #     #else:
+        #     #    score = 0
+        
+        # self.score = score
+        # self.save()
+        return score
+
+
 
 class Round(models.Model):
     tournament = models.ForeignKey(Tournament, on_delete=models.CASCADE)

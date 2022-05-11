@@ -1,0 +1,20 @@
+{%extends 'golf_app/golf_app_base.html'%}
+{%load golf_extras%}
+{%load static%}
+
+{%block body_block%}
+
+<h2>{{t.name}} Trends </h2>
+
+<script type="text/javascript">
+    console.log('connected')
+    var groups = '{{groups}}'
+    console.log(groups)
+    for (i=0; i < groups.length; i++) {
+        console.log(groups[i])
+    }
+    
+
+</script>
+
+{%endblock%}

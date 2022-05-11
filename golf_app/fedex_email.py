@@ -6,7 +6,7 @@ from django.core.mail import send_mail
 from django.template.loader import get_template
 from requests import request
 #from golf_app.views import fedEx_summary_context_data as fedex_data
-from golf_app.views import FedExSummaryEmail
+
 from django.conf import settings
 from django.template.loader import render_to_string
 from django.template import Template, Context
@@ -22,7 +22,9 @@ import time
 
 
 
-def send_summary_email():
+def send_summary_email(dist):
+    '''takes a list of email addresses, returns nothing'''
+    from golf_app.views import FedExSummaryEmail
     start = datetime.now()
     req = HttpRequest()
     context = FedExSummaryEmail().get_context_data()
@@ -40,10 +42,11 @@ def send_summary_email():
     
     
     #print(msg)
-    send_mail("Test Golf Game Update ",
+    send_mail("Weekly Golf Game Update ",
     from_email = "jflynn87g.gmail.com",
     #recipient_list = ['jflynn87@hotmail.com','jrc7825@gmail.com', 'ryosuke.aoki0406@gmail.com'],
-    recipient_list = ['jflynn87@hotmail.com',],
+    #recipient_list = ['jflynn87@hotmail.com',],
+    recipient_list = dist,
     message = msg,
     html_message=msg,
      )

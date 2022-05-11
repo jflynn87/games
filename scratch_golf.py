@@ -27,9 +27,203 @@ import csv
 from rest_framework.request import Request
 from django.http import HttpRequest
 import numpy as np
+import pytz
 
 
 start = datetime.now()
+#t = Tournament.objects.exclude(current=True).last()
+#sd = ScoreDict.objects.get(tournament=t)
+#print (t)
+
+t = Tournament.objects.get(current=True)
+
+for g in Group.objects.filter(tournament=t):
+    r = HttpRequest()
+    s = views.TrendsAPI().get(r, pk=t.pk, group=g.number)
+
+    print (g)
+    d = {k:v for k,v in json.loads(s.content).items() if v.get('slope') != 'not available'}
+    sorted_slopes = dict(sorted(d.items(), key=lambda x: x[1]['sum']))
+    for k,v in sorted_slopes.items():
+        print(k,v)
+
+exit()
+
+
+
+
+right_picks = 0
+d = {}
+for t in Tournament.objects.filter(season__current=True).exclude(current=True).order_by('pk'):
+    if t.special_field():
+        continue
+    sd = ScoreDict.objects.get(tournament=t)
+    print ('-------------------------------------------')
+    print (t)
+    try:
+        espn = espn_api.ESPNData(t=t, data=sd.espn_api_data)
+    except Exception as e: 
+        print ('skipping; ', t)
+        continue
+    
+    d[t.pk] = {'name': t.name}
+    big = espn.group_stats()
+
+    for g in Group.objects.filter(tournament=t):
+        r = HttpRequest()
+        s = views.TrendsAPI().get(r, pk=t.pk, group=g)
+        if len([v.get('slope') for k,v in json.loads(s.content).items() if v.get('group') == g.number and v.get('slope') != 'not available']) >0:
+            ss = {k:v for k,v in json.loads(s.content).items() if v.get('group') == g.number and v.get('slope') != 'not available'}
+            sorted_slopes = dict(sorted(ss.items(), key=lambda x: x[1]['slope']))
+            min_golfer = list(sorted_slopes.items())[0][1]
+           
+            big_espn_nums = [x.get('golfer_espn_nums') for k, x in big.items() if int(k) == g.number]
+            
+            if min_golfer.get('espn_num') in [x.get('golfer_espn_nums') for k,x in big.items() if int(k) == g.number][0]:
+                right_picks +=1
+
+            scoredtl = ScoreDetails.objects.filter(user__pk=1, pick__playerName__group=g)[0]
+            d.get(t.pk).update({    'group-' + str(g.number): {
+                                    #'s_golfer': [x.get('golfer') for k,x in min_golfer.items()][0],
+                                    's_rank': [v.get('rank') for k,v in sd.data.items() if k != 'info' and v.get('pga_num') == min_golfer.get('espn_num')][0],
+                                    's_golfer': min_golfer.get('golfer'),
+                                    'pick': scoredtl.pick.playerName.playerName,
+                                    'pick_score': scoredtl.gross_score,
+                                    'big_golfers': [x.get('golfers') for k,x in big.items() if int(k) == g.number],
+                                    'big_slope': [x.get('slope') for k, x in json.loads(s.content).items() if int(x.get('group')) == g.number and  x.get('espn_num') in big_espn_nums[0]],
+                                    'big_rank': espn.get_rank(str([x.get('golfer_espn_nums')[0] for k,x in big.items() if int(k) == g.number][0]))
+            }})
+            
+            #print ('sorted: ', sorted(json.loads(s.content).items(), key=lambda x: x[1]['slope']))
+            if g.num_of_picks() > 1:
+                second_golfer = list(sorted_slopes.items())[1][1]
+               
+                d.get(t.pk).update({'group-' + str(g.number) + '-A': {
+                                    's_rank': [v.get('rank') for k,v in sd.data.items() if k != 'info' and v.get('pga_num') == second_golfer.get('espn_num')][0],
+                                    's_golfer': second_golfer.get('golfer'),
+                                    'pick': ScoreDetails.objects.filter(user__pk=1, pick__playerName__group=g)[1].pick.playerName.playerName,
+                                    'pick_score': ScoreDetails.objects.filter(user__pk=1, pick__playerName__group=g)[1].gross_score,
+                                    'big_golfers': [x.get('golfers') for k,x in big.items() if int(k) == g.number],
+                                    'big_slope': [x.get('slope') for k, x in json.loads(s.content).items() if int(x.get('group')) == g.number and  x.get('espn_num') in big_espn_nums[0]],
+                                    'big_rank': espn.get_rank(str([x.get('golfer_espn_nums')[0] for k,x in big.items() if int(k) == g.number][0]))
+                }})
+                #print ([x.get('golfer_espn_nums') for k,x in big.items() if int(k) == g.number])
+                #print ([x for x in second_golfer.get('espn_num')])
+                if second_golfer.get('espn_num') in [x.get('golfer_espn_nums') for k,x in big.items() if int(k) == g.number][0]:
+                    right_picks +=1
+            
+
+        else:
+            print ('not enough results for any golfer, skipping')
+
+print (d)
+print ('MATCHES: ', right_picks)
+
+## comment above to just run report
+with open('trends.json', 'w') as convert_file:
+     convert_file.write(json.dumps(d))
+
+
+with open('trends.json') as json_file:
+    data = json.load(json_file)
+
+for t in Tournament.objects.filter(season__current=True).exclude(current=True):
+    print ('--------------- ', t , ' --------------------')
+    try:
+        d = [v for k,v in data.items() if int(k) == t.pk][0]
+    except Exception as e:
+        continue
+    
+
+    slope = 0
+    big = 0 
+    mine = 0
+
+    for k, v in d.items():
+        #print (k, v)
+        if k != 'name':
+            if v.get('s_rank') in t.not_playing_list():
+                sd = ScoreDict.objects.get(tournament=t)
+                slope += int(sd.data.get('info').get('cut_num'))
+            else: 
+                slope += int(utils.formatRank(v.get('s_rank')))
+            big += int(utils.formatRank(v.get('big_rank')))
+            mine += int(utils.formatRank(v.get('pick_score')))
+
+    print ('slope: ', slope)
+    print ('mine: ', mine)
+    print ('big: ', big)
+
+
+print (datetime.now() - start)        
+exit()
+
+#s = FedExSeason.objects.get(season__current=True)
+
+#print (s.picks_at_risk(u))
+#t = Tournament.objects.get(current=True)
+#sd = ScoreDict.objects.get(tournament=t)
+#espn = espn_api.ESPNData(t=t, data=sd.espn_api_data)
+
+utc = pytz.utc
+est = pytz.timezone('US/Eastern')
+
+for g in Group.objects.filter(tournament__current=True):
+    print ("Group " + str(g.number))
+    for f in Field.objects.filter(tournament__current=True, group=g):
+        res_list = []
+        res = {k:v for k,v in f.golfer.results.items() if v.get('season') == 2022 and v.get('rank') != 'n/a'}
+        for k, v in res.items():
+            if v.get('rank') in ['CUT', 'WD', 'DQ']:
+                t = Tournament.objects.get(pk=k)
+                sd = ScoreDict.objects.get(tournament=t)
+                #espn = espn_api.ESPNData(t=t, data=sd.espn_api_data)
+                #r_list.append(espn.cut_num())
+                res_list.append(sd.data.get('info').get('cut_num'))
+            else:
+                res_list.append(utils.formatRank(v.get('rank')))
+        
+        #y  = res_list
+        if len(res_list) < 6:
+            print (f, 'Not enough data ', res_list)
+        else:            
+            y = res_list[-6:]
+            #y = [12,9,6,3,2,1]
+        
+            coefficients, residuals, _, _, _ = np.polyfit(range(len(y)),y,1,full=True)
+            mse = residuals[0]/(len(y))
+            nrmse = np.sqrt(mse)/(max(y) - min(y))    
+
+            if coefficients[0] < 0:
+                desc = 'Trending Down'
+            else:
+                desc = 'Trending Up'
+
+            print (f, coefficients[0], desc, y)
+
+        
+print (datetime.now() - start)
+
+
+
+exit()
+
+r = HttpRequest()
+s = views.FedExSummaryEmail().get_context_data()
+
+#print (s.get('display_dict').get('user_data'))
+print ('-----------------------------------------')
+slopes = {k:v.get('trend').get('slope') for k,v in s.get('display_dict').get('user_data').items()}
+
+best_slopes = sorted(slopes.items(), key=lambda x: x[1])[-2:]
+
+print (best_slopes, type(best_slopes))
+print (best_slopes[0][0], best_slopes[1][0])
+
+#print (json.loads(s.get(r, 1).content))
+
+exit()
+
 #sd = ScoreDict.objects.get(tournament__season__current=True, tournament__pga_tournament_num='018')
 #sd.update_sd_data()
 #exit()

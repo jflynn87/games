@@ -88,6 +88,8 @@ urlpatterns= [
     path('fedex_picks_by_score/<int:pk>', views.FedExPicksByScore.as_view(), name='fedex_picks_by_score'),
     path('fedex_in_out/', views.FedExInOutAPI.as_view(), name='fedex_in_out'),
     path('fedex_detail_api/<int:pk>', views.FedExDetailAPI.as_view(), name='fedex_detail_api'),
-    
+    path('fedex_send_summary_email_api/<str:option>', views.SendFedExEmail.as_view(), name='fedex_send_sumary_email_api'),
+    path('trends_view/', views.TrendsView.as_view(), name='trends_view'),
+    path('trends_api/<int:pk>/<int:group>', views.TrendsAPI.as_view(), name='trends_api'),
 
 ]

@@ -146,3 +146,18 @@ function summaryStats() {
 })
 
 }
+
+function emailReport(dist) {
+      fetch("/golf_app/fedex_send_summary_email_api/" + dist, 
+      {method: "GET",
+      }
+            )
+      .then((response) => response.json())
+      .then((responseJSON) => {
+            data = responseJSON
+            console.log('email: ', data)
+ 
+            
+  })
+  
+}
