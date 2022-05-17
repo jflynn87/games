@@ -56,14 +56,23 @@ function buildField() {
 
 function fieldUpdates() {
 return new Promise(function (resolve,reject) {
-      $('#field_stats_update_status').text('Updating....')
-      var firstField = Number($('#first_field_key').text())
-      var lastField = Number($('#last_field_key').text())
+      //$('#field_stats_update_status').text('Updating....')
+      const fieldKeys = getFeldKeys()
+      fieldKeys
+      //.then((response) => response.json())
+      .then((responseJSON) => {
+            keys = responseJSON
+      console.log('back from funct: ', keys)
+      var firstField = keys.first_field_key
+      var lastField = keys.last_field_key
+      //var firstField = Number($('#first_field_key').text())
+      //var lastField = Number($('#last_field_key').text())
       console.log('field keys: ', lastField, firstField)
       var loops =  Math.floor(Number(lastField-firstField)/20)
       remainder = Number(lastField-firstField)%20
       for (let i=1; i <= loops; i++) {
             //var updateRange = []  
+
             if (i == 1) {
                   updateRange = [firstField, firstField + 20]
             }
@@ -72,7 +81,8 @@ return new Promise(function (resolve,reject) {
             else {updateRange = [firstField + (20 *(i-1)+1), firstField + (20 * i)]}
             console.log(i, updateRange)        
             console.log(typeof(updateRange[0].toString()), updateRange[0].toString().length, updateRange[1].toString())
-              
+            $('#setup_table tbody').append('<tr id=field_update' + i + '><td>Updating Field batch ' + i + ' pk range: ' +  updateRange +  
+                                          '</td><td id=field_update' + i + '-status>updating....</td>')              
             fetch("/golf_app/field_updates/" + updateRange[0].toString() + "/" + updateRange[1].toString(), 
             {method: "GET",
                   }
@@ -81,7 +91,7 @@ return new Promise(function (resolve,reject) {
             .then((responseJSON) => {
             data = responseJSON
             console.log(data)
-            //$('#golfer_stats_update_status').text('Complete')
+            $('#field_update' + i + '-status').html('Complete')
            
             })
             .then((response) => {
@@ -89,7 +99,9 @@ return new Promise(function (resolve,reject) {
                   resolve()
                         })
                         
-      }
+                  }
+      
+      })
 
 //       fetch("/golf_app/field_updates/", 
 //     {method: "GET",
@@ -117,7 +129,8 @@ function golferResultsUpdates() {
           var loops =  Math.floor(Number(lastGolfer-firstGolfer)/200)
           remainder = Number(lastGolfer-firstGolfer)%200
           //console.log('loops: ', loops, remainder)
-          $('#setup_table tr:last').after('<tr id=all_golfers_status><td>Updating all golfers</td><td>' + 0 + '</td></tr>')
+          //$('#setup_table tr:last').after('<tr id=all_golfers_status><td>Updating all golfers</td><td>' + 0 + '</td></tr>')
+
           for (let i=1; i <= loops; i++) {
             //var updateRange = []  
             if (i == 1) {
@@ -128,7 +141,9 @@ function golferResultsUpdates() {
             else {updateRange = [firstGolfer + (200 *(i-1)+1), firstGolfer + (200 * i)]}
             console.log(i, updateRange)        
             console.log(typeof(updateRange[0].toString()), updateRange[0].toString().length, updateRange[1].toString())
-              
+            $('#setup_table tbody').append('<tr id=golfers_update' + i + '><td>Updating Golfers batch ' + i + ' pk range: ' +  updateRange +  
+            '</td><td id=golfers_update' + i + '-status>updating....</td>')              
+                
             fetch("/golf_app/golfer_results_updates/" + updateRange[0].toString() + "/" + updateRange[1].toString(), 
             {method: "GET",
                   }
@@ -137,7 +152,7 @@ function golferResultsUpdates() {
             .then((responseJSON) => {
             data = responseJSON
             console.log(data)
-            //$('#golfer_stats_update_status').text('Complete')
+            $('#golfers_update' + i + '-status').html('Complete')
            
             })
       }
@@ -194,6 +209,27 @@ function emailReport(dist) {
             console.log('email: ', data)
  
             
+  })
+  
+}
+
+function getFeldKeys() { 
+      console.log('getFieldKeys')
+      return new Promise (function (resolve, reject) { 
+            fetch("/golf_app/get_field_keys_api/", 
+              {method: "GET",
+                    }
+                    )
+              .then((response) => response.json())
+              .then((responseJSON) => {
+              data = responseJSON
+              console.log('field keys api result: ', data)
+              console.log('resolving field keys')
+              resolve(data)
+                
+             
+              })
+      
   })
   
 }

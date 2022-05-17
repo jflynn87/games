@@ -92,5 +92,6 @@ urlpatterns= [
     path('fedex_send_summary_email_api/<str:option>', views.SendFedExEmail.as_view(), name='fedex_send_sumary_email_api'),
     path('trends_view/', views.TrendsView.as_view(), name='trends_view'),
     path('trends_api/<int:pk>/<int:group>', views.TrendsAPI.as_view(), name='trends_api'),
+    path('get_field_keys_api/', views.GetFieldKeysAPI.as_view(), name='get_field_keys_api'),
 
 ]

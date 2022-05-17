@@ -31,18 +31,86 @@ import pytz
 
 
 start = datetime.now()
-#t = Tournament.objects.exclude(current=True).last()
-#sd = ScoreDict.objects.get(tournament=t)
-#print (t)
-
 t = Tournament.objects.get(current=True)
 
-max = Field.objects.filter(tournament=t).latest('pk')
-print (max.pk)
-print (max, max.recent)
-print (max.season_stats)
+#for f in Field.objects.filter(tournament=t, playerName='Mackenzie Hughes'):
+for f in Field.objects.filter(tournament=t):
+    #print (f.golfer.summary_stats(t.season))
+    diff = Field.objects.filter((Q(golfer=f.golfer) | Q(partner_golfer=f.golfer)), tournament__season=t.season) \
+           .exclude(tournament__pga_tournament_num__in=t.season.special_fields()) \
+           .exclude(tournament__current=True) \
+           .exclude(withdrawn=True) \
+           .count() - \
+        f.season_stats.get('played')
+    if diff != 0:
+        print (f, diff, Field.objects.filter((Q(golfer=f.golfer) | Q(partner_golfer=f.golfer)), tournament__season=t.season) \
+           .exclude((Q(tournament__pga_tournament_num__in=t.season.special_fields()) & Q(tournament__pga_tournament_num__ne='018'))) \
+           .exclude(tournament__current=True) \
+           .exclude(withdrawn=True) \
+           .count(), f.season_stats.get('played'))
+
+#g = Golfer.objects.get(golfer_name='Mackenzie Hughes')
+#print (g.summary_stats(t.season))
 
 exit()
+
+
+
+for f in Field.objects.filter(tournament=t, playerName="Justin Thomas"):
+    print (f, f.recent, f.season_stats)
+
+exit()
+
+espn = espn_api.ESPNData().all_data
+with open('byron_nelson_r2.json', 'w') as outfile:
+    json.dump(espn, outfile)
+
+exit()
+#with open('byron_nelson_early_r1.json') as json_file:
+#    data = json.load(json_file)
+
+#espn = espn_api.ESPNData(t=t, data=data)
+
+
+s  = Season.objects.get(current=True)
+t = Tournament.objects.get(current=True)
+
+#r = HttpRequest()
+#x = views.TrendsAPI().get(r, pk=t.pk, group='all')
+
+
+by_g = datetime.now()
+
+for g in Group.objects.filter(tournament=t):
+    r = HttpRequest()
+    x1 = views.TrendsAPI().get(r, pk=t.pk, group=g.number)
+ 
+print ('by grop: ',datetime.now() - by_g)
+
+
+
+exit()
+
+
+#for f in Field.objects.filter(tournament=t):
+#    d = f.golfer.summary_stats(s)
+    #print (f, d)
+    #fields = Field.objects.filter(tournament__season=s, golfer=g).exclude(tournament__current=True). \
+    #    exclude(tournament__pga_tournament_num__in=s.special_fields()).count()
+    #if Field.objects.filter(golfer=g, tournament=t).exists():
+    #    played = Field.objects.get(golfer=g, tournament=t).season_stats.get('played')
+    #    print (g.golfer_name, fields, played)
+
+#print (datetime.now() - start)
+#exit()
+
+#f = Field.objects.get(playerName="James Hahn", tournament__current=True)
+#print ('pre : ', f.season_stats)
+#update  = f.golfer.summary_stats(f.tournament.season)
+#print ('post: ', update)
+
+
+#exit()
 
 for g in Group.objects.filter(tournament=t):
     r = HttpRequest()

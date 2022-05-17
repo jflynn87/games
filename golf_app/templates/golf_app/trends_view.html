@@ -5,14 +5,49 @@
 {%block body_block%}
 
 <h2>{{t.name}} Trends </h2>
+<div id="table_div"></div>
 
 <script type="text/javascript">
     console.log('connected')
-    var groups = '{{groups}}'
-    console.log(groups)
+    var groups = $.parseJSON('{{groups|escapejs}}')
+
+
     for (i=0; i < groups.length; i++) {
-        console.log(groups[i])
-    }
+        //var g = groups[i].toString()
+
+        $('#table_div').append('<table class=table id=tbl-' + groups[i] + '>' +
+                                '<tr><th id=status-' + groups[i] +  ' colspan=4>Group ' + groups[i] + ' Loading<span class=status>....</span></th></tr>' + 
+                                '<tr><th>Golfer</th>' +
+                                    '<th>Sum of recent resuluts</th>' +
+                                    '<th>Slope</th>' +
+                                    '<th>recent resuluts</th>' +
+                                '</tr>' + 
+                                '</table>')
+
+        fetch("/golf_app/trends_api/" + '{{t.pk}}' + '/' + groups[i],
+        {method: "GET",
+        }
+          )
+        .then((response) => response.json())
+        .then((responseJSON) => {
+          var data = responseJSON
+          console.log(typeof(data))
+
+          for (let j=0; j < Object.keys(data).length; j++) {
+            $('#tbl-' + Object.values(data)[j].group).append('<tr><td>' + Object.values(data)[j].golfer + '</td>' +
+                                                              '<td>' + Object.values(data)[j].sum + '</td>' +
+                                                              '<td>' + Object.values(data)[j].slope + '</td>' +
+                                                              '<td>' + Object.values(data)[j].res_list + '</td>' +
+                '</tr>')  
+
+          }
+          $('#status-' + Object.values(data)[0].group).html('Group ' + Object.values(data)[0].group +' Load Complete').css('background-color', 'lightblue').attr('colspan', '4')
+
+        })
+    
+        
+        }
+    
     
 
 </script>

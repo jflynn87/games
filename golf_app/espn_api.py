@@ -25,6 +25,10 @@ class ESPNData(object):
         else:
             self.t = Tournament.objects.get(current=True)
 
+        #with open('byron_nelson_r2.json') as json_file:
+        #    data = json.load(json_file)
+        #self.all_data = data
+
         if data:
             self.all_data = data 
         elif self.t.complete and not force_refresh:
@@ -191,7 +195,7 @@ class ESPNData(object):
                 return  min(int(x.get('status').get('position').get('id')) for x in self.field_data \
                         if int(x.get('status').get('position').get('id')) > int(self.t.saved_cut_num)) 
             except Exception as e:
-                print ('issue wiht cut num, returning saved model num', e)
+                #print ('issue wiht cut num, returning saved model num', e)
                 return self.t.saved_cut_num
         else:
             cuts = [v for v in self.field_data if v.get('status').get('type').get('id') == '3']

@@ -434,12 +434,12 @@ def setup(request):
 
             pga_t_num = data.get('tid')
 
-            if pga_t_num == t.pga_tournament_num:
-                first_field = Field.objects.filter(tournament=t).first().pk
-                last_field = Field.objects.filter(tournament=t).latest('pk').pk
-            else:
-                first_field = 0
-                last_field = 0
+            #if pga_t_num == t.pga_tournament_num:
+            #first_field = Field.objects.filter(tournament=t).first().pk
+            #last_field = Field.objects.filter(tournament=t).latest('pk').pk
+            #else:
+            #    first_field = 0
+            #    last_field = 0
             
             try:
                 espn_data = espn_schedule.ESPNSchedule()
@@ -464,8 +464,8 @@ def setup(request):
                                                             'pga_t_num': pga_t_num,
                                                             'first_golfer': Golfer.objects.first(),
                                                             'last_golfer': Golfer.objects.last(),
-                                                            'first_field': first_field,
-                                                            'last_field': last_field,
+                                                            #'first_field': first_field,
+                                                            #'last_field': last_field,
                             })
         else:
            return HttpResponse('Not Authorized')
@@ -2059,6 +2059,11 @@ class EspnApiScores(APIView):
                 return JsonResponse(data, status=200, safe=False)
 
             espn = espn_api.ESPNData(t=t, force_refresh=True, update_sd=False)
+            #with open('byron_nelson_r2.json') as json_file:
+            #    data = json.load(json_file)
+
+            #espn = espn_api.ESPNData(t=t, data=data)
+
 
             #if not espn.needs_update():
             #    data = return_sd_data(t,d)
@@ -2112,13 +2117,17 @@ class EspnApiScores(APIView):
                 
                 thru = espn.get_thru(pick.playerName.golfer.espn_number)
                 
-                #if golfer_data:
-                if golfer_data.get('statistics') and len(golfer_data.get('statistics')) >0:
-                    to_par = golfer_data.get('statistics')[0].get('displayValue')
-                    sod_position = golfer_data.get('movement')
+                if golfer_data: #need this check for pre-start WD
+                    if golfer_data.get('statistics') and len(golfer_data.get('statistics')) >0:
+                        to_par = golfer_data.get('statistics')[0].get('displayValue')
+                        sod_position = golfer_data.get('movement')
+                    else:
+                        to_par = ''
+                        sod_position = ''
                 else:
-                    to_par = ''
-                    sod_position = ''
+                        to_par = 'WD'
+                        sod_position = 'WD'
+
                 
                 sd = ScoreDetails.objects.filter(pick__playerName__tournament=t, pick__playerName=pick.playerName).update(  
                                     today_score=today_score,
@@ -2553,7 +2562,7 @@ class BuildFieldAPI(APIView):
 
 class FieldUpdatesAPI(APIView):
     def get(self, request, min_key, max_key):
-        print ('updateing field data: ', min_key, '  ', max_key)
+        #print ('updateing field data: ', min_key, '  ', max_key)
         start = datetime.datetime.now()
         t = Tournament.objects.get(current=True)
         d = {}
@@ -2563,6 +2572,7 @@ class FieldUpdatesAPI(APIView):
 
             #for f in Field.objects.filter(tournament=t):
             for f in Field.objects.filter(pk__gte=min_key, pk__lte=max_key):
+                s = datetime.datetime.now()
                 #print ('udpating field: ', f)
                 if t.pga_tournament_num not in ['470', '018']:
                     f.handi = f.handicap()
@@ -2588,15 +2598,15 @@ class FieldUpdatesAPI(APIView):
                     for k, v in player_s.items():
                         if k != 'pga_num':
                             f.season_stats.update({k: v})
-                print ('saving field: ', f)
+                #print ('saving field: ', f, datetime.datetime.now() - s)
                 f.save()
 
             d['status'] = {'msg': 'Updated Field Records: ' + str(Field.objects.get(pk=min_key)) + str(Field.objects.get(pk=max_key))}
         except Exception as e:
-            print ('Update Field API error: ', e)
+            print ('Update Field API error: ', f, e)
             d['error'] = {'msg': str(e)}
         
-        print ('Update Field API time: ', datetime.datetime.now() - start)
+        print ('Update Field API time: ', datetime.datetime.now() - start, min_key, '  ', max_key)
 
         return JsonResponse(json.dumps(d), status=200, safe=False)
 
@@ -3137,7 +3147,14 @@ class TrendsAPI(APIView):
         try:
             t = Tournament.objects.get(pk=pk)
             d = {}
-            for f in Field.objects.filter(tournament=t, group__number=group).exclude(withdrawn=True):
+
+            if group == 'all':
+                groups = list(Group.objects.filter(tournament=t).values_list('number', flat=True))
+            else:
+                groups = []
+                groups.append(group)
+            #for f in Field.objects.filter(tournament=t, group__number=group).exclude(withdrawn=True):
+            for f in Field.objects.filter(tournament=t, group__number__in=groups).exclude(withdrawn=True):
                 res_list = []
                 #res = {k:v for k,v in f.golfer.results.items() if v.get('season') == 2022 and v.get('rank') != 'n/a' and int(k) < int(pk)}
                 res = {k:v for k,v in f.golfer.results.items() if v.get('rank') != 'n/a' and int(k) < int(pk)}
@@ -3198,8 +3215,35 @@ class TrendsView(LoginRequiredMixin, TemplateView):
     def get_context_data(self, **kwargs):
         start = datetime.datetime.now()
         context = super(TrendsView, self).get_context_data(**kwargs)
-        context.update({'t': Tournament.objects.get(current=True),
-                        'groups': list(Group.objects.filter(tournament__current=True).values_list('number', flat=True))})
+        t = Tournament.objects.get(current=True)
+        context.update({'t': t,
+                        'groups': json.dumps(list(Group.objects.filter(tournament__current=True).values_list('number', flat=True))),
+                        })
 
         return context
 
+
+class GetFieldKeysAPI(APIView):
+
+    def get(self, request):
+        
+        #start = datetime.datetime.now()
+        try:
+            t = Tournament.objects.get(current=True)
+            d = {}
+
+            first_field = Field.objects.filter(tournament=t).first().pk
+            last_field = Field.objects.filter(tournament=t).latest('pk').pk
+
+            d = {'first_field_key': first_field,
+                'last_field_key': last_field,}
+
+
+        except Exception as e:
+            print ('GetFieldKeys API Error: ', e)
+            d['error'] = {'msg': str(e)}
+        
+        
+        #print ('GetFieldKeys time: ', datetime.datetime.now() - start)
+
+        return JsonResponse(d, status=200, safe=False)

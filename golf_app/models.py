@@ -108,6 +108,9 @@ class Season(models.Model):
     def major_count(self):
         return 4
 
+    def special_fields(self):
+        return ['999', '470', '468', '018']
+
         # 11/30/2021  - yes for the chart - changed above
         # else:
         #     for user in self.get_users('obj'):
@@ -573,35 +576,82 @@ class Golfer(models.Model):
     def natural_key(self):
         return self.golfer_pga_num
 
-    def summary_stats(self, season):
+    def summary_stats(self, season, rerun=False):
         '''takes a golfer object and season object, returns a dict'''
-        #start = datetime.now()
+        start = datetime.now()
         d = {'played': 0,
-            'won': 0,
-            'top10': 0,
-            'bet11_29': 0,
-            'bet30_49': 0,
-            'over50': 0,
-            'cuts': 0
-            }
+                'won': 0,
+                'top10': 0,
+                'bet11_29': 0,
+                'bet30_49': 0,
+                'over50': 0,
+                'cuts': 0
+                }
+        
+        fields = Field.objects.filter(tournament__season=season, golfer=self).exclude(tournament__current=True). \
+            exclude(tournament__pga_tournament_num__in=season.special_fields()).exclude(withdrawn=True).count()
+
+        if fields == 0:
+            print ('summary stats: ', self.golfer_name, ' : first tournament')
+            return d
+        else:
+            last_played = Field.objects.filter(tournament__season=season, golfer=self).exclude(tournament__current=True). \
+              exclude(tournament__pga_tournament_num__in=season.special_fields()).latest('pk')
+            #print ('diff: ', fields - last_played.season_stats.get('played'), fields, last_played.season_stats.get('played'))
+            if rerun:        
+                print ('summary stats: ', self.golfer_name, ' : rerun updating all tournaments')
+                fields = Field.objects.filter((Q(golfer=self) | Q(partner_golfer=self)), tournament__season=season).exclude(tournament__current=True).exclude(tournament__pga_tournament_num='468').values_list('tournament__pk',flat=True).order_by('tournament__pk')
+                t_list = Tournament.objects.filter(pk__in=fields)
+            elif fields == last_played.season_stats.get('played'):
+                print ('summary stats: ', self.golfer_name, ' : no change returning last t stats')
+                return last_played.season_stats
+            elif fields - last_played.season_stats.get('played') == 1:
+                print ('summary stats: ', self.golfer_name, ' : updating last T only')
+                t_list = [last_played.tournament.pk]
+                data = Field.objects.get((Q(golfer=self) | Q(partner_golfer=self)), tournament=last_played.tournament).season_stats
+                d = {'played': data.get('played'),
+                    'won': data.get('won'),
+                    'top10': data.get('top10'),
+                    'bet11_29': data.get('bet11_29'),
+                    'bet30_49': data.get('bet30_49'),
+                    'over50': data.get('over50'),
+                    'cuts': data.get('cuts')
+                        }
+            else:
+                print ('summary stats: ', self.golfer_name, ' : updating all tournaments')
+                fields = Field.objects.filter((Q(golfer=self) | Q(partner_golfer=self)), tournament__season=season).exclude(tournament__current=True).exclude(tournament__pga_tournament_num='468').values_list('tournament__pk',flat=True).order_by('tournament__pk')
+                #print (fields)
+                t_list = Tournament.objects.filter(pk__in=fields)
+
         played = 0
-        
-        fields = Field.objects.filter((Q(golfer=self) | Q(partner_golfer=self)), tournament__season=season).exclude(tournament__current=True).exclude(tournament__pga_tournament_num='468').values_list('tournament__pk',flat=True).order_by('tournament__pk')
-        
-        t_list = Tournament.objects.filter(pk__in=fields)
+
+        # if rerun:        
+        #     fields = Field.objects.filter((Q(golfer=self) | Q(partner_golfer=self)), tournament__season=season).exclude(tournament__current=True).exclude(tournament__pga_tournament_num='468').values_list('tournament__pk',flat=True).order_by('tournament__pk')
+        #     t_list = Tournament.objects.filter(pk__in=fields)
+
+        # elif Field.objects.filter((Q(golfer=self) | Q(partner_golfer=self)), tournament__season=season).exclude(tournament__current=True).exclude(tournament__pga_tournament_num='468').count() == \
+        #       Field.objects.get((Q(golfer=self) | Q(partner_golfer=self)), tournament__current=True).season_stats.get('played'):
+        #     print ('golfer stats already up to date: ', self)
+        # else:
+        #     #fields = Field.objects.filter((Q(golfer=self) | Q(partner_golfer=self)), tournament__season=season).exclude(tournament__current=True).exclude(tournament__pga_tournament_num='468').values_list('tournament__pk',flat=True).order_by('tournament__pk')
+        #     t_list = []
+        #     t_list.append(Tournament.objects.exclude(current=True).exclude(pga_tournament_num='468').latest('pk').pk)
+
         
         #for sd in ScoreDict.objects.filter(tournament__season=season).exclude(tournament__current=True):
         for sd in ScoreDict.objects.filter(tournament__pk__in=t_list):
             #if sd.tournament.pga_tournament_num == '470':
-            if sd.tournament.special_field():
+            if sd.tournament.special_field() and sd.tournament.pga_tournament_num != '018':
                 continue
             
             try:
                 if sd.data:
                     x = [v.get('rank') for k, v in sd.data.items() if k !='info' and v.get('pga_num') in [self.espn_number, self.golfer_pga_num]]
-                
+                    print (sd.tournament, x)
                 if not x:
+                    print (self, 'not in sd: ', sd.tournament)
                     continue
+                    
                 elif x[0] in sd.tournament.not_playing_list():
                     played += 1
                     t = d.get('cuts') + 1
@@ -622,15 +672,16 @@ class Golfer(models.Model):
                     played += 1
                     t = d.get('bet30_49') + 1
                     d.update({'bet30_49':  t})
-                elif utils.formatRank(x[0]) > 50:
+                elif utils.formatRank(x[0]) >= 50:
                     played += 1
                     t = d.get('over50') + 1
                     d.update({'over50':  t})
                 #print (d)
             except Exception as e:
                 print ('summary stats issue: ', self, sd.tournament, e)
-        d.update({'played': played})
-        #print (self, d, datetime.now() - start)
+        #d.update({'played': played})
+        d.update({'played': d.get('played') + played})
+        #print ('summary stats: ', self, d, datetime.now() - start)
         return d
 
     def get_season_results(self, season=None, rerun=False, espn_api=None, t_list=None):
@@ -1014,7 +1065,7 @@ class Field(models.Model):
                 print ('WD? not found in espn: ',  self.playerName, self.golfer.espn_number) 
                 cut = True
                 score = (int(api_data.cut_num()) - int(self.handi)) + api_data.cut_penalty(self)
-        print ('calc SCORE ', score, 'cut ', cut)
+        print ('golfer:', self.playerName, 'calc SCORE ', score, 'cut ', cut)
         return {'score': score, 'cut': cut}
 
 
