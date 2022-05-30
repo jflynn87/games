@@ -1065,7 +1065,7 @@ class Field(models.Model):
                 print ('WD? not found in espn: ',  self.playerName, self.golfer.espn_number) 
                 cut = True
                 score = (int(api_data.cut_num()) - int(self.handi)) + api_data.cut_penalty(self)
-        print ('golfer:', self.playerName, 'calc SCORE ', score, 'cut ', cut)
+        #print ('golfer:', self.playerName, 'calc SCORE ', score, 'cut ', cut)
         return {'score': score, 'cut': cut}
 
 

@@ -76,14 +76,16 @@ class ESPNData(object):
             self.field_data = self.competition_data.get('competitors')
 
         pre_sd = datetime.now()
+        
         if len(self.field_data) >0 and update_sd and not data:
+            print ('UPDATING SD DATA')
             sd, created = ScoreDict.objects.get_or_create(tournament=self.t)
             sd.espn_api_data = self.all_data
             sd.save()
 
-        print ('sd save dur: ', datetime.now() - pre_sd)
-        print ('data set up: ', datetime.now() - data_start)
-        print ('espn API Init complete, field len: ', len(self.field_data), ' dur: ', datetime.now() - start)
+        #print ('sd save dur: ', datetime.now() - pre_sd)
+        #print ('data set up: ', datetime.now() - data_start)
+        #print ('espn API Init complete, field len: ', len(self.field_data), ' dur: ', datetime.now() - start)
 
 
     def get_t_name(self):  #need to test this to confirm it works
@@ -156,6 +158,19 @@ class ESPNData(object):
     def started_golfers_list(self):
         return [v.get('id') for v in self.field_data if self.player_started(v.get('id'))]
     
+    
+    def all_golfers_started(self):
+        if not self.t.started():
+            return False
+        
+        if self.get_round() > 1:
+            return True
+        elif len([v.get('id') for v in self.field_data if v.get('status').get('period') == 1 and v.get('status').get('type').get('name') == "STATUS_SCHEDULED"]) == 0:
+            return True
+        else:
+            return False
+    
+
     def field(self):
         return self.field_data
 

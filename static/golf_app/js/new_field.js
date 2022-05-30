@@ -22,6 +22,8 @@ $(document).ready(function () {
          //g_links = $.parseJSON(responseJSON[4])
          startedGolfers = s_data.started_golfers
          tStarted = s_data.t_started
+         allGolfersStarted = s_data.all_golfers_started
+         latePicks = s_data.late_picks
          lockedGroups = s_data.lock_groups
          
          picksObjs = $.parseJSON(responseJSON[4])
@@ -694,7 +696,10 @@ function checkComplete(info) {
         }
   
         //console.log(Object.keys(picks).length, countries_ok)
-        if (total == parseInt(info['total']) && countries_ok == true && ryder_ok == true) {
+        //if (total == parseInt(info['total']) && countries_ok == true && ryder_ok == true) {
+        console.log('all started data ', allGolfersStarted)
+        console.log('lat picks ', latePicks)
+        if (total == parseInt(info['total']) && countries_ok == true && ryder_ok == true && (! allGolfersStarted == true  || latePicks == true)) {
           $('#sub_button').removeAttr('disabled').attr('class', 'btn btn-primary').val('Submit Picks');
           $('#actual-grouptotal').css('background-color', '')  
           $('#required-groupcomplete').text('True')

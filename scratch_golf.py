@@ -28,10 +28,122 @@ from rest_framework.request import Request
 from django.http import HttpRequest
 import numpy as np
 import pytz
+from operator import itemgetter
 
+#for u in Season.objects.get(current=True).get_users('obj'):
+#    handi = Picks.objects.filter(user=u, playerName__tournament__season__current=True).aggregate(Sum('playerName__handi'))
+#    print (u, handi)
 
-start = datetime.now()
 t = Tournament.objects.get(current=True)
+sd = ScoreDict.objects.get(tournament=t)
+
+espn = espn_api.ESPNData(t=t, data=sd.espn_api_data)
+for f in Field.objects.filter(tournament=t, playerName__in=['Sam Burns']):
+    print (espn.get_round())
+
+exit()
+
+for t in Tournament.objects.filter(season__current=True).exclude(current=True).order_by('pk'):
+    ts = TotalScore.objects.filter(tournament=t).order_by('score')
+    bd = BonusDetails.objects.filter(tournament=t, user=ts[0].user, bonus_type='3')
+    winner_hc = Picks.objects.filter(playerName__tournament=t, user=ts[0].user).aggregate(Sum('playerName__handi'))
+    second_hc = Picks.objects.filter(playerName__tournament=t, user=ts[1].user).aggregate(Sum('playerName__handi'))
+    
+    
+    
+    print (t, ts[0].score + bd[0].bonus_points, '/', winner_hc.get('playerName__handi__sum'), ': ', ts[1].score, '/', second_hc.get('playerName__handi__sum'))
+    print ('Total Diff', (ts[0].score + bd[0].bonus_points) - ts[1].score)
+    print ('HC Diff', winner_hc.get('playerName__handi__sum') - second_hc.get('playerName__handi__sum'))
+
+    if (ts[0].score + bd[0].bonus_points) - ts[1].score > winner_hc.get('playerName__handi__sum') - second_hc.get('playerName__handi__sum'):
+        print ('XXXXXXXXXXXXXXXXXXXXXXXXXXXX')
+
+exit()
+
+for t in Tournament.objects.filter(season__current=True).exclude(current=True):
+    
+    if t.good_api_data() and not t.special_field():
+        print (t, t.season)
+        sd = ScoreDict.objects.get(tournament=t)
+        espn = espn_api.ESPNData(t=t, data=sd.espn_api_data)
+        d = {}
+        for g in Group.objects.filter(tournament=t):
+            d[g.number] = {}
+            for f in Field.objects.filter(group=g).exclude(withdrawn=True):
+                d.get(g.number).update({f.playerName: {'gross': f.calc_score(api_data=espn).get('score') + f.handi,
+                                                    'net': f.calc_score(api_data=espn).get('score') }})
+            #golfer_list = list(Field.objects.filter(group=g).values_list('golfer__espn_number', flat=True))
+            #raw_min_score = min([int(espn.get_rank(x.get('id'))) for x in espn.field_data if x.get('id') in golfer_list])
+            #raw_min = [(x.get('athlete').get('displayName') , espn.get_rank(x.get('id'))) for x in espn.field_data if x.get('id') in golfer_list and int(espn.get_rank(x.get('id'))) == raw_min_score]
+            #print (g.number, ' : ', raw_min)
+        
+            min_gross = min(d.get(g.number).items(), key=lambda x: x[1]['gross'])
+            min_net = min(d.get(g.number).items(), key=lambda x: x[1]['net'])
+            
+            if min_gross[0] == min_net[0]:
+                continue
+            else:
+                print ('-----------------------------------------------------')
+                print ('HC impact - ', t, ' : ', g.number)
+                print ('Gross BIG: ', {k:v for k,v in d.get(g.number).items() if v.get('gross') == min_gross[1].get('gross')})
+                print ('Net BIG: ', {k:v for k,v in d.get(g.number).items() if v.get('net') == min_net[1].get('net')})
+                print ('-----------------------------------------------------')
+
+exit()
+
+for t in Tournament.objects.filter(season__current=True).exclude(major=True):
+    sd = ScoreDict.objects.get(tournament=t)
+    if t.special_field():
+        continue
+    elif t.good_api_data():
+        #sd = ScoreDict.objects.get(tournament=t)
+        espn = espn_api.ESPNData(t=t, data=sd.espn_api_data) 
+        stats = espn.group_stats()
+        for k,v in stats.items():
+            for b in v.get('golfer_espn_nums'):
+                rank = espn.get_rank(b)
+                if rank == espn.cut_num():
+                    print (t, k, v, b)
+        #for g in Group.objects.filter(tournament=t):
+        #    if g.playerCnt == g.cut_count(score_dict=sd.data,  espn_api_data=None):
+        #            print (t, g)
+    else:
+        score = manual_score.Score(score_dict=sd.data, tournament=t)
+        cut_num = score.score_dict.get('info').get('cut_num')
+        print (t, cut_num)
+        for g in Group.objects.filter(tournament=t, number__gte=5):
+            big = score.optimal_picks(g.number)
+            print (big[1], cut_num)
+            if big[1] == cut_num:
+                print ('CCCCCCCCCCCCCCCCCCCCCCC')
+        
+
+exit()
+
+t = Tournament.objects.get(current=True)
+sd = ScoreDict.objects.get(tournament=t)
+
+#espn = espn_api.ESPNData(data=sd.espn_api_data)
+start = datetime.now()
+hc = {}
+for user in Picks.objects.values('user__username').distinct().order_by('user_id'):
+    hc[user.get('user__username')] = {}
+handicaps = Picks.objects.filter(playerName__tournament=t).values('user__username').order_by('user__username').annotate(Sum('playerName__handi'))
+for h in handicaps:
+    hc.get(h.get('user__username')).update({'total': h.get('playerName__handi__sum')})
+
+
+print ('hc dur: ', datetime.now() - start)
+
+s_start = datetime.now()
+
+bd = golf_serializers.BonusDetailSerializer(BonusDetails.objects.filter(tournament=t).exclude(bonus_points=0), many=True).data
+pm = golf_serializers.PickMethodSerializer(PickMethod.objects.filter(tournament=t).exclude(method__in=[1,2]), many=True).data
+
+print ('serializer dur: ', datetime.now() - s_start)
+
+
+exit()
 
 #for f in Field.objects.filter(tournament=t, playerName='Mackenzie Hughes'):
 for f in Field.objects.filter(tournament=t):

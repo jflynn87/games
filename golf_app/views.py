@@ -2058,7 +2058,8 @@ class EspnApiScores(APIView):
                 print ("Tournament Complete dur: ", datetime.datetime.now() - start)
                 return JsonResponse(data, status=200, safe=False)
 
-            espn = espn_api.ESPNData(t=t, force_refresh=True, update_sd=False)
+            espn = espn_api.ESPNData(t=t, force_refresh=True, update_sd=True)
+            #espn = espn_api.ESPNData(t=t, force_refresh=True, update_sd=False)
             #with open('byron_nelson_r2.json') as json_file:
             #    data = json.load(json_file)
 
@@ -2141,6 +2142,7 @@ class EspnApiScores(APIView):
 
                 #print ('score check: ', d.get('jcarl62'), pick, score)
             if bd.no_cut_exists():
+                print ('espnAPIscores not cut bonus exists')
                 no_cuts = bd.update_cut_bonus()
                 for u, b in no_cuts.items():
                     d.get(u.username).update({'score': d.get(u.username).get('score') - b})   
@@ -2471,7 +2473,8 @@ class SummaryStatsAPI(APIView):
                     data = sd.espn_api_data
                     espn = espn = espn_api.ESPNData(t=t, data=data)
                 else:
-                    espn = espn_api.ESPNData(force_refresh=True)
+                    espn = espn = espn_api.ESPNData(t=t, data=sd.espn_api_data) #should use SD data to keep consistent
+                    #espn = espn_api.ESPNData(force_refresh=True)
 
                 cut_line = espn.cut_line()
                 if cut_line.get('cut_score') == 0:
@@ -2772,12 +2775,16 @@ class StartedDataAPI(APIView):
             d['t_started'] =  t_started
             d['started_golfers'] = started_golfers
             d['lock_groups'] = lock_groups
+            d['all_golfers_started'] = espn.all_golfers_started()
+            d['late_picks'] = t.late_picks
             print ('GetStertedDataAPI after espn time: ', datetime.datetime.now() - after_espn_start)
             print (d)
         except Exception as e:
             d['t_started'] =  False
             d['started_golfers'] = []
             d['lock_groups'] = []
+            d['all_golfers_started'] = False
+            d['late_picks'] = False
 
             print ('GetStartedDataAPI error: ', e)
             d['error'] = {'msg': str(e)}
@@ -2854,9 +2861,12 @@ class FedExSummaryEmail(TemplateView):
             display_dict.get('details').update({k:v})
 
         prior_tournaments = Tournament.objects.filter(season__current=True).exclude(current=True).order_by('pk')
-        last_t = prior_tournaments.last()
-        t = Tournament.objects.get(current=True)
-
+        #print ('XXXXXXXXXXXXXXXXXXXXXXXXXXX', prior_tournaments[:2])
+        #last_t = prior_tournaments.latest('pk')
+        #t = Tournament.objects.get(current=True)
+        last_t = prior_tournaments.reverse()[1]
+        t = prior_tournaments.reverse()[0]
+        print ('Tournaments: ', last_t, t)
         t_3_ago = json.loads(prior_tournaments.reverse()[2].season.get_total_points(prior_tournaments.reverse()[2]))
         t_5_ago = json.loads(prior_tournaments.reverse()[4].season.get_total_points(prior_tournaments.reverse()[4]))
 
@@ -2881,8 +2891,10 @@ class FedExSummaryEmail(TemplateView):
 
             display_dict.get('user_data').get(u).update({'trend':{
                                                 'current': c_total,
-                                                'five': int(c_total) - int([v.get('diff') for k, v in t_5_ago.items() if k == u][0]),
-                                                'three': int(c_total) - int([v.get('diff') for k, v in t_3_ago.items() if k == u][0]),
+                                                #'five': int(c_total) - int([v.get('diff') for k, v in t_5_ago.items() if k == u][0]),
+                                                #'three': int(c_total) - int([v.get('diff') for k, v in t_3_ago.items() if k == u][0]),
+                                                'three': t_3_ago.get(u).get('diff'),
+                                                'five': t_5_ago.get(u).get('diff'),
                                                 'slope': str(coefficients[0]),
                                                 'nrmse': str(nrmse),
                                                 'desc': desc
@@ -2930,7 +2942,8 @@ class FedExSummaryEmail(TemplateView):
         remaining_prizes = ((remaining_events - remaining_majors) * season.season.regular_prize()) + (remaining_majors * season.season.major_prize()) 
 
         context.update({'display_dict': display_dict, 
-                        'last_t': last_t,
+                        #'last_t': last_t,
+                        'last_t': t,
                         'msg1': msg1,
                         'first': first,
                         'second': second,
@@ -2945,7 +2958,7 @@ class FedExSummaryEmail(TemplateView):
                         'complete_majors': complete_majors,
                         'prizes_won': prizes_won,
                         'remaining_prizes': remaining_prizes, 
-                        't': t,
+                        't': Tournament.objects.get(current=True),
 
 
         })
