@@ -19,6 +19,7 @@
                                 '<tr><th id=status-' + groups[i] +  ' colspan=4>Group ' + groups[i] + ' Loading<span class=status>....</span></th></tr>' + 
                                 '<tr><th>Golfer</th>' +
                                     '<th>Sum of recent resuluts</th>' +
+                                    '<th>Past Results</th>' +
                                     '<th>Slope</th>' +
                                     '<th>recent resuluts</th>' +
                                 '</tr>' + 
@@ -31,11 +32,15 @@
         .then((response) => response.json())
         .then((responseJSON) => {
           var data = responseJSON
-          console.log(typeof(data))
+          //console.log(data)
 
           for (let j=0; j < Object.keys(data).length; j++) {
+            //console.log(Object.values(data)[j])
+            pastRes = Object.values(Object.values(data)[j].past_results)
+            console.log(pastRes)
             $('#tbl-' + Object.values(data)[j].group).append('<tr><td>' + Object.values(data)[j].golfer + '</td>' +
                                                               '<td>' + Object.values(data)[j].sum + '</td>' +
+                                                              '<td>' + pastRes + '</td>' +
                                                               '<td>' + Object.values(data)[j].slope + '</td>' +
                                                               '<td>' + Object.values(data)[j].res_list + '</td>' +
                 '</tr>')  

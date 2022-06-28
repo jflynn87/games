@@ -266,7 +266,7 @@ class Tournament(models.Model):
             else:
                 random_picks.append(random.choice(Field.objects.filter(tournament=self, group=group, withdrawn=False)))
         
-        #print ('saving random', user, datetime.now(), random_picks)
+        print ('saving random', user, datetime.now(), random_picks)
         self.save_picks(random_picks, user, mode)
 
         return random_picks 
@@ -412,7 +412,7 @@ class Tournament(models.Model):
         f_len = Field.objects.filter(tournament=self).count()
         #owgr_sum = Field.objects.filter(tournament=self).exclude(currentWGR=9999).aggregate(Sum('currentWGR'))
         #unranked = Field.objects.filter(tournament=self, currentWGR=9999).count()
-        top_100 = round(Field.objects.filter(tournament=self, currentWGR__lte=100).count()/f_len,2)
+        top_100 = round(Field.objects.filter(tournament=self, currentWGR__lte=122).count()/f_len,2)
 
         if top_100 > .3:
             return "strong"

@@ -2081,6 +2081,7 @@ class EspnApiScores(APIView):
             BonusDetails.objects.filter(tournament=t, bonus_type='5').update(bonus_points=0)
 
             for golfer in Picks.objects.filter(playerName__tournament=t).values('playerName__golfer__espn_number').distinct():
+                start_golfer_score = datetime.datetime.now()
                 pick = Picks.objects.filter(playerName__tournament=t, playerName__golfer__espn_number=golfer.get('playerName__golfer__espn_number')).first()
                 score = pick.playerName.calc_score(api_data=espn)
                 #print (pick, score)
@@ -2139,8 +2140,9 @@ class EspnApiScores(APIView):
                                     sod_position=sod_position
                 )
 
-
+                #print (pick, 'dur: ', datetime.datetime.now() - start_golfer_score)
                 #print ('score check: ', d.get('jcarl62'), pick, score)
+            print ('for loop dur: ', datetime.datetime.now() - start_calc_score)
             if bd.no_cut_exists():
                 print ('espnAPIscores not cut bonus exists')
                 no_cuts = bd.update_cut_bonus()
@@ -3166,7 +3168,9 @@ class TrendsAPI(APIView):
             else:
                 groups = []
                 groups.append(group)
-            #for f in Field.objects.filter(tournament=t, group__number=group).exclude(withdrawn=True):
+            prior_t = Tournament.objects.filter(pga_tournament_num=t.pga_tournament_num).exclude(current=True)
+            sds = ScoreDict.objects.filter(tournament__in=prior_t)    
+            prior_sds = ScoreDict.objects.filter(tournament__in=prior_t)
             for f in Field.objects.filter(tournament=t, group__number__in=groups).exclude(withdrawn=True):
                 res_list = []
                 #res = {k:v for k,v in f.golfer.results.items() if v.get('season') == 2022 and v.get('rank') != 'n/a' and int(k) < int(pk)}
@@ -3209,7 +3213,13 @@ class TrendsAPI(APIView):
                                'desc': desc,
                                'sum': sum(res_list[-5:])
                     }
-            
+                d.get(f.pk).update({'past_results': {}})
+                for sd in prior_sds:
+                    past_r = [v.get('rank') for k, v in sd.data.items() if k != 'info' and v.get('pga_num') == f.golfer.espn_number]
+                    if past_r and len(past_r) > 0:
+                        d.get(f.pk).get('past_results').update({sd.tournament.season.season: past_r[0]})
+                    else:
+                        d.get(f.pk).get('past_results').update({sd.tournament.season.season: 'n/a'})
 
         except Exception as e:
             print ('Trends API Error: ', e)

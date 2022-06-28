@@ -34,7 +34,120 @@ from operator import itemgetter
 #    handi = Picks.objects.filter(user=u, playerName__tournament__season__current=True).aggregate(Sum('playerName__handi'))
 #    print (u, handi)
 
+
+
+#t = Tournament.objects.get(season__current=True, name__startswith='RBC Canadian')
 t = Tournament.objects.get(current=True)
+f_len = Field.objects.filter(tournament=t).count() 
+print (f_len)
+#print (round(Field.objects.filter(tournament=t, currentWGR__lte=105).count()/f_len,2))
+print (Field.objects.filter(tournament=t, currentWGR__lte=122).count()/f_len)
+print (Field.objects.filter(tournament=t, currentWGR__lte=100).count())
+print (Field.objects.filter(tournament=t, currentWGR__lte=122).count())
+
+print (t.field_quality())
+#owgr = populateField.get_worldrank()
+
+#f = open('liv.txt', 'r')
+#c = 0 
+#for l in f:
+#    o = utils.fix_name(l.strip(), owgr)[1][0]
+    
+#    if o < 101:
+#        print (l, o)
+#        c += 1
+
+#print (c)
+
+exit()
+
+s = 0
+c = 0
+
+for p in FedExPicks.objects.filter(pick__season__season__current=True, user__pk=2):
+    print (p, p.score)
+    c += 1
+    s += p.score
+
+print (c, s)
+
+exit()
+
+print (Field.objects.filter(tournament__current=True, group__number=6).count())
+print (Field.objects.filter(tournament__current=True, group__number=6, withdrawn=True).count())
+for f in Field.objects.filter(tournament__current=True, group__number=6):
+    print (f
+     )
+
+exit()
+
+t = Tournament.objects.get(season__current=True, name='Charles Schwab Challenge')
+sd = ScoreDict.objects.get(tournament=t)
+espn = espn_api.ESPNData(t=t, data=sd.espn_api_data)
+
+big = espn.group_stats()
+
+
+
+#for f in Field.objects.filter(tournament=t):
+for group, data in big.items():
+    for g in data.get('golfer_espn_nums'):
+        f = Field.objects.get(tournament=t, golfer__espn_number=g)
+        max_key = max([k for k,v in f.recent.items() if v.get('rank') != 'DNP'], default=None)
+     
+        #if max_key and f.recent.get(max_key).get('rank') == 'CUT':
+
+        print (f.playerName, f.group.number, f.recent.get(max_key), f.calc_score(api_data=espn))
+
+
+exit ()
+
+def playing(sd, espn_api):
+    gd = espn_api.golfer_data(sd.pick.playerName.golfer.espn_number)
+    #print (sd.pick.playerName, gd.get('status').get('period'))
+    if gd.get('status').get('period') == espn_api.get_round() and gd.get('status').get('type').get('id') == '1':
+        return True
+    return False
+    
+
+
+start = datetime.now()
+
+
+t = Tournament.objects.get(current=True)
+sd = ScoreDict.objects.get(tournament=t)
+espn = espn_api.ESPNData(t=t, data=sd.espn_api_data)
+#espn = espn_api.ESPNData()
+for sd in ScoreDetails.objects.filter(pick__playerName__tournament=t):
+    #print (sd.pick.playerName.playerName, sd.score, sd.gross_score, espn.get_rank(sd.pick.playerName.golfer.espn_number),  sd.thru)
+    #print (sd.pick.playerName.playerName, espn.golfer_data(sd.pick.playerName.golfer.espn_number).get('status'))
+    if not playing(sd, espn) and int(sd.gross_score) == int(espn.get_rank(sd.pick.playerName.golfer.espn_number)):
+        print ('skip: ', sd)
+    else:
+        print ('dont skip', sd)
+
+
+
+exit()
+
+
+d = {}        
+for f in Field.objects.filter(tournament=t, group__number=9):
+    d[f.playerName] = {}
+    for x in Tournament.objects.filter(pga_tournament_num=t.pga_tournament_num).exclude(current=True):
+        sd = ScoreDict.objects.get(tournament=x)    
+        if sd.data:
+            d.get(f.playerName).update({x.season.season: [v.get('rank') for k, v in sd.data.items() if k != 'info' and v.get('pga_num') == f.golfer.espn_number]})
+        else:
+            d.get(f.playerName).update({x.season.season: 'no data'})
+
+
+for k,v in d.items():
+    print (k, v)
+
+print (datetime.now() - start)
+exit()
+
 sd = ScoreDict.objects.get(tournament=t)
 
 espn = espn_api.ESPNData(t=t, data=sd.espn_api_data)
