@@ -2058,11 +2058,12 @@ class EspnApiScores(APIView):
                 print ("Tournament Complete dur: ", datetime.datetime.now() - start)
                 return JsonResponse(data, status=200, safe=False)
 
+            pre_sd = ScoreDict.objects.get(tournament=t)
             espn = espn_api.ESPNData(t=t, force_refresh=True, update_sd=True)
-            #espn = espn_api.ESPNData(t=t, force_refresh=True, update_sd=False)
-            #with open('byron_nelson_r2.json') as json_file:
+            
+            ## use this to test from file and comment out the espn line above
+            #with open('open_champ_r2.json') as json_file:
             #    data = json.load(json_file)
-
             #espn = espn_api.ESPNData(t=t, data=data)
 
 
@@ -2141,7 +2142,7 @@ class EspnApiScores(APIView):
                 )
 
                 #print (pick, 'dur: ', datetime.datetime.now() - start_golfer_score)
-                #print ('score check: ', d.get('jcarl62'), pick, score)
+                #print ('score check: ', d.get('john'), pick, score)
             print ('for loop dur: ', datetime.datetime.now() - start_calc_score)
             if bd.no_cut_exists():
                 print ('espnAPIscores not cut bonus exists')

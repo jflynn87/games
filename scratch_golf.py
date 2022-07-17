@@ -34,6 +34,23 @@ from operator import itemgetter
 #    handi = Picks.objects.filter(user=u, playerName__tournament__season__current=True).aggregate(Sum('playerName__handi'))
 #    print (u, handi)
 
+t = Tournament.objects.get(current=True)
+sd = ScoreDict.objects.get(tournament=t)
+espn = espn_api.ESPNData(data=sd.espn_api_data, t=t)
+
+#espn.hole_by_hole('3470')
+start = datetime.now()
+print ('pst cut: ', espn.post_cut(), espn.cut_line(), espn.cut_num(), espn.total_making_cut())
+print (datetime.now() - start)
+#espn = espn_api.ESPNData().all_data
+#with open('open_champ_r2.json', 'w') as outfile:
+#    json.dump(espn, outfile)
+
+#exit()
+
+
+exit()
+
 
 
 #t = Tournament.objects.get(season__current=True, name__startswith='RBC Canadian')

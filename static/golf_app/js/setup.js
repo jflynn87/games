@@ -126,19 +126,20 @@ function golferResultsUpdates() {
           var firstGolfer = Number($('#first_golfer_key').text())
           var lastGolfer = Number($('#last_golfer_key').text())
           console.log('Golfer Keys: ', lastGolfer, firstGolfer)
-          var loops =  Math.floor(Number(lastGolfer-firstGolfer)/200)
+          var loop_s = 100
+          var loops =  Math.floor(Number(lastGolfer-firstGolfer)/loop_s)
           remainder = Number(lastGolfer-firstGolfer)%200
           //console.log('loops: ', loops, remainder)
           //$('#setup_table tr:last').after('<tr id=all_golfers_status><td>Updating all golfers</td><td>' + 0 + '</td></tr>')
-
+          
           for (let i=1; i <= loops; i++) {
             //var updateRange = []  
             if (i == 1) {
-                  updateRange = [firstGolfer, firstGolfer + 200]
+                  updateRange = [firstGolfer, firstGolfer + loop_s]
             }
             else if (i == loops) {
-                  updateRange = [firstGolfer + (200 *(i-1)+1), lastGolfer]}
-            else {updateRange = [firstGolfer + (200 *(i-1)+1), firstGolfer + (200 * i)]}
+                  updateRange = [firstGolfer + (loop_s *(i-1)+1), lastGolfer]}
+            else {updateRange = [firstGolfer + (loop_s *(i-1)+1), firstGolfer + (loop_s * i)]}
             console.log(i, updateRange)        
             console.log(typeof(updateRange[0].toString()), updateRange[0].toString().length, updateRange[1].toString())
             $('#setup_table tbody').append('<tr id=golfers_update' + i + '><td>Updating Golfers batch ' + i + ' pk range: ' +  updateRange +  

@@ -1046,6 +1046,7 @@ class Field(models.Model):
         
         
         if api_data:
+            #print ('models calc score: ', self, api_data.get_rank(self.golfer.espn_number), int(api_data.cut_num()))
             if api_data.golfer_data(self.golfer.espn_number):
                 if api_data.golfer_data(self.golfer.espn_number).get('status').get('type').get('id') == "3":
                     if self.post_cut_wd(api_data=api_data):

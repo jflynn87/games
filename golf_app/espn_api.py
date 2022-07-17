@@ -197,6 +197,9 @@ class ESPNData(object):
         if not self.started():
             return self.t.saved_cut_num
 
+        if self.t.cut_score and self.t.cut_score.isdigit():
+            return int(self.t.cut_score) + 1
+
         #clean this up, added for round 1 based on espn not having a cut round or score.  they have cutRound == 0 
         if self.t.has_cut and int(self.get_round()) <= int(self.t.saved_cut_round) and self.event_data.get('tournament').get('cutRound') == 0:
             #move this to be the cut_line funciton
@@ -446,6 +449,19 @@ class ESPNData(object):
             print ('espn api leader score exception: ', e)
             return ['']
 
+    def post_cut(self):
+        if not self.t.has_cut:
+            return False
+        
+        if self.event_data.get('tournament').get('cutRound') == 0:
+            return False
+
+        if len([x.get('athlete').get('id') for x in self.field_data if x.get('status').get('type').get('id') == '3' \
+                and x.get('status').get('type').get('shortDetail') == "CUT"]) > 0:
+                return True
+
+        return False
+
     def cut_line(self):
         cut_info = {'line_type': '',
                     'cut_score': 'No Cut Line'}
@@ -461,10 +477,12 @@ class ESPNData(object):
 
         elif self.t.has_cut and int(self.get_round()) <= int(self.t.saved_cut_round): #and self.event_data.get('tournament').get('cutRound') == 0:
             max_rank = max(int(x.get('status').get('position').get('id')) for x in self.field_data \
-                     if int(x.get('status').get('position').get('id')) < int(self.t.saved_cut_num)) 
-            cut_score = [x.get('score').get('displayValue') for x in self.field_data if self.get_rank(x.get('id')) == str(max_rank)][0]
+                     if int(x.get('status').get('position').get('id')) <= int(self.t.saved_cut_num)) 
+            #cut_score = [x.get('score').get('displayValue') for x in self.field_data if self.get_rank(x.get('id')) == str(max_rank)][0]
+            cut_score = [self.golfer_data(x.get('id')).get('statistics')[0].get('displayValue') for x in self.field_data if str(self.get_rank(x.get('id'))) == str(max_rank)][0]
             cut_info.update({'line_type': 'Projected', 'cut_score': cut_score})
-
+            #print ('cut stuff: ', max_rank, cut_score)
+            #print ([(self.golfer_data(x.get('id')).get('status').get('position').get('id'), x.get('score').get('displayValue'), self.golfer_data(x.get('id')).get('statistics')[0].get('displayValue')) for x in self.field_data if str(self.get_rank(x.get('id'))) == str(max_rank)])
         return cut_info
 
     def needs_update(self):
@@ -561,10 +579,19 @@ class ESPNData(object):
 
         return ranked_d
 
-    def cut_count(self, group):
+    def cut_count(self, group=None):
+        '''gets cut golfers for a group'''
         golfers = group.get_golfers()
         if self.t.pga_tournament_num == '018':
             return len([x for x in self.field_data if (str(x.get('roster')[0].get('playerId')) in golfers or str(x.get('roster')[1].get('playerId')) in golfers) and x.get('status').get('type').get('id') == '3'])
         else:
             return len([x for x in self.field_data if x.get('id') in golfers and x.get('status').get('type').get('id') == '3'])
 
+    def total_making_cut(self):
+        return len([x for x in self.field_data if  x.get('status').get('type').get('id') != '3']) - self.post_cut_wd()
+    
+    def hole_by_hole(self, espn_num):
+        r = self.get_round()
+
+        print (self.golfer_data(espn_num))
+        return 
