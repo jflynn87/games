@@ -373,6 +373,8 @@ class SeasonTotalView(ListView):
                     
                     if tournament.major:
                         winner_dict[winner.user] = winner_dict.get(winner.user) + 100/tournament.num_of_winners()
+                    elif tournament.pga_t_type() in ['PLF', 'PLS']:
+                        winner_dict[winner.user] = winner_dict.get(winner.user) + 75/tournament.num_of_winners()
                     else:
                         winner_dict[winner.user] = winner_dict.get(winner.user) + 30/tournament.num_of_winners()
 
@@ -396,11 +398,11 @@ class SeasonTotalView(ListView):
         for rank in second_half_ranks:
             second_half_rank_list.append(rank)
 
-        print ('display_dict', display_dict)
-        print ()
-        print ('winner dict', winner_dict)
-        print ('second half totals', total_second_half_score_list)
-        print ('full season totals',total_score_list)
+        #print ('display_dict', display_dict)
+        #print ()
+        #print ('winner dict', winner_dict)
+        #print ('second half totals', total_second_half_score_list)
+        #print ('full season totals',total_score_list)
 
         context = super(SeasonTotalView, self).get_context_data(**kwargs)
         context.update({
@@ -1519,19 +1521,19 @@ class TrendDataAPI(APIView):
                 t_qs = reversed(Tournament.objects.filter(season__pk=season.pk).order_by('-pk')[:int(num_of_t)])
 
             for t in t_qs:
-                print (t)
+                #print (t)
                 labels.append(t.name[0:8])
                 totals = json.loads(t.season.get_total_points(t))
-                print ('past totals')
+                #print ('past totals')
                 for user, stats in totals.items():
-                    print (user, stats)
+                   #print (user, stats)
                     l = diff_dict[user]
                     l.append(stats['diff'])
                     diff_dict[user] = l
                     
 
             #diff_dict['min_scale'] = min([min(v) for v in diff_dict.values()])
-            print ('diff_dict')
+            #print ('diff_dict')
             return JsonResponse(data={'labels': labels, 'data': diff_dict, 'min_scale': min([min(v) for v in diff_dict.values()])}, status=200)
         except Exception as e:
             print ('Trend Data API failed: ', e)

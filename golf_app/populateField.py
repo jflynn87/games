@@ -47,7 +47,9 @@ def create_groups(tournament_number, espn_t_num=None):
 
     print ('going to get_field')
     tournament = setup_t(tournament_number, espn_t_num)
+
     owgr_rankings =  get_worldrank()
+
     field = get_field(tournament, owgr_rankings)
     print ('field length: ', len(field))
     #OWGR_rankings = {}
@@ -109,36 +111,71 @@ def get_worldrank():
     '''Goes to OWGR web site takes no input, goes to web to get world golf rankings and returns a dictionary with player name as a string and key, ranking as a string in values'''
 
     print ('start owgr.com lookp')
+    
+    url = 'https://apiweb.owgr.com/api/owgr/rankings/getRankings?pageSize=10411&pageNumber=1&regionId=0&countryId=0&sortString=Rank+ASC'
+    with urllib.request.urlopen(url) as schedule_json_url:
+        data = json.loads(schedule_json_url.read().decode())
 
-    html = urllib.request.urlopen("http://www.owgr.com/ranking?pageNo=1&pageSize=All&country=All")
+    d = {x.get('player').get('fullName').split('(')[0]: [x.get('rank'), x.get('lastWeekRank'), x.get('endLastYearRank')] for x in data.get('rankingsList')}
+
+    return d
+
+    #keep for pga if neeeded  - issue is it only has top 1000
+    html = urllib.request.urlopen("https://www.pgatour.com/stats/stat.186.html")
     soup = BeautifulSoup(html, 'html.parser')
 
-    rankslist = (soup.find("div", {'class': 'table_container'}))
+    players = (soup.find("table", {'id': 'statsTable'}))
+
     ranks = {}
-
-    for row in rankslist.find_all('tr')[1:]:
+    for row in players.find_all('tr')[1:]:
+        rank_list = []
         try:
-            rank_data = row.find_all('td')
-            
-            rank_list = []
-            i = 0
-            for data in rank_data:
-                if data.text != '':
-                    rank_list.append(int(data.text))
-                else:
-                    rank_list.append(9999)
-                i += 1
-                if i == 3:
-                    break
-            player = (row.find('td', {'class': 'name'})).text.split('(')[0]
-            
-            ranks[player] = rank_list
-        except Exception as e:
-            print('exeption 1',row,e)
+            pga_num = row.get('id').strip('playerStatsRow')
+            current_rank = row.find_all('td')[0].text.strip().strip('T')
+            last_week = row.find_all('td')[1].text.strip().strip('T')
+            soy = '0'
+            rank_list = [current_rank, last_week, soy]
+            if row.find('a'):
+                ranks[row.find('a').text.strip()] = rank_list
+            else:
+                ranks[row.find('td', {'class': 'player-name'}).text.strip()] = rank_list
 
-    print ('end owgr.com lookup')
-    
+        except Exception as e:
+            print ('player owgr scrape issue', e)
+            print ('row: ', row)
+
     return ranks
+
+    # for old OWGR website - commented on 8/10/2022 - delete at some point
+    # html = urllib.request.urlopen("http://www.owgr.com/ranking?pageNo=1&pageSize=All&country=All")
+    # soup = BeautifulSoup(html, 'html.parser')
+
+    # rankslist = (soup.find("div", {'class': 'table_container'}))
+    # ranks = {}
+
+    # for row in rankslist.find_all('tr')[1:]:
+    #     try:
+    #         rank_data = row.find_all('td')
+            
+    #         rank_list = []
+    #         i = 0
+    #         for data in rank_data:
+    #             if data.text != '':
+    #                 rank_list.append(int(data.text))
+    #             else:
+    #                 rank_list.append(9999)
+    #             i += 1
+    #             if i == 3:
+    #                 break
+    #         player = (row.find('td', {'class': 'name'})).text.split('(')[0]
+            
+    #         ranks[player] = rank_list
+    #     except Exception as e:
+    #         print('exeption 1',row,e)
+
+    # print ('end owgr.com lookup')
+    
+    # return ranks
 
 def setup_t(tournament_number, espn_t_num=None):
     '''takes a t number as a string, returns a tournament object'''

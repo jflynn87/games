@@ -11,11 +11,12 @@ $(document).ready(function() {
                                                                      $('#scores-div').attr('hidden', false)}))
       
       const fn1 = totalScores()
-      const fn2 = seasonPoints()
+      //const fn2 = seasonPoints()
+      const fn2 = function(){return}
       
       Promise.all([fn1, fn2]).then((response) => 
       {
-
+      seasonPoints()
       sort_table('totals-table')
       udatePickData()
       if ($('#pga_t_num').text() != '470')

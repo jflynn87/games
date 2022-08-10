@@ -22,7 +22,6 @@
   {%endfor%}
 {%endif%}
 
-
 <h4>{{t.name}}</h4>
 
 <p id='leader'>leaders ... </p>
@@ -119,10 +118,11 @@
 </div>
 {%endif%}
 
+{%compress js%}
 
   <script type="text/javascript" src="{%static 'golf_app/js/api_scores.js'%}"></script>
 
   <script type="text/javascript" src="{%static 'golf_app/js/getPicksSummary.js'%}"></script> 
-
+{%endcompress%}
 
 {%endblock%}

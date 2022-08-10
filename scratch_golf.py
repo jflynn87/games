@@ -30,9 +30,133 @@ import numpy as np
 import pytz
 from operator import itemgetter
 
+
+
 #for u in Season.objects.get(current=True).get_users('obj'):
 #    handi = Picks.objects.filter(user=u, playerName__tournament__season__current=True).aggregate(Sum('playerName__handi'))
 #    print (u, handi)
+
+
+## for loading pga schedule into season
+season = Season.objects.get(current=True)
+url = 'https://statdata.pgatour.com/r/current/schedule.json'
+with urllib.request.urlopen(url) as schedule_json_url:
+        data = json.loads(schedule_json_url.read().decode())
+
+season.data = data
+season.save()
+##end season data
+
+exit()
+
+data = season.data
+start = datetime.now()
+t = Tournament.objects.get(current=True)
+print (t.pga_t_type())
+print (datetime.now() - start)
+exit()
+#print (type(data.get('schedule')[0]), len(data.get('schedule')[0]))
+#print (type(data.get('schedule')[0].get('years')[0].get('tour')[0].get('trns')[0]), len(data.get('schedule')[0].get('years')[0].get('tour')[0].get('trns')[0]))
+c = 0
+for s in data.get('schedule'):
+    for year in s.get('years'):
+        if str(year.get('year')) == str(season.season):
+            for tour in year.get('tour'):
+                if tour.get('desc') == 'PGA TOUR':
+                    reg = [v.get('trnType') for v in tour.get('trns') if v.get('trnType') in ['STD', 'LRS']]
+                    api = [v.get('trnType') for v in tour.get('trns') if v.get('trnType') == 'API']
+                    mjr = [v.get('trnType') for v in tour.get('trns') if v.get('trnType') == 'MJR']
+                    oth = [v.get('trnType') for v in tour.get('trns') if v.get('trnType') == 'OTH']
+                    pla = [v.get('trnType') for v in tour.get('trns') if v.get('trnType') in ['PLF', 'PLS']]
+                    wgc = [v.get('trnType') for v in tour.get('trns') if v.get('trnType') == 'WGC']
+                    alt = [v.get('trnType') for v in tour.get('trns') if v.get('trnType') == 'ALT']
+                    for t in tour.get('trns'):
+                        t_name = [v[0].get('official') for k,v in t.items() if k == 'trnName'][0]
+                        t_type = [v for k,v in t.items() if k == 'trnType'][0]
+                        t_num =  [v for k,v in t.items() if k == 'permNum'][0]
+                        try:
+                            t_obj = Tournament.objects.get(season=season, pga_tournament_num=str(t_num))
+                            strength = t_obj.field_quality()
+                        except Exception as w:
+                            #print (w)
+                            strength = w
+                        print (t_name, ' ', t_num, ' ', t_type, ' ', strength)
+                        c += 1
+ 
+print ('total: ', c )
+
+print ('REG: ', len(reg))
+print ('MJR: ', len(mjr))
+print ('API: ', len(api))
+print ('OTH: ', len(oth))
+print ('PLA: ', len(pla))
+print ('WGC: ', len(wgc))
+print ('ALT: ', len(alt))
+
+ #       print (k,v)
+ #       print (k,v.get('trnName'), v.get('trnType'))
+exit()
+
+season.data = d
+season.save()
+
+#exit()
+for x in season.data.get('fedex_t_nums'):
+    print (x)
+
+exit()
+
+t = Tournament.objects.get(current=True)
+sd = ScoreDict.objects.get(tournament=t)
+espn = espn_api.ESPNData(t=t, data=sd.espn_api_data)
+
+print (espn.post_cut_wd())
+print (espn.post_cut_wd_score())
+
+exit()
+
+url = 'https://www.livgolf.com/players-directory'
+
+html = urllib.request.urlopen(url)
+soup = BeautifulSoup(html, 'html.parser')
+owgr = populateField.get_worldrank()
+#owgr = {}
+top_100 = 0
+liv_list = []
+for golfer in soup.find_all('h3', {'class': "text-black text-base md:text-c20 leading-c100 font-extrabold font-sequel uppercase"}):
+     d = utils.fix_name(golfer.text, owgr)
+     liv_list.append(golfer.text)
+     #print (golfer.text, ': ', d)
+     if d[1][0] < 101:
+         top_100 +=1
+
+print ('liv_top100: ', top_100, 'total liv: ', len(liv_list))
+
+pga_url = 'https://www.pgatour.com/players.html'
+pga_html = urllib.request.urlopen(pga_url)
+pga_soup = BeautifulSoup(pga_html, 'html.parser')
+
+pga_list = pga_soup.find_all('li', {'class': "player-card active"})
+c = 0
+pga_top100 = 0
+#print (pga_list)
+for letter in pga_list:
+    #print (letter)
+    for g in letter.find_all('a', {'class': 'player-link'}):
+        c += 1 
+        try:
+            g_obj = Golfer.objects.get(golfer_pga_num=g.get('href').split('.')[1])
+            p = utils.fix_name(g_obj.golfer_name, owgr)
+            if p[1][0] < 101 and g_obj.golfer_name not in liv_list:
+                pga_top100 +=1 
+
+        except Exception as e:
+            continue
+            
+
+print ('pga_top100: ', pga_top100)
+print ('Total PGA: ', c)
+exit()
 
 t = Tournament.objects.get(current=True)
 sd = ScoreDict.objects.get(tournament=t)

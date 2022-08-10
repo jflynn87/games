@@ -6,6 +6,7 @@ from django.conf import settings
 from django.db.models import Min, Q, Count, Sum, Max, fields
 from datetime import datetime
 from django.db.models.base import Model
+from django.forms import JSONField
 
 from scipy.stats.stats import rankdata
 from golf_app import utils
@@ -26,6 +27,7 @@ class Season(models.Model):
     #season = models.CharField(max_length=10, null=True)
     season = models.IntegerField(default=0)
     current = models.BooleanField()
+    data = models.JSONField(null=True, blank=True)
 
     def __str__(self):
         return str(self.season)
@@ -431,6 +433,19 @@ class Tournament(models.Model):
             return True
         else:
             return False
+    
+    def pga_t_type(self):
+        for s in self.season.data.get('schedule'):
+            for year in s.get('years'):
+                if str(year.get('year')) == str(self.season.season):
+                    for tour in year.get('tour'):
+                        if tour.get('desc') == 'PGA TOUR':
+                            for t in tour.get('trns'):
+                                if str(t.get('permNum')) == str(self.pga_tournament_num):
+                                    return (t.get('trnType'))
+        print ('models file pga_t_type not finding t')                           
+        return None
+
 
 class Group(models.Model):
     tournament= models.ForeignKey(Tournament, on_delete=models.CASCADE)
