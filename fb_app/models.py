@@ -61,7 +61,7 @@ class Week(models.Model):
     #    super(Week, self).save()
 
     def started(self):
-        print ('week started check', self.current)
+        #print ('week started check', self.current)
         if self.set_started:
             print ('manually set started')
             return True
@@ -477,16 +477,45 @@ class Player(models.Model):
 
     def submit_default_picks(self, week):
         if week.started():
-            if not Picks.objects.filter(week=week, player=self).exists():
+            espn = espn_data.ESPNData()
+            starting_pick = 16
+            if len(espn.first_game_of_week()) == 1 and \
+                espn.game_dow(espn.first_game_of_week()[0]) == 'Thursday':
+                pick_16 = Picks()
+                pick_16.week = week
+                pick_16.player = self
+                pick_16.pick_num = 16
+                g = Games.objects.get(eid=espn.first_game_of_week()[0])
+                if g.loser:
+                    pick_16.team = g.loser
+                elif g.dog:
+                    pick_16.team = g.dog
+                else:
+                    pick_16.team = g.away
+                pick_16.save()
+                starting_pick = 15
+                
+            #if not Picks.objects.filter(week=week, player=self).exists():
             #if len(pick_pending) > 0:
-               sorted_spreads = sorted(week.get_spreads().items(), key=lambda x: x[1][2],reverse=True)
-               for i, game in enumerate(sorted_spreads):
-                    pick = Picks()
-                    pick.week = week
-                    pick.player = self
-                    pick.pick_num = 16 - i
-                    pick.team = game[1][1]
-                    pick.save()
+            sorted_spreads = sorted(week.get_spreads().items(), key=lambda x: x[1][2],reverse=True)
+            if starting_pick == 15:
+                games_list= [x for x in sorted_spreads if x[0] != espn.first_game_of_week()[0]]
+            else:
+                games_list = sorted_spreads
+            for i, game in enumerate(games_list):
+                pick = Picks()
+                pick.week = week
+                pick.player = self
+                pick.pick_num = starting_pick - i
+                pick.team = game[1][1]
+                pick.save()
+        pm = PickMethod()
+        pm.player = self
+        pm.week = week
+        pm.method = '3'
+        pm.save()
+
+
 
     def season_points_behind(self):
         return self.league.leading_score() - self.season_total()  
@@ -759,6 +788,16 @@ class PlayoffStats(models.Model):
     def __str__(self):
         return str(self.game)
 
+
+class PickMethod(models.Model):
+    CHOICES = (('1', 'player'), ('2', 'favs'), ('3', 'auto'), ('4', 'fixed_auto'))
+
+    method = models.CharField(max_length=20, choices=CHOICES)
+    week = models.ForeignKey(Week, on_delete=models.CASCADE)
+    player = models.ForeignKey(Player, on_delete=models.CASCADE)
+
+    def __str__(self):
+        return str(self.player) + self.method
 
 
 

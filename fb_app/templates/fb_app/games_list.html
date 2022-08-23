@@ -33,7 +33,8 @@
 
 <p hidden id='week_key'>{{week.pk}}</p>
 <h3 style="background-color:lightblue"> Week: <select id='week-list'> <option value='{{week.pk}}' selected> {{week.week}} </option> </select>  
-    {%if week.started and not week.late_picks%} Week started - no changes {%endif%}</h3>
+    <!-- {%if week_started and not week.late_picks%} Week started - no changes {%endif%} -->
+</h3>
 <p class='status' id='status'>updating spreads.....</p>
 <div class="updated-status">
   <p>Lowest points win, losing picks get that number of points</p>
@@ -42,7 +43,7 @@
   <p>Home team in CAPS</p>
 
 </div>
-{%if not week.started or week.late_picks%}
+{%if not week_started or week.late_picks%} 
 <div id='favs'>
   <form method="POST" name='favs'>
     {%csrf_token%}
@@ -90,13 +91,15 @@
 <div class='middle'></div>
 
   <div id="picksect" class="picks">
-        <table class='table table-sm'>
+    <h5 id="loading_msg">Loading Picks<span class="status">....</span></h5>
+
+    <table class='table table-sm' id="picks-table">
       <thead>
           <th>Pick#</th>
           <th>Pick List</th>
       </thead>
-      <tbody id ='pickstbl'>
-
+      <tbody id ='pickstbl' hidden>
+        
         {{ form.media.js }}
         <form id="pick_form" method="POST">
           {%csrf_token%}
@@ -111,15 +114,15 @@
           {%endfor%}
         </tbody>
     </table>
-    {%if not week.started or week.late_picks%}
-    <button type="submit" onclick="validate()" class="btn btn-primary">Submit Picks</button>
-    {%endif%}
+    
+    <button id='sub_btn' type="submit" onclick="validate()" class="btn btn-primary" disabled>Submit Picks</button>
+    
   </form>
 </div>  
   </div>
 </div>
 
-
+  
 <div>
   <table>
       <tbody id='old_picks'>
@@ -129,7 +132,7 @@
         </tr>
         {%endfor%}
       </tbody>
-  </table>
+  </table> 
 
 <table>
   <tbody id='teams'>
@@ -141,5 +144,5 @@
     {%endfor%}
   </tbody>
 </table>
-</div>
+</div> 
 {%endblock%}

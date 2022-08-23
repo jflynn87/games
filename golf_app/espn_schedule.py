@@ -52,4 +52,4 @@ class ESPNSchedule(object):
 
     def remaining_events(self):
         print ({k for k,v in self.get_event_list().items() if v.get('status') == 'pre'})
-        return len([v for k,v in self.get_event_list().items() if v.get('status') == 'pre']) +1  #+1 for in progress current tornament
+        return len([v for k,v in self.get_event_list().items() if v.get('status') == 'pre']) # removed plus 1 on 8/10/22 +1  #+1 for in progress current tornament

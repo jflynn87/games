@@ -10,7 +10,7 @@ from django.contrib.auth.models import User
 from datetime import datetime, timedelta
 from golf_app import populateField, calc_leaderboard, manual_score, bonus_details, espn_api, \
                      round_by_round, scrape_espn, utils, golf_serializers, espn_schedule, \
-                     scrape_scores_picks, espn_ryder_cup, withdraw, fedex_email
+                     scrape_scores_picks, espn_ryder_cup, withdraw, fedex_email, pga_t_data
 from django.db.models import Count, Sum
 from unidecode import unidecode as decode
 import json
@@ -36,16 +36,15 @@ from operator import itemgetter
 #    handi = Picks.objects.filter(user=u, playerName__tournament__season__current=True).aggregate(Sum('playerName__handi'))
 #    print (u, handi)
 
+#s.update_data()
 
-## for loading pga schedule into season
-season = Season.objects.get(current=True)
-url = 'https://statdata.pgatour.com/r/current/schedule.json'
-with urllib.request.urlopen(url) as schedule_json_url:
-        data = json.loads(schedule_json_url.read().decode())
+t = Tournament.objects.get(current=True)
+for f in Field.objects.filter(tournament=t):
+    print (f.playerName, f.currentWGR, t.fedex_data.get(f.playerName), len(f.season_stats))
 
-season.data = data
-season.save()
-##end season data
+exit()
+
+print (pga_t_data.PGAData().fedex_stats())
 
 exit()
 

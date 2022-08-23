@@ -1,14 +1,13 @@
 import os
 
-from django.db.models.query import QuerySet
 os.environ.setdefault("DJANGO_SETTINGS_MODULE","gamesProj.settings")
 
 import django
 django.setup()
-#from golf_app.models import Tournament, TotalScore, ScoreDetails, Field, Picks, PickMethod
-from fb_app.models import Season, Week, Games, Teams, Picks, League, Player,  MikeScore, WeekScore, PickPerformance, PlayoffStats
+ 
+from fb_app.models import Season, Week, Games, Teams, Picks, League, Player,  MikeScore, WeekScore, PickPerformance, PlayoffStats, PickMethod
 from django.contrib.auth.models import User
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta, timezone, tzinfo
 from django.db.models import Min, Q, Count, Sum, Max
 from django.db.models.functions import ExtractWeek, ExtractYear
 import time
@@ -36,13 +35,72 @@ from fb_app import views
 from django.http import HttpRequest
 from rest_framework.renderers import JSONRenderer
 from rest_framework.parsers import JSONParser
-
+import pprint
 #import tabula
+
+#headers = {'User-Agent': 'Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.149 Mobile Safari/537.36'}
+#url = "http://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard"
+
+#payload = {'week': str(1)}
+    #print ('payload ', payload)
+    #payload = {}  #works for pre season/current week?
+#else:
+#    payload = {}  #works for preseason and post season
+#json_data = requests.get(url, headers=headers, params=payload).json()
+#print (json_data)
+#print (json_data.keys())
+#print ('espn week: ', json_data.get('week'))
+#print (json.dumps(json_data, indent=4, sort_keys=True))
+
+
+#f = open('espn_schedule.json', "w")
+#f.write(json.dumps(json_data, indent=5))
+#f.close()
+
+
+
+start = datetime.now()
+
+espn = espn_data.ESPNData()
+print (espn.regular_week())
+exit()
+
+week = Week.objects.get(current=True)
+d = sorted(week.get_spreads().items(), key=lambda x: x[1][2],reverse=True)
+new_d = [x for x in d if x[0] != espn.first_game_of_week()[0]]
+
+print (len(d), len(new_d))
+print (new_d)
+exit()
+
+
+#espn.get_data()
+print (datetime.now() - start)
+est = pytz.timezone('US/Eastern')
+utc = pytz.utc
+
+for g in Games.objects.filter(week__current=True):
+
+    print (g ,espn.started(g.eid))
+    print (espn.game_date_utc(g.eid), espn.game_date_est(g.eid), espn.game_dow(g.eid))
+    #d_utc = utc.localize(datetime.strptime(espn.game_date(g.eid)[:-1], '%Y-%m-%dT%H:%M'))
+    #d_est = d_utc.astimezone(est)
+
+#print (Games.objects.get(eid=espn.first_game_of_week()))
+start_f = datetime.now()
+f = espn.first_game_of_week()
+print (datetime.now() - start_f)
+print (Games.objects.get(eid=f[0]))
+exit()
 
 espn = espn_data.ESPNData().get_orig_data()
 
 with open('data.txt', 'w') as outfile:
     json.dump(espn, outfile)
+
+
+
+
 exit()
 
 

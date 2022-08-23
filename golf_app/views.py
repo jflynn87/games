@@ -16,7 +16,7 @@ import datetime
 from golf_app import populateField, manual_score, withdraw, scrape_espn, \
      mp_calc_scores, golf_serializers, utils, olympic_sd, espn_api, \
      ryder_cup_scores, espn_ryder_cup, bonus_details, espn_schedule, scrape_scores_picks, \
-     scrape_cbs_golf, fedex_email 
+     scrape_cbs_golf, fedex_email, pga_t_data 
 
 from django.utils import timezone
 from django.core.exceptions import ObjectDoesNotExist
@@ -2621,7 +2621,7 @@ class FieldUpdatesAPI(APIView):
 
 class UpdateGolferResultsAPI(APIView):
     def get(self, request, min_key, max_key):
-        print ('starting golfer results update')
+        print ('starting golfer results update range: ', str(min_key), ' - ', str(max_key))  
         start = datetime.datetime.now()
         d = {}
  
@@ -2939,12 +2939,25 @@ class FedExSummaryEmail(TemplateView):
 
         complete_events = Tournament.objects.filter(season__current=True, complete=True).count()
         complete_majors = Tournament.objects.filter(season__current=True, complete=True, major=True).count()
+        fedex = pga_t_data.PGAData().fedex_stats()
+        remaining_fedex = fedex.get('remaining')
         remaining_events = sched.remaining_events()
         remaining_majors = season.season.major_count() - complete_majors
-        remaining_regular = remaining_events - remaining_majors 
+    
+        remaining_regular = remaining_events - (remaining_majors + remaining_fedex)
         
         prizes_won = (complete_majors * season.season.major_prize()) + ((complete_events - complete_majors) * season.season.regular_prize())
-        remaining_prizes = ((remaining_events - remaining_majors) * season.season.regular_prize()) + (remaining_majors * season.season.major_prize()) 
+        #remaining_prizes = ((remaining_events - remaining_majors) * season.season.regular_prize()) + (remaining_majors * season.season.major_prize()) 
+        remaining_prizes = ((remaining_events - (remaining_majors + remaining_fedex)) * season.season.regular_prize()) + (remaining_majors * season.season.major_prize() \
+                + (remaining_fedex * 75)) 
+
+        remaining_msg = 'with ' + str (remaining_regular + remaining_majors + remaining_fedex) + ' events remaining '
+        if remaining_regular > 0 and remaining_majors >0:
+            remaining_msg += '(' + str(remaining_regular) + ' regular, ' + str(remaining_majors) + ' majors, ' + str(remaining_fedex) + ' fedEx playoffs)' 
+        elif remaining_regular > 0 and remaining_majors == 0:
+            remaining_msg += '(' + str(remaining_regular) + ' regular, ' + str(remaining_fedex) + ' fedEx playoffs)' 
+        elif remaining_fedex >0:
+            remaining_msg += '(' + str(remaining_fedex) + ' fedEx playoffs)' 
 
         context.update({'display_dict': display_dict, 
                         #'last_t': last_t,
@@ -2957,13 +2970,14 @@ class FedExSummaryEmail(TemplateView):
                         'momentum_1': momentum_1,
                         'momentum_2': momentum_2,
                         'complete': complete_events,
-                        'remaining': remaining_events,
-                        'remaining_majors': remaining_majors,
-                        'remaining_regular': remaining_regular,
+                        #'remaining': remaining_events,
+                        #'remaining_majors': remaining_majors,
+                        #'remaining_regular': remaining_regular,
                         'complete_majors': complete_majors,
                         'prizes_won': prizes_won,
                         'remaining_prizes': remaining_prizes, 
                         't': Tournament.objects.get(current=True),
+                        'remaining_msg': remaining_msg,
 
 
         })
@@ -3264,7 +3278,7 @@ class GetFieldKeysAPI(APIView):
             d = {'first_field_key': first_field,
                 'last_field_key': last_field,}
 
-
+            print ('Field keys range: ', d)
         except Exception as e:
             print ('GetFieldKeys API Error: ', e)
             d['error'] = {'msg': str(e)}

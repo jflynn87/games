@@ -12,6 +12,10 @@ body {
 
 }
 
+.strike {
+  text-decoration: line-through;
+}
+
 .row {
   display: flex;
 }

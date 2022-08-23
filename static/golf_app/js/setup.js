@@ -68,17 +68,27 @@ return new Promise(function (resolve,reject) {
       //var firstField = Number($('#first_field_key').text())
       //var lastField = Number($('#last_field_key').text())
       console.log('field keys: ', lastField, firstField)
+      if (Number(lastField - firstField) < 50) {
+            console.log('field less than 50 so 1 batch')
+            var loops = 1
+            var remainder = 0
+            var loop_updates = lastField - firstField
+      }
+      else {
+      var loop_updates = 20
       var loops =  Math.floor(Number(lastField-firstField)/20)
       remainder = Number(lastField-firstField)%20
+
+      }
       for (let i=1; i <= loops; i++) {
             //var updateRange = []  
 
             if (i == 1) {
-                  updateRange = [firstField, firstField + 20]
+                  updateRange = [firstField, firstField + loop_updates]
             }
             else if (i == loops) {
-                  updateRange = [firstField + (20 *(i-1)+1), lastField]}
-            else {updateRange = [firstField + (20 *(i-1)+1), firstField + (20 * i)]}
+                  updateRange = [firstField + (loop_updates *(i-1)+1), lastField]}
+            else {updateRange = [firstField + (loop_updates *(i-1)+1), firstField + (loop_updates * i)]}
             console.log(i, updateRange)        
             console.log(typeof(updateRange[0].toString()), updateRange[0].toString().length, updateRange[1].toString())
             $('#setup_table tbody').append('<tr id=field_update' + i + '><td>Updating Field batch ' + i + ' pk range: ' +  updateRange +  

@@ -113,16 +113,6 @@ class Season(models.Model):
     def special_fields(self):
         return ['999', '470', '468', '018']
 
-        # 11/30/2021  - yes for the chart - changed above
-        # else:
-        #     for user in self.get_users('obj'):
-        #         score_dict[u.username] = TotalScore.objects.filter(tournament__season=self, user=u, tournament__pk__lte=tournament.pk).aggregate(Sum('score'))
-        #     min_score = min(score_dict.items(), key=lambda v: v[1].get('score__sum'))[1].get('score__sum')
-        #     second = sorted(score_dict.items(), key=lambda v: v[1].get('score__sum'))[1][1].get('score__sum')
-        #     for i, (user, data) in enumerate(sorted(score_dict.items(), key=lambda v: v[1].get('score__sum'))):
-        #         sorted_dict[user] = {'total': data.get('score__sum'), 'diff':  int(min_score) - int(data.get('score__sum')), 'rank': i+1,
-        #                                             'points_behind_second': int(second) - int(data.get('score__sum'))}
-        #     return json.dumps(sorted_dict)
 
 
 class Tournament(models.Model):
@@ -318,7 +308,12 @@ class Tournament(models.Model):
     def first_group_multi_pick(self):
         if int(self.season.season) < 2022:
             return False
-        if len(Field.objects.filter(tournament=self)) > 70:
+        #if len(Field.objects.filter(tournament=self)) > 70:
+        #    return True
+        #else:
+        #    return False
+        g_1 = Group.objects.get(tournament=self, number=1)
+        if g_1.playerCnt >= 10:
             return True
         else:
             return False
@@ -442,7 +437,7 @@ class Tournament(models.Model):
                         if tour.get('desc') == 'PGA TOUR':
                             for t in tour.get('trns'):
                                 if str(t.get('permNum')) == str(self.pga_tournament_num):
-                                    return (t.get('trnType'))
+                                     return (t.get('trnType'))
         print ('models file pga_t_type not finding t')                           
         return None
 

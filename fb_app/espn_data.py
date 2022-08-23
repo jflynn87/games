@@ -1,11 +1,12 @@
 from datetime import datetime, timedelta
 import requests 
+import pytz
 #import json
 
 
 
 class ESPNData(object):
-    '''takes an optinal dict and provides funcitons to retrieve espn golf data'''
+    '''takes an optinal dict and provides funcitons to retrieve espn FB data'''
 
     def __init__(self, week=None):
         from fb_app.models import Week
@@ -80,6 +81,40 @@ class ESPNData(object):
         return d
 
 
-    
+    def started(self, game_id):
+        '''takes an espn game id and returns a bool'''
+        state = [x.get('status').get('type').get('id') for x in [game for game in self.data.get('events')] if str(x.get('id')) == str(game_id)]
+        #print (state)
+        if state[0] == '1':
+            return False
+        else:
+            return True
 
-            
+    def game_date_utc(self, game_id):
+        return [x.get('date') for x in [game for game in self.data.get('events')] if str(x.get('id')) == str(game_id)][0]
+
+    def game_date_est(self, game_id):
+        est = pytz.timezone('US/Eastern')
+        utc = pytz.utc
+        d_utc = utc.localize(datetime.strptime(self.game_date_utc(game_id)[:-1], '%Y-%m-%dT%H:%M'))
+        d_est = d_utc.astimezone(est)
+
+        return d_est
+
+
+    def game_dow(self, game_id):
+        return self.game_date_est(game_id).strftime('%A')
+
+
+    def first_game_of_week(self):
+        '''returns a list as there may be multiple games starting at the same time'''
+        d = min([x.get('date') for x in [game for game in self.data.get('events')]])
+        return ([x.get('id') for x in [game for game in self.data.get('events') if game.get('date') == d]]) 
+    
+    def regular_week(self):
+        if len(self.first_game_of_week()) == 1 and \
+            self.game_dow(self.first_game_of_week()[0]) == 'Thursday':
+            return True
+        
+        return False
+

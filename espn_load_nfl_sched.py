@@ -32,10 +32,12 @@ def load_sched(year):
         week_cnt = w.week + 1
     else:
         week_cnt = 1
+
+    print (season, week_cnt)
     
     #week_cnt = current_week.week + 1
     
-    while week_cnt < 23:
+    while week_cnt < 2:
             try:
                 week, created = Week.objects.get_or_create(season_model=season, week=week_cnt)
                 #week.season = season.season
@@ -58,9 +60,10 @@ def load_sched(year):
                 
                 if week.week < 19:
                 
-                    payload = {'week': str(week_cnt)}
+                    #payload = {'week': 'PRE' + str(week_cnt)}
+                    payload = {}  #works for pre season/current week?
                     print ('payload ', payload)
-                    #payload = {}  #works for pre season/current week?
+                    
                 else:
                     payload = {}  #works for preseason and post season
                 json_data = requests.get(url, headers=headers, params=payload).json()

@@ -1,7 +1,7 @@
 from django.shortcuts import render, redirect
 from django.views.generic import ListView, TemplateView, View, DetailView, UpdateView, CreateView
 import urllib.request
-from fb_app.models import Games, Week, Picks, Player, League, Teams, WeekScore, Season, PickPerformance, PlayoffPicks, PlayoffScores, PlayoffStats
+from fb_app.models import Games, Week, Picks, Player, League, Teams, WeekScore, Season, PickPerformance, PlayoffPicks, PlayoffScores, PlayoffStats, PickMethod
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth import authenticate, login, logout
@@ -187,11 +187,17 @@ class GameListView(LoginRequiredMixin,ListView):
         context = super(GameListView, self).get_context_data(**kwargs)
         print ('game list view', self.kwargs)
         week = self.get_week()
+        week_started = week.started()
+
         player=Player.objects.get(name=self.request.user)
         #not adjusting game cnt as expect postponed only after picks done
         PickFormSet = modelformset_factory(Picks, form=CreatePicksForm, max_num=(week.game_cnt))
         NoPickFormSet = modelformset_factory(Picks, form=CreatePicksForm, extra=(week.game_cnt))
         games=Games.objects.filter(week=week).order_by("game_time")
+
+        if week_started and not Picks.objects.filter(player=player, week=week).exists():
+            p = player.submit_default_picks(week)
+
         if Picks.objects.filter(player=player, week=week).exists():
             form = PickFormSet(queryset=Picks.objects.filter(week=week, player=player), form_kwargs={'week': week})
         else:
@@ -206,14 +212,16 @@ class GameListView(LoginRequiredMixin,ListView):
             'week': week,
             'games_list': games,
             'form': form,
-            'teams': team_dict
+            'teams': team_dict,
+            'week_started': week_started
             })
         else:
             context.update({
             'week': week,
             'games_list': games,
             'form': form,
-            'teams': team_dict
+            'teams': team_dict,
+            'week_started': week_started
             })
 
         return context
@@ -236,12 +244,18 @@ class GameListView(LoginRequiredMixin,ListView):
              team_dict[team.id] = team.nfl_abbr
 
          pick_list = []
+         pm = PickMethod()
+         pm.week = week
+         pm.player = player
+
          if request.POST.get('favs') == 'favs':
             sorted_spreads = sorted(week.get_spreads().items(), key=lambda x: x[1][2], reverse=True)
             #print ('sspreads', sorted_spreads)
             #list of tuples returned by sort, use tuple to find fav
             for g in sorted_spreads:
                 pick_list.append(g[1][0])
+
+            pm.method = '2'
             print ('picking favs', pick_list)
          else:
             PickFormSet = modelformset_factory(Picks, form=CreatePicksForm, max_num=(week.game_cnt))
@@ -249,11 +263,15 @@ class GameListView(LoginRequiredMixin,ListView):
 
             if formset.is_valid():
                 #print ('valid')
-                
+                if PickMethod.objects.filter(week=week, player=player, method=3).exists():
+                    pm.method = '4'
+                else:
+                    pm.method = '1'    
                 for form in formset:
                     cd = form.cleaned_data
                     team = cd.get('team')
                     pick_list.append(team)
+            
             else:
                 print ('pick formset errors: ', formset.errors)
                 return render (request, 'fb_app/games_list.html', {
@@ -264,7 +282,7 @@ class GameListView(LoginRequiredMixin,ListView):
                 'week': week,
 
                 })
-
+         pm.save()
          i = 0
          picks_chk = []
          while i < len(pick_list):
@@ -505,19 +523,21 @@ class NewScoresView(TemplateView):
         context = super(NewScoresView, self).get_context_data(**kwargs)
         print (self.kwargs)
         week = Week.objects.get(pk=self.kwargs.get('pk'))
+        week_started = week.started()
     
-        base_data = self.get_base_data()
+        base_data = self.get_base_data(week, week_started)
 
         user = base_data[0]
         player = base_data[1]
         league = base_data[2]
+        view = base_data[3]
 
         if week.picks_complete(league) or league.league == 'Football Fools':
             print ('picks complete')
         else:
-            if week.started():
-                for player in Player.objects.filter(league=league):
-                    if Picks.objects.filter(player=player, week=week, player__active=True).count() < 1:
+            if week_started:
+                for player in Player.objects.filter(league=league, active=True):
+                    if Picks.objects.filter(player=player, week=week).count() < 1:
                         player.submit_default_picks(week)
         
         if league.ties_lose:
@@ -526,10 +546,24 @@ class NewScoresView(TemplateView):
         else:
             game_cnt = week.game_cnt              
 
+        if week.week != 1 and view != 'scores_view':
+            prior_week = Week.objects.get(week=week.week-1, season_model__current=True)
+            prior_week_scores = WeekScore.objects.filter(player__league=league, week=prior_week, week__season_model__current=True).order_by('score')
+        else:
+            prior_week = Week.objects.exclude(current=True).last()
+            prior_week_scores = None
+            
+        if PickMethod.objects.filter(week=week, method='3').exists():
+            espn = espn_data.ESPNData()
+            if espn.regular_week() and len(espn.first_game_of_week()) == 1:
+                thurs_game = Games.objects.get(eid=espn.first_game_of_week()[0])
+                late_users = list(PickMethod.objects.filter(week=week, method='3').values_list('player', flat=True))
+                if Picks.objects.filter(team=thurs_game.winner, player__in=late_users).exists():
+                    Picks.objects.filter(team=thurs_game.winner, player__in=late_users).update(team=thurs_game.loser)
 
         print ('game count: ', game_cnt)
-        if week.started():
-        
+        #if week.started():
+        if view == 'scores_view':
             context.update({
             'players': None,
             'picks': None,
@@ -543,13 +577,15 @@ class NewScoresView(TemplateView):
             'totals': None,
             'season_ranks': None,
             'league': league,
-            'game_cnt': game_cnt
+            'game_cnt': game_cnt, 
+            'week_started': week_started, 
+            'view': view
             })
 
             print ('*******finished context: ', datetime.datetime.now() - start)
             
             return context
-        else:
+        elif view == 'pre_start':
             print ('week not started')
             player_list = []
             picks_pending = []
@@ -561,7 +597,7 @@ class NewScoresView(TemplateView):
                 else:
                     picks_pending.append(player.name.username)
             
-            prior_week_scores = WeekScore.objects.filter(player__league=league, week__week=week.week - 1, week__season_model__current=True).order_by('score')
+            #prior_week_scores = WeekScore.objects.filter(player__league=league, week__week=week.week - 1, week__season_model__current=True).order_by('score')
 
             context.update ({'players': picks_submitted,
                         #'picks': pick_dict,
@@ -569,14 +605,188 @@ class NewScoresView(TemplateView):
                         'pending': picks_pending,
                         'league': league, 
                         'scores': prior_week_scores,
-                        'prior_week': Week.objects.get(week=week.week-1, season_model__current=True)
+                        #'prior_week': Week.objects.get(week=week.week-1, season_model__current=True),
+                        'prior_week': prior_week,
+                        'week_started': week_started,
+                        'view': view
                         
                         #'games': Games.objects.filter(week=week).order_by('eid'),
                              })
             return context
 
+        elif view == 'no_picks':
+            print ('no picks view: ', self.request.user)
+            player_list = []
+            picks_pending = []
+            picks_submitted = []
+            for player in Player.objects.filter(league=league, active=True):
+                player_list.append(player.name.username)
+                if player.picks_submitted(week):
+                    picks_submitted.append(player.name.username)
+                else:
+                    picks_pending.append(player.name.username)
+            
+            #prior_week_scores = WeekScore.objects.filter(player__league=league, week__week=week.week - 1, week__season_model__current=True).order_by('score')
 
-    def get_base_data(self):
+            context.update ({'players': picks_submitted,
+                        #'picks': pick_dict,
+                        'week': week,
+                        'pending': picks_pending,
+                        'league': league, 
+                        'scores': prior_week_scores,
+                        #'prior_week': Week.objects.get(week=week.week-1, season_model__current=True),
+                        'prior_week': prior_week,
+                        'week_started': week_started,
+                        'view': view
+                        
+                        #'games': Games.objects.filter(week=week).order_by('eid'),
+                             })
+        else:
+            print ('score view unknown: ', base_data)
+            raise HTTP404
+
+        return context
+        # start = datetime.datetime.now()
+        # context = super(NewScoresView, self).get_context_data(**kwargs)
+        # print (self.kwargs)
+        # week = Week.objects.get(pk=self.kwargs.get('pk'))
+        # week_started = week.started()
+    
+        # base_data = self.get_base_data(week, week_started)
+
+        # user = base_data[0]
+        # player = base_data[1]
+        # league = base_data[2]
+        # view = base_data[4]
+
+        # if week.picks_complete(league) or league.league == 'Football Fools':
+        #     print ('picks complete')
+        # else:
+        #     if week_started:
+        #         for player in Player.objects.filter(league=league):
+        #             if Picks.objects.filter(player=player, week=week, player__active=True).count() < 1:
+        #                 player.submit_default_picks(week)
+        #                 #pm = PickMethod()
+        #                 #pm.week = week
+        #                 #pm.player = player
+        #                 #pm.method = '3'
+        #                 #pm.save()
+        
+        # if league.ties_lose:
+        #     #print ('ties lose')
+        #     game_cnt = Games.objects.filter(week=week).exclude(postponed=True).count()
+        # else:
+        #     game_cnt = week.game_cnt              
+
+
+        # #if week_started:
+        # if view == 'scores_view':
+            
+        #     context.update ({'players': picks_submitted,
+        #                     'week': week,
+        #                     'pending': picks_pending,
+        #                     'league': league, 
+        #                     'scores': prior_week_scores,
+        #                     #'prior_week': Week.objects.get(week=week.week-1, season_model__current=True)
+        #                     'prior_week': prior_week_obj,
+        #                     'week_started': week_started,
+
+        #                     #'games': Games.objects.filter(week=week).order_by('eid'),
+        #                      })
+
+        
+        # elif view == 'pre_start':
+        #     context.update({
+        #     'players': None,
+        #     'picks': None,
+        #     'week': week,
+        #     'pending': None,
+        #     'games': None,
+        #     'scores': None,
+        #     'projected_ranks': None,
+        #     'projected_scores': None,
+        #     'ranks': None,
+        #     'totals': None,
+        #     'season_ranks': None,
+        #     'league': league,
+        #     'game_cnt': game_cnt
+        #     })
+        # elif view == 'no_picks':
+        #     context.update({
+        #     'players': None,
+        #     'picks': None,
+        #     'week': week,
+        #     'pending': None,
+        #     'games': None,
+        #     'scores': None,
+        #     'projected_ranks': None,
+        #     'projected_scores': None,
+        #     'ranks': None,
+        #     'totals': None,
+        #     'season_ranks': None,
+        #     'league': league,
+        #     'game_cnt': game_cnt,
+        #     'msg': 'Week Started, please submit picks to see scores.'
+        #     })
+        # else:
+        #     context.update({
+        #     'players': None,
+        #     'picks': None,
+        #     'week': week,
+        #     'pending': None,
+        #     'games': None,
+        #     'scores': None,
+        #     'projected_ranks': None,
+        #     'projected_scores': None,
+        #     'ranks': None,
+        #     'totals': None,
+        #     'season_ranks': None,
+        #     'league': league,
+        #     'game_cnt': game_cnt,
+        #     'msg': 'Something wrong, try submitting picks.'
+        #     })
+
+
+
+            
+            
+        #     print ('*******finished context: ', datetime.datetime.now() - start)
+            
+        #     return context
+        # # else:
+        # #     print ('week not started')
+        # #     player_list = []
+        # #     picks_pending = []
+        # #     picks_submitted = []
+        # #     for player in Player.objects.filter(league=league, active=True):
+        # #         player_list.append(player.name.username)
+        # #         if player.picks_submitted(week):
+        # #             picks_submitted.append(player.name.username)
+        # #         else:
+        # #             picks_pending.append(player.name.username)
+            
+        # #     if week.week != 1:
+        # #         prior_week_scores = WeekScore.objects.filter(player__league=league, week__week=week.week - 1, week__season_model__current=True).order_by('score')
+        # #         prior_week_obj = Week.objects.get(week=week.week-1, season_model__current=True)
+        # #     else:
+        # #         prior_week_scores = None
+        # #         prior_week_obj = Week.objects.get(week=1, season_model__current=True)
+
+        # #     context.update ({'players': picks_submitted,
+        # #                 #'picks': pick_dict,
+        # #                 'week': week,
+        # #                 'pending': picks_pending,
+        # #                 'league': league, 
+        # #                 'scores': prior_week_scores,
+        # #                 #'prior_week': Week.objects.get(week=week.week-1, season_model__current=True)
+        # #                 'prior_week': prior_week_obj
+                        
+        # #                 #'games': Games.objects.filter(week=week).order_by('eid'),
+        # #                      })
+        # #     return context
+
+
+    def get_base_data(self, week, week_started):
         '''takes in view object and calculates the user, player, league and week,
          returns a tuple of objects'''
 
@@ -597,7 +807,21 @@ class NewScoresView(TemplateView):
             user= None
             player = None
 
-        return (user, player, league)
+        if week_started and league.league == 'Football Fools':
+            view = 'scores_view'
+        elif not week_started and league.league == 'Football_Fools':
+            view = 'pre_start'
+        elif not week_started:
+            view = 'pre_start'
+        elif week_started and not PickMethod.objects.filter(player=player, week=week, method=3).exists():
+            view = 'scores_view'
+        elif week_started and PickMethod.objects.filter(player=player, week=week, method=4).exists():
+            view = 'scores_view'
+        else:
+            view = 'no_picks'
+
+
+        return (user, player, league, view)
 
 
 
@@ -1350,4 +1574,35 @@ def calc_qb_ratings(stats):
 class PlayoffLogic(TemplateView):
     template_name='fb_app/playoff_about.html'
 
+
+class GetGameStatusAPI(APIView):
+    
+    def get(self, request, week_key):
+        try:
+            week = Week.objects.get(pk=week_key)
+            week_started = week.started()
+            espn = espn_data.ESPNData()            
+            d = {}
+
+            if week_started and PickMethod.objects.filter(week=week, player__name=self.request.user, method__in=['1', '2', '4']).exists():
+                all_started = True
+            else:
+                all_started = False
+            d['all_started'] = all_started
+            
+            for g in Games.objects.filter(week=week):
+                if not week_started or week.late_picks:
+                    s = False
+                elif all_started:
+                    s = True
+                else:
+                    s = espn.started(g.eid)
+                d[g.home.pk] = {'started': s, 'abbr': g.home.nfl_abbr}
+                d[g.away.pk] = {'started': s, 'abbr': g.away.nfl_abbr}
+                
+            return Response(json.dumps(d), 200)
+
+        except Exception as e:
+            print ('get picks api issue: ', e)
+            return Response(json.dumps({'msg': str(e)}), 500)
 

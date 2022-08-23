@@ -24,7 +24,6 @@ class CreatePicksForm(ModelForm):
             team_list.append(game.home)
             team_list.append(game.away)
         self.fields['team'].queryset = Teams.objects.filter(nfl_abbr__in=team_list)
-        #self.fields['week'].queryset = Week.objects.filter(season_model__current=True)
 
 
     class Meta:

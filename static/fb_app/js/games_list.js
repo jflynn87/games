@@ -74,10 +74,14 @@ function validate() {
     if (missing_picks){
         alert('Missing Picks, please select one team per game')
         $('#pick_form').attr('onsubmit','return false');
-}
+    }
+    else {
+      $('#pickstbl :disabled').removeAttr('disabled')
+    }
+
 
 };
-//$("select[id^='week-list']").change(function () {
+
 $(document).ready(function () {
 $("#week-list").change(function () {
   console.log('caught click', $('#week-list').val())
@@ -109,16 +113,54 @@ $(document).ready(function () {
         console.log('week: ', weeks[i]['fields']['week'])
         if (weeks[i]['pk'] != $('#week_key').text()) {
           console.log(weeks[i]['pk'],  $('#week_key').text())
-        //$('#week-list').append('<a href=/fb_app/games_list/' + weeks[i]['pk'] + '/'  +'> <button>' + weeks[i]['fields']['week'] + '</button> </a>') }
         $('#week-list').append('<option value=/fb_app/games_list/' + weeks[i]['pk'] + '>' + weeks[i]['fields']['week'] + '</option>') }
 
       }
       )
 })
 })
-//commented on update to bootstrap 5.0
-//$(window).resize(function() {
-//  console.log($(window).width())
-//  $('#picksect').attr('class', 'row')
-//})
+
+$('#pickstbl').ready(function() {
+  fetch("/fb_app/game_states/" + $('#week_key').text(),
+  {method: "GET",
+  })
+.then((response) => response.json())
+.then((responseJSON) => {
+      data = $.parseJSON(responseJSON)
+      //console.log(data)
+      if (data.msg) {
+        $('#loading_msg').text('Error: ' + data.msg + ' please try again')  
+      }
+      else      
+        {
+         //console.log($('#picks-table'))
+          picks_len = document.getElementById('picks-table').rows.length
+          teams_len = Object.keys(data).length
+
+          for (i=0; i< picks_len -1; i++) {
+            pick_form = $('#id_form-' + i + '-team')
+            //console.log('AA ', data, pick_form.val())
+            if (data[pick_form.val()] && data[pick_form.val()].started) {
+              $('#id_form-' + i + '-team option').attr('disabled', true)
+              $('#id_form-' + i + '-team').css('backgroundColor', 'gray')
+            }
+          }
+
+          for (c=1; c< teams_len; c++) {
+
+            if (data[c].started) {
+              $("select option[value='" + Object.keys(data)[c-1] + "']").attr('disabled', true)
+              $("select option[value='" + Object.keys(data)[c-1] + "']").css('font-weight', '100').css('color', 'pink')
+              }
+            }
+
+          
+          $('#loading_msg').remove()
+         $('#pickstbl').attr('hidden', false)}
+         if (data.all_started) {
+          $('#sub_btn').attr('hidden', true)
+         }
+         else {$('#sub_btn').attr('disabled', false)}
+    })
+})
   

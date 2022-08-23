@@ -365,10 +365,12 @@ def get_field(t, owgr_rankings):
 
 def configure_groups(field_list, tournament):
     '''takes a list, calculates the number of groups and players per group, returns a dict'''
+    ## try to simplify this 10 picks (9 or 10 groups) for any tournament over 30 and dynamic gruoups of 3 for smaller.  
     print ('config groups')
     group_cnt = 1
     groups = {}
-    if len(field_list) > 64:
+    #if len(field_list) > 64:
+    if len(field_list) > 89:
         group_size = 10
 
         if tournament.pga_tournament_num == '999':
@@ -397,11 +399,17 @@ def configure_groups(field_list, tournament):
             #group_size = len(field_list) - 50
             #remainder = 0
 
-    elif len(field_list) > 29 and len(field_list) < 65 :
-        print ('bet 30 - 64, 10 groups')
+    #elif len(field_list) > 29 and len(field_list) < 65 :
+    elif len(field_list) > 29 and len(field_list) < 90:
+        ## change this to just spread the field.  Don't forget you need specific logic for the hero (18 golfer field)
+        print ('bet 30 - 69, 10 groups')
         total_groups = 10
-        group_size = int(len(field_list) / total_groups)
-        remainder = len(field_list) % (total_groups*group_size)
+        group_size = int(round(len(field_list) / total_groups, 0))  #if you round this you need to cope wiht a negative remainder and smaller last group.
+        if len(field_list) > total_groups*group_size:
+            remainder = len(field_list) % (total_groups*group_size)
+        else:
+            remainder = len(field_list) - (total_groups*group_size)
+        
         while group_cnt < total_groups:
             groups[group_cnt] = group_size
             group_cnt +=1
@@ -415,7 +423,7 @@ def configure_groups(field_list, tournament):
         while group_cnt < total_groups:
             groups[group_cnt] = group_size
             group_cnt +=1
-
+    print ('XXX ', group_size, remainder)
     if remainder == 0:
         groups[group_cnt] = group_size
     else:
