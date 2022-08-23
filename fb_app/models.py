@@ -338,9 +338,16 @@ class Week(models.Model):
         else:
             return False
 
+    def games_complete(self):
+        if Games.objects.filter(week=self, final=True).count() +  \
+         Games.objects.filter(week=self, postponed=True).count()== self.game_cnt:
+            return True
+        else:
+            return False
+
 @receiver(post_save, sender=Week)
 def update_analyitcs(sender, **kwargs):
-    print (kwargs.get('instance'))
+    print ('updating stats; ', kwargs.get('instance'))
     week = kwargs.get('instance')
     if week.week > 19:
         return
@@ -800,6 +807,16 @@ class PickMethod(models.Model):
         return str(self.player) + self.method
 
 
+class AccessLog(models.Model):
+    user = models.ForeignKey(User, null=True, blank=True, on_delete=models.SET_NULL, related_name='fb_user')
+    page = models.CharField(max_length=100, null=True, blank=True)
+    updated = models.DateTimeField(auto_now=True)
+    week = models.ForeignKey(Week, blank=True, null=True, on_delete=models.CASCADE)
+    device_type = models.CharField(max_length=100, blank=True, null=True)
+    views = models.PositiveBigIntegerField(default=0, null=True)
+
+    def __str__(self):
+        return str(self.user.username) + '  ' + str(self.page)
 
 
 

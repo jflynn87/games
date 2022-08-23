@@ -61,6 +61,10 @@ import pprint
 
 start = datetime.now()
 
+w = Week.objects.get(season_model__current=True, week=1)
+print (w.games_complete())
+exit()
+
 espn = espn_data.ESPNData()
 print (espn.regular_week())
 exit()

@@ -42,4 +42,6 @@ urlpatterns = [
     path('team_def_stats/<str:nfl_abbr>', views.TeamDefStatsView.as_view()),
     path('team_opp_stats/<str:nfl_abbr>', views.TeamOppStatsView.as_view()),
     path('game_states/<int:week_key>', views.GetGameStatusAPI.as_view()),
+    path('setup/', views.Setup.as_view(), name='setup'),
+    path('roll_week/', views.RollWeekAPI.as_view()),
     ]

@@ -1,0 +1,63 @@
+{%extends "fb_app/base.html"%}
+
+{%load mathfilters%}
+{%load static%}
+{{form.media.css}}
+{%block body_block%}
+
+<script src="{% static "fb_app/js/setup.js"%}" type="text/javascript" ></script>
+
+<h3>Weeks</h3>
+
+{%if error%}
+<div class="alert-danger">
+    {{error}}
+
+</div>
+{%endif%}
+
+
+<button id="roll_week" onclick="rollWeek()" class="btn btn-primary">Roll to Next Week</button>
+<div id="status_msg">
+    <h4>Status</h4>
+    <p>Click to roll to next week</p>
+
+</div>
+<div class="form-group">
+<form method="post" name="weeks">
+    {%csrf_token%}
+<table class="table bordered">
+    <thead>
+        <th>Week</th>
+        <th>Games</th>
+        <th>Current</th>
+    </thead>
+    <tbody>
+        {%for w in weeks%}
+        <tr>
+            <td>{{w.week}}</td>
+            <td>{{w.game_cnt}}</td>
+            <td>{{w.current}}</td>
+        </tr>   
+        {%endfor%}
+    </tbody>
+</table>
+
+    <label for="nfl_sesaon" >NFL Sesaon</label>
+    <select type="select" name="nfl_season" id="nfl_season" class="form-control" >
+        <option value="REG" selected> REG</option>
+        <option value="PRE">PRE</option>
+        <option value="POST">POST</option>
+        </select>
+    <label for="payload" >Payload </label>
+    <input type="text" name="payload" id="payload" class="form-control" placeholder="max week number">
+    
+    <br>
+    <label for="current">Check to set up current week in api</label>
+    <input type="checkbox" name="current" id="current">
+    <br>
+    <button type="submit" class="btn-primary" >Submit</button>
+</form>
+</div>
+
+{%endblock%}

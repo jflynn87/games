@@ -1,7 +1,8 @@
 from django.shortcuts import render, redirect
 from django.views.generic import ListView, TemplateView, View, DetailView, UpdateView, CreateView
 import urllib.request
-from fb_app.models import Games, Week, Picks, Player, League, Teams, WeekScore, Season, PickPerformance, PlayoffPicks, PlayoffScores, PlayoffStats, PickMethod
+from fb_app.models import Games, Week, Picks, Player, League, Teams, WeekScore, Season, PickPerformance, \
+     PlayoffPicks, PlayoffScores, PlayoffStats, PickMethod, AccessLog
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth import authenticate, login, logout
@@ -521,6 +522,7 @@ class NewScoresView(TemplateView):
     def get_context_data(self, **kwargs):
         start = datetime.datetime.now()
         context = super(NewScoresView, self).get_context_data(**kwargs)
+        access = save_access_log(self.request, 'scores_view')
         print (self.kwargs)
         week = Week.objects.get(pk=self.kwargs.get('pk'))
         week_started = week.started()
@@ -1118,6 +1120,7 @@ class UpdatePlayoffs(LoginRequiredMixin, UpdateView):
 class PlayoffScores(LoginRequiredMixin, TemplateView):
     template_name = 'fb_app/playoff_score.html'
 
+
     def get_context_data(self, **kwargs):
         context = super(PlayoffScores, self).get_context_data(**kwargs)
         #player = Player.objects.get(name=self.request.user)
@@ -1606,3 +1609,84 @@ class GetGameStatusAPI(APIView):
             print ('get picks api issue: ', e)
             return Response(json.dumps({'msg': str(e)}), 500)
 
+
+def save_access_log(request, screen):
+    '''takes a request and a string saves an object and returns nothing'''
+    try:
+        if request.user.is_authenticated:
+            log, created = AccessLog.objects.get_or_create(week=Week.objects.get(current=True), user=request.user, page=screen, device_type=request.user_agent)
+            log.views += 1
+            log.save()
+    except Exception as e:
+        print ('save access log issue: ', e)
+    return
+
+
+class Setup(LoginRequiredMixin, TemplateView):
+    template_name = 'fb_app/setup.html'
+
+    def get_context_data(self, **kwargs):
+        context = super(Setup, self).get_context_data(**kwargs)
+        #player = Player.objects.get(name=self.request.user)
+        weeks = Week.objects.filter(season_model__current=True)
+
+        context.update(
+                {'weeks': weeks})
+        return context
+
+    def post(self, request, **kwargs):
+        from fb_app import load_espn_sched
+        print (request.POST)
+        espn = {}
+        nfl_season=request.POST.get('nfl_season')
+        if request.POST.get('payload') and request.POST.get('current'):
+            error = 'Enter a max week or select checkbox for current week'
+        elif request.POST.get('payload'):
+            espn = load_espn_sched.load_sched(payload=request.POST.get('payload'), nfl_season=nfl_season)
+            error = "PAYLOaD"
+            
+        elif request.POST.get('current'):
+            error = 'CURRENT '
+            espn = load_espn_sched.load_sched(nfl_season=nfl_season)
+        else:
+            error = 'Unknown input'
+        weeks = Week.objects.filter(season_model__current=True)
+
+        print ('setup summary: ', espn)
+        return render (request, 'fb_app/setup.html', {
+            'form': request.POST,
+            'error': error,
+            'weeks': weeks,
+        }
+        )
+
+
+class RollWeekAPI(APIView):
+    
+    def get(self, request):
+        print ('Rolling Week API')
+        start = datetime.datetime.now()
+        try:    
+            d = {}
+            week = Week.objects.get(current=True)
+
+            if week.games_complete():
+                if Week.objects.filter(season_model__current=True, week=week.week + 1).exists():
+                    week.current = False
+                    new_current = Week.objects.get(season_model__current=True, week=week.week + 1)
+                    new_current.current = True
+                    week.save()
+                    new_current.save()
+                    d.update({'success': {'current_week': new_current.week, 'current': new_current.current}})
+                else:
+                    d.update({'no_next_week':  {'current_week': week.week, 'current': week.current}})
+
+            else:
+                d.update({'games_not_complete':  {'current_week': week.week, 'current': week.current}})
+
+        except Exception as e:
+            print ('get picks api issue: ', e)
+            d.update({'error': {'msg': str(e)}})
+        
+        d['duration'] = str(datetime.datetime.now() - start)
+        return Response(json.dumps(d), 200)
