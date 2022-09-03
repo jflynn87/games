@@ -8,6 +8,11 @@
 {%if not t.complete%}
 <!-- <script type="text/javascript" src="{%static 'golf_app/js/get_espn_data.js'%}"></script> -->
 {%endif%}
+<div id='baseball_scores' hidden>
+  <h4>Baseball Scores</h4>
+  
+</div>
+
 <div class="container-fluid"> 
   
 <div class=row>
@@ -120,4 +125,67 @@
     <p hidden id='username'>{{request.user.username}}</p>
     <p hidden id='tournament_key'>{{t.pk}}</p> 
   </div>
+{%if user.is_superuser%}
+  <script>
+    fetch("/user_app/baseball_scores/",
+      {method: "GET",
+      })
+  .then((response) =>  response.json())
+  .then((responseJSON) => {
+      data = responseJSON
+      console.log('baseball: ', data, Object.keys(data).length)
+      $('#baseball_scores').append('<table class=table id=baseball_table>' +
+                                    '<tr>' + 
+                                    '<th>Final</th>' + 
+                                    '<th>Inning</th>' + 
+                                    '<th>Team</th>' + 
+                                    '<th>Score</th>' + 
+                                    '<th>Team</th>' + 
+                                    '<th>Score</th>' + 
+                                    '</table>')
+
+      var team_keys = []
+      for (i=0; i< Object.keys(data).length; i++) {
+        $.each(Object.values(data)[i], function(k, v) {
+          if (k.startsWith('team')) {
+          team_keys.push(k)}
+        } )
+
+        row = document.createElement('tr')
+        row.id = Object.keys(data)[i]
+        td1 = document.createElement('td')
+        td1.innerHTML = Object.values(data)[i].final
+        td2 = document.createElement('td')
+        td2.innerHTML = Object.values(data)[i].inning
+        td3 = document.createElement('td')
+        td4 = document.createElement('td')
+        td5 = document.createElement('td')
+        td6 = document.createElement('td')
+        
+        for (t=0; t < team_keys.length; t++) {
+            if (t==0) 
+            {td3.innerHTML =Object.values(data)[i][team_keys[t]].name
+              td4.innerHTML =Object.values(data)[i][team_keys[t]].score
+              if (Object.values(data)[i][team_keys[t]].winner == true) {td3.style.fontWeight = 'bold';}
+            }
+            else {td5.innerHTML =Object.values(data)[i][team_keys[t]].name
+                td6.innerHTML =Object.values(data)[i][team_keys[t]].score}
+        }
+
+        row.append(td1)
+        row.append(td2)
+        row.append(td3)
+        row.append(td4)
+        row.append(td5)
+        row.append(td6)
+
+        $('#baseball_table').append(row)
+
+      }
+      $('#baseball_scores').attr('hidden', false)     
+  
+})
+
+</script>
+{%endif%}
 {% endblock %}

@@ -1,18 +1,28 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.views.generic import View, TemplateView, ListView, DetailView, CreateView, UpdateView, FormView
+from user_app import espn_baseball
 from golf_app.models import Tournament, Season  
 from fb_app.models import Week, Games, PlayoffPicks 
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponseRedirect, HttpResponse
 from django.contrib.auth import authenticate, login, logout
-from django.contrib.auth.mixins import LoginRequiredMixin
-from django.views.generic.base import TemplateResponseMixin
+#from django.contrib.auth.mixins import LoginRequiredMixin
+#from django.views.generic.base import TemplateResponseMixin
 from django.urls import reverse, reverse_lazy
 from django.contrib.auth.models import User
-from django.contrib.auth.forms import UserCreationForm
+#from django.contrib.auth.forms import UserCreationForm
 from user_app.forms import UserCreateForm
 from golf_app import utils
-from django.db.models import Q, Max
+#from django.db.models import Q, Max
+
+from django.http import JsonResponse
+import json
+import random
+from django.db import transaction
+import urllib.request
+import csv
+from rest_framework.views import APIView 
+
 
 
 class SignUp(CreateView):
@@ -20,30 +30,6 @@ class SignUp(CreateView):
     form_class = UserCreateForm
     success_url = reverse_lazy('login')
     template_name = 'user_app/signup.html'
-
-# def user_login(request):
-
-#     if request.method == "POST":
-#         username = request.POST.get('username')
-#         password = request.POST.get('password')
-
-#         user = authenticate(username=username,password=password)
-
-#         if user:
-#             if user.is_active:
-#                 login(request, user)
-#                 #return HttpResponseRedirect(reverse('index'))
-#                 return render (request, 'index.html', {}
-#                 )
-#             else:
-#                 return HttpResponse("Your account is not active")
-#         else:
-#             print ("someone tried to log in and failed")
-#             #print ("Username: {} and password {}".format(username,password))
-#             print ("Username: {} ".format(username))
-#             return HttpResponse("invalid login details supplied")
-#     else:
-#         return render(request, 'login.html', {})
 
 
 def index(request):
@@ -60,7 +46,8 @@ def index(request):
                 game = None
         except Exception as e:
             game = None
-            week = Week.objects.filter(season_model__current=True).last()
+            #week = Week.objects.filter(season_model__current=True).last()
+            week = Week.objects.latest('pk')
             print ('week', week)
     
         try:
@@ -98,32 +85,14 @@ def special(request):
     return HttpResponse("You are logged in!")
 
 
-# def register(request):
-#     registered = False
+class GetBaseballScore(APIView):
 
-#     if request.method == "POST":
-#         user_form = UserForm(data=request.POST)
-
-
-#         if user_form.is_valid():
-#             user = user_form.save()
-#             user.set_password(user.password)
-#             user.save()
-
-#             registered = True
-#         else:
-#             print(user_form.errors)
-
-#     else:
-#         user_form = UserForm()
-
-
-#     return render(request,'registration.html',
-#                             {'user_form': user_form,
-#                              'registered': registered})
-
-
-# @login_required
-# def user_logout(request):
-#     logout(request)
-#     return HttpResponseRedirect(reverse('index'))
+    def get(self, request):
+        
+        try:
+            d = espn_baseball.ESPNData().get_score(['21'])
+        except Exception as e:
+            print ('Baseball score API Error: ', e)
+            d['error'] = {'msg': str(e)}
+        
+        return JsonResponse(d, status=200, safe=False)

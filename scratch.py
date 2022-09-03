@@ -27,6 +27,7 @@ import requests
 #from linebot.exceptions import LineBotApiError
 from bs4 import BeautifulSoup
 from fb_app import scrape_cbs, scrape_cbs_playoff, playoff_stats, espn_data 
+from user_app import espn_baseball
 import pytz
 from django.core import serializers
 #import docx2txt
@@ -58,11 +59,57 @@ import pprint
 #f.close()
 
 
+start = datetime.now()
+#headers = {'User-Agent': 'Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.149 Mobile Safari/537.36'}
+#url = 'https://site.api.espn.com/apis/site/v2/sports/baseball/mlb/scoreboard'
+#data = requests.get(url, headers=headers).json() 
+
+#for game in data.get('events'):
+#    print (game.get('name'), game.get('status').get('period'), game.get('status').get('type').get('completed'))
+#    for competition in game.get('competitions'):
+#        for competitor in competition.get('competitors'):
+#            print (competitor.get('team').get('name'), competitor.get('score'), competitor.get('winner') )
+
+espn = espn_baseball.ESPNData()
+print (espn.get_score(['21']))
+print (datetime.now() - start)
+
+exit()
 
 start = datetime.now()
+d = {}
+for p in Player.objects.filter(league__league='Golfers', active=True):
+    d.update({p.name.username: {'score': 0, 'proj_score': 0}})
+espn = espn_data.ESPNData()
+#first_game = espn.first_game_of_week()[0]
+for g in Games.objects.filter(week__current=True):
+    #print (espn.get_team(g.eid, 'home'),
+    home_score =  espn.get_team_score(g.eid, 'home')
+    #print (espn.get_team(g.eid, 'away'), 
+    away_score = espn.get_team_score(g.eid, 'away')
+    winner = espn.game_winner(g.eid)
+    loser = espn.game_loser(g.eid)
+    if espn.game_complete(g.eid):
+        for pick in Picks.objects.filter(team=Teams.objects.get(nfl_abbr=loser), week=g.week, player__league=League.objects.get(league="Golfers"), player__active=True):
+            d.get(pick.player.name.username).update({'score': d.get(pick.player.name.username).get('score') + pick.pick_num})
 
-w = Week.objects.get(season_model__current=True, week=1)
-print (w.games_complete())
+
+print (d)
+
+w = Week.objects.get(current=True)
+print (datetime.now() - start)
+by_pick_start = datetime.now()
+e = {}
+for p in Player.objects.filter(league__league='Golfers', active=True):
+    e.update({p.name.username: {'score': 0, 'proj_score': 0}})
+espn = espn_data.ESPNData()
+#values('user_id').distinct().order_by('user_id'):
+for p in Picks.objects.filter(week=w, league=League.objects.get(league="Golfers")):
+    pass
+
+
+
+
 exit()
 
 espn = espn_data.ESPNData()

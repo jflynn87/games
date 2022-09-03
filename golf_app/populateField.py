@@ -817,9 +817,11 @@ def get_individual_stats(t=None):
     return d
 
 
-def get_fedex_data(tournament):
-    if tournament.fedex_data and len(tournament.fedex_data) > 0:
-        return tournament.fedex_data
+def get_fedex_data(tournament=None):
+    '''takes an optional tournament object to update/setup, returns a dict'''
+    if tournament:
+        if tournament.fedex_data and len(tournament.fedex_data) > 0:
+            return tournament.fedex_data
 
     data = {}
     try:
@@ -840,10 +842,10 @@ def get_fedex_data(tournament):
     except Exception as ex:
         print ('fedex overall issue ', ex)
 
-    tournament.fedex_data = data
-    tournament.save()
-
-    fedex_season = FedExSeason.objects.get(season=tournament.season).update_player_points()
+    if tournament:
+        tournament.fedex_data = data
+        tournament.save()
+        fedex_season = FedExSeason.objects.get(season=tournament.season).update_player_points()
 
     return data
 

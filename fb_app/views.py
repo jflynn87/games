@@ -463,6 +463,7 @@ def ajax_get_games(request, week):
 class UpdateScores(APIView):
     
     def get(self, num):
+        start = datetime.datetime.now()
         #print ('*** update scores: ', self.request.GET)
         week = Week.objects.get(week=self.request.GET.get('week'), \
             season_model=Season.objects.get(season=self.request.GET.get('season')))
@@ -487,6 +488,7 @@ class UpdateScores(APIView):
         else:
             data = json.dumps({'msg': 'week not started'})
         
+        print ('Update Score duration: ', datetime.datetime.now() - start)
         return Response(data, 200)
 
     def post(self, num):
@@ -648,144 +650,6 @@ class NewScoresView(TemplateView):
             raise HTTP404
 
         return context
-        # start = datetime.datetime.now()
-        # context = super(NewScoresView, self).get_context_data(**kwargs)
-        # print (self.kwargs)
-        # week = Week.objects.get(pk=self.kwargs.get('pk'))
-        # week_started = week.started()
-    
-        # base_data = self.get_base_data(week, week_started)
-
-        # user = base_data[0]
-        # player = base_data[1]
-        # league = base_data[2]
-        # view = base_data[4]
-
-        # if week.picks_complete(league) or league.league == 'Football Fools':
-        #     print ('picks complete')
-        # else:
-        #     if week_started:
-        #         for player in Player.objects.filter(league=league):
-        #             if Picks.objects.filter(player=player, week=week, player__active=True).count() < 1:
-        #                 player.submit_default_picks(week)
-        #                 #pm = PickMethod()
-        #                 #pm.week = week
-        #                 #pm.player = player
-        #                 #pm.method = '3'
-        #                 #pm.save()
-        
-        # if league.ties_lose:
-        #     #print ('ties lose')
-        #     game_cnt = Games.objects.filter(week=week).exclude(postponed=True).count()
-        # else:
-        #     game_cnt = week.game_cnt              
-
-
-        # #if week_started:
-        # if view == 'scores_view':
-            
-        #     context.update ({'players': picks_submitted,
-        #                     'week': week,
-        #                     'pending': picks_pending,
-        #                     'league': league, 
-        #                     'scores': prior_week_scores,
-        #                     #'prior_week': Week.objects.get(week=week.week-1, season_model__current=True)
-        #                     'prior_week': prior_week_obj,
-        #                     'week_started': week_started,
-
-        #                     #'games': Games.objects.filter(week=week).order_by('eid'),
-        #                      })
-
-        
-        # elif view == 'pre_start':
-        #     context.update({
-        #     'players': None,
-        #     'picks': None,
-        #     'week': week,
-        #     'pending': None,
-        #     'games': None,
-        #     'scores': None,
-        #     'projected_ranks': None,
-        #     'projected_scores': None,
-        #     'ranks': None,
-        #     'totals': None,
-        #     'season_ranks': None,
-        #     'league': league,
-        #     'game_cnt': game_cnt
-        #     })
-        # elif view == 'no_picks':
-        #     context.update({
-        #     'players': None,
-        #     'picks': None,
-        #     'week': week,
-        #     'pending': None,
-        #     'games': None,
-        #     'scores': None,
-        #     'projected_ranks': None,
-        #     'projected_scores': None,
-        #     'ranks': None,
-        #     'totals': None,
-        #     'season_ranks': None,
-        #     'league': league,
-        #     'game_cnt': game_cnt,
-        #     'msg': 'Week Started, please submit picks to see scores.'
-        #     })
-        # else:
-        #     context.update({
-        #     'players': None,
-        #     'picks': None,
-        #     'week': week,
-        #     'pending': None,
-        #     'games': None,
-        #     'scores': None,
-        #     'projected_ranks': None,
-        #     'projected_scores': None,
-        #     'ranks': None,
-        #     'totals': None,
-        #     'season_ranks': None,
-        #     'league': league,
-        #     'game_cnt': game_cnt,
-        #     'msg': 'Something wrong, try submitting picks.'
-        #     })
-
-
-
-            
-            
-        #     print ('*******finished context: ', datetime.datetime.now() - start)
-            
-        #     return context
-        # # else:
-        # #     print ('week not started')
-        # #     player_list = []
-        # #     picks_pending = []
-        # #     picks_submitted = []
-        # #     for player in Player.objects.filter(league=league, active=True):
-        # #         player_list.append(player.name.username)
-        # #         if player.picks_submitted(week):
-        # #             picks_submitted.append(player.name.username)
-        # #         else:
-        # #             picks_pending.append(player.name.username)
-            
-        # #     if week.week != 1:
-        # #         prior_week_scores = WeekScore.objects.filter(player__league=league, week__week=week.week - 1, week__season_model__current=True).order_by('score')
-        # #         prior_week_obj = Week.objects.get(week=week.week-1, season_model__current=True)
-        # #     else:
-        # #         prior_week_scores = None
-        # #         prior_week_obj = Week.objects.get(week=1, season_model__current=True)
-
-        # #     context.update ({'players': picks_submitted,
-        # #                 #'picks': pick_dict,
-        # #                 'week': week,
-        # #                 'pending': picks_pending,
-        # #                 'league': league, 
-        # #                 'scores': prior_week_scores,
-        # #                 #'prior_week': Week.objects.get(week=week.week-1, season_model__current=True)
-        # #                 'prior_week': prior_week_obj
-                        
-        # #                 #'games': Games.objects.filter(week=week).order_by('eid'),
-        # #                      })
-        # #     return context
 
 
     def get_base_data(self, week, week_started):
@@ -815,9 +679,11 @@ class NewScoresView(TemplateView):
             view = 'pre_start'
         elif not week_started:
             view = 'pre_start'
-        elif week_started and not PickMethod.objects.filter(player=player, week=week, method=3).exists():
+        elif week_started and not week.regular_week:
             view = 'scores_view'
-        elif week_started and PickMethod.objects.filter(player=player, week=week, method=4).exists():
+        elif week_started and week.regular_week and PickMethod.objects.filter(player=player, week=week).exclude(method=3).exists():
+            view = 'scores_view'
+        elif week_started and week.regular_week and PickMethod.objects.filter(player=player, week=week, method=4).exists():
             view = 'scores_view'
         else:
             view = 'no_picks'
@@ -1587,7 +1453,9 @@ class GetGameStatusAPI(APIView):
             espn = espn_data.ESPNData()            
             d = {}
 
-            if week_started and PickMethod.objects.filter(week=week, player__name=self.request.user, method__in=['1', '2', '4']).exists():
+            if week_started and not week.regular_week:
+                all_started = True
+            elif week_started and PickMethod.objects.filter(week=week, player__name=self.request.user, method__in=['1', '2', '4']).exists():
                 all_started = True
             else:
                 all_started = False
@@ -1638,16 +1506,16 @@ class Setup(LoginRequiredMixin, TemplateView):
         from fb_app import load_espn_sched
         print (request.POST)
         espn = {}
-        nfl_season=request.POST.get('nfl_season')
+        nfl_season_type=request.POST.get('nfl_season_type')
         if request.POST.get('payload') and request.POST.get('current'):
             error = 'Enter a max week or select checkbox for current week'
         elif request.POST.get('payload'):
-            espn = load_espn_sched.load_sched(payload=request.POST.get('payload'), nfl_season=nfl_season)
+            espn = load_espn_sched.load_sched(payload=request.POST.get('payload'), nfl_season_type=nfl_season_type)
             error = "PAYLOaD"
             
         elif request.POST.get('current'):
             error = 'CURRENT '
-            espn = load_espn_sched.load_sched(nfl_season=nfl_season)
+            espn = load_espn_sched.load_sched(nfl_season_type=nfl_season_type)
         else:
             error = 'Unknown input'
         weeks = Week.objects.filter(season_model__current=True)

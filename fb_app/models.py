@@ -37,6 +37,7 @@ class Week(models.Model):
     late_picks = models.BooleanField(default=False)
     set_started = models.BooleanField(default=False)
     set_not_started = models.BooleanField(default=False)
+    regular_week = models.BooleanField(default=False)
 
     def __str__(self):
         return str(self.week)
@@ -486,8 +487,9 @@ class Player(models.Model):
         if week.started():
             espn = espn_data.ESPNData()
             starting_pick = 16
-            if len(espn.first_game_of_week()) == 1 and \
-                espn.game_dow(espn.first_game_of_week()[0]) == 'Thursday':
+            #if len(espn.first_game_of_week()) == 1 and \
+            #    espn.game_dow(espn.first_game_of_week()[0]) == 'Thursday':
+            if week.regular_week:
                 pick_16 = Picks()
                 pick_16.week = week
                 pick_16.player = self

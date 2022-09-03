@@ -38,7 +38,28 @@ from operator import itemgetter
 
 #s.update_data()
 
+
+fedex = populateField.get_fedex_data()
+
+top_30 = {k:v for k,v in fedex.items() if int(v.get('rank')) < 31}
+
+for k,v in top_30.items():
+    try:
+        f = FedExField.objects.get(golfer__golfer_name=k)
+        print (k, '-', v.get('rank'), '-', v.get('last_week_rank'), '-', f.soy_owgr)
+    except Exception as e:
+        print (k, '-', v.get('rank'), '-', v.get('last_week_rank'), '-', 'outside top 100')
+
+
+exit()
+
+
 t = Tournament.objects.get(current=True)
+
+print (t.fedex_data.get('Aaron Wise'))
+
+exit()
+
 for f in Field.objects.filter(tournament=t):
     print (f.playerName, f.currentWGR, t.fedex_data.get(f.playerName), len(f.season_stats))
 
