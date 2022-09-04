@@ -70,6 +70,11 @@ start = datetime.now()
 #        for competitor in competition.get('competitors'):
 #            print (competitor.get('team').get('name'), competitor.get('score'), competitor.get('winner') )
 
+g = Games.objects.latest('pk')
+print (g.pk)
+
+exit()
+
 espn = espn_baseball.ESPNData()
 print (espn.get_score(['21']))
 print (datetime.now() - start)

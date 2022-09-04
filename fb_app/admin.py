@@ -1,7 +1,7 @@
 from django.contrib import admin
 from fb_app.models import Week, Games, Picks, Player, League, Teams, MikeScore, \
     WeekScore, Season, PickPerformance, PlayoffPicks, PlayoffScores, PlayoffStats, \
-    PickMethod, AccessLog
+    PickMethod, AccessLog, SeasonPicks
 
 # Register your models here.
 
@@ -37,6 +37,11 @@ class AccessLogAdmin(admin.ModelAdmin):
     list_display = ['week', 'user', 'page', 'device_type', 'views']
     list_filter = ['week', 'user']
 
+class SeasonPicksAdmin(admin.ModelAdmin):
+    list_display = ['game', 'player', 'pick']
+    list_filter = ['game__week__season', 'player']
+
+
 
 admin.site.register(Week, WeekAdmin)
 admin.site.register(Games, GamesAdmin)
@@ -53,3 +58,4 @@ admin.site.register(PlayoffScores)
 admin.site.register(PlayoffStats)
 admin.site.register(PickMethod, PickMethodAdmin) 
 admin.site.register(AccessLog, AccessLogAdmin) 
+admin.site.register(SeasonPicks, SeasonPicksAdmin) 

@@ -1,0 +1,23 @@
+{%extends "fb_app/base.html"%}
+
+{%load static%}
+{%load fb_extras%}
+{{form.media.css}}
+{%block body_block%}
+
+<!-- <script src="{% static "fb_app/js/all_games.js"%}" type="text/javascript" ></script> -->
+
+{%if error%}
+<div class="alert-danger">
+    {{error}}
+</div>
+{%endif%}
+<h4 style="text-align: center;">{{season.season}} Regular Season Picks Submittted.  Good Luck!  </h4>
+<ul>
+{%for k,v in sp.items%}
+<li>{{v.nfl_abbr}} : {{v.wins}} / {{v.loss}}</li>
+{%endfor%}
+</ul>
+<br>
+<a href="{% url 'fb_app:all_games' %}"> <button class="btn btn-primary">Update Picks</button></a>
+{%endblock%}

@@ -90,7 +90,7 @@ class GetBaseballScore(APIView):
     def get(self, request):
         
         try:
-            d = espn_baseball.ESPNData().get_score(['21'])
+            d = espn_baseball.ESPNData().get_score(['21', '15'])
         except Exception as e:
             print ('Baseball score API Error: ', e)
             d['error'] = {'msg': str(e)}

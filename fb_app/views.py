@@ -2,14 +2,14 @@ from django.shortcuts import render, redirect
 from django.views.generic import ListView, TemplateView, View, DetailView, UpdateView, CreateView
 import urllib.request
 from fb_app.models import Games, Week, Picks, Player, League, Teams, WeekScore, Season, PickPerformance, \
-     PlayoffPicks, PlayoffScores, PlayoffStats, PickMethod, AccessLog
+     PlayoffPicks, PlayoffScores, PlayoffStats, PickMethod, AccessLog, SeasonPicks
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth import authenticate, login, logout
 from django.http import HttpResponseRedirect, HttpResponse, JsonResponse, HttpRequest
 from django.urls import reverse, reverse_lazy
 #from fb_app.forms import UserForm, CreatePicksForm#, PickFormSet, NoPickFormSet
-from fb_app.forms import CreatePicksForm, CreatePlayoffsForm
+from fb_app.forms import CreatePicksForm, CreatePlayoffsForm, CreateSeasonPicksForm, SeasonPicksFormSet
 from django.core.exceptions import ObjectDoesNotExist
 from fb_app.validate_picks import validate
 from django.contrib.auth.models import User
@@ -17,6 +17,7 @@ from django.db.models import Q, Min, Count
 import urllib3
 import json
 import datetime
+
 import scipy.stats as ss
 from django.forms import formset_factory, modelformset_factory
 from collections import OrderedDict
@@ -1557,4 +1558,130 @@ class RollWeekAPI(APIView):
             d.update({'error': {'msg': str(e)}})
         
         d['duration'] = str(datetime.datetime.now() - start)
+        return Response(json.dumps(d), 200)
+
+
+class PickAllGames(LoginRequiredMixin, TemplateView):
+    template_name = 'fb_app/all_games_form.html'
+    login_url = '/login'
+    
+    def get_context_data(self, **kwargs):
+        start = datetime.datetime.now()
+        context = super(PickAllGames, self).get_context_data(**kwargs)
+        player = Player.objects.get(name=self.request.user)
+        
+        if SeasonPicks.objects.filter(player=player, season=Season.objects.get(current=True)).exists():
+            games = SeasonPicks.objects.filter(player=player, season=Season.objects.get(current=True))
+            mode = 'update'
+        else:
+            games = Games.objects.filter(week__season_model__current=True)
+            mode = 'new'
+        
+        print ('MODE: ', mode)
+        print ('GAMES len : ', len(games))
+        context.update(
+                {'games': games,
+                'mode': mode,
+                'season': Season.objects.get(current=True)
+                })
+
+        print ('ALL PICKS DUR: ', datetime.datetime.now() - start)
+        return context
+
+    def post(self, request, **kwargs):
+        print (request.POST)
+        start = datetime.datetime.now()        
+        season = Season.objects.get(current=True)
+        player = Player.objects.get(name=self.request.user)
+
+        if SeasonPicks.objects.filter(player=player, season=season).exists():
+            SeasonPicks.objects.filter(player=player, season=season).delete()
+
+        if request.POST.get('favs'):
+            last_season = Season.objects.get(season=str(int(season.season)-1))
+            stats = {}
+            for team in Teams.objects.all():
+                stats[team] = team.get_record(last_season)
+
+            print (player, ' : ', 'picking favs')
+            for g in Games.objects.filter(week__season=season):
+                p = SeasonPicks()
+                p.player = player
+                p.season = season
+                p.game = g
+                if stats.get(g.home)[0] > stats.get(g.away)[0]:
+                    p.pick = g.home
+                elif stats.get(g.away)[0] > stats.get(g.home)[0]:
+                    p.pick = g.away
+                else:
+                    p.pick = g.home
+                p.save()
+        else:
+            for k,v in request.POST.items():
+                if k != 'csrfmiddlewaretoken':
+                    if SeasonPicks.objects.filter(player=player, season=season, game=Games.objects.get(pk=k)).exists():
+                        p = SeasonPicks.objects.get(player=player, season=season, game=Games.objects.get(pk=k))
+                    else:
+                        p = SeasonPicks()
+                        p.game = Games.objects.get(pk=k)
+                        p.season = season
+                        p.player = player
+                    
+                    p.pick = Teams.objects.get(pk=v)
+                    p.save()
+        
+        #mode = 'update'
+        #error = 'Picks Submitted'
+        print ('season picks submitted: ', player, 'Dur: ', datetime.datetime.now() - start)
+        return redirect('/fb_app/all_games_confirm')
+        # return render (request, self.template_name, {
+        #     #'form': request.POST,
+        #     'games': SeasonPicks.objects.filter(player=player, season=season),
+        #     'error': error,
+        #     'season': season,
+           
+        # }
+        #)
+
+
+class PickAllGamesConfirm(LoginRequiredMixin, TemplateView):
+    template_name= 'fb_app/all_games_confirm.html'
+    login_url = '/login'
+    
+    def get_context_data(self, **kwargs):
+        start = datetime.datetime.now()
+        context = super(PickAllGamesConfirm, self).get_context_data(**kwargs)
+        player = Player.objects.get(name=self.request.user)
+        
+        sp = player.season_picks_summary()
+
+        context.update(
+                {'sp': sp,
+                'season': Season.objects.get(current=True)
+                })
+
+        print ('ALL PICKS DUR: ', datetime.datetime.now() - start)
+        return context
+
+
+class GetRecordsAPI(APIView):
+    
+    def get(self, request):
+
+        start = datetime.datetime.now()
+        try:    
+            d = {}
+            c_season = Season.objects.get(current=True)
+            season = Season.objects.get(season=str(int(c_season.season)-1))
+
+            for t in Teams.objects.all():
+                d[t.pk] = {'record': t.get_record(season),
+                            'nfl_abbr': t.nfl_abbr,
+                            'team_pk': t.pk}
+
+        except Exception as e:
+            print ('get records api issue: ', e)
+            d.update({'error': {'msg': str(e)}})
+        
+        #d['duration'] = str(datetime.datetime.now() - start)
         return Response(json.dumps(d), 200)

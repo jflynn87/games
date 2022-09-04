@@ -1,0 +1,95 @@
+{%extends "fb_app/base.html"%}
+
+{%load static%}
+{%load fb_extras%}
+{{form.media.css}}
+{%block body_block%}
+
+<script src="{% static "fb_app/js/all_games.js"%}" type="text/javascript" ></script>
+
+{%if error%}
+<div class="alert-danger">
+    {{error}}
+</div>
+{%endif%}
+
+<!-- <div id="team_summary">
+    <h4>Team Records based on Picks</h4>
+    <ul id="team_summary_list">
+        <li id="summary_status">loading....</li>
+    </ul>
+
+</div> -->
+<h4 style="text-align: center;">Pick All Winners - {{season.season}} Regular Season</h4>
+
+<div id='favs'>
+    <form method="POST" name='favs'>
+      {%csrf_token%}
+      
+      </h2>
+      <input type="text" name="favs" value="favs" hidden>
+    <input type="submit" class="btn btn-primary" value='Pick Favorites'></button> Pick favs based on prior year record.  Home team in case of ties.
+  </form>
+  </div>
+  
+
+<form method="post" id="pick_form" >
+    {%csrf_token%}
+<table class="table" id="game_table">
+    <thead>
+        <tr class="week_row">
+            <th> </th>
+            <th>Home</th>
+            <th>Away</th>
+        </tr>
+    </thead>
+    <tbody>
+        {%if mode == 'new'%}
+            {%regroup games by week as g_by_week%}
+            {%for week in g_by_week%}
+            <tr class='week_row'>
+                <td colspan="4"  style="font-weight: bold; background-color: rgb(0, 119, 255); color: white; text-align: center;">Week {{week.grouper}}</td>
+            </tr>
+            {%for g in week.list%}
+            <tr>
+                <td></td>
+                <td> <input type="radio" value="{{g.home.pk}}" name="{{g.pk}}" checked class="form-check-input"> {{g.home}} <span class="{{g.home.pk}} record"> </span> </input></td>
+                <td> <input type="radio" value="{{g.away.pk}}" name="{{g.pk}}" class="form-check-input">{{g.away}} <span class="{{g.away.pk}} record"> </span></td>
+                <!-- <td><select id="{{g.pk}}" name="{{g.pk}}">
+                    <option value='{{g.home.pk}}'>{{g.home.nfl_abbr}}</option>
+                    <option value='{{g.away.pk}}'>{{g.away.nfl_abbr}}</option>
+                </select></td>
+            </tr> -->
+            {%endfor%}
+            {%endfor%}
+        {%else%}            
+            {%regroup games by game.week.week as g_by_week%}
+            {%for week in g_by_week%}
+            <tr class='week_row'>
+                <td colspan="4"  style="font-weight: bold; background-color: rgb(0, 119, 255); color: white; text-align: center;">Week {{week.grouper}}</td>
+            </tr>
+            {%for p in week.list%}
+            <tr>
+                <td></td>
+                {%if p.game.home.pk == p.pick.pk%}
+                <td><input type="radio" value="{{p.game.home.pk}}" name="{{p.game.pk}}" checked class="form-check-input" > {{p.game.home}} <span class="{{p.game.home.pk}} record"> </span></td>
+                <td> <input type="radio" value="{{p.game.away.pk}}" name="{{p.game.pk}}" class="form-check-input">{{p.game.away}} <span class="{{p.game.away.pk}} record"> </span></td>
+                {%else%}
+                <td><input type="radio" value="{{p.game.home.pk}}" name="{{p.game.pk}}" class="form-check-input"> {{p.game.home}} <span class="{{p.game.home.pk}} record"> </span></td>
+                <td> <input type="radio" value="{{p.game.away.pk}}" name="{{p.game.pk}}" checked class="form-check-input">{{p.game.away}} <span class="{{p.game.away.pk}} record"> </span></td>
+                {%endif%}
+
+            </tr>
+            {%endfor%}
+            {%endfor%}
+
+        {%endif%} 
+    </tbody>
+</table>
+<div id="sub_button_div">
+<button id='sub_button' type="submit" class="btn btn-primary">Submit Picks</button>
+</div>
+</form>
+
+
+{%endblock%}

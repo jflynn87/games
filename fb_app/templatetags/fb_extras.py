@@ -1,5 +1,5 @@
 from django import template
-#from golf_app.models import Picks, mpScores, Field, Tournament, Group
+from fb_app.models import Season
 #from django.db.models import Count
 #from string import ascii_letters
 #import re
@@ -15,4 +15,5 @@ def check_final(qtr):
         return True
     else:
         return False
+
 

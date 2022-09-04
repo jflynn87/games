@@ -386,9 +386,9 @@ class Teams(models.Model):
         if season == None:
             season = Season.objects.get(current=True)
 
-        wins = Games.objects.filter(week__season=season, winner=self).count()
-        losses = Games.objects.filter(week__season=season, loser=self).count()
-        ties = Games.objects.filter(Q(week__season=season), (Q(home=self) | Q(away=self)), Q(tie=True)).count()
+        wins = Games.objects.filter(week__season=season, winner=self).exclude(week__week__gte=19).count()
+        losses = Games.objects.filter(week__season=season, loser=self).exclude(week__week__gte=19).count()
+        ties = Games.objects.filter(Q(week__season=season), (Q(home=self) | Q(away=self)), Q(tie=True)).exclude(week__week__gte=19).count()
 
         return (wins, losses, ties)
 
@@ -529,6 +529,21 @@ class Player(models.Model):
     def season_points_behind(self):
         return self.league.leading_score() - self.season_total()  
          
+
+    def season_picks_summary(self, season=None):
+        if not season:
+            season = Season.objects.get(current=True)
+
+        d = {}
+
+        for t in Teams.objects.all():
+            wins = SeasonPicks.objects.filter(pick=t, season=season, player=self).count()
+            loss = 17 - wins
+            d[t.pk] = {'nfl_abbr': t.nfl_abbr,
+                        'wins': wins,
+                        'loss': loss }
+        
+        return d
 
 
 
@@ -821,9 +836,18 @@ class AccessLog(models.Model):
         return str(self.user.username) + '  ' + str(self.page)
 
 
+class SeasonPicks(models.Model):
+    season = models.ForeignKey(Season, on_delete=models.CASCADE)
+    player = models.ForeignKey(Player, on_delete=models.CASCADE)
+    game = models.ForeignKey(Games, on_delete=models.CASCADE)
+    pick = models.ForeignKey(Teams, on_delete=models.CASCADE)
 
 
-    
+    def __str__(self):
+        return str(self.season) + str(self.player) + str(self.game)
+
+
+  
         
 
 
