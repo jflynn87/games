@@ -19,10 +19,21 @@ $('#game_table').ready(function() {
 $(document).ready(function() {
     $('#pick_form').submit(function() {
         console.log('submitting')
-      $('#sub_button').prop('disabled', true).text("Submitting")
+        $('#favs_btn').prop('disabled', true).text("Submitting")
+        $('#sub_button').prop('disabled', true).text("Submitting")
         $('#sub_button_div').append('Submitting Picks <span class=status>....</span>')
 })
 })
+
+$(document).ready(function() {
+    $('#favs').submit(function() {
+        console.log('submitting')
+      $('#favs_btn').prop('disabled', true).text("Submitting")
+      $('#sub_button').prop('disabled', true).text("Submitting")
+        $('#favs').append('Submitting Picks <span class=status>....</span>')
+})
+})
+
 
 
 function teamSummary(data) {
