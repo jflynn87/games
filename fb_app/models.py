@@ -2,7 +2,7 @@ from django.db import models
 from django.db.models import constraints
 from django.contrib.auth.models import User
 from django.conf import settings
-from django.db.models import Q, Sum
+from django.db.models import Q, Sum, F
 from django.core.exceptions import ObjectDoesNotExist
 
 import datetime
@@ -27,6 +27,19 @@ class Season(models.Model):
     def __str__(self):
         return (str)(self.season)
 
+    def started(self):
+        if Week.objects.filter(season=self, week=1).exists():
+            if Week.objects.get(season=self, week=1).started():
+                return True
+        return False
+
+    def home_wins(self):
+        return Games.objects.filter(week__season_model=self, week__week__lte=18, home=F('winner')).count()
+
+    def away_wins(self):
+        return Games.objects.filter(week__season_model=self, week__week__lte=18, away=F('winner')).count()
+            
+            
 
 class Week(models.Model):
     season = models.CharField(max_length=30, null=True)
@@ -546,6 +559,16 @@ class Player(models.Model):
         return d
 
 
+    def home_season_picks(self, season=None):
+        if not season:
+            season = Season.objects.get(current=True)
+        return SeasonPicks.objects.filter(season=season, player=self, pick=F('game__home')).count()
+
+    def away_season_picks(self, season=None):
+        if not season:
+            season = Season.objects.get(current=True)
+        return SeasonPicks.objects.filter(season=season, player=self, pick=F('game__away')).count()
+
 
 class Picks(models.Model):
     week = models.ForeignKey(Week,on_delete=models.CASCADE, db_index=True)
@@ -594,10 +617,6 @@ class Picks(models.Model):
     #             print ('projected issue', game)
     #     except ObjectDoesNotExist:
     #         return False
-
-
-    def lock(self):
-        pass
 
 
 

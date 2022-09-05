@@ -22,6 +22,7 @@
 </div> -->
 <h4 style="text-align: center;">Pick All Winners - {{season.season}} Regular Season</h4>
 
+{%if not season.started%}
 <div id='favs'>
     <form method="POST" name='favs'>
       {%csrf_token%}
@@ -31,16 +32,22 @@
     <input id='favs_btn' type="submit" class="btn btn-primary" value='Pick Favorites'></button> Pick favs based on prior year record.  Home team in case of ties.
   </form>
   </div>
-  
+  {%endif%}
 
 <form method="post" id="pick_form" >
     {%csrf_token%}
-<table class="table" id="game_table">
-    <thead>
-        <tr class="week_row">
+<table class="table" id="game_table" style="position: relative;">
+    <thead style="position: sticky; top: 0; background-color: blue; color: white; border: blue;" >
+        <tr class="week_row"></tr> 
             <th> </th>
-            <th>Home</th>
-            <th>Away</th>
+            <th>Home
+            <p>2021 home team wins:  {{last_season.home_wins}}</p>
+            <p>{{season.season}} picks home team wins: <span id="home_wins"> {{player.home_season_picks}} </span></p>
+            </th>
+            <th>Away
+            <p>2021 away team wins:  {{last_season.away_wins}}</p>
+            <p>{{season.season}} picks away team wins: <span id="away_wins">{{player.away_season_picks}}</span></p>
+            </th>
         </tr>
     </thead>
     <tbody>
@@ -53,8 +60,8 @@
             {%for g in week.list%}
             <tr>
                 <td></td>
-                <td> <input type="radio" value="{{g.home.pk}}" name="{{g.pk}}" checked class="form-check-input"> {{g.home}} <span class="{{g.home.pk}} record"> </span> </input></td>
-                <td> <input type="radio" value="{{g.away.pk}}" name="{{g.pk}}" class="form-check-input">{{g.away}} <span class="{{g.away.pk}} record"> </span></td>
+                <td> <input type="radio" value="{{g.home.pk}}" name="{{g.pk}}" checked class="form-check-input home"> {{g.home}} <span class="{{g.home.pk}} record"> </span> </input></td>
+                <td> <input type="radio" value="{{g.away.pk}}" name="{{g.pk}}" class="form-check-input away">{{g.away}} <span class="{{g.away.pk}} record"> </span></td>
                 <!-- <td><select id="{{g.pk}}" name="{{g.pk}}">
                     <option value='{{g.home.pk}}'>{{g.home.nfl_abbr}}</option>
                     <option value='{{g.away.pk}}'>{{g.away.nfl_abbr}}</option>
@@ -72,11 +79,11 @@
             <tr>
                 <td></td>
                 {%if p.game.home.pk == p.pick.pk%}
-                <td><input type="radio" value="{{p.game.home.pk}}" name="{{p.game.pk}}" checked class="form-check-input" > {{p.game.home}} <span class="{{p.game.home.pk}} record"> </span></td>
-                <td> <input type="radio" value="{{p.game.away.pk}}" name="{{p.game.pk}}" class="form-check-input">{{p.game.away}} <span class="{{p.game.away.pk}} record"> </span></td>
+                <td><input type="radio" value="{{p.game.home.pk}}" name="{{p.game.pk}}" checked class="form-check-input home" > {{p.game.home}} <span class="{{p.game.home.pk}} record"> </span></td>
+                <td> <input type="radio" value="{{p.game.away.pk}}" name="{{p.game.pk}}" class="form-check-input away">{{p.game.away}} <span class="{{p.game.away.pk}} record"> </span></td>
                 {%else%}
-                <td><input type="radio" value="{{p.game.home.pk}}" name="{{p.game.pk}}" class="form-check-input"> {{p.game.home}} <span class="{{p.game.home.pk}} record"> </span></td>
-                <td> <input type="radio" value="{{p.game.away.pk}}" name="{{p.game.pk}}" checked class="form-check-input">{{p.game.away}} <span class="{{p.game.away.pk}} record"> </span></td>
+                <td><input type="radio" value="{{p.game.home.pk}}" name="{{p.game.pk}}" class="form-check-input home"> {{p.game.home}} <span class="{{p.game.home.pk}} record"> </span></td>
+                <td> <input type="radio" value="{{p.game.away.pk}}" name="{{p.game.pk}}" checked class="form-check-input away">{{p.game.away}} <span class="{{p.game.away.pk}} record"> </span></td>
                 {%endif%}
 
             </tr>
@@ -86,9 +93,11 @@
         {%endif%} 
     </tbody>
 </table>
+{%if not season.started%}
 <div id="sub_button_div">
 <button id='sub_button' type="submit" class="btn btn-primary">Submit Picks</button>
 </div>
+{%endif%}
 </form>
 
 

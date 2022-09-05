@@ -43,12 +43,12 @@ function teamSummary(data) {
         var wins = $('input[value=' + Object.values(data)[i].team_pk.toString() +  ']:checked').length 
         var loss = 17 - wins
         $('.' + Object.keys(data)[i]).text('last season record: ' + Object.values(data)[i].record + ', your 2022 picks: ' + wins + ',' + loss)
-        //$('#team_summary_list').append('<li id=' + Object.values(data)[i].team_pk + '>' + Object.values(data)[i].nfl_abbr + 
-        //                                '<span> :' + wins + ' / ' + loss + '</span>' +
-        //                                '</li>')
-        
 
     }
+
+    $('#home_wins').text($('.home:checked').length)
+    $('#away_wins').text($('.away:checked').length)
+
     $('#summary_status').hide()
 }
 

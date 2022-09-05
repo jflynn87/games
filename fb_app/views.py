@@ -1563,18 +1563,19 @@ class RollWeekAPI(APIView):
 
 class PickAllGames(LoginRequiredMixin, TemplateView):
     template_name = 'fb_app/all_games_form.html'
-    login_url = '/login'
+    login_url = 'login'
     
     def get_context_data(self, **kwargs):
         start = datetime.datetime.now()
         context = super(PickAllGames, self).get_context_data(**kwargs)
         player = Player.objects.get(name=self.request.user)
+        season = Season.objects.get(current=True)
         
-        if SeasonPicks.objects.filter(player=player, season=Season.objects.get(current=True)).exists():
-            games = SeasonPicks.objects.filter(player=player, season=Season.objects.get(current=True))
+        if SeasonPicks.objects.filter(player=player, season=season).exists():
+            games = SeasonPicks.objects.filter(player=player, season=season)
             mode = 'update'
         else:
-            games = Games.objects.filter(week__season_model__current=True)
+            games = Games.objects.filter(week__season_model=season)
             mode = 'new'
         
         print ('MODE: ', mode)
@@ -1582,7 +1583,9 @@ class PickAllGames(LoginRequiredMixin, TemplateView):
         context.update(
                 {'games': games,
                 'mode': mode,
-                'season': Season.objects.get(current=True)
+                'season': season,
+                'last_season': Season.objects.get(season=str(int(season.season)-1)),
+                'player': player,
                 })
 
         print ('ALL PICKS DUR: ', datetime.datetime.now() - start)

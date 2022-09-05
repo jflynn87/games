@@ -5,10 +5,10 @@ os.environ.setdefault("DJANGO_SETTINGS_MODULE","gamesProj.settings")
 import django
 django.setup()
  
-from fb_app.models import Season, Week, Games, Teams, Picks, League, Player,  MikeScore, WeekScore, PickPerformance, PlayoffStats, PickMethod
+from fb_app.models import Season, Week, Games, Teams, Picks, League, Player,  MikeScore, WeekScore, PickPerformance, PlayoffStats, PickMethod, SeasonPicks
 from django.contrib.auth.models import User
 from datetime import datetime, timedelta, timezone, tzinfo
-from django.db.models import Min, Q, Count, Sum, Max
+from django.db.models import Min, Q, Count, Sum, Max, F
 from django.db.models.functions import ExtractWeek, ExtractYear
 import time
 import urllib
@@ -70,8 +70,42 @@ start = datetime.now()
 #        for competitor in competition.get('competitors'):
 #            print (competitor.get('team').get('name'), competitor.get('score'), competitor.get('winner') )
 
-g = Games.objects.latest('pk')
-print (g.pk)
+s = Season.objects.get(season=2021)
+pp = PickPerformance.objects.get(season=s, league=League.objects.get(league='Golfers'))
+d = json.loads(pp.data)
+r = {'tot_win': 0,
+    'tot_loss': 0}
+for u, stats in d.items():
+    r[u] = {'win': 0,
+            'loss': 0
+            }
+    win = 0
+    loss = 0
+    for team, data in d.get(u).items():
+        win += data.get('right')
+        loss += data.get('wrong')
+    r.get(u).update({'win': r.get(u).get('win') + win,
+                    'loss': r.get(u).get('loss') + loss,
+                                              })
+    r.update({'tot_win': r.get('tot_win') + win}) 
+    r.update({'tot_loss':   r.get('tot_loss') + loss})
+
+print (r)
+print ('R: ', datetime.now() - start)
+
+print (Games.objects.filter(week__season_model=s, week__week__lte=18, home=F('winner')).count())
+print (Games.objects.filter(week__season_model=s, week__week__lte=18, away=F('winner')).count())
+print (Games.objects.filter(week__season_model=s, week__week__lte=18, tie=True).count())
+
+
+print (SeasonPicks.objects.filter(season__current=True, player=Player.objects.get(name=User.objects.get(pk=1)), pick=F('game__home')).count())
+print (SeasonPicks.objects.filter(season__current=True, player=Player.objects.get(name=User.objects.get(pk=1)), pick=F('game__away')).count())
+
+print (s.home_wins())
+print (s.away_wins())
+
+print (Player.objects.get(name=User.objects.get(pk=1)).home_season_picks(Season.objects.get(current=True)))
+print (Player.objects.get(name=User.objects.get(pk=1)).away_season_picks(Season.objects.get(current=True)))
 
 exit()
 
