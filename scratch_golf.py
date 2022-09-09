@@ -32,12 +32,17 @@ from operator import itemgetter
 
 
 
-#for u in Season.objects.get(current=True).get_users('obj'):
-#    handi = Picks.objects.filter(user=u, playerName__tournament__season__current=True).aggregate(Sum('playerName__handi'))
-#    print (u, handi)
 
-#s.update_data()
+pga  = pga_t_data.PGAData()
+data = pga.t_data
 
+for l in data:
+    if l.get('primaryEvent'):
+        print(l.get('trnName')[0].get('short'), '-', l.get('Purse'), l.get('permNum'))
+    else:
+        print ('alt', l.get('trnName')[0].get('short'))
+
+exit()
 
 fedex = populateField.get_fedex_data()
 

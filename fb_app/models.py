@@ -391,6 +391,10 @@ class Teams(models.Model):
     def __str__(self):
         return str(self.nfl_abbr)
 
+    def natural_key(self):
+        return self.nfl_abbr
+
+
     def get_mike_abbr(self):
         return self.mike_abbr
 
@@ -481,6 +485,7 @@ class Player(models.Model):
     league = models.ForeignKey(League, on_delete=models.CASCADE)
     name = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     active = models.BooleanField(default=True)
+    email_picks = models.BooleanField(default=False)
 
 
     def __str__(self):

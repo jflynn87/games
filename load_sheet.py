@@ -41,7 +41,8 @@ def readSheet(file,numPlayers,override_week=None):
         
 
         if str(app_week.week) != week_str:
-            print ("sheet week doesn't match model", week_str, app_week.week)
+            print ("sheet week doesn't match model")
+            print ('sheet weeK: ', week_str, 'db week: ', app_week.week)
             exit()
         elif Picks.objects.filter(player__league__league="Football Fools", week=app_week):
             print ('deleting picks')
@@ -152,5 +153,5 @@ def readSheet(file,numPlayers,override_week=None):
 
 
 
-readSheet('21-22 FOOTBALL FOOLS.xml', 25)
+readSheet('2022-2023 FOOTBALL FOOLS.xml', 26)
 

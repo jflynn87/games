@@ -243,7 +243,8 @@ class ESPNData(object):
         
         for g in Group.objects.filter(tournament=self.t):
             try:
-                golfers = g.get_golfers()
+                #golfers = g.get_golfers()
+                golfers = self.made_cut_golfers(g.get_golfers())
                 
                 if self.t.pga_tournament_num == '018':
                     min_score = min([int(x.get('status').get('position').get('id')) for x in self.field_data if str(x.get('roster')[0].get('playerId')) in golfers or str(x.get('roster')[1].get('playerId')) in golfers])
@@ -327,6 +328,30 @@ class ESPNData(object):
                 and x.get('status').get('type').get('shortDetail') in l and int(x.get('status').get('period')) > self.t.saved_cut_round]) 
 
     
+    def golfers_post_cut_wd(self, espn_num):
+        '''takes a list, returns a list'''
+        l = self.t.not_playing_list()
+        l.remove('CUT')
+        return [x.get('athlete').get('id') for x in self.field_data if x.get('status').get('type').get('id') == '3' \
+                and x.get('status').get('type').get('shortDetail') in l and int(x.get('status').get('period')) > self.t.saved_cut_round  \
+                and x.get('athlete').get('id') in espn_num]
+
+
+    def regular_cut_golfers(self, espn_num):
+        '''takes a list, returns a list'''
+                
+        return [x.get('athlete').get('id') for x in self.field_data if x.get('status').get('type').get('id') == '3' \
+                and x.get('athlete').get('id') in espn_num and x.get('athlete').get('id') not in self.golfers_post_cut_wd(espn_num)] 
+
+
+    def made_cut_golfers(self, golfers):
+        '''takes a list of golfers, returns a list'''
+        post_cut_wd = self.golfers_post_cut_wd(golfers)
+        regular_made = [x.get('athlete').get('id') for x in self.field_data if x.get('status').get('type').get('id') != '3' \
+                and x.get('athlete').get('id') in golfers]
+
+        return post_cut_wd + regular_made
+
     def post_cut_wd_score(self):
         return len([x for x in self.field_data if x.get('status').get('type').get('id') != '3']) + 1
 

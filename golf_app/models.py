@@ -329,25 +329,25 @@ class Tournament(models.Model):
 
         return score_dict.get('info').get('cut_num')
 
+    # commented before 2023 season
+    # def optimal_picks(self):
+    #     optimal_dict = {}
 
-    def optimal_picks(self):
-        optimal_dict = {}
+    #     for group in Group.objects.filter(tournament=self):
 
-        for group in Group.objects.filter(tournament=self):
+    #        golfer_list = []
+    #        gm_start = datetime.now()
+    #        group_cuts = Field.objects.filter(group=group, rank__in=self.not_playing_list()).count()
 
-           golfer_list = []
-           gm_start = datetime.now()
-           group_cuts = Field.objects.filter(group=group, rank__in=self.not_playing_list()).count()
+    #        group_min = group.min_score(mode='full')
+    #        #print (group_min)
+    #        for gm in group_min:
+    #            f = Field.objects.get(pk=gm[0])
+    #            golfer_list.append(f.playerName)
 
-           group_min = group.min_score(mode='full')
-           #print (group_min)
-           for gm in group_min:
-               f = Field.objects.get(pk=gm[0])
-               golfer_list.append(f.playerName)
+    #            optimal_dict[group.number] = {'golfer': golfer_list, 'rank': gm[1], 'cuts': group_cuts, 'total_golfers': group.playerCnt}
 
-               optimal_dict[group.number] = {'golfer': golfer_list, 'rank': gm[1], 'cuts': group_cuts, 'total_golfers': group.playerCnt}
-
-        return json.dumps(optimal_dict)
+    #     return json.dumps(optimal_dict)
 
 
     def not_playing_list(self):
@@ -480,14 +480,14 @@ class Group(models.Model):
     def natural_key(self):
         return self.number
 
-    
-    def optimal_pick(self, score_dict):
-        '''takes a dict returns a list'''
-        if score_dict.get('info'):   #check if espn scrape dict
-            best_score = min(utils.formatRank(x.get('rank')) - x.get('handicap') for k, x in score_dict.items() if k != 'info' and x.get('group') == self.number) 
-            best_list = {v['pga_num']:k for (k,v) in score_dict.items() if v.get('group') == self.number and utils.formatRank(v.get('rank')) - v.get('handicap') == best_score}
-            #print ('best: ', best_list, best_score)
-            return best_list
+    #commented before 2023, dont think this is used anymore
+    # def optimal_pick(self, score_dict):
+    #     '''takes a dict returns a list'''
+    #     if score_dict.get('info'):   #check if espn scrape dict
+    #         best_score = min(utils.formatRank(x.get('rank')) - x.get('handicap') for k, x in score_dict.items() if k != 'info' and x.get('group') == self.number) 
+    #         best_list = {v['pga_num']:k for (k,v) in score_dict.items() if v.get('group') == self.number and utils.formatRank(v.get('rank')) - v.get('handicap') == best_score}
+    #         #print ('best: ', best_list, best_score)
+    #         return best_list
 
 
     def cut_count(self, score_dict=None, espn_api_data=None):
@@ -510,6 +510,14 @@ class Group(models.Model):
     def get_golfers(self):
         '''takes a group and returns a list of espn numbers'''
         return Field.objects.filter(group=self).values_list('golfer__espn_number', flat=True)
+
+    def get_made_cut_golfers(self, espn_api_data):
+        '''takes a group and returns a list of espn numbers'''
+        golfers = self.get_golfers()
+
+        post_cut_wd = espn_api_data.golfers_post_cut_wd(golfers)     
+        
+        return post_cut_wd
 
 
     def cut_penalty(self):

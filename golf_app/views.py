@@ -236,7 +236,7 @@ def email_picks(tournament, user):
     mail_t = "Tournament: " + tournament.name + "\r"
     
 
-    mail_url = "Website to make changes or picks: " + "http://jflynn87.pythonanywhere.com/golf_app/field/"
+    mail_url = "Website to make changes or picks: " + "http://jflynn87.pythonanywhere.com/golf_app/new_field_list_1"
     mail_content = mail_t + "\r" + "\r" +mail_picks + "\r"+ mail_url
     mail_recipients = [user.email]
     send_mail(mail_sub, mail_content, 'jflynn87g@gmail.com', mail_recipients)  #add fail silently
@@ -1060,6 +1060,7 @@ class GetGroupNum(APIView):
 class GolfLeaderboard(APIView):
     def get(self, request):
 
+        sorted_data = {}
         try:
             data = {}
             season = Season.objects.get(current=True)
@@ -1069,7 +1070,7 @@ class GolfLeaderboard(APIView):
             sorted_data = sorted(data.items(), key=lambda x: x[1]['total'])
             print (sorted_data)
         except Exception as e:
-            print ('error: ', e)
+            print ('Golf leaderboard error: ', e)
             sorted_data['error'] = {'msg': str(e)}
                 
         return Response(json.dumps(sorted_data), 200)

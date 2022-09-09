@@ -71,6 +71,14 @@ start = datetime.now()
 #            print (competitor.get('team').get('name'), competitor.get('score'), competitor.get('winner') )
 
 s = Season.objects.get(season=2021)
+week = Week.objects.get(current=True)
+user = User.objects.get(pk=1)
+views.email_picks(week, user)
+
+exit()
+
+
+
 pp = PickPerformance.objects.get(season=s, league=League.objects.get(league='Golfers'))
 d = json.loads(pp.data)
 r = {'tot_win': 0,

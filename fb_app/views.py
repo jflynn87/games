@@ -31,8 +31,7 @@ from bs4 import BeautifulSoup
 import pytz
 from django.utils import dateformat
 from math import ceil
-
-
+from django.core.mail import send_mail
 
 
 
@@ -326,6 +325,13 @@ class GameListView(LoginRequiredMixin,ListView):
              i +=1
              pick_num -=1
 
+         try:
+            if player.email_picks:
+                email_picks(week, request.user)
+         except Exception as e:
+            print ('email picks error', e)
+
+         
          print (datetime.datetime.now(), request.user, 'saved picks')
          return redirect('fb_app:picks_list', pk=week.pk)
 
@@ -449,16 +455,34 @@ class AboutView(TemplateView):
 class AllTime(TemplateView):
     template_name="fb_app/all_time.html"
 
-def ajax_get_games(request, week):
-    #print ('in getting gamesS')
-    if request.is_ajax():
-       # print (request)
-        games = Games.objects.filter(week__week='3')
-        data = json.dumps(games)
-        return HttpResponse(data, content_type="application/json")
-    else:
-        print ('not ajax')
-        raise Http404
+# def ajax_get_games(request, week):
+#     #print ('in getting gamesS')
+#     if request.is_ajax():
+#        # print (request)
+#         games = Games.objects.filter(week__week='3')
+#         data = json.dumps(games)
+#         return HttpResponse(data, content_type="application/json")
+#     else:
+#         print ('not ajax')
+#         raise Http404
+
+
+class GetGamesAPI(APIView):
+
+    def get(self, request, week_num):
+        start = datetime.datetime.now()
+        #print ('*** update scores: ', self.request.GET)
+        print ('XXXXXX', week_num, type(week_num))
+        try:
+            week = Week.objects.get(week=week_num, season_model=Season.objects.get(current=True))
+            games = serializers.serialize('json', Games.objects.filter(week=week), use_natural_foreign_keys=True)
+        except Exception as e:
+            print ('fb app Get Games API error: ', e)
+            games = {'error': str(e)}
+        
+        #print ('Update Score duration: ', datetime.datetime.now() - start)
+        return Response(games, 200)
+
 
 
 class UpdateScores(APIView):
@@ -1688,3 +1712,23 @@ class GetRecordsAPI(APIView):
         
         #d['duration'] = str(datetime.datetime.now() - start)
         return Response(json.dumps(d), 200)
+
+
+def email_picks(week, user):
+    '''takes a week object and user object, sends mail, returns none'''
+
+    mail_picks = "\r"
+    for pick in Picks.objects.filter(week=week, player__name=user):
+        mail_picks = mail_picks + 'Pick #' + str(pick.pick_num) + ' : ' + pick.team.nfl_abbr + "\r"
+
+    mail_sub = "Football Game Picks Submittted: Week " + str(week.week)
+    mail_t = "Week: " + str(week.week) + "\r"
+    
+
+    mail_url = "Website to make changes or picks: " + "http://jflynn87.pythonanywhere.com/fb_app/games_list/" 
+    mail_content = mail_t + "\r" + "\r" +mail_picks + "\r"+ mail_url
+    mail_recipients = [user.email]
+
+    send_mail(mail_sub, mail_content, 'jflynn87g@gmail.com', mail_recipients)  #add fail silently
+    
+    return
