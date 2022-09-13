@@ -9,7 +9,7 @@ from django.db.models.base import Model
 from django.forms import JSONField
 
 from scipy.stats.stats import rankdata
-from golf_app import utils
+from golf_app import utils 
 from django.db import transaction
 from unidecode import unidecode
 import json
@@ -405,16 +405,34 @@ class Tournament(models.Model):
     def field_quality(self):
         if self.major:
             return "major"
+        from golf_app import utils , pga_t_data
         
-        f_len = Field.objects.filter(tournament=self).count()
-        #owgr_sum = Field.objects.filter(tournament=self).exclude(currentWGR=9999).aggregate(Sum('currentWGR'))
-        #unranked = Field.objects.filter(tournament=self, currentWGR=9999).count()
-        top_100 = round(Field.objects.filter(tournament=self, currentWGR__lte=122).count()/f_len,2)
+        if self.season.season < 2023:
+            f_len = Field.objects.filter(tournament=self).count()
+            #owgr_sum = Field.objects.filter(tournament=self).exclude(currentWGR=9999).aggregate(Sum('currentWGR'))
+            #unranked = Field.objects.filter(tournament=self, currentWGR=9999).count()
+            top_100 = round(Field.objects.filter(tournament=self, currentWGR__lte=122).count()/f_len,2)
 
-        if top_100 > .3:
-            return "strong"
+            if top_100 > .3:
+                return "strong"
+            else:
+                return "weak"
         else:
-            return "weak"
+            t_data = self.season.data
+            t_type = t_data.get_t_type(self.pga_tournament_num)
+            if t_type == 'MJR':
+                return 'major'
+            elif t_type in ['PLF', 'PLS'] or self.pga_tournament_num == '500':  #500 for Pres cup
+                return 'special'
+            elif t_data.get_purse(self.pga_tournament_num) >= 10000000:
+                return 'strong'
+            elif t_data.get_purse(self.pga_tournament_num) < 10000000:
+                return 'weak'
+            else:
+                print ('field quality in else, why?')
+                return 'weak'
+
+
 
     def special_field(self):
         if self.pga_tournament_num in ['999', '470', '468', '018']:
@@ -1691,6 +1709,7 @@ class FedExPicks(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     pick = models.ForeignKey(FedExField, on_delete=models.CASCADE)
     score = models.IntegerField(default=0)
+    top_3 = models.BooleanField(null=True, default=False)
 
     def __str__(self):
         return str(self.user.username) + ' ' + str(self.pick.golfer.golfer_name)

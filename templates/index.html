@@ -148,12 +148,25 @@
                                     '</table>')
 
       var team_keys = []
+      if (Object.keys(data).length == 0) {
+        console.log('no games')
+        row = document.createElement('tr')
+        row.id = Object.keys(data)[0]
+        td1 = document.createElement('td')
+        td1.innerHTML = 'No Games'
+        row.append(td1)
+
+        $('#baseball_table').append(row)
+
+      }
+      else {
       for (i=0; i< Object.keys(data).length; i++) {
+        team_keys = []
         $.each(Object.values(data)[i], function(k, v) {
           if (k.startsWith('team')) {
           team_keys.push(k)}
         } )
-
+        console.log(team_keys)
         row = document.createElement('tr')
         row.id = Object.keys(data)[i]
         td1 = document.createElement('td')
@@ -164,7 +177,7 @@
         td4 = document.createElement('td')
         td5 = document.createElement('td')
         td6 = document.createElement('td')
-        
+        console.log(i)
         for (t=0; t < team_keys.length; t++) {
             if (t==0) 
             {td3.innerHTML =Object.values(data)[i][team_keys[t]].name
@@ -174,7 +187,9 @@
             else {td5.innerHTML =Object.values(data)[i][team_keys[t]].name
                 td6.innerHTML =Object.values(data)[i][team_keys[t]].score}
         }
-
+     
+    
+       
         row.append(td1)
         row.append(td2)
         row.append(td3)
@@ -183,9 +198,9 @@
         row.append(td6)
 
         $('#baseball_table').append(row)
-
-      }
-      $('#baseball_scores').attr('hidden', false)     
+    } }
+    
+        $('#baseball_scores').attr('hidden', false)     
   
 })
 

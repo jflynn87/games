@@ -1,5 +1,7 @@
 from golf_app.models import FedExField, FedExSeason, Season, Golfer
 from golf_app import populateField, utils
+import urllib
+from bs4 import BeautifulSoup
 
 
 
@@ -13,20 +15,56 @@ class FedEx(object):
       self.prior_season = Season.objects.get(season=int(self.season.season) -1)
 
 
-   def get_data(self, save=True):
-      '''takes a season object and optional bool, returns a dict'''
-      data = populateField.get_fedex_data()
-      if not FedExSeason.objects.filter(season__season=self.prior_season).exists():
-         season = FedExSeason()
-         season.season = Season.objects.get(season=self.prior_season)
-      else:
-         season = FedExSeason.objects.get(season__season=self.prior_season) 
+   def get_data(self):
+      '''returns a dict'''
+      # data = populateField.get_fedex_data()
+      # if not FedExSeason.objects.filter(season__season=self.prior_season).exists():
+      #    season = FedExSeason()
+      #    season.season = Season.objects.get(season=self.prior_season)
+      # else:
+      #    season = FedExSeason.objects.get(season__season=self.prior_season) 
 
-      if save:
-         season.prior_season_data = data
-         season.save()
+      # if save:
+      #    season.prior_season_data = data
+      #    season.save()
       
-      return data
+      # return data
+      
+      # moved prior season data logic to populatefield for first tournament of season
+      total = 214  # need to find this manually from the pga web
+      r = 50
+      start = 1
+      m = 50
+      d = {}
+      while total >= m:
+         url = 'https://www.pgatour.com/news/2022/09/08/2022-2023-pga-tour-full-membership-fantasy-rankings-' + str(start) + '-' + str(m) + '.html'
+         print (url)
+         html = urllib.request.urlopen(url)
+         soup = BeautifulSoup(html, 'html.parser')
+         div = soup.find('div', {'class': 'table parbase section'})
+         table = div.find('table')
+         for row in table.find_all('tr')[1:]:
+            d[row.find_all('td')[1].text.strip()] = {
+                  'fantasy_rank': row.find_all('td')[0].text.strip(),
+                  'age': row.find_all('td')[2].text.strip(),
+                  '2022_earnings': row.find_all('td')[3].text.strip(),
+                  'status': row.find_all('td')[4].text.strip(),
+                  'comment': row.find_all('td')[5].text.strip()
+                  
+            }
+
+         start = start + r
+         m = m + r
+         if m > total:
+            m = total
+         if start > total:
+            print ('get fedex start of season done looping thru pages ', m)
+            break
+
+      #print (d, len(d))
+
+      return d
+
 
    def create_field(self):
       owgr = populateField.get_worldrank()

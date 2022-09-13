@@ -894,7 +894,13 @@ class FBLeaderboard(APIView):
                                             'rank': ranks[p.name.username],
                                             'behind': p.season_points_behind()
                                         }
-            #sorted_data = {k: v for k, v in sorted(data.items(), key=lambda item: item[1][1])}
+                if p.season_picks_record():
+                    record = p.season_picks_record()
+                    data.get(p.name.username).update({'season_wins': [v.get('wins') for k, v in record.items() if k == p.name.username][0], \
+                                                     'season_loss': [v.get('loss') for k, v in record.items() if k == p.name.username][0]})
+                else:
+                    data.get(p.name.username).update({'season_wins': 0, 'season_loss': 0})
+
             sorted_data = sorted(data.items(), key=lambda x: x[1]['rank'])
             #print (sorted_data)
         except Exception as e:

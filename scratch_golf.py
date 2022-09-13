@@ -1,5 +1,6 @@
 import os
 
+
 os.environ.setdefault("DJANGO_SETTINGS_MODULE","gamesProj.settings")
 import django
 django.setup()
@@ -10,7 +11,8 @@ from django.contrib.auth.models import User
 from datetime import datetime, timedelta
 from golf_app import populateField, calc_leaderboard, manual_score, bonus_details, espn_api, \
                      round_by_round, scrape_espn, utils, golf_serializers, espn_schedule, \
-                     scrape_scores_picks, espn_ryder_cup, withdraw, fedex_email, pga_t_data
+                     scrape_scores_picks, espn_ryder_cup, withdraw, fedex_email, pga_t_data, fedexData, \
+                     setup_fedex_field
 from django.db.models import Count, Sum
 from unidecode import unidecode as decode
 import json
@@ -31,10 +33,24 @@ import pytz
 from operator import itemgetter
 
 
+#d = populateField.get_fedex_data()
+
+d = setup_fedex_field.FedExSetup().setup()
+
+print (d)
 
 
-pga  = pga_t_data.PGAData()
-data = pga.t_data
+
+
+#pga  = pga_t_data.PGAData()
+#print (pga.get_full_list())
+#print (pga.get_t_name('060'))
+#print (pga.get_purse('060'))
+#print (pga.get_t_type('060'))
+exit()
+#
+# 
+# data = pga.t_data
 
 for l in data:
     if l.get('primaryEvent'):

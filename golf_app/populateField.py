@@ -1,9 +1,7 @@
-#from gamesProj.golf_app.models import FedExSeason
-from golf_app.models import (Picks, Field, Group, Tournament, TotalScore,
-    ScoreDetails, Name, Season, User, BonusDetails, Golfer, ScoreDict, StatLinks, FedExSeason)
+from golf_app.models import Field, Group, Tournament, Season, Golfer, ScoreDict, StatLinks, FedExSeason
 import urllib3
 from django.core.exceptions import ObjectDoesNotExist
-from golf_app import scrape_cbs_golf, scrape_espn, utils, scrape_scores_picks, populateMPField, populateZurichField, espn_api
+from golf_app import scrape_cbs_golf, scrape_espn, utils, scrape_scores_picks, populateMPField, populateZurichField, espn_api, pga_t_data
 from django.db import transaction
 import urllib
 from urllib.request import Request, urlopen
@@ -24,9 +22,10 @@ import time
 def create_groups(tournament_number, espn_t_num=None):
 
     '''takes in 2 tournament numbers for pgatour.com and espn.com to get json files for the field and score.  initializes all tables for the tournament'''
-
+    print ('starting populte field', tournament_number)
     season = Season.objects.get(current=True)
 
+    t_data = update_t_data(season)
     if Tournament.objects.filter(season=season).count() > 0 and tournament_number != '999':  #skip for olympics
         try:
             last_tournament = Tournament.objects.get(current=True, complete=True, season=season)
@@ -43,7 +42,15 @@ def create_groups(tournament_number, espn_t_num=None):
         except ObjectDoesNotExist:
             print ('no current tournament')
     else:
-        print ('setting up first tournament of season')
+        print ('setting up first tournament of season - make sure last season not marketed as current')
+        
+        #if FedExSeason.objects.filter(season=Season.objects.get(current=True)).exists():
+        #    FedExSeason.objects.filter(season=Season.objects.get(current=True)).delete()
+        #fs = FedExSeason()
+        #fs.season = Season.objects.get(current=True)
+        #fs.allow_picks = True
+        #fs.prior_season_data = get_fedex_data()
+        #fs.save()
 
     print ('going to get_field')
     tournament = setup_t(tournament_number, espn_t_num)
@@ -77,6 +84,19 @@ def create_groups(tournament_number, espn_t_num=None):
     else:
         create_field(field, tournament)
     return ({'msg: ', tournament.name, ' Field complete'})
+
+
+def update_t_data(season):
+    t_data = pga_t_data.PGAData()
+    if season.data:
+        if season.data == t_data:
+            return t_data
+        
+    print ("UPDATING PGA T DATA")
+    new_t_data = pga_t_data.PGAData(update=True)
+
+    return new_t_data
+        
 
 def get_womans_rankings():
 
@@ -260,7 +280,7 @@ def setup_t(tournament_number, espn_t_num=None):
 
 def get_field(t, owgr_rankings):
     '''takes a tournament object, goes to web to get field and returns a dict'''
-        
+    print ('getting field get_field func')        
     field_dict = {}
     if t.pga_tournament_num == '470':
         print ('match play')
@@ -819,16 +839,22 @@ def get_individual_stats(t=None):
 
 def get_fedex_data(tournament=None):
     '''takes an optional tournament object to update/setup, returns a dict'''
+    print ('updating fedex data')    
     if tournament:
         if tournament.fedex_data and len(tournament.fedex_data) > 0:
             return tournament.fedex_data
 
     data = {}
     try:
+        season = Season.objects.get(current=True)
         link = 'https://www.pgatour.com/fedexcup/official-standings.html'
         fed_ex_html = urllib.request.urlopen(link)
         fed_ex_soup = BeautifulSoup(fed_ex_html, 'html.parser')
         rows = fed_ex_soup.find('table', {'class': 'table-fedexcup-standings'}).find_all('tr')
+        fedex_data_year = fed_ex_soup.find('h2', {'class': 'title'}).text.strip()[:4]
+        if Tournament.objects.filter(season__current=True).count() > 0 and not str(season.season) == str(fedex_data_year):
+            print ('fedex data season mismatch')
+            return {}
         try:
             for row in rows[1:]:
                 tds = row.find_all('td')
@@ -842,6 +868,7 @@ def get_fedex_data(tournament=None):
     except Exception as ex:
         print ('fedex overall issue ', ex)
 
+    fedex_data_year = fed_ex_soup.find('h2', {'class': 'title'}).text.strip()[:4]
     if tournament:
         tournament.fedex_data = data
         tournament.save()
@@ -854,13 +881,16 @@ def get_golfer(player, pga_num=None, espn_data=None, espn_num=None):
     #player is the golfer name
     if pga_num and Golfer.objects.filter(golfer_pga_num=pga_num).exists():
         golfer = Golfer.objects.get(golfer_pga_num=pga_num)
-    elif Golfer.objects.filter(golfer_name=player, golfer_pga_num__in=['', None]).exists():
+    elif Golfer.objects.filter(golfer_name=player, golfer_pga_num__in=['', None]).exists() and pga_num:
         golfer = Golfer.objects.get(golfer_name=player, golfer_pga_num__in=['', None])
         golfer.golfer_pga_num = pga_num
         golfer.save()
     else:
         g = Golfer()
-        g.golfer_pga_num=pga_num
+        if pga_num:
+            g.golfer_pga_num=pga_num
+        else:
+            g.golfer_pga_num = ''
         g.golfer_name = player
         g.save()
         golfer = g

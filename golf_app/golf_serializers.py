@@ -150,8 +150,9 @@ class PicksSerializer(serializers.ModelSerializer):
 
 
 class FedExFieldSerializer(serializers.ModelSerializer):
-    prior_owgr = serializers.SerializerMethodField('get_prior_owgr')
+    #prior_owgr = serializers.SerializerMethodField('get_prior_owgr')
     picked = serializers.SerializerMethodField('get_picked')
+    top_3 = serializers.SerializerMethodField('get_top3')
 
     class Meta:
         model = FedExField
@@ -162,14 +163,29 @@ class FedExFieldSerializer(serializers.ModelSerializer):
         c_s = Season.objects.get(current=True)
         season = Season.objects.get(season=str(int(c_s.season)-1))
 
-        f = Field.objects.filter(golfer=fedexfield.golfer, tournament__season=season).exclude(tournament__pga_tournament_num='999').order_by('-pk')[0]
+        if Field.objects.filter(golfer=fedexfield.golfer, tournament__season=season).exclude(tournament__pga_tournament_num='999').exists():
+            f = Field.objects.filter(golfer=fedexfield.golfer, tournament__season=season).exclude(tournament__pga_tournament_num='999').order_by('-pk')[0]
+            return f.soy_WGR
+        else:
+            return '9999'
 
-        return f.soy_WGR
+        
     
     def get_picked(self, obj):
         user = self.context.get('user')
         if FedExPicks.objects.filter(pick=obj, user=user).exists():
             return True
+        else:
+            return False
+
+    def get_top3(self, obj):
+        user = self.context.get('user')
+        if FedExPicks.objects.filter(pick=obj, user=user).exists():
+            p = FedExPicks.objects.get(pick=obj, user=user)
+            if p.top_3:
+                return True
+            else:
+                return False
         else:
             return False
 

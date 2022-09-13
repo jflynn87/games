@@ -248,10 +248,13 @@ def fedex_email_picks(user):
     try:
         mail_picks = "\r"
         for pick in FedExPicks.objects.filter(pick__season__season__current=True, user=user):
-            mail_picks = mail_picks + 'Group: ' + str(pick.pick.golfer.golfer_name) + "\r"
+            if pick.top_3:
+                mail_picks = mail_picks + str(pick.pick.golfer.golfer_name) + ' TOP 3 PICK'"\r"
+            else:
+                mail_picks = mail_picks + str(pick.pick.golfer.golfer_name) + "\r"
 
         mail_sub = "Golf Game FEDEX Picks Submittted: " + user.username
-        mail_t = "Old FedEx Picks: " + user.username + "\r"
+        mail_t = "FedEx Picks: " + user.username + "\r"
         
 
         mail_url = "Website to make changes or picks: " + "http://jflynn87.pythonanywhere.com"
@@ -370,13 +373,24 @@ class SeasonTotalView(ListView):
             if tournament.complete:
                 for winner in tournament.winner():
                     score_list.append(winner.user)
-                    
-                    if tournament.major:
-                        winner_dict[winner.user] = winner_dict.get(winner.user) + 100/tournament.num_of_winners()
-                    elif tournament.pga_t_type() in ['PLF', 'PLS']:
-                        winner_dict[winner.user] = winner_dict.get(winner.user) + 75/tournament.num_of_winners()
+                    if tournament.season < 2023:
+                        if tournament.major:
+                            winner_dict[winner.user] = winner_dict.get(winner.user) + 100/tournament.num_of_winners()
+                        elif tournament.pga_t_type() in ['PLF', 'PLS']:
+                            winner_dict[winner.user] = winner_dict.get(winner.user) + 75/tournament.num_of_winners()
+                        else:
+                            winner_dict[winner.user] = winner_dict.get(winner.user) + 30/tournament.num_of_winners()
                     else:
-                        winner_dict[winner.user] = winner_dict.get(winner.user) + 30/tournament.num_of_winners()
+                        field_quality = tournament.field_quality()
+                        if field_quality == 'major':
+                            winner_dict[winner.user] = winner_dict.get(winner.user) + 100/tournament.num_of_winners()
+                        elif field_quality == 'special':
+                            winner_dict[winner.user] = winner_dict.get(winner.user) + 75/tournament.num_of_winners()
+                        elif field_quality == 'strong':
+                            winner_dict[winner.user] = winner_dict.get(winner.user) + 50/tournament.num_of_winners()
+                        elif field_quality == 'weak':
+                            winner_dict[winner.user] = winner_dict.get(winner.user) + 25/tournament.num_of_winners()
+                    
 
             display_dict[tournament] = score_list
 
@@ -1789,17 +1803,22 @@ class FedExPicksView(LoginRequiredMixin,TemplateView):
             print ('old picks: ')
             for p in FedExPicks.objects.filter(user=self.request.user, pick__season__season__current=True):
                 print (p, p.pick.golfer.golfer_name)
-            fedex_email_picks(self.request.user)
+            #fedex_email_picks(self.request.user)
         FedExPicks.objects.filter(user=self.request.user, pick__season__season__current=True).delete()
         data = json.loads(self.request.body)
         print ('pick list', data.get('pick_list'))
-        msg = 'FedEx Picks Submitted'
+        print ('top 3 list', data.get('top3_list'))
+        
         for p in data.get('pick_list'):
             pick = FedExPicks()
             pick.user = self.request.user
             pick.pick = FedExField.objects.get(season__season__current=True, pk=p)
+            if p in data.get('top3_list'):
+                print ('TOP 3 ', p)
+                pick.top_3 = True
             pick.save()
-            
+        fedex_email_picks(self.request.user)
+        msg = 'FedEx Picks Submitted'
         response = {'status': 1, 'message': msg, 'url': '/golf_app/fedex_picks_list'} 
         return HttpResponse(json.dumps(response), content_type='application/json')
 
@@ -2549,7 +2568,7 @@ class BuildFieldAPI(APIView):
         d = {}
 
         try:
-            print (request.data, type(request.data))
+            print ('request data: ', request.data, type(request.data))
             
             pga_t_num = request.data.get('pga_t_num')
             espn_t_num = request.data.get('espn_t_num')
@@ -3269,9 +3288,9 @@ class GetFieldKeysAPI(APIView):
     def get(self, request):
         
         #start = datetime.datetime.now()
+        d = {}
         try:
             t = Tournament.objects.get(current=True)
-            d = {}
 
             first_field = Field.objects.filter(tournament=t).first().pk
             last_field = Field.objects.filter(tournament=t).latest('pk').pk

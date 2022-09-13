@@ -9,7 +9,7 @@
       <ul>
         {% for p in picks_list%}
         
-        <li>{{p.pick.golfer.golfer_name}}, OWGR: {{p.pick.soy_owgr}}</li> 
+        <li>{{p.pick.golfer.golfer_name}} {%if p.top_3%},  TOP3 PICK {%endif%}</li> 
 
         {%endfor%}
 

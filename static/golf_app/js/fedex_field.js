@@ -17,6 +17,7 @@ $(document).ready(function () {
     $('#intro').append('<p>-30 points for any correct pick</p><p>Additional -50 for any pick that was outside the top 30 OWGR as of the start of the season</p> \
     <p>+20 for any pick that was in the top 30 OWGR but doesn' + "'" + 't make it</p> \
     <p>Total points included in season total like a regular tournament.</p> <br>')
+    $('#intro').append('<p>Field and fantasy data sourced from <a href=https://www.pgatour.com/news/2022/09/08/2022-2023-pga-tour-full-membership-fantasy-rankings.html> this link</a>.  OWGR from owgr website as of start of 2022/2023 season</p>')
 
 })
     
@@ -43,7 +44,7 @@ function user_picks() {
                     $('input[name^=owgr]:checked').attr('checked', '')
                 }
                 else {
-                l = 31
+                l = 41  //figure out how to count the owgr of the #30 golfer rather than manually setting here
                 for (let i=0; i < l; i++){
                     $('input[name=owgr-' + i).attr('checked', true)
                                         }    
@@ -74,7 +75,10 @@ function user_picks() {
          table.classList.add('table')
          header = document.createElement('thead')
              h_0 = document.createElement('th')
-             h_0.innerHTML = 'Select'
+             h_0.innerHTML = 'Select Top 30'
+             h_0_a = document.createElement('th')
+             h_0_a.innerHTML = 'Select Top 3'
+   
              h_1 = document.createElement('th')
              h_1.innerHTML = 'Golfer'
              h_1.colSpan = 2
@@ -100,7 +104,7 @@ function user_picks() {
 
              h_3 = document.createElement('th')
              h_3.id = 'prior_fedex'
-             h_3.innerHTML = '20/21 FedEx Rank'
+             h_3.innerHTML = 'Prior Season FedEx Rank'
              h_3_i = document.createElement('i')
              h_3_i.classList.add("fas", "fa-sort")
              h_3.appendChild(h_3_i)
@@ -118,24 +122,36 @@ function user_picks() {
                                                     });
 
 
-             h_4 = document.createElement('th')
-             h_4.id = 'prior_owgr'
-             h_4.innerHTML = '2021 SOY OWGR'
-             h_4_i = document.createElement('i')
-             h_4_i.classList.add("fas", "fa-sort")
-             h_4.appendChild(h_4_i)
+            h_3_a = document.createElement('th')
+            h_3_a.innerHTML = 'Last Season Played'                                                         
+            
+            h_3_b = document.createElement('th')
+            h_3_b.innerHTML = 'Qualification Method'                                                        
+                                        
+            h_3_c = document.createElement('th')
+            h_3_c.innerHTML = 'Fantasy Projection'                                                        
+                                       
 
-             h_4.addEventListener('click', function(evt) {
-                th = this
-                const cell_i = 5
-                const order = document.getElementById('prior_season_owgr_sort').innerHTML
-                sort_table($('#fedex_table'), cell_i, order);  //index or pointer to clicked cell
-                if (document.getElementById('prior_season_owgr_sort').innerHTML == 'asc') {
-                    document.getElementById('prior_season_owgr_sort').innerHTML = 'desc'
-                }
-                else {document.getElementById('prior_season_owgr_sort').innerHTML = 'asc'}
-                
-                                                    });
+             h_4 = document.createElement('th')
+             //h_4.id = 'prior_owgr'
+             h_4.innerHTML = 'Fantasy Comments'
+             //h_4_i = document.createElement('i')
+             //h_4_i.classList.add("fas", "fa-sort")
+             //h_4.appendChild(h_4_i)
+
+             //h_4.addEventListener('click', function(evt) {
+             //   th = this
+             //   const cell_i = 5
+             //   const order = document.getElementById('prior_season_owgr_sort').innerHTML
+             //   sort_table($('#fedex_table'), cell_i, order);  //index or pointer to clicked cell
+             //   if (document.getElementById('prior_season_owgr_sort').innerHTML == 'asc') {
+             //       document.getElementById('prior_season_owgr_sort').innerHTML = 'desc'
+             //   }
+             //   else {document.getElementById('prior_season_owgr_sort').innerHTML = 'asc'}
+             //   
+             //                                      });
+
+
 
          curr_owgr_sort = document.createElement('p')
             curr_owgr_sort.id = 'curr_owgr_sort'
@@ -146,15 +162,19 @@ function user_picks() {
             prior_fedex_sort.innerHTML = 'asc'
             prior_fedex_sort.hidden = true
 
-         prior_season_owgr_sort = document.createElement('p')
-            prior_season_owgr_sort.id = 'prior_season_owgr_sort'
-            prior_season_owgr_sort.innerHTML = 'asc'
-            prior_season_owgr_sort.hidden = true
+        //  prior_season_owgr_sort = document.createElement('p')
+        //     prior_season_owgr_sort.id = 'prior_season_owgr_sort'
+        //     prior_season_owgr_sort.innerHTML = 'asc'
+        //     prior_season_owgr_sort.hidden = true
 
          header.appendChild(h_0)
+         header.appendChild(h_0_a)
          header.appendChild(h_1)
          header.appendChild(h_2)
          header.appendChild(h_3)
+         header.appendChild(h_3_a)
+         header.appendChild(h_3_b)
+         header.appendChild(h_3_c)
          header.appendChild(h_4)
          table.appendChild(header)
 
@@ -178,9 +198,10 @@ function user_picks() {
                 let inputB =  document.createElement('input');
                 inputB.id = g.id
                 inputB.type = 'checkbox'   
-                inputB.classList.add('my-checkbox')
+                inputB.classList.add('my-checkbox', 'top-30')
                 inputB.name= 'owgr-' + g.soy_owgr
                 inputB.value = g.id
+
                 if (g.picked) {
                     inputB.checked = true
                 }
@@ -191,17 +212,48 @@ function user_picks() {
                 inputB.addEventListener('change', function(evt) {
                             count_actual(this);
                                                                 });
-    
+
+                c_0_a = document.createElement('td')
+                let inputC =  document.createElement('input');
+                inputC.id = g.id + '_top3'
+                inputC.type = 'checkbox'   
+                inputC.classList.add('my-checkbox', 'top_3')
+                inputC.name= 'top3-' + g.soy_owgr
+                inputC.value = g.id
+
+                if (g.top_3) {
+                    inputC.checked = true
+                }
+
+                if ($('#allow_picks').text() == 'false') {
+                    inputC.disabled = true }
+
+
+                inputC.addEventListener('change', function(evt) {
+                    count_actual(this);
+                                                        });
+
                 c_0.appendChild(inputA)
                 c_0.appendChild(inputB) 
+                c_0_a.appendChild(inputC) 
 
                 c_1 = document.createElement('td')
                 img = document.createElement('img')
-                img.src = g.golfer.pic_link
+                if (typeof(g.golfer.pic_link) === 'string')
+                {img.src = g.golfer.pic_link}
+                else
+                 {img.src = 'https://www.pgatour.com/etc/designs/pgatour-libs/img/flags/24x24/USA.png'}
 
                 flag = document.createElement('img')
-                flag.src = g.golfer.flag_link
-
+                //console.log(g.golfer.flag_link, typeof(g.golfer.flag_link))
+                
+                if (typeof(g.golfer.flag_link) === 'string') {
+                      
+                    flag.src = g.golfer.flag_link }
+                                    
+                else {console.log(g, 'IN ELSE ') 
+                    flag.src = ''}
+                
                 c_1.append(img)
                 c_1.append(flag)
                 c_1a = document.createElement('td')
@@ -214,14 +266,29 @@ function user_picks() {
                 if (g.prior_season_data.rank != undefined) {
                 c_3.innerHTML = g.prior_season_data.rank }
                 else {c_3.innerHTML = 'n/a'}
+
+                c_3_a = document.createElement('td')
+                c_3_a.innerHTML = g.prior_season_data.starts
+
+                c_3_b = document.createElement('td')
+                c_3_b.innerHTML = g.prior_season_data.status
+
+                c_3_c = document.createElement('td')
+                c_3_c.innerHTML = g.prior_season_data.fantasy_rank
+                
                 c_4 = document.createElement('td')
-                c_4.innerHTML = g.prior_owgr
+                //c_4.innerHTML = g.prior_owgr
+                c_4.innerHTML = g.prior_season_data.comment
 
                 row.appendChild(c_0)
+                row.appendChild(c_0_a)
                 row.appendChild(c_1)
                 row.appendChild(c_1a)
                 row.appendChild(c_2)
                 row.appendChild(c_3)
+                row.appendChild(c_3_a)
+                row.appendChild(c_3_b)
+                row.appendChild(c_3_c)
                 row.appendChild(c_4)
                 t_body.appendChild(row)
 
@@ -260,21 +327,29 @@ function user_picks() {
             document.getElementById('field').appendChild(frag);
             document.getElementById('field').append(curr_owgr_sort)
             document.getElementById('field').append(prior_fedex_sort)
-            document.getElementById('field').append(prior_season_owgr_sort)
+            //document.getElementById('field').append(prior_season_owgr_sort)
             count_actual()
-            })
+            $('#field').attr('hidden', false)
+        })
     
 }
 
 
 function create_post() {
     console.log('submit form')
+    $('#sub_button').attr('disabled', true).text('Submitting...')
     //toggle_submitting()    
-    checked = $('input[class=my-checkbox]:checked')
+    checked = $('input[class="my-checkbox top-30"]:checked')
     //console.log(checked)
     pick_list = []
     $.each(checked, function(i, pick){
         pick_list.push(pick.value)
+    })
+    top3 = $('input[class="my-checkbox top_3"]:checked')
+    top3_list = []
+    $.each(top3, function(i, pick){
+        console.log('top3', pick)
+        top3_list.push(pick.value)
     })
 
     console.log(pick_list)
@@ -286,6 +361,7 @@ function create_post() {
      'X-CSRFToken': $.cookie('csrftoken')
              },
      body: JSON.stringify({'pick_list': pick_list, 
+                           'top3_list': top3_list
                              })
  })
     .then((response) => response.json())
@@ -307,26 +383,58 @@ function create_post() {
 
 
 function count_actual(ele) {
-        var selected = $('input[class=my-checkbox]:checked').length
+        var selected = $('input[class="my-checkbox top-30"]:checked').length
+        var top3_selected = $('input[class="my-checkbox top_3"]:checked').length
         
         if (ele && selected > 30) {
-            alert('30 already picked, deselect one pick');
+            alert('top 30 - 30 already picked, deselect one pick');
             console.log(ele)
             ele.checked = false;
-            selected = $('input[class=my-checkbox]:checked').length
+            selected = $('input[class="my-checkbox top-30"]:checked').length
                                             
         }
-        console.log('selected', selected)
-        //$('#sub_button').text(selected + ' of 30 Picks')
-        if (selected === 30) {
+
+        if (ele && top3_selected > 3){
+            alert('Top 3 - 3 already picked, deselect one pick');
+            console.log(ele)
+            ele.checked = false;
+            selected = $('input[class="my-checkbox top-30"]:checked').length
+                                            
+        }
+
+        console.log('picks selected', selected, top3_selected)
+
+        if (selected  >= 30 && top3_selected >= 3) {
             $('#sub_button').removeAttr('disabled').attr('class', 'btn btn-primary').text('Submit Picks')
         }
         else {
-            $('#sub_button').attr('disabled', true).attr('class', 'btn btn-secondary').text(selected + ' of 30 Picks')
+            $('#sub_button').attr('disabled', true).attr('class', 'btn btn-secondary').text((selected + top3_selected) + ' of 33 Picks')
         }
     return selected
   }
-  
+
+// function count_top3(ele) {
+//     var selected = $('input[class="my-checkbox top_3"]:checked').length
+    
+//     if (ele && selected > 3) {
+//         alert('Top 3 already picked, deselect one pick');
+//         console.log(ele)
+//         ele.checked = false;
+//         selected = $('input[class="my-checkbox top_3"]:checked').length
+                                        
+//     }
+//     console.log('top3 selected', selected)
+//     //$('#sub_button').text(selected + ' of 30 Picks')
+//     if (selected === 3 && top30 == 3) {
+//         $('#sub_button').removeAttr('disabled').attr('class', 'btn btn-primary').text('Submit Picks')
+//     }
+//     else {
+//         $('#sub_button').attr('disabled', true).attr('class', 'btn btn-secondary').text(selected + ' of 30 Picks')
+//     }
+// return selected
+// }
+
+
 function sort_table(table, cell_i, order) {
     
     const tRows = Array.from(table[0].rows)

@@ -1,3 +1,4 @@
+from lzma import FILTER_LZMA1
 from django.db import models
 from django.db.models import constraints
 from django.contrib.auth.models import User
@@ -573,6 +574,23 @@ class Player(models.Model):
         if not season:
             season = Season.objects.get(current=True)
         return SeasonPicks.objects.filter(season=season, player=self, pick=F('game__away')).count()
+
+
+    def season_picks_record(self, season=None):
+        if not season:
+            season = Season.objects.get(current=True)
+        #d = {'wins': 0,
+        #     'loss': 0}
+        d = {}
+
+        if SeasonPicks.objects.filter(season=season, player=self).exists():
+            wins = SeasonPicks.objects.filter(season=season, player=self, pick=F('game__winner')).count()
+            loss = SeasonPicks.objects.filter(season=season, player=self, pick=F('game__loser')).count()
+            d.update({self.name.username : {'wins': wins, 'loss': loss}})
+            return d    
+        else:
+            return None
+
 
 
 class Picks(models.Model):

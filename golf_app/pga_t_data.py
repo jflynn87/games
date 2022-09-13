@@ -38,6 +38,34 @@ class PGAData(object):
             print ('pga_t_data get_t_type error: ', e)
             return None
 
+    def get_purse(self, t_num):
+        try:
+            return [x.get('Purse') for x in self.t_data if str(x.get('permNum')) == str(t_num)][0]
+        except Exception as e:
+            print ('pga_t_data get_t_type error: ', e)
+            return None
+
+
+    def get_t_name(self, t_num):
+        try:
+            return [x.get('trnName')[0].get('official') for x in self.t_data if str(x.get('permNum')) == str(t_num)][0]
+        except Exception as e:
+            print ('pga_t_data get_t_type error: ', e)
+            return None
+        
+
+    def get_full_list(self):
+        '''returns a dict'''
+        d = {}
+        for l in self.t_data:
+            #if l.get('primaryEvent'):
+            d[l.get('permNum')] = {'name': self.get_t_name(l.get('permNum')),
+                                   'purse': self.get_purse(l.get('permNum')),
+                                   'primary_event':  l.get('primaryEvent') }
+            #else:
+            #    print ('alt', l.get('trnName')[0].get('short'))
+        return d
+
     def fedex_stats(self):
         '''no input, returns a dict'''
         

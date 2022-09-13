@@ -69,12 +69,12 @@ start = datetime.now()
 #    for competition in game.get('competitions'):
 #        for competitor in competition.get('competitors'):
 #            print (competitor.get('team').get('name'), competitor.get('score'), competitor.get('winner') )
-
-s = Season.objects.get(season=2021)
-week = Week.objects.get(current=True)
-user = User.objects.get(pk=1)
-views.email_picks(week, user)
-
+d = {}
+for p in Player.objects.filter(league__league   ='Golfers'):
+    if p.season_picks_record():
+        d.update(p.season_picks_record())
+print (d)
+print (datetime.now() - start)
 exit()
 
 
