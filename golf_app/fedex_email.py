@@ -12,13 +12,13 @@ from django.template.loader import render_to_string
 from django.template import Template, Context
 from django.shortcuts import render
 from django.http import HttpRequest
-from selenium.webdriver import Chrome, ChromeOptions
-from selenium.webdriver.support import expected_conditions as EC
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.common.by import By
-from datetime import datetime
+# from selenium.webdriver import Chrome, ChromeOptions
+# from selenium.webdriver.support import expected_conditions as EC
+# from selenium.webdriver.support.ui import WebDriverWait
+# from selenium.webdriver.common.by import By
+# from datetime import datetime
 
-import time
+# import time
 
 
 

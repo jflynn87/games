@@ -327,7 +327,7 @@ class GameListView(LoginRequiredMixin,ListView):
 
          try:
             if player.email_picks:
-                email_picks(week, request.user)
+                email_picks(request.user)
          except Exception as e:
             print ('email picks error', e)
 
@@ -1720,21 +1720,75 @@ class GetRecordsAPI(APIView):
         return Response(json.dumps(d), 200)
 
 
-def email_picks(week, user):
-    '''takes a week object and user object, sends mail, returns none'''
+def email_picks(user):
+    '''takes a list of email addresses, returns nothing'''
+    from django.template.loader import get_template
 
-    mail_picks = "\r"
-    for pick in Picks.objects.filter(week=week, player__name=user):
-        mail_picks = mail_picks + 'Pick #' + str(pick.pick_num) + ' : ' + pick.team.nfl_abbr + "\r"
 
-    mail_sub = "Football Game Picks Submittted: Week " + str(week.week)
-    mail_t = "Week: " + str(week.week) + "\r"
+
+    from django.conf import settings
+    from django.template.loader import render_to_string
+    from django.template import Template, Context
+
+    start = datetime.datetime.now()
+    #req = HttpRequest()
+    u = {'user': user}
+    context = PicksEmail().get_context_data(**u)
     
-
-    mail_url = "Website to make changes or picks: " + "http://jflynn87.pythonanywhere.com/fb_app/games_list/" 
-    mail_content = mail_t + "\r" + "\r" +mail_picks + "\r"+ mail_url
-    mail_recipients = [user.email]
-
-    send_mail(mail_sub, mail_content, 'jflynn87g@gmail.com', mail_recipients)  #add fail silently
+    dir = settings.BASE_DIR + '/fb_app/templates/fb_app/'
+    #msg_plain = render_to_string(dir + 'email.txt', {'appt': appt})
+    msg = render_to_string(dir + 'email_picks.html', context)
+    #msg = EmailMessage(msg_html)
     
+    t = Template(dir + 'email_picks.html')
+    c = Context(context)
+    #html =  t.render(c)
+    req = HttpRequest()
+    #print (render(req, dir + 'fedex_summary.html', context, content_type='application/xhtml+xml').__dict__)    
+    print ('sending FB picks email', user)
+    
+    #print(msg)
+    send_mail("Weekly Footbakk Picks ",
+    from_email = "jflynn87g.gmail.com",
+    #recipient_list = ['jflynn87@hotmail.com','jrc7825@gmail.com', 'ryosuke.aoki0406@gmail.com'],
+    #recipient_list = ['jflynn87@hotmail.com',],
+    recipient_list = [user.email, ],
+    message = msg,
+    html_message=msg
+     )
+
     return
+
+
+
+class PicksEmail(TemplateView):
+    template_name = 'fb_app/email_picks.html'
+
+    def get_context_data(self, **kwargs):
+        start = datetime.datetime.now()
+        context = super(PicksEmail, self).get_context_data(**kwargs)
+        week = Week.objects.get(season_model__current=True, week=1)
+        print ('kwargs ', kwargs, kwargs.get('user'), type(kwargs), kwargs.keys())
+        if kwargs:
+            user = kwargs.get('user')
+        else:
+            user = self.request.user
+        
+        print (user, type(user))
+        picks = {}
+
+        for p in Picks.objects.filter(player__name=user, week=week).order_by('-pick_num'):
+            picks[p.pick_num] = {'pick': p,
+                                'game': Games.objects.get(Q(week=week), (Q(home=p.team) | (Q(away= p.team)))) 
+                                }
+
+        context.update({
+                    'picks': picks,
+                    'week': week,
+                    'user': user
+        })
+
+        return context
+        
+
+

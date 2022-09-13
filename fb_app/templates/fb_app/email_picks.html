@@ -1,0 +1,26 @@
+{%block body_block%}
+
+<h3>Week {{week.week}} Picks - {{user.username}}</h3>
+
+<table class="table">
+    <thead><th>Home Team</th>
+        <th>Away Team</th>
+        <th>Pick</th>
+        <th>Pick #</th>
+    </thead>
+    <tbody>
+        {%for p_num, data in picks.items%}
+        
+        <tr>
+            <td>{{data.game.home}}</td>
+            <td>{{data.game.away}}</td>
+            <td>{{data.pick.team}}</td>
+            <td>{{data.pick.pick_num}}</td>
+        </tr>
+        {%endfor%}
+    </tbody>
+</table>
+
+
+
+{%endblock%}

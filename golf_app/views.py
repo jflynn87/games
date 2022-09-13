@@ -260,7 +260,8 @@ def fedex_email_picks(user):
         mail_url = "Website to make changes or picks: " + "http://jflynn87.pythonanywhere.com"
         mail_content = mail_t + "\r" + "\r" +mail_picks + "\r"+ mail_url
         # change address to user if they want it
-        mail_recipients = ["jflynn87@hotmail.com"]
+        #mail_recipients = ["jflynn87@hotmail.com"]
+        mail_recipients = [user.email,]
         send_mail(mail_sub, mail_content, 'jflynn87g@gmail.com', mail_recipients)  #add fail silently
     except Exception as e:
         print ('FEDEX Email picks error', e)
@@ -1817,7 +1818,11 @@ class FedExPicksView(LoginRequiredMixin,TemplateView):
                 print ('TOP 3 ', p)
                 pick.top_3 = True
             pick.save()
-        fedex_email_picks(self.request.user)
+        if UserProfile.objects.filter(user=self.request.user).exists():
+            profile = UserProfile.objects.get(user=self.request.user)
+            if profile.email_picks:
+                fedex_email_picks(self.request.user)        
+        
         msg = 'FedEx Picks Submitted'
         response = {'status': 1, 'message': msg, 'url': '/golf_app/fedex_picks_list'} 
         return HttpResponse(json.dumps(response), content_type='application/json')

@@ -58,11 +58,12 @@ class Season(models.Model):
         if not tournament:
             for u in self.get_users('obj'):
                 t_scores = TotalScore.objects.filter(tournament__season=self, user=u).aggregate(Sum('score'))
-                user_fed_ex = FedExPicks.objects.filter(pick__season__season=self, user=u).aggregate(Sum('score'))
+                #user_fed_ex = FedExPicks.objects.filter(pick__season__season=self, user=u).aggregate(Sum('score'))
                 if not user_fed_ex.get('score__sum'):
                     user_fed_ex['score__sum'] = 0
-                fed_ex_scores[u.username] = {'score__sum': user_fed_ex.get('score__sum')}
-                total_score = t_scores.get('score__sum') + user_fed_ex.get('score__sum')
+                #fed_ex_scores[u.username] = {'score__sum': user_fed_ex.get('score__sum')}
+                #total_score = t_scores.get('score__sum') + user_fed_ex.get('score__sum')
+                total_score = t_scores.get('score__sum')
                 score_dict[u.username] = {'score__sum': total_score, 't_scores': t_scores.get('score__sum')}
             min_score = min(score_dict.items(), key=lambda v: v[1].get('score__sum'))[1].get('score__sum')
             second = sorted(score_dict.items(), key=lambda v: v[1].get('score__sum'))[1][1].get('score__sum')
@@ -72,21 +73,23 @@ class Season(models.Model):
                 #sorted_dict[user] = {'total': data.get('score__sum'), 'diff':  int(min_score) - int(data.get('score__sum')), 'rank': i+1, 
                 sorted_dict[user] = {'total': score_dict.get(user).get('score__sum'), 'diff':  int(min_score) - int(data.get('score__sum')), 'rank': i+1, 
                                     'points_behind_second': int(second) - int(data.get('score__sum')), 't_scores': score_dict.get(user).get('t_scores'),
-                                    'fed_ex_score': fed_ex_scores.get(user).get('score__sum')}
-                                    #add gross scores
+                                    #'fed_ex_score': fed_ex_scores.get(user).get('score__sum')
+                                     }
+                                    
                                     
             return json.dumps(sorted_dict)
         else:
             for u in self.get_users('obj'):
                 t_scores = TotalScore.objects.filter(tournament__season=self, user=u, tournament__pk__lte=tournament.pk).aggregate(Sum('score'))
-                if tournament.fedex_data and tournament.fedex_data.get('player_points').get(u.username):
+                #if tournament.fedex_data and tournament.fedex_data.get('player_points').get(u.username):
                     #print (tournament, tournament.fedex_data)
-                    user_fed_ex = tournament.fedex_data.get('player_points').get(u.username).get('score')
-                else:
-                    user_fed_ex = 0
+                #    user_fed_ex = tournament.fedex_data.get('player_points').get(u.username).get('score')
+                #else:
+                #    user_fed_ex = 0
                 #print (u, user_fed_ex)
-                fed_ex_scores[u.username] = user_fed_ex
-                total_score = t_scores.get('score__sum') + user_fed_ex
+                #fed_ex_scores[u.username] = user_fed_ex
+                #total_score = t_scores.get('score__sum') + user_fed_ex
+                total_score = t_scores.get('score__sum')
                 score_dict[u.username] = {'score__sum': total_score, 't_scores': t_scores.get('score__sum')}
             min_score = min(score_dict.items(), key=lambda v: v[1].get('score__sum'))[1].get('score__sum')
             second = sorted(score_dict.items(), key=lambda v: v[1].get('score__sum'))[1][1].get('score__sum')
@@ -96,8 +99,9 @@ class Season(models.Model):
                 #sorted_dict[user] = {'total': data.get('score__sum'), 'diff':  int(min_score) - int(data.get('score__sum')), 'rank': i+1, 
                 sorted_dict[user] = {'total': score_dict.get(user).get('score__sum'), 'diff':  int(min_score) - int(data.get('score__sum')), 'rank': i+1, 
                                     'points_behind_second': int(second) - int(data.get('score__sum')), 't_scores': score_dict.get(user).get('t_scores'),
-                                    'fed_ex_score': user_fed_ex}
-                                    #add gross scores
+                                    #'fed_ex_score': user_fed_ex
+                                    }
+                                    
                                     
             return json.dumps(sorted_dict)
 
