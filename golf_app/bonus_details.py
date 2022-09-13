@@ -153,7 +153,7 @@ class BonusDtl(object):
         elif field_type == 'major':
             points = 150 / self.tournament.num_of_winners()
         elif field_type == 'special':
-            points = 150 / self.tournament.num_of_winners()
+            points = 125 / self.tournament.num_of_winners()
         
         return points
 

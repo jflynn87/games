@@ -34,8 +34,12 @@ from operator import itemgetter
 
 
 #d = populateField.get_fedex_data()
+t = Tournament.objects.get(current=True)
+print (t.field_quality())
+exit()
 
-d = setup_fedex_field.FedExSetup().setup()
+
+#d = setup_fedex_field.FedExSetup().setup()
 
 print (d)
 

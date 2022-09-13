@@ -418,15 +418,15 @@ class Tournament(models.Model):
             else:
                 return "weak"
         else:
-            t_data = self.season.data
+            t_data = pga_t_data.PGAData(season=self.season)
             t_type = t_data.get_t_type(self.pga_tournament_num)
             if t_type == 'MJR':
                 return 'major'
             elif t_type in ['PLF', 'PLS'] or self.pga_tournament_num == '500':  #500 for Pres cup
                 return 'special'
-            elif t_data.get_purse(self.pga_tournament_num) >= 10000000:
+            elif int(t_data.get_purse(self.pga_tournament_num).replace(',', '')) >= 10000000:
                 return 'strong'
-            elif t_data.get_purse(self.pga_tournament_num) < 10000000:
+            elif int(t_data.get_purse(self.pga_tournament_num).replace(',','')) < 10000000:
                 return 'weak'
             else:
                 print ('field quality in else, why?')
