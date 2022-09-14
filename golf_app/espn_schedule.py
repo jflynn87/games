@@ -4,7 +4,7 @@ from requests import get
 import json
 
 from golf_app import utils
-from golf_app.models import Tournament, ScoreDict, Group, Field
+from golf_app.models import Season
 
 
 class ESPNSchedule(object):
@@ -17,8 +17,10 @@ class ESPNSchedule(object):
     def __init__(self):
         start = datetime.now()
 
+        s = Season.objects.get(current=True)
+
         headers = {'User-Agent': 'Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.149 Mobile Safari/537.36'}
-        url = 'https://www.espn.com/golf/schedule/_/season/2022/tour/pga?_xhr=pageContent'
+        url = 'https://www.espn.com/golf/schedule/_/season/' + str(s.season) + '/tour/pga?_xhr=pageContent'
         self.schedule = get(url, headers=headers).json()
 
         self.events_to_exclude = ['The Match', 'Corales Puntacana Championship', 'Puerto Rico Open', 'Barracuda Championship', 'Barbasol Championship']

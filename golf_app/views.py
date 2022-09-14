@@ -1939,7 +1939,12 @@ class RyderCupScoresView(LoginRequiredMixin, TemplateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         s = Season.objects.get(current=True)
-        t = Tournament.objects.get(pga_tournament_num='468', season=s)
+        if pga_t_data(season=season).ryder_or_pres() == 'ryder':
+            t = Tournament.objects.get(pga_tournament_num='468', season=s)
+        elif pga_t_data(season=season).ryder_or_pres() == 'presidents':
+            t = Tournament.objects.get(pga_tournament_num='500', season=s)
+        else:
+            t = None
         
 
         context.update({
@@ -1954,7 +1959,13 @@ class RyderCupScoresAPI(APIView):
     def get(self,request):
         
         s = Season.objects.get(current=True)
-        t = Tournament.objects.get(season=s, pga_tournament_num='468')
+        if pga_t_data(season=season).ryder_or_pres() == 'ryder':
+            t = Tournament.objects.get(season=s, pga_tournament_num='468')
+        elif pga_t_data(season=season).ryder_or_pres() == 'presidents':
+            t = Tournament.objects.get(pga_tournament_num='500', season=s)
+        else:
+            t = None
+
         if t.complete:
             sd = ScoreDict.objects.get(tournament=t)
             score_dict = espn_ryder_cup.ESPNData(data=sd.data).field()

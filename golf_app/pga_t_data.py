@@ -80,3 +80,10 @@ class PGAData(object):
         return d
 
                
+    def ryder_or_pres(self):
+        if '468' in self.get_full_list().keys():
+            return 'ryder'
+        elif '500' in self.get_full_list().keys():
+            return 'presidents'
+        else:
+            return None

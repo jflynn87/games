@@ -34,8 +34,11 @@ from operator import itemgetter
 
 
 #d = populateField.get_fedex_data()
-t = Tournament.objects.get(current=True)
-print (t.field_quality())
+s = Season.objects.get(current=True)
+d = pga_t_data.PGAData(season=s)
+
+print (d.ryder_or_pres())
+
 exit()
 
 

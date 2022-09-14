@@ -1748,7 +1748,7 @@ def email_picks(user):
     print ('sending FB picks email', user)
     
     #print(msg)
-    send_mail("Weekly Footbakk Picks ",
+    send_mail("Weekly Football Picks ",
     from_email = "jflynn87g.gmail.com",
     #recipient_list = ['jflynn87@hotmail.com','jrc7825@gmail.com', 'ryosuke.aoki0406@gmail.com'],
     #recipient_list = ['jflynn87@hotmail.com',],
