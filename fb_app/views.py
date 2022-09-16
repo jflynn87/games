@@ -1767,7 +1767,7 @@ class PicksEmail(TemplateView):
     def get_context_data(self, **kwargs):
         start = datetime.datetime.now()
         context = super(PicksEmail, self).get_context_data(**kwargs)
-        week = Week.objects.get(season_model__current=True, week=1)
+        week = Week.objects.get(season_model__current=True, current=True)
         print ('kwargs ', kwargs, kwargs.get('user'), type(kwargs), kwargs.keys())
         if kwargs:
             user = kwargs.get('user')

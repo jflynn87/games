@@ -33,11 +33,14 @@ import pytz
 from operator import itemgetter
 
 
+
+
 #d = populateField.get_fedex_data()
 s = Season.objects.get(current=True)
-d = pga_t_data.PGAData(season=s)
+print (s.get_users('obj'))
+#d = pga_t_data.PGAData(season=s)
 
-print (d.ryder_or_pres())
+#print (d.ryder_or_pres())
 
 exit()
 

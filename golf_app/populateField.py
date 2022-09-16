@@ -70,7 +70,7 @@ def create_groups(tournament_number, espn_t_num=None):
         groups = configure_zurich_groups(tournament)
     elif tournament.pga_tournament_num == '999': # my code for olymics
         groups = configure_groups(field, tournament)
-    elif tournament.pga_tournament_num == '468': # Ryder Cup
+    elif tournament.pga_tournament_num in ['468', '500']: # Ryder Cup, Pres Cup
         groups = configure_ryder_cup_groups(tournament)
     else:
         #shouldnt get here
@@ -140,62 +140,6 @@ def get_worldrank():
 
     return d
 
-    #keep for pga if neeeded  - issue is it only has top 1000
-    html = urllib.request.urlopen("https://www.pgatour.com/stats/stat.186.html")
-    soup = BeautifulSoup(html, 'html.parser')
-
-    players = (soup.find("table", {'id': 'statsTable'}))
-
-    ranks = {}
-    for row in players.find_all('tr')[1:]:
-        rank_list = []
-        try:
-            pga_num = row.get('id').strip('playerStatsRow')
-            current_rank = row.find_all('td')[0].text.strip().strip('T')
-            last_week = row.find_all('td')[1].text.strip().strip('T')
-            soy = '0'
-            rank_list = [current_rank, last_week, soy]
-            if row.find('a'):
-                ranks[row.find('a').text.strip()] = rank_list
-            else:
-                ranks[row.find('td', {'class': 'player-name'}).text.strip()] = rank_list
-
-        except Exception as e:
-            print ('player owgr scrape issue', e)
-            print ('row: ', row)
-
-    return ranks
-
-    # for old OWGR website - commented on 8/10/2022 - delete at some point
-    # html = urllib.request.urlopen("http://www.owgr.com/ranking?pageNo=1&pageSize=All&country=All")
-    # soup = BeautifulSoup(html, 'html.parser')
-
-    # rankslist = (soup.find("div", {'class': 'table_container'}))
-    # ranks = {}
-
-    # for row in rankslist.find_all('tr')[1:]:
-    #     try:
-    #         rank_data = row.find_all('td')
-            
-    #         rank_list = []
-    #         i = 0
-    #         for data in rank_data:
-    #             if data.text != '':
-    #                 rank_list.append(int(data.text))
-    #             else:
-    #                 rank_list.append(9999)
-    #             i += 1
-    #             if i == 3:
-    #                 break
-    #         player = (row.find('td', {'class': 'name'})).text.split('(')[0]
-            
-    #         ranks[player] = rank_list
-    #     except Exception as e:
-    #         print('exeption 1',row,e)
-
-    # print ('end owgr.com lookup')
-    
-    # return ranks
 
 def setup_t(tournament_number, espn_t_num=None):
     '''takes a t number as a string, returns a tournament object'''

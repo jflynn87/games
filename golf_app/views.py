@@ -1831,6 +1831,7 @@ class FedExPicksView(LoginRequiredMixin,TemplateView):
 class FedExFieldAPI(APIView):
     def get(self, request, filter):
 
+        start = datetime.datetime.now()
         s = FedExSeason.objects.get(season__current=True)
 
         if filter == 'all':
@@ -1839,7 +1840,7 @@ class FedExFieldAPI(APIView):
             data = {'picks': picks,
                     'users': users}
         else:            
-            context = {'user': self.request.user}
+            context = {'user': self.request.user} 
             try:
                 if s.season.season == 2022 and self.request.user.username == "Hiro":
                     t = Tournament.objects.get(season__season='2022', name='Hero World Challenge')
@@ -1859,7 +1860,8 @@ class FedExFieldAPI(APIView):
             except Exception as e:
                 print ('FedEx Field API exception: ', e)
                 data = json.dumps({'msg': e})    
-            
+        
+        print ('FedEX Field API dur: ', datetime.datetime.now() - start)
         return JsonResponse(data, status=200, safe=False)
 
 
@@ -2090,6 +2092,8 @@ class EspnApiScores(APIView):
             for u in t.season.get_users('obj'):
                 d[u.username] = {'score': 0,
                                 'cuts': 0}
+            greg = User.objects.get(username="GregH")
+            d.update({greg.username: {'score': 0, 'cuts': 0}})
 
             if t.complete:
                 data = return_sd_data(t,d)
@@ -2117,7 +2121,8 @@ class EspnApiScores(APIView):
             start_calc_score  = datetime.datetime.now()
             cut_num = espn.cut_num()
             
-            BonusDetails.objects.filter(tournament=t, bonus_type='5').update(bonus_points=0)
+            if BonusDetails.objects.filter(tournament=t, bonus_type='5').exists():
+                BonusDetails.objects.filter(tournament=t, bonus_type='5').update(bonus_points=0)
 
             for golfer in Picks.objects.filter(playerName__tournament=t).values('playerName__golfer__espn_number').distinct():
                 start_golfer_score = datetime.datetime.now()

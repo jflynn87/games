@@ -248,6 +248,13 @@ form #bottom_sect {
   right: 0;
 }
 
+.fedex_sub_display {
+  position: fixed;
+  bottom: 0;
+  right: 0;
+
+}
+
 /*big scree */
 @media only screen and (min-width: 1199px) {
 
