@@ -33,6 +33,17 @@ import pytz
 from operator import itemgetter
 
 t = Tournament.objects.get(current=True)
+s = Season.objects.get(current=True)
+
+for u in s.get_users('obj'):
+    print (u, FedExPicks.objects.filter(user=u, pick__season__season=s).count())
+
+
+for f in Field.objects.filter(tournament=t):
+    print (f, f.pk, f.season_stats)
+
+exit()
+
 espn = espn_api.ESPNData()
 for f in Field.objects.filter(tournament=t, group__number=3):
     print (f, espn.get_rank(f.golfer.espn_number))    

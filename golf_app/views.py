@@ -2634,7 +2634,7 @@ class FieldUpdatesAPI(APIView):
             for f in Field.objects.filter(pk__gte=min_key, pk__lte=max_key):
                 s = datetime.datetime.now()
                 #print ('udpating field: ', f)
-                if t.pga_tournament_num not in ['470', '018']:
+                if t.pga_tournament_num not in ['470', '018', '500', '468']:
                     f.handi = f.handicap()
                 else:
                     f.handi = 0
@@ -3324,11 +3324,13 @@ class GetFieldKeysAPI(APIView):
         try:
             t = Tournament.objects.get(current=True)
 
-            first_field = Field.objects.filter(tournament=t).first().pk
-            last_field = Field.objects.filter(tournament=t).latest('pk').pk
-
-            d = {'first_field_key': first_field,
-                'last_field_key': last_field,}
+            first_field = Field.objects.filter(tournament=t).aggregate(Min('pk'))
+            last_field = Field.objects.filter(tournament=t).aggregate(Max('pk'))
+            #first_field = Field.objects.filter(tournament=t).first().pk
+            #last_field = Field.objects.filter(tournament=t).latest('pk').pk
+            print(first_field)
+            d = {'first_field_key': first_field.get('pk__min'),
+                'last_field_key': last_field.get('pk__max'),}
 
             print ('Field keys range: ', d)
         except Exception as e:

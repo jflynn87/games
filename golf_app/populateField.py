@@ -704,34 +704,35 @@ def create_ryder_cup_field(field, tournament):
     fed_ex = get_fedex_data(tournament)
     individual_stats = get_individual_stats()
 
-    for f in Field.objects.filter(tournament=tournament):
+    #should be moved to sepatate api
+    # for f in Field.objects.filter(tournament=tournament):
+        
+    #     f.prior_year = 'n/a'
+    #     recent = OrderedDict(sorted(f.recent_results().items(), reverse=True))
+    #     f.recent = recent
+    #     f.season_stats = f.golfer.summary_stats(tournament.season) 
 
-        f.prior_year = 'n/a'
-        recent = OrderedDict(sorted(f.recent_results().items(), reverse=True))
-        f.recent = recent
-        f.season_stats = f.golfer.summary_stats(tournament.season) 
+    #     # print (fed_ex)#
+    #     if fed_ex.get(f.playerName):
+    #         f.season_stats.update({'fed_ex_points': fed_ex.get(f.playerName).get('points'),
+    #                             'fed_ex_rank': fed_ex.get(f.playerName).get('rank')})
+    #     else:
+    #         f.season_stats.update({'fed_ex_points': 'n/a',
+    #                             'fed_ex_rank': 'n/a'})
 
-        # print (fed_ex)#
-        if fed_ex.get(f.playerName):
-            f.season_stats.update({'fed_ex_points': fed_ex.get(f.playerName).get('points'),
-                                'fed_ex_rank': fed_ex.get(f.playerName).get('rank')})
-        else:
-            f.season_stats.update({'fed_ex_points': 'n/a',
-                                'fed_ex_rank': 'n/a'})
-
-        if individual_stats.get(f.playerName):
-            player_s = individual_stats.get(f.playerName)
-        else:
-            player_s = {}
-        for k, v in player_s.items():
-            if k != 'pga_num':
-                f.season_stats.update({k: v})
+    #     if individual_stats.get(f.playerName):
+    #         player_s = individual_stats.get(f.playerName)
+    #     else:
+    #         player_s = {}
+    #     for k, v in player_s.items():
+    #         if k != 'pga_num':
+    #             f.season_stats.update({k: v})
             
-        f.save()
+    #     f.save()
 
-    for g in Golfer.objects.all():
-        g.results = g.get_season_results()
-        g.save()
+    # for g in Golfer.objects.all():
+    #     g.results = g.get_season_results()
+    #     g.save()
 
 
     print ('saved Ryder Cup field objects')
