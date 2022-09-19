@@ -259,7 +259,8 @@ class ESPNData(object):
                 else:
                     min_score = min([int(self.get_rank(x.get('id'))) - Field.objects.values('handi').get(tournament=self.t, golfer__espn_number=x.get('id')).get('handi') for x in self.field_data if x.get('id') in golfers])
                     best = [x.get('athlete').get('id') for x in self.field_data if x.get('id') in golfers and int(self.get_rank(x.get('id'))) - Field.objects.values('handi').get(tournament=self.t, golfer__espn_number=x.get('id')).get('handi') == min_score]
-                    cuts = len([x.get('athlete').get('id') for x in self.field_data if x.get('id') in golfers and x.get('status').get('type').get('id') == '3'])
+                    cuts = len(self.regular_cut_golfers(g.get_golfers()))
+                    #cuts = len([x.get('athlete').get('id') for x in self.field_data if x.get('id') in golfers and x.get('status').get('type').get('id') == '3'])
                     ## change cuts to use the function after testing
                 golfer_list = []
                 golfer_espn_num_list = []

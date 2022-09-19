@@ -39,7 +39,7 @@
   <td>{{prize|currency}}</td>
   {%endfor%}
   <td></td>
-  </tr>
+  <!-- </tr>
   <tr id='ranks'style="background-color: lightblue">
     <th>Season Rank</th>
       {%for user in user_list%}
@@ -53,7 +53,7 @@
     <td id=weekly_total_{{user.username}}>...</td>
     {%endfor%}
     <td></td>
-  </tr>
+  </tr> -->
 
   <!-- <tr style="background-color: lightblue">
     <th>Weekly Point Total</th>
@@ -85,11 +85,11 @@
   {%if t == 'totals'%}
   <td>Totals:</td>
   {%else%}
-  {%if t.pga_tournament_num == '468'%}
+  {%if t.pga_tournament_num == '468' or t.pga_tournament_num == '500'%}
   <td> <a href="{%url 'golf_app:ryder_cup_scores'%}">{{t.name}}</td>
   {%else%}
   <!-- <td> <a href="{%url 'golf_app:new_scores' pk=t.pk %}">{{t.name}}</td> -->
-  <td> <a href="{%url 'golf_app:api_scores_view' pk=t.pk %}">{{t.name}}</td>
+  <td> <a href="{%url 'golf_app:api_scores_view' pk=t.pk %}">{{t.name}}: ${{t.prize}}</td>
   {%endif%}
   {%endif%}
   {%for s in score%}

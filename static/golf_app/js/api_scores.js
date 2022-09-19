@@ -35,9 +35,13 @@ $(document).ready(function() {
             get_records()
             //get_ranks()
       }
-     $('#status').html('<h5>Scores Updated</h5>')
+     //$('#status').html('<h5>Scores Updated</h5>')
       var done = new Date()
+      var totalTime = done - start
+      sec = Math.floor((totalTime/1000)%60)
+      console.log(sec)
       console.log('load duration: ', done - start)
+      $('#status').html('<h5>Scores Updated - duration ' + sec + ' seconds' + '</h5>')
       }
       )      
 

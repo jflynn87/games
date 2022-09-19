@@ -113,10 +113,13 @@ class Score(object):
             print ('winning team: ', winning_team[0], winning_score[0])
             
             #need this as model and dict have different euro/EUR
-            if winning_team[0] == "USA":
-                winning_team = 'USA'
-            elif winning_team[0] == 'EUR':
-                winning_team = 'euro'
+            #fixed for pres cup, shouldn't need this anymore  Confirn
+            # if winning_team[0] == "USA":
+            #     winning_team = 'USA'
+            # elif winning_team[0] == 'EUR':
+            #     winning_team = 'euro'
+            # elif winning_team == 'INTL':
+            #     winning_team = 'INTL'
 
             
             for cp in CountryPicks.objects.filter(tournament=self.tournament, country=winning_team):

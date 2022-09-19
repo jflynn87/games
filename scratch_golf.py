@@ -32,12 +32,17 @@ import numpy as np
 import pytz
 from operator import itemgetter
 
-
-
+t = Tournament.objects.get(current=True)
+espn = espn_api.ESPNData()
+for f in Field.objects.filter(tournament=t, group__number=3):
+    print (f, espn.get_rank(f.golfer.espn_number))    
+exit()
 
 #d = populateField.get_fedex_data()
 s = Season.objects.get(current=True)
-print (s.get_users('obj'))
+print (s.get_users('obj'), len(s.get_users('obj')))
+print ('======================')
+print (s.get_users(), len(s.get_users()))
 #d = pga_t_data.PGAData(season=s)
 
 #print (d.ryder_or_pres())
@@ -166,7 +171,7 @@ print (espn.post_cut_wd_score())
 
 exit()
 
-url = 'https://www.livgolf.com/players-directory'
+url = 'https://www.presidentscup.com/standings.html'
 
 html = urllib.request.urlopen(url)
 soup = BeautifulSoup(html, 'html.parser')

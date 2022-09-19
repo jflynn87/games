@@ -163,7 +163,9 @@ function formatSG(field) {
 
 
 function buildHeader() {
-    if ($('#pga_t_num').text() == 468) {
+    console.log('t num: ', $('#pga_t_num').text())
+    if ($('#pga_t_num').text() == 468 || $('#pga_t_num').text() == 500) {
+        console.log('IF works')
         var instructions = '<p style=font-weight:bold;>Instructions:</p><p>One Pick per Group</p> <p>Match win -10 points, -1 point per hole of winning margin</p>' +
         '<p>Match loss +10 points, +1 point per hole of winning margin</p>' +
         '<p>Draw 0 points</p>' + 
@@ -231,7 +233,7 @@ function buildHeader() {
     }
 
     //Ryder Cup
-    if ($('#pga_t_num').text() == 468) {
+    if ($('#pga_t_num').text() == 468 | 500) {
         $('#field_sect #pick_form').append('<table id=ryderCup_picks' + " class=table> \
         <thead class=total_score> <th colspan=2>Special Ryder Cup Picks " + '</th> </thead>' +
         '</table>')

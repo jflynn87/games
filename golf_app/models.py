@@ -34,23 +34,35 @@ class Season(models.Model):
 
     def get_users(self, mode=None):
         ''''returns a list of user pk's as dict values or native objects if mode == obj'''
-            
+
+        f = False
+        new_users = []
+        l = []
+
         if Tournament.objects.filter(season=self).count() > 1:
             first_t = Tournament.objects.filter(season=self).first()
         else:
-            #print (str(int(self.season) - 1))
             first_t = Tournament.objects.filter(season__season=str(int(self.season) - 1)).first()
+            f = True
 
+        users =list(TotalScore.objects.filter(tournament=first_t).values('user'))
 
-        #print (first_t)
-        users = TotalScore.objects.filter(tournament=first_t).values('user')
-                
+        if f:
+            old = [v.get('user') for v in users]
+            new_users = Picks.objects.filter(playerName__tournament=Tournament.objects.get(current=True)).exclude(user__pk__in=old).values('user').distinct()
+               
         if mode == 'obj':
-            l = []
             for u in users:
                 l.append(u.get('user'))
+            if f: 
+                for n in new_users:
+                    l.append(n.get('user'))
             return User.objects.filter(pk__in=l)
         else:
+            if f:
+                for n in new_users:
+                    users.append({'user': n.get('user')}) 
+                
             return users
 
     def get_total_points(self, tournament=None):
@@ -469,6 +481,30 @@ class Tournament(models.Model):
                                      return (t.get('trnType'))
         print ('models file pga_t_type not finding t')                           
         return None
+
+    def prize(self):
+        if int(self.season.season)< 2023:
+            if self.major:
+                return 100
+            elif self.pga_t_type() in ['PLF', 'PLS']:
+                return 75
+            else:
+                return 30
+        else:
+            field_quality = self.field_quality()
+            if field_quality == 'major':
+                return 100
+            elif field_quality == 'special':
+                return 75
+            elif field_quality == 'strong':
+                return 50
+            elif field_quality == 'weak':
+                return 25
+        
+        print ('Prize ERROR no prize found')
+        return 0
+
+
 
 
 class Group(models.Model):

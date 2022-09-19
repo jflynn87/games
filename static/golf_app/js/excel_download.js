@@ -9,6 +9,7 @@ $('#download_excel').html('Preparing Data...')
       //data: {'tournament' : $('#tournament_key').text()},
       success: function (json) {
           //console.log(json.golfers)
+          $('#download_excel').html('Formatting Excel File...')
           golfers = json.golfers
           field = $.parseJSON(json.field)
           var createXLSLFormatObj = [];

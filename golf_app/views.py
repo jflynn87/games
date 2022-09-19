@@ -200,11 +200,19 @@ class NewFieldListView(LoginRequiredMixin,TemplateView):
                 cp.gender = 'women'
                 cp.save()
 
-        if tournament.pga_tournament_num == '468':  #Ryder Cup
+        if tournament.pga_tournament_num in ['468', '500']:  #Ryder/Pres Cup
             cp = CountryPicks()
             cp.user = user
             cp.tournament = tournament
-            cp.country = data.get('ryder_cup')[0]
+            if data.get('ryder_cup')[0] == "USA":
+                cp.country = 'USA'
+            elif tournament.pga_tournament_num == '468':
+                cp.county = "EUR"
+            elif tournament.pga_tournament_num == '500':
+                cp.country = 'INTL'
+            else:
+                cp.country = 'bad data'
+
             cp.ryder_cup_score = data.get('ryder_cup')[1]
             cp.gender = 'men'
             cp.save()
@@ -231,6 +239,9 @@ def email_picks(tournament, user):
     mail_picks = "\r"
     for pick in Picks.objects.filter(playerName__tournament=tournament, user=user):
         mail_picks = mail_picks + 'Group: ' + str(pick.playerName.group.number) + ' Golfer: ' + pick.playerName.playerName + "\r"
+    if tournament.pga_tournament_num in ['500', '468']:
+        cp = CountryPicks.objects.get(tournament=tournament, user=user)
+        mail_picks = mail_picks + 'Winning Team: ' + str(cp.country) + ' Points: ' + str(cp.ryder_cup_score) + "\r"
 
     mail_sub = "Golf Game Picks Submittted: " + tournament.name 
     mail_t = "Tournament: " + tournament.name + "\r"
@@ -321,7 +332,7 @@ class PicksListView(LoginRequiredMixin,ListView):
         t = Tournament.objects.get(current=True)
         if t.pga_tournament_num == '999':  
             countries = CountryPicks.objects.filter(user=self.request.user, tournament=t)
-        elif t.pga_tournament_num == '468':
+        elif t.pga_tournament_num in ['468', '500']:
             countries = CountryPicks.objects.filter(user=self.request.user, tournament=t)
         else:
             countries = None
@@ -374,7 +385,7 @@ class SeasonTotalView(ListView):
             if tournament.complete:
                 for winner in tournament.winner():
                     score_list.append(winner.user)
-                    if tournament.season < 2023:
+                    if int(tournament.season.season)< 2023:
                         if tournament.major:
                             winner_dict[winner.user] = winner_dict.get(winner.user) + 100/tournament.num_of_winners()
                         elif tournament.pga_t_type() in ['PLF', 'PLS']:
@@ -382,16 +393,16 @@ class SeasonTotalView(ListView):
                         else:
                             winner_dict[winner.user] = winner_dict.get(winner.user) + 30/tournament.num_of_winners()
                     else:
-                        field_quality = tournament.field_quality()
-                        if field_quality == 'major':
-                            winner_dict[winner.user] = winner_dict.get(winner.user) + 100/tournament.num_of_winners()
-                        elif field_quality == 'special':
-                            winner_dict[winner.user] = winner_dict.get(winner.user) + 75/tournament.num_of_winners()
-                        elif field_quality == 'strong':
-                            winner_dict[winner.user] = winner_dict.get(winner.user) + 50/tournament.num_of_winners()
-                        elif field_quality == 'weak':
-                            winner_dict[winner.user] = winner_dict.get(winner.user) + 25/tournament.num_of_winners()
-                    
+                        # field_quality = tournament.field_quality()
+                        # if field_quality == 'major':
+                        #     winner_dict[winner.user] = winner_dict.get(winner.user) + 100/tournament.num_of_winners()
+                        # elif field_quality == 'special':
+                        #     winner_dict[winner.user] = winner_dict.get(winner.user) + 75/tournament.num_of_winners()
+                        # elif field_quality == 'strong':
+                        #     winner_dict[winner.user] = winner_dict.get(winner.user) + 50/tournament.num_of_winners()
+                        # elif field_quality == 'weak':
+                        #     winner_dict[winner.user] = winner_dict.get(winner.user) + 25/tournament.num_of_winners()
+                        winner_dict[winner.user] = winner_dict.get(winner.user) + tournament.prize()/tournament.num_of_winners()
 
             display_dict[tournament] = score_list
 
@@ -1941,9 +1952,9 @@ class RyderCupScoresView(LoginRequiredMixin, TemplateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         s = Season.objects.get(current=True)
-        if pga_t_data(season=season).ryder_or_pres() == 'ryder':
+        if pga_t_data(season=s).ryder_or_pres() == 'ryder':
             t = Tournament.objects.get(pga_tournament_num='468', season=s)
-        elif pga_t_data(season=season).ryder_or_pres() == 'presidents':
+        elif pga_t_data(season=s).ryder_or_pres() == 'presidents':
             t = Tournament.objects.get(pga_tournament_num='500', season=s)
         else:
             t = None
@@ -1961,9 +1972,9 @@ class RyderCupScoresAPI(APIView):
     def get(self,request):
         
         s = Season.objects.get(current=True)
-        if pga_t_data(season=season).ryder_or_pres() == 'ryder':
+        if pga_t_data(season=s).ryder_or_pres() == 'ryder':
             t = Tournament.objects.get(season=s, pga_tournament_num='468')
-        elif pga_t_data(season=season).ryder_or_pres() == 'presidents':
+        elif pga_t_data(season=s).ryder_or_pres() == 'presidents':
             t = Tournament.objects.get(pga_tournament_num='500', season=s)
         else:
             t = None
@@ -2092,8 +2103,8 @@ class EspnApiScores(APIView):
             for u in t.season.get_users('obj'):
                 d[u.username] = {'score': 0,
                                 'cuts': 0}
-            greg = User.objects.get(username="GregH")
-            d.update({greg.username: {'score': 0, 'cuts': 0}})
+            #greg = User.objects.get(username="GregH")
+            #d.update({greg.username: {'score': 0, 'cuts': 0}})
 
             if t.complete:
                 data = return_sd_data(t,d)

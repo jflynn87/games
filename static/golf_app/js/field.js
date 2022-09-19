@@ -201,7 +201,7 @@ function get_info(info, ele) {
 }
 
 function check_complete(info) {
-  //console.log(info)
+  console.log('CHECK COMPLETE')
   $('#pick-status').append('<table id=status-tbl class="table table-sm"> </table>')
   $('#status-tbl').append('<tr id=picks-row> <td> Groups: </td> </tr>')
   $.each(info,  function(group, picks) {
@@ -243,10 +243,10 @@ $("#actual-row").each(function () {
         else {countries_ok = false}
       }
 
-      if ($('#pga_t_num').text() == 468) {var ryder_ok = false}
+      if ($('#pga_t_num').text() == 468 || 500) {var ryder_ok = false}
       else {var ryder_ok = true}
 
-      if ($('#pga_t_num').text() == '468') {
+      if ($('#pga_t_num').text() == '468' || '500') {
         console.log('complete chk ', $('#winning_points').val())
         if ($('#winning_team').val() && parseFloat($('#winning_points').val()) > 14) {
             ryder_ok = true

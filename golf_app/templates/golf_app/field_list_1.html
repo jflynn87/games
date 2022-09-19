@@ -33,6 +33,8 @@
     <h4>Strong Field - 100 bonus points for the winning picks</h4>
 {%elif tournament.field_quality == 'weak'%}
     <h4>Weak Field - 50 bonus points for the winning picks</h4>
+{%elif tournament.field_quality == 'special'%}
+    <h4>Special Field - 75 bonus points for the winning picks</h4>
 {%else%}
     <h4>Field Quality Not Available</h4>
 {%endif%}
@@ -57,15 +59,16 @@
 
 
 {%if not t_started or tournament.late_picks%}
-    <div id="'top-sect">
+    <div id="top-sect">
     <br>
+    <div id="random-line">
     <form name="random" method="post" id="random_form">
         {%csrf_token%}
         <input type="text" name="random" value="random" hidden>
         <h5>Click for random picks  <input type='submit' id="random_btn" class="btn btn-primary" value="Random Picks" disabled></h5>
         
     </form>
-
+</div>
     <span style="float: right;" >
         <a href="#" id="download_excel" onclick="downloadExcel()">
         <i class="fas fa-file-download" title="Download Excel" data-toggle="tooltip"> Download Excel</i>
@@ -104,7 +107,7 @@
 <link rel="stylesheet" href='{%static "golf_app/css/load.css"%}'> 
 {%endcompress%}
 
-{%if tournament.pga_tournament_num != "470" and tournament.pga_tournament_num != "018" and tournament.pga_tournament_num != "468"%}
+{%if tournament.pga_tournament_num != "470" and tournament.pga_tournament_num != "018" and tournament.pga_tournament_num != "468" and tournament.pga_tournament_num != "500"%}
 <script type="text/babel" src="{%static 'test_app/src/withdraw.js'%}"></script> 
 {%endif%} 
 <script type="text/babel" src="{%static 'test_app/src/check_espn_num.js'%}"></script> 

@@ -34,6 +34,10 @@ $(document).ready(function () {
          
          fedexPicks = responseJSON[5].data
 
+         if ($('#pga_t_num').text() == 468 || $('#pga_t_num').text() == 500) {
+            buildHeader()
+         }
+
          //console.log(info)
          //console.log(field)
          //console.log(groups)
@@ -683,10 +687,10 @@ function checkComplete(info) {
           else {countries_ok = false}
         }
   
-        if ($('#pga_t_num').text() == 468) {var ryder_ok = false}
+        if ($('#pga_t_num').text() == 468 || 500) {var ryder_ok = false}
         else {var ryder_ok = true}
   
-        if ($('#pga_t_num').text() == '468') {
+        if ($('#pga_t_num').text() == '468' || '500') {
           console.log('complete chk ', $('#winning_points').val())
           if ($('#winning_team').val() && parseFloat($('#winning_points').val()) > 14) {
               ryder_ok = true
@@ -697,8 +701,8 @@ function checkComplete(info) {
   
         //console.log(Object.keys(picks).length, countries_ok)
         //if (total == parseInt(info['total']) && countries_ok == true && ryder_ok == true) {
-        console.log('all started data ', allGolfersStarted)
-        console.log('lat picks ', latePicks)
+        //console.log('all started data ', allGolfersStarted)
+        //console.log('lat picks ', latePicks)
         if (total == parseInt(info['total']) && countries_ok == true && ryder_ok == true && (! allGolfersStarted == true  || latePicks == true)) {
           $('#sub_button').removeAttr('disabled').attr('class', 'btn btn-primary').val('Submit Picks');
           $('#actual-grouptotal').css('background-color', '')  
@@ -818,3 +822,139 @@ function clear_submitting() {
     $('.status').empty()
 
 }
+
+
+function buildHeader() {
+    var eventName = $('#t-name').text()
+        
+    if ($('#pga_t_num').text() == 468) {
+        var intl = "Europe"
+        var low_points = 14
+        var high_points = 28
+    }
+    else {
+        var intl = "International"
+        var lowPoints = 15
+        var highPoints = 30
+
+    }
+
+    if ($('#pga_t_num').text() == 468 || $('#pga_t_num').text() == 500) {
+            var instructions = '<p style=font-weight:bold;>Instructions:</p><p>One Pick per Group</p> <p>Match win -10 points, -1 point per hole of winning margin</p>' +
+        '<p>Match loss +10 points, +1 point per hole of winning margin</p>' +
+        '<p>Draw 0 points</p>' + 
+        '<p>DNP +5 points (per session)</p>' + 
+        '<p>Winning team -25 points</p>' +
+        '<p>Closest to winning score -25.  Must pick winning team to qualify for this bonus.</p>' 
+        if ($('#pga_t_num').text() == 468) {
+            var tie = '<p>To bet on a 14/14 tie, choose 14 point and the prior ryder cup winning team as they keep the cup.</p>'
+        }
+        else {var tie = '<p>There is no winner in a tie for Presidents Cup, but you can choose 15 points if you think it will be a tie.</p>'
+        
+        }
+        instructions = instructions + tie
+    }
+    else if ($('#pga_t_num').text() == 999) {
+        var instructions = '<p>Olympics, build this</p>'
+    }
+    else {
+        //var instructions = '<p>Enter 2 picks for group 1, and 1 pick for remaining groups</p>'
+        var instructions = '<p>Something wrong, in Special Event header (new_field.js)</p>'
+    }
+    
+    $('#top_sect').append('<div id=make_picks><br>' + instructions + '<br>' +
+    '<form id="random_form" name="random_form" method="post">' +
+    '<input type="hidden" name="csrfmiddlewaretoken" value=' + $.cookie('csrftoken') +  '>' +
+    //'<input type="text" name="random" value="random" hidden>' +
+    //'<h5 id=status>Loading Golfers, please wait for all to load <span class=status style="font-size:large;">...</span></h5> <br>' + 
+    '<p id=random_line hidden>Click for random picks  <input id=random_btn type="submit" class="btn btn-secondary" value="Random" disabled></p>' +
+    
+    '</form>')
+
+    $('#top_sect').append('<div id=too_late hidden><br> <p>Tournament Started, too late for picks</p></div>')
+
+    // $('#top_sect').append('<span style="float: right;" >' + 
+    //     '<a href="#" id="download_excel" >' +
+    //     '<i class="fas fa-file-download" title="Download Excel" data-toggle="tooltip"> Download Excel</i>' +
+    //     '</a>' +
+    //     '</span>')
+
+
+   // $('#field_sect').append('<form id=pick_form method=post></form>')
+
+    if ($('#pga_t_num').text() == 999) {
+        console.log('add countries here')
+        //$('#field_sect #pick_form').append('<div id=mens_countries></div>')
+        $('#field_sect #pick_form').append('<table id=mens_countries_picks' + " class=table> \
+                                        <thead class=total_score> <th> Men's Medal Countries" + '</th> </thead>' +
+                                        '</table>')
+        $('#mens_countries_picks').append('<tr><td>Pick 3 countries, -50 for gold, -35 for silver, -20 for bronze.  Add +5 for each golfer above 1 per country.</td></tr>')
+        
+        $('#field_sect #pick_form').append('<table id=womens_countries_picks' + " class=table> \
+                                        <thead class=total_score> <th> Women's Medal Countries" + '</th> </thead>' +
+                                        '</table>')
+        $('#womens_countries_picks').append('<tr><td>Pick 3 countries, -50 for gold, -35 for silver, -20 for bronze.  Add +5 for each golfer above 1 per country.</td></tr>')
+        
+        fetch("/golf_app/get_country_counts/",         
+        {method: "GET",
+        })
+    .then((response) => response.json())
+    .then((responseJSON) => {
+        data = responseJSON
+        console.log('countries: ', data)
+        formatMenMedals(data)
+        formatWomenMedals(data)
+    })
+    }
+
+    //Ryder Cup
+    if ($('#pga_t_num').text() == 468 | 500) {
+
+        $('#field_sect #pick_form').append('<table id=ryderCup_picks' + " class=table> \
+        <thead class=total_score> <th colspan=2>Special " + eventName +  " Picks " + '</th> </thead>' +
+        '</table>')
+        $('#ryderCup_picks').append('<p><label for=winning_team style=font-weight:bold>Choose Winning Team</label>' +  
+             '<select id=winning_team class="form-control"><option></option><option value=euro>' + intl + '</option><option value-usa>USA</option> </select> </p>' + 
+             '<p><label for=winning_points style=font-weight:bold>Enter winning team score, number between' + lowPoints + ' - ' + highPoints + '</label>' + 
+             '<input id=winning_points class="form-control"  type=number placeholder="enter between ' + lowPoints + ' - ' + highPoints +'" step=0.5 min="' + lowPoints +  '"max="' + highPoints + '"><textbox></textbox></input></p>')
+
+        $('#winning_points').on('change', function() {
+            
+            if (parseFloat($('#winning_points').val()) % 1 == 0 || parseFloat($('#winning_points').val()) % 1 == 0.5)
+                {
+                    if (parseFloat($('#winning_points').val()) >= lowPoints && parseFloat($('#winning_points').val()) <= highPoints) 
+                        {
+                             $('#pick-status').empty()
+                             checkComplete(info)
+                        }
+                    else {
+                        $('#winning_points').val('')                        
+                        $('#pick-status').empty()
+                        checkComplete(info)
+                        alert('Bad winning points entry: ' + $('#winning_points').val() + '. Please enter between ' + lowPoints +  ' and ' + highPoints)}
+            
+                }   
+                else {
+                       $('#winning_points').val('')                        
+                       $('#pick-status').empty()
+                       checkComplete(info)
+                       alert ('Bad winning points value, must be a whole number or .5')}
+            })
+
+        $('#winning_team').change(function() {console.log('selected team '), winning_team;
+                $('#pick-status').empty()                            
+                checkComplete(info)})
+        
+
+        $('#random-line').remove()
+
+    }
+    
+    
+    $('#random_form').on('submit', function(event){
+        event.preventDefault();
+        console.log("random submitted!")  
+        create_post_random();
+    });
+}
+

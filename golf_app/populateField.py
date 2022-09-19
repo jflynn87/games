@@ -61,7 +61,7 @@ def create_groups(tournament_number, espn_t_num=None):
     print ('field length: ', len(field))
     #OWGR_rankings = {}
    
-    if tournament.pga_tournament_num not in ['470', '018', '999', '468']:  #Match Play and Zurich (team event)  
+    if tournament.pga_tournament_num not in ['470', '018', '999', '468', '500']:  #Match Play and Zurich (team event)  
         groups = configure_groups(field, tournament)
         prior_year = prior_year_sd(tournament)  #diff sources for MP & Zurich so don't use this func for those events
     elif tournament.pga_tournament_num == '470':
@@ -79,7 +79,7 @@ def create_groups(tournament_number, espn_t_num=None):
     
     if tournament.pga_tournament_num == '999':
         create_olympic_field(field, tournament)
-    elif tournament.pga_tournament_num == '468':
+    elif tournament.pga_tournament_num in ['468', '500']:
         create_ryder_cup_field(field, tournament)
     else:
         create_field(field, tournament)
@@ -721,6 +721,8 @@ def create_ryder_cup_field(field, tournament):
 
         if individual_stats.get(f.playerName):
             player_s = individual_stats.get(f.playerName)
+        else:
+            player_s = {}
         for k, v in player_s.items():
             if k != 'pga_num':
                 f.season_stats.update({k: v})
@@ -809,14 +811,16 @@ def get_fedex_data(tournament=None):
                                         'points': tds[4].text.strip().replace(',', '')}
         except Exception as e:
             print ('fedex mapping issue ', e)
+
+        fedex_data_year = fed_ex_soup.find('h2', {'class': 'title'}).text.strip()[:4]
+        if tournament:
+            tournament.fedex_data = data
+            tournament.save()
+            fedex_season = FedExSeason.objects.get(season=tournament.season).update_player_points()
+
     except Exception as ex:
         print ('fedex overall issue ', ex)
 
-    fedex_data_year = fed_ex_soup.find('h2', {'class': 'title'}).text.strip()[:4]
-    if tournament:
-        tournament.fedex_data = data
-        tournament.save()
-        fedex_season = FedExSeason.objects.get(season=tournament.season).update_player_points()
 
     return data
 
