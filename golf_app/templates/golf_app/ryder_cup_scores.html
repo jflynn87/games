@@ -6,6 +6,7 @@
 <br>
 <h1 class='center'>{{t.name}}</h1>
 <br>
+{%if t.started%}
 <script type='text/javascript' src="{%static 'golf_app/js/ryderCupScores.js'%}"></script>
 <div id='overall_score' class='center'><div id='loading'><h3>Loading.....</h3></div></div>
 
@@ -26,5 +27,22 @@
 </table>
 
 <div id='detail_table'></div>
+{%else%}
+<h4>{{t.name}} Not Started, please come back when play begins</h4>
+<table class="table">
+    <thead>
+        <th>Player</th>
+        <th>Picks</th>
 
+    </thead>
+    <tbody>
+        {%for u, p in picks.items%}
+            <tr>
+                <td>{{u}}</td>
+                <td>{{p}}</td>
+            </tr>
+        {%endfor%}
+    </tbody>
+</table>
+{%endif%}
 {%endblock%}

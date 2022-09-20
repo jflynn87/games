@@ -1,4 +1,3 @@
-#from os import execv
 from django.core.exceptions import ImproperlyConfigured
 from django.db import models 
 from django.contrib.auth.models import User
@@ -430,7 +429,7 @@ class Tournament(models.Model):
             return "major"
         from golf_app import utils , pga_t_data
         
-        if self.season.season < 2023:
+        if int(self.season.season) < 2023:
             f_len = Field.objects.filter(tournament=self).count()
             #owgr_sum = Field.objects.filter(tournament=self).exclude(currentWGR=9999).aggregate(Sum('currentWGR'))
             #unranked = Field.objects.filter(tournament=self, currentWGR=9999).count()
@@ -503,6 +502,24 @@ class Tournament(models.Model):
         
         print ('Prize ERROR no prize found')
         return 0
+
+    def winner_bonus_points(self):
+        field_type = self.field_quality()
+        if int(self.season.season) < 2023:
+            print ('T winner_bonus_points before 2023 need to update code')
+            return 0
+        else:
+            if field_type == 'weak':
+                return 50
+            elif field_type == 'strong':
+                return 100
+            elif field_type == 'major':
+                return 150 
+            elif field_type == 'special':
+                return 125
+            else:
+                print ('T winner_bonus_points unknown')
+                return 0        
 
 
 

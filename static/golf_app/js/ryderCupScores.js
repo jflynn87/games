@@ -7,7 +7,18 @@ $(document).ready(function() {
     .then((responseJSON) => {
           picks = responseJSON
           console.log(picks)
+          console.log(picks.error)
+          console.log('error' in picks)
+          if ('error' in picks) {
+                $('#loading').html('<h3>ERROR: ' + picks.error + '</h3>')
+          }
+          else {
+            buildTable(picks)
+          }
+        })
+})
 
+function buildTable(picks) {
           picks_l = Object.keys(picks).length
 
           for (let i=0; i < picks_l; i++) {
@@ -38,8 +49,8 @@ $(document).ready(function() {
                                         '<span class=right_ryder_cup_score>' + eur.score.displayValue + '</span><img src=' + eur.flag + '></img>')
         $('#loading').hide()
          //create_detail(picks.score_dict, picks.field)
-    })
-})
+}
+
 
 function sort_table(table, cell_i, order) {
     

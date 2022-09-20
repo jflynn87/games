@@ -8,6 +8,7 @@ $(document).ready(function () {
     fetch("/golf_app/get_started_data/" + t_key).then(response => response.json()),
     fetch("/golf_app/field_get_picks/").then(response => response.json()),
     fetch("/golf_app/fedex_picks_api/" + $('#fedex_season_key').text() + '/' + 'by_user').then(response => response.json()),
+    fetch("/golf_app/get_country_picks/" + $('#pga_t_num').text() + '/user').then(response => response.json()),         
        ])
     .then((responseJSON) => {
          info = $.parseJSON(responseJSON[0])
@@ -33,9 +34,11 @@ $(document).ready(function () {
          })
          
          fedexPicks = responseJSON[5].data
+         cpPicks = responseJSON[6]
+         console.log('cp: ', cpPicks)
 
          if ($('#pga_t_num').text() == 468 || $('#pga_t_num').text() == 500) {
-            buildHeader()
+            buildHeader(cpPicks)
          }
 
          //console.log(info)
@@ -824,7 +827,7 @@ function clear_submitting() {
 }
 
 
-function buildHeader() {
+function buildHeader(cpPicks) {
     var eventName = $('#t-name').text()
         
     if ($('#pga_t_num').text() == 468) {
@@ -917,6 +920,14 @@ function buildHeader() {
              '<select id=winning_team class="form-control"><option></option><option value=euro>' + intl + '</option><option value-usa>USA</option> </select> </p>' + 
              '<p><label for=winning_points style=font-weight:bold>Enter winning team score, number between' + lowPoints + ' - ' + highPoints + '</label>' + 
              '<input id=winning_points class="form-control"  type=number placeholder="enter between ' + lowPoints + ' - ' + highPoints +'" step=0.5 min="' + lowPoints +  '"max="' + highPoints + '"><textbox></textbox></input></p>')
+        
+        if (cpPicks.length > 0) {
+            console.log(cpPicks[0].ryder_cup_score)
+            if (cpPicks[0].country == 'USA') {$('#winning_team').val('USA')}
+            else {$('#winning_team').val('euro')}
+            $('#winning_points').val(cpPicks[0].ryder_cup_score)
+            
+        }
 
         $('#winning_points').on('change', function() {
             
@@ -948,8 +959,8 @@ function buildHeader() {
 
         $('#random-line').remove()
 
-    }
-    
+        }
+        
     
     $('#random_form').on('submit', function(event){
         event.preventDefault();

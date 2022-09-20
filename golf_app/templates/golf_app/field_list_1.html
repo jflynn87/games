@@ -34,7 +34,7 @@
 {%elif tournament.field_quality == 'weak'%}
     <h4>Weak Field - 50 bonus points for the winning picks</h4>
 {%elif tournament.field_quality == 'special'%}
-    <h4>Special Field - 75 bonus points for the winning picks</h4>
+    <h4>Special Field - {{tournament.winner_bonus_points}} bonus points for the winning picks</h4>
 {%else%}
     <h4>Field Quality Not Available</h4>
 {%endif%}

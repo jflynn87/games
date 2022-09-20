@@ -310,12 +310,12 @@ class GetPicks(APIView):
         start = datetime.datetime.now()
         t = Tournament.objects.get(current=True)
         try: 
-            #picks = golf_serializers.PicksSerializer(Picks.objects.filter(user__username=self.request.user, playerName__tournament=t).exclude(playerName__withdrawn=True), many=True).data
             picks = serializers.serialize('json', Picks.objects.filter(user__username=self.request.user, playerName__tournament=t).exclude(playerName__withdrawn=True))
+                
             print ('get picks duration: ', datetime.datetime.now() - start)            
-            #return Response(json.dumps(picks), 200)
+
             return Response(picks, 200)
-            #return Response(json.dumps(pick_list), 200)
+
         except Exception as e:
             print ('Get Picks API exception', e)
             return Response(json.dumps({'status': str(e)}), 500)
@@ -1952,15 +1952,18 @@ class RyderCupScoresView(LoginRequiredMixin, TemplateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         s = Season.objects.get(current=True)
-        if pga_t_data(season=s).ryder_or_pres() == 'ryder':
+        if pga_t_data.PGAData(season=s).ryder_or_pres() == 'ryder':
             t = Tournament.objects.get(pga_tournament_num='468', season=s)
-        elif pga_t_data(season=s).ryder_or_pres() == 'presidents':
+        elif pga_t_data.PGAData(season=s).ryder_or_pres() == 'presidents':
             t = Tournament.objects.get(pga_tournament_num='500', season=s)
         else:
             t = None
         
-
+        picks = {}
+        for u in s.get_users('obj'):
+            picks[u.username] = Picks.objects.filter(playerName__tournament=t, user=u).count()
         context.update({
+            'picks': picks,
              't': t,
 
          })
@@ -1970,35 +1973,34 @@ class RyderCupScoresView(LoginRequiredMixin, TemplateView):
 
 class RyderCupScoresAPI(APIView):
     def get(self,request):
-        
+        data = {}
         s = Season.objects.get(current=True)
-        if pga_t_data(season=s).ryder_or_pres() == 'ryder':
+        if pga_t_data.PGAData(season=s).ryder_or_pres() == 'ryder':
             t = Tournament.objects.get(season=s, pga_tournament_num='468')
-        elif pga_t_data(season=s).ryder_or_pres() == 'presidents':
+        elif pga_t_data.PGAData(season=s).ryder_or_pres() == 'presidents':
             t = Tournament.objects.get(pga_tournament_num='500', season=s)
         else:
             t = None
 
-        if t.complete:
-            sd = ScoreDict.objects.get(tournament=t)
-            score_dict = espn_ryder_cup.ESPNData(data=sd.data).field()
-        else:
-            score_dict = espn_ryder_cup.ESPNData().field()
-
-        scores = ryder_cup_scores.Score(score_dict).update_scores()
-        totals = ryder_cup_scores.Score(score_dict).total_scores()
-        print ('view totals: ', totals)
-        
         try:
-            data = {}
+            if t.complete:
+                sd = ScoreDict.objects.get(tournament=t)
+                score_dict = espn_ryder_cup.ESPNData(data=sd.data).field()
+            else:
+                score_dict = espn_ryder_cup.ESPNData().field()
+            print ("AAAAAAAAA")
+            scores = ryder_cup_scores.Score(score_dict).update_scores()
+            totals = ryder_cup_scores.Score(score_dict).total_scores()
+            print ('ryder cyup view totals: ', totals)
+                    
             data['score_dict'] = score_dict
             data['field'] = {}
             #for f in Field.objects.filter(tournament=t):
             #    data['field'].update({f.golfer.espn_number: f.playerName})
 
-            for u in s.get_users():
-                
-                user = User.objects.get(pk=u.get('user'))
+            for user in s.get_users('obj'):
+                print ('BBBBBB', user)
+                #user = User.objects.get(pk=u.get('user'))
                 print (user, totals.get(user.username))
                 cp = CountryPicks.objects.get(tournament=t, user=user)
                 picks = Picks.objects.filter(playerName__tournament=t, user=user).order_by('playerName__group__number')
@@ -2022,7 +2024,8 @@ class RyderCupScoresAPI(APIView):
 
         except Exception as e:
             print ('Ryder Cup scrores API exception: ', e)
-            data = json.dumps({'msg': e})    
+            #data = json.dumps({'msg': str(e)})    
+            data['error'] = str(e)
             
         return JsonResponse(data, status=200, safe=False)
 
@@ -2217,7 +2220,8 @@ class EspnApiScores(APIView):
                 winner_list = overall_bd.weekly_winner(d)
                 print ('winners ', winner_list)
                 for winner in winner_list:
-                    d.get(winner).update({'score': d.get(winner).get('score') - overall_bd.weekly_winner_points()})
+                    d.get(winner).update({'score': d.get(winner).get('score') - t.winner_bonus_points()})
+                    #d.get(winner).update({'score': d.get(winner).get('score') - overall_bd.weekly_winner_points()})
             for username in d.keys():
                 user = User.objects.get(username=username)
                 ts, created = TotalScore.objects.get_or_create(user=user, tournament=t)

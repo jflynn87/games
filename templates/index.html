@@ -24,8 +24,11 @@
         <a href="{% url 'golf_app:new_field_list_1' %}"> <button class="btn btn-primary">Make Picks</button></a>
         <br>
         <br>
-        <!-- <a href="{% url 'golf_app:new_scores'%}"> <button class="btn btn-primary">Current Week Scores</button></a> -->
+        {%if t.pga_tournament_num == '468' or  t.pga_tournament_num == '500'%}
+        <a href="{% url 'golf_app:ryder_cup_scores'%}"> <button class="btn btn-primary">Ryder/Pres Cup Scores</button></a>
+        {%else%}
         <a href="{% url 'golf_app:api_scores_view'%}"> <button class="btn btn-primary">Current Week Scores</button></a>
+        {%endif%}
         <br>
         <br>
         <a href="{% url 'golf_app:total_score'%}"> <button class="btn btn-primary">Season Totals</button></a>

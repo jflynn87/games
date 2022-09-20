@@ -135,7 +135,8 @@ class BonusDtl(object):
                 if not PickMethod.objects.filter(user__username=winner, method='3', tournament=self.tournament).exists():
                     w = User.objects.get(username=winner)
                     bd, created = BonusDetails.objects.get_or_create(user=w, tournament=self.tournament, bonus_type='3')
-                    bd.bonus_points = self.weekly_winner_points()
+                    #bd.bonus_points = self.weekly_winner_points()
+                    bd.bonus_points = self.tournament.winner_bonus_points() / self.tournament.num_of_winners()
                     bd.save()
 
             return weekly_winner
