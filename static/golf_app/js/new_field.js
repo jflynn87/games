@@ -8,7 +8,7 @@ $(document).ready(function () {
     fetch("/golf_app/get_started_data/" + t_key).then(response => response.json()),
     fetch("/golf_app/field_get_picks/").then(response => response.json()),
     fetch("/golf_app/fedex_picks_api/" + $('#fedex_season_key').text() + '/' + 'by_user').then(response => response.json()),
-    fetch("/golf_app/get_country_picks/" + $('#pga_t_num').text() + '/user').then(response => response.json()),         
+    fetch("/golf_app/get_country_picks/" + $('#pga_t_num').text() + '/user').then(response => response.json()),  //warp in an if?         
        ])
     .then((responseJSON) => {
          info = $.parseJSON(responseJSON[0])
