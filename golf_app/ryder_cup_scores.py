@@ -20,7 +20,7 @@ class Score(object):
     
     def __init__(self, score_dict, tournament=None):
         if not tournament:
-            self.tournament = Tournament.objects.get(season__current=True, pga_tournament_num='468')
+            self.tournament = Tournament.objects.get(season__current=True, pga_tournament_num='500  ')
         else:
             self.tournament = tournament
         
@@ -95,10 +95,12 @@ class Score(object):
             user = User.objects.get(pk=player.get('user'))
             sd = ScoreDetails.objects.filter(pick__playerName__tournament=self.tournament, user=user)
             score = sd.aggregate(Sum('score'))
-        
+
             ts, created = TotalScore.objects.get_or_create(user=user, tournament=self.tournament)
             ts.score = score.get('score__sum')
-            
+            if not ts.score:
+                ts.score = 0
+
             ts.save()
 
             ts_dict[ts.user.username] = {'total_score': ts.score}
@@ -169,7 +171,6 @@ class Score(object):
             self.tournament.complete = True
             self.tournament.save()
 
-    
         sorted_ts_dict = sorted(ts_dict.items(), key=lambda v: v[1].get('total_score'))
         print ('total score dict: ', ts_dict)
         print ('total_scores duration', datetime.now() - start)

@@ -35,9 +35,12 @@ from operator import itemgetter
 t = Tournament.objects.get(current=True)
 s = Season.objects.get(current=True)
 
-for u in s.get_users('obj'):
-    print (u, FedExPicks.objects.filter(user=u, pick__season__season=s).count())
+if not t.picks_complete():
+    t.missing_picks()
 
+print (Picks.objects.filter(playerName__tournament=t).count())
+
+exit()
 
 for f in Field.objects.filter(tournament=t):
     print (f, f.pk, f.season_stats)

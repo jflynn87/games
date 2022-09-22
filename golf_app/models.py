@@ -280,6 +280,13 @@ class Tournament(models.Model):
             else:
                 random_picks.append(random.choice(Field.objects.filter(tournament=self, group=group, withdrawn=False)))
         
+        if self.pga_tournament_num in ['468', '500']:
+            cp = CountryPicks()
+            cp.country = ''
+            cp.ryder_cup_score = 0
+            cp.tournament = self
+            cp.user = user
+            cp.save()
         print ('saving random', user, datetime.now(), random_picks)
         self.save_picks(random_picks, user, mode)
 

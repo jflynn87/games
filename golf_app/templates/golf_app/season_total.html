@@ -86,7 +86,7 @@
   <td>Totals:</td>
   {%else%}
   {%if t.pga_tournament_num == '468' or t.pga_tournament_num == '500'%}
-  <td> <a href="{%url 'golf_app:ryder_cup_scores'%}">{{t.name}}</td>
+  <td> <a href="{%url 'golf_app:ryder_cup_scores'%}">{{t.name}}: ${{t.prize}}</td>
   {%else%}
   <!-- <td> <a href="{%url 'golf_app:new_scores' pk=t.pk %}">{{t.name}}</td> -->
   <td> <a href="{%url 'golf_app:api_scores_view' pk=t.pk %}">{{t.name}}: ${{t.prize}}</td>

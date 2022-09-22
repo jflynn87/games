@@ -42,8 +42,10 @@ function buildTable(picks) {
         }
           sort_table($('#score_table'), 1, 'asc')
           usa = picks.score_dict.overall.USA
-          eur = picks.score_dict.overall.EUR
-          console.log(usa)
+          if (picks.score_dict.overall.EUR)
+          {eur = picks.score_dict.overall.EUR}
+          else {eur = picks.score_dict.overall.INTL}
+          console.log(eur)
             $('#overall_score').append('<img src=' + usa.flag + '><span class=left_ryder_cup_score>' + usa.score.displayValue + '</span></img>' +
                                         '<span class=middle_ryder_cup_score></span>'  +
                                         '<span class=right_ryder_cup_score>' + eur.score.displayValue + '</span><img src=' + eur.flag + '></img>')

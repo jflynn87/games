@@ -140,7 +140,8 @@ class NewFieldListView(LoginRequiredMixin,TemplateView):
                     response = {'status': 0, 'message': msg} 
                     return HttpResponse(json.dumps(response), content_type='application/json')
 
-        if tournament.started() and not tournament.late_picks:
+        if tournament.pga_tournament_num not in ['500', '468'] and \
+            tournament.started() and not tournament.late_picks:
             espn = espn_api.ESPNData()
             msg = 'Golfer already palying: '
             error = False
@@ -1959,6 +1960,9 @@ class RyderCupScoresView(LoginRequiredMixin, TemplateView):
         else:
             t = None
         
+        if not t.picks_complete():
+            t.missing_picks()
+
         picks = {}
         for u in s.get_users('obj'):
             picks[u.username] = Picks.objects.filter(playerName__tournament=t, user=u).count()
@@ -2002,7 +2006,10 @@ class RyderCupScoresAPI(APIView):
                 print ('BBBBBB', user)
                 #user = User.objects.get(pk=u.get('user'))
                 print (user, totals.get(user.username))
-                cp = CountryPicks.objects.get(tournament=t, user=user)
+                if CountryPicks.objects.filter(tournament=t, user=user).exists():
+                    cp = CountryPicks.objects.get(tournament=t, user=user)
+                else:
+                    cp = CountryPicks()
                 picks = Picks.objects.filter(playerName__tournament=t, user=user).order_by('playerName__group__number')
                 data[user.username] = {'c_pick': cp.country,
                                        'c_points':  cp.ryder_cup_score}
