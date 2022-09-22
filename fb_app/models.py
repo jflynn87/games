@@ -564,7 +564,17 @@ class Player(models.Model):
         
         return d
 
+    def season_picks_week_wins(self, week):
+        d = {}
+        if week.started():
+            wins = SeasonPicks.objects.filter(game__week=week, player=self, pick=F('game__winner')).count()
+            loss = SeasonPicks.objects.filter(game__week=week, player=self, pick=F('game__loser')).count()
 
+            d[week.week] = {'wins': wins, 'loss': loss}
+
+        return d
+
+            
     def home_season_picks(self, season=None):
         if not season:
             season = Season.objects.get(current=True)
@@ -577,19 +587,33 @@ class Player(models.Model):
 
 
     def season_picks_record(self, season=None):
+        #start = datetime.datetime.now()
         if not season:
             season = Season.objects.get(current=True)
-        #d = {'wins': 0,
-        #     'loss': 0}
-        d = {}
-
-        if SeasonPicks.objects.filter(season=season, player=self).exists():
-            wins = SeasonPicks.objects.filter(season=season, player=self, pick=F('game__winner')).count()
-            loss = SeasonPicks.objects.filter(season=season, player=self, pick=F('game__loser')).count()
-            d.update({self.name.username : {'wins': wins, 'loss': loss}})
-            return d    
-        else:
+        
+        if not SeasonPicks.objects.filter(season=season, player=self).exists():
             return None
+        d = {}
+        d[self.name.username] = {'wins': 0,
+             'loss': 0}
+        #d = {}
+        current_week = Week.objects.get(current=True)
+        for week in Week.objects.filter(season_model__current=True, week__lte=current_week.week):
+            wins = SeasonPicks.objects.filter(game__week=week, player=self, pick=F('game__winner')).count()
+            loss = SeasonPicks.objects.filter(game__week=week, player=self, pick=F('game__loser')).count()
+            d.get(self.name.username).update({'wins': d.get(self.name.username).get('wins') + wins,
+                                            'loss': d.get(self.name.username).get('loss') + loss})
+        
+        #print (datetime.datetime.now() - start)
+
+        return d 
+        #if SeasonPicks.objects.filter(season=season, player=self).exists():
+        #    wins = SeasonPicks.objects.filter(season=season, player=self, pick=F('game__winner')).count()
+        #    loss = SeasonPicks.objects.filter(season=season, player=self, pick=F('game__loser')).count()
+        #    d.update({self.name.username : {'wins': wins, 'loss': loss}})
+        #    return d    
+        #else:
+        #    return None
 
 
 
@@ -887,7 +911,6 @@ class SeasonPicks(models.Model):
 
     def __str__(self):
         return str(self.season) + str(self.player) + str(self.game)
-
 
   
         

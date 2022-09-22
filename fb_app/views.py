@@ -1789,6 +1789,41 @@ class PicksEmail(TemplateView):
         })
 
         return context
-        
+    
+
+class AllGamesScore(LoginRequiredMixin, TemplateView):
+    template_name= 'fb_app/all_games_score.html'
+    login_url = 'login'
+    
+    def get_context_data(self, **kwargs):
+        start = datetime.datetime.now()
+        context = super(AllGamesScore, self).get_context_data(**kwargs)
+        d = {}
+        for p in Player.objects.filter(league__league='Golfers'):
+            if SeasonPicks.objects.filter(player=p, season__current=True).exists():
+                d.update(p.season_picks_record())
+
+        context.update(
+                {'record': d,
+                'season': Season.objects.get(current=True)
+                })
+
+        print ('SP PICKS SCORE DUR: ', datetime.datetime.now() - start)
+        return context
 
 
+class SPDetailsAPI(APIView):
+     def get(self, request, player):
+
+        start = datetime.datetime.now()
+        try:  
+            d = {}
+            d[player] = {}
+            p = Player.objects.get(name__username=player)
+            for week in Week.objects.filter(season_model__current=True):
+                d.get(player).update({'week' + str(week.week): p.season_picks_week_wins(week)}) 
+                print (d)
+        except Exception as e:
+            print ('SPDetailsAPI error: ', e)
+
+        return Response(json.dumps(d), 200)

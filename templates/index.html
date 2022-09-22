@@ -77,7 +77,11 @@
         <a href="{% url 'fb_app:season_total' %}" class="btn btn-primary">Season Totals</a>
         <br>
         <br>
+        {%if fb_week.season_model.started%}
+        <a href="{% url 'fb_app:all_games_score' %}" class="btn btn-primary">SP Results</a>
+        {%else%}
         <a href="{% url 'fb_app:all_games' %}" class="btn btn-primary">Pick All Games</a>
+        {%endif%}
         <br>
         <br>
         <a href="{% url 'fb_app:analytics' %}"> <button class="btn btn-primary">Analytics</button></a>

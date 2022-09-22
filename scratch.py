@@ -7,7 +7,7 @@ django.setup()
  
 from fb_app.models import Season, Week, Games, Teams, Picks, League, Player,  MikeScore, WeekScore, PickPerformance, PlayoffStats, PickMethod, SeasonPicks
 from django.contrib.auth.models import User
-from datetime import datetime, timedelta, timezone, tzinfo
+from datetime import date, datetime, timedelta, timezone, tzinfo
 from django.db.models import Min, Q, Count, Sum, Max, F
 from django.db.models.functions import ExtractWeek, ExtractYear
 import time
@@ -69,6 +69,15 @@ start = datetime.now()
 #    for competition in game.get('competitions'):
 #        for competitor in competition.get('competitors'):
 #            print (competitor.get('team').get('name'), competitor.get('score'), competitor.get('winner') )
+start = datetime.now()
+for p in Player.objects.filter(league__league="Golfers"):
+    print (p, p.season_picks_record())
+    #for w in Week.objects.filter(season_model__current=True):
+    #    print (w)
+    #    print (p.season_picks_week_wins(w))
+print (datetime.now() - start)
+exit()
+
 d = {}
 for p in Player.objects.filter(league__league   ='Golfers'):
     if p.season_picks_record():
