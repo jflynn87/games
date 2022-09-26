@@ -116,12 +116,12 @@ class Score(object):
             
             #need this as model and dict have different euro/EUR
             #fixed for pres cup, shouldn't need this anymore  Confirn
-            # if winning_team[0] == "USA":
-            #     winning_team = 'USA'
-            # elif winning_team[0] == 'EUR':
-            #     winning_team = 'euro'
-            # elif winning_team == 'INTL':
-            #     winning_team = 'INTL'
+            if winning_team[0] == "USA":
+                winning_team = 'USA'
+            elif winning_team[0] == 'EUR':
+                winning_team = 'euro'
+            elif winning_team[0] == 'INTL':
+                winning_team = 'INTL'
 
             
             for cp in CountryPicks.objects.filter(tournament=self.tournament, country=winning_team):
@@ -145,7 +145,7 @@ class Score(object):
                 for cp in CountryPicks.objects.filter(tournament=self.tournament, country=winning_team, ryder_cup_score__in=bonus_scores):
                     bd, created = BonusDetails.objects.get_or_create(user=cp.user, tournament=self.tournament, bonus_type=10, bonus_points=25)
                     bd.save()
-
+#
                 for u in self.tournament.season.get_users():
                     if self.tournament.winning_picks(User.objects.get(pk=u.get('user'))):
                         print ('weekly winner ', User.objects.get(pk=u.get('user')))
@@ -157,6 +157,8 @@ class Score(object):
                             bd.bonus_points = 100 / self.tournament.num_of_winners()
                         elif field_type == 'major':
                             bd.bonus_points = 150 / self.tournament.num_of_winners()
+                        elif field_type == 'special':
+                            bd.bonus_points = 125 / self.tournament.num_of_winners()
                         else:
                             print ('no winner ', self.tournament.field_quality())
                         bd.save()
