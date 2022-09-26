@@ -1782,6 +1782,9 @@ class GetCountryPicks(APIView):
     def get(self,request, pga_t_num, user):
         print ('GETCOUNTRY API request', self.request.user, pga_t_num)
         t = Tournament.objects.get(pga_tournament_num=pga_t_num, season__current=True)
+
+        if t.pga_tournament_num not in ['500', '468']:
+            return JsonResponse(json.dumps({}), status=200, safe=False)
         try:
             if user == 'user':
                #data = serializers.serialize('json', CountryPicks.objects.filter(tournament=t, user=self.request.user),  use_natural_foreign_keys=True)
