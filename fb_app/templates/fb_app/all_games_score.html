@@ -6,6 +6,7 @@
 {%block body_block%}
 <script src="{% static "fb_app/js/sp_scores.js"%}" type="text/javascript" ></script>
 <h4 style="text-align: center;">{{season.season}} Pre Season All Games Picks</h4>
+<p id="user" hidden>{{request.user.username}}</p>
 <table class="table">
     <thead>
         <th>Player</th>
@@ -15,12 +16,12 @@
     <tbody>
 {%for u, record in record.items%}
 <tr id={{u}}_row>
-    <td>{{u}} <span id="{{u}}" class="fa fa-plus-circle" style="color: lightblue;" onclick="weekDtls()"> Click for details</span></td>
+    <th>{{u}} <span id="{{u}}" class="fa fa-plus-circle" style="color: lightblue;" onclick="weekDtls('{{u}}')"> Click for details</span></th>
     <td>{{record.wins}}</td>
     <td>{{record.loss}}</td>
 </tr>
 <tr id="{{u}}_weeks_dtl_row" hidden>
-    <td><table id="{{u}}_weeks_dtl_table">
+    <td><table id="{{u}}_weeks_dtl_table" class="table">
 
     </table>
     </td>

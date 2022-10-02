@@ -690,10 +690,10 @@ function checkComplete(info) {
           else {countries_ok = false}
         }
   
-        if ($('#pga_t_num').text() == 468 || 500) {var ryder_ok = false}
+        if ($('#pga_t_num').text() == 468 || $('#pga_t_num').text() == 500) {var ryder_ok = false}
         else {var ryder_ok = true}
   
-        if ($('#pga_t_num').text() == '468' || '500') {
+        if ($('#pga_t_num').text() == '468' || $('#pga_t_num').text() == '500') {
           console.log('complete chk ', $('#winning_points').val())
           if ($('#winning_team').val() && parseFloat($('#winning_points').val()) > 14) {
               ryder_ok = true

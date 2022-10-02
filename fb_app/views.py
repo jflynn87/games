@@ -1821,8 +1821,8 @@ class SPDetailsAPI(APIView):
             d[player] = {}
             p = Player.objects.get(name__username=player)
             for week in Week.objects.filter(season_model__current=True):
-                d.get(player).update({'week' + str(week.week): p.season_picks_week_wins(week)}) 
-                print (d)
+                d.get(player).update(p.season_picks_week_wins(week)) 
+            print (d)
         except Exception as e:
             print ('SPDetailsAPI error: ', e)
 
