@@ -84,9 +84,9 @@ function validate() {
 
 $(document).ready(function () {
 $("#week-list").change(function () {
-  console.log('caught click', $('#week-list').val())
+  //console.log('caught click', $('#week-list').val())
   if ($('#week-list').val() != $('#week_key')) {
-    console.log($(this).val())
+    //console.log($(this).val())
     $('#status').text('changing week ....').attr('class', 'status')
     $('#favs').hide()
     $('#gamesect').hide()
@@ -99,7 +99,7 @@ $("#week-list").change(function () {
 
 
 $(document).ready(function () {
-  console.log('get weeks') 
+  //console.log('get weeks') 
   //get_spreads()
     
   fetch("/fb_app/get_weeks/",
@@ -108,11 +108,11 @@ $(document).ready(function () {
 .then((response) =>  response.json())
 .then((responseJSON) => {
       weeks = $.parseJSON(responseJSON)
-      console.log(weeks)
+      //console.log(weeks)
       $.each(weeks, function(i) {
-        console.log('week: ', weeks[i]['fields']['week'])
+        //console.log('week: ', weeks[i]['fields']['week'])
         if (weeks[i]['pk'] != $('#week_key').text()) {
-          console.log(weeks[i]['pk'],  $('#week_key').text())
+          //console.log(weeks[i]['pk'],  $('#week_key').text())
         $('#week-list').append('<option value=/fb_app/games_list/' + weeks[i]['pk'] + '>' + weeks[i]['fields']['week'] + '</option>') }
 
       }
@@ -136,6 +136,7 @@ $('#pickstbl').ready(function() {
          //console.log($('#picks-table'))
           picks_len = document.getElementById('picks-table').rows.length
           teams_len = Object.keys(data).length
+          nonGameKeys = ['all_started', 'late_picks']
 
           for (i=0; i< picks_len -1; i++) {
             pick_form = $('#id_form-' + i + '-team')
@@ -145,10 +146,10 @@ $('#pickstbl').ready(function() {
               $('#id_form-' + i + '-team').css('backgroundColor', 'gray')
             }
           }
+          
+          for (c=0; c< teams_len; c++) {
 
-          for (c=1; c< teams_len; c++) {
-
-            if (data[c].started) {
+            if (Object.keys(data)[c].indexOf(nonGameKeys) != -1 && data[c].started) {
               $("select option[value='" + Object.keys(data)[c-1] + "']").attr('disabled', true)
               $("select option[value='" + Object.keys(data)[c-1] + "']").css('font-weight', '100').css('color', 'pink')
               }
@@ -157,10 +158,33 @@ $('#pickstbl').ready(function() {
           
           $('#loading_msg').remove()
          $('#pickstbl').attr('hidden', false)}
-         if (data.all_started) {
+         console.log('game status: ', data)
+         if (data.all_started && ! data.late_picks) {
           $('#sub_btn').attr('hidden', true)
          }
          else {$('#sub_btn').attr('disabled', false)}
     })
 })
   
+$('#sub_btn').ready(function() {
+  $('#sub_btn').on('click', function() {
+    disableForm()
+    $('#pick_form').submit()
+  })
+  $('#favs_btn').on('click', function() {
+    disableForm()
+    $('#favs_form').submit()
+  })
+
+})
+
+function disableForm() {
+  console.log('sub clicked')
+  $('#sub_btn').attr('disabled', true)
+  $('#sub_btn').text('Submitting...')
+  $('#favs_btn').attr('disabled', true)
+  $('#favs_btn').text('Submitting...')
+
+
+
+}

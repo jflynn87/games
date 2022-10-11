@@ -1,11 +1,12 @@
 import urllib.request
 import json
 from golf_app.models import Season, Tournament
+from datetime import date, datetime
 
 
 class PGAData(object):
     
-    def __init__(self, season=None, update=False):
+    def __init__(self, season=None, update=False, t=None):
         '''takes an optional season object, optional pga season tournament data'''
         if not season:
             self.season = Season.objects.get(current=True)
@@ -19,6 +20,11 @@ class PGAData(object):
             with urllib.request.urlopen(url) as schedule_json_url:
                 self.data = json.loads(schedule_json_url.read().decode())
 
+        if t:
+            self.t = t
+        else:
+            self.t = Tournament.objects.get(current=True) 
+        
         if update:
             self.season.data = self.data
             self.season.save()
@@ -87,3 +93,14 @@ class PGAData(object):
             return 'presidents'
         else:
             return None
+
+    def next_t(self):
+
+        curr_week = datetime.today().isocalendar()[1]
+        next_week = min([x.get('date')[0].get('weeknumber') for x in self.t_data if int(x.get('date')[0].get('weeknumber')) > int(curr_week)])
+        if next_week:
+            w = next_week
+        else:
+            w = min([x.get('date')[0].get('weeknumber') for x in self.t_data])
+              
+        return [x.get('permNum') for x in self.t_data if str(x.get('date')[0].get('weeknumber')) == str(w)  and x.get('primaryEvent')][0]

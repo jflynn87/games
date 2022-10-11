@@ -45,12 +45,12 @@
 </div>
 {%if not week_started or week.late_picks%} 
 <div id='favs'>
-  <form method="POST" name='favs'>
+  <form id="favs_form" method="POST" name='favs'>
     {%csrf_token%}
     
     </h2>
     <input type="text" name="favs" value="favs" hidden>
-  <input type="submit" class="btn btn-primary" value='Pick Favorites'></button> Picks largest spread to lowest
+  <input id= 'favs_btn' type="submit" class="btn btn-primary" value='Pick Favorites'></button> Picks largest spread to lowest
 </form>
 </div>
 {%endif%}

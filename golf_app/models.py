@@ -1128,6 +1128,7 @@ class Field(models.Model):
         return False 
 
     def calc_score(self, sd=None, api_data=None):
+        start = datetime.now()
         if not sd and not api_data:
             raise Exception('field calc score requires either a score dict or api data')
         
@@ -1174,6 +1175,7 @@ class Field(models.Model):
                 cut = True
                 score = (int(api_data.cut_num()) - int(self.handi)) + api_data.cut_penalty(self)
         #print ('golfer:', self.playerName, 'calc SCORE ', score, 'cut ', cut)
+        print ('calc score dur: ', self, datetime.now() - start)
         return {'score': score, 'cut': cut}
 
 

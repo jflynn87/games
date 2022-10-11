@@ -21,7 +21,7 @@ function get_spreads() {
       console.log(json)
           for (i = 0; i < json.length; ++i) {
     
-            console.log(json[i][0])
+            //console.log(json[i][0])
             row = $('tr[name=' + json[i][0] + ']')
     
             $('td', row).each(function () {
@@ -41,7 +41,7 @@ function get_spreads() {
           }
           var months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
           now = new Date()
-          console.log(now)
+          //console.log(now)
           $('#status').text('spreads updated: ' + now).attr('class', 'updated-status')
         })
       }

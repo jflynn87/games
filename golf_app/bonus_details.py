@@ -235,6 +235,7 @@ class BonusDtl(object):
         if self.espn_api and self.no_cut_exists():
             for ts in TotalScore.objects.filter(tournament=self.tournament, cut_count=0):
                 if not PickMethod.objects.filter(user=ts.user, method='3', tournament=self.tournament).exists():
+                    print ('no CUT bonus: ', ts.user)
                     bd, created = BonusDetails.objects.get_or_create(user=ts.user, tournament=self.tournament, bonus_type='2')
                     bd.bonus_points = no_cut_points
                     bd.save()

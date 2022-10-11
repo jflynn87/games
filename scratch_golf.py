@@ -1,3 +1,4 @@
+from configparser import DuplicateOptionError
 import os
 
 
@@ -34,6 +35,20 @@ from operator import itemgetter
 
 t = Tournament.objects.get(current=True)
 s = Season.objects.get(current=True)
+
+sd = ScoreDict.objects.get(tournament=t)
+espn = espn_api.ESPNData(data=sd.espn_api_data, t=t)
+a = datetime.now()
+for g in Group.objects.filter(tournament=t):
+    start = datetime.now() 
+    made = espn.made_cut_golfers(g.get_golfers())
+    print (g, len(made), datetime.now() - start)
+
+
+print (espn.post_cut_wd())
+
+
+exit()
 
 if not t.picks_complete():
     t.missing_picks()

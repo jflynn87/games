@@ -2116,8 +2116,6 @@ class EspnApiScores(APIView):
             for u in t.season.get_users('obj'):
                 d[u.username] = {'score': 0,
                                 'cuts': 0}
-            #greg = User.objects.get(username="GregH")
-            #d.update({greg.username: {'score': 0, 'cuts': 0}})
 
             if t.complete:
                 data = return_sd_data(t,d)
@@ -2212,7 +2210,6 @@ class EspnApiScores(APIView):
                 #print ('score check: ', d.get('john'), pick, score)
             print ('for loop dur: ', datetime.datetime.now() - start_calc_score)
             if bd.no_cut_exists():
-                print ('espnAPIscores not cut bonus exists')
                 no_cuts = bd.update_cut_bonus()
                 for u, b in no_cuts.items():
                     d.get(u.username).update({'score': d.get(u.username).get('score') - b})   

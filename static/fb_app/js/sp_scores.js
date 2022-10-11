@@ -15,10 +15,10 @@ function weekDtls(user) {
             $('#' + user + '_weeks_dtl_table').append('<tr><th>Week</th><th>Win</th><th>Loss</th></tr> ')
             $.each(week, function(num, record) {
             $('#' + user + '_weeks_dtl_table').append('<tr><td>' + num +
-            '<span id=' + user + '_week_' + num +
+            '<span id=' + user + '_expand_week_' + num +
             ' class="fa fa-plus-circle" style="color: lightblue;"> Click for details</span></td><td>' +
                                                        record.wins + '</td><td>' + record.loss + '</td></tr>') 
-            $('#' + user + '_week_' + num).click(weekGames(user + '_' + num))
+            $('#' + user + '_expand_week_' + num).on('click', weekGames(user + '_' + num))
                                                     })
             
         })

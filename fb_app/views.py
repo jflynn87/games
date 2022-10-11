@@ -1491,6 +1491,7 @@ class GetGameStatusAPI(APIView):
             else:
                 all_started = False
             d['all_started'] = all_started
+            d['late_picks'] = week.late_picks
             
             for g in Games.objects.filter(week=week):
                 if not week_started or week.late_picks:
@@ -1501,7 +1502,7 @@ class GetGameStatusAPI(APIView):
                     s = espn.started(g.eid)
                 d[g.home.pk] = {'started': s, 'abbr': g.home.nfl_abbr}
                 d[g.away.pk] = {'started': s, 'abbr': g.away.nfl_abbr}
-                
+            print (d)                
             return Response(json.dumps(d), 200)
 
         except Exception as e:
