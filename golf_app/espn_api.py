@@ -237,11 +237,15 @@ class ESPNData(object):
            return golfer_data.get('status').get('position').get('displayName')
 
 
-    def group_stats(self):
-        '''takes a espn api obj, returns a dict with best in group and group cut counts'''
+    def group_stats(self, groups=None):
+        '''takes a espn api obj and queryset of groups, returns a dict with best in group and group cut counts'''
         d = {}
+
+        if not groups:
+            groups = Group.objects.filter(tournament=self.t)            
         
-        for g in Group.objects.filter(tournament=self.t):
+        #for g in Group.objects.filter(tournament=self.t):
+        for g in groups:
             try:
                 #golfers = g.get_golfers()
                 golfers = self.made_cut_golfers(g.get_golfers())

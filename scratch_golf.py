@@ -35,25 +35,23 @@ from operator import itemgetter
 
 t = Tournament.objects.get(current=True)
 s = Season.objects.get(current=True)
-
 sd = ScoreDict.objects.get(tournament=t)
-espn = espn_api.ESPNData(data=sd.espn_api_data, t=t)
-a = datetime.now()
-for g in Group.objects.filter(tournament=t):
-    start = datetime.now() 
-    made = espn.made_cut_golfers(g.get_golfers())
-    print (g, len(made), datetime.now() - start)
+espn = espn_api.ESPNData(t=t, data=sd.espn_api_data)
+start = datetime.now()
+stats = espn.group_stats()
+
+print (stats, datetime.now() - start)
+
+g_list = list(Picks.objects.filter(playerName__tournament=t).values_list('playerName__pk', flat=True).distinct())
 
 
-print (espn.post_cut_wd())
 
+print ('GOLFERS', len(g_list))
 
 exit()
 
-if not t.picks_complete():
-    t.missing_picks()
-
-print (Picks.objects.filter(playerName__tournament=t).count())
+golfers = Picks.objects.filter(playerName__tournament=t).values_list('playerName__golfer__espn_number', flat=True).distinct()
+print (golfers, len(golfers))
 
 exit()
 

@@ -2146,69 +2146,76 @@ class EspnApiScores(APIView):
             if BonusDetails.objects.filter(tournament=t, bonus_type='5').exists():
                 BonusDetails.objects.filter(tournament=t, bonus_type='5').update(bonus_points=0)
 
-            for golfer in Picks.objects.filter(playerName__tournament=t).values('playerName__golfer__espn_number').distinct():
-                start_golfer_score = datetime.datetime.now()
-                pick = Picks.objects.filter(playerName__tournament=t, playerName__golfer__espn_number=golfer.get('playerName__golfer__espn_number')).first()
-                score = pick.playerName.calc_score(api_data=espn)
-                #print (pick, score)
+            g_list = Picks.objects.filter(playerName__tournament=t).values_list('playerName__pk', flat=True)
+            golfers = [*set(g_list)]
+            print ('GOLFERS', len(golfers))
+            for golfer in golfers:
+                print (golfer)
+                p = Picks.objects.filter(playerName__pk=golfer).first()
+                s = pick_calc_score(p.pk, espn, big, t, d, cut_num)
+                # start_golfer_score = datetime.datetime.now()
+                # pick = Picks.objects.filter(playerName__tournament=t, playerName__golfer__espn_number=golfer).first()
+                # score = pick.playerName.calc_score(api_data=espn)
+                # #print (pick, score)
 
-                bonus = 0
+                # bonus = 0
 
-                bd = bonus_details.BonusDtl(espn_api=espn, espn_scrape_data=None, tournament=t, inquiry=False)  
-                bd_big = bd.best_in_group(big, pick)
-                if bd_big:
-                    print ('BIG: ', pick, bonus)
-                    bonus += 10
-                if bd.winner(pick):
-                    bonus += bd.winner_points(pick)
-                if espn.tournament_complete() and espn.playoff():
-                    if bd.playoff_loser(pick):
-                        bonus += 25
+                # bd = bonus_details.BonusDtl(espn_api=espn, espn_scrape_data=None, tournament=t, inquiry=False)  
+                # bd_big = bd.best_in_group(big, pick)
+                # if bd_big:
+                #     #print ('BIG: ', pick, bonus)
+                #     bonus += 10
+                # if bd.winner(pick):
+                #     bonus += bd.winner_points(pick)
+                # if espn.tournament_complete() and espn.playoff():
+                #     if bd.playoff_loser(pick):
+                #         bonus += 25
 
-                for p in Picks.objects.filter(playerName__tournament=t, playerName__golfer__espn_number=pick.playerName.golfer.espn_number):
-                    if score.get('cut'):
-                        d.get(p.user.username).update({'cuts': d.get(p.user.username).get('cuts') + 1})
-                    if PickMethod.objects.filter(user=p.user, method__in=[1,2], tournament=t).exists():
-                        d.get(p.user.username).update({'score': d.get(p.user.username).get('score') + ((score.get('score') - bonus))})
-                    else:
-                        d.get(p.user.username).update({'score': (d.get(p.user.username).get('score') + score.get('score'))})
+                # for p in Picks.objects.filter(playerName__tournament=t, playerName__golfer__espn_number=pick.playerName.golfer.espn_number):
+                #     if score.get('cut'):
+                #         d.get(p.user.username).update({'cuts': d.get(p.user.username).get('cuts') + 1})
+                #     if PickMethod.objects.filter(user=p.user, method__in=[1,2], tournament=t).exists():
+                #         d.get(p.user.username).update({'score': d.get(p.user.username).get('score') + ((score.get('score') - bonus))})
+                #     else:
+                #         d.get(p.user.username).update({'score': (d.get(p.user.username).get('score') + score.get('score'))})
 
-                rank = espn.get_rank(pick.playerName.golfer.espn_number)
-                golfer_data = espn.golfer_data(pick.playerName.golfer.espn_number)
+                # rank = espn.get_rank(pick.playerName.golfer.espn_number)
+                # golfer_data = espn.golfer_data(pick.playerName.golfer.espn_number)
                 
-                if rank in t.not_playing_list():
-                    today_score = rank
-                    gross_score = cut_num  #should just use the score from model calc_score i think
-                else:
-                    today_score = ''  #fix this, but does it matter?
-                    gross_score = rank
+                # if rank in t.not_playing_list():
+                #     today_score = rank
+                #     gross_score = cut_num  #should just use the score from model calc_score i think
+                # else:
+                #     today_score = ''  #fix this, but does it matter?
+                #     gross_score = rank
                 
-                thru = espn.get_thru(pick.playerName.golfer.espn_number)
+                # thru = espn.get_thru(pick.playerName.golfer.espn_number)
                 
-                if golfer_data: #need this check for pre-start WD
-                    if golfer_data.get('statistics') and len(golfer_data.get('statistics')) >0:
-                        to_par = golfer_data.get('statistics')[0].get('displayValue')
-                        sod_position = golfer_data.get('movement')
-                    else:
-                        to_par = ''
-                        sod_position = ''
-                else:
-                        to_par = 'WD'
-                        sod_position = 'WD'
+                # if golfer_data: #need this check for pre-start WD
+                #     if golfer_data.get('statistics') and len(golfer_data.get('statistics')) >0:
+                #         to_par = golfer_data.get('statistics')[0].get('displayValue')
+                #         sod_position = golfer_data.get('movement')
+                #     else:
+                #         to_par = ''
+                #         sod_position = ''
+                # else:
+                #         to_par = 'WD'
+                #         sod_position = 'WD'
 
                 
-                sd = ScoreDetails.objects.filter(pick__playerName__tournament=t, pick__playerName=pick.playerName).update(  
-                                    today_score=today_score,
-                                    thru = thru,
-                                    gross_score=gross_score,
-                                    score=score.get('score'),
-                                    toPar = to_par,
-                                    sod_position=sod_position
-                )
+                # sd = ScoreDetails.objects.filter(pick__playerName__tournament=t, pick__playerName=pick.playerName).update(  
+                #                     today_score=today_score,
+                #                     thru = thru,
+                #                     gross_score=gross_score,
+                #                     score=score.get('score'),
+                #                     toPar = to_par,
+                #                     sod_position=sod_position
+                # )
 
-                #print (pick, 'dur: ', datetime.datetime.now() - start_golfer_score)
-                #print ('score check: ', d.get('john'), pick, score)
+                # #print (pick, 'dur: ', datetime.datetime.now() - start_golfer_score)
+                # #print ('score check: ', d.get('john'), pick, score)
             print ('for loop dur: ', datetime.datetime.now() - start_calc_score)
+            bd = bonus_details.BonusDtl(espn_api=espn, espn_scrape_data=None, tournament=t, inquiry=False)  
             if bd.no_cut_exists():
                 no_cuts = bd.update_cut_bonus()
                 for u, b in no_cuts.items():
@@ -2282,8 +2289,76 @@ def return_sd_data(t,d):
     print ('return SD data dur: ', datetime.datetime.now() - start)
 
     return d
-    
 
+def pick_calc_score(p_key, espn, big, t, d, cut_num=None):
+        start_golfer_score = datetime.datetime.now()
+    
+        if not cut_num:
+            cut_num = espn.cut_num()
+
+        pick = Picks.objects.get(pk=p_key)
+        #print ('XXXXXPICK', pick)
+        score = pick.playerName.calc_score(api_data=espn)
+        #print ('CCCCCC', pick, score)
+
+        bonus = 0
+
+        bd = bonus_details.BonusDtl(espn_api=espn, espn_scrape_data=None, tournament=t, inquiry=False)  
+        bd_big = bd.best_in_group(big, pick)
+        if bd_big:
+            #print ('BIG: ', pick, bonus)
+            bonus += 10
+        if bd.winner(pick):
+            bonus += bd.winner_points(pick)
+        if espn.tournament_complete() and espn.playoff():
+            if bd.playoff_loser(pick):
+                bonus += 25
+
+        for p in Picks.objects.filter(playerName__tournament=t, playerName__golfer__espn_number=pick.playerName.golfer.espn_number):
+            if score.get('cut'):
+                d.get(p.user.username).update({'cuts': d.get(p.user.username).get('cuts') + 1})
+            if PickMethod.objects.filter(user=p.user, method__in=[1,2], tournament=t).exists():
+                d.get(p.user.username).update({'score': d.get(p.user.username).get('score') + ((score.get('score') - bonus))})
+            else:
+                d.get(p.user.username).update({'score': (d.get(p.user.username).get('score') + score.get('score'))})
+
+        rank = espn.get_rank(pick.playerName.golfer.espn_number)
+        golfer_data = espn.golfer_data(pick.playerName.golfer.espn_number)
+        
+        if rank in t.not_playing_list():
+            today_score = rank
+            gross_score = cut_num  #should just use the score from model calc_score i think
+        else:
+            today_score = ''  #fix this, but does it matter?
+            gross_score = rank
+        
+        thru = espn.get_thru(pick.playerName.golfer.espn_number)
+        
+        if golfer_data: #need this check for pre-start WD
+            if golfer_data.get('statistics') and len(golfer_data.get('statistics')) >0:
+                to_par = golfer_data.get('statistics')[0].get('displayValue')
+                sod_position = golfer_data.get('movement')
+            else:
+                to_par = ''
+                sod_position = ''
+        else:
+                to_par = 'WD'
+                sod_position = 'WD'
+
+        
+        sd = ScoreDetails.objects.filter(pick__playerName__tournament=t, pick__playerName=pick.playerName).update(  
+                            today_score=today_score,
+                            thru = thru,
+                            gross_score=gross_score,
+                            score=score.get('score'),
+                            toPar = to_par,
+                            sod_position=sod_position
+        )
+
+        #print (pick, 'dur: ', datetime.datetime.now() - start_golfer_score)
+        #print ('score check: ', d.get('john'), pick, score)
+
+        return d
 
 
 class AllTimeView(TemplateView):
@@ -3346,6 +3421,59 @@ class GetFieldKeysAPI(APIView):
             print ('Field keys range: ', d)
         except Exception as e:
             print ('GetFieldKeys API Error: ', e)
+            d['error'] = {'msg': str(e)}
+        
+        
+        #print ('GetFieldKeys time: ', datetime.datetime.now() - start)
+
+        return JsonResponse(d, status=200, safe=False)
+
+class ScoresByPickView(LoginRequiredMixin, TemplateView):
+    login_url = 'login'
+    template_name = 'golf_app/speed_test.html'
+
+    def get_context_data(self, **kwargs):
+        start = datetime.datetime.now()
+        context = super(ScoresByPickView, self).get_context_data(**kwargs)
+        t = Tournament.objects.get(current=True)
+        #espn = espn_api.ESPNData()
+        #pick_keys = list(Picks.objects.filter(playerName__tournament=t).values_list('playerName__pk', flat=True).distinct())
+        pick_keys = list(Group.objects.filter(tournament=t).values_list('pk', flat=True))
+        context.update({'t': t,
+                        'picks_keys': pick_keys,
+                        #'big': json.dumps(espn.group_stats()),
+                        #'cut_num': espn.cut_num(),
+                        })
+        print ('ScoresByPick context dur: ', datetime.datetime.now() - start, ' records: ', len(pick_keys))
+        return context
+
+
+class ScoresByPickAPI(APIView):
+
+    def get(self, request, key):
+        
+        start = datetime.datetime.now()
+        d = {}
+        try:
+            t = Tournament.objects.get(current=True)
+            sd = ScoreDict.objects.get(tournament=t)
+            picks = Picks.objects.filter(playerName__group__pk=key).values_list('playerName__pk', flat=True).distinct()
+            
+            for u in t.season.get_users('obj'):
+                d[u.username] = {'score': 0,
+                                'cuts': 0}
+            espn = espn_api.ESPNData(t=t, data=sd.espn_api_data)
+            cut_num = espn.cut_num()
+            big = espn.group_stats(Group.objects.filter(pk=key))
+            for p in picks:
+                p_start = datetime.datetime.now()
+                pick = Picks.objects.filter(playerName__pk=p).first()            
+                
+                d = pick_calc_score(pick.pk, espn, big, t, d, cut_num)
+                print (pick, datetime.datetime.now() - p_start)
+            print ('CCCC: ',  key, len(picks), datetime.datetime.now() - start)
+        except Exception as e:
+            print ('ScoresByPicksAPI Error: ', e)
             d['error'] = {'msg': str(e)}
         
         

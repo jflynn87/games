@@ -1,0 +1,31 @@
+{%extends 'golf_app/golf_app_base.html'%}
+{%load static%}
+{%block body_block%}
+
+<h1>Test</h1>
+
+{%for p in picks_keys%}
+<script type="text/javascript">console.log('Start: ', Date())</script>
+<p><script type="text/javascript">
+
+        console.log('called finc', '{{p}}')
+    fetch('/golf_app/scores_by_pick_api/' + '{{p}}' ,
+          {method: "GET",
+          })
+          .then((response) => response.json())
+          .then((responseJSON) => {
+                data = responseJSON
+                console.log('pick score api returned', data)
+                console.log('Finsih: ', Date())
+          })
+          
+    </script>
+    </p> 
+    
+{%endfor%}
+
+
+
+
+{%endblock%}
+

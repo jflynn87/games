@@ -93,5 +93,7 @@ urlpatterns= [
     path('trends_view/', views.TrendsView.as_view(), name='trends_view'),
     path('trends_api/<int:pk>/<int:group>', views.TrendsAPI.as_view(), name='trends_api'),
     path('get_field_keys_api/', views.GetFieldKeysAPI.as_view(), name='get_field_keys_api'),
+    path('scores_by_pick/', views.ScoresByPickView.as_view(), name='scores_by_pick'),
+    path('scores_by_pick_api/<int:key>', views.ScoresByPickAPI().as_view(), name='scores_by_pick_api')
 
 ]
