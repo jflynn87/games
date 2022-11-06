@@ -1,0 +1,22 @@
+{%extends "base.html"%}
+{%block body_block%}
+<h1>2022 World Cup - Group Stage Picks Summary</h1>
+
+{% regroup picks by team.group as picks_by_group %}
+
+<table>
+{%for g in picks_by_group%}
+<tr>
+    <th>{{g.grouper}}</th>
+    
+</tr>
+{%for t in g.list%}
+<tr>
+    <td>{{t.rank}}</td>
+    <td>{{t.team}}</td>
+</tr>
+{%endfor%}
+{%endfor%}
+
+{%endblock%}
+</table>

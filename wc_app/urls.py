@@ -9,5 +9,6 @@ app_name = 'wc_app'
 urlpatterns = [
     #url(r'^$',views.ShoeListView.as_view(),name='shoe_list'),
     path('wc_group_picks', views.GroupPicksView.as_view(), name='wc_group_picks'),
+    path('wc_group_picks_summary', views.GroupPicksSummaryView.as_view(), name='wc_group_picks_summary'),
 
     ]

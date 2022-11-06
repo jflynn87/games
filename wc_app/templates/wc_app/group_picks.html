@@ -32,8 +32,8 @@
 </form>
 <script type="text/javascript">
 
-
 var data = JSON.parse('{{teams|escapejs}}')
+var picks = JSON.parse('{{picks|escapejs}}')
 console.log(data)
 $.each(data, function(i,d){
     groupNum = d.fields.group
@@ -52,8 +52,14 @@ $.each(data, function(i,d){
     //                                                '<td>' + d.fields.rank + '</td>')
     $('#' + d.pk + '_row').append('<td style=width:30%> <a href=' + d.fields.info_link + '> <span><img src="' + d.fields.flag_link + '"></img></span>' + d.fields.full_name + '</a></td>' +
                                                     '<td>' + d.fields.rank + '</td>')
+    if (picks.length > 0) {
+        var pick = picks.find(t => t.fields.team === d.pk)
+        $('#sel_' + d.pk + ' option[value=' + pick.fields.rank + ']').attr('selected', 'selected')
 
+    }
 })
+
+$(document).ready(function() {console.log('ready'), checkComplete()})
 
 
 function checkComplete(table) {
@@ -84,7 +90,7 @@ function checkComplete(table) {
             $('#sub_btn').attr('disabled', false)
         }
     }
-    else {
+    else if (table != undefined){
     checkGroups(table)
                 }
 }
