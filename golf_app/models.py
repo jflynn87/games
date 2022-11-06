@@ -1127,7 +1127,7 @@ class Field(models.Model):
             return True
         return False 
 
-    def calc_score(self, sd=None, api_data=None, cut_num=None):
+    def calc_score(self, sd=None, api_data=None):
         start = datetime.now()
         if not sd and not api_data:
             raise Exception('field calc score requires either a score dict or api data')
@@ -1155,9 +1155,6 @@ class Field(models.Model):
         
         if api_data:
             #print ('models calc score: ', self, api_data.get_rank(self.golfer.espn_number), int(api_data.cut_num()))
-            if not cut_num:
-                cut_num = api_data.cut_num()
-
             if api_data.golfer_data(self.golfer.espn_number):
                 if api_data.golfer_data(self.golfer.espn_number).get('status').get('type').get('id') == "3":
                     if self.post_cut_wd(api_data=api_data):
@@ -1165,22 +1162,18 @@ class Field(models.Model):
                         score = int(api_data.post_cut_wd_score()) - int(self.handi)
                     else:
                         cut = True
-                        #score = (int(api_data.cut_num()) - int(self.handi)) + api_data.cut_penalty(self)
-                        score = (int(cut_num) - int(self.handi)) + api_data.cut_penalty(self)
+                        score = (int(api_data.cut_num()) - int(self.handi)) + api_data.cut_penalty(self)
                 elif self.tournament.has_cut and int(api_data.get_round()) <= int(self.tournament.saved_cut_round) \
-                     and int(api_data.get_rank(self.golfer.espn_number)) >= int(cut_num):
-                     #and int(api_data.get_rank(self.golfer.espn_number)) >= int(api_data.cut_num()):
+                     and int(api_data.get_rank(self.golfer.espn_number)) >= int(api_data.cut_num()):
                     cut = True
-                    #score = (api_data.cut_num() - int(self.handi)) + api_data.cut_penalty(self)
-                    score = (cut_num - int(self.handi)) + api_data.cut_penalty(self)
+                    score = (api_data.cut_num() - int(self.handi)) + api_data.cut_penalty(self)
                 else: 
                     score = int(api_data.get_rank(self.golfer.espn_number)) - int(self.handi)
 
             else:
                 print ('WD? not found in espn: ',  self.playerName, self.golfer.espn_number) 
                 cut = True
-                #score = (int(api_data.cut_num()) - int(self.handi)) + api_data.cut_penalty(self)
-                score = (int(cut_num) - int(self.handi)) + api_data.cut_penalty(self)
+                score = (int(api_data.cut_num()) - int(self.handi)) + api_data.cut_penalty(self)
         #print ('golfer:', self.playerName, 'calc SCORE ', score, 'cut ', cut)
         #print ('calc score dur: ', self, datetime.now() - start)
         return {'score': score, 'cut': cut}

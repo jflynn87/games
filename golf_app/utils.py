@@ -264,33 +264,6 @@ def post_cut_wd_count(t, sd=None, api_data=None):
                 and x.get('status').get('type').get('shortDetail') in l and int(x.get('status').get('period')) > t.saved_cut_round]) 
 
     
-## moved from espn api to add to init and speed up    
-def cut_num(espn, t):
-    '''gives cut num wihtout group penalty.  returns an int and need to add group penalty seperately'''
-    if not self.t.started():
-        return self.t.saved_cut_num
-
-    if self.t.has_cut and self.t.cut_score and self.t.cut_score.isdigit():
-        return int(self.t.cut_score) + 1
-
-    #clean this up, added for round 1 based on espn not having a cut round or score.  they have cutRound == 0 
-    if self.t.has_cut and int(self.get_round()) <= int(self.t.saved_cut_round) and self.event_data.get('tournament').get('cutRound') == 0:
-        #move this to be the cut_line funciton
-        return  min(int(x.get('status').get('position').get('id')) for x in self.field_data \
-                    if int(x.get('status').get('position').get('id')) > int(self.t.saved_cut_num)) 
-
-    if self.event_data.get('tournament').get('cutCount') != 0:
-        return self.event_data.get('tournament').get('cutCount') + 1
-    elif self.t.has_cut and int(self.get_round()) <= int(self.t.saved_cut_round):
-        try:
-            return  min(int(x.get('status').get('position').get('id')) for x in self.field_data \
-                    if int(x.get('status').get('position').get('id')) > int(self.t.saved_cut_num)) 
-        except Exception as e:
-            #print ('issue wiht cut num, returning saved model num', e)
-            return self.t.saved_cut_num
-    else:
-        #changed to != 3 10/23 - based on no cut events.  is this condition hit for others?
-        cuts = [v for v in self.field_data if v.get('status').get('type').get('id') != '3']
-        return len(cuts) + 1  
-
+    
+        
 
