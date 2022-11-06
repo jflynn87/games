@@ -1,0 +1,121 @@
+{%extends "base.html"%}
+{%block body_block%}
+<h1>2022 World Cup - Group Stage Picks</h1>
+<h3>Rules</h3>
+<ul>
+    <li>Choose rank within group for each team</li>
+    <li>First place correct - 5 points</li>
+    <li>Second place correct - 3 points</li>
+    <li>Third place correct - 2 points</li>
+    <li>Fourth correct - 1 point</li>
+    <li>Ties - If a tie for 3&4, 3 points awarded if you picked those teams in 3&4.  If 1 correct team, 2 points awarded</li>
+</ul>
+
+<p>Rankings taken from <a href="https://www.fifa.com/fifa-world-ranking/men?dateId=id13792">FIFA</a> as of 10/6/2022</p>
+<div id="picks_sect">
+    <form method="POST" id="pick_form" class="form-class">
+        {%csrf_token%}
+    {%for g in groups%}
+    <table id='picks_table_{{g.pk}}' class="table table-bordered">
+        
+        <thead>
+            <th colspan='3' style="background-color:blue;color:white;">{{g.group}} <span id='{{g.pk}}_status'> - Make Picks</span></th>
+        </thead>
+        <tr>
+            <th>Group Rank</th>
+            <th>Team</th>
+            <th>FIFA Rank</th>
+        </tr>
+        </table>
+    {%endfor%}
+    <button type="submit" class="btn btn-primary" id="sub_btn" disabled>Submit</button>
+</form>
+<script type="text/javascript">
+
+
+var data = JSON.parse('{{teams|escapejs}}')
+console.log(data)
+$.each(data, function(i,d){
+    groupNum = d.fields.group
+    
+    $('#picks_table_' + d.fields.group).append('<tr id=' + d.pk + '_row></tr>')
+    $('#' + d.pk + '_row').append('<td style=width:10%;> <select name=' + d.pk + ' selected=0 id=sel_' + d.pk + ' class=pick_input>' +
+                                        '<option value=0>--</option>' + 
+                                        '<option value=1>1</option>' + 
+                                        '<option value=2>2</option>' + 
+                                        '<option value=3>3</option>' + 
+                                        '<option value=4>4</option>' + 
+                                     '</input> </td>')
+    $('#sel_' + d.pk).on('change', function() {checkComplete(document.getElementById('picks_table_' + d.fields.group))})
+
+    //$('#' + d.pk + '_row').append('<td> <a href=' + d.fields.info_link + '>' + d.fields.full_name + '<span><img src="' + d.fields.flag_link + '"></img></span>' +'</a></td>' +
+    //                                                '<td>' + d.fields.rank + '</td>')
+    $('#' + d.pk + '_row').append('<td style=width:30%> <a href=' + d.fields.info_link + '> <span><img src="' + d.fields.flag_link + '"></img></span>' + d.fields.full_name + '</a></td>' +
+                                                    '<td>' + d.fields.rank + '</td>')
+
+})
+
+
+function checkComplete(table) {
+    $('#sub_btn').attr('disabled', true)
+    picks = $('.pick_input')
+    var pickArray = []
+    for (i=0; i < picks.length; i++) {
+        pickArray.push(picks[i].value)
+            }
+
+    one = pickArray.filter(i => i === '1').length
+    two = pickArray.filter(i => i === '2').length
+    three = pickArray.filter(i => i === '3').length
+    four = pickArray.filter(i => i === '4').length
+    
+    if (one == 8 && two == 8 && three == 8 && four == 8){
+        tables = document.getElementsByTagName('table')
+        groupArray = []
+        
+        for (var t=0; t< tables.length; t++) {
+            groupArray.push(checkGroups(tables[t]))}
+        console.log(groupArray)
+        console.log(groupArray.indexOf(false))
+        if (groupArray.indexOf(false) != -1){
+            $('#sub_btn').attr('disabled', true)
+            }
+        else {
+            $('#sub_btn').attr('disabled', false)
+        }
+    }
+    else {
+    checkGroups(table)
+                }
+}
+
+function checkGroups(table){
+    rows = table.rows
+    pickArray = []
+    for (i=2; i < rows.length; i++) {
+        pickArray.push(rows[i].cells[0].children[0].value)
+             }
+    
+    one = pickArray.filter(i => i === '1').length
+    two = pickArray.filter(i => i === '2').length
+    three = pickArray.filter(i => i === '3').length
+    four = pickArray.filter(i => i === '4').length
+    total = one + two + three + four
+
+    if (one === 1 && two === 1 && three === 1 && four === 1) {
+        $('#' + table.id.slice(-1) + '_status').html(' - Picks Good')
+        $('#' + table.id.slice(-1) + '_status').css('background-color', 'blue')
+        return true
+    }
+    else if (total == 0) {$('#' + table.id.slice(-1) + '_status').html('- Make Picks')
+                            return false}
+    else if (total == 4) {$('#' + table.id.slice(-1) + '_status').html('- Error - Check Picks')
+                          $('#' + table.id.slice(-1) + '_status').css('background-color', 'red')
+                            return false}
+
+}
+
+</script>
+
+</div>
+{%endblock%}

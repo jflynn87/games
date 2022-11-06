@@ -16,6 +16,7 @@ $(document).ready(function() {
       
       Promise.all([fn1, fn2]).then((response) => 
       {
+            console.log('total scores done')
       seasonPoints()
       sort_table('totals-table')
       udatePickData()

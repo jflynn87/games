@@ -482,6 +482,14 @@ class League(models.Model):
         return min(l)
 
 
+    def correct_picks(self):
+        d = {}
+        for p in Player.objects.filter(league=self):
+            d.update({p.name.username: p.correct_picks()})
+
+        return d
+
+
 class Player(models.Model):
     league = models.ForeignKey(League, on_delete=models.CASCADE)
     name = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
@@ -615,6 +623,13 @@ class Player(models.Model):
         #else:
         #    return None
 
+    def correct_picks(self):
+        wins = 0
+        for w in Week.objects.filter(season_model__current=True):
+            winners = Games.objects.filter(week=w).values('winner')
+            wins += Picks.objects.filter(week=w, player=self, team__in=winners).count()
+        return wins
+        
 
 
 class Picks(models.Model):

@@ -63,6 +63,7 @@ INSTALLED_APPS = [
     'run_app',
     'port_app',
     'user_app',
+    'wc_app',
     ]
 
 

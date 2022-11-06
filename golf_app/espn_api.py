@@ -192,10 +192,10 @@ class ESPNData(object):
 
     def cut_num(self):
         '''gives cut num wihtout group penalty.  returns an int and need to add group penalty seperately'''
-        if not self.started():
+        if not self.t.started():
             return self.t.saved_cut_num
 
-        if self.t.cut_score and self.t.cut_score.isdigit():
+        if self.t.has_cut and self.t.cut_score and self.t.cut_score.isdigit():
             return int(self.t.cut_score) + 1
 
         #clean this up, added for round 1 based on espn not having a cut round or score.  they have cutRound == 0 
@@ -214,16 +214,20 @@ class ESPNData(object):
                 #print ('issue wiht cut num, returning saved model num', e)
                 return self.t.saved_cut_num
         else:
-            cuts = [v for v in self.field_data if v.get('status').get('type').get('id') == '3']
+            #changed to != 3 10/23 - based on no cut events.  is this condition hit for others?
+            cuts = [v for v in self.field_data if v.get('status').get('type').get('id') != '3']
             return len(cuts) + 1  
         
 
-    def get_rank(self, espn_number):
+    def get_rank(self, espn_number, cut_num=None):
         golfer_data = self.golfer_data(espn_number)
+
+        if not cut_num:
+            cut_num = self.cut_num()
         if not golfer_data:
-            return self.cut_num()
+            return cut_num
         if golfer_data.get('status').get('type').get('id') in ['3']:
-           return self.cut_num()
+           return cut_num
            #return golfer_data.get('status').get('type').get('shortDetail')
         else:
            return golfer_data.get('status').get('position').get('id')

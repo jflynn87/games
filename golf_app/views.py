@@ -1,5 +1,5 @@
-from tkinter import E
-from venv import create
+#from tkinter import E
+#from venv import create
 from django.shortcuts import render, redirect
 from django.views.generic import TemplateView, ListView
 from golf_app.models import CountryPicks, Field, Tournament, Picks, Group, TotalScore, ScoreDetails, \
@@ -2107,6 +2107,7 @@ class EspnApiScores(APIView):
     def get(self, request, pk):
         start = datetime.datetime.now()
         d = {}
+        print ('111111111111111111111111111111111111111')
         try:
 
             t = Tournament.objects.get(pk=pk)
@@ -2116,19 +2117,25 @@ class EspnApiScores(APIView):
             for u in t.season.get_users('obj'):
                 d[u.username] = {'score': 0,
                                 'cuts': 0}
+            print ('2222222222222222222222222222222222')
+            # for testing, remove!!!
+            t.complete = False
+            t.save()
 
             if t.complete:
                 data = return_sd_data(t,d)
                 print ("Tournament Complete dur: ", datetime.datetime.now() - start)
                 return JsonResponse(data, status=200, safe=False)
-
+            print ('3333333333333333333333333333333333333333333333')
             pre_sd = ScoreDict.objects.get(tournament=t)
-            espn = espn_api.ESPNData(t=t, force_refresh=True, update_sd=True)
+            #espn = espn_api.ESPNData(t=t, force_refresh=True, update_sd=True)
             
             ## use this to test from file and comment out the espn line above
+            sd = ScoreDict.objects.get(tournament=t)
+            data = sd.espn_api_data
             #with open('open_champ_r2.json') as json_file:
             #    data = json.load(json_file)
-            #espn = espn_api.ESPNData(t=t, data=data)
+            espn = espn_api.ESPNData(t=t, data=data)
 
 
             #if not espn.needs_update():
@@ -2150,9 +2157,10 @@ class EspnApiScores(APIView):
             golfers = [*set(g_list)]
             print ('GOLFERS', len(golfers))
             for golfer in golfers:
-                print (golfer)
+                #print ('golfer', golfer)
                 p = Picks.objects.filter(playerName__pk=golfer).first()
                 s = pick_calc_score(p.pk, espn, big, t, d, cut_num)
+                print ('DDDDDDDD')
                 # start_golfer_score = datetime.datetime.now()
                 # pick = Picks.objects.filter(playerName__tournament=t, playerName__golfer__espn_number=golfer).first()
                 # score = pick.playerName.calc_score(api_data=espn)
@@ -2298,8 +2306,8 @@ def pick_calc_score(p_key, espn, big, t, d, cut_num=None):
 
         pick = Picks.objects.get(pk=p_key)
         #print ('XXXXXPICK', pick)
-        score = pick.playerName.calc_score(api_data=espn)
-        #print ('CCCCCC', pick, score)
+        score = pick.playerName.calc_score(api_data=espn, cut_num=cut_num)
+        print ('CCCCCC', pick, score)
 
         bonus = 0
 
@@ -2322,7 +2330,7 @@ def pick_calc_score(p_key, espn, big, t, d, cut_num=None):
             else:
                 d.get(p.user.username).update({'score': (d.get(p.user.username).get('score') + score.get('score'))})
 
-        rank = espn.get_rank(pick.playerName.golfer.espn_number)
+        rank = espn.get_rank(pick.playerName.golfer.espn_number, cut_num)
         golfer_data = espn.golfer_data(pick.playerName.golfer.espn_number)
         
         if rank in t.not_playing_list():

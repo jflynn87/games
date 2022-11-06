@@ -69,12 +69,27 @@ start = datetime.now()
 #    for competition in game.get('competitions'):
 #        for competitor in competition.get('competitors'):
 #            print (competitor.get('team').get('name'), competitor.get('score'), competitor.get('winner') )
-start = datetime.now()
-for p in Player.objects.filter(league__league="Golfers"):
-    print (p, p.season_picks_record())
+start = datetime.now() 
+
+l = League.objects.get(league='Golfers')
+print (l.correct_picks())
+
+print (datetime.now() - start)
+exit()
+d = {}
+
+for p in Player.objects.filter(league__league='Golfers', active=True):
+    d[p.name.username] = {'wins': 0, 'loss': 0}
+
+for w in Week.objects.filter(season_model__current=True):
+    winners = Games.objects.filter(week=w).values('winner')
+    for p in Player.objects.filter(league__league='Golfers', active=True):
+        wins = Picks.objects.filter(week=w, player=p, team__in=winners).count()
+        d.get(p.name.username).update({'wins': d.get(p.name.username).get('wins') + wins})
     #for w in Week.objects.filter(season_model__current=True):
     #    print (w)
     #    print (p.season_picks_week_wins(w))
+print (d)
 print (datetime.now() - start)
 exit()
 

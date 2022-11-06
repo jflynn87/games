@@ -36,6 +36,7 @@ urlpatterns = [
     re_path(r'^run_app/', include('run_app.urls',namespace='run_app')),
     re_path(r'^port_app/', include('port_app.urls',namespace='port_app')),
     re_path(r'^user_app/', include('user_app.urls',namespace='user_app')),
+    path('wc_app/', include('wc_app.urls')),
     path('accounts/', include('django.contrib.auth.urls')),
     #url(r'^', include('django.contrib.auth.urls')),
     #url(r'^api-auth/', include('rest_framework.urls')),
