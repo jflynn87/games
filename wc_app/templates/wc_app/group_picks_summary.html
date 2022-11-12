@@ -1,10 +1,14 @@
-{%extends "base.html"%}
+{%extends "wc_app/wc_base.html"%}
 {%block body_block%}
-<h1>2022 World Cup - Group Stage Picks Summary</h1>
+<h1>{{stage.event.name}} {{stage.name}} Picks Summary</h1>
+
+<h2>Good Luck {{request.user.username}}</h2>
+<h3>These are your picks</h3>
+<br>
 
 {% regroup picks by team.group as picks_by_group %}
 
-<table>
+<table class="table">
 {%for g in picks_by_group%}
 <tr>
     <th>{{g.grouper}}</th>
@@ -12,11 +16,15 @@
 </tr>
 {%for t in g.list%}
 <tr>
-    <td>{{t.rank}}</td>
-    <td>{{t.team}}</td>
+    <td style="width: 20%;">{{t.rank}}</td>
+    <td> <img src="{{t.team.flag_link}}"  alt=""> {{t.team}}</td>
 </tr>
 {%endfor%}
 {%endfor%}
 
-{%endblock%}
+
 </table>
+
+<a href="{%url 'wc_app:wc_group_picks'%}"><button class="btn btn-primary">Update Picks</button></a>
+
+{%endblock%}

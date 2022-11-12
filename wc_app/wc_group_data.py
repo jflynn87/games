@@ -3,6 +3,7 @@ import imp
 #from requests import get
 from urllib import request
 from bs4 import BeautifulSoup
+from wc_app.models import Event, Stage, Group, Team
 from selenium import webdriver
 from webdriver_manager.chrome import ChromeDriverManager
 from selenium.webdriver.chrome.options import Options
@@ -27,23 +28,28 @@ class ESPNData(object):
     def __init__(self):
         start = datetime.now()
 
+        #url = 'https://www.espn.com/soccer/standings/_/league/fifa.world'
+        #url ='https://www.espn.com/soccer/table/_/league/fifa.world'
+        url = 'https://www.espn.com/soccer/standings/_/league/FIFA.WORLD/season/2018'
+        html = request.urlopen(url)
+        self.soup = BeautifulSoup(html, 'html.parser')
+
         print ('WC Init duration: ', datetime.now() - start)
 
         # is this updated as games start?  https://site.api.espn.com/apis/site/v2/sports/soccer/fifa.world/scoreboard
 
-    def get_group_data(self):
-        url = 'https://www.espn.com/soccer/standings/_/league/fifa.world'
-        html = request.urlopen(url)
-        soup = BeautifulSoup(html, 'html.parser')
-        t_body = soup.find('tbody', {'class': "Table__TBODY"})
+
+
+    def get_group_data(self, create=False):
+        t_body = self.soup.find_all('tbody', {'class': "Table__TBODY"})[0]
         data = {}
-        for row in t_body.find_all('tr'):
+        for i, row in enumerate(t_body.find_all('tr')):
             if 'subgroup-headers' in row['class']:
                 data[row.text] = {}
                 g = row.text
             else:    
                 #print (row.find_all('a')[1].text)
-                print (row.find_all('a')[2].text)
+                #print (row.find_all('a')[2].text)#, row.find_all('td')[1].text)
                 team =  row.find_all('a')[1].text
                 full_name = str(row.find_all('a')[2].text)
                 team_info =  'https://www.espn.com' + str(row.find('a')['href'])
@@ -51,9 +57,56 @@ class ESPNData(object):
                 data.get(g).update({team: { 
                                 'info': team_info, 
                                 'flag': flag,
-                                'full_name': full_name}})
+                                'full_name': full_name,
+                                'rank': row.find_all('td')[0].find_all('span')[0].text,
+                                'index': i}})
+
+        if create:
+            rankings = self.get_rankings()
+            print ('len rankings; ', len(rankings))
+    
+            stage = Stage.objects.get(current=True)
+            Group.objects.filter(stage=stage).delete()
+            Team.objects.filter(group__stage=stage).delete()
+
+            for group, teams in data.items():
+                g, g_created = Group.objects.get_or_create(stage=stage, group=group)
+                for team, data in teams.items():
+                    if rankings.get(team):
+                        t, t_created = Team.objects.get_or_create(group=g, name=team,\
+                                        rank=rankings.get(team).get('rank'), flag_link=data.get('flag'), \
+                                        info_link=data.get('info'), full_name=data.get('full_name')) 
+                    else:
+                        t, t_created = Team.objects.get_or_create(group=g, name=team,\
+                                        flag_link=data.get('flag'), \
+                                        info_link=data.get('info'), full_name=data.get('full_name')) 
+                        print ("NO RANKING :", team)
+
+            print ('Created WC Groups: ', Group.objects.filter(stage=stage).count(), ' Teams: ', Team.objects.filter(group__stage=stage).count())        
+
 
         return data
+
+    def get_group_records(self, data=None):
+        if not data:
+            data = self.get_group_data()
+
+        score_dict = {}
+        for i, r in enumerate(self.soup.find_all('tbody', {'class': "Table__TBODY"})[1]):
+            #print (r.find_all('td')[0]['class'])
+            if 'tar' not in r.find_all('td')[0]['class']:
+                team = [team for k,v in data.items() for team,d  in v.items() if d.get('index') == i][0]
+                score_dict[team] = {'played': r.find_all('td')[0].text,
+                                    'wins': r.find_all('td')[1].text,
+                                    'draw': r.find_all('td')[2].text,
+                                    'loss': r.find_all('td')[3].text,
+                                    'for': r.find_all('td')[4].text,
+                                    'against': r.find_all('td')[5].text,
+                                    'goal_diff': r.find_all('td')[6].text,
+                                    'points': r.find_all('td')[7].text,
+                                    }
+
+        return score_dict
 
     
     def get_rankings(self):

@@ -6,6 +6,17 @@ django.setup()
 from wc_app import wc_group_data
 from wc_app.models import Event, Group, Team, Picks, Stage
 
+wc = wc_group_data.ESPNData()
+
+groups = wc.get_group_data(create=False)
+record = wc.get_group_records(groups)
+
+stage = Stage.objects.get(current=True)
+for p in Picks.objects.filter(stage=stage):
+    
+
+exit()
+
 
 event = Event.objects.all().first()
 stage = Stage.objects.get(event=event, current=True) 

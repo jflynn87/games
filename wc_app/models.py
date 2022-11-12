@@ -14,13 +14,16 @@ class Event(models.Model):
     def __str__(self):
         return str(self.name)
 
+
 class Stage(models.Model):
+    PICK_TYPE_CHOICES = (('1', 'rank'), ('2', 'bracket'))
     event = models.ForeignKey(Event, on_delete=models.CASCADE)
     name = models.CharField(max_length=200)
     current = models.BooleanField(default=False)
     complete = models.BooleanField(default=False)
     set_started = models.BooleanField(default=False)
     set_not_started = models.BooleanField(default=False)
+    pick_type = models.CharField(max_length=100, choices=PICK_TYPE_CHOICES)
 
     def __str__(self):
         return str(self.name)

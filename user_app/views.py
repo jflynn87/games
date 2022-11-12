@@ -88,7 +88,7 @@ def special(request):
 class GetBaseballScore(APIView):
 
     def get(self, request):
-        
+        d = {}
         try:
             d = espn_baseball.ESPNData().get_score(['21', '15'])
             #d = espn_baseball.ESPNData().get_score(['21'])
