@@ -1193,7 +1193,7 @@ class Field(models.Model):
             l = self.tournament.not_playing_list()
             l.remove('CUT')
             if api_data.golfer_data(self.golfer.espn_number).get('status').get('type').get('id')  == '3' and \
-               api_data.get_round_score(self.golfer.espn_number, 3) not in [None, '--'] and \
+               api_data.get_round_score(self.golfer.espn_number, 3) not in [None, '--', '0', 0] and \
                api_data.golfer_data(self.golfer.espn_number).get('status').get('type').get('shortDetail') in l:
                 return True
             else:
