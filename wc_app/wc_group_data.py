@@ -113,7 +113,13 @@ class ESPNData(object):
         d = {}
         try:
             options = Options()
-            options.headless = True
+            options.add_argument("--no-sandbox")
+            options.add_argument("--headless")
+            options.add_argument("--disable-gpu")
+            #options.headless = True
+            #options.sandbox = False
+            #options.disable-gpu = True
+
 
             driver = webdriver.Chrome(ChromeDriverManager().install(), options=options)
             driver.get("https://www.fifa.com/fifa-world-ranking/men?dateId=id13792")

@@ -10,8 +10,9 @@ from django.db.models import Min, Q, Count, Sum, Max
 from datetime import datetime
 
 wc = wc_group_data.ESPNData()
-
-espn = wc.get_group_data(create=False)
+print (wc.get_rankings())
+exit()
+#espn = wc.get_group_data(create=False)
 loop_start = datetime.now()
 for g in Group.objects.filter(stage__current=True):
     x = [k for k, v in sorted(espn.get(g.group).items(), key= lambda r: r[1].get('rank'))]
