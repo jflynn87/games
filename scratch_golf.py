@@ -36,38 +36,11 @@ from operator import itemgetter
 
 start = datetime.now()
 
-url = 'https://www.espn.com/soccer/standings/_/league/fifa.world'
-
-html = urllib.request.urlopen(url)
-soup = BeautifulSoup(html, 'html.parser')
-t_body = soup.find('tbody', {'class': "Table__TBODY"})
-
-#for row in soup.find_all('tr', {'class': "subgroup-headers"}):
-for row in t_body.find_all('tr'):
-    if 'subgroup-headers' in row['class']:
-        print (row.text)
-    else:    
-        team_info =  'https://www.espn.com' + str(row.find('a')['href'])
-        flag = 'https://a.espncdn.com/combiner/i?img=/i/teamlogos/countries/500/' + str(row.find('img')['alt'].lower()) + '.png&h=40&w=40' 
-        print (team_info)
-        print (flag)
-     #print (row.find_all('td')[0])
-     #print (row.text)
-
-exit()
 t = Tournament.objects.get(current=True)
-sd = ScoreDict.objects.get(tournament=t)
-espn = espn_api.ESPNData(t=t, data=sd.espn_api_data)
-for g in Group.objects.filter(tournament=t):
-    print (g)
-    all_start = datetime.now()
-    a = g.get_golfers()
-    all_end = datetime.now()
-    print ('all: ', len(a), all_end - all_start)
-    no_cut_start = datetime.now()
-    b = g.get_made_cut_golfers(espn)
-    no_cut_end = datetime.now()
-    print ('no cut: ', len(b), no_cut_end - no_cut_start)
+#sd = ScoreDict.objects.get(tournament=t)
+espn = espn_api.ESPNData()
+for p in Field.objects.filter(group__number=1, tournament=t):
+    print (p, espn.cut_penalty(p))
 
 print (datetime.now() - start)
 
