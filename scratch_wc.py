@@ -5,14 +5,43 @@ django.setup()
 
 from wc_app import wc_group_data
 from wc_app.models import Event, Group, Team, Picks, Stage
+from django.contrib.auth.models import User
+from django.db.models import Min, Q, Count, Sum, Max
+from datetime import datetime
 
 wc = wc_group_data.ESPNData()
 
-groups = wc.get_group_data(create=False)
-record = wc.get_group_records(groups)
+espn = wc.get_group_data(create=False)
+loop_start = datetime.now()
+for g in Group.objects.filter(stage__current=True):
+    x = [k for k, v in sorted(espn.get(g.group).items(), key= lambda r: r[1].get('rank'))]
+    for u in User.objects.filter(pk__in=[1,2]):
+        if Picks.objects.filter(team__name=x[0], rank=1, user=u).exists() and \
+            Picks.objects.filter(team__name=x[1], rank=2, user=u).exists() and \
+            Picks.objects.filter(team__name=x[2], rank=3, user=u).exists() and \
+            Picks.objects.filter(team__name=x[3], rank=4, user=u).exists():
+                print (g, 'right picks')
+print ('pefect picks loop: ', datetime.now() - loop_start)
+
+exit()
+
+Picks.objects.filter(team__group__stage__current=True, user=User.objects.get(pk=2)).delete()
+
+for g in Group.objects.filter(stage__current=True):
+    for i, team in enumerate(Team.objects.filter(group=g)):
+        p = Picks()
+        p.user = User.objects.get(pk=2)
+        p.rank = i + 1
+        p.team = team
+        p.save()
+
+exit()
+
+
+#record = wc.get_group_records(groups)
 
 stage = Stage.objects.get(current=True)
-for p in Picks.objects.filter(stage=stage):
+#for p in Picks.objects.filter(stage=stage):
     
 
 exit()

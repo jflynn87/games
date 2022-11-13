@@ -2,6 +2,7 @@ from django.shortcuts import render
 from django.views.generic import TemplateView
 from django.contrib.auth.mixins import LoginRequiredMixin
 from wc_app.models import Event, Group, Team, Picks, Stage
+from django.contrib.auth.models import User
 from wc_app import wc_group_data
 from django.core import serializers
 from django.http import HttpResponse, HttpResponseRedirect
@@ -9,6 +10,7 @@ from datetime import datetime
 from rest_framework.views import APIView
 from django.http import JsonResponse
 from datetime import datetime
+from django.db.models import Q
 
 # Create your views here.
 
@@ -91,20 +93,54 @@ class ScoresAPI(APIView):
         start = datetime.now()
         espn = wc_group_data.ESPNData().get_group_data()
         d = {}
-        score = 0
-        for p in Picks.objects.filter(team__group__stage__current=True):
-            rank = [d.get('rank') for k,v in espn.items() for team,d  in v.items() if team == p.team.name][0]
+        
+        #users = Picks.objects.filter(team__group__stage__current=True).values('user').distinct()
+        stage = Stage.objects.get(current=True)
+        users = stage.event.get_users()
+        for u in users:
+            #print (u)
+            #user= User.objects.get(pk=u.get('user'))
+            d[u.username] = {'score': 0}
             
-            print (p, p.rank, rank)
-            if p.rank in [1,2] and rank in ['1','2']:
-                score +=3 
+        for team in Team.objects.filter(group__stage__current=True): 
+            rank = [data.get('rank') for k,v in espn.items() for t, data  in v.items() if t == team.name][0]
+             
+            print (team, rank)
+            for p in Picks.objects.filter(team=team):
+                if p.rank == 1 and rank == '1':
+                    score = 5
+                elif p.rank in [1,2] and rank in ['1','2']:
+                    score = 3
+                else:
+                    score = 0
+            
+                d.get(p.user.username).update({'score': d.get(p.user.username).get('score') + score})
+                if d.get(p.user.username).get(team.group.group):
+                    d.get(p.user.username).get(team.group.group).update(
+                                               {team.name: 
+                                              {'flag': p.team.flag_link,
+                                               'team_rank': rank,
+                                               'pick_rank': p.rank,
+                                               'points': score
+                                              }
+                                                })
+                else:
+                    d.get(p.user.username).update({team.group.group: 
+                            {team.name: 
+                            {'flag': p.team.flag_link,
+                            'team_rank': rank,
+                            'pick_rank': p.rank,
+                            'points': score
+                            }
+                            }})
 
-            d[p.user.username] = {'group': p.team.group.group,
-                                  'team': p.team.name, 
-                                  'pick_rank': p.rank,
-                                  'rank': rank,         
-                                }
-        d[p.user.username].update({'score': score})
+        for g in Group.objects.filter(stage__current=True):
+            for u in users:
+                if g.perfect_picks(espn, u):
+                    d.get(u.username).update({'score': d.get(u.username).get('score') + 5})
+                    d.get(u.username).get(g.group).update({'bonus': 'perfect picks'})
+            
+        
         data = serializers.serialize('json', Picks.objects.filter(team__group__stage__current=True, user=self.request.user))
         print ('WC scores duration: ', datetime.now() - start)
         return JsonResponse(d, status=200, safe=False)

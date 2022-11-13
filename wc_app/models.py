@@ -14,6 +14,13 @@ class Event(models.Model):
     def __str__(self):
         return str(self.name)
 
+    def get_users(self):
+        l = []
+        users = Picks.objects.filter(team__group__stage__current=True).values('user').distinct()
+        for u in users:
+            l.append(User.objects.get(pk=u.get('user')))
+        return l
+
 
 class Stage(models.Model):
     PICK_TYPE_CHOICES = (('1', 'rank'), ('2', 'bracket'))
@@ -36,6 +43,17 @@ class Group(models.Model):
 
     def __str__(self):
         return str(self.group)
+
+    def perfect_picks(self, espn, user):
+    
+        x = [k for k, v in sorted(espn.get(self.group).items(), key= lambda r: r[1].get('rank'))]
+        if Picks.objects.filter(team__name=x[0], rank=1, user=user).exists() and \
+            Picks.objects.filter(team__name=x[1], rank=2, user=user).exists() and \
+            Picks.objects.filter(team__name=x[2], rank=3, user=user).exists() and \
+            Picks.objects.filter(team__name=x[3], rank=4, user=user).exists():
+             print ('WC Perfect Picks ', self.group, user)
+             return True
+        return False
 
 
 class Team(models.Model):

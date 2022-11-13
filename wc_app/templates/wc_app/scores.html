@@ -1,12 +1,15 @@
 {%extends "wc_app/wc_base.html"%}
 {%load static%}
 {%block body_block%}
+<link rel="stylesheet" href={%static 'golf_app/css/scores.css' %}>
 <h1>Scores {{stage.event.name}} </h1>
 
 <h3>{{stage.name}} Scores</h3>
 {% if stage.pick_type == '1'%}
-<p id="status">Updating Scores <span class="spinner-border" role="status" ></span> </p>
+<h4 id="status">Updating Scores <span class="spinner-border spinner-border-sm align-items-center " style="color:red; margin: 5px" role="status" ></span> </h4>
+<div id="scores_div"></div>
 <script type="text/javascript" src="{%static 'wc_app/js/scores.js'%}"></script>
+
 {%else%}
 <h3>bracket</h3>
 {%endif%}

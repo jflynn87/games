@@ -8,7 +8,7 @@
 
 {% regroup picks by team.group as picks_by_group %}
 
-<table class="table">
+<table class="table table-sm">
 {%for g in picks_by_group%}
 <tr>
     <th>{{g.grouper}}</th>

@@ -140,6 +140,15 @@
   background-color: lightgray;
 }
 
+td .all_watermark {
+  font-family: 'Raleway Dots';
+  color: red;
+  position: relative;
+  opacity: 50%;
+  
+  
+}
+
 
 @media only screen and (max-width: 600px) {
 td .watermark {
