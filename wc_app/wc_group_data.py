@@ -29,8 +29,8 @@ class ESPNData(object):
         start = datetime.now()
 
         #url = 'https://www.espn.com/soccer/standings/_/league/fifa.world'
-        #url ='https://www.espn.com/soccer/table/_/league/fifa.world'
-        url = 'https://www.espn.com/soccer/standings/_/league/FIFA.WORLD/season/2018'
+        url ='https://www.espn.com/soccer/table/_/league/fifa.world'
+        #url = 'https://www.espn.com/soccer/standings/_/league/FIFA.WORLD/season/2018'
         html = request.urlopen(url)
         self.soup = BeautifulSoup(html, 'html.parser')
 
