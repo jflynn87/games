@@ -76,3 +76,8 @@ class Picks (models.Model):
     rank = models.IntegerField()
     def __str__(self):
         return str(self.user.username) + ' ' + str(self.team)
+
+class Data(models.Model):
+    stage = models.ForeignKey(Stage, on_delete=models.CASCADE)
+    rankings = models.JSONField(null=True)
+    group_data = models.JSONField(null=True)

@@ -8,6 +8,7 @@ from selenium import webdriver
 from webdriver_manager.chrome import ChromeDriverManager
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
+import json
 
 ## need to pip install webdriver-manager, packages and upgrade to selenium 4.  also upgrade chrome
 
@@ -62,7 +63,7 @@ class ESPNData(object):
                                 'index': i}})
 
         if create:
-            rankings = self.get_rankings()
+            rankings = self.get_rankings(use_file=True)
             print ('len rankings; ', len(rankings))
     
             stage = Stage.objects.get(current=True)
@@ -109,46 +110,56 @@ class ESPNData(object):
         return score_dict
 
     
-    def get_rankings(self):
+    def get_rankings(self, refresh=False, save_file=False, use_file=False):
         d = {}
-        try:
-            options = Options()
-            options.add_argument("--no-sandbox")
-            options.add_argument("--headless")
-            options.add_argument("--disable-gpu")
-            #options.headless = True
-            #options.sandbox = False
-            #options.disable-gpu = True
+
+        if use_file:
+            d = open('fifa_rankings_2022.json')
+            return json.load(d)
+       
+        else:
+            try:
+                options = Options()
+                options.add_argument("--no-sandbox")
+                options.add_argument("--headless")
+                options.add_argument("--disable-gpu")
+                #options.headless = True
+                #options.sandbox = False
+                #options.disable-gpu = True
 
 
-            driver = webdriver.Chrome(ChromeDriverManager().install(), options=options)
-            driver.get("https://www.fifa.com/fifa-world-ranking/men?dateId=id13792")
-            #url = 'https://www.fifa.com/fifa-world-ranking'
-            #table = driver.find_element(By.XPATH,'//*[@id="content"]/main/section[1]/div/div/div[2]/div[1]/div[1]/div/table')
-            table = driver.find_element(By.CSS_SELECTOR, '#content > main > section.ff-pt-64.ff-pb-32.ff-bg-grey-lightest > div > div > div:nth-child(1) > table')
-            for r in table.find_elements(By.CSS_SELECTOR, 'tr')[1:]:
-                rank = ''
-                team = ''
-                points = ''
-                change = ''
-                for i, cell in enumerate(r.find_elements(By.TAG_NAME, 'td')):
-                    if i == 0:
-                        rank = cell.text
-                    elif i == 2:
-                        team = cell.text
-                    elif i == 3:
-                        points = cell.text
-                    elif i == 7:
-                        change = cell.text
-                
-                d[team] = {'rank': rank, 'points': points, 'change': change}
+                driver = webdriver.Chrome(ChromeDriverManager().install(), options=options)
+                driver.get("https://www.fifa.com/fifa-world-ranking/men?dateId=id13792")
+                #url = 'https://www.fifa.com/fifa-world-ranking'
+                #table = driver.find_element(By.XPATH,'//*[@id="content"]/main/section[1]/div/div/div[2]/div[1]/div[1]/div/table')
+                table = driver.find_element(By.CSS_SELECTOR, '#content > main > section.ff-pt-64.ff-pb-32.ff-bg-grey-lightest > div > div > div:nth-child(1) > table')
+                for r in table.find_elements(By.CSS_SELECTOR, 'tr')[1:]:
+                    rank = ''
+                    team = ''
+                    points = ''
+                    change = ''
+                    for i, cell in enumerate(r.find_elements(By.TAG_NAME, 'td')):
+                        if i == 0:
+                            rank = cell.text
+                        elif i == 2:
+                            team = cell.text
+                        elif i == 3:
+                            points = cell.text
+                        elif i == 7:
+                            change = cell.text
+                    
+                    d[team] = {'rank': rank, 'points': points, 'change': change}
 
-            #hard coding over 50 teams to avoid complex scrolling logic
-            d['KSA'] = {'rank': '51', 'points': '1437.78', 'change': '2.04'}        
-            d['GHA'] = {'rank': '61', 'points': '1393', 'change': '-0.47'}        
+                #hard coding over 50 teams to avoid complex scrolling logic
+                d['KSA'] = {'rank': '51', 'points': '1437.78', 'change': '2.04'}        
+                d['GHA'] = {'rank': '61', 'points': '1393', 'change': '-0.47'}        
 
-        except Exception as e:
-            print ("WC rankings error: ", e)
-        finally:
-            driver.close()
-            return d 
+                json_obj = json.dumps(d)
+                with open ('fifa_rankings_2022.json', 'w') as outfile:
+                    outfile.write(json_obj)
+
+            except Exception as e:
+                print ("WC rankings error: ", e)
+            finally:
+                driver.close()
+                return d 

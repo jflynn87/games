@@ -10,19 +10,19 @@ from django.db.models import Min, Q, Count, Sum, Max
 from datetime import datetime
 
 wc = wc_group_data.ESPNData()
-print (wc.get_rankings())
-exit()
-#espn = wc.get_group_data(create=False)
-loop_start = datetime.now()
-for g in Group.objects.filter(stage__current=True):
-    x = [k for k, v in sorted(espn.get(g.group).items(), key= lambda r: r[1].get('rank'))]
-    for u in User.objects.filter(pk__in=[1,2]):
-        if Picks.objects.filter(team__name=x[0], rank=1, user=u).exists() and \
-            Picks.objects.filter(team__name=x[1], rank=2, user=u).exists() and \
-            Picks.objects.filter(team__name=x[2], rank=3, user=u).exists() and \
-            Picks.objects.filter(team__name=x[3], rank=4, user=u).exists():
-                print (g, 'right picks')
-print ('pefect picks loop: ', datetime.now() - loop_start)
+#print (wc.get_rankings(use_file=True))
+
+espn = wc.get_group_data(create=True)
+# loop_start = datetime.now()
+# for g in Group.objects.filter(stage__current=True):
+#     x = [k for k, v in sorted(espn.get(g.group).items(), key= lambda r: r[1].get('rank'))]
+#     for u in User.objects.filter(pk__in=[1,2]):
+#         if Picks.objects.filter(team__name=x[0], rank=1, user=u).exists() and \
+#             Picks.objects.filter(team__name=x[1], rank=2, user=u).exists() and \
+#             Picks.objects.filter(team__name=x[2], rank=3, user=u).exists() and \
+#             Picks.objects.filter(team__name=x[3], rank=4, user=u).exists():
+#                 print (g, 'right picks')
+# print ('pefect picks loop: ', datetime.now() - loop_start)
 
 exit()
 

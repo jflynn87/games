@@ -39,8 +39,12 @@ start = datetime.now()
 t = Tournament.objects.get(current=True)
 #sd = ScoreDict.objects.get(tournament=t)
 espn = espn_api.ESPNData()
+print (espn.pre_cut_wd())
+print (espn.post_cut_wd())
+for g in Group.objects.filter(tournament=t):
+    print (g, g.cut_count(espn_api_data=espn))
 for p in Field.objects.filter(group__number=1, tournament=t):
-    print (p, espn.cut_penalty(p))
+    print (p, espn.get_rank(p.golfer.espn_number), espn.cut_penalty(p))
 
 print (datetime.now() - start)
 
