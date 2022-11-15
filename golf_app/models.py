@@ -589,7 +589,8 @@ class Group(models.Model):
         #    return 0  # add score dict lookup here and fix code
         elif espn_api_data:
             #golfers = self.get_golfers()
-            golfers = len(self.get_golfers()) - self.get_made_cut_golfers(espn_api_data)
+
+            golfers = self.get_made_cut_golfers(espn_api_data)
             if self.tournament.pga_tournament_num == '018':
                 return len([x.get('roster')[0].get('playerId') for x in espn_api_data.field_data if (str(x.get('roster')[0].get('playerId')) in golfers or str(x.get('roster')[1].get('playerId')) in golfers) and x.get('status').get('type').get('id') == '3'])
             else:

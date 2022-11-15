@@ -35,6 +35,11 @@ class Stage(models.Model):
     def __str__(self):
         return str(self.name)
 
+    def started(self):
+        if self.set_started:
+            return True
+        return False
+
 
 class Group(models.Model):
     #event = models.ForeignKey(Event, on_delete=models.CASCADE)
