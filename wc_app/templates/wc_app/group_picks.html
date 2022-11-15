@@ -4,11 +4,12 @@
 <h3>Rules</h3>
 <ul>
     <li>Choose rank within group for each team</li>
-    <li>First place correct - 5 points</li>
-    <li>Second place correct - 3 points</li>
-    <li>Third place correct - 2 points</li>
-    <li>Fourth correct - 1 point</li>
-    <li>Ties - If a tie for 3&4, 3 points awarded if you picked those teams in 3&4.  If 1 correct team, 2 points awarded</li>
+    <li>First place correct: 3 points</li>
+    <li>Second place correct: 3 points</li>
+    <li>Correct first place pick: +2 points</li>
+    <li>All picks in Group correct: +5 points</li>
+    <li>Upset bonus - for the 3rd and 4th rated teams, bonus points = (team rank - second best rank) *.3 - rounded to 2 decimal places</li>
+    
 </ul>
 
 <p>Rankings taken from <a href="https://www.fifa.com/fifa-world-ranking/men?dateId=id13792">FIFA</a> as of 10/6/2022</p>
@@ -19,12 +20,13 @@
     <table id='picks_table_{{g.pk}}' class="table table-bordered">
         
         <thead>
-            <th colspan='3' style="background-color:blue;color:white;">{{g.group}} <span id='{{g.pk}}_status'> - Make Picks</span></th>
+            <th colspan='4' style="background-color:blue;color:white;">{{g.group}} <span id='{{g.pk}}_status'> - Make Picks</span></th>
         </thead>
         <tr>
             <th>Group Rank</th>
             <th>Team</th>
             <th>FIFA Rank</th>
+            <th>Bonus Points</th>
         </tr>
         </table>
     {%endfor%}
@@ -34,10 +36,10 @@
 
 var data = JSON.parse('{{teams|escapejs}}')
 var picks = JSON.parse('{{picks|escapejs}}')
-console.log(data)
+console.log('picks ', picks)
 $.each(data, function(i,d){
-    groupNum = d.fields.group
-    
+    //groupNum = d.fields.group
+    console.log(d.fields.group, d.fields.team)
     $('#picks_table_' + d.fields.group).append('<tr id=' + d.pk + '_row></tr>')
     $('#' + d.pk + '_row').append('<td style=width:10%;> <select name=' + d.pk + ' selected=0 id=sel_' + d.pk + ' class=pick_input>' +
                                         '<option value=0>--</option>' + 
@@ -52,12 +54,25 @@ $.each(data, function(i,d){
     //                                                '<td>' + d.fields.rank + '</td>')
     $('#' + d.pk + '_row').append('<td style=width:30%> <a href=' + d.fields.info_link + '> <span><img src="' + d.fields.flag_link + '"></img></span>' + d.fields.full_name + '</a></td>' +
                                                     '<td>' + d.fields.rank + '</td>')
+    
     if (picks.length > 0) {
         var pick = picks.find(t => t.fields.team === d.pk)
         $('#sel_' + d.pk + ' option[value=' + pick.fields.rank + ']').attr('selected', 'selected')
 
     }
+    fetch("/wc_app/wc_group_bonus_api/" + d.pk,         
+        {method: "GET",
+            })
+    .then((response) => response.json())
+    .then((responseJSON) => {
+        bonus_data = responseJSON
+        console.log('group bonus: ', Object.keys(bonus_data), Object.values(bonus_data))
+            $('#' + Object.keys(bonus_data) + '_row').append('<td>' + Object.values(bonus_data) + '</td>')
+        
+        })
+
 })
+
 
 $(document).ready(function() {console.log('ready'), checkComplete()})
 

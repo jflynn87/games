@@ -13,5 +13,8 @@ urlpatterns = [
     path('wc_scores', views.ScoresView.as_view(), name='wc_scores'),
     path('wc_about', views.AboutView.as_view(), name='wc_about'),
     path('wc_scores_api', views.ScoresAPI.as_view()),
+    path('wc_group_bonus_api/<int:team_pk>', views.GroupBonusAPI.as_view()),
+    #path('wc_group_bonus_api', views.GroupBonusAPI.as_view()),
+    
 
     ]

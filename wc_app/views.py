@@ -144,3 +144,18 @@ class ScoresAPI(APIView):
         data = serializers.serialize('json', Picks.objects.filter(team__group__stage__current=True, user=self.request.user))
         print ('WC scores duration: ', datetime.now() - start)
         return JsonResponse(d, status=200, safe=False)
+
+
+class GroupBonusAPI(APIView):
+
+    def get(self, request, team_pk):
+        start = datetime.now()
+        d = {}
+        team = Team.objects.get(pk=team_pk)
+        d[team.pk] = team.upset_bonus()
+
+        #for team in Team.objects.filter(group__stage__current=True):
+        #    d[team.pk] = team.upset_bonus()
+        
+        #print ('WC GroupBonusAPI duration: ', datetime.now() - start)
+        return JsonResponse(d, status=200, safe=False)

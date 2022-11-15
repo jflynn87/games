@@ -73,6 +73,15 @@ class Team(models.Model):
     def __str__(self):
         return str(self.name)
 
+    def upset_bonus(self):
+        second_ranked_team = Team.objects.filter(group=self.group).order_by('rank')[1]
+        #print (self.name, second_ranked_team)
+        if self.rank > second_ranked_team.rank:
+            return round((self.rank - second_ranked_team.rank)*.3,2)
+        else:
+            return 0
+
+
 
 class Picks (models.Model):
     team = models.ForeignKey(Team, on_delete=models.CASCADE)
