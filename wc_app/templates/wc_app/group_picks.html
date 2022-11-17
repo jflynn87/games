@@ -1,18 +1,19 @@
 {%extends "wc_app/wc_base.html"%}
+{%load static%}
 {%block body_block%}
 <h1>2022 World Cup - Group Stage Picks</h1>
 <h3>Rules</h3>
 <ul>
-    <li>Choose rank within group for each team</li>
-    <li>First place correct: 3 points</li>
-    <li>Second place correct: 3 points</li>
-    <li>Correct first place pick: +2 points</li>
-    <li>All picks in Group correct: +5 points</li>
-    <li>Upset bonus - for the 3rd and 4th rated teams, bonus points = (team rank - second best rank) *.3 - rounded to 2 decimal places</li>
+    <li>Choose the rank within the group for each team</li>
+    <li>If your #1 or #2 pick finishes in first or second place: +3 points</li>
+    <li>If your first place pick finishes in first place: +2 points</li>
+    <li>All picks in Group correct (1st, 2nd, 3rd, 4th): +5 points </li>
+    <li>Upset bonus:  if the 3rd and 4th FIFA ranked teams finishes first or second, bonus points = (team rank - second best rank) *.3.  Rounded to 2 decimal places (if you picked one of those teams in 1st and they finish 1st you also get the first place bonus)</li>
+    <li>All team rankings will be taken from ESPN.com.  Note that there are several tie breakers that determine the actual rank of each team, actual ranks based on those tie breakers will be used for scoring.</li>
     
 </ul>
 
-<p>Rankings taken from <a href="https://www.fifa.com/fifa-world-ranking/men?dateId=id13792">FIFA</a> as of 10/6/2022</p>
+<p>Current FIFA World Rankings taken from <a href="https://www.fifa.com/fifa-world-ranking/men?dateId=id13792">FIFA</a> as of 10/6/2022</p>
 <div id="picks_sect">
     <form method="POST" id="pick_form" class="form-class">
         {%csrf_token%}
@@ -32,14 +33,15 @@
     {%endfor%}
     <button type="submit" class="btn btn-primary" id="sub_btn" disabled>Submit</button>
 </form>
-<script type="text/javascript">
+<script type="text/javascript" src="{%static 'wc_app/js/group_picks.js'%}"></script>
+<!-- <script type="text/javascript">
 
 var data = JSON.parse('{{teams|escapejs}}')
 var picks = JSON.parse('{{picks|escapejs}}')
 console.log('picks ', picks)
 $.each(data, function(i,d){
     //groupNum = d.fields.group
-    console.log(d.fields.group, d.fields.team)
+    
     $('#picks_table_' + d.fields.group).append('<tr id=' + d.pk + '_row></tr>')
     $('#' + d.pk + '_row').append('<td style=width:10%;> <select name=' + d.pk + ' selected=0 id=sel_' + d.pk + ' class=pick_input>' +
                                         '<option value=0>--</option>' + 
@@ -66,7 +68,7 @@ $.each(data, function(i,d){
     .then((response) => response.json())
     .then((responseJSON) => {
         bonus_data = responseJSON
-        console.log('group bonus: ', Object.keys(bonus_data), Object.values(bonus_data))
+        //console.log('group bonus: ', Object.keys(bonus_data), Object.values(bonus_data))
             $('#' + Object.keys(bonus_data) + '_row').append('<td>' + Object.values(bonus_data) + '</td>')
         
         })
@@ -136,7 +138,7 @@ function checkGroups(table){
 
 }
 
-</script>
+</script> -->
 
 </div>
 {%endblock%}

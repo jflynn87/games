@@ -26,9 +26,9 @@ class GroupPicksView(LoginRequiredMixin, TemplateView):
         context.update({
             #'event': event, 
             'stage': stage,
-            'teams': serializers.serialize('json', Team.objects.filter(group__stage=stage), use_natural_foreign_keys=True),
+            #'teams': serializers.serialize('json', Team.objects.filter(group__stage=stage), use_natural_foreign_keys=True),
             'groups': Group.objects.filter(stage=stage),
-            'picks': serializers.serialize('json', Picks.objects.filter(team__group__stage=stage, user=self.request.user))
+            #'picks': serializers.serialize('json', Picks.objects.filter(team__group__stage=stage, user=self.request.user))
         })
 
         return context
@@ -156,6 +156,28 @@ class GroupBonusAPI(APIView):
 
         #for team in Team.objects.filter(group__stage__current=True):
         #    d[team.pk] = team.upset_bonus()
+        
+        #print ('WC GroupBonusAPI duration: ', datetime.now() - start)
+        return JsonResponse(d, status=200, safe=False)
+
+
+class GroupStageTeamsAPI(APIView):
+
+    def get(self, request ):
+        start = datetime.now()
+        stage = Stage.objects.get(current=True)
+        d = serializers.serialize('json', Team.objects.filter(group__stage=stage), use_natural_foreign_keys=True),
+        
+        #print ('WC GroupBonusAPI duration: ', datetime.now() - start)
+        return JsonResponse(d, status=200, safe=False)
+
+
+class GroupStagePicksAPI(APIView):
+
+    def get(self, request):
+        start = datetime.now()
+        stage = Stage.objects.get(current=True)
+        d = serializers.serialize('json', Picks.objects.filter(team__group__stage=stage, user=self.request.user))
         
         #print ('WC GroupBonusAPI duration: ', datetime.now() - start)
         return JsonResponse(d, status=200, safe=False)
