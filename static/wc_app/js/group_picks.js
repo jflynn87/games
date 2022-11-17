@@ -32,9 +32,11 @@ function buildTable() {
                                                         '<td>' + d.fields.rank + '</td>')
         //console.log('eventlistner group', d.fields.group)
         document.getElementById('sel_' + d.pk).addEventListener('change', function () {checkComplete(document.getElementById('picks_table_' + d.fields.group))})
+        document.getElementById('sel_' + d.pk).addEventListener('onchange', function () {checkComplete(document.getElementById('picks_table_' + d.fields.group))}) //for ios
         if (picks.length > 0) {
             var pick = picks.find(t => t.fields.team === d.pk)
             $('#sel_' + d.pk + ' option[value=' + pick.fields.rank + ']').attr('selected', 'selected')
+            //$('#sel_' + d.pk + ' option[value=' + pick.fields.rank + ']')
 
         }
         fetch("/wc_app/wc_group_bonus_api/" + d.pk,         
@@ -109,7 +111,7 @@ function checkGroups(table){
     three = pickArray.filter(c => c === '3').length
     four = pickArray.filter(c => c === '4').length
     total = one + two + three + four
-    console.log(table.id, one, two, three, four, total)
+    //console.log(table.id, one, two, three, four, total)
     if (one === 1 && two === 1 && three === 1 && four === 1) {
         $('#' + table.id.split('_')[2] + '_status').html(' - Picks Good')
         $('#' + table.id.split('_')[2] + '_status').css('background-color', 'blue')
