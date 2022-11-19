@@ -95,3 +95,15 @@ class Data(models.Model):
     stage = models.ForeignKey(Stage, on_delete=models.CASCADE)
     rankings = models.JSONField(null=True)
     group_data = models.JSONField(null=True)
+
+class AccessLog(models.Model):
+    stage = models.ForeignKey(Stage, on_delete=models.CASCADE)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='wc_al_user')
+    screen = models.CharField(max_length=100)
+    count = models.IntegerField(default=0, null=True)
+
+
+class TotalScore(models.Model):
+    stage = models.ForeignKey(Stage, on_delete=models.CASCADE)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='wc_ts_user')
+    score = models.FloatField(default=0)

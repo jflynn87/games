@@ -26,13 +26,15 @@ class ESPNData(object):
         field_data is the actual golfers in the tournament'''
 
     #only use event_data for match play events, other data not reliable.
-    def __init__(self):
+    def __init__(self, url=None):
         start = datetime.now()
 
-        #url = 'https://www.espn.com/soccer/standings/_/league/fifa.world'
-        url ='https://www.espn.com/soccer/table/_/league/fifa.world'
-        #url = 'https://www.espn.com/soccer/standings/_/league/FIFA.WORLD/season/2018'
-        html = request.urlopen(url)
+        if url:
+            self.url = url
+        else:
+            self.url ='https://www.espn.com/soccer/table/_/league/fifa.world'
+        
+        html = request.urlopen(self.url)
         self.soup = BeautifulSoup(html, 'html.parser')
 
         print ('WC Init duration: ', datetime.now() - start)
@@ -80,7 +82,7 @@ class ESPNData(object):
                     else:
                         t, t_created = Team.objects.get_or_create(group=g, name=team,\
                                         flag_link=data.get('flag'), \
-                                        info_link=data.get('info'), full_name=data.get('full_name')) 
+                                        info_link=data.get('info'), full_name=data.get('full_name'), rank=65) 
                         print ("NO RANKING :", team)
 
             print ('Created WC Groups: ', Group.objects.filter(stage=stage).count(), ' Teams: ', Team.objects.filter(group__stage=stage).count())        

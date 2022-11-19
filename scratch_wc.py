@@ -9,7 +9,7 @@ from django.contrib.auth.models import User
 from django.db.models import Min, Q, Count, Sum, Max
 from datetime import datetime
 
-wc = wc_group_data.ESPNData()
+wc = wc_group_data.ESPNData(url='https://www.espn.com/soccer/standings/_/league/FIFA.WORLD/season/2018')
 #print (wc.get_rankings(use_file=True))
 
 espn = wc.get_group_data(create=True)
@@ -24,17 +24,19 @@ espn = wc.get_group_data(create=True)
 #                 print (g, 'right picks')
 # print ('pefect picks loop: ', datetime.now() - loop_start)
 
-exit()
+users = [1, 2]
 
-Picks.objects.filter(team__group__stage__current=True, user=User.objects.get(pk=2)).delete()
+for x in users:
+    u = User.objects.get(pk=x)
+    Picks.objects.filter(team__group__stage__current=True, user=u).delete()
 
-for g in Group.objects.filter(stage__current=True):
-    for i, team in enumerate(Team.objects.filter(group=g)):
-        p = Picks()
-        p.user = User.objects.get(pk=2)
-        p.rank = i + 1
-        p.team = team
-        p.save()
+    for g in Group.objects.filter(stage__current=True):
+        for i, team in enumerate(Team.objects.filter(group=g)):
+            p = Picks()
+            p.user = u
+            p.rank = i + 1
+            p.team = team
+            p.save()
 
 exit()
 
