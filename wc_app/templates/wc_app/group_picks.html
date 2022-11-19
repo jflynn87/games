@@ -31,7 +31,11 @@
         </tr>
         </table>
     {%endfor%}
+    {%if stage.started%}
+    <p style="color: red; font-weight:bold;">Stage Started, too late for picks</p>
+    {%else%}
     <button type="submit" class="btn btn-primary" id="sub_btn" disabled>Submit</button>
+    {%endif%}
 </form>
 <script type="text/javascript" src="{%static 'wc_app/js/group_picks.js'%}"></script>
 

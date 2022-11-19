@@ -73,8 +73,14 @@ class ScoresView(LoginRequiredMixin, TemplateView):
     def get_context_data(self, **kwargs):
         context = super(ScoresView, self).get_context_data(**kwargs)
         stage = Stage.objects.get(current=True)
+        users = []
+        if not stage.started():
+            for user in Picks.objects.filter(team__group__stage=stage).values('user').distinct():
+                u = User.objects.get(pk=user.get('user'))
+                users.append(u.username)
         context.update({
             'stage': stage, 
+            'users': users
             #'picks': serializers.serialize('json', Picks.objects.filter(team__group__event=event, user=self.request.user))
             #'picks': Picks.objects.filter(team__group__stage=stage, user=self.request.user).order_by('team__group', 'rank')
         })

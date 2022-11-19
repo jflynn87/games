@@ -2103,13 +2103,15 @@ class ApiScoresView(LoginRequiredMixin, TemplateView):
 
 
 class EspnApiScores(APIView):
+
     @transaction.atomic
-    def get(self, request, pk):
+    def get(self, request, pk, rerun=False):
         start = datetime.datetime.now()
         d = {}
         try:
 
             t = Tournament.objects.get(pk=pk)
+
             if not t.started():
                 return JsonResponse({'msg': 'Tournament Not Started'}, status=200, safe=False)
 
@@ -2117,13 +2119,18 @@ class EspnApiScores(APIView):
                 d[u.username] = {'score': 0,
                                 'cuts': 0}
 
-            if t.complete:
+            if t.complete and not rerun:
                 data = return_sd_data(t,d)
                 print ("Tournament Complete dur: ", datetime.datetime.now() - start)
                 return JsonResponse(data, status=200, safe=False)
 
-            pre_sd = ScoreDict.objects.get(tournament=t)
-            espn = espn_api.ESPNData(t=t, force_refresh=True, update_sd=True)
+            #pre_sd = ScoreDict.objects.get(tournament=t)
+            if rerun:
+                sd = ScoreDict.objects.get(tournament=t)
+                espn = espn_api.ESPNData(t=t, force_refresh=False, update_sd=False, data=sd.espn_api_data)
+            else:    
+                espn = espn_api.ESPNData(t=t, force_refresh=True, update_sd=True)
+            
             
             ## use this to test from file and comment out the espn line above
             #with open('open_champ_r2.json') as json_file:
@@ -2148,9 +2155,9 @@ class EspnApiScores(APIView):
 
             g_list = Picks.objects.filter(playerName__tournament=t).values_list('playerName__pk', flat=True)
             golfers = [*set(g_list)]
-            print ('GOLFERS', len(golfers))
+            
             for golfer in golfers:
-                print (golfer)
+                #print (golfer)
                 p = Picks.objects.filter(playerName__pk=golfer).first()
                 s = pick_calc_score(p.pk, espn, big, t, d, cut_num)
                 # start_golfer_score = datetime.datetime.now()

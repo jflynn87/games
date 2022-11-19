@@ -17,5 +17,12 @@
 {%endif%}
 {%else%}
 <h4>Come back when games begin</h4>
+<h5>Picks Submitted</h5>
+<ul>
+{%for u in users%}
+<li>{{u}}</li>
+{%endfor%}
+</ul>
+
 {%endif%}
 {%endblock%}

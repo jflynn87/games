@@ -36,15 +36,17 @@ from operator import itemgetter
 
 start = datetime.now()
 
-t = Tournament.objects.get(current=True)
-#sd = ScoreDict.objects.get(tournament=t)
-espn = espn_api.ESPNData()
+#t = Tournament.objects.get(current=True)
+t = Tournament.objects.filter(season__current=True).order_by('-pk')[1]
+
+sd = ScoreDict.objects.get(tournament=t)
+espn = espn_api.ESPNData(t=t, data=sd.espn_api_data)
 print (espn.pre_cut_wd())
 print (espn.post_cut_wd())
 for g in Group.objects.filter(tournament=t):
     print (g, g.cut_count(espn_api_data=espn))
 for p in Field.objects.filter(group__number=1, tournament=t):
-    print (p, espn.get_rank(p.golfer.espn_number), espn.cut_penalty(p))
+    print (p, p.calc_score(api_data=espn), espn.cut_num(), espn.cut_penalty(p))
 
 print (datetime.now() - start)
 

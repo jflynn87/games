@@ -588,15 +588,12 @@ class Group(models.Model):
         #else:
         #    return 0  # add score dict lookup here and fix code
         elif espn_api_data:
-            #golfers = self.get_golfers()
+            golfers = self.get_golfers()
 
-            golfers = self.get_made_cut_golfers(espn_api_data)
             if self.tournament.pga_tournament_num == '018':
                 return len([x.get('roster')[0].get('playerId') for x in espn_api_data.field_data if (str(x.get('roster')[0].get('playerId')) in golfers or str(x.get('roster')[1].get('playerId')) in golfers) and x.get('status').get('type').get('id') == '3'])
             else:
-                return len([x for x in espn_api_data.field_data if x.get('id') in golfers and x.get('status').get('type').get('id') == '3'])
-            #print (type(espn_api_data))
-            #return espn_api_data.cut_count(self)
+                return len([x for x in espn_api_data.field_data if x.get('id') in golfers and x.get('status').get('type').get('id') == '3']) - len(espn_api_data.golfers_post_cut_wd(golfers))
 
     def get_golfers(self):
         '''takes a group and returns a list of espn numbers'''
@@ -607,7 +604,6 @@ class Group(models.Model):
         golfers = self.get_golfers()
 
         post_cut_wd = espn_api_data.golfers_post_cut_wd(golfers)     
-        
         return post_cut_wd
 
 

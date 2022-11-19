@@ -63,6 +63,7 @@ urlpatterns= [
     path('ryder_cup_scores/', views.RyderCupScoresView.as_view(), name='ryder_cup_scores'),
     path('ryder_cup_score_api/', views.RyderCupScoresAPI.as_view(), name='ryder_cup_score_api'),
     path('get_api_scores/<int:pk>', views.EspnApiScores.as_view(), name='get_api_scores'),
+    #path('get_api_scores_reun/<int:pk>/<str:rerun>', views.EspnApiScores.as_view(), name='get_api_scores_rerun'),
     path('api_scores_view/', views.ApiScoresView.as_view(), name='api_scores_view'),
     path('api_scores_view/<int:pk>', views.ApiScoresView.as_view(), name='api_scores_view'),
     path('total_played_api/<str:season>', views.TotalPlayedAPI.as_view(), name='total_played_api'),

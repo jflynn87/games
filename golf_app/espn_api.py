@@ -337,6 +337,7 @@ class ESPNData(object):
         '''takes a list, returns a list'''
         l = self.t.not_playing_list()
         l.remove('CUT')
+        #print ('espn_api golfers post cut wd', len(espn_num))
         return [x.get('athlete').get('id') for x in self.field_data if x.get('status').get('type').get('id') == '3' \
                 and x.get('status').get('type').get('shortDetail') in l and int(x.get('status').get('period')) > self.t.saved_cut_round  \
                 and x.get('athlete').get('id') in espn_num]
@@ -610,6 +611,7 @@ class ESPNData(object):
     def cut_count(self, group=None):
         '''gets cut golfers for a group'''
         golfers = group.get_golfers()
+
         if self.t.pga_tournament_num == '018':
             return len([x for x in self.field_data if (str(x.get('roster')[0].get('playerId')) in golfers or str(x.get('roster')[1].get('playerId')) in golfers) and x.get('status').get('type').get('id') == '3'])
         else:
