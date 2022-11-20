@@ -31,6 +31,7 @@ class Stage(models.Model):
     set_started = models.BooleanField(default=False)
     set_not_started = models.BooleanField(default=False)
     pick_type = models.CharField(max_length=100, choices=PICK_TYPE_CHOICES)
+    score_url = models.URLField(null=True)
 
     def __str__(self):
         return str(self.name)
@@ -88,13 +89,21 @@ class Picks (models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='wc_user')
     #stage = models.ForeignKey(Stage, on_delete=models.CASCADE)
     rank = models.IntegerField()
+
     def __str__(self):
         return str(self.user.username) + ' ' + str(self.team)
 
+
 class Data(models.Model):
     stage = models.ForeignKey(Stage, on_delete=models.CASCADE)
-    rankings = models.JSONField(null=True)
-    group_data = models.JSONField(null=True)
+    rankings = models.JSONField(null=True, blank=True)
+    group_data = models.JSONField(null=True, blank=True)
+    display_data = models.JSONField(null=True, blank=True)
+    force_refresh = models.BooleanField(default=False)
+
+    def __str__(self):
+        return str(self.stage)
+
 
 class AccessLog(models.Model):
     stage = models.ForeignKey(Stage, on_delete=models.CASCADE)
@@ -102,8 +111,15 @@ class AccessLog(models.Model):
     screen = models.CharField(max_length=100)
     count = models.IntegerField(default=0, null=True)
 
+    def __str__(self):
+        return str(self.stage)
+
 
 class TotalScore(models.Model):
     stage = models.ForeignKey(Stage, on_delete=models.CASCADE)
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='wc_ts_user')
     score = models.FloatField(default=0)
+
+    def __str__(self):
+        return str(self.stage) + str(self.user) + str(self.score)
+

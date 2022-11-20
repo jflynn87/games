@@ -4,10 +4,13 @@ import django
 django.setup()
 
 from wc_app import wc_group_data
-from wc_app.models import Event, Group, Team, Picks, Stage
+from wc_app.models import Event, Group, Team, Picks, Stage, Data
 from django.contrib.auth.models import User
 from django.db.models import Min, Q, Count, Sum, Max
 from datetime import datetime
+
+Data.objects.all().delete()
+exit()
 
 wc = wc_group_data.ESPNData(url='https://www.espn.com/soccer/standings/_/league/FIFA.WORLD/season/2018')
 #print (wc.get_rankings(use_file=True))

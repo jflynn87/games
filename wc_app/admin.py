@@ -3,7 +3,7 @@ from django.contrib import admin
 # Register your models here.
 
 
-from wc_app.models import Event, Group, Team, Picks, Stage, AccessLog, TotalScore
+from wc_app.models import Event, Group, Team, Picks, Stage, AccessLog, TotalScore, Data
                 
 
 class EventAdmin(admin.ModelAdmin):
@@ -37,6 +37,11 @@ class TotalScoreAdmin(admin.ModelAdmin):
     list_display = ['user', 'stage', 'score']
     #list_filter = ['team', 'user']
 
+class DataAdmin(admin.ModelAdmin):
+    list_display = ['stage']
+    #list_filter = ['team', 'user']
+
+
 
 admin.site.register(Event, EventAdmin)
 admin.site.register(Stage, StageAdmin)
@@ -45,4 +50,5 @@ admin.site.register(Team, TeamAdmin)
 admin.site.register(Picks, PicksAdmin)
 admin.site.register(AccessLog, AccessLogAdmin)
 admin.site.register(TotalScore, TotalScoreAdmin)
+admin.site.register(Data, DataAdmin)
 

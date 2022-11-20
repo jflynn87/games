@@ -3,7 +3,7 @@ import imp
 #from requests import get
 from urllib import request
 from bs4 import BeautifulSoup
-from wc_app.models import Event, Stage, Group, Team
+from wc_app.models import Event, Stage, Group, Team, Data
 from selenium import webdriver
 from webdriver_manager.chrome import ChromeDriverManager
 from selenium.webdriver.chrome.options import Options
@@ -26,7 +26,7 @@ class ESPNData(object):
         field_data is the actual golfers in the tournament'''
 
     #only use event_data for match play events, other data not reliable.
-    def __init__(self, url=None):
+    def __init__(self, url=None, stage=None):
         start = datetime.now()
 
         if url:
@@ -36,6 +36,11 @@ class ESPNData(object):
         
         html = request.urlopen(self.url)
         self.soup = BeautifulSoup(html, 'html.parser')
+
+        if stage:
+            self.stage = stage
+        else:
+            self.stage = Stage.objects.get(current=True)
 
         print ('WC Init duration: ', datetime.now() - start)
 
@@ -165,3 +170,20 @@ class ESPNData(object):
             finally:
                 driver.close()
                 return d 
+
+
+    def new_data(self):
+        try:
+            
+            saved_d = Data.objects.get(stage=self.stage)
+            if saved_d.force_refresh:
+                return True
+            if saved_d.group_data == self.get_group_data():
+                print ('no new data')
+                return False
+            else:
+                print ('new data')
+                return True
+        except Exception as e:
+            print ('ESPN WC API new data check error: ', e)
+            return True

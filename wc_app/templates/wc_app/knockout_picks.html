@@ -1,0 +1,58 @@
+{%extends "wc_app/wc_base.html"%}
+{%load static%}
+{%block body_block%}
+
+<h1>2022 World Cup - {{stage.name}} Stage Picks</h1>
+<h3>Rules</h3>
+<ul>
+    <li>Bracket Style, pick winners of each game/round</li>
+    
+</ul>
+
+<div id="bracket">
+<script type="text/javascript">
+var g = JSON.parse('{{games|escapejs}}')
+console.log(g)
+games = []
+$.each(g, function(i,game) {
+    console.log(i, game)
+    games.push(game)})
+console.log(games, typeof(games))
+var singleElimination = {
+  "teams": 
+  g,
+  //[['URU', 'RUS'], ['KSA', 'EGY'], ['ESP', 'POR'], ['IRN', 'MAR'], ['FRA', 'DEN'], ['PER', 'AUS'], ['CRO', 'ARG'], ['NGA', 'ISL']],
+  //[              // Matchups
+        
+  //["USA", "England"], // First match
+    //["Team 3", "Team 4"]  // Second match
+  //],
+  "results": []
+  //[            // List of brackets (single elimination, so only one bracket)
+    //[                     // List of rounds in bracket
+    //  [                   // First round in this bracket
+    //    [null,null],           // Team 1 vs Team 2
+    //    [null,null]            // Team 3 vs Team 4
+    //    [null,null]            // Team 5 vs Team 6
+    //    [null,null]            // Team 7 vs Team 8
+    //    [null,null]            // Team 9 vs Team 10
+    //    [null,null]            // Team 11 vs Team 12
+    //   [null,null]            // Team 13 vs Team 14
+    //    [null,null]            // Team 15 vs Team 16
+    //  ],
+    //  [                   // Second (final) round in single elimination bracket
+    //    //[5, 6],           // Match for first place
+    //   //[7, 8]            // Match for 3rd place
+    //  ]
+    //]
+  //]
+}
+
+console.log(singleElimination)
+$(document).ready(function() {
+    $('#bracket').bracket({init: singleElimination})
+})
+
+</script>
+</div>
+{%endblock%}

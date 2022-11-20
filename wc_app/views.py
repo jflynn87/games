@@ -1,7 +1,7 @@
 from django.shortcuts import render
 from django.views.generic import TemplateView
 from django.contrib.auth.mixins import LoginRequiredMixin
-from wc_app.models import Event, Group, Team, Picks, Stage, AccessLog, TotalScore
+from wc_app.models import Event, Group, Team, Picks, Stage, AccessLog, TotalScore, Data
 from django.contrib.auth.models import User
 from wc_app import wc_group_data
 from django.core import serializers
@@ -11,6 +11,7 @@ from rest_framework.views import APIView
 from django.http import JsonResponse
 from datetime import datetime
 from django.db.models import Q
+import json
 
 # Create your views here.
 
@@ -101,61 +102,77 @@ class ScoresAPI(APIView):
     def get(self, request):
         start = datetime.now()
         try:
-            #espn = wc_group_data.ESPNData().get_group_data()
-            #for test delete and uncomment line above
-            espn = wc_group_data.ESPNData(url='https://www.espn.com/soccer/standings/_/league/FIFA.WORLD/season/2018').get_group_data()
+            stage = Stage.objects.get(current=True)
+            e = wc_group_data.ESPNData(url=stage.score_url)
+            espn = e.get_group_data()
+
+            if e.new_data():
+                print ('new data, refresh scores')
+            else:
+                print ('no updates, use saved data')
+                d = Data.objects.get(stage=stage)
+                print ('WC scores duration: ', datetime.now() - start)
+                return JsonResponse(d.display_data, status=200, safe=False)
             d = {}
             
-            stage = Stage.objects.get(current=True)
-            users = stage.event.get_users()
-            for u in users:
-                d[u.username] = {'Score': 0, 'Bonus': 0}
-                
-            for team in Team.objects.filter(group__stage__current=True): 
-                rank = [data.get('rank') for k,v in espn.items() for t, data  in v.items() if t == team.name][0]
-                
-                #print (team, rank)
-                for p in Picks.objects.filter(team=team):
-                    
-                    if p.rank == 1 and rank == '1':
-                        score = round(5 + p.team.upset_bonus(),2)
-                    elif p.rank in [1,2] and rank in ['1','2']:
-                        score = round(3 + p.team.upset_bonus(),2)
-                    else:
-                        score = 0
-                
-                    d.get(p.user.username).update({'Score': d.get(p.user.username).get('Score') + score})
-                    if d.get(p.user.username).get(team.group.group):
-                        d.get(p.user.username).get(team.group.group).update(
-                                                {team.name: 
-                                                {'flag': p.team.flag_link,
-                                                'team_rank': rank,
-                                                'pick_rank': p.rank,
-                                                'points': score
-                                                }
-                                                    })
-                    else:
-                        d.get(p.user.username).update({team.group.group: 
-                                {team.name: 
-                                {'flag': p.team.flag_link,
-                                'team_rank': rank,
-                                'pick_rank': p.rank,
-                                'points': score
-                                }
-                                }})
             
-            for g in Group.objects.filter(stage__current=True):
+            if stage.pick_type == '1': #rank style
+                users = stage.event.get_users()
                 for u in users:
-                    if g.perfect_picks(espn, u):
-                        d.get(u.username).update({'Score': round(d.get(u.username).get('Score') + 5,2)})
-                        d.get(u.username).update({'Bonus': d.get(u.username).get('Bonus') + 5})
-                        d.get(u.username).get(g.group).update({'bonus': 'perfect picks'})
-                    ts, created = TotalScore.objects.get_or_create(stage=stage, user=u)
-                    ts.score = d.get(u.username).get('Score')
-                    ts.save()
+                    d[u.username] = {'Score': 0, 'Bonus': 0}
+                    
+                for team in Team.objects.filter(group__stage__current=True): 
+                    rank = [data.get('rank') for k,v in espn.items() for t, data  in v.items() if t == team.name][0]
+                    
+                    #print (team, rank)
+                    for p in Picks.objects.filter(team=team):
+                        
+                        if p.rank == 1 and rank == '1':
+                            score = round(5 + p.team.upset_bonus(),2)
+                        elif p.rank in [1,2] and rank in ['1','2']:
+                            score = round(3 + p.team.upset_bonus(),2)
+                        else:
+                            score = 0
+                    
+                        d.get(p.user.username).update({'Score': d.get(p.user.username).get('Score') + score})
+                        if d.get(p.user.username).get(team.group.group):
+                            d.get(p.user.username).get(team.group.group).update(
+                                                    {team.name: 
+                                                    {'flag': p.team.flag_link,
+                                                    'team_rank': rank,
+                                                    'pick_rank': p.rank,
+                                                    'points': score
+                                                    }
+                                                        })
+                        else:
+                            d.get(p.user.username).update({team.group.group: 
+                                    {team.name: 
+                                    {'flag': p.team.flag_link,
+                                    'team_rank': rank,
+                                    'pick_rank': p.rank,
+                                    'points': score
+                                    }
+                                    }})
+                
+                for g in Group.objects.filter(stage__current=True):
+                    for u in users:
+                        if g.perfect_picks(espn, u):
+                            d.get(u.username).update({'Score': round(d.get(u.username).get('Score') + 5,2)})
+                            d.get(u.username).update({'Bonus': d.get(u.username).get('Bonus') + 5})
+                            d.get(u.username).get(g.group).update({'bonus': 'perfect picks'})
+                        ts, created = TotalScore.objects.get_or_create(stage=stage, user=u)
+                        ts.score = d.get(u.username).get('Score')
+                        ts.save()
+                #print ('score data: ', d)
+            elif stage.pick_type == '2': #braket
+                print ('bracket stage')
+                d = {}    
 
-            print ('dd: ', d)
             #data = serializers.serialize('json', Picks.objects.filter(team__group__stage__current=True, user=self.request.user))
+            data_obj, created = Data.objects.get_or_create(stage=stage)
+            data_obj.group_data = espn
+            data_obj.display_data = d
+            data_obj.save()
             print ('WC scores duration: ', datetime.now() - start)
             return JsonResponse(d, status=200, safe=False)
         except Exception as e:
@@ -198,3 +215,58 @@ class GroupStagePicksAPI(APIView):
         
         #print ('WC GroupBonusAPI duration: ', datetime.now() - start)
         return JsonResponse(d, status=200, safe=False)
+
+class KnockoutPicksView(LoginRequiredMixin, TemplateView):
+    login_url = 'login'
+    template_name = 'wc_app/knockout_picks.html'
+
+
+    def get_context_data(self, **kwargs):
+        context = super(KnockoutPicksView, self).get_context_data(**kwargs)
+        #event = Event.objects.all().first()
+        stage = Stage.objects.get(current=True)
+        games = []
+        #teams = Team.objects.all()[0:17].values_list('full_name', flat=True)
+        teams = Team.objects.all()[0:17]
+        for i,t in enumerate(teams):
+            if i == 0:
+                l = []
+                #l.append({'name': t.name, 'flag': t.flag_link})
+            elif i % 2 == 0:
+                games.append(l)
+                l = []
+                #l.append(t.name)
+            #else:
+            #    l.append(t.name)
+            l.append({'name': t.name, 'flag': t.flag_link})
+
+        print (games)
+
+        context.update({
+            #'event': event, 
+            'stage': stage,
+            'games': json.dumps(games),
+            #'teams': serializers.serialize('json', Team.objects.filter(group__stage=stage), use_natural_foreign_keys=True),
+            'groups': Group.objects.filter(stage=stage),
+            #'picks': serializers.serialize('json', Picks.objects.filter(team__group__stage=stage, user=self.request.user))
+        })
+
+        return context
+
+    def post(self, request, *args, **kwargs):
+        print (self.request.user, request.POST)
+
+        Picks.objects.filter(user=self.request.user, team__group__stage__current=True).delete()
+        for t, r in request.POST.items():
+            if t != 'csrfmiddlewaretoken':
+                print (t, r)
+                p = Picks()
+                p.user=self.request.user
+                p.team=Team.objects.get(pk=t)
+                #p.stage= Stage.objects.get(current=True)
+                p.rank = r
+                p.save()
+        print ('picks usubmitted: ', self.request.user, ' ', datetime.now(), '  ', Picks.objects.filter(user=self.request.user, team__group__stage__current=True))
+
+        return HttpResponseRedirect('wc_group_picks_summary')
+

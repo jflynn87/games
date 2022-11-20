@@ -16,6 +16,7 @@ urlpatterns = [
     path('wc_group_bonus_api/<int:team_pk>', views.GroupBonusAPI.as_view()),
     path('wc_group_stage_teams_api', views.GroupStageTeamsAPI.as_view()),
     path('wc_group_stage_picks_api', views.GroupStagePicksAPI.as_view()),
+    path('wc_ko_picks_view', views.KnockoutPicksView.as_view(), name='wc_ko_picks_view')
     
     #path('wc_group_bonus_api', views.GroupBonusAPI.as_view()),
     
