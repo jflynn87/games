@@ -9,7 +9,32 @@ from django.contrib.auth.models import User
 from django.db.models import Min, Q, Count, Sum, Max
 from datetime import datetime
 
-Data.objects.all().delete()
+#e = wc_group_data.ESPNData().get_group_data()
+Team.objects.filter(group__group='Final 16').delete()
+stage = Stage.objects.get(name="Group Stage")
+e  = Data.objects.get(stage=stage)
+print (e.group_data.keys())
+ko_group = Group.objects.get(group="Final 16")
+
+for g in Group.objects.filter(stage=stage):
+    #rank = [data.get('rank') for k,v in espn.items() for t, data  in v.items() if t == team.name][0]
+    d = [(t,data.get('rank')) for k,v in e.group_data.items() for t, data in v.items() if data.get('rank') in ['1', '2'] and k == g.group ]
+    #print (g.group[-1].lower(),ord(g.group[-1].lower()) -96, d)
+    for x in d:
+        if int(x[1]) == 1:
+            rank = ord(g.group[-1].lower()) -96
+        else:
+            rank = (ord(g.group[-1].lower()) -96) + 8
+
+        team = Team()
+        team.group = ko_group
+        team.name = x[0]
+        team.rank = rank
+        team.save()
+
+        print (g, x[0], rank)
+
+
 exit()
 
 wc = wc_group_data.ESPNData(url='https://www.espn.com/soccer/standings/_/league/FIFA.WORLD/season/2018')

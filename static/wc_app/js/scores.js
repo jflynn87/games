@@ -14,11 +14,14 @@ $(document).ready(function () {
     else {
     $('#scores_div').append('<table id=score_table class="table table-bordered table-sm"></table>')
     $('#score_table').append('<thead></thead>')
-    $('#score_table').find('thead').append('<th class=border>Player</th>')
+    $('#score_table').find('thead').append('<th class=border>Player</th><th class=border>Total Score</th><th class=border>Group Bonus</th>')
     $('#score_table').append('<tbody id=score_table_body></tbody>')
     $.each(Object.values(data)[0], function(group, d) {
 
+        if (group != 'Score' && group != 'Bonus') {
+
         $('#score_table').find('thead').append('<th class=border>' + group + '</th>')
+        }
     })
     
     $.each(data, function(user, d) {

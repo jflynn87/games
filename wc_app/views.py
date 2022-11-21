@@ -224,21 +224,17 @@ class KnockoutPicksView(LoginRequiredMixin, TemplateView):
     def get_context_data(self, **kwargs):
         context = super(KnockoutPicksView, self).get_context_data(**kwargs)
         #event = Event.objects.all().first()
-        stage = Stage.objects.get(current=True)
+        stage = Stage.objects.get(name='Knockout Stage', event__current=True)
         games = []
-        #teams = Team.objects.all()[0:17].values_list('full_name', flat=True)
-        teams = Team.objects.all()[0:17]
-        for i,t in enumerate(teams):
-            if i == 0:
-                l = []
-                #l.append({'name': t.name, 'flag': t.flag_link})
-            elif i % 2 == 0:
-                games.append(l)
-                l = []
-                #l.append(t.name)
-            #else:
-            #    l.append(t.name)
-            l.append({'name': t.name, 'flag': t.flag_link})
+        order = [1,10, 3, 12, 5, 14, 7, 16, 2, 9, 4, 11, 6, 13, 8, 15]
+
+        #for t in Team.objects.filter(group__stage=stage).order_by('rank')[0:8]:
+        for i, team in enumerate(order):
+            print (i)
+            if i % 2 == 0:
+                fav = Team.objects.get(group__stage=stage, rank=order[i])
+                opponent = Team.objects.get(group__stage=stage, rank=order[i+1])
+                games.append([fav.name, opponent.name])
 
         print (games)
 
