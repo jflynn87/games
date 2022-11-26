@@ -8,7 +8,8 @@
 {%if stage.started%}
 
 {% if stage.pick_type == '1'%}
-<h4 id="status">Updating Scores <span class="spinner-border spinner-border-sm align-items-center " style="color:red; margin: 5px" role="status" ></span> </h4>
+<h4 id="status" onclick="getTable()">Updating Scores <span class="spinner-border spinner-border-sm align-items-center " style="color:red; margin: 5px" role="status" ></span> </h4>
+<div id="table_div"></div>
 <div id="scores_div"></div>
 <script type="text/javascript" src="{%static 'wc_app/js/scores.js'%}"></script>
 

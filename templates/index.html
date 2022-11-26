@@ -124,7 +124,10 @@
       <div class="card-body">
         <h4 class="card-title" style="font-weight: bold;">Select an Option</h4>
         <!-- <a href="{% url 'fb_app:games_list' pk=fb_week.pk %}" class="btn btn-primary">Make Picks</a> -->
-        <a href="{% url 'wc_app:wc_group_picks'%}" class="btn btn-primary">Make Picks</a>
+        <a href="{% url 'wc_app:wc_group_picks'%}" class="btn btn-primary">Group Stage Picks</a>
+        <br>
+        <br>
+        <a href="{% url 'wc_app:wc_ko_picks_view'%}" class="btn btn-primary">Knockout Stage Picks</a>
         <br>
         <br>
         <a href="{% url 'wc_app:wc_scores' %}" class="btn btn-primary">Scores</a>

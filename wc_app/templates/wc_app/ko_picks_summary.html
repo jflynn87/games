@@ -1,0 +1,40 @@
+{%extends "wc_app/wc_base.html"%}
+{%block body_block%}
+<h1>{{stage.event.name}} {{stage.name}} Picks Summary</h1>
+
+<h2>Good Luck {{request.user.username}}</h2>
+<h3>These are your picks</h3>
+<br>
+
+<table class="table table-sm">
+
+<tr>
+    <th colspan=2 style="background-color: lightblue;">Round 1 Winners</th>
+    
+</tr>
+{%for p in picks%}
+{%if forloop.counter == 9%}
+<tr><th colspan=2 style="background-color: lightblue;">Quarterfinal Winners</th></tr>
+{%elif forloop.counter == 13 %}
+<tr><th colspan=2 style="background-color: lightblue;">Semifinal Winners</th></tr>
+{%elif forloop.counter == 15 %}
+<tr><th colspan=2 style="background-color: lightblue;">Champion</th></tr>
+{%elif forloop.counter == 16 %}
+<tr><th colspan=2 style="background-color: lightblue;">Consolation Game Winner</th></tr>
+{%endif%}
+
+
+
+<tr>
+    <td style="width: 20%;">Game # {{p.rank}}</td>
+    <td> <img src="{{p.team.flag_link}}"  alt=""> {{p.team}}</td>
+</tr>
+
+{%endfor%}
+
+
+</table>
+
+<a href="{%url 'wc_app:wc_ko_picks_view'%}"><button class="btn btn-primary">Update Picks</button></a>
+
+{%endblock%}

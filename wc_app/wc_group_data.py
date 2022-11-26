@@ -103,8 +103,11 @@ class ESPNData(object):
         for i, r in enumerate(self.soup.find_all('tbody', {'class': "Table__TBODY"})[1]):
             #print (r.find_all('td')[0]['class'])
             if 'tar' not in r.find_all('td')[0]['class']:
-                team = [team for k,v in data.items() for team,d  in v.items() if d.get('index') == i][0]
-                score_dict[team] = {'played': r.find_all('td')[0].text,
+                team = {k:team for k,v in data.items() for team,d  in v.items() if d.get('index') == i} #[0]
+                print (team, [k for k,v in team.items()][0])
+                #score_dict[team] = {'played': r.find_all('td')[0].text,
+                if score_dict.get([k for k,v in team.items()][0]):
+                    score_dict.get([k for k,v in team.items()][0]).update({[v for k,v in team.items()][0]: {'played': r.find_all('td')[0].text,
                                     'wins': r.find_all('td')[1].text,
                                     'draw': r.find_all('td')[2].text,
                                     'loss': r.find_all('td')[3].text,
@@ -112,7 +115,19 @@ class ESPNData(object):
                                     'against': r.find_all('td')[5].text,
                                     'goal_diff': r.find_all('td')[6].text,
                                     'points': r.find_all('td')[7].text,
-                                    }
+                                    }})
+
+                else:
+
+                    score_dict[[k for k,v in team.items()][0]] = {[v for k,v in team.items()][0]: {'played': r.find_all('td')[0].text,
+                                    'wins': r.find_all('td')[1].text,
+                                    'draw': r.find_all('td')[2].text,
+                                    'loss': r.find_all('td')[3].text,
+                                    'for': r.find_all('td')[4].text,
+                                    'against': r.find_all('td')[5].text,
+                                    'goal_diff': r.find_all('td')[6].text,
+                                    'points': r.find_all('td')[7].text,
+                                    }}
 
         return score_dict
 

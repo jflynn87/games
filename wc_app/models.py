@@ -89,6 +89,7 @@ class Picks (models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='wc_user')
     #stage = models.ForeignKey(Stage, on_delete=models.CASCADE)
     rank = models.IntegerField()
+    data = models.JSONField(blank=True, null=True)
 
     def __str__(self):
         return str(self.user.username) + ' ' + str(self.team)

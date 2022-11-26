@@ -10,6 +10,8 @@ from django.db.models import Min, Q, Count, Sum, Max
 from datetime import datetime
 
 #e = wc_group_data.ESPNData().get_group_data()
+
+
 Team.objects.filter(group__group='Final 16').delete()
 stage = Stage.objects.get(name="Group Stage")
 e  = Data.objects.get(stage=stage)
@@ -25,11 +27,13 @@ for g in Group.objects.filter(stage=stage):
             rank = ord(g.group[-1].lower()) -96
         else:
             rank = (ord(g.group[-1].lower()) -96) + 8
-
+        t_data = Team.objects.get(name=x[0], group__stage__name="Group Stage")
         team = Team()
         team.group = ko_group
         team.name = x[0]
         team.rank = rank
+        team.flag_link = t_data.flag_link
+
         team.save()
 
         print (g, x[0], rank)

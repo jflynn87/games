@@ -37,7 +37,11 @@ class GroupPicksView(LoginRequiredMixin, TemplateView):
     def post(self, request, *args, **kwargs):
         print (self.request.user, request.POST)
 
-        Picks.objects.filter(user=self.request.user, team__group__stage__current=True).delete()
+        stage = Stage.objects.get(event__current=True, name="Group Stage")
+        if stage.started():
+            return HttpResponse('Too late to make picks')
+        #Picks.objects.filter(user=self.request.user, team__group__stage__current=True).delete()
+        Picks.objects.filter(user=self.request.user, stage=stage).delete()
         for t, r in request.POST.items():
             if t != 'csrfmiddlewaretoken':
                 print (t, r)
@@ -102,7 +106,7 @@ class ScoresAPI(APIView):
     def get(self, request):
         start = datetime.now()
         try:
-            stage = Stage.objects.get(current=True)
+            stage = Stage.objects.get(event__current=True, name="Group Stage")
             e = wc_group_data.ESPNData(url=stage.score_url)
             espn = e.get_group_data()
 
@@ -173,6 +177,7 @@ class ScoresAPI(APIView):
             data_obj.group_data = espn
             data_obj.display_data = d
             data_obj.save()
+
             print ('WC scores duration: ', datetime.now() - start)
             return JsonResponse(d, status=200, safe=False)
         except Exception as e:
@@ -216,6 +221,18 @@ class GroupStagePicksAPI(APIView):
         #print ('WC GroupBonusAPI duration: ', datetime.now() - start)
         return JsonResponse(d, status=200, safe=False)
 
+
+class GroupStageTableAPI(APIView):
+
+    def get(self, request):
+        start = datetime.now()
+        stage = Stage.objects.get(current=True)
+        d = wc_group_data.ESPNData().get_group_records()
+        
+        print ('WC GroupStageTableAPI duration: ', datetime.now() - start)
+        return JsonResponse(d, status=200, safe=False)
+
+
 class KnockoutPicksView(LoginRequiredMixin, TemplateView):
     login_url = 'login'
     template_name = 'wc_app/knockout_picks.html'
@@ -223,28 +240,11 @@ class KnockoutPicksView(LoginRequiredMixin, TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super(KnockoutPicksView, self).get_context_data(**kwargs)
-        #event = Event.objects.all().first()
         stage = Stage.objects.get(name='Knockout Stage', event__current=True)
-        games = []
-        order = [1,10, 3, 12, 5, 14, 7, 16, 2, 9, 4, 11, 6, 13, 8, 15]
-
-        #for t in Team.objects.filter(group__stage=stage).order_by('rank')[0:8]:
-        for i, team in enumerate(order):
-            print (i)
-            if i % 2 == 0:
-                fav = Team.objects.get(group__stage=stage, rank=order[i])
-                opponent = Team.objects.get(group__stage=stage, rank=order[i+1])
-                games.append([fav.name, opponent.name])
-
-        print (games)
 
         context.update({
-            #'event': event, 
             'stage': stage,
-            'games': json.dumps(games),
-            #'teams': serializers.serialize('json', Team.objects.filter(group__stage=stage), use_natural_foreign_keys=True),
             'groups': Group.objects.filter(stage=stage),
-            #'picks': serializers.serialize('json', Picks.objects.filter(team__group__stage=stage, user=self.request.user))
         })
 
         return context
@@ -252,17 +252,77 @@ class KnockoutPicksView(LoginRequiredMixin, TemplateView):
     def post(self, request, *args, **kwargs):
         print (self.request.user, request.POST)
 
-        Picks.objects.filter(user=self.request.user, team__group__stage__current=True).delete()
-        for t, r in request.POST.items():
-            if t != 'csrfmiddlewaretoken':
-                print (t, r)
-                p = Picks()
-                p.user=self.request.user
-                p.team=Team.objects.get(pk=t)
-                #p.stage= Stage.objects.get(current=True)
-                p.rank = r
-                p.save()
-        print ('picks usubmitted: ', self.request.user, ' ', datetime.now(), '  ', Picks.objects.filter(user=self.request.user, team__group__stage__current=True))
+        stage = Stage.objects.get(event__current=True, name="Knockout Stage")
+        Picks.objects.filter(user=self.request.user, team__group__stage=stage).delete()
+        #Picks.objects.filter(user=self.request.user, team__group__stage__name="Knockout Stage", team__group__stage__event__current=True).delete()
+        for game, team in request.POST.items():
+            if game != 'csrfmiddlewaretoken': 
+               print (game, Team.objects.get(pk=team))
+               p = Picks()
+               p.user=self.request.user
+               p.team=Team.objects.get(pk=team)
+               p.group= Group.objects.get(group='Final 16')
+               p.rank = game.split('_')[0][1:]
+               p.data = {'from_ele': game[0:]}
+               p.save()
+        print ('picks submitted: ', self.request.user, ' ', datetime.now(), '  ', Picks.objects.filter(user=self.request.user, team__group__stage=stage))
 
-        return HttpResponseRedirect('wc_group_picks_summary')
+        return HttpResponseRedirect('wc_ko_picks_summary')
+        
 
+
+class KOBracketAPI(APIView):
+
+    def get(self, request):
+        start = datetime.now()
+        d = {}
+        stage = Stage.objects.get(name='Knockout Stage', event__current=True)
+        #games = []
+        order = [1,10, 3, 12, 5, 14, 7, 16, 2, 9, 4, 11, 6, 13, 8, 15]
+        m = 1
+        for i, team in enumerate(order):
+            if i % 2 == 0:
+                fav = Team.objects.get(group__stage=stage, rank=order[i])
+                dog = Team.objects.get(group__stage=stage, rank=order[i+1])
+                #games.append([fav.name, dog.name])
+                if i == 0:
+                    match = 'match_1' 
+                else:
+                    match = 'match_' + str(m)
+                m += 1
+                fav_data = Team.objects.get(name=fav.name, group__stage__name="Group Stage")
+                dog_data = Team.objects.get(name=dog.name, group__stage__name="Group Stage")
+
+                d[match] = {'fav': fav.name, 
+                            'fav_pk': fav.pk, 
+                            'fav_flag': fav_data.flag_link,
+                            'fav_fifa_rank': fav_data.rank,
+                            'dog': dog.name,
+                            'dog_pk': dog.pk, 
+                            'dog_flag': dog_data.flag_link,
+                            'dog_fifa_rank': dog_data.rank,
+                
+                            }
+        if Picks.objects.filter(user=self.request.user, team__group__stage=stage).exists():
+            d['picks'] = serializers.serialize('json', Picks.objects.filter(user=self.request.user, team__group__stage=stage).order_by('rank'))
+        else:
+            d['picks'] = json.dumps([])
+
+        print ('WC KOBracketAPI duration: ', datetime.now() - start)
+        return JsonResponse(d, status=200, safe=False)
+
+
+class KOPicksSummaryView(LoginRequiredMixin, TemplateView):
+    login_url = 'login'
+    template_name = 'wc_app/ko_picks_summary.html'
+
+    def get_context_data(self, **kwargs):
+        context = super(KOPicksSummaryView, self).get_context_data(**kwargs)
+        stage = Stage.objects.get(event__current=True, name="Knockout Stage")
+        context.update({
+            'stage': stage, 
+            #'picks': serializers.serialize('json', Picks.objects.filter(team__group__event=event, user=self.request.user))
+            'picks': Picks.objects.filter(team__group__stage=stage, user=self.request.user).order_by('team__group', 'rank')
+        })
+        
+        return context
