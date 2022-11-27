@@ -41,6 +41,12 @@ class Stage(models.Model):
             return True
         return False
 
+    def ko_match_order(self):
+        if self.name == 'Knockout Stage':
+            return [1,10, 3, 12, 5, 14, 7, 16, 2, 9, 4, 11, 6, 13, 8, 15]
+        else:
+            return []
+
 
 class Group(models.Model):
     #event = models.ForeignKey(Event, on_delete=models.CASCADE)
@@ -82,6 +88,18 @@ class Team(models.Model):
         else:
             return 0
 
+    def ko_first_game(self):
+        order = [1, 10, 3, 12, 5, 14, 7, 16, 2, 9, 4, 11, 6, 13, 8, 15]
+        if order.index(self.rank) % 2 == 0:
+            i = order.index(self.rank) + 2
+        else:
+            i = order.index(self.rank) + 1
+        game = int(round(i/2, 0))
+        
+        return game
+
+    def ko_path(self):
+        return self.ko_first_game() + 8
 
 
 class Picks (models.Model):

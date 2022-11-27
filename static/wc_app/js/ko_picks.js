@@ -230,8 +230,11 @@ function checkForward(ele, matchId) {
 
             
         }
+        else {
+            resetChamp()
+        }
     }
-   // console.log('check forward resolving')
+    //console.log('check forward resolving')
     resolve()})
 }
 

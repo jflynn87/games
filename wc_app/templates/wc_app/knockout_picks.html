@@ -21,14 +21,11 @@
      <h1 id="headline">World Cup Knockout Round</h1>
      <p class="year"><i class="fa fa-star"></i> 2022 <i class="fa fa-star"></i></p>
      <p>Qatar</p>
-
-     
    </div>
   </header>
 <form method="POST">     
    {%csrf_token%}
   <div class="hero">
-   <p><button class="btn btn-primary" type="submit" id="sub_btn" disabled>0 of 18 picks</button></p>
    <p>Fill in the bracket, then click the submit button to save your picks.  Good Luck!</p>
   </div>
   <section id="bracket">
@@ -152,10 +149,15 @@
     </div>  <!-- END ROUND ONE -->                  
   </div>
   </div>
+  
   </section>
   <section class="share">
       <div class="share-wrap">
-        
+        {%if stage.started or not stage.current%}
+        <p style="color: white;">Picks not available</p>
+        {%else%}
+        <p><button class="btn btn-primary" type="submit" id="sub_btn" disabled>0 of 18 picks</button></p>
+        {%endif%}
       </div>
   </section>
 </form>

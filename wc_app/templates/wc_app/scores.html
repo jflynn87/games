@@ -18,12 +18,22 @@
 {%endif%}
 {%else%}
 <h4>Come back when games begin</h4>
+{%if stage.name == 'Group Stage'%}
 <h5>Picks Submitted</h5>
 <ul>
 {%for u in users%}
 <li>{{u}}</li>
 {%endfor%}
 </ul>
+{%else%}
+<p><a href="{% url 'wc_app:wc_scores'%}/group">Group Stage Details</a></p>
+<table class="table">
+    <tr><th>Player</th><th>Score</th><th>Picks</th></tr>
+{%for u, d in ko_users.items%}
 
+<tr><td>{{u}}</td>><td>{{d.score}}</td><td>{{d.picks}}</td></tr>
+{%endfor%}
+</table>
+{%endif%}
 {%endif%}
 {%endblock%}

@@ -23,7 +23,7 @@ class GroupPicksView(LoginRequiredMixin, TemplateView):
     def get_context_data(self, **kwargs):
         context = super(GroupPicksView, self).get_context_data(**kwargs)
         #event = Event.objects.all().first()
-        stage = Stage.objects.get(current=True)
+        stage = Stage.objects.get(name='Group Stage',event__current=True)
         context.update({
             #'event': event, 
             'stage': stage,
@@ -62,7 +62,7 @@ class GroupPicksSummaryView(LoginRequiredMixin, TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super(GroupPicksSummaryView, self).get_context_data(**kwargs)
-        stage = Stage.objects.get(current=True)
+        stage = Stage.objects.get(name="Group Stage",event__current=True)
         context.update({
             'stage': stage, 
             #'picks': serializers.serialize('json', Picks.objects.filter(team__group__event=event, user=self.request.user))
@@ -75,10 +75,28 @@ class GroupPicksSummaryView(LoginRequiredMixin, TemplateView):
 class ScoresView(LoginRequiredMixin, TemplateView):
     login_url = 'login'
     template_name = 'wc_app/scores.html'
+    
+    def dispatch(self, request, *args, **kwargs):
+        print ('kwargs', kwargs)
+        #start = datetime.datetime.now()
 
+        if kwargs.get('stage'):
+            self.kwargs = kwargs
+        #print ('finsihed new score dispatch: ', datetime.datetime.now() - start)
+        return super(ScoresView, self).dispatch(request, *args, **kwargs)
+
+    
     def get_context_data(self, **kwargs):
         context = super(ScoresView, self).get_context_data(**kwargs)
-        stage = Stage.objects.get(current=True)
+        if self.kwargs.get('stage')  == 'group':
+            stage = Stage.objects.get(name='Group Stage', event__current=True )
+        elif self.kwargs.get('stage')  == 'ko':
+            stage = Stage.objects.get(name='Knockout Stage', event__current=True )
+        elif Stage.objects.filter(current=True).count() == 1:
+            stage = Stage.objects.get(current=True)
+        else:
+            stage = Stage.objects.get(name='Group Stage', event__current=True )
+
         log, created = AccessLog.objects.get_or_create(stage=stage, user=self.request.user, screen='scores')
         log.count +=1
         log.save()
@@ -86,9 +104,18 @@ class ScoresView(LoginRequiredMixin, TemplateView):
         users = []
         if not stage.started():
             users = stage.event.get_users()
+
+        ko_users = {}
+        for s in TotalScore.objects.filter(stage=Stage.objects.get(name='Group Stage', event__current=True)):
+            ko_users[s.user.username] = {'score': s.score, 
+                                    'picks': Picks.objects.filter(user=s.user, team__group__stage=stage).count()
+            }
+        
+        
         context.update({
             'stage': stage, 
-            'users': users
+            'users': users,
+            'ko_users': ko_users
             #'picks': serializers.serialize('json', Picks.objects.filter(team__group__event=event, user=self.request.user))
             #'picks': Picks.objects.filter(team__group__stage=stage, user=self.request.user).order_by('team__group', 'rank')
         })
@@ -105,20 +132,19 @@ class ScoresAPI(APIView):
 
     def get(self, request):
         start = datetime.now()
+        d = {}
         try:
             stage = Stage.objects.get(event__current=True, name="Group Stage")
-            e = wc_group_data.ESPNData(url=stage.score_url)
+            e = wc_group_data.ESPNData(url=stage.score_url, stage=stage)
             espn = e.get_group_data()
-
-            if e.new_data():
+            data_obj, created = Data.objects.get_or_create(stage=stage)
+            if e.new_data() or data_obj.display_data in [None, '', {}]:
                 print ('new data, refresh scores')
             else:
                 print ('no updates, use saved data')
-                d = Data.objects.get(stage=stage)
                 print ('WC scores duration: ', datetime.now() - start)
-                return JsonResponse(d.display_data, status=200, safe=False)
-            d = {}
-            
+                return JsonResponse(data_obj.display_data, status=200, safe=False)
+          
             
             if stage.pick_type == '1': #rank style
                 users = stage.event.get_users()
@@ -173,7 +199,7 @@ class ScoresAPI(APIView):
                 d = {}    
 
             #data = serializers.serialize('json', Picks.objects.filter(team__group__stage__current=True, user=self.request.user))
-            data_obj, created = Data.objects.get_or_create(stage=stage)
+            
             data_obj.group_data = espn
             data_obj.display_data = d
             data_obj.save()
@@ -204,7 +230,7 @@ class GroupStageTeamsAPI(APIView):
 
     def get(self, request ):
         start = datetime.now()
-        stage = Stage.objects.get(current=True)
+        stage = Stage.objects.get(name="Group Stage", event__current=True)
         d = serializers.serialize('json', Team.objects.filter(group__stage=stage), use_natural_foreign_keys=True),
         
         #print ('WC GroupBonusAPI duration: ', datetime.now() - start)
@@ -215,7 +241,7 @@ class GroupStagePicksAPI(APIView):
 
     def get(self, request):
         start = datetime.now()
-        stage = Stage.objects.get(current=True)
+        stage = Stage.objects.get(name="Group Stage", event__current=True)
         d = serializers.serialize('json', Picks.objects.filter(team__group__stage=stage, user=self.request.user))
         
         #print ('WC GroupBonusAPI duration: ', datetime.now() - start)
@@ -226,7 +252,7 @@ class GroupStageTableAPI(APIView):
 
     def get(self, request):
         start = datetime.now()
-        stage = Stage.objects.get(current=True)
+        stage = Stage.objects.get(name="Group Stage", event__current=True)
         d = wc_group_data.ESPNData().get_group_records()
         
         print ('WC GroupStageTableAPI duration: ', datetime.now() - start)
@@ -253,6 +279,8 @@ class KnockoutPicksView(LoginRequiredMixin, TemplateView):
         print (self.request.user, request.POST)
 
         stage = Stage.objects.get(event__current=True, name="Knockout Stage")
+        picks_valid = validate_ko_picks(self.request.user, stage, request.POST)
+        #add if to check and error processing
         Picks.objects.filter(user=self.request.user, team__group__stage=stage).delete()
         #Picks.objects.filter(user=self.request.user, team__group__stage__name="Knockout Stage", team__group__stage__event__current=True).delete()
         for game, team in request.POST.items():
@@ -326,3 +354,16 @@ class KOPicksSummaryView(LoginRequiredMixin, TemplateView):
         })
         
         return context
+
+def validate_ko_picks(user, stage, picks):
+    '''takes a user obj and a dict of picks returns a tuple with a bool and a string'''
+    if stage.started():
+        return (False, 'Stage started too late for picks')
+    
+    order = stage.ko_match_order()
+
+
+
+
+
+

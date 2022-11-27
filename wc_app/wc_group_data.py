@@ -39,8 +39,10 @@ class ESPNData(object):
 
         if stage:
             self.stage = stage
-        else:
+        elif Stage.objects.filter(current=True).count() ==1:
             self.stage = Stage.objects.get(current=True)
+        else:
+            self.stage = Stage.objects.get(name="Group Stage",event__current=True)
 
         print ('WC Init duration: ', datetime.now() - start)
 

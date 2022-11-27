@@ -11,6 +11,10 @@ from datetime import datetime
 
 #e = wc_group_data.ESPNData().get_group_data()
 
+for t in Team.objects.filter(group__group="Final 16").order_by('rank'):
+    print (t, t.rank, t.ko_first_game())
+
+exit()
 
 Team.objects.filter(group__group='Final 16').delete()
 stage = Stage.objects.get(name="Group Stage")
