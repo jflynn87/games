@@ -14,7 +14,7 @@ import time
 import urllib
 from urllib import request
 import json
-from fb_app import fb_serializers
+from fb_app import fb_serializers, validate_picks
 #from fb_app.scores import Scores
 #from urllib.request import Request, urlopen
 #from selenium.webdriver import Chrome, ChromeOptions
@@ -37,6 +37,7 @@ from django.http import HttpRequest
 from rest_framework.renderers import JSONRenderer
 from rest_framework.parsers import JSONParser
 import pprint
+
 #import tabula
 
 #headers = {'User-Agent': 'Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.149 Mobile Safari/537.36'}
@@ -71,8 +72,47 @@ start = datetime.now()
 #            print (competitor.get('team').get('name'), competitor.get('score'), competitor.get('winner') )
 start = datetime.now() 
 
+#week = Week.objects.get(week=11, season_model__current=True)
+#for g in Games.objects.filter(week=week):
+#    print (g.dog)
+
+for player in Player.objects.filter(league__league='Golfers', active=True):
+    print ('--------------------', player, '---------------------------')
+    c = 0
+    for week in Week.objects.filter(season_model__current=True):
+        if Picks.objects.filter(week=week, player=player).exists():
+            res = validate_picks.validate(Picks.objects.filter(week=week, player=player).values_list('team__nfl_abbr', flat=True), week)
+        
+            if not res[0]:
+                print (week, res)
+                c += len(res[1])
+                for pm in PickMethod.objects.filter(player=player, week=week).order_by('pk'):
+                    print (pm.pk, pm.get_method_display())
+    print (c, PickMethod.objects.filter(player=player, method='3').count(), PickMethod.objects.filter(player=player, method='4').count())
+exit()
+    
+
+
+player = Player.objects.get(name__username='Laroqm')
+for p in PickMethod.objects.filter(player=player, week__season_model__current=True):
+    print (p.week, p.pk, p.get_method_display(), Picks.objects.filter(week=p.week, player=player).count(), Games.objects.filter(week=p.week).count(), p.week.game_cnt, \
+             validate_picks.validate(Picks.objects.filter(week=p.week, player=player).values_list('team__nfl_abbr', flat=True), p.week))
+
+#print (Picks.objects.filter(week__week=11, week__season_model__current=True, player=player))
+for pick in Picks.objects.filter(week__week=12, week__season_model__current=True, player=player):
+    print (pick)
+for game in Games.objects.filter(week__week=12 , week__season_model__current=True):
+    print (game.home)
+exit()
+
 l = League.objects.get(league='Golfers')
-print (l.correct_picks())
+#Picks.objects.filter(player__name__username__in=['Laroqm', 'shishmeister'], week__current=True).delete()
+w = Week.objects.get(current=True)
+for p in Player.objects.filter(name__username__in=['Laroqm', 'shishmeister']):
+    for w in Week.objects.filter(week__gt=w.week, season_model__current=True):
+        print (p, w, Picks.objects.filter(week__current=True, player=p).count())
+        for pick in Picks.objects.filter(week__current=True, player=p):
+            print (pick)
 
 print (datetime.now() - start)
 exit()

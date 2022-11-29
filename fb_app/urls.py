@@ -49,6 +49,7 @@ urlpatterns = [
     path('get_records/', views.GetRecordsAPI.as_view()),
     path('picks_email/', views.PicksEmail.as_view(), name='picks_email'),
     path('all_games_score', views.AllGamesScore.as_view(), name='all_games_score'),
-    path('sp_weekly_scores/<str:player>', views.SPDetailsAPI.as_view())
+    path('sp_weekly_scores/<str:player>', views.SPDetailsAPI.as_view()),
+    path('validate_picks_api/<int:week>', views.ValidatePicksAPI.as_view())
     
     ]

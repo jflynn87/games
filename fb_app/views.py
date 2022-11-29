@@ -295,7 +295,7 @@ class GameListView(LoginRequiredMixin,ListView):
          if picks_check[0]:
             print ('pick valid' + str(picks_check[0]))
          else:
-
+            print ('FB picks error ', error, week, team_dict)
             error = picks_check[1]
             return render (request, 'fb_app/games_list.html', {
             'form': formset,
@@ -567,6 +567,7 @@ class NewScoresView(TemplateView):
             if week_started:
                 for player in Player.objects.filter(league=league, active=True):
                     if Picks.objects.filter(player=player, week=week).count() < 1:
+                        print ('Submit auto FB picks', player, week, datetime.datetime.now())
                         player.submit_default_picks(week)
         
         if league.ties_lose:
@@ -582,13 +583,14 @@ class NewScoresView(TemplateView):
             prior_week = Week.objects.exclude(current=True).last()
             prior_week_scores = None
             
+        ## fix this!  updating all picks for the users, not just the auto user for the week and is late users working?
         if PickMethod.objects.filter(week=week, method='3').exists():
             espn = espn_data.ESPNData()
             if espn.regular_week() and len(espn.first_game_of_week()) == 1:
                 thurs_game = Games.objects.get(eid=espn.first_game_of_week()[0])
                 late_users = list(PickMethod.objects.filter(week=week, method='3').values_list('player', flat=True))
-                if Picks.objects.filter(team=thurs_game.winner, player__in=late_users).exists():
-                    Picks.objects.filter(team=thurs_game.winner, player__in=late_users).update(team=thurs_game.loser)
+                if Picks.objects.filter(week=week, team=thurs_game.winner, player__in=late_users).exists():
+                    Picks.objects.filter(week=week, team=thurs_game.winner, player__in=late_users).update(team=thurs_game.loser)
 
         print ('game count: ', game_cnt)
         #if week.started():
@@ -1536,7 +1538,7 @@ class Setup(LoginRequiredMixin, TemplateView):
 
     def post(self, request, **kwargs):
         from fb_app import load_espn_sched
-        print (request.POST)
+        print ('setup FB Week: ', request.POST)
         espn = {}
         nfl_season_type=request.POST.get('nfl_season_type')
         if request.POST.get('payload') and request.POST.get('current'):
@@ -1585,7 +1587,7 @@ class RollWeekAPI(APIView):
                 d.update({'games_not_complete':  {'current_week': week.week, 'current': week.current}})
 
         except Exception as e:
-            print ('get picks api issue: ', e)
+            print ('roll week api issue: ', e)
             d.update({'error': {'msg': str(e)}})
         
         d['duration'] = str(datetime.datetime.now() - start)
@@ -1826,5 +1828,23 @@ class SPDetailsAPI(APIView):
             print (d)
         except Exception as e:
             print ('SPDetailsAPI error: ', e)
+
+        return Response(json.dumps(d), 200)
+
+
+class ValidatePicksAPI(APIView):
+     def get(self, request, week):
+
+        start = datetime.datetime.now()
+        d = {}
+        try:  
+            week = Week.objects.get(pk=week)
+            for player in Player.objects.filter(league__league='Golfers', active=True):
+                res = validate(Picks.objects.filter(week=week, player=player).values_list('team__nfl_abbr', flat=True), week)
+                d[player.name.username] = {'picks_val': res, 'picks_count': Picks.objects.filter(week=week, player=player).count()}
+
+        except Exception as e:
+            print ('SPDetailsAPI error: ', e)
+            d['error'] = {'mgs': str(e)}
 
         return Response(json.dumps(d), 200)

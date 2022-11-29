@@ -267,6 +267,10 @@ class KnockoutPicksView(LoginRequiredMixin, TemplateView):
     def get_context_data(self, **kwargs):
         context = super(KnockoutPicksView, self).get_context_data(**kwargs)
         stage = Stage.objects.get(name='Knockout Stage', event__current=True)
+        log, created = AccessLog.objects.get_or_create(stage=stage, user=self.request.user, screen='ko_picks')
+        log.count +=1
+        log.save()
+
 
         context.update({
             'stage': stage,

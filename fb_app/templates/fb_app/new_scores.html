@@ -7,7 +7,7 @@
 
 {%block body_block%} 
 
-
+<div id="validate_picks"></div>
 <div id='loading'>
   <!-- <img src="{%static 'fb_app/images/LT1.gif'%}" height="50%" width="50%"></img> -->
   <br>
@@ -19,6 +19,7 @@
 
 
 
+<p hidden id='week_pk'>{{week.pk}}</p>
 <p hidden id='week'>{{week.week}}</p>
 <p hidden id='season'>{{week.season_model.season}}</p>
 <p hidden id='league'>{{league.league}}</p>
@@ -72,6 +73,7 @@
 {%compress js%}
   <script src="{% static "fb_app/js/ranks.js"%}" type="text/javascript"></script>
 {%endcompress%}
+
     <div id='nfl-scores'> 
       <!-- <form id='winners-form' method='post'>
         {%csrf_token%}  -->
@@ -85,6 +87,12 @@
 {%if view == 'no_picks'%}
 <h4>Week Started</h4>
 <h5>No picks, submit picks: <a href="{%url 'fb_app:games_list' %}">Make Picks</a></h5>
+{%endif%}
+
+{%if user.is_superuser%}
+{%compress js%}
+<script src="{% static 'fb_app/js/validate_picks.js'%}" type="text/javascript" ></script> 
+{%endcompress%}
 {%endif%}
 
 {%endblock%}

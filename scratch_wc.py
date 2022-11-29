@@ -9,13 +9,17 @@ from django.contrib.auth.models import User
 from django.db.models import Min, Q, Count, Sum, Max
 from datetime import datetime
 
-#e = wc_group_data.ESPNData().get_group_data()
 
-for t in Team.objects.filter(group__group="Final 16").order_by('rank'):
-    print (t, t.rank, t.ko_first_game())
+stage = Stage.objects.get(name="Group Stage")
+e = Data.objects.get(stage=stage)
+
+for team in Team.objects.filter(group__group="Final 16").order_by('rank'):
+    group_team = Team.objects.get(name=team.name, group__stage=stage)
+    #for g in Group.objects.filter(stage_=stage):
+    g_rank = [data.get('rank') for k,v in e.group_data.items() for t, data in v.items() if t == team.name]
+    print (team.ko_first_game(), team, team.rank, group_team.group, g_rank)
 
 exit()
-
 Team.objects.filter(group__group='Final 16').delete()
 stage = Stage.objects.get(name="Group Stage")
 e  = Data.objects.get(stage=stage)

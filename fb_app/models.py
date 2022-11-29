@@ -511,6 +511,7 @@ class Player(models.Model):
         return int(score.get('score__sum'))
 
     def submit_default_picks(self, week):
+        print ('Submit auto FB picks', self, week, datetime.datetime.now())
         if week.started():
             espn = espn_data.ESPNData()
             starting_pick = 16

@@ -99,7 +99,8 @@ class Team(models.Model):
         return game
 
     def ko_path(self):
-        return self.ko_first_game() + 8
+        if self.rank in [1, 10, 3, 12]:
+            path = []
 
 
 class Picks (models.Model):
