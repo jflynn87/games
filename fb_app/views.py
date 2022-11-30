@@ -1840,7 +1840,10 @@ class ValidatePicksAPI(APIView):
         try:  
             week = Week.objects.get(pk=week)
             for player in Player.objects.filter(league__league='Golfers', active=True):
-                res = validate(Picks.objects.filter(week=week, player=player).values_list('team__nfl_abbr', flat=True), week)
+                if Picks.objects.filter(week=week, player=player).exists():
+                    res = validate(Picks.objects.filter(week=week, player=player).values_list('team__nfl_abbr', flat=True), week)
+                else:
+                    res = []
                 d[player.name.username] = {'picks_val': res, 'picks_count': Picks.objects.filter(week=week, player=player).count()}
 
         except Exception as e:

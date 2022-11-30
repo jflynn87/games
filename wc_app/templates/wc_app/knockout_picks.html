@@ -18,7 +18,11 @@
 <body>
   <header class="hero">
     <div class="hero-wrap">
-     <h1 id="headline">World Cup Knockout Round</h1>
+{%if user.is_superuser%}
+      <button id="create_teams" class="btn btn-primary" onclick="createTeams()">Create Teams</button>
+{%endif%}
+ 
+      <h1 id="headline">World Cup Knockout Round</h1>
      <p class="year"><i class="fa fa-star"></i> 2022 <i class="fa fa-star"></i></p>
      <p>Qatar</p>
    </div>
@@ -175,4 +179,5 @@
 <script type="text/javascript" src="{%static 'wc_app/js/ko_picks.js'%}"></script>
 <div id="bracket"></div> -->
 <script type="text/javascript" src="{%static 'wc_app/js/ko_picks.js'%}"></script>
+<script type="text/javascript" src="{%static 'wc_app/js/create_teams.js'%}"></script>
 {%endblock%}

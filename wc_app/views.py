@@ -367,6 +367,46 @@ def validate_ko_picks(user, stage, picks):
     order = stage.ko_match_order()
 
 
+class CreateKOTeamsAPI(APIView):
+
+    def get(self, request):
+        start = datetime.now()
+        d = {}
+        try:
+            Team.objects.filter(group__group='Final 16').delete()
+            stage = Stage.objects.get(name="Group Stage")
+            e  = Data.objects.get(stage=stage)
+            print (e.group_data.keys())
+            ko_group = Group.objects.get(group="Final 16")
+
+            for g in Group.objects.filter(stage=stage):
+                #rank = [data.get('rank') for k,v in espn.items() for t, data  in v.items() if t == team.name][0]
+                d = [(t,data.get('rank')) for k,v in e.group_data.items() for t, data in v.items() if data.get('rank') in ['1', '2'] and k == g.group ]
+                #print (g.group[-1].lower(),ord(g.group[-1].lower()) -96, d)
+                for x in d:
+                    if int(x[1]) == 1:
+                        rank = ord(g.group[-1].lower()) -96
+                    else:
+                        rank = (ord(g.group[-1].lower()) -96) + 8
+                    t_data = Team.objects.get(name=x[0], group__stage__name="Group Stage")
+                    team = Team()
+                    team.group = ko_group
+                    team.name = x[0]
+                    team.rank = rank
+                    team.flag_link = t_data.flag_link
+
+                    team.save()
+
+                    print (g, x[0], rank)
+                        
+        except Exception as e:
+            print ('CreateKOTeamsAPI error: ', e)
+            d['error'] = {str(e)}
+
+        print ('CreateKOTeamsAPI duration: ', d, datetime.now() - start)
+        return JsonResponse(d, status=200, safe=False)
+
+
 
 
 

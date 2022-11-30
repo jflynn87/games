@@ -21,6 +21,8 @@ urlpatterns = [
     path('wc_ko_picks_summary', views.KOPicksSummaryView.as_view(), name='wc_ko_picks_summary'),
     path('wc_ko_bracket_api', views.KOBracketAPI.as_view()),
     path('wc_group_stage_table_api', views.GroupStageTableAPI.as_view()),
+    path('wc_ko_create_teams_api', views.CreateKOTeamsAPI.as_view()),
+    
     
     #path('wc_group_bonus_api', views.GroupBonusAPI.as_view()),
     

@@ -72,6 +72,53 @@ start = datetime.now()
 #            print (competitor.get('team').get('name'), competitor.get('score'), competitor.get('winner') )
 start = datetime.now() 
 
+for week in Week.objects.filter(week__gte=13):
+    pick_list= []
+    for player in Player.objects.filter(league__league='Golfers', active=True):
+        if Picks.objects.filter(player=player, week=week).exists():
+            if PickMethod.objects.filter(week=week, method='2', player=player).exists():
+                print (player, PickMethod.objects.filter(week=week, player=player))
+                if not validate_picks.validate(Picks.objects.filter(week=week, player=player).values_list('team__nfl_abbr', flat=True), week)[0]:
+                   sorted_spreads = sorted(week.get_spreads().items(), key=lambda x: x[1][2], reverse=True)
+                   for g in sorted_spreads:
+                       pick_list.append(g[1][0])
+                       i = 0
+                       picks_chk = []
+                       while i < len(pick_list):
+                            picks_chk.append(str(Teams.objects.get(nfl_abbr=pick_list[i])))
+                            i +=1
+         
+                   picks_check = validate_picks.validate(picks_chk, week)
+
+                   if picks_check[0]:
+                        print ('pick valid' + str(picks_check[0]))
+                   else:
+                        print ('FB picks error ', week, picks_check)
+                        break
+
+                   if Picks.objects.filter(week=week, player=player).count() >0:
+                        Picks.objects.filter(week=week, player=player).delete()
+                
+
+
+                   i = 0  #first item in list is pick 16
+                   pick_num = 16
+                   while i < week.game_cnt:
+                        team = picks_chk[i]
+                        picks = Picks()
+                        picks.pick_num = pick_num
+                        picks.team = Teams.objects.get(nfl_abbr__iexact=team)
+                        picks.player = player
+                        picks.week = week
+                        picks.save()
+                        i +=1
+                        pick_num -=1
+
+                   print ('picks fixed, ', week, player)                
+
+
+exit()
+
 #week = Week.objects.get(week=11, season_model__current=True)
 #for g in Games.objects.filter(week=week):
 #    print (g.dog)
