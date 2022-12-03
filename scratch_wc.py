@@ -3,12 +3,70 @@ os.environ.setdefault("DJANGO_SETTINGS_MODULE","gamesProj.settings")
 import django
 django.setup()
 
-from wc_app import wc_group_data
+from wc_app import wc_group_data, wc_ko_data
 from wc_app.models import Event, Group, Team, Picks, Stage, Data
 from django.contrib.auth.models import User
 from django.db.models import Min, Q, Count, Sum, Max
 from datetime import datetime
+from requests import get
+import json
+from bs4 import BeautifulSoup
+from urllib.request import Request, urlopen
 
+for p in Picks.objects.filter(team__group__group='Final 16', user__pk=1).order_by('rank'):
+    print (p.team.name, p.rank)
+
+for t in Team.objects.filter(group__group='Final 16'):
+    full_team = Team.objects.get(group__stage__name='Group Stage', name=t.name)
+    t.full_name = full_team.full_name
+    t.save()
+exit()
+
+espn = wc_ko_data.ESPNData(source='web')
+#espn = wc_ko_data.ESPNData()
+for s, l in espn.web_get_data().items():
+    print (s, l)
+
+for t in Team.objects.filter(group__group="Final 16"):
+    print (t, len([x for k,x in espn.web_get_data().items() if t.full_name in x]))
+exit()
+
+#url = 'https://site.api.espn.com/apis/site/v2/sports/soccer/fifa.world/scoreboard'
+url = 'https://site.api.espn.com/apis/v2/scoreboard/header?sport=soccer&league=fifa.world'
+headers = {'User-Agent': 'Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.149 Mobile Safari/537.36'}
+#url =  "https://site.web.api.espn.com/apis/site/v2/sports/golf/leaderboard?league=pga"
+
+all_data = get(url, headers=headers).json()
+
+#with open('wc_api.json', 'w') as outfile:
+#    json.dump(all_data, outfile, indent=4)
+
+for sport in all_data.get('sports'):
+    print (sport.get('name'))
+    for league in sport.get('leagues'):
+        print (league.keys(), league.get('name'))
+        for event in league.get('events'):
+            #print (event.keys())
+            print (event.get('group'), event.get('summary'))
+
+#print(json.dumps(all_data, indent=4))
+
+web_url = 'https://www.espn.com/soccer/bracket'
+
+html = urlopen(web_url)
+#html = get(web_url)
+soup = BeautifulSoup(html, 'html.parser')
+
+bracket = soup.find('div', {'class': 'BracketLayout'})
+
+#for group in bracket.find_all('div', {'data-testid': 'regionRound'}):
+for game in bracket.find_all('div', {'class': 'BracketCell__Competitors'}):
+    for team in game.find_all('div', {'class': 'BracketCell__Name'}):
+        print (team.text)
+
+
+
+exit()
 
 
 Team.objects.filter(group__group='Final 16').delete()

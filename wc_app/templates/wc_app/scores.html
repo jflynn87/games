@@ -3,6 +3,7 @@
 {%block body_block%}
 <link rel="stylesheet" href={%static 'golf_app/css/scores.css' %}>
 <h1>Scores {{stage.event.name}} </h1>
+<p id="stage_key" hidden>{{stage.pk}}</p>
 
 <h3>{{stage.name}} Scores</h3>
 {%if stage.started%}
@@ -14,7 +15,8 @@
 <script type="text/javascript" src="{%static 'wc_app/js/scores.js'%}"></script>
 
 {%else%}
-<h3>bracket</h3>
+<div id="scores_div"></div>
+<script type="text/javascript" src="{%static 'wc_app/js/ko_scores.js'%}"></script>
 {%endif%}
 {%else%}
 <h4>Come back when games begin</h4>

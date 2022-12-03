@@ -16,7 +16,8 @@ class Event(models.Model):
 
     def get_users(self):
         l = []
-        users = Picks.objects.filter(team__group__stage__current=True).values('user').distinct()
+        first_stage = Stage.objects.filter(event=self).order_by('pk')[0]
+        users = Picks.objects.filter(team__group__stage=first_stage).values('user').distinct()
         for u in users:
             l.append(User.objects.get(pk=u.get('user')))
         return l

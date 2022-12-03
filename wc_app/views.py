@@ -3,7 +3,7 @@ from django.views.generic import TemplateView
 from django.contrib.auth.mixins import LoginRequiredMixin
 from wc_app.models import Event, Group, Team, Picks, Stage, AccessLog, TotalScore, Data
 from django.contrib.auth.models import User
-from wc_app import wc_group_data
+from wc_app import wc_group_data, wc_ko_data
 from django.core import serializers
 from django.http import HttpResponse, HttpResponseRedirect
 from datetime import datetime
@@ -130,28 +130,29 @@ class AboutView(LoginRequiredMixin, TemplateView):
 
 class ScoresAPI(APIView):
 
-    def get(self, request):
+    def get(self, request, stage_pk):
         start = datetime.now()
         d = {}
         try:
-            stage = Stage.objects.get(event__current=True, name="Group Stage")
-            e = wc_group_data.ESPNData(url=stage.score_url, stage=stage)
-            espn = e.get_group_data()
-            data_obj, created = Data.objects.get_or_create(stage=stage)
-            if e.new_data() or data_obj.display_data in [None, '', {}]:
-                print ('new data, refresh scores')
-            else:
-                print ('no updates, use saved data')
-                print ('WC scores duration: ', datetime.now() - start)
-                return JsonResponse(data_obj.display_data, status=200, safe=False)
-          
+            #stage = Stage.objects.get(event__current=True, name="Group Stage")
+            stage = Stage.objects.get(pk=stage_pk)
+            print (stage)
+            users = stage.event.get_users()          
+            for u in users:
+                d[u.username] = {'Score': 0, 'Bonus': 0}
             
             if stage.pick_type == '1': #rank style
-                users = stage.event.get_users()
-                for u in users:
-                    d[u.username] = {'Score': 0, 'Bonus': 0}
-                    
-                for team in Team.objects.filter(group__stage__current=True): 
+                e = wc_group_data.ESPNData(url=stage.score_url, stage=stage)
+                espn = e.get_group_data()
+                data_obj, created = Data.objects.get_or_create(stage=stage)
+                if e.new_data() or data_obj.display_data in [None, '', {}]:
+                    print ('new data, refresh scores')
+                else:
+                    print ('no updates, use saved data')
+                    print ('WC scores duration: ', datetime.now() - start)
+                    return JsonResponse(data_obj.display_data, status=200, safe=False)
+                
+                for team in Team.objects.filter(group__stage=stage): 
                     rank = [data.get('rank') for k,v in espn.items() for t, data  in v.items() if t == team.name][0]
                     
                     #print (team, rank)
@@ -184,7 +185,7 @@ class ScoresAPI(APIView):
                                     }
                                     }})
                 
-                for g in Group.objects.filter(stage__current=True):
+                for g in Group.objects.filter(stage=stage):
                     for u in users:
                         if g.perfect_picks(espn, u):
                             d.get(u.username).update({'Score': round(d.get(u.username).get('Score') + 5,2)})
@@ -195,20 +196,50 @@ class ScoresAPI(APIView):
                         ts.save()
                 #print ('score data: ', d)
             elif stage.pick_type == '2': #braket
-                print ('bracket stage')
-                d = {}    
+                espn  = wc_ko_data.ESPNData(source='web')
+                data = espn.web_get_data()
+
+                for u, stats in d.items():
+                    score = 0
+                    pick_list = []
+                    group_ts = TotalScore.objects.get(user__username=u, stage=Stage.objects.get(event__current=True, name='Group Stage'))
+                    for p in Picks.objects.filter(team__group__stage=stage, user=User.objects.get(username=u)).order_by('team__group', 'rank'):
+                        p_score = 0
+                        if p.rank < 9 and len([v for k, v in data.items() if k == 'stage_2' and p.team.full_name in v]) > 0:
+                            p_score += 5
+                        elif p.rank > 8 and p.rank < 13 and len([v for k, v in data.items() if k == 'stage_3' and p.team.full_name in v]) > 0:
+                            p_score += 10
+                        elif p.rank > 13 and p.rank < 15 and len([v for k, v in data.items() if k == 'stage_4' and p.team.full_name in v]) > 0:
+                            p_score += 15
+                        elif p.rank == 15 and len([v for k, v in data.items() if k == 'stage_5' and p.team.full_name in v]) > 0:  # need to figure out how to make this winners
+                            p_score += 30
+                        elif p.rank == 16 and len([v for k, v in data.items() if k == 'stage_6' and p.team.full_name in v]) > 0:  # need to figure out how to make this winners
+                            p_score += 20
+
+                        pick_list.append([p.team.name, p.team.flag_link, p.rank, p_score])
+                        score += p_score
+                    d.get(u).update({'group_stage_score': group_ts.score,
+                                    'ko_stage_score': score,
+                                    'Score': group_ts.score + score,
+                                    'picks': pick_list})
+                    
+
+
 
             #data = serializers.serialize('json', Picks.objects.filter(team__group__stage__current=True, user=self.request.user))
             
-            data_obj.group_data = espn
-            data_obj.display_data = d
-            data_obj.save()
+            try: 
+                data_obj.group_data = espn
+                data_obj.display_data = d
+                data_obj.save()
+            except Exception as e1:
+                print ('WC data save failed', stage, e1)
 
             print ('WC scores duration: ', datetime.now() - start)
             return JsonResponse(d, status=200, safe=False)
-        except Exception as e:
-            print ("WC SCORE API ERRor", e)
-            d['error'] = str(e)
+        except Exception as e2:
+            print ("WC SCORE API ERRor", e2)
+            d['error'] = str(e2)
             return JsonResponse(d, status=200, safe=False)
 
 class GroupBonusAPI(APIView):
@@ -372,9 +403,17 @@ class CreateKOTeamsAPI(APIView):
     def get(self, request):
         start = datetime.now()
         d = {}
+
         try:
-            Team.objects.filter(group__group='Final 16').delete()
             stage = Stage.objects.get(name="Group Stage")
+            if  Picks.objects.filter(team__group__group="Final 16").exists():
+                print ('CReate KO Team - too late picks already exist')
+                d['error'] = 'too late picks already exist'
+                return JsonResponse(d, status=200)
+            else:
+                Team.objects.filter(group__group='Final 16').delete()
+
+
             e  = Data.objects.get(stage=stage)
             print (e.group_data.keys())
             ko_group = Group.objects.get(group="Final 16")

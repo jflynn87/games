@@ -1,20 +1,12 @@
 from datetime import datetime
-import imp
-#from requests import get
 from urllib import request
 from bs4 import BeautifulSoup
 from wc_app.models import Event, Stage, Group, Team, Data
-from selenium import webdriver
-from webdriver_manager.chrome import ChromeDriverManager
-from selenium.webdriver.chrome.options import Options
-from selenium.webdriver.common.by import By
+#from selenium import webdriver
+#from webdriver_manager.chrome import ChromeDriverManager
+#from selenium.webdriver.chrome.options import Options
+#from selenium.webdriver.common.by import By
 import json
-
-## need to pip install webdriver-manager, packages and upgrade to selenium 4.  also upgrade chrome
-
-#import json
-
-#from wc_app.models import 
 
 
 

@@ -1,6 +1,6 @@
 $(document).ready(function () {
     var start = new Date()
-    fetch("/wc_app/wc_scores_api",         
+    fetch("/wc_app/wc_scores_api/" + $('#stage_key').text(),         
     {method: "GET",
     })
 .then((response) => response.json())
