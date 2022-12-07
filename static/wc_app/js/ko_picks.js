@@ -1,5 +1,5 @@
 $(document).ready(function() {
-       fetch("/wc_app/wc_ko_bracket_api",         
+       fetch("/wc_app/wc_ko_bracket_api/" + $('#picks_user').text(),         
          {method: "GET",
          })
          .then((response) => response.json())

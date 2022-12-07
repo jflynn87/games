@@ -104,6 +104,8 @@ class Team(models.Model):
             path = []
 
 
+
+
 class Picks (models.Model):
     team = models.ForeignKey(Team, on_delete=models.CASCADE)
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='wc_user')
@@ -113,6 +115,22 @@ class Picks (models.Model):
 
     def __str__(self):
         return str(self.user.username) + ' ' + str(self.team)
+
+
+    def ko_fix_picks(self):
+        if self.rank == 13 and self.data.get('from_ele') == 'm13_fav':
+            #p1 = Picks.objects.get(rank=9, user=self.user, team__group=self.team.group)
+            return Picks.objects.get(rank=9, user=self.user, team__group=self.team.group)
+        elif self.rank == 13 and self.data.get('from_ele') == 'm13_dog':
+            return Picks.objects.get(rank=10, user=self.user, team__group=self.team.group)
+
+        elif self.rank == 14 and self.data.get('from_ele') == 'm14_fav':
+            return Picks.objects.get(rank=11, user=self.user, team__group=self.team.group)
+        elif self.rank == 14 and self.data.get('from_ele') == 'm14_dog':
+            return Picks.objects.get(rank=12, user=self.user, team__group=self.team.group)
+        else:
+            return None
+
 
 
 class Data(models.Model):

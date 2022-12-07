@@ -204,6 +204,9 @@ class ScoresAPI(APIView):
                     pick_list = []
                     group_ts = TotalScore.objects.get(user__username=u, stage=Stage.objects.get(event__current=True, name='Group Stage'))
                     for p in Picks.objects.filter(team__group__stage=stage, user=User.objects.get(username=u)).order_by('team__group', 'rank'):
+                        if p.rank in [13, 14]:
+                            fix = p.ko_fix_picks()
+                            p = fix
                         p_score = 0
                         if p.rank < 9 and len([v for k, v in data.items() if k == 'stage_2' and p.team.full_name in v]) > 0:
                             p_score += 5
@@ -302,10 +305,15 @@ class KnockoutPicksView(LoginRequiredMixin, TemplateView):
         log.count +=1
         log.save()
 
+        if kwargs:
+            u = User.objects.get(username=kwargs.get('user'))
+        else:
+            u = self.request.user
 
         context.update({
             'stage': stage,
             'groups': Group.objects.filter(stage=stage),
+            'picks_user': u
         })
 
         return context
@@ -336,7 +344,7 @@ class KnockoutPicksView(LoginRequiredMixin, TemplateView):
 
 class KOBracketAPI(APIView):
 
-    def get(self, request):
+    def get(self, request, username=None):
         start = datetime.now()
         d = {}
         stage = Stage.objects.get(name='Knockout Stage', event__current=True)
@@ -366,8 +374,15 @@ class KOBracketAPI(APIView):
                             'dog_fifa_rank': dog_data.rank,
                 
                             }
-        if Picks.objects.filter(user=self.request.user, team__group__stage=stage).exists():
-            d['picks'] = serializers.serialize('json', Picks.objects.filter(user=self.request.user, team__group__stage=stage).order_by('rank'))
+
+        print ('picks user ', username)
+        if username:
+            pick_user = User.objects.get(username=username)
+        else:
+            pick_user = self.request.user
+
+        if Picks.objects.filter(user=pick_user, team__group__stage=stage).exists():
+            d['picks'] = serializers.serialize('json', Picks.objects.filter(user=pick_user, team__group__stage=stage).order_by('rank'))
         else:
             d['picks'] = json.dumps([])
 

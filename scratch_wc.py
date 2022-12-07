@@ -13,6 +13,50 @@ import json
 from bs4 import BeautifulSoup
 from urllib.request import Request, urlopen
 
+stage = Stage.objects.get(name="Knockout Stage")
+
+for p in Picks.objects.filter(team__group__stage=stage, user__pk=2).order_by('rank'):
+    #if p.rank not in [13, 14]:
+    #    print (p, p.rank, p.data)
+    #else:
+    print(p, p.rank, p.data, p.ko_fix_picks(p.rank))
+#print (list(Picks.objects.filter(team__group__stage=stage, user__pk=1).order_by('rank').values('rank', 'team__name', 'data')))
+
+exit()
+
+
+order = stage.ko_match_order()
+left = order[0:8]
+right = order[8:]
+print (order)
+for t in Team.objects.filter(group__stage=stage):
+    print (t, t.rank)
+
+for u in stage.event.get_users():
+    print (u)
+    left_side = 0
+    right_side = 0
+
+    for p in Picks.objects.filter(user=u, team__group__stage=stage):
+        if p.team.rank in left:
+            left_side += 1 
+        elif p.team.rank in right:
+            right_side += 1
+
+    p_9 = Picks.objects.get(user=u, team__group__stage=stage, rank=9)
+    p_10 = Picks.objects.get(user=u, team__group__stage=stage, rank=10)
+    print (p_9, p_10)
+    if p_9.team.rank not in left:
+        print ('1313131313 - error')
+    if p_10.team.rank not in left:
+        print ('1414141414 - error')
+
+    print ('left: ', left_side)
+    print ('right: ', right_side)
+exit()
+
+
+
 for p in Picks.objects.filter(team__group__group='Final 16', user__pk=1).order_by('rank'):
     print (p.team.name, p.rank)
 

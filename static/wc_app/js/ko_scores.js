@@ -6,7 +6,7 @@ $(document).ready(function () {
 .then((response) => response.json())
 .then((responseJSON) => {
     data = responseJSON
-    
+    console.log(data)
     if (data.error) {$('#scores_div').append("<h3>John is a crappy programmer, send him a line msg </h3>")
                      
                      $('#status').html('<p> Error Message: ' + data.error +'<p>')
@@ -21,7 +21,7 @@ $(document).ready(function () {
     $.each(data, function(user, d) {
         
         $('#score_table').append('<tr id=' + user + '_row class=small><td>' + user + '</td> <td><p style=font-weight:bold;>Total: ' + d.Score + '</p>' + 
-                                                    '<p>KO: ' + d.ko_stage_score  + '</p>' +
+                                                    '<p><a href=/wc_app/wc_ko_picks_view/' + user + '>KO:  ' + d.ko_stage_score  + '</a></p>' +
                                                     '<p>Group Stage: ' + d.group_stage_score  + '</p></td>' + 
                                                     '<td id=' + user + '_rof16_cell></td><td id=' + user + '_quarters_cell></td>' +
                                                     '<td id=' + user + '_semis_cell></td><td id=' + user + '_third_cell></td>' + 
@@ -80,7 +80,7 @@ function addPicks(user, data) {
             else if (i + 1 < 13) {
                 $('#' + user + '_quarters_cell').append('<p><img src=' + info[1] + ' style=height:20;width:20;>' + info[0] + ' : ' + info[3] +' pts</p>')
             }
-            else if (i + 1 < 15) {
+            else if (i + 1 ==13 || i+1 ==14) {
                 $('#' + user + '_semis_cell').append('<p><img src=' + info[1] + ' style=height:20;width:20;>' + info[0] + ' : ' + info[3] +' pts</p>')
             }
             else if (i + 1 == 16) {
