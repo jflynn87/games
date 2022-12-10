@@ -19,19 +19,22 @@ $(document).ready(function () {
     $('#score_table').append('<tbody id=score_table_body></tbody>')
     }
     $.each(data, function(user, d) {
+      if (user != 'results') {
         
         $('#score_table').append('<tr id=' + user + '_row class=small><td>' + user + '</td> <td><p style=font-weight:bold;>Total: ' + d.Score + '</p>' + 
                                                     '<p><a href=/wc_app/wc_ko_picks_view/' + user + '>KO:  ' + d.ko_stage_score  + '</a></p>' +
-                                                    '<p>Group Stage: ' + d.group_stage_score  + '</p></td>' + 
+                                                    '<p>Group Stage: ' + d.group_stage_score  + '</p>' + 
+                                                    '<p>Best possible score: ' + d.best_score  + '</p>' + 
+                                                    '</td>' + 
                                                     '<td id=' + user + '_rof16_cell></td><td id=' + user + '_quarters_cell></td>' +
                                                     '<td id=' + user + '_semis_cell></td><td id=' + user + '_third_cell></td>' + 
                                                     '<td id=' + user + '_champ_cell></td>' +
                                                     '</tr>'
                                                     )
-        addPicks(user, d.picks)
-
+        addPicks(user, d.picks, data.results)
+      }
     })
-    
+      
     sort_table('score_table')    
 })
 
@@ -71,23 +74,68 @@ function sort_table(tableId) {
       }
     }
 
-function addPicks(user, data) {
+function addPicks(user, data, results) {
       $.each(data, function(i, info) {
-
+            
             if (i + 1 < 9) {
-                $('#' + user + '_rof16_cell').append('<p><img src=' + info[1] + ' style=height:20;width:20;>' + info[0] + ' : ' + info[3] +' pts</p>')
-            }
+                if (results['round-of-16'].losers.indexOf(info[0]) != -1) {
+                
+                  c = 'loser'
+                }
+                else if (results['round-of-16'].winners.indexOf(info[0]) != -1) {
+                  c= 'winner'
+                }
+                else {c = ''}
+
+                $('#' + user + '_rof16_cell').append('<p><img src=' + info[1] + ' style=height:20;width:20;><span class=' + c +  ' >' + info[0] + ' : ' + info[3] +' pts</span></p>')
+              }
             else if (i + 1 < 13) {
-                $('#' + user + '_quarters_cell').append('<p><img src=' + info[1] + ' style=height:20;width:20;>' + info[0] + ' : ' + info[3] +' pts</p>')
+              if (results['quarterfinals'].losers.indexOf(info[0]) != -1 || info[4] == 'out') {
+                
+                c = 'loser'
+              }
+              else if (results['quarterfinals'].winners.indexOf(info[0]) != -1) {
+                c= 'winner'
+              }
+              else {c = ''}
+
+                $('#' + user + '_quarters_cell').append('<p><img src=' + info[1] + ' style=height:20;width:20;><span class=' + c +  ' >' + info[0] + ' : ' + info[3] +' pts</span></p>')
             }
             else if (i + 1 ==13 || i+1 ==14) {
-                $('#' + user + '_semis_cell').append('<p><img src=' + info[1] + ' style=height:20;width:20;>' + info[0] + ' : ' + info[3] +' pts</p>')
+              if (results['semifinals'].losers.indexOf(info[0]) != -1 || info[4] == 'out') {
+                
+                c = 'loser'
+              }
+              else if (results['semifinals'].winners.indexOf(info[0]) != -1) {
+                c= 'winner'
+              }
+              else {c = ''}
+
+              $('#' + user + '_semis_cell').append('<p><img src=' + info[1] + ' style=height:20;width:20;><span class=' + c +  ' >' + info[0] + ' : ' + info[3] +' pts</span></p>')
             }
             else if (i + 1 == 16) {
-                $('#' + user + '_third_cell').append('<p><img src=' + info[1] + ' style=height:20;width:20;>' + info[0] + ' : ' + info[3] +' pts</p>')
+              if (results['3rd-place'].losers.indexOf(info[0]) != -1 || info[4] == 'out') {
+                
+                c = 'loser'
+              }
+              else if (results['3rd-place'].winners.indexOf(info[0]) != -1) {
+                c= 'winner'
+              }
+              else {c = ''}
+
+                $('#' + user + '_third_cell').append('<p><img src=' + info[1] + ' style=height:20;width:20;><span class=' + c +  ' >' + info[0] + ' : ' + info[3] +' pts</span></p>')
             }
             else if (i + 1 == 15) {
-                $('#' + user + '_champ_cell').append('<p><img src=' + info[1] + ' style=height:20;width:20;>' + info[0] +  ' : ' + info[3] +' pts</p>')
+              if (results['final'].losers.indexOf(info[0]) != -1 || info[4] == 'out') {
+                
+                c = 'loser'
+              }
+              else if (results['final'].winners.indexOf(info[0]) != -1) {
+                c= 'winner'
+              }
+              else {c = ''}
+
+                $('#' + user + '_champ_cell').append('<p><img src=' + info[1] + ' style=height:20;width:20;><span class=' + c +  ' >' + info[0] + ' : ' + info[3] +' pts</span></p>')
             }
 
             

@@ -12,15 +12,23 @@ from requests import get
 import json
 from bs4 import BeautifulSoup
 from urllib.request import Request, urlopen
+from datetime import datetime
 
+start = datetime.now()
 stage = Stage.objects.get(name="Knockout Stage")
 
-for p in Picks.objects.filter(team__group__stage=stage, user__pk=2).order_by('rank'):
-    #if p.rank not in [13, 14]:
-    #    print (p, p.rank, p.data)
-    #else:
-    print(p, p.rank, p.data, p.ko_fix_picks(p.rank))
-#print (list(Picks.objects.filter(team__group__stage=stage, user__pk=1).order_by('rank').values('rank', 'team__name', 'data')))
+#espn = wc_ko_data.ESPNData().api_winners_losers()
+#print (espn)
+
+for p in Picks.objects.filter(team__group__group='Final 16').order_by('rank'):
+    if p.rank in [13, 14]:
+        #print (p.team, p.rank, p.calc_score(espn, 'api'))
+        right_pick = p.ko_fix_picks()
+        print (p.user , p.team, p.rank, right_pick.team)
+        p.team = right_pick.team
+        p.save()
+
+print (datetime.now() - start)
 
 exit()
 

@@ -44,10 +44,16 @@ class ESPNData(object):
 
             self.data = data
         else:
-            url = 'https://site.api.espn.com/apis/site/v2/sports/soccer/fifa.world/scoreboard'
+            #url = 'https://site.api.espn.com/apis/site/v2/sports/soccer/fifa.world/scoreboard'
+            url = 'https://site.api.espn.com/apis/site/v2/sports/soccer/fifa.world/scoreboard?limit=950&dates=20221203-20221227'
             headers = {'User-Agent': 'Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.149 Mobile Safari/537.36'}
-            self.data = get(url, headers=headers).json()
+            api_data = get(url, headers=headers).json()
 
+            self.data = {}
+            
+            if api_data.get('leagues')[0].get('id') == '606':
+                self.data = api_data.get('events')
+            
 
         if stage:
             self.stage = stage
@@ -56,6 +62,8 @@ class ESPNData(object):
 
         else:
             self.stage = Stage.objects.get(name="Knockout Stage",event__current=True)
+
+        self.rounds = ['round-of-16','quarterfinals', 'semifinals', '3rd-place', 'final']
 
         print ('WC KO Init duration: ', datetime.now() - start)
 
@@ -67,17 +75,20 @@ class ESPNData(object):
 
         return self.data
 
-    def api_get_data(self):
-        #for sport in self.data.get('sports'):
-        #    print (sport.get('name'))
-        print (self.data.keys())
-        for event in self.data.get('events'):
-            #print (event.keys())
-            for competition in event.get('competitions'):
-                print ('----------------------------------')
-                print (competition.get('status'))
-                print (competition.keys())
-                for competitor in competition.get('competitors'):
-                    print (competitor.get('team').get('displayName'))
-                print ('----------------------------------')
-        return []
+
+    def api_winners_losers(self):
+        d = {}
+        for r in self.rounds:
+            d[r] = {'winners': [], 'losers': []}
+        for match in self.data:
+            for competition in match.get('competitions'):
+                if competition.get('status').get('type').get('completed'):
+                    for team in competition.get('competitors'):
+                        if team.get('winner'):
+                            d.get(match.get('season').get('slug')).get('winners').append(team.get('team').get('abbreviation')) 
+                        else:
+                            d.get(match.get('season').get('slug')).get('losers').append(team.get('team').get('abbreviation')) 
+        return d
+                            
+                    
+

@@ -131,6 +131,66 @@ class Picks (models.Model):
         else:
             return None
 
+    def calc_score(self, data, source):
+        p_score = 0
+        best_score = 0
+        
+        if source == 'web':
+
+            if self.rank < 9 and len([v for k, v in data.items() if k == 'stage_2' and self.team.full_name in v]) > 0:
+                p_score += 5
+            elif self.rank > 8 and self.rank < 13 and len([v for k, v in data.items() if k == 'stage_3' and self.team.full_name in v]) > 0:
+                p_score += 10
+            elif self.rank > 13 and self.rank < 15 and len([v for k, v in data.items() if k == 'stage_4' and self.team.full_name in v]) > 0:
+                p_score += 15
+            elif self.rank == 15 and len([v for k, v in data.items() if k == 'stage_5' and self.team.full_name in v]) > 0:  # need to figure out how to make this winners
+                p_score += 30
+            elif self.rank == 16 and len([v for k, v in data.items() if k == 'stage_6' and self.team.full_name in v]) > 0:  # need to figure out how to make this winners
+                p_score += 20
+        elif source == 'api':
+            if self.rank < 9 and self.team.name in data.get('round-of-16').get('winners'):
+                p_score += 5
+            elif self.rank in [9, 10, 11, 12] and self.team.name in data.get('quarterfinals').get('winners'):
+                p_score += 10
+            elif self.rank in [13, 14] and self.team.name in data.get('semifinals').get('winners'):
+                p_score += 15
+            elif self.rank == 15 and self.team.name in data.get('final').get('winners'):
+                p_score += 30
+            elif self.rank == 16 and self.team.name in data.get('3rd-place').get('winners'):
+                p_score += 20
+
+            if p_score > 0:
+                best_score = p_score
+            elif self.rank < 9 and self.team.name not in data.get('round-of-16').get('losers'):
+                best_score += 5
+            elif self.rank in [9, 10, 11, 12] and self.team.name not in data.get('quarterfinals').get('losers'):
+                best_score += 10
+            elif self.rank in [13, 14] and self.team.name not in data.get('semifinals').get('losers'):
+                best_score += 15
+            elif self.rank == 15 and self.team.name not in data.get('final').get('losers'):
+                best_score += 30
+            elif self.rank == 16 and self.team.name not in data.get('3rd-place').get('losers'):
+                best_score += 20
+
+        else:
+            raise Exception ('invalid source') 
+
+
+        return (p_score, best_score)
+
+    def in_out(self, data):
+        result = 'in'
+        if self.rank < 9:
+           return result
+        elif self.rank in [9, 10, 11, 12] and self.team.name in data.get('round-of-16').get('losers'):
+            result = 'out'
+        elif self.team.name in data.get('round-of-16').get('losers') or self.team.name in data.get('quarterfinals').get('losers'):
+            result = 'out'
+        #elif self.rank == 15 and (self.team.name in data.get('round-of-16').get('losers') or self.team.name in data.get('quarterfinals').get('losers') or self.team.name in data.get('semifinals').get('losers') ):
+        #    result = 'out'
+        #elif self.rank == 16 and self.team.name not in data.get('3rd-place').get('losers'):
+        #    best_score += 20
+        return result
 
 
 class Data(models.Model):

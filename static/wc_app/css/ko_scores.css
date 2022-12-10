@@ -1,0 +1,10 @@
+
+.loser {
+    color: red;
+    text-decoration-line: line-through;    
+    opacity: .5;
+  }
+  
+  .winner {
+    font-weight: bold;
+  }

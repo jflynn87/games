@@ -140,11 +140,11 @@ class ScoresAPI(APIView):
             users = stage.event.get_users()          
             for u in users:
                 d[u.username] = {'Score': 0, 'Bonus': 0}
-            
+            data_obj, created = Data.objects.get_or_create(stage=stage)
             if stage.pick_type == '1': #rank style
                 e = wc_group_data.ESPNData(url=stage.score_url, stage=stage)
                 espn = e.get_group_data()
-                data_obj, created = Data.objects.get_or_create(stage=stage)
+                
                 if e.new_data() or data_obj.display_data in [None, '', {}]:
                     print ('new data, refresh scores')
                 else:
@@ -196,39 +196,32 @@ class ScoresAPI(APIView):
                         ts.save()
                 #print ('score data: ', d)
             elif stage.pick_type == '2': #braket
-                espn  = wc_ko_data.ESPNData(source='web')
-                data = espn.web_get_data()
-
+                #espn  = wc_ko_data.ESPNData(source='web')
+                #data = espn.web_get_data()
+                espn = wc_ko_data.ESPNData(source='api')
+                winners_losers = espn.api_winners_losers()
+                
                 for u, stats in d.items():
                     score = 0
+                    best_score = 0
                     pick_list = []
                     group_ts = TotalScore.objects.get(user__username=u, stage=Stage.objects.get(event__current=True, name='Group Stage'))
                     for p in Picks.objects.filter(team__group__stage=stage, user=User.objects.get(username=u)).order_by('team__group', 'rank'):
-                        if p.rank in [13, 14]:
-                            fix = p.ko_fix_picks()
-                            p = fix
-                        p_score = 0
-                        if p.rank < 9 and len([v for k, v in data.items() if k == 'stage_2' and p.team.full_name in v]) > 0:
-                            p_score += 5
-                        elif p.rank > 8 and p.rank < 13 and len([v for k, v in data.items() if k == 'stage_3' and p.team.full_name in v]) > 0:
-                            p_score += 10
-                        elif p.rank > 13 and p.rank < 15 and len([v for k, v in data.items() if k == 'stage_4' and p.team.full_name in v]) > 0:
-                            p_score += 15
-                        elif p.rank == 15 and len([v for k, v in data.items() if k == 'stage_5' and p.team.full_name in v]) > 0:  # need to figure out how to make this winners
-                            p_score += 30
-                        elif p.rank == 16 and len([v for k, v in data.items() if k == 'stage_6' and p.team.full_name in v]) > 0:  # need to figure out how to make this winners
-                            p_score += 20
+                        #if p.rank in [13, 14]:
+                        #    fix = p.ko_fix_picks()
+                        #    p = fix
+                        p_score = p.calc_score(winners_losers, 'api')
 
-                        pick_list.append([p.team.name, p.team.flag_link, p.rank, p_score])
-                        score += p_score
+                        pick_list.append([p.team.name, p.team.flag_link, p.rank, p_score[0], p.in_out(winners_losers)])
+                        score += p_score[0]
+                        best_score += p_score[1]
                     d.get(u).update({'group_stage_score': group_ts.score,
                                     'ko_stage_score': score,
                                     'Score': group_ts.score + score,
+                                    'best_score': best_score,
                                     'picks': pick_list})
-                    
 
-
-
+                d['results'] = winners_losers    
             #data = serializers.serialize('json', Picks.objects.filter(team__group__stage__current=True, user=self.request.user))
             
             try: 
