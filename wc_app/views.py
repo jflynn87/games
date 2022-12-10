@@ -218,7 +218,7 @@ class ScoresAPI(APIView):
                     d.get(u).update({'group_stage_score': group_ts.score,
                                     'ko_stage_score': score,
                                     'Score': group_ts.score + score,
-                                    'best_score': best_score,
+                                    'best_score': best_score + group_ts.score,
                                     'picks': pick_list})
 
                 d['results'] = winners_losers    

@@ -163,13 +163,13 @@ class Picks (models.Model):
                 best_score = p_score
             elif self.rank < 9 and self.team.name not in data.get('round-of-16').get('losers'):
                 best_score += 5
-            elif self.rank in [9, 10, 11, 12] and self.team.name not in data.get('quarterfinals').get('losers'):
+            elif self.rank in [9, 10, 11, 12] and not (self.team.name in data.get('round-of-16').get('losers') or self.team.name in data.get('quarterfinals').get('losers')):
                 best_score += 10
-            elif self.rank in [13, 14] and self.team.name not in data.get('semifinals').get('losers'):
+            elif self.rank in [13, 14] and not (self.team.name in data.get('round-of-16').get('losers') or self.team.name in data.get('quarterfinals').get('losers') or self.team.name in data.get('semifinals').get('losers')):
                 best_score += 15
-            elif self.rank == 15 and self.team.name not in data.get('final').get('losers'):
+            elif self.rank == 15 and not (self.team.name in data.get('round-of-16').get('losers') or self.team.name in data.get('quarterfinals').get('losers') or self.team.name in data.get('semifinals').get('losers') or self.team.name in data.get('final').get('losers')):
                 best_score += 30
-            elif self.rank == 16 and self.team.name not in data.get('3rd-place').get('losers'):
+            elif self.rank == 16 and not (self.team.name in data.get('round-of-16').get('losers') or self.team.name in data.get('quarterfinals').get('losers') or self.team.name in data.get('semifinals').get('losers') or self.team.name in data.get('3rd-place').get('losers')):
                 best_score += 20
 
         else:
