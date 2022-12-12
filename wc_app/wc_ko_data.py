@@ -47,12 +47,12 @@ class ESPNData(object):
             #url = 'https://site.api.espn.com/apis/site/v2/sports/soccer/fifa.world/scoreboard'
             url = 'https://site.api.espn.com/apis/site/v2/sports/soccer/fifa.world/scoreboard?limit=950&dates=20221203-20221227'
             headers = {'User-Agent': 'Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.149 Mobile Safari/537.36'}
-            api_data = get(url, headers=headers).json()
+            self.api_data = get(url, headers=headers).json()
 
             self.data = {}
             
-            if api_data.get('leagues')[0].get('id') == '606':
-                self.data = api_data.get('events')
+            if self.api_data.get('leagues')[0].get('id') == '606':
+                self.data = self.api_data.get('events')
             
 
         if stage:
@@ -90,5 +90,12 @@ class ESPNData(object):
                             d.get(match.get('season').get('slug')).get('losers').append(team.get('team').get('abbreviation')) 
         return d
                             
-                    
+
+    def stage_complete(self):
+        for match in self.data:
+            for competition in match.get('competitions'):
+                if not competition.get('status').get('type').get('completed'):
+                    return False
+        return True
+        
 

@@ -17,16 +17,11 @@ from datetime import datetime
 start = datetime.now()
 stage = Stage.objects.get(name="Knockout Stage")
 
-#espn = wc_ko_data.ESPNData().api_winners_losers()
-#print (espn)
+e = wc_ko_data.ESPNData()
+espn = e.api_winners_losers()
 
-for p in Picks.objects.filter(team__group__group='Final 16').order_by('rank'):
-    if p.rank in [13, 14]:
-        #print (p.team, p.rank, p.calc_score(espn, 'api'))
-        right_pick = p.ko_fix_picks()
-        print (p.user , p.team, p.rank, right_pick.team)
-        p.team = right_pick.team
-        p.save()
+print (espn)
+print (e.stage_complete())
 
 print (datetime.now() - start)
 

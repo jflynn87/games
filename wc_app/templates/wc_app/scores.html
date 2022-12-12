@@ -6,7 +6,7 @@
 <h1>Scores {{stage.event.name}} </h1>
 <p id="stage_key" hidden>{{stage.pk}}</p>
 
-<h3>{{stage.name}} Scores</h3>
+<h3 id="stage_name">{{stage.name}} Scores</h3>
 {%if stage.started%}
 
 {% if stage.pick_type == '1'%}

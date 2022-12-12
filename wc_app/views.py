@@ -198,38 +198,47 @@ class ScoresAPI(APIView):
             elif stage.pick_type == '2': #braket
                 #espn  = wc_ko_data.ESPNData(source='web')
                 #data = espn.web_get_data()
-                espn = wc_ko_data.ESPNData(source='api')
-                winners_losers = espn.api_winners_losers()
+                if stage.complete:
+                    d = data_obj.display_data
+                else:
+                    espn = wc_ko_data.ESPNData(source='api')
+                    winners_losers = espn.api_winners_losers()
+                    
+                    for u, stats in d.items():
+                        score = 0
+                        best_score = 0
+                        pick_list = []
+                        group_ts = TotalScore.objects.get(user__username=u, stage=Stage.objects.get(event__current=True, name='Group Stage'))
+                        for p in Picks.objects.filter(team__group__stage=stage, user=User.objects.get(username=u)).order_by('team__group', 'rank'):
+                            #if p.rank in [13, 14]:
+                            #    fix = p.ko_fix_picks()
+                            #    p = fix
+                            p_score = p.calc_score(winners_losers, 'api')
+
+                            pick_list.append([p.team.name, p.team.flag_link, p.rank, p_score[0], p.in_out(winners_losers)])
+                            score += p_score[0]
+                            best_score += p_score[1]
+                        d.get(u).update({'group_stage_score': group_ts.score,
+                                        'ko_stage_score': score,
+                                        'Score': group_ts.score + score,
+                                        'best_score': best_score + group_ts.score,
+                                        'picks': pick_list})
+
+                    d['results'] = winners_losers    
+                    if espn.stage_complete():
+                        stage.complete = True
+                        stage.save()
+                        max_score = max([v.get('Score') for k, v in d.items() if k != 'results'])
+                        print ('min score', max_score)
+                        winner  = [k for k, v in d.items() if k != 'results' and v.get('Score') == max_score]
+                        d.get('results').update({'complete': True, 'winner': winner})
                 
-                for u, stats in d.items():
-                    score = 0
-                    best_score = 0
-                    pick_list = []
-                    group_ts = TotalScore.objects.get(user__username=u, stage=Stage.objects.get(event__current=True, name='Group Stage'))
-                    for p in Picks.objects.filter(team__group__stage=stage, user=User.objects.get(username=u)).order_by('team__group', 'rank'):
-                        #if p.rank in [13, 14]:
-                        #    fix = p.ko_fix_picks()
-                        #    p = fix
-                        p_score = p.calc_score(winners_losers, 'api')
-
-                        pick_list.append([p.team.name, p.team.flag_link, p.rank, p_score[0], p.in_out(winners_losers)])
-                        score += p_score[0]
-                        best_score += p_score[1]
-                    d.get(u).update({'group_stage_score': group_ts.score,
-                                    'ko_stage_score': score,
-                                    'Score': group_ts.score + score,
-                                    'best_score': best_score + group_ts.score,
-                                    'picks': pick_list})
-
-                d['results'] = winners_losers    
-            #data = serializers.serialize('json', Picks.objects.filter(team__group__stage__current=True, user=self.request.user))
-            
-            try: 
-                data_obj.group_data = espn
-                data_obj.display_data = d
-                data_obj.save()
-            except Exception as e1:
-                print ('WC data save failed', stage, e1)
+                    try: 
+                        data_obj.group_data = espn.api_data
+                        data_obj.display_data = d
+                        data_obj.save()
+                    except Exception as e1:
+                        print ('WC data save failed', stage, e1)
 
             print ('WC scores duration: ', datetime.now() - start)
             return JsonResponse(d, status=200, safe=False)
