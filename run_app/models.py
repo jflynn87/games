@@ -15,6 +15,9 @@ class Shoes(models.Model):
     def get_absolute_url(self):
         return reverse("run_app:list")
 
+    def natural_key(self):
+        return self.name
+
     def save(self, *args, **kwargs):
         if self.main_shoe:
             try:

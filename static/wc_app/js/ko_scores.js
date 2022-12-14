@@ -115,7 +115,7 @@ function addPicks(user, data, results) {
               $('#' + user + '_semis_cell').append('<p><img src=' + info[1] + ' style=height:20;width:20;><span class=' + c +  ' >' + info[0] + ' : ' + info[3] +' pts</span></p>')
             }
             else if (i + 1 == 16) {
-              if (results['3rd-place'].losers.indexOf(info[0]) != -1 || info[4] == 'out') {
+              if (results['3rd-place'].losers.indexOf(info[0]) != -1 || info[4] == 'out' || results['semifinals'].winners.indexOf(info[0]) != -1) {
                 
                 c = 'loser'
               }

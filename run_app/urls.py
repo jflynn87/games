@@ -18,5 +18,6 @@ urlpatterns = [
     url(r'^dashboard/$',views.DashboardView.as_view(),name='dashboard'),
     url(r'^plan/(?P<pk>\d+)/$',views.ScheduleView.as_view(),name='plan'),
     url(r'^get_run_data/$',views.getRunKeeperData.as_view(),name='get_run_data'),
+    url(r'^get_shoe_data_api/$',views.GetShoeDataAPI.as_view(),name='get_shoe_data_api'),
 
     ]

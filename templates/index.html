@@ -145,6 +145,7 @@
     <br>
     {%if user.is_superuser%}
     <p>John's Menu:</p>
+    <div id="buttons">
 
       <a href="{% url 'run_app:dashboard' %}"> <button class="btn btn-primary">Runs</button></a>
       <a href="{% url 'golf_app:setup' %}"> <button class="btn btn-primary">Golf Setup</button></a>
@@ -152,8 +153,14 @@
       <a href="{% url 'admin:index' %}"> <button class="btn btn-primary">Admin</button></a>
       <a href="{% url 'golf_app:update_field'%}"> <button class="btn btn-primary">Update Field</button></a>
       <a href="{% url 'fb_app:setup'%}"> <button class="btn btn-primary">Setup NFL</button></a>
-      
-    {%endif%}
+    </div>
+    
+      <div id="shoe_stats" >
+        <p id="shoe_update">Loading...</p>
+        <script src='{% static "run_app/js/update_stats.js"%}' type="text/javascript" ></script>
+        
+      </div>
+      {%endif%}
     <p hidden id='username'>{{request.user.username}}</p>
     <p hidden id='tournament_key'>{{t.pk}}</p> 
   </div>
@@ -166,6 +173,7 @@
   .then((responseJSON) => {
       data = responseJSON
       console.log('baseball: ', data, Object.keys(data).length)
+      if (Object.keys(data).length != 0) {
       $('#baseball_scores').append('<table class=table id=baseball_table>' +
                                     '<tr>' + 
                                     '<th>Final</th>' + 
@@ -177,18 +185,18 @@
                                     '</table>')
 
       var team_keys = []
-      if (Object.keys(data).length == 0) {
-        console.log('no games')
-        row = document.createElement('tr')
-        row.id = Object.keys(data)[0]
-        td1 = document.createElement('td')
-        td1.innerHTML = 'No Games'
-        row.append(td1)
+      //if (Object.keys(data).length == 0) {
+        //console.log('no games')
+        //row = document.createElement('tr')
+        //row.id = Object.keys(data)[0]
+        //td1 = document.createElement('td')
+        //td1.innerHTML = 'No Games'
+        //row.append(td1)
 
-        $('#baseball_table').append(row)
+        //$('#baseball_table').append(row)
 
-      }
-      else {
+      //}
+      //else {
       for (i=0; i< Object.keys(data).length; i++) {
         team_keys = []
         $.each(Object.values(data)[i], function(k, v) {
@@ -227,9 +235,10 @@
         row.append(td6)
 
         $('#baseball_table').append(row)
-    } }
-    
         $('#baseball_scores').attr('hidden', false)     
+      } }
+    
+
   
 })
 

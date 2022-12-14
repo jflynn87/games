@@ -9,6 +9,7 @@ from django.views.generic import (View,TemplateView,
 from run_app.models import Shoes, Run, Schedule, Plan
 from run_app.forms import CreateRunForm
 from django.db.models import Sum, Count, Max
+
 import datetime
 from datetime import timedelta
 
@@ -18,6 +19,7 @@ from django.db.models import Q
 from run_app import scrape_runs, strava 
 from rest_framework.views import APIView
 from rest_framework.response import Response
+from django.core import serializers
 import json
 
 
@@ -315,11 +317,27 @@ class getRunKeeperData(APIView):
                 else:
                     print ('not a run: ', data)
             
-            return Response(run_dict, 200)
+            return JsonResponse(run_dict, status=200, safe=False)
 
                 #return JsonResponse(json.dumps(run_dict), 200)
-                #return JsonResponse(run_dict )
+
         except Exception as e:
             print ('api error', e)
-            return Response(json.dumps({'error': str(e)}), 401)
+            return JsonResponse({'error': str(e)}, status=200)
 
+class GetShoeDataAPI(APIView):
+
+    #def __init__(self):
+    #    print ('init')
+
+    def get(self, num):
+        data = {}
+        try:
+            data['shoes'] = list(Run.objects.filter(shoes__active=True).values('shoes__name').annotate(Sum('dist')))
+            data['runs'] = serializers.serialize('json', Run.objects.all().order_by('-date')[:5], use_natural_foreign_keys=True)
+            print (data)
+        except Exception as e:
+            print ('GETSHoeAPIDATAAPI issue', e)
+            data = {'error': str(e)}
+
+        return JsonResponse(data, status=200, safe=False)
