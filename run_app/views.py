@@ -16,6 +16,7 @@ from datetime import timedelta
 from django.db.models.functions import ExtractWeek, ExtractYear
 from django.core.exceptions import ObjectDoesNotExist
 from django.db.models import Q
+from django.db.models.functions import Coalesce
 from run_app import scrape_runs, strava 
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -204,6 +205,9 @@ class ScheduleView(DetailView):
             context = super(ScheduleView, self).get_context_data(**kwargs)
             plan = Plan.objects.get(pk=self.kwargs.get('pk'))
             #today = datetime.datetime.now()
+            if today < datetime.datetime.combine(plan.start_date, datetime.datetime.min.time()):
+                today = datetime.datetime.combine(plan.start_date, datetime.datetime.min.time())
+            
             if today <= datetime.datetime.combine(plan.end_date, datetime.datetime.min.time()):
                 current_week = Schedule.objects.filter(date=today).values('week').first()
                 last_week = Schedule.objects.filter(week=int(current_week.get('week'))-1).values('week').first()
@@ -313,7 +317,8 @@ class getRunKeeperData(APIView):
                         run.location = 1
 
                         run.save()
-                     
+
+                        update_plan_actual(run)
                 else:
                     print ('not a run: ', data)
             
@@ -325,10 +330,25 @@ class getRunKeeperData(APIView):
             print ('api error', e)
             return JsonResponse({'error': str(e)}, status=200)
 
-class GetShoeDataAPI(APIView):
+def update_plan_actual(run):
+    #today = datetime.datetime.now()
+    try:
+        plan = Plan.objects.all().order_by('-pk')[0]
+        for day in Schedule.objects.filter(plan=plan, run=None, date__lte=datetime.datetime.today()):
+            print ('updating plan', day)
+            if Run.objects.filter(date=day.date).exists():
+                print (day.date)
+                run = Run.objects.get(date=day.date)
+                day.run = run
+                day.save()
+                print ('updated schedule', day)
+    except Exception as e:
+        print ('no schedule update', e)
+    
+    return
 
-    #def __init__(self):
-    #    print ('init')
+
+class GetShoeDataAPI(APIView):
 
     def get(self, num):
         data = {}
@@ -339,5 +359,58 @@ class GetShoeDataAPI(APIView):
         except Exception as e:
             print ('GETSHoeAPIDATAAPI issue', e)
             data = {'error': str(e)}
+
+        return JsonResponse(data, status=200, safe=False)
+
+
+class GetPlanSummaryAPI(APIView):
+
+    #def __init__(self):
+    #    print ('init')
+
+    def get(self, num):
+        data = {}
+        try:
+            plan = Plan.objects.all().order_by('-pk')[0]
+            #plan = Plan.objects.get(pk=2)
+            if datetime.datetime.combine(plan.end_date, datetime.datetime.min.time()) > datetime.datetime.today():
+                max_date = datetime.date.today()
+            else:
+                max_date = plan.end_date
+
+            print ('max: ', plan, max_date)
+            total_dist = Schedule.objects.filter(plan=plan).aggregate(Sum('dist'))
+            #print ('raw total dist ', total_dist)
+            #epxected_to_date = Schedule.objects.filter(date__gte=plan.start_date, date__lte=max_date).aggregate(Sum('dist')) 
+            expected_to_date = Schedule.objects.filter(plan=plan, date__gte=plan.start_date, date__lte=max_date).aggregate(d=Coalesce(Sum('dist'), 0)) 
+            dist_to_date = Run.objects.filter(date__gte=plan.start_date, date__lte=plan.end_date).aggregate(d=Coalesce(Sum('dist'), 0.0))
+  
+            data['total_dist'] = round(float(total_dist.get('dist__sum')) * 1.6, 2)
+            data['dist_to_date'] = round(dist_to_date.get('d'), 2)
+            data['expected_to_date'] = round(float(expected_to_date.get('d')) * 1.6, 2)
+        except Exception as e:
+            print ('GETPlanSummaryAPI issue', e)
+            data = {'error': str(e)}
+        print (data)
+        return JsonResponse(data, status=200, safe=False)
+
+
+class GetThisWeekPlanAPI(APIView):
+
+    #def __init__(self):
+    #    print ('init')
+
+    def get(self, num):
+        data = {}
+        try:
+            plan = Plan.objects.all().order_by('-pk')[0]
+            today = datetime.datetime.today().date()
+            mon = today - timedelta(days=today.weekday())
+            sun = mon + timedelta(days=6)
+            data = serializers.serialize('json', Schedule.objects.filter(date__gte=mon, date__lte=sun, plan=plan))
+
+        except Exception as e:
+            print ('GETPlanSummaryAPI issue', e)
+            data = json.dumps({'error': str(e)})
 
         return JsonResponse(data, status=200, safe=False)

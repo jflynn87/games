@@ -13,6 +13,8 @@ $(document).ready(function () {
                     }
     else {
       if (data.results.complete) {$('#stage_name').text('Tournament Complete. Congrats to the winner ' + data.results.winner)}
+
+      $('#scores_div').append('<p><a href=wc_scores/group>Group Stage Scores</a></p>')
     $('#scores_div').append('<table id=score_table class="table table-bordered table-sm"></table>')
     $('#score_table').append('<thead></thead>')
     $('#score_table').find('thead').append('<th class=border>Player</th><th class=border>Total Score</th><th class=border>Rd of 16</th>' + 

@@ -144,7 +144,9 @@
     <br>
     <br>
     {%if user.is_superuser%}
-    <p>John's Menu:</p>
+    <div class=middle></div>
+    <div class="card">
+    <h3>John's Menu</h3>
     <div id="buttons">
 
       <a href="{% url 'run_app:dashboard' %}"> <button class="btn btn-primary">Runs</button></a>
@@ -154,13 +156,23 @@
       <a href="{% url 'golf_app:update_field'%}"> <button class="btn btn-primary">Update Field</button></a>
       <a href="{% url 'fb_app:setup'%}"> <button class="btn btn-primary">Setup NFL</button></a>
     </div>
-    
+    <script src='{% static "run_app/js/update_stats.js"%}' type="text/javascript" ></script>    
+    <script src='{% static "run_app/js/run_plan_summary.js"%}' type="text/javascript" ></script>
+    <script src='{% static "run_app/js/this_week_run_plan.js"%}' type="text/javascript" ></script>
       <div id="shoe_stats" >
         <p id="shoe_update">Loading...</p>
-        <script src='{% static "run_app/js/update_stats.js"%}' type="text/javascript" ></script>
-        
       </div>
+      <div id="run_plan_summary"></div>
+      <div id="this_week_run_plan">
+      </div>
+
+      <script>
+        stats = updateRunData()
+        stats.then((response) => {runPlanSummary(); 
+                                  thisWeekRunPlan()})
+      </script>
       {%endif%}
+      </div>
     <p hidden id='username'>{{request.user.username}}</p>
     <p hidden id='tournament_key'>{{t.pk}}</p> 
   </div>

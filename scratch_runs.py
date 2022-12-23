@@ -22,14 +22,29 @@ import urllib3
 #from run_app import scrape_runs
 
 import requests
+from django.http import HttpRequest
+from run_app import views
 from pprint import pprint
 from run_app import strava
 import time
 import json
 
-r = Run.objects.all().values('shoes__name').order_by('-shoes__pk').annotate(Sum('dist'))
-for x in r:
-    print (x)
+
+#r = HttpRequest()
+plan = Plan.objects.get(pk=3)
+print (plan)
+#x = views.GetPlanSummaryAPI().get(plan.pk)
+
+#by_week = Schedule.objects.filter(plan=plan).values('week').annotate(Sum('dist'))
+#for d in Schedule.objects.filter(plan=plan):
+#    print (d, ' : ', d.dist)
+#print (x.content)
+#print (by_week)
+
+today = datetime.today().date()
+mon = today - timedelta(days=today.weekday())
+sun = mon + timedelta(days=6)
+print (mon, sun)
 exit()
 
 

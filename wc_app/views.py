@@ -142,6 +142,9 @@ class ScoresAPI(APIView):
                 d[u.username] = {'Score': 0, 'Bonus': 0}
             data_obj, created = Data.objects.get_or_create(stage=stage)
             if stage.pick_type == '1': #rank style
+                if not stage.current:
+                    print ('WC Group stage complete use saved data')
+                    return JsonResponse(data_obj.display_data, status=200, safe=False)
                 e = wc_group_data.ESPNData(url=stage.score_url, stage=stage)
                 espn = e.get_group_data()
                 

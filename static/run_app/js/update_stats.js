@@ -1,4 +1,6 @@
-$(document).ready(function () {
+//$(document).ready(function () {
+function updateRunData() {
+    return new Promise(function(resolve, reject) {
     var start = new Date()
     fetch("/run_app/get_run_data",
     {method: "GET",
@@ -30,10 +32,16 @@ $(document).ready(function () {
                 })
             $('#shoe_update').empty()
                 } 
+                console.log('DATA ReSOLVIONG')
+                resolve()
             })
-    }
+            
     
+    }
+        
     })
+})
+
 }
-    )
+    
 

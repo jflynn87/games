@@ -12,14 +12,14 @@ from bs4 import BeautifulSoup
 def get_schedule():
     #import urllib3.request
     
-    html = urllib.request.urlopen("https://www.halhigdon.com/training-programs/marathon-training/marathon-3/")
+    html = urllib.request.urlopen("https://www.halhigdon.com/training-programs/marathon-training/intermediate-1-marathon/")
     soup = BeautifulSoup(html, 'html.parser')
     schedule = (soup.find("div", {'id': 'training-schedule'}))
 
-    plan = Plan.objects.get(name="Nagano 21")
+    plan = Plan.objects.get(name="Nagano 23")
     date = plan.start_date
     sect = 0
-
+    Schedule.objects.filter(plan=plan).delete()
 
     for row in schedule.find_all('tr')[1:]:
         col = row.find_all('td')
@@ -33,32 +33,40 @@ def get_schedule():
                 #dist = str(day.string)
 #                print ('day.string', day.string)
                 schedule.dist = 0
-                if day.string[-3:] == 'run' and day.string[1] != '-':
-                    schedule.dist = int(str(day.string).split(' ')[0])
-                if day.string[-3:] == 'run' and day.string[1] == '-':
-                    schedule.dist = int(str(day.string)[2])
-                if day.string[-4:] in ['Rest', "ross", "Bike"]:
-                    schedule.dist = 0
-                if day.string[-4:] in ['hill', 'empo', 'tlek', ' 200', ' 400', 'pace']:
-                    schedule.dist = 3
-                if day.string[-4:] in ['empo', 'tlek']:
-                    schedule.dist = 5
-                if day.string[-4:] == 'pace':
-                    schedule.dist = int(str(day.string).split(' ')[0])
-                if day.string[-4:] == 'Race':
-                    if day.string[0:4] == "Half":
-                        schedule.dist = 21
-                    elif day.string[0:1] == "5":
-                        schedule.dist = 3
-                    elif day.string[0:2] == "10":
-                        schedule.dist = 6
-                    elif day.string[0:2] == "15":
-                        schedule.dist = 10
-                    elif day.string[0:3] == '1-2':
-                        schedule.dist = 2
-                    #else:
-                    #    schedule.dist = int(str(day.string).split('-')[0])
-                if day.string[-3:] == 'hon':
+                if day.string.isnumeric():
+                    schedule.dist = int(day.string)
+                elif day.string[0].isnumeric():
+                    schedule.dist = int(day.string[0])
+                elif day.string[0:1].isnumeric():
+                    schedule.dist = int(day.string[0:1])
+                # elif day.string[-3:] == 'run' and day.string[1] != '-':
+                #     schedule.dist = int(str(day.string).split(' ')[0])
+                # elif day.string[-3:] == 'run' and day.string[1] == '-':
+                #     schedule.dist = int(str(day.string)[2])
+                # elif day.string[-4:] in ['Rest', "ross", "Bike"]:
+                #     schedule.dist = 0
+                # elif day.string[-4:] in ['hill', 'empo', 'tlek', ' 200', ' 400', 'pace']:
+                #     schedule.dist = 3
+                # elif day.string[-4:] in ['empo', 'tlek']:
+                #     schedule.dist = 5
+                # elif day.string[-4:] == 'pace':
+                #     schedule.dist = int(str(day.string).split(' ')[0])
+                # elif day.string[-4:] == 'Race':
+                #     if day.string[0:4] == "Half":
+                #         schedule.dist = 21
+                #     elif day.string[0:1] == "5":
+                #         schedule.dist = 3
+                #     elif day.string[0:2] == "10":
+                #         schedule.dist = 6
+                #     elif day.string[0:2] == "15":
+                #         schedule.dist = 10
+                #     elif day.string[0:3] == '1-2':
+                #         schedule.dist = 2
+                #     #else:
+                #     #    schedule.dist = int(str(day.string).split('-')[0])
+                elif day.string[0:4] == 'Half':
+                    schedule.dist = 13
+                elif day.string[-3:] == 'hon':
                     schedule.dist = 26
 
                 schedule.sched_type = day.string
