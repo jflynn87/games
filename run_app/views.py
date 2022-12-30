@@ -388,6 +388,11 @@ class GetPlanSummaryAPI(APIView):
             data['total_dist'] = round(float(total_dist.get('dist__sum')) * 1.6, 2)
             data['dist_to_date'] = round(dist_to_date.get('d'), 2)
             data['expected_to_date'] = round(float(expected_to_date.get('d')) * 1.6, 2)
+
+            for s in Schedule.objects.filter(plan=plan, run__isnull=True, date__lte=max_date):
+                if Run.objects.filter(date=s.date).exists():
+                    s.run = Run.objects.get(date=s.date)
+                    s.save()
         except Exception as e:
             print ('GETPlanSummaryAPI issue', e)
             data = {'error': str(e)}

@@ -15,15 +15,21 @@ from urllib.request import Request, urlopen
 from datetime import datetime
 
 start = datetime.now()
-stage = Stage.objects.get(name="Knockout Stage")
 
-e = wc_ko_data.ESPNData()
-espn = e.api_winners_losers()
 
-print (espn)
-print (e.stage_complete())
 
-print (datetime.now() - start)
+e = Event.objects.get(current=True)
+for u in e.get_users():
+    print (u)
+# stage = Stage.objects.get(name="Knockout Stage")
+
+# e = wc_ko_data.ESPNData()
+# espn = e.api_winners_losers()
+
+# print (espn)
+# print (e.stage_complete())
+
+# print (datetime.now() - start)
 
 exit()
 

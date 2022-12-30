@@ -17,7 +17,10 @@ function thisWeekRunPlan() {
         $('#this_week_plan_table').append('<tr id=plan_row></tr>')
         $('#plan_row').append('<td>' + data[data.length-1].fields.date + '</td>')
         $.each(data, function(i, d) {
-                $('#plan_row').append('<td>' + d.fields.dist + '</td>')
+            console.log(d.fields.run)
+            if (d.fields.run == null) {$('#plan_row').append('<td>' + d.fields.dist + '</td>')}
+            else {$('#plan_row').append('<td style=color:green;font-weight:bold;>' + d.fields.dist + '</td>')}
+
 
         })
 

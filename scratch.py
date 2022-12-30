@@ -38,6 +38,26 @@ from rest_framework.renderers import JSONRenderer
 from rest_framework.parsers import JSONParser
 import pprint
 
+#import docx2txt 
+from docx.api import Document   
+
+
+document = Document('ff_test.docx')
+
+#for line in data:
+#    if line != '':
+#        print (line.strip())
+
+table = document.tables[0]
+
+#for row in table.rows:
+#    for cell in row.cells:
+#        if cell.text != '':
+#            print (cell.text.strip())
+
+print ('week: ', table.rows[0].cells[0].text.strip())
+print ([c.text.strip() for c in table.rows[0].cells[1:][:-1]])
+exit()
 #import tabula
 
 #headers = {'User-Agent': 'Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.149 Mobile Safari/537.36'}

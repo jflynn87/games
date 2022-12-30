@@ -7,25 +7,29 @@ from fb_app.models import Week, Player, Picks, Teams, MikeScore, WeekScore, Leag
 from django.contrib.auth.models import User
 from django.core.exceptions import ObjectDoesNotExist
 from fb_app import validate_picks
-
+from docx.api import Document   
 
 def readSheet(file,numPlayers,override_week=None):
         '''takes a pick file and updates week, owner list and picsk'''
         from bs4 import BeautifulSoup
 
-        xml = open(file,encoding="utf8")
-        soup = BeautifulSoup(xml,"xml")
+        #xml = open(file,encoding="utf8")
+        #soup = BeautifulSoup(xml,"xml")
+        document = Document('ff_test.docx')
+
+        table = document.tables[0]
 
         sheet = []
         picks = {}
 
         #test this for a single digit week....This gets the week from the start of the shhet
-        week = []
-        print (soup.findAll('t'))
-        for data in soup.findAll('t')[0:1]:
-        #for data in soup.findAll('t')[1]:
-            week.append(data.text)
-        week_str = ''.join(week)
+        #week = []
+        #print (soup.findAll('t'))
+        #for data in soup.findAll('t')[0:1]:
+        ##for data in soup.findAll('t')[1]:
+        #    week.append(data.text)
+        #week_str = ''.join(week)
+        week_str = table.rows[0].cells[0].text.strip()
         print ('week: ' + week_str)
 
 
@@ -52,16 +56,32 @@ def readSheet(file,numPlayers,override_week=None):
 
         #create a sheet with just players, picks and totals (totals assumes that the total is 2 digits and more than 16).
 
-        for tag in soup.findAll('t'):
-            if tag.text not in (' ', '1','2','3','4','5','6','7','8','9','10','11','12','13','14','15','16', '17', '18'):
-                if len(tag.text) > 1:
-                    if tag.text == "LiL":
-                        sheet.append("LiL B")
-                    elif tag.text == "B":
-                        print (tag.text)
-                    else:
-                        sheet.append(tag.text)
 
+        for row in table.rows:
+            for cell in row.cells:
+                #print(cell.text.strip()[0:3], type(cell.text.strip()))
+                if cell.text.strip() in ('',' ', '1','2','3','4','5','6','7','8','9','10','11','12','13','14','15','16', '17', '18'):
+                    continue
+                elif len(cell.text) > 1 \
+                    and len(cell.text.strip().split(' ')) ==1:
+                    
+                    sheet.append(cell.text.strip())
+                #elif cell.text.strip()[0:2] == "LI":
+                #    sheet.append('LIL B')
+                elif len(cell.text.strip().split(' ')) > 1:
+                    sheet.append(cell.text.strip().split(' ')[0] + ' ' + cell.text.strip().split(' ')[len(cell.text.strip().split(' '))-1])
+
+        #for tag in soup.findAll('t'):
+        #    if tag.text not in (' ', '1','2','3','4','5','6','7','8','9','10','11','12','13','14','15','16', '17', '18'):
+                # if len(tag.text) > 1:
+                #     if tag.text == "LiL":
+                #         sheet.append("LiL B")
+                #     elif tag.text == "B":
+                #         print (tag.text)
+                #     else:
+                #         sheet.append(tag.text)
+
+        print (sheet)
         sheet_scores = True
         print (len(sheet))
         print ('sheet len: ',  len(sheet))
@@ -153,5 +173,6 @@ def readSheet(file,numPlayers,override_week=None):
 
 
 
-readSheet('2022-2023 FOOTBALL FOOLS.xml', 26)
+#readSheet('2022-2023 FOOTBALL FOOLS.xml', 26)
+readSheet('ff_test.docx', 26)
 
