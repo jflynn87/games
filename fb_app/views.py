@@ -123,7 +123,7 @@ class GetSpreads(generics.ListAPIView):
 #                         try:
 #                             col = row.find_all('td')
 #                             teams = col[0].text.split()
-#                             line = col[5].text.split()
+#                             line = col[5].text.split()week
 #                             if line[0][0] == '-':
 #                                 fav = teams[0]
 #                                 dog = teams[1]
@@ -327,7 +327,7 @@ class GameListView(LoginRequiredMixin,ListView):
 
          try:
             if player.email_picks:
-                email_picks(request.user)
+                email_picks(request.user, week)
          except Exception as e:
             print ('email picks error', e)
 
@@ -570,11 +570,12 @@ class NewScoresView(TemplateView):
                         print ('Submit auto FB picks', player, week, datetime.datetime.now())
                         player.submit_default_picks(week)
         
-        if league.ties_lose:
+        #if league.ties_lose:
             #print ('ties lose')
-            game_cnt = Games.objects.filter(week=week).exclude(postponed=True).count()
-        else:
-            game_cnt = week.game_cnt              
+        #    game_cnt = Games.objects.filter(week=week).exclude(postponed=True).count()
+        #else:
+        #need to address pre-start and after games start cancels more cleanly.  Need to include the scoring logic as well.
+        game_cnt = week.game_cnt              
 
         if week.week != 1 and view != 'scores_view':
             prior_week = Week.objects.get(week=week.week-1, season_model__current=True)
@@ -1723,7 +1724,7 @@ class GetRecordsAPI(APIView):
         return Response(json.dumps(d), 200)
 
 
-def email_picks(user):
+def email_picks(user, week=None):
     '''takes a list of email addresses, returns nothing'''
     from django.template.loader import get_template
 
@@ -1736,6 +1737,9 @@ def email_picks(user):
     start = datetime.datetime.now()
     #req = HttpRequest()
     u = {'user': user}
+    if not week:
+        week = Week.objects.get(current=True)
+    u.update({'week': week})
     context = PicksEmail().get_context_data(**u)
     
     dir = settings.BASE_DIR + '/fb_app/templates/fb_app/'
@@ -1770,14 +1774,16 @@ class PicksEmail(TemplateView):
     def get_context_data(self, **kwargs):
         start = datetime.datetime.now()
         context = super(PicksEmail, self).get_context_data(**kwargs)
-        week = Week.objects.get(season_model__current=True, current=True)
-        print ('kwargs ', kwargs, kwargs.get('user'), type(kwargs), kwargs.keys())
+        #week = Week.objects.get(season_model__current=True, current=True)
+        print ('email kwargs ', kwargs, kwargs.get('user'), type(kwargs), kwargs.keys())
         if kwargs:
             user = kwargs.get('user')
+            week = kwargs.get('week')
         else:
             user = self.request.user
+            week = Week.objects.get(current=True)
         
-        print (user, type(user))
+        #print (user, type(user))
         picks = {}
 
         for p in Picks.objects.filter(player__name=user, week=week).order_by('-pick_num'):
@@ -1830,6 +1836,24 @@ class SPDetailsAPI(APIView):
             print ('SPDetailsAPI error: ', e)
 
         return Response(json.dumps(d), 200)
+
+
+class SPWeekDetailAPI(APIView):
+     def get(self, request, player, w):
+
+        start = datetime.datetime.now()
+        try:  
+            d = {}
+            week = Week.objects.get(week=w, season_model__current=True)
+            
+            d.update(Player.objects.get(name__username=player).season_picks_weekly_details(week))
+            
+            print (d)
+        except Exception as e:
+            print ('SPWeekDetailAPI error: ', e)
+
+        return Response(json.dumps(d), 200)
+
 
 
 class ValidatePicksAPI(APIView):

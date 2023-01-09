@@ -624,6 +624,27 @@ class Player(models.Model):
         #else:
         #    return None
 
+    def season_picks_weekly_details(self, week):
+        d = {}
+        d[self.name.username] = {}
+        
+        for sp in SeasonPicks.objects.filter(game__week=week, player=self):
+            d.get(self.name.username).update({sp.game.eid: {'home': sp.game.home.nfl_abbr,
+                                                                'home_score': sp.game.home_score,
+                                                                'away': sp.game.away.nfl_abbr,
+                                                                'away_score': sp.game.away_score,
+                                                                #'winner': sp.game.winner.nfl_abbr,
+                                                                'tie': sp.game.tie,
+                                                                'pick': sp.pick.nfl_abbr}})
+
+            if not sp.game.tie:
+                d.get(self.name.username).get(sp.game.eid).update({'winner': sp.game.winner.nfl_abbr})
+            else:
+                d.get(self.name.username).get(sp.game.eid).update({'winner': None})
+
+        return d
+
+    
     def correct_picks(self):
         wins = 0
         for w in Week.objects.filter(season_model__current=True):

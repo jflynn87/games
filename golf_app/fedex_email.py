@@ -16,7 +16,7 @@ from django.http import HttpRequest
 # from selenium.webdriver.support import expected_conditions as EC
 # from selenium.webdriver.support.ui import WebDriverWait
 # from selenium.webdriver.common.by import By
-# from datetime import datetime
+from datetime import datetime
 
 # import time
 

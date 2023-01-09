@@ -15,7 +15,8 @@ def readSheet(file,numPlayers,override_week=None):
 
         #xml = open(file,encoding="utf8")
         #soup = BeautifulSoup(xml,"xml")
-        document = Document('ff_test.docx')
+        #document = Document('ff_test.docx')
+        document = Document(file)
 
         table = document.tables[0]
 
@@ -173,6 +174,6 @@ def readSheet(file,numPlayers,override_week=None):
 
 
 
-#readSheet('2022-2023 FOOTBALL FOOLS.xml', 26)
-readSheet('ff_test.docx', 26)
+readSheet('2022-2023 FOOTBALL FOOLS.docx', 26)
+#readSheet('ff_test.docx', 26)
 

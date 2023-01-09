@@ -36,6 +36,16 @@ from operator import itemgetter
 
 start = datetime.now()
 
+#s = Season.objects.get(current=True)
+#t = Tournament.objects.filter(season__current=True).order_by('-pk')[3]
+t = Tournament.objects.get(current=True)
+
+s =  FedExSeason.objects.get(season__current=True)
+print (s.picks_at_risk(User.objects.get(pk=1)))
+
+
+exit()
+
 #t = Tournament.objects.get(current=True)
 t = Tournament.objects.filter(season__current=True).order_by('-pk')[1]
 

@@ -68,7 +68,7 @@ class Season(models.Model):
         '''takes a season and optional tournament object and returns a json response'''
         score_dict = {}
         sorted_dict = {}
-        fed_ex_scores= {}
+        #fed_ex_scores= {}
         if not tournament:
             for u in self.get_users('obj'):
                 t_scores = TotalScore.objects.filter(tournament__season=self, user=u).aggregate(Sum('score'))
@@ -80,16 +80,19 @@ class Season(models.Model):
                 #total_score = t_scores.get('score__sum')
                 total_score = 0 if t_scores.get('score__sum') is None else t_scores.get('score__sum')
                 #score_dict[u.username] = {'score__sum': total_score, 't_scores': t_scores.get('score__sum')}
-                score_dict[u.username] = {'score__sum': total_score}
-            print (score_dict)
+                score_dict[u.username] = {'score__sum': total_score, 
+                                        'fed_ex_score': self.fed_ex_scores(u)}
+            #print (score_dict)
             min_score = min(score_dict.items(), key=lambda v: v[1].get('score__sum'))[1].get('score__sum')
             second = sorted(score_dict.items(), key=lambda v: v[1].get('score__sum'))[1][1].get('score__sum')
 
             #print ('fed ex scores: ', fed_ex_scores)
             for i, (user, data) in enumerate(sorted(score_dict.items(), key=lambda v: v[1].get('score__sum'))):
                 #sorted_dict[user] = {'total': data.get('score__sum'), 'diff':  int(min_score) - int(data.get('score__sum')), 'rank': i+1, 
+                
                 sorted_dict[user] = {'total': score_dict.get(user).get('score__sum'), 'diff':  int(min_score) - int(data.get('score__sum')), 'rank': i+1, 
                                     'points_behind_second': int(second) - int(data.get('score__sum')), #'t_scores': score_dict.get(user).get('t_scores'),
+                                    'fed_ex_score': score_dict.get(user).get('fed_ex_score')
                                     #'fed_ex_score': fed_ex_scores.get(user).get('score__sum')
                                      }
                                     
@@ -108,7 +111,7 @@ class Season(models.Model):
                 #total_score = t_scores.get('score__sum') + user_fed_ex
                 #total_score = t_scores.get('score__sum')
                 total_score = 0 if t_scores.get('score__sum') is None else t_scores.get('score__sum')
-                score_dict[u.username] = {'score__sum': total_score, 't_scores': t_scores.get('score__sum')}
+                score_dict[u.username] = {'score__sum': total_score, 't_scores': t_scores.get('score__sum'), 'fed_ex_score': self.fed_ex_scores(u, tournament)}
             min_score = min(score_dict.items(), key=lambda v: v[1].get('score__sum'))[1].get('score__sum')
             second = sorted(score_dict.items(), key=lambda v: v[1].get('score__sum'))[1][1].get('score__sum')
 
@@ -116,12 +119,24 @@ class Season(models.Model):
             for i, (user, data) in enumerate(sorted(score_dict.items(), key=lambda v: v[1].get('score__sum'))):
                 #sorted_dict[user] = {'total': data.get('score__sum'), 'diff':  int(min_score) - int(data.get('score__sum')), 'rank': i+1, 
                 sorted_dict[user] = {'total': score_dict.get(user).get('score__sum'), 'diff':  int(min_score) - int(data.get('score__sum')), 'rank': i+1, 
-                                    'points_behind_second': int(second) - int(data.get('score__sum')), #'t_scores': score_dict.get(user).get('t_scores'),
+                                    'points_behind_second': int(second) - int(data.get('score__sum')),
+                                    'fed_ex_score': score_dict.get(user).get('fed_ex_score')
+                                     #'t_scores': score_dict.get(user).get('t_scores'),
                                     #'fed_ex_score': user_fed_ex
                                     }
                                     
                                     
             return json.dumps(sorted_dict)
+
+    def fed_ex_scores(self, user, t=None):
+
+        if t:
+            score = t.fedex_data.get('player_points').get(user.username).get('score')
+        else:
+            score = FedExPicks.objects.filter(pick__season__season=self, user=user).aggregate(Sum('score')).get('score__sum')
+        
+        return score
+
 
     def regular_prize(self):
         return 30
@@ -1712,7 +1727,7 @@ class FedExSeason(models.Model):
 
         at_risk_potential_score = 0
         for k,v in at_risk.items():
-            p = FedExPicks.objects.get(user=user, pick__golfer__golfer_name=k)
+            p = FedExPicks.objects.get(user=user, pick__golfer__golfer_name=k, pick__season__season__current=True)
             if p.pick.soy_owgr > 30:
                 at_risk_potential_score += 80
             elif p.pick.soy_owgr < 30:
@@ -1723,7 +1738,7 @@ class FedExSeason(models.Model):
 
         potential_score = 0
         for k,v in otv_data.items():
-            p = FedExPicks.objects.get(user=user, pick__golfer__golfer_name=k)
+            p = FedExPicks.objects.get(user=user, pick__golfer__golfer_name=k, pick__season__season__current=True)
             if p.pick.soy_owgr > 30:
                 potential_score += 80
             elif p.pick.soy_owgr < 30:
@@ -1733,7 +1748,7 @@ class FedExSeason(models.Model):
 
         top70_potential_score = 0
         for k,v in top_70.items():
-            p = FedExPicks.objects.get(user=user, pick__golfer__golfer_name=k)
+            p = FedExPicks.objects.get(user=user, pick__golfer__golfer_name=k, pick__season__season__current=True)
             if p.pick.soy_owgr > 30:
                 top70_potential_score += 80
             elif p.pick.soy_owgr < 30:

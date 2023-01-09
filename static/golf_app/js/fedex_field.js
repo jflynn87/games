@@ -660,6 +660,9 @@ function score_view() {
         th0.innerHTML = 'Player'
         th0a = document.createElement('th')
         th0a.innerHTML = 'Total Points'
+        th0c = document.createElement('th')
+        th0c.innerHTML = 'Top 3'
+        
         th0b = document.createElement('th')
         th0b.innerHTML = '-80 point picks'
         th1 = document.createElement('th')
@@ -671,6 +674,7 @@ function score_view() {
 
         header.appendChild(th0)
         header.appendChild(th0a)
+        header.appendChild(th0c)
         header.appendChild(th0b)
         header.appendChild(th1)
         header.appendChild(th2)
@@ -697,6 +701,7 @@ function score_view() {
         document.getElementById('scores').appendChild(score_frag)
         
         $.each(picks, function(user, pick_data) {
+            top3 = document.createElement('td')
             cell80 = document.createElement('td')
             cell30 = document.createElement('td')
             cell20 = document.createElement('td')
@@ -729,8 +734,19 @@ function score_view() {
                     else {cell0.append(', ' + pick.golfer_name)}
                     
                 }
+                if (pick.top_3) {
+                   // if (top3.innerHTML == '') {
+                        t_3_p = document.createElement('p')
+                        t_3_p.innerHTML = pick.golfer_name
+                        top3.append(t_3_p)
+                   // }
+                   // else
+                   //     {top3.append(', ' + pick.golfer_name)}
+                    
+                }
             })
             
+            document.getElementById('user_' + user).appendChild(top3)
             document.getElementById('user_' + user).appendChild(cell80)
             document.getElementById('user_' + user).appendChild(cell30)
             document.getElementById('user_' + user).appendChild(cell20)

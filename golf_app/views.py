@@ -1926,10 +1926,13 @@ class FedExPicksAPI(APIView):
                 for p in FedExPicks.objects.filter(pick__season=fedex_season):
                     if d.get(p.user.username):
                         d.get(p.user.username).update({p.pick.golfer.espn_number: {'golfer_name': p.pick.golfer.golfer_name,
-                                                                                    'score': p.score}})
+                                                                                    'score': p.score, 'top_3': p.top_3}})
                     else:
                         d[p.user.username] = {p.pick.golfer.espn_number: {'golfer_name': p.pick.golfer.golfer_name,
-                                                                    'score': p.score}}
+                                                                    'score': p.score, 'top_3': p.top_3}}
+                    
+                        
+
         except Exception as e:
             print ('FedExPicksAPI error: ', e)
             d['error'] = {'msg': str(e)}
@@ -1937,11 +1940,6 @@ class FedExPicksAPI(APIView):
         
         print ('duration FEDEXpicks API: ', datetime.datetime.now() - start)
         return JsonResponse(d, status=200, safe=False)
-
-
-
-
-
 
 
 class PriorYearStatsAPI(APIView):
