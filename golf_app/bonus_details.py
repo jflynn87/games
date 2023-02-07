@@ -108,10 +108,10 @@ class BonusDtl(object):
                             group = winner.playerName.group.number - 5
                         else:
                             group = winner.playerName.group.number
-                if not self.inquiry:
-                    bd, created = BonusDetails.objects.get_or_create(user=winner.user, tournament=winner.playerName.tournament, bonus_type='1')
-                    bd.bonus_points = self.winner_points(pick)
-                    bd.save()
+                    if not self.inquiry:
+                        bd, created = BonusDetails.objects.get_or_create(user=winner.user, tournament=winner.playerName.tournament, bonus_type='1')
+                        bd.bonus_points = self.winner_points(pick)
+                        bd.save()
             return True
         else: 
             return False

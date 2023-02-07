@@ -3186,11 +3186,11 @@ class FedExPicksByScore(APIView):
         d = {}
         try:
             fedex_season = FedExSeason.objects.get(pk=pk)
-
+            
             for u in fedex_season.season.get_users('obj'):
                 d[u.username] = fedex_season.picks_by_score(u)
                 d.get(u.username).update(fedex_season.picks_at_risk(u))
-                
+                d.get(u.username).update(fedex_season.above_below_line(u))
         except Exception as e:
             print ('FedExPicksByScore error: ', e)
             d['error'] = {'msg': str(e)}
@@ -3209,6 +3209,9 @@ class FedExInOutAPI(APIView):
         t = Tournament.objects.get(current=True)
         d = {'into_top30': {},
              'out_top30': {}}
+
+        if not user_order:
+            user_order = json.loads(Season.objects.get(current=True).get_total_points())
         try:
             # for pick in FedExPicks.objects.filter(pick__season__season__current=True).values('pick__golfer').distinct():
             #     #print (pick)
@@ -3270,7 +3273,9 @@ class FedExDetailAPI(APIView):
                 if FedExPicks.objects.filter(pick__season=fedex_season, pick__golfer__golfer_name=k).exists():
                     pick = FedExPicks.objects.filter(pick__season=fedex_season, pick__golfer__golfer_name=k).first()
                     users = list(FedExPicks.objects.filter(pick__season=fedex_season, pick__golfer__golfer_name=k).values_list('user__username', flat=True))
+                    top_3 = list(FedExPicks.objects.filter(pick__season=fedex_season, pick__golfer__golfer_name=k, top_3=True).values_list('user__username', flat=True))
                     d[pick.pick.golfer.golfer_name] = {'user_list': users,
+                                                        'top_3': top_3,
                                                         'score': pick.score,
                                                         'soy_owgr': pick.pick.soy_owgr,
                                                         'rank': rank
@@ -3292,6 +3297,7 @@ class FedExDetailAPI(APIView):
                         owgr = 999
 
                     d[k] = {'user_list': [],
+                            'top_3': [],
                             'score': '',
                             'soy_owgr': owgr,
                             'rank': rank
@@ -3475,8 +3481,8 @@ class ScoresByPickAPI(APIView):
                 pick = Picks.objects.filter(playerName__pk=p).first()            
                 
                 d = pick_calc_score(pick.pk, espn, big, t, d, cut_num)
-                print (pick, datetime.datetime.now() - p_start)
-            print ('CCCC: ',  key, len(picks), datetime.datetime.now() - start)
+               # print (pick, datetime.datetime.now() - p_start)
+            #print ('CCCC: ',  key, len(picks), datetime.datetime.now() - start)
         except Exception as e:
             print ('ScoresByPicksAPI Error: ', e)
             d['error'] = {'msg': str(e)}

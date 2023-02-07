@@ -36,12 +36,27 @@ from operator import itemgetter
 
 start = datetime.now()
 
-#s = Season.objects.get(current=True)
+s = Season.objects.get(current=True)
+#owgr = populateField.get_worldrank()
+p = pga_t_data.PGAData().get_full_list()
+
+for k, v in p.items():
+    print (k,v)
+
+    
+
+exit()
 #t = Tournament.objects.filter(season__current=True).order_by('-pk')[3]
 t = Tournament.objects.get(current=True)
 
 s =  FedExSeason.objects.get(season__current=True)
-print (s.picks_at_risk(User.objects.get(pk=1)))
+#print (s.picks_at_risk(User.objects.get(pk=1)))
+print (s.season.fed_ex_scores(User.objects.get(pk=1)))
+
+#for p in FedExPicks.objects.filter(pick__season=s, user=User.objects.get(pk=1)):
+#    print (p, p.top_3, p.score)
+
+#print (s.top_3())
 
 
 exit()

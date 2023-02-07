@@ -92,7 +92,8 @@ class Season(models.Model):
                 
                 sorted_dict[user] = {'total': score_dict.get(user).get('score__sum'), 'diff':  int(min_score) - int(data.get('score__sum')), 'rank': i+1, 
                                     'points_behind_second': int(second) - int(data.get('score__sum')), #'t_scores': score_dict.get(user).get('t_scores'),
-                                    'fed_ex_score': score_dict.get(user).get('fed_ex_score')
+                                    'fed_ex_score': score_dict.get(user).get('fed_ex_score'),
+                                    'player': user
                                     #'fed_ex_score': fed_ex_scores.get(user).get('score__sum')
                                      }
                                     
@@ -120,7 +121,8 @@ class Season(models.Model):
                 #sorted_dict[user] = {'total': data.get('score__sum'), 'diff':  int(min_score) - int(data.get('score__sum')), 'rank': i+1, 
                 sorted_dict[user] = {'total': score_dict.get(user).get('score__sum'), 'diff':  int(min_score) - int(data.get('score__sum')), 'rank': i+1, 
                                     'points_behind_second': int(second) - int(data.get('score__sum')),
-                                    'fed_ex_score': score_dict.get(user).get('fed_ex_score')
+                                    'fed_ex_score': score_dict.get(user).get('fed_ex_score'),
+                                    'player': user
                                      #'t_scores': score_dict.get(user).get('t_scores'),
                                     #'fed_ex_score': user_fed_ex
                                     }
@@ -134,6 +136,16 @@ class Season(models.Model):
             score = t.fedex_data.get('player_points').get(user.username).get('score')
         else:
             score = FedExPicks.objects.filter(pick__season__season=self, user=user).aggregate(Sum('score')).get('score__sum')
+            #if FedExPicks.objects.filter(pick__season__season=self, user=user, top_3=True, rank__in=[1, 2, 3]).exists():
+            top3 = FedExSeason.objects.get(season=self).top_3()
+            for p in FedExPicks.objects.filter(pick__season__season=self, user=user, top_3=True, pick__golfer__golfer_name__in=top3.keys()):
+                fed_ex_rank = [x.get('rank') for k, x in top3.items() if k == p.pick.golfer.golfer_name][0]
+                if fed_ex_rank == '1':
+                    score -= 100
+                elif fed_ex_rank == '2':
+                    score -= 75
+                elif fed_ex_rank == '3':
+                    score -= 50
         
         return score
 
@@ -1776,6 +1788,12 @@ class FedExSeason(models.Model):
                 d.update({'plus_20': d.get('plus_20') + 1})
         return d
 
+
+    def top_3(self, t=None):
+        if not t:
+            t = Tournament.objects.get(current=True)
+        
+        return {k:v for k,v in t.fedex_data.items() if v.get('rank') in ['1', '2', '3']}
 
         
 

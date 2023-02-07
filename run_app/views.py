@@ -384,10 +384,17 @@ class GetPlanSummaryAPI(APIView):
             #epxected_to_date = Schedule.objects.filter(date__gte=plan.start_date, date__lte=max_date).aggregate(Sum('dist')) 
             expected_to_date = Schedule.objects.filter(plan=plan, date__gte=plan.start_date, date__lte=max_date).aggregate(d=Coalesce(Sum('dist'), 0)) 
             dist_to_date = Run.objects.filter(date__gte=plan.start_date, date__lte=plan.end_date).aggregate(d=Coalesce(Sum('dist'), 0.0))
+            expected_runs = Schedule.objects.filter(plan=plan, date__gte=plan.start_date, date__lte=max_date).exclude(dist=0).count()
+            total_runs = Run.objects.filter(date__gte=plan.start_date, date__lte=plan.end_date).count()
   
             data['total_dist'] = round(float(total_dist.get('dist__sum')) * 1.6, 2)
             data['dist_to_date'] = round(dist_to_date.get('d'), 2)
             data['expected_to_date'] = round(float(expected_to_date.get('d')) * 1.6, 2)
+            #data['dist_percent'] = round((expected_to_date.get('d')*1.6)/dist_to_date.get('d'),2)
+            data['dist_percent'] = round(dist_to_date.get('d')/(expected_to_date.get('d')*1.6),2)
+            data['runs_percent'] = round(total_runs/expected_runs,2)
+            data['expected_runs'] = expected_runs
+            data['total_runs'] = total_runs
 
             for s in Schedule.objects.filter(plan=plan, run__isnull=True, date__lte=max_date):
                 if Run.objects.filter(date=s.date).exists():
