@@ -1807,8 +1807,13 @@ class FedExPicksView(LoginRequiredMixin,TemplateView):
      def get_context_data(self,**kwargs):
         context = super(FedExPicksView, self).get_context_data(**kwargs)
         utils.save_access_log(self.request, 'fedex picks')
+        try:
+            prior_t = Tournament.objects.filter(season__current=True).order_by('-pk')[1]
+        except Exception as e:
+            prior_t = Tournament()
         context.update({
          'season': FedExSeason.objects.get(season__current=True),
+         'prior_t': prior_t
                         })
         return context
 

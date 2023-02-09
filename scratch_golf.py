@@ -37,13 +37,20 @@ from operator import itemgetter
 start = datetime.now()
 
 s = Season.objects.get(current=True)
-#owgr = populateField.get_worldrank()
-p = pga_t_data.PGAData().get_full_list()
-
-for k, v in p.items():
+t = pga_t_data.PGAData(update=True).get_full_list()
+for k,v in t.items():
     print (k,v)
 
-    
+exit()
+#owgr = populateField.get_worldrank()
+#p = populateField.get_fedex_data()
+
+headers = {'User-Agent': 'Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.149 Mobile Safari/537.36'}
+url = 'https://www.espn.com/golf/stats/player/_/table/general/sort/cupPoints/dir/desc'
+schedule = get(url, headers=headers).json()
+
+print(schedule)
+
 
 exit()
 #t = Tournament.objects.filter(season__current=True).order_by('-pk')[3]

@@ -13,7 +13,7 @@ class PGAData(object):
         else:
             self.season = season
 
-        if self.season.data:
+        if self.season.data and not update:
             self.data = self.season.data
         else:
             url = 'https://statdata.pgatour.com/r/current/schedule.json'
@@ -104,3 +104,16 @@ class PGAData(object):
             w = min([x.get('date')[0].get('weeknumber') for x in self.t_data])
               
         return [x.get('permNum') for x in self.t_data if str(x.get('date')[0].get('weeknumber')) == str(w)  and x.get('primaryEvent')][0]
+
+
+    # copied from espn schedule, use to fix this class
+    # def current_event(self):
+    #     if [v for v in self.schedule.get('events') if v.get('status')  == 'in']:
+    #         return [v for v in self.schedule.get('events') if v.get('status') == 'in']
+
+    #     end_date = datetime.now() + timedelta(days=5)
+    #     start_date = datetime.utcnow()
+        
+    #     event = [v for v in self.schedule.get('events') if datetime.strptime(v.get('startDate')[:-1], '%Y-%m-%dT%H:%M') >= start_date \
+    #                 and  datetime.strptime(v.get('startDate')[:-1], '%Y-%m-%dT%H:%M') < end_date]
+    #     return event

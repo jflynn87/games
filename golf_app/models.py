@@ -1793,7 +1793,10 @@ class FedExSeason(models.Model):
         if not t:
             t = Tournament.objects.get(current=True)
         
-        return {k:v for k,v in t.fedex_data.items() if v.get('rank') in ['1', '2', '3']}
+        if t.fedex_data:
+            return {k:v for k,v in t.fedex_data.items() if v.get('rank') in ['1', '2', '3']}
+        else:
+            return {}
 
         
 
