@@ -9,7 +9,15 @@ $(document).ready(function () {
         
         //$('#status').append('<p id=field_status>Loading Field...</p>')
         const field = buildField();
-        field.then((response) => {//$('#field_status').text("Field Loaded, moving to other functioms");
+        field.then((response) => {
+            const fedex = updateFedEx();
+        //})
+        
+        fedex.then((response) => {
+            const golferStats = updateGolferStats();
+        //})
+        //field.then((response) => {//$('#field_status').text("Field Loaded, moving to other functioms");
+        golferStats.then((response) => {//$('#field_status').text("Field Loaded, moving to other functioms");
                                 
                                 const fUpdates = fieldUpdates()
                                 fUpdates.then((response) => {
@@ -23,6 +31,8 @@ $(document).ready(function () {
                                 //summaryStats()}
         )
         })
+})
+    })
 })
 
 function buildField() {
@@ -41,12 +51,25 @@ function buildField() {
 
         }
               )
-        .then((response) => response.json())
+        .then((response) => {
+            if (response.ok) {
+                  return response.json()
+              }
+              else
+                  {$('#field_setup_status').text('Error ' + response.status + ':' + response.statusText)
+                  reject()}
+            })
         .then((responseJSON) => {
               
-              data = responseJSON
-              $('#field_setup_status').text('Complete')
-              resolve()              
+              data = $.parseJSON(responseJSON)
+              console.log('buidl t', data)
+              console.log(data.error)
+              if (data.error) {
+                  $('#field_setup_status').text('Error ' + data.error.msg)   
+                  reject()
+                  }
+              else {$('#field_setup_status').text('Complete')
+              resolve()              }
   }
   
 )
@@ -54,6 +77,98 @@ function buildField() {
 })
 }
 
+
+function updateFedEx() {
+      return new Promise (function (resolve, reject) {
+      $('#setup_table tbody').append('<tr><td>FedEx Data</td><td id=update_fedex_setup_status>Updating....</td>')
+          fetch("/golf_app/setup_fedex_data_api/",
+          {method: "POST",
+          headers: {
+              'Accept': 'application/json',
+              'Content-Type': 'application/json',
+              'X-CSRFToken': $.cookie('csrftoken')
+                      },
+          body: JSON.stringify({'pga_t_num': $('#pga_t_num').val(),
+                                'espn_t_num': $('#espn_t_num').val()
+                                })
+  
+          }
+                )
+          .then((response) => {
+            if (response.ok) {
+                  return response.json()
+                  }
+            else
+            {console.log('updateFedex error: ', response)
+            $('#update_fedex_setup_status').text('Error ' + response.status + ':' + response.statusText)}
+            resolve()
+      })
+          .then((responseJSON) => {
+            data = responseJSON
+            if (! data.error) {
+               console.log('FEDEX data', data)
+               $('#update_fedex_setup_status').text('Complete')
+               //resolve()
+              }
+              else
+                  {console.log('updateFedex error: ', data.error.msg)
+                  $('#update_fedex_setup_status').text('Error ' + data.error.msg)}
+                  //resolve()
+            
+            console.log('fedex resolving')
+            resolve()
+            })
+ 
+  })
+  }
+  
+  
+  function updateGolferStats() {
+      return new Promise (function (resolve, reject) {
+      $('#setup_table tbody').append('<tr><td>Golfer Stats</td><td id=update_golfer_stats_status>Updating....</td>')
+          fetch("/golf_app/setup_golfer_stats_api/", 
+          {method: "POST",
+          headers: {
+              'Accept': 'application/json',
+              'Content-Type': 'application/json',
+              'X-CSRFToken': $.cookie('csrftoken')
+                      },
+          body: JSON.stringify({'pga_t_num': $('#pga_t_num').val(),
+                                'espn_t_num': $('#espn_t_num').val()
+                                })
+  
+          }
+                )
+          .then((response) => {
+            if (response.ok) {
+                  return response.json()
+                  }
+            else
+            {console.log('updateGolferStats error: ', response)
+            $('#update_golfer_stats_status').text('Error ' + response.status + ':' + response.statusText)}
+            resolve()
+      })
+          .then((responseJSON) => {
+            data = responseJSON
+            if (! data.error) {
+               console.log('GolferStats data', data)
+               $('#update_golfer_stats_status').text('Complete')
+               //resolve()
+              }
+              else
+                  {console.log('updateFedex error: ', data.error.msg)
+                  $('#update_golfer_stats_status').text('Error ' + data.error.msg)}
+                  //resolve()
+            
+            console.log('golfer stats resolving')
+            resolve()
+            })
+ 
+  })
+  }
+
+
+  
 function fieldUpdates() {
 return new Promise(function (resolve,reject) {
       //$('#field_stats_update_status').text('Updating....')

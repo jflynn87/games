@@ -1,7 +1,7 @@
-from golf_app.models import Field, Group, Tournament, Season, Golfer, ScoreDict, StatLinks, FedExSeason
+from golf_app.models import Field, Group, Tournament, Season, Golfer, ScoreDict, StatLinks, FedExSeason, FedExField
 import urllib3
 from django.core.exceptions import ObjectDoesNotExist
-from golf_app import scrape_cbs_golf, scrape_espn, utils, scrape_scores_picks, populateMPField, populateZurichField, espn_api, pga_t_data
+from golf_app import scrape_cbs_golf, scrape_espn, utils, scrape_scores_picks, populateMPField, populateZurichField, espn_api, pga_t_data, espn_golfer_api
 from django.db import transaction
 import urllib
 from urllib.request import Request, urlopen
@@ -493,50 +493,33 @@ def create_field(field, tournament):
             group_num += 1
             player_cnt = 1
 
-    # doing here to save this data before updating the field by field records
-    fed_ex = get_fedex_data(tournament)
-    individual_stats = get_individual_stats()
-
-
-    #need to do this after full field is saved for the calcs to work.  No h/c in MP
-    # Move to separate functions for performance
-    # fed_ex = get_fedex_data(tournament)
-    # individual_stats = get_individual_stats()
-
-    # for f in Field.objects.filter(tournament=tournament):
-        
-    #     if tournament.pga_tournament_num not in ['470', '018']:
-    #         f.handi = f.handicap()
-    #     else:
-    #         f.handi = 0
-        
-    #     f.prior_year = f.prior_year_finish()
-    #     recent = OrderedDict(sorted(f.recent_results().items(), reverse=True))
-    #     f.recent = recent
-    #     f.season_stats = f.golfer.summary_stats(tournament.season) 
-
-    #     #print (fed_ex)
-    #     if fed_ex.get(f.playerName):
-    #        f.season_stats.update({'fed_ex_points': fed_ex.get(f.playerName).get('points'),
-    #                               'fed_ex_rank': fed_ex.get(f.playerName).get('rank')})
-    #     else:
-    #        f.season_stats.update({'fed_ex_points': 'n/a',
-    #                               'fed_ex_rank': 'n/a'})
-
-    #     if individual_stats.get(f.playerName):
-    #         player_s = individual_stats.get(f.playerName)
-    #         for k, v in player_s.items():
-    #             if k != 'pga_num':
-    #                 f.season_stats.update({k: v})
-        
-    #     f.save()
-
-    # for g in Golfer.objects.all():
-    #     g.results = g.get_season_results()
-    #     g.save()
-
-
     print ('saved field objects')
+    # doing here to save this data before updating the field by field records
+    #move these to separate path
+    #fed_ex = get_fedex_data(tournament)
+    #individual_stats = get_individual_stats()
+
+
+def setup_fedex_data(t=None, update=False):
+    if not t:
+        t= Tournament.objects.get(current=True)
+    
+    try:
+        fedex = get_fedex_data(t,update)
+    except Exception as e:
+        print ('populate field setup_fedex_data issue: ', e)
+        return {}
+    return fedex
+
+
+def setup_individual_stats(update=False):
+    
+    try:
+        stats = get_individual_stats(update=update) 
+    except Exception as e:
+        print ('populate field setup_individual_stats issue: ', e)
+        return {}
+    return stats
 
 
 def create_olympic_field(field, tournament):
@@ -738,82 +721,111 @@ def create_ryder_cup_field(field, tournament):
     print ('saved Ryder Cup field objects')
 
 
-def get_individual_stats(t=None):
+def get_individual_stats(t=None, update=False):
     start = datetime.datetime.now()
     d = {}
 
     if not t:
         t= Tournament.objects.get(current=True)
 
-    if t.individual_stats and len(t.individual_stats) > 0:
+    if t.individual_stats and len(t.individual_stats) > 0 and not update:
         return t.individual_stats
-    for stat in StatLinks.objects.all():
-        print (stat.link)
-        try: 
-            html = urllib.request.urlopen(stat.link)
-            soup = BeautifulSoup(html, 'html.parser')
 
-            for row in soup.find('table', {'id': 'statsTable'}).find_all('tr')[1:]:
-                if d.get(row.find('td', {'class': 'player-name'}).text.strip()):
-                    d[row.find('td', {'class': 'player-name'}).text.strip()].update({stat.name: {
-                                                                        'rank': row.find_all('td')[0].text.strip(),
-                                                                        #'rounds': row.find_all('td')[3].text,
-                                                                        'average': row.find_all('td')[4].text,
-                                                                        'total_sg': row.find_all('td')[5].text,
-                                                                        #'measured_rounds': row.find_all('td')[6].text
-                                                                        }})
-                else:
-                    d[row.find('td', {'class': 'player-name'}).text.strip()] = {'pga_num': row.get('id').strip('playerStatsRow'),
-                                                                                'stats_rounds': row.find_all('td')[3].text,
-                                                                                'stats_measured_rounds': row.find_all('td')[6].text
-                                                                                }
-                    d[row.find('td', {'class': 'player-name'}).text.strip()].update( 
-                                                                        {stat.name: {'rank': row.find_all('td')[0].text.strip(),
-                                                                        #'rounds': row.find_all('td')[3].text,
-                                                                        'average': row.find_all('td')[4].text,
-                                                                        'total_sg': row.find_all('td')[5].text,
-                                                                        #'measured_rounds': row.find_all('td')[6].text
-                                                                        }})
+    try:
+        for f in Field.objects.filter(tournament=t):
+            data = espn_golfer_api.ESPNGolfer(f.golfer.espn_number)
+            d[f.golfer.golfer_name] = {'espn_data': data}
+        t.individual_stats = d
+        t.save()
 
-            t.individual_stats = d
-            t.save()
+    #PGA changed website can't scrape
+    # for stat in StatLinks.objects.all():
+    #     print (stat.link)
+    #     try: 
+    #         html = urllib.request.urlopen(stat.link)
+    #         soup = BeautifulSoup(html, 'html.parser')
 
-        except Exception as e:
-            print ('get_individual_stats exception ', stat.link, e)
+    #         for row in soup.find('table', {'id': 'statsTable'}).find_all('tr')[1:]:
+    #             if d.get(row.find('td', {'class': 'player-name'}).text.strip()):
+    #                 d[row.find('td', {'class': 'player-name'}).text.strip()].update({stat.name: {
+    #                                                                     'rank': row.find_all('td')[0].text.strip(),
+    #                                                                     #'rounds': row.find_all('td')[3].text,
+    #                                                                     'average': row.find_all('td')[4].text,
+    #                                                                     'total_sg': row.find_all('td')[5].text,
+    #                                                                     #'measured_rounds': row.find_all('td')[6].text
+    #                                                                     }})
+    #             else:
+    #                 d[row.find('td', {'class': 'player-name'}).text.strip()] = {'pga_num': row.get('id').strip('playerStatsRow'),
+    #                                                                             'stats_rounds': row.find_all('td')[3].text,
+    #                                                                             'stats_measured_rounds': row.find_all('td')[6].text
+    #                                                                             }
+    #                 d[row.find('td', {'class': 'player-name'}).text.strip()].update( 
+    #                                                                     {stat.name: {'rank': row.find_all('td')[0].text.strip(),
+    #                                                                     #'rounds': row.find_all('td')[3].text,
+    #                                                                     'average': row.find_all('td')[4].text,
+    #                                                                     'total_sg': row.find_all('td')[5].text,
+    #                                                                     #'measured_rounds': row.find_all('td')[6].text
+    #                                                                     }})
+
+    #         t.individual_stats = d
+    #         t.save()
+
+    except Exception as e:
+        print ('get_individual_stats exception ', e)
     print ('individual stats calc duraion: ', datetime.datetime.now() - start)
     return d
 
 
-def get_fedex_data(tournament=None):
+def get_fedex_data(tournament=None, update=False):
     '''takes an optional tournament object to update/setup, returns a dict'''
     print ('updating fedex data')    
-    if tournament:
+    start = datetime.datetime.now()
+    if tournament and not update:
         if tournament.fedex_data and len(tournament.fedex_data) > 0:
             return tournament.fedex_data
 
     data = {}
     try:
         season = Season.objects.get(current=True)
-        link = 'https://www.pgatour.com/fedexcup/official-standings.html'
-        fed_ex_html = urllib.request.urlopen(link)
-        fed_ex_soup = BeautifulSoup(fed_ex_html, 'html.parser')
-        rows = fed_ex_soup.find('table', {'class': 'table-fedexcup-standings'}).find_all('tr')
-        fedex_data_year = fed_ex_soup.find('h2', {'class': 'title'}).text.strip()[:4]
-        if Tournament.objects.filter(season__current=True).count() > 0 and not str(season.season) == str(fedex_data_year):
-            print ('fedex data season mismatch')
-            return {}
-        try:
-            for row in rows[1:]:
-                tds = row.find_all('td')
-                if not tds[0].get('class'):
-                #    print (tds[2].text.strip())
-                    data[tds[2].text.replace(u'\xa0', u' ')] = {'rank': tds[0].text, 
-                                         'last_week_rank': tds[1].text,
-                                        'points': tds[4].text.strip().replace(',', '')}
-        except Exception as e:
-            print ('fedex mapping issue ', e)
+        prior_t = Tournament.objects.filter(season__current=True).order_by('-pk')[1]
+        #print (prior_t.fedex_data)
+        c = 0    
+        #for g in FedExField.objects.filter(season__season__current=True, golfer__espn_number='9780'):
+        g_count = FedExField.objects.filter(season__season__current=True).count()
+        for g in FedExField.objects.filter(season__season__current=True):
+            if g.golfer.espn_number:
+                g_data = espn_golfer_api.ESPNGolfer(g.golfer.espn_number)
+                if g_data.fedex_rank():
+                    try:
+                        prior = prior_t.fedex_data.get(g.golfer.golfer_name).get('rank')
+                    except Exception as e:
+                        prior = ''
+                    data[g.golfer.golfer_name] = {'rank': g_data.fedex_rank(), 'points': g_data.fedex_points(), 'last_week_rank': prior }
+            c += 1
+            if c % 20 == 0:
+                print ('fedex data updated: ', c, ' of ', g_count, ' dur: ', datetime.datetime.now() - start)
+            elif c == g_count:
+                print ('fedex updates completed: ', c, ' of ', g_count)
+        # link = 'https://www.pgatour.com/fedexcup/official-standings.html'
+        # fed_ex_html = urllib.request.urlopen(link)
+        # fed_ex_soup = BeautifulSoup(fed_ex_html, 'html.parser')
+        # rows = fed_ex_soup.find('table', {'class': 'table-fedexcup-standings'}).find_all('tr')
+        # fedex_data_year = fed_ex_soup.find('h2', {'class': 'title'}).text.strip()[:4]
+        # if Tournament.objects.filter(season__current=True).count() > 0 and not str(season.season) == str(fedex_data_year):
+        #     print ('fedex data season mismatch')
+        #     return {}
+        # try:
+        #     for row in rows[1:]:
+        #         tds = row.find_all('td')
+        #         if not tds[0].get('class'):
+        #         #    print (tds[2].text.strip())
+        #             data[tds[2].text.replace(u'\xa0', u' ')] = {'rank': tds[0].text, 
+        #                                  'last_week_rank': tds[1].text,
+        #                                 'points': tds[4].text.strip().replace(',', '')}
+        # except Exception as e:
+        #     print ('fedex mapping issue ', e)
 
-        fedex_data_year = fed_ex_soup.find('h2', {'class': 'title'}).text.strip()[:4]
+        # fedex_data_year = fed_ex_soup.find('h2', {'class': 'title'}).text.strip()[:4]
         if tournament:
             tournament.fedex_data = data
             tournament.save()

@@ -13,7 +13,7 @@ from datetime import datetime, timedelta
 from golf_app import populateField, calc_leaderboard, manual_score, bonus_details, espn_api, \
                      round_by_round, scrape_espn, utils, golf_serializers, espn_schedule, \
                      scrape_scores_picks, espn_ryder_cup, withdraw, fedex_email, pga_t_data, fedexData, \
-                     setup_fedex_field
+                     setup_fedex_field, espn_golfer_api
 from django.db.models import Count, Sum
 from unidecode import unidecode as decode
 import json
@@ -37,21 +37,57 @@ from operator import itemgetter
 start = datetime.now()
 
 s = Season.objects.get(current=True)
-t = pga_t_data.PGAData(update=True).get_full_list()
-for k,v in t.items():
-    print (k,v)
+#t = Tournament.objects.filter(season__current=True).order_by('-pk')[1]
+#for f in Field.objects.filter(tournament=t)[:5]:
+#    print (f, f.season_stats)
 
+
+e = espn_golfer_api.ESPNGolfer('9780')
+d = e.all_stats
+
+print (d)
+
+print (e.fedex_rank(), e.fedex_points())
+
+
+#d = populateField.get_fedex_data(t, update=True)
+#print (d)
+print (datetime.now() - start)
 exit()
+#t = pga_t_data.PGAData(update=True).get_full_list()
+#for k,v in t.items():
+#    print (k,v)
+
+#exit()
 #owgr = populateField.get_worldrank()
 #p = populateField.get_fedex_data()
 
-headers = {'User-Agent': 'Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.149 Mobile Safari/537.36'}
-url = 'https://www.espn.com/golf/stats/player/_/table/general/sort/cupPoints/dir/desc'
-schedule = get(url, headers=headers).json()
+#for g in FedExField.objects.filter(season__season__current=True):
+#    print (g)
 
-print(schedule)
+#headers = {'User-Agent': 'Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.149 Mobile Safari/537.36'}
+#url =  "http://sports.core.api.espn.com/v2/sports/golf/leagues/pga/seasons/2023/types/2/athletes/9780/statistics/0?lang=en&region=us"
 
+#all_data = get(url, headers=headers).json()
 
+#print (type(all_data.get('splits')))
+
+for g in FedExField.objects.filter(season__season__current=True):
+    if g.golfer.espn_number:
+        e = espn_golfer_api.ESPNGolfer(g.golfer.espn_number)
+        print (g, e.fedex_rank())
+        #headers = {'User-Agent': 'Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.149 Mobile Safari/537.36'}
+        #url =  "http://sports.core.api.espn.com/v2/sports/golf/leagues/pga/seasons/" + str(s.season) + "/types/2/athletes/" + g.golfer.espn_number + "/statistics/0?lang=en&region=us"
+        #all_data = get(url, headers=headers).json()
+
+        #if all_data.get('splits'):
+        #    for c in all_data.get('splits').get('categories'):
+        #        print (g.golfer.golfer_name, [x for x in c.get('stats') if x.get('name') == 'cupPoints'][0].get('rank'))
+        #else:
+        #    print (g.golfer.golfer_name, 'NO DATA')
+    else:
+        print (g.golfer.golfer_name, 'No ESPN')
+print (datetime.now() - start)
 exit()
 #t = Tournament.objects.filter(season__current=True).order_by('-pk')[3]
 t = Tournament.objects.get(current=True)

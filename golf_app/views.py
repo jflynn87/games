@@ -3496,3 +3496,33 @@ class ScoresByPickAPI(APIView):
         #print ('GetFieldKeys time: ', datetime.datetime.now() - start)
 
         return JsonResponse(d, status=200, safe=False)
+
+
+class SetupFedexDataAPI(APIView):
+    def post(self, request):
+        start = datetime.datetime.now()
+        try:
+            data = {}
+            print ('DATA ', request.data)
+            t= Tournament.objects.get(pga_tournament_num=request.data.get('pga_t_num'), season__current=True)
+            data = populateField.setup_fedex_data(t, update=True)  #is there a better way to do the update ind?
+            print ('setup fedex API duration: ', datetime.datetime. now() - start)
+            return JsonResponse(data, status=200)
+        except Exception as e:
+            print ('setup fedex data API exception: ', e)
+            return JsonResponse({'error': {'msg': str(e)}})
+
+
+class SetupGolferStatsAPI(APIView):
+    def post(self, request):
+        start = datetime.datetime.now()
+        try:
+            data = {}
+            #print ('DATA ', request.data)
+            t= Tournament.objects.get(pga_tournament_num=request.data.get('pga_t_num'), season__current=True)
+            data = populateField.setup_individual_stats(update=True)  #is there a better way to do the update ind?
+            print ('setup golfer stats API duration: ', datetime.datetime. now() - start)
+            return JsonResponse(data, status=200)
+        except Exception as e:
+            print ('setup golfer stats API exception: ', e)
+            return JsonResponse({'error': {'msg': str(e)}})
