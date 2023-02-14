@@ -1,5 +1,6 @@
 {%extends 'golf_app/golf_app_base.html'%}
 {%load static%}
+{%load compress%}
 {%block body_block%}
 
 
@@ -113,6 +114,7 @@
 
 {%endfor%}
 </table>
+{%compress js%}
 <script type="text/javascript" src="{%static 'golf_app/js/setup.js'%}"></script> 
-
+{%endcompress%}
 {%endblock%}

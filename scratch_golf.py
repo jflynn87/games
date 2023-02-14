@@ -38,25 +38,28 @@ start = datetime.now()
 
 s = Season.objects.get(current=True)
 #t = Tournament.objects.filter(season__current=True).order_by('-pk')[1]
+t = Tournament.objects.get(current=True)
 #for f in Field.objects.filter(tournament=t)[:5]:
 #    print (f, f.season_stats)
 
 
-e = espn_golfer_api.ESPNGolfer('9780')
-d = e.all_stats
+#e = espn_golfer_api.ESPNGolfer('9780')
+#d = e.all_stats
 
-print (d)
+#print (d)
 
-print (e.fedex_rank(), e.fedex_points())
+#t = pga_t_data.PGAData(update=True).get_full_list()
+#for k,v in t.items():
+#    print (k,v)
+
+for f in Field.objects.filter(tournament=t):
+    print (f, f.season_stats)
 
 
 #d = populateField.get_fedex_data(t, update=True)
 #print (d)
 print (datetime.now() - start)
 exit()
-#t = pga_t_data.PGAData(update=True).get_full_list()
-#for k,v in t.items():
-#    print (k,v)
 
 #exit()
 #owgr = populateField.get_worldrank()

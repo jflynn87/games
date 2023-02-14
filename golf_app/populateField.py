@@ -734,7 +734,8 @@ def get_individual_stats(t=None, update=False):
     try:
         for f in Field.objects.filter(tournament=t):
             data = espn_golfer_api.ESPNGolfer(f.golfer.espn_number)
-            d[f.golfer.golfer_name] = {'espn_data': data}
+            d[f.golfer.golfer_name] = {'espn_data': data.all_stats}
+
         t.individual_stats = d
         t.save()
 

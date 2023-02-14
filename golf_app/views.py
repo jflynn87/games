@@ -1923,7 +1923,7 @@ class FedExPicksAPI(APIView):
         print (filter)
         try:
             if filter == 'by_user':
-                print ('IN BY USER')
+                #print ('IN BY USER')
                 data = list(FedExPicks.objects.filter(pick__season=f_season, user=self.request.user).values_list('pick__golfer__pk', flat=True))
                 d['data'] = data
                 print ('FEDEX: ', d)

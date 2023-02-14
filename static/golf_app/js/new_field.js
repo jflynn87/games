@@ -284,9 +284,12 @@ function buildForm(info, groups, field, golfers, partners, picks, tStarted, star
             golferTd.append(golferP2)
 
             golferP3 = document.createElement('p')
+            try {
             if (f.fields.season_stats.fed_ex_rank != 'n/a') {
                 fedexTotals = f.fields.season_stats.fed_ex_rank + '/' + f.fields.season_stats.fed_ex_points}
             else {fedexTotals = 'n/a'}
+            }
+            catch(error) {fedexTotals = 'error'}
 
             golferP3.innerHTML = 'OWGR: ' + f.fields.currentWGR + '; Handicap: ' + f.fields.handi +
                                  '; FedEx: ' + fedexTotals + '; Prior Year: ' + f.fields.prior_year
@@ -357,8 +360,10 @@ function getStatsData(ele) {
     .then((response) => response.json())
     .then((responseJSON) => {
       data = responseJSON
+      
       var stats = build_stats_row(data[0])
-          
+
+      
       row.deleteCell(0)
       row.appendChild(stats)
     
@@ -374,7 +379,7 @@ function getStatsData(ele) {
   
 
 function build_stats_row(field) {
-    console.log(field)
+    //console.log(field)
     let stats_row = document.createElement('tr');
     stats_row.id = 'stats_row-' + field.id
     stats_row.style.width = 100%
@@ -403,7 +408,7 @@ function build_stats_row(field) {
         }
         rowA_header.classList.add('stats_row')
         stats_table.appendChild(rowA_header)
-            
+
         let stats_rowA = document.createElement('tr')
             
             currOWGR = document.createElement('td')
@@ -416,9 +421,13 @@ function build_stats_row(field) {
             soyOWGR.innerHTML = field.soy_WGR
             soyOWGR.colSpan = 2
             fedEx = document.createElement('td')
+            try {
             fedEx.innerHTML = 'rank: ' + field.season_stats.fed_ex_rank + '; points:' + field.season_stats.fed_ex_points
-            fedEx.colSpan = 2
 
+            }
+            catch (error)
+            {fedEx.innerHTML = 'rank: n/a'}
+            fedEx.colSpan = 2
             stats_rowA.append(currOWGR)
             stats_rowA.append(sowOWGR)
             stats_rowA.append(soyOWGR)
@@ -458,6 +467,7 @@ function build_stats_row(field) {
         recent_p = document.createElement('p')
         var ranks = ''
         var items = ''
+        try {
         rec_l = Object.keys(field.recent).length
         for (let i=0; i < rec_l; i++) {
             var r = Object.values(field.recent)[i]
@@ -465,7 +475,8 @@ function build_stats_row(field) {
             else {ranks += r.rank + ' '}
             items += r.name + ': ' + r.rank + '\n'
             }
-        
+        }
+        catch (error) {ranks = ['']}
         recent_p.innerHTML = ranks
         recent_form.appendChild(recent_p)
 
