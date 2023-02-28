@@ -3,6 +3,7 @@ from django.views.generic import View, TemplateView, ListView, DetailView, Creat
 from user_app import espn_baseball
 from golf_app.models import Tournament, Season  
 from fb_app.models import Week, Games, PlayoffPicks 
+from wc_app.models import Event
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponseRedirect, HttpResponse
 from django.contrib.auth import authenticate, login, logout
@@ -68,6 +69,11 @@ def index(request):
         golf_auction_user_list = ['john', 'jcarl62', 'ryosuke']
         print ('game', game)
         print ('picks', picks)
+        if Event.objects.filter(current=True).exists():
+            event = Event.objects.get(current=True)
+        else:
+            event = None
+
         return render(request, 'index.html', {
             'fb_week': week,
             #'sb_user_list': User.objects.filter(username__in=['john', 'jcarl62']),
@@ -76,6 +82,7 @@ def index(request):
             'sb_user_list': sb_user_list,
             'golf_auction_user_list': golf_auction_user_list,
             't': t,
+            'event': event,
 
                 })
 

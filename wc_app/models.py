@@ -10,6 +10,8 @@ class Event(models.Model):
     complete = models.BooleanField(default=False)
     set_started = models.BooleanField(default=False)
     set_not_started = models.BooleanField(default=False)
+    logo_file = models.CharField(null=True, blank=True, max_length=200)
+    data = models.JSONField(null=True, blank=True)
 
     def __str__(self):
         return str(self.name)

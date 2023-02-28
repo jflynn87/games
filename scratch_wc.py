@@ -3,7 +3,7 @@ os.environ.setdefault("DJANGO_SETTINGS_MODULE","gamesProj.settings")
 import django
 django.setup()
 
-from wc_app import wc_group_data, wc_ko_data
+from wc_app import wc_group_data, wc_ko_data, wbc_group
 from wc_app.models import Event, Group, Team, Picks, Stage, Data
 from django.contrib.auth.models import User
 from django.db.models import Min, Q, Count, Sum, Max
@@ -16,9 +16,83 @@ from datetime import datetime
 
 start = datetime.now()
 
+import ssl 
 
 
 e = Event.objects.get(current=True)
+d = {}
+d['group_stage_rules'] = ['<ul> \
+    <li>Choose the rank within the group for each team</li> \
+    <li>If your #1 or #2 pick finishes in first or second place: +3 points</li> \
+    <li>If your first place pick finishes in first place: +2 points</li> \
+    <li>All picks in Group correct (1st, 2nd, 3rd, 4th, 5th): +5 points </li> \
+    <li>Upset bonus:  if the 3rd, 4th or 5th ranked teams finishes first or second, bonus points = (team rank - second best rank) *.3.  Rounded to 2 decimal places (if you picked one of those teams in 1st and they finish 1st you also get the first place bonus)</li> \
+    <li>All team rankings will be taken from ESPN.com.  </li> \
+    </ul>' ]
+d['group_stage_ranks_msg'] = ['<p>Current WBC Rankings taken from <a href="https://en.wikipedia.org/wiki/2023_World_Baseball_Classic">HERE</a> as of 3/1/2023</p>'] 
+e.data = d
+e.save()
+#wbc = wbc_group.TeamData()
+#teams = wbc.create_teams()
+
+#print (teams.count())
+
+exit()
+
+web_url = 'https://en.wikipedia.org/wiki/2023_World_Baseball_Classic'
+context = ssl._create_unverified_context()
+headers = {'User-Agent': 'Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.149 Mobile Safari/537.36'}
+#url =  "https://site.web.api.espn.com/apis/site/v2/sports/golf/leaderboard?league=pga"
+
+#html = get(web_url, headers=headers)
+
+
+html = urlopen(web_url, context=context)
+#html = get(web_url)
+soup = BeautifulSoup(html, 'html.parser')
+
+tables = soup.find_all('table', {'class': 'wikitable'})
+
+table = tables[4]
+data = {}
+for i, row in enumerate(table.find_all('tr')):
+    if i == 0:
+        for j, th in enumerate(row.find_all('th')):
+            t = th.text.split('(')[0].strip()
+            data[t] = {}
+            if j == 0:
+                a = t
+            elif j == 1: 
+                b = t
+            elif j == 2:
+                c = t
+            elif j == 3:
+                d = t
+            else:
+                raise Exception('I index error, why are we here')
+    else:
+        for k, td in enumerate(row.find_all('td')):
+            country = td.text.split('(')[0].strip()
+            rank = td.text.split('(')[1].strip()
+            if k == 0:
+                data[a].update({country: {'rank': rank}})
+            elif k == 1:
+                data[b].update({country: {'rank': rank}})
+            elif k == 2:
+                data[c].update({country: {'rank': rank}})
+            elif k == 3:
+                data[d].update({country: {'rank': rank}})
+            else:
+                raise Exception('J index issue, why here')
+
+print (data)
+
+
+
+
+
+exit()
+
 for u in e.get_users():
     print (u)
 # stage = Stage.objects.get(name="Knockout Stage")

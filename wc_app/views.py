@@ -270,7 +270,7 @@ class GroupStageTeamsAPI(APIView):
     def get(self, request ):
         start = datetime.now()
         stage = Stage.objects.get(name="Group Stage", event__current=True)
-        d = serializers.serialize('json', Team.objects.filter(group__stage=stage), use_natural_foreign_keys=True),
+        d = serializers.serialize('json', Team.objects.filter(group__stage=stage), use_natural_foreign_keys=True)
         
         #print ('WC GroupBonusAPI duration: ', datetime.now() - start)
         return JsonResponse(d, status=200, safe=False)

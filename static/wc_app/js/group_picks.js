@@ -13,21 +13,29 @@ function buildTable() {
         var data = JSON.parse(responseJSON[0])
         var picks = JSON.parse(responseJSON[1])
         console.log('picks ', picks)
+        
+        var picksPerGrp = data.length / $('#pick_form table').length
+        var options = ''
+        for (g=0; g <= picksPerGrp; g++) {
+            if (g == 0) {options = options + '<option value=' + g + '>--</option>'}
+            else {options = options + '<option value=' + g + '>' + g + '</option>'}
+        }
         $.each(data, function(i,d){
     
-    
         $('#picks_table_' + d.fields.group).append('<tr id=' + d.pk + '_row></tr>')
+        // $('#' + d.pk + '_row').append('<td style=width:10%;> <select name=' + d.pk + ' selected=0 id=sel_' + d.pk + ' class=pick_input>' +
+        //                                     '<option value=0>--</option>' + 
+        //                                     '<option value=1>1</option>' + 
+        //                                     '<option value=2>2</option>' + 
+        //                                     '<option value=3>3</option>' + 
+        //                                     '<option value=4>4</option>' + 
+        //                                 '</input> </td>')
+
         $('#' + d.pk + '_row').append('<td style=width:10%;> <select name=' + d.pk + ' selected=0 id=sel_' + d.pk + ' class=pick_input>' +
-                                            '<option value=0>--</option>' + 
-                                            '<option value=1>1</option>' + 
-                                            '<option value=2>2</option>' + 
-                                            '<option value=3>3</option>' + 
-                                            '<option value=4>4</option>' + 
-                                        '</input> </td>')
-        //$('#sel_' + d.pk).on('change', checkComplete(document.getElementById('picks_table_' + d.fields.group)))
-        
-        //$('#' + d.pk + '_row').append('<td> <a href=' + d.fields.info_link + '>' + d.fields.full_name + '<span><img src="' + d.fields.flag_link + '"></img></span>' +'</a></td>' +
-        //                                                '<td>' + d.fields.rank + '</td>')
+                                             options + 
+                                         '</input> </td>')
+
+
         $('#' + d.pk + '_row').append('<td style=width:30%> <a href=' + d.fields.info_link + '> <span><img src="' + d.fields.flag_link + '"></img></span>' + d.fields.full_name + '</a></td>' +
                                                         '<td>' + d.fields.rank + '</td>')
         //console.log('eventlistner group', d.fields.group)
@@ -60,7 +68,10 @@ function buildTable() {
 }
 
 function checkComplete(table) {
-    
+    groups = $('#pick_form table').length
+    teams = $('#pick_form table tr').length - (groups * 2)
+    teamsPerGrp = teams/groups
+    console.log('TEAMS ', teams, teamsPerGrp)
     $('#sub_btn').attr('disabled', true)
     picks = $('.pick_input')
     var pickArray = []

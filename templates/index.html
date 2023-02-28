@@ -106,10 +106,6 @@
         <br>
         <a href="{% url 'fb_app:playoff_score' %}"> <button class="btn btn-primary">Super Bowl Score</button></a>
         {%endif%}
-
-    
-
-
       </div>
     </div>
     <div class=middle></div>
@@ -122,10 +118,13 @@
     <img src="{%static '/img/scoreboard.gif'%}" class="card-img-top" style="height: 27rem;" alt="...">
     <div id='fb_lb_body' class='card-body'></div>
     </div>
+  {%if event%}
     <div class=middle></div>
     <div class="card">
-      <h3>World Cup Game</h3>
-      <img src="{%static '/img/download.jfif'%}" style="height: 27rem;" class="card-img-top" alt="...">
+      <h3>{{event.name}}</h3>
+      <!-- <img src="{%static '/img/download.jfif'%}" style="height: 27rem;" class="card-img-top" alt="..."> -->
+      <p>{{event.image_logo}}</p>
+      <img src="{% get_static_prefix %}{{event.logo_file}}" style="height: 27rem;" class="card-img-top" alt="...">
       <div class="card-body">
         <h4 class="card-title" style="font-weight: bold;">Select an Option</h4>
         <!-- <a href="{% url 'fb_app:games_list' pk=fb_week.pk %}" class="btn btn-primary">Make Picks</a> -->
@@ -142,10 +141,8 @@
         <br>
         <br>
     </div>
-
-
-
   </div>
+  {%endif%}
     <br>
     <br>
     {%if user.is_superuser%}
