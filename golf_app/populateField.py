@@ -1,7 +1,7 @@
 from golf_app.models import Field, Group, Tournament, Season, Golfer, ScoreDict, StatLinks, FedExSeason, FedExField
 import urllib3
 from django.core.exceptions import ObjectDoesNotExist
-from golf_app import scrape_cbs_golf, scrape_espn, utils, scrape_scores_picks, populateMPField, populateZurichField, espn_api, pga_t_data, espn_golfer_api
+from golf_app import scrape_cbs_golf, scrape_espn, utils, scrape_scores_picks, populateMPField, populateZurichField, espn_api, pga_t_data, espn_golfer_stats_api
 from django.db import transaction
 import urllib
 from urllib.request import Request, urlopen
@@ -733,7 +733,7 @@ def get_individual_stats(t=None, update=False):
 
     try:
         for f in Field.objects.filter(tournament=t):
-            data = espn_golfer_api.ESPNGolfer(f.golfer.espn_number)
+            data = espn_golfer_stats_api.ESPNGolfer(f.golfer.espn_number)
             d[f.golfer.golfer_name] = {'espn_data': data.all_stats}
 
         t.individual_stats = d

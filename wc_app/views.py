@@ -40,8 +40,8 @@ class GroupPicksView(LoginRequiredMixin, TemplateView):
         stage = Stage.objects.get(event__current=True, name="Group Stage")
         if stage.started():
             return HttpResponse('Too late to make picks')
-        #Picks.objects.filter(user=self.request.user, team__group__stage__current=True).delete()
-        Picks.objects.filter(user=self.request.user, stage=stage).delete()
+        Picks.objects.filter(user=self.request.user, team__group__stage=stage).delete()
+        #Picks.objects.filter(user=self.request.user, group__stage=stage).delete()
         for t, r in request.POST.items():
             if t != 'csrfmiddlewaretoken':
                 print (t, r)

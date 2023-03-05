@@ -3,7 +3,7 @@ os.environ.setdefault("DJANGO_SETTINGS_MODULE","gamesProj.settings")
 import django
 django.setup()
 
-from wc_app import wc_group_data, wc_ko_data, wbc_group
+from wc_app import wc_group_data, wc_ko_data, wbc_group, wbc_group_standings
 from wc_app.models import Event, Group, Team, Picks, Stage, Data
 from django.contrib.auth.models import User
 from django.db.models import Min, Q, Count, Sum, Max
@@ -20,22 +20,62 @@ import ssl
 
 
 e = Event.objects.get(current=True)
-d = {}
-d['group_stage_rules'] = ['<ul> \
+stage, s_created = Stage.objects.get_or_create(event=e, current=True)
+stage.name = "Group Stage"
+stage.curret = True
+stage.pick_type = 1
+stage.score_url = 'https://www.espn.com/world-baseball-classic/standings'
+stage.save()
+espn = wbc_group_standings.ESPNData()
+
+#for k, v in d.items():
+#    print(k, v)
+#    print ('----')
+
+#print (datetime.now() - start)
+
+data = {}
+data['group_stage_rules'] = ['<ul> \
     <li>Choose the rank within the group for each team</li> \
     <li>If your #1 or #2 pick finishes in first or second place: +3 points</li> \
-    <li>If your first place pick finishes in first place: +2 points</li> \
+    <li>If your first place pick finishes in first place: +2 points - not available in case of a tie</li> \
     <li>All picks in Group correct (1st, 2nd, 3rd, 4th, 5th): +5 points </li> \
     <li>Upset bonus:  if the 3rd, 4th or 5th ranked teams finishes first or second, bonus points = (team rank - second best rank) *.3.  Rounded to 2 decimal places (if you picked one of those teams in 1st and they finish 1st you also get the first place bonus)</li> \
-    <li>All team rankings will be taken from ESPN.com.  </li> \
+    <li>Tie breaker - applied in this order: winning %, highest runs scored, lowest runs against.  If all are equal, then it is a tie and picks will be correct for either rank of the tied teams.</li> \
     </ul>' ]
-d['group_stage_ranks_msg'] = ['<p>Current WBC Rankings taken from <a href="https://en.wikipedia.org/wiki/2023_World_Baseball_Classic">HERE</a> as of 3/1/2023</p>'] 
-e.data = d
-e.save()
-#wbc = wbc_group.TeamData()
-#teams = wbc.create_teams()
+data['group_stage_ranks_msg'] = ['<p>Current WBC Rankings taken from <a href="https://en.wikipedia.org/wiki/2023_World_Baseball_Classic">HERE</a> as of 3/1/2023</p>'] 
+data['group_stage_group_count'] = 4
+data['group_stage_teams_per_group'] = 5
 
-#print (teams.count())
+e.data = data
+e.save()
+
+pools = espn.get_pool_names()
+print ('pools: ', pools)
+
+for p in pools:
+    g, g_created = Group.objects.get_or_create(stage=stage, group=p)
+
+d = espn.get_team_data()
+wbc = wbc_group.TeamData()
+teams = wbc.data
+print (teams)
+
+for key, t in d.items():
+    team, t_created = Team.objects.get_or_create(group=Group.objects.get(stage=stage, group=t.get('pool')), name=t.get('abbr'))
+    team.name = t.get('abbr')
+    team.full_name = t.get('full_name')
+    team.flag_link = t.get('flag')
+    try:
+        rank = [data.get('rank') for pool, team_info in teams.items() for team_name, data in team_info.items() if team_name == t.get('full_name')][0]
+    except Exception as e:
+        print ('fix Korea')
+        rank = [data.get('rank') for pool, team_info in teams.items() for team_name, data in team_info.items() if team_name == "South Korea"][0]
+    print (t.get('full_name'), rank)
+    team.rank = int(rank)
+    team.save()
+
+
 
 exit()
 

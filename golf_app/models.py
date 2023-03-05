@@ -19,7 +19,6 @@ from collections import OrderedDict
 from bs4 import BeautifulSoup
 
 
-
 # Create your models here.
 
 class Season(models.Model):
@@ -878,24 +877,23 @@ class Golfer(models.Model):
             return None
 
     def get_flag(self):
+        from golf_app import espn_golfer_base_data_api
+        #try:
+        #     player_html = urllib.request.urlopen(self.get_pga_player_link())
+        #     player_soup = BeautifulSoup(player_html, 'html.parser')
+        #     country = (player_soup.find('div', {'class': 'country'}))
+        #     flag = country.find('img').get('src')
 
+        #     return  "https://www.pgatour.com" + flag
+        # except Exception as e:
+        #     print ('Issue with PGA.com Flag lookup use espn?: ', self.golfer_name, e)
+        #     return None
         try:
-            #if golfer[1]=='.' and golfer[3] =='.':
-            #    name = str(pga_num) + '.' + golfer[0].lower() + '-' + golfer[2].lower() + '--' + golfer.split(' ')[1].strip(', Jr.').lower()
-            #else:
-            #    name = str(pga_num) + '.' + golfer.split(' ')[0].lower() + '-' + golfer.split(' ')[1].strip(', Jr.').lower()
-
-            #link = 'https://www.pgatour.com/players/player.' + unidecode.unidecode(name) + '.html'
-            #link = get_pga_player_link(pga_num, golfer)
-            player_html = urllib.request.urlopen(self.get_pga_player_link())
-            player_soup = BeautifulSoup(player_html, 'html.parser')
-            country = (player_soup.find('div', {'class': 'country'}))
-            flag = country.find('img').get('src')
-
-            return  "https://www.pgatour.com" + flag
+            return espn_golfer_base_data_api.ESPNGolfer(self.espn_number).get_flag()
         except Exception as e:
-            print ('Issue with PGA.com Flag lookup use espn?: ', self.golfer_name, e)
+            print ('issue with espn flag lookup', e)
             return None
+
 
     def get_fedex_stats(self):
         #not reliable as pga site frequently fails to load player

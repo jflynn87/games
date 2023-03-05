@@ -13,7 +13,7 @@ from datetime import datetime, timedelta
 from golf_app import populateField, calc_leaderboard, manual_score, bonus_details, espn_api, \
                      round_by_round, scrape_espn, utils, golf_serializers, espn_schedule, \
                      scrape_scores_picks, espn_ryder_cup, withdraw, fedex_email, pga_t_data, fedexData, \
-                     setup_fedex_field, espn_golfer_api
+                     setup_fedex_field, espn_golfer_stats_api, espn_golfer_base_data_api
 from django.db.models import Count, Sum
 from unidecode import unidecode as decode
 import json
@@ -39,22 +39,23 @@ start = datetime.now()
 s = Season.objects.get(current=True)
 #t = Tournament.objects.filter(season__current=True).order_by('-pk')[1]
 t = Tournament.objects.get(current=True)
-#for f in Field.objects.filter(tournament=t)[:5]:
+for g in Golfer.objects.all():
+    g.flag_link = g.get_flag()
+    g.save()
+exit()
+
+## for f in Field.objects.filter(tournament=t)[:5]:
 #    print (f, f.season_stats)
 
 
-#e = espn_golfer_api.ESPNGolfer('9780')
+#e = espn_golfer_base_data_api.ESPNGolfer('9780')
 #d = e.all_stats
 
-#print (d)
+#print (e.get_flag())
 
 #t = pga_t_data.PGAData(update=True).get_full_list()
 #for k,v in t.items():
 #    print (k,v)
-
-for f in Field.objects.filter(tournament=t):
-    print (f, f.season_stats)
-
 
 #d = populateField.get_fedex_data(t, update=True)
 #print (d)

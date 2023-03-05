@@ -212,7 +212,7 @@ function buildForm(info, groups, field, golfers, partners, picks, tStarted, star
             golferFlag = document.createElement('img')
             
             golferPic.src = golfer[0].pic_link
-            
+                        
             
             if (f.fields.partner) {
                 golferName.innerHTML = f.fields.playerName + '(' + (Number(f.fields.currentWGR) - Number(f.fields.partner_owgr)).toString() + ')'
@@ -221,6 +221,8 @@ function buildForm(info, groups, field, golfers, partners, picks, tStarted, star
             golferName.style.fontWeight = 'bold'
 
             golferFlag.src = golfer[0].flag_link
+            golferFlag.style.height = '20px'
+            golferFlag.style.width = '20px'
 
             golferP1.append(golferPic)
             golferP1.append(golferName)

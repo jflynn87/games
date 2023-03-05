@@ -25,7 +25,8 @@
 {%endautoescape%}
 {%endfor%}
 <!-- <p>Current FIFA World Rankings taken from <a href="https://www.fifa.com/fifa-world-ranking/men?dateId=id13792">FIFA</a> as of 10/6/2022</p> -->
-
+<p hidden id="group_count">{{stage.event.data.group_stage_group_count}}</p>
+<p hidden id="teams_per_group">{{stage.event.data.group_stage_teams_per_group}}</p>
 <div id="picks_sect">
     <form method="POST" id="pick_form" class="form-class">
         {%csrf_token%}
