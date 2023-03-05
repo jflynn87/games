@@ -1,5 +1,6 @@
 {%extends "wc_app/wc_base.html"%}
 {%load static%}
+{%load compress%}
 {%block body_block%}
 <h1>{{stage.event.name}} - {{stage.name}} Picks</h1>
 <h3>Rules</h3>
@@ -50,8 +51,9 @@
     <button type="submit" class="btn btn-primary" id="sub_btn" disabled>Submit</button>
     {%endif%}
 </form>
+{%compress js%}
 <script type="text/javascript" src="{%static 'wc_app/js/group_picks.js'%}"></script>
-
+{%endcompress%}
 <!-- <script type="text/javascript">
 
 var data = JSON.parse('{{teams|escapejs}}')
