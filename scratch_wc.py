@@ -22,7 +22,9 @@ e = wbc_group_standings.ESPNData()
 data = e.get_team_data()
 
 #usa = [data.get('rank') for key, team_info in e.get_team_data() for team_name, data in team_info.items() if team_name == t.get('full_name')][0]
+#print (data)
 
+#for t in Team.objects.filter(group__stage__current=True, group__group="Pool A"):
 for t in Team.objects.filter(group__stage__current=True):
     print (e.get_rank(t, data=data))
 

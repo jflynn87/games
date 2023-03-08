@@ -55,7 +55,7 @@ class ESPNData(object):
                                            'pct': row.find_all('td')[2].text,
                                            'gb': row.find_all('td')[3].text,
                                            'scored': row.find_all('td')[4].text,
-                                           'againt': row.find_all('td')[5].text,
+                                           'against': row.find_all('td')[5].text,
                                            })
         
         print ('group d create dur: ', datetime.now() - start)
@@ -92,22 +92,37 @@ class ESPNData(object):
 
         if not data:
             data = self.get_team_data()
-        pcts = [{'abbr':v.get('abbr'), 'pct': v.get('pct')} for k, v in data.items() if v.get('pool') == team.group.group]
-
-        sorted_pcts = sorted(pcts, key=lambda x:x.get('pct'))
+        pcts = [{'abbr':v.get('abbr'), 'pct': v.get('pct'), 'scored': v.get('scored'), 'against': v.get('against')} for k, v in data.items() if v.get('pool') == team.group.group]
+        t_data = [{'abbr':v.get('abbr'), 'pct': v.get('pct'), 'scored': v.get('scored'), 'against': v.get('against')} for k, v in data.items() if v.get('abbr') == team.name][0]
+        sorted_pcts = sorted(pcts, key=lambda x:(x.get('pct'), x.get('scored')), reverse=True)
+        #print ('sorted pcts: ', sorted_pcts)
+        print ('team data: ', t_data)
+        orig_idx = next((index for (index,d ) in enumerate(sorted_pcts) if d['abbr'] == team.name))
         
-        #print (sorted_pcts.index([v for v in sorted_pcts if v.get('abbr') == t.name]))
-        idx = next((index for (index,d ) in enumerate(sorted_pcts) if d['abbr'] == team.name)) 
-        print ('Team Rank before tie check: ', team, idx)
-
+        if len({k:v for k,v  in data.items() if v.get('pool') == team.group.group and v.get('pct') == t_data.get('pct')}) == 1:
+            return  orig_idx + 1
+        elif len({k:v for k,v in data.items() if v.get('pool') == team.group.group and v.get('pct') == t_data.get('pct') and v.get('scored') == t_data.get('scored')}) == 1:
+            return orig_idx + 1
+               
+        same_win_pct = [{'abbr':v.get('abbr'), 'pct': v.get('pct'), 'scored': v.get('scored'), 'against': v.get('against')}  \
+                        for k, v in data.items() if v.get('pool') == team.group.group and v.get('pct') == t_data.get('pct')]
+        sorted_against = sorted(same_win_pct, key=lambda x:int(x.get('against')))
+        
+        same_win_pct_best = next((index for (index,d ) in enumerate(sorted_pcts) if d['pct'] == t_data.get('pct') and d['scored'] == t_data['scored']))
+        #return same_win_pct_best +1          
+        idx = same_win_pct_best
         while True:
-            if idx != 0 and sorted_pcts[idx].get('pct') == sorted_pcts[idx-1].get('pct'):
-                idx -= 1
+            print (team, idx)
+            if idx != 0:
+                if float(sorted_pcts[same_win_pct_best].get('against')) == float(sorted_pcts[idx-1].get('against')): 
+                    idx -= 1
+                else: 
+                    return idx +1
             else:
                 if idx == 0:
                     rank = 1
                 else:
                     rank = idx + 1
-                break
+                return rank
         print ('Team Rank after tie check: ', team, rank)
         return rank
