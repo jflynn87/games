@@ -72,3 +72,42 @@ class ESPNData(object):
         return l
 
 
+    def new_data(self):
+        try:
+            
+            saved_d = Data.objects.get(stage=self.stage)
+            if saved_d.force_refresh:
+                return True
+            if saved_d.group_data == self.get_team_data():
+                print ('no new data')
+                return False
+            else:
+                print ('new data')
+                return True
+        except Exception as e:
+            print ('ESPN WC API new data check error: ', e)
+            return True
+        
+    def get_rank(self, team, data):
+
+        if not data:
+            data = self.get_team_data()
+        pcts = [{'abbr':v.get('abbr'), 'pct': v.get('pct')} for k, v in data.items() if v.get('pool') == team.group.group]
+
+        sorted_pcts = sorted(pcts, key=lambda x:x.get('pct'))
+        
+        #print (sorted_pcts.index([v for v in sorted_pcts if v.get('abbr') == t.name]))
+        idx = next((index for (index,d ) in enumerate(sorted_pcts) if d['abbr'] == team.name)) 
+        print ('Team Rank before tie check: ', team, idx)
+
+        while True:
+            if idx != 0 and sorted_pcts[idx].get('pct') == sorted_pcts[idx-1].get('pct'):
+                idx -= 1
+            else:
+                if idx == 0:
+                    rank = 1
+                else:
+                    rank = idx + 1
+                break
+        print ('Team Rank after tie check: ', team, rank)
+        return rank

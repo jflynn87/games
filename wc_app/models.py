@@ -70,6 +70,8 @@ class Group(models.Model):
              return True
         return False
 
+    def wbc_perfect_picks(self):
+        return False
 
 class Team(models.Model):
     group = models.ForeignKey(Group, on_delete=models.CASCADE)
