@@ -3,7 +3,7 @@ from django.views.generic import TemplateView
 from django.contrib.auth.mixins import LoginRequiredMixin
 from wc_app.models import Event, Group, Team, Picks, Stage, AccessLog, TotalScore, Data
 from django.contrib.auth.models import User
-from wc_app import wc_group_data, wc_ko_data, wbc_group_standings
+from wc_app import wc_group_data, wc_ko_data, wbc_group_standings, mlb_group_stage
 from django.core import serializers
 from django.http import HttpResponse, HttpResponseRedirect
 from datetime import datetime
@@ -138,35 +138,37 @@ class ScoresAPI(APIView):
             stage = Stage.objects.get(pk=stage_pk)
             print ('score api stage: ', stage)
             users = stage.event.get_users()          
+            data_obj, created = Data.objects.get_or_create(stage=stage)
             if stage.event.data.get('event_type') == 'wbc':
-                score = wbc_scores(stage, users)
+                score = wbc_scores(stage, users, data_obj)
             else:
-                score = wc_scores(stage, users)
+                score = wc_scores(stage, users, data_obj)
 
             return JsonResponse(score, status=200, safe=False)
         except Exception as e2:
-            print ("WC SCORE API ERRor", e2)
+            print ("WC SCORE init API ERRor", e2)
             score = {}
             score['error'] = str(e2)
             return JsonResponse(score, status=200, safe=False)
 
-def wbc_scores(stage, users):
+def wbc_scores(stage, users, data_obj):
     start = datetime.now()
     d = {}
     for u in users:
         d[u.username] = {'Score': 0, 'Bonus': 0}
-    data_obj, created = Data.objects.get_or_create(stage=stage)
+    #data_obj, created = Data.objects.get_or_create(stage=stage)
     if stage.pick_type == '1': #rank style
         if not stage.current:
-            print ('WBC Group stage complete use saved dat a')
+            print ('WBC Group stage complete use saved data')
             return data_obj.display_data
             #return JsonResponse(data_obj.display_data, status=200, safe=False)
         
-        e = wbc_group_standings.ESPNData(url=stage.score_url, stage=stage)
+        #e = wbc_group_standings.ESPNData(url=stage.score_url, stage=stage)
+        e = mlb_group_stage.MLBData()
         espn = e.get_team_data()
         
         if e.new_data() or data_obj.display_data in [None, '', {}]:
-            print ('new data, refresh scores')
+            print ('WBC new data, refresh scores')
         else:
             print ('no updates, use saved data')
             print ('WC scores duration: ', datetime.now() - start)
@@ -174,24 +176,24 @@ def wbc_scores(stage, users):
             #return JsonResponse(data_obj.display_data, status=200, safe=False)
         
         for team in Team.objects.filter(group__stage=stage): 
-            #rank = [data.get('rank') for k,v in espn.items() for t, data  in v.items() if t == team.name][0]
-            rank = str(e.get_rank(team, espn))
-            #print (team, rank)
+           
+            rank = [data.get('rank') for k,v in espn.items() for t, data in v.items() if t == team.full_name][0]
+            print ('RANKS: ', team, rank)
             for p in Picks.objects.filter(team=team):
-                
-                if p.rank == 1 and rank == '1':
+                if p.rank == 1 and rank == 1:
                     score = round(5 + p.team.upset_bonus(),2)
-                elif p.rank in [1,2] and rank in ['1','2']:
+                elif p.rank in [1,2] and rank in [1,2]:
                     score = round(3 + p.team.upset_bonus(),2)
                 else:
                     score = 0
-            
+                
                 d.get(p.user.username).update({'Score': d.get(p.user.username).get('Score') + score})
+                
                 if d.get(p.user.username).get(team.group.group):
                     d.get(p.user.username).get(team.group.group).update(
                                             {team.name: 
                                             {'flag': p.team.flag_link,
-                                            'team_rank': rank,
+                                            'rank': rank,
                                             'pick_rank': p.rank,
                                             'points': score
                                             }
@@ -200,16 +202,16 @@ def wbc_scores(stage, users):
                     d.get(p.user.username).update({team.group.group: 
                             {team.name: 
                             {'flag': p.team.flag_link,
-                            'team_rank': rank,
+                            'rank': rank,
                             'pick_rank': p.rank,
                             'points': score
                             }
                             }})
-        
+
         for g in Group.objects.filter(stage=stage):
             for u in users:
                 #if g.perfect_picks(espn, u):
-                if g.wbc_perfect_picks():
+                if g.wbc_perfect_picks(espn, u):
                     d.get(u.username).update({'Score': round(d.get(u.username).get('Score') + 5,2)})
                     d.get(u.username).update({'Bonus': d.get(u.username).get('Bonus') + 5})
                     d.get(u.username).get(g.group).update({'bonus': 'perfect picks'})
@@ -217,6 +219,14 @@ def wbc_scores(stage, users):
                 ts.score = d.get(u.username).get('Score')
                 ts.save()
         #print ('score data: ', d)
+        try: 
+            data_obj.group_data = espn
+            data_obj.display_data = d
+            data_obj.save()
+        except Exception as e1:
+            print ('WC data save failed', stage, e1)
+
+
     elif stage.pick_type == '2': #braket
         #espn  = wc_ko_data.ESPNData(source='web')
         #data = espn.web_get_data()
@@ -260,14 +270,15 @@ def wbc_scores(stage, users):
                 data_obj.display_data = d
                 data_obj.save()
             except Exception as e1:
-                print ('WC data save failed', stage, e1)
+                    print ('WC data save failed', stage, e1)
 
     print ('WC scores duration: ', datetime.now() - start)
     return d
 
 
 
-def wc_scores(stage, users):  ## fix this, just copied during wbc
+def wc_scores(stage, users, data_obj):  ## fix this, just copied during wbc
+    start = datetime.now()
     d = {}
     for u in users:
         d[u.username] = {'Score': 0, 'Bonus': 0}
@@ -305,7 +316,7 @@ def wc_scores(stage, users):  ## fix this, just copied during wbc
                     d.get(p.user.username).get(team.group.group).update(
                                             {team.name: 
                                             {'flag': p.team.flag_link,
-                                            'team_rank': rank,
+                                            'rank': rank,
                                             'pick_rank': p.rank,
                                             'points': score
                                             }
@@ -314,7 +325,7 @@ def wc_scores(stage, users):  ## fix this, just copied during wbc
                     d.get(p.user.username).update({team.group.group: 
                             {team.name: 
                             {'flag': p.team.flag_link,
-                            'team_rank': rank,
+                            'rank': rank,
                             'pick_rank': p.rank,
                             'points': score
                             }
@@ -329,6 +340,7 @@ def wc_scores(stage, users):  ## fix this, just copied during wbc
                 ts, created = TotalScore.objects.get_or_create(stage=stage, user=u)
                 ts.score = d.get(u.username).get('Score')
                 ts.save()
+
         #print ('score data: ', d)
     elif stage.pick_type == '2': #braket
         #espn  = wc_ko_data.ESPNData(source='web')
@@ -379,8 +391,6 @@ def wc_scores(stage, users):  ## fix this, just copied during wbc
     return JsonResponse(d, status=200, safe=False)
 
 
-
-
 class GroupBonusAPI(APIView):
 
     def get(self, request, team_pk):
@@ -423,7 +433,13 @@ class GroupStageTableAPI(APIView):
     def get(self, request):
         start = datetime.now()
         stage = Stage.objects.get(name="Group Stage", event__current=True)
-        d = wc_group_data.ESPNData().get_group_records()
+        if stage.event.data.get('event_type') == 'wbc':
+            d = wbc_group_standings.ESPNData().teams_by_pool()
+
+            d['headers'] = ['Wins', 'Loss', 'PCT', 'GB', 'RS', 'RA']
+            d['type'] = 'WBC'
+        else:
+            d = wc_group_data.ESPNData().get_group_records()
         
         print ('WC GroupStageTableAPI duration: ', datetime.now() - start)
         return JsonResponse(d, status=200, safe=False)
@@ -431,8 +447,17 @@ class GroupStageTableAPI(APIView):
 
 class KnockoutPicksView(LoginRequiredMixin, TemplateView):
     login_url = 'login'
-    template_name = 'wc_app/knockout_picks.html'
+    #template_name = 'wc_app/knockout_picks.html'
 
+    def stage(self):
+        return Stage.objects.get(name='Knockout Stage', event__current=True)
+    
+    def get_template_names(self):
+        #t_name = super().get_template_names()
+        if self.stage().event.data.get('event_type') == 'wbc':
+            return ['wc_app/wbc_ko_picks.html',]
+        else:
+            return ['wc_app/knockout_picks.html',]
 
     def get_context_data(self, **kwargs):
         context = super(KnockoutPicksView, self).get_context_data(**kwargs)
@@ -485,31 +510,62 @@ class KOBracketAPI(APIView):
         d = {}
         stage = Stage.objects.get(name='Knockout Stage', event__current=True)
         #games = []
-        order = [1,10, 3, 12, 5, 14, 7, 16, 2, 9, 4, 11, 6, 13, 8, 15]
-        m = 1
-        for i, team in enumerate(order):
-            if i % 2 == 0:
-                fav = Team.objects.get(group__stage=stage, rank=order[i])
-                dog = Team.objects.get(group__stage=stage, rank=order[i+1])
-                #games.append([fav.name, dog.name])
-                if i == 0:
-                    match = 'match_1' 
-                else:
-                    match = 'match_' + str(m)
-                m += 1
-                fav_data = Team.objects.get(name=fav.name, group__stage__name="Group Stage")
-                dog_data = Team.objects.get(name=dog.name, group__stage__name="Group Stage")
+        if stage.event.data.get('event_type') == 'wbc':
+            order = [1, 4, 3, 2, 5, 8, 7, 6]
+            m = 1
+            data_obj = Data.objects.get(stage__event__current=True, stage__name='Group Stage')
+            for i, o in enumerate(order):
+                if i % 2 == 0:
+                    if i == 0:
+                        match = 'match_1'
+                    else:
+                        match = 'match_' + str(m)
 
-                d[match] = {'fav': fav.name, 
-                            'fav_pk': fav.pk, 
-                            'fav_flag': fav_data.flag_link,
-                            'fav_fifa_rank': fav_data.rank,
-                            'dog': dog.name,
-                            'dog_pk': dog.pk, 
-                            'dog_flag': dog_data.flag_link,
-                            'dog_fifa_rank': dog_data.rank,
+                    #print ('MATCH ', match, m, order[i], stage)
+                    fav = Team.objects.get(group__stage=stage, rank=order[i])
+                    dog = Team.objects.get(group__stage=stage, rank=order[i+1])
+
+                    fav_data = Team.objects.get(full_name=fav.name, group__stage__name="Group Stage", group__stage__event__current=True)
+                    dog_data = Team.objects.get(full_name=dog.name, group__stage__name="Group Stage", group__stage__event__current=True)
+                    #print ('XXCCX ', data_obj.group_data.get(fav.group.group), fav.group.group)
+                    d[match] = {'fav': fav.name, 
+                                'fav_pk': fav.pk, 
+                                'fav_flag': fav_data.flag_link,
+                                'fav_fifa_rank': data_obj.group_data.get(fav_data.group.group).get(fav_data.full_name).get('rank'),
+                                'dog': dog.name,
+                                'dog_pk': dog.pk, 
+                                'dog_flag': dog_data.flag_link,
+                                'dog_fifa_rank': data_obj.group_data.get(dog_data.group.group).get(dog_data.full_name).get('rank'),
+                    
+                                }
+                    m +=1
                 
-                            }
+        else:    
+            order = [1,10, 3, 12, 5, 14, 7, 16, 2, 9, 4, 11, 6, 13, 8, 15]
+            m = 1
+            for i, team in enumerate(order):
+                if i % 2 == 0:
+                    fav = Team.objects.get(group__stage=stage, rank=order[i])
+                    dog = Team.objects.get(group__stage=stage, rank=order[i+1])
+                    #games.append([fav.name, dog.name])
+                    if i == 0:
+                        match = 'match_1' 
+                    else:
+                        match = 'match_' + str(m)
+                    m += 1
+                    fav_data = Team.objects.get(name=fav.name, group__stage__name="Group Stage", group__stage__event__current=True)
+                    dog_data = Team.objects.get(name=dog.name, group__stage__name="Group Stage", group__stage__event__current=True)
+
+                    d[match] = {'fav': fav.name, 
+                                'fav_pk': fav.pk, 
+                                'fav_flag': fav_data.flag_link,
+                                'fav_fifa_rank': fav_data.rank,
+                                'dog': dog.name,
+                                'dog_pk': dog.pk, 
+                                'dog_flag': dog_data.flag_link,
+                                'dog_fifa_rank': dog_data.rank,
+                    
+                                }
 
         print ('picks user ', username)
         if username:
@@ -556,38 +612,55 @@ class CreateKOTeamsAPI(APIView):
         d = {}
 
         try:
-            stage = Stage.objects.get(name="Group Stage")
-            if  Picks.objects.filter(team__group__group="Final 16").exists():
+            group = Group.objects.get(stage__event__current=True, group__in=['Final 16', 'Final 8'])
+            stage = group.stage
+            
+            if  Picks.objects.filter(team__group__stage__event__current=True, team__group=group).exists(): #16 for world cup, 8 for WBC
                 print ('CReate KO Team - too late picks already exist')
                 d['error'] = 'too late picks already exist'
                 return JsonResponse(d, status=200)
             else:
-                Team.objects.filter(group__group='Final 16').delete()
+                Team.objects.filter(group=group).delete()
+                
 
-
-            e  = Data.objects.get(stage=stage)
-            print (e.group_data.keys())
-            ko_group = Group.objects.get(group="Final 16")
-
-            for g in Group.objects.filter(stage=stage):
+            data_obj = Data.objects.get(stage__event__current=True, stage__name='Group Stage')
+            
+            ko_group = Group.objects.get(stage=stage)
+            print ('AAAAAAAA', data_obj.stage)
+            pools = ['Pool A', 'Pool B', 'Pool C', 'Pool D']
+            for g in Group.objects.filter(stage=Stage.objects.get(current=True, name="Group Stage")):
                 #rank = [data.get('rank') for k,v in espn.items() for t, data  in v.items() if t == team.name][0]
-                d = [(t,data.get('rank')) for k,v in e.group_data.items() for t, data in v.items() if data.get('rank') in ['1', '2'] and k == g.group ]
+                print (data_obj.group_data)
+                d = [(t,data.get('rank')) for k,v in data_obj.group_data.items() for t, data in v.items() if data.get('rank') in ['1', '2', 1, 2] and k == g.group ]
+                
                 #print (g.group[-1].lower(),ord(g.group[-1].lower()) -96, d)
-                for x in d:
-                    if int(x[1]) == 1:
-                        rank = ord(g.group[-1].lower()) -96
-                    else:
-                        rank = (ord(g.group[-1].lower()) -96) + 8
-                    t_data = Team.objects.get(name=x[0], group__stage__name="Group Stage")
-                    team = Team()
-                    team.group = ko_group
-                    team.name = x[0]
-                    team.rank = rank
-                    team.flag_link = t_data.flag_link
+                print ('DD ', d)
+                if stage.event.data.get('event_type') == 'wbc':
+                    for x in d:
+                        t_data = Team.objects.get(full_name=x[0], group__stage__name="Group Stage", group__stage__event__current=True)
+                        team = Team()
+                        team.group = ko_group
+                        team.name = x[0]
+                        team.full_name = x[0]
+                        team.rank = (pools.index(t_data.group.group) * 2) + x[1]
+                        team.flag_link = t_data.flag_link
+                        team.save()
+                else:
+                    for x in d:
+                        if int(x[1]) == 1:
+                            rank = ord(g.group[-1].lower()) -96
+                        else:
+                            rank = (ord(g.group[-1].lower()) -96) + 8
+                        t_data = Team.objects.get(name=x[0], group__stage__name="Group Stage", group__stage__event__current=True)
+                        team = Team()
+                        team.group = ko_group
+                        team.name = x[0]
+                        team.rank = rank
+                        team.flag_link = t_data.flag_link
 
-                    team.save()
+                        team.save()
 
-                    print (g, x[0], rank)
+                        print (g, x[0], rank)
                         
         except Exception as e:
             print ('CreateKOTeamsAPI error: ', e)

@@ -34,7 +34,7 @@ $(document).ready(function () {
             if (group != 'Score' && group != 'Bonus') {
 
                 $('#' + user + '_row').append('<td id=' + user + group.substr(-1)  + '_cell><table class=table-sm id=' + user + group.substr(-1)  + 
-                                                    '_cell_tbl><tr class="small all_watermark"><td>Team</td><td>Pick</td><td>Score</td></tr></tabke>' + '</td>')
+                                                    '_cell_tbl><tr class="small all_watermark"><td>Team</td><td>Pick</td><td>Score</td></tr></table>' + '</td>')
                 var groupTbl = buildGroupTable(pick, user, group ,$('#' + user + group.substr(-1)  + '_cell_tbl'))
                 groupTbl.then((response) => {sortGroup(user + group.substr(-1)  + '_cell_tbl')})
                 
@@ -114,7 +114,10 @@ function buildGroupTable(pick, user, group, tableId) {
         $('#' + user + group.substr(-1) + '_cell_tbl').css('background-color', 'lightgreen')}
     else {
     $('#' + user + group.substr(-1) + '_cell_tbl').append(
-    '<tr><td hidden>' + team_d.team_rank + '</td><td><img src=' + team_d.flag +' style=height:20; width:20;>' + team  + '</td><td>' + team_d.pick_rank + '</td><td>' + team_d.points +  '</td></tr>' + 
+    '<tr><td hidden>' + team_d.rank + '</td><td><img src=' + team_d.flag +' style=height:20; width:20;>' + team  + '</td><td>' +
+      team_d.pick_rank + '</td><td>' + team_d.points +  '</td>' +
+      //'<td>' + team_d.team_rank + '</td>' +
+     '</tr>' + 
     '</table>' ) }
  })
  resolve()
@@ -140,7 +143,7 @@ function sortGroup(tableId) {
       x = rows[i].getElementsByTagName('td')[0].innerHTML;
       //console.log('x', x)
       y = rows[i + 1].getElementsByTagName('td')[0].innerHTML;
-      //console.log('xy ' ,x, y)
+      console.log('xy ' ,x, y)
       
       if (Number(x) > Number(y)) {
         //console.log(i, Number(x), Number(y))
@@ -169,6 +172,27 @@ function buildStandingTable(data) {
     
     standings = data
     console.log(data)
+      if (data.type == 'WBC') {
+        console.log('WBC')
+        $.each(standings, function(group, teams) {
+          if (group != 'headers' && group != 'type') {
+          $('#stand_tbl_cards').append('<div class=card>' +
+                              '<table id=stand_tbl_' + group[5] +'><thead><tr style=text-align:center;background-color:lightblue;><th colspan=9>' + group +  '</th></tr></thead>' + 
+                              '<tr class=small><th>Team</th><th>W</th><th>L</th><th>PCT</th><th>Scored</th><th>Against</th></tr>' + 
+                              '</table>' +
+                            '</div>')
+                            $.each(teams, function(label, stat) {
+                              $('#stand_tbl_' + group[5]).append('<tr><td>' + stat.abbr + '</td><td>' + stat.wins + '</td>' +
+                                                                '<td>' + stat.loss + '</td>' +
+                                                                '<td>' + stat.pct + '</td>' +
+                                                                '<td>' + stat.scored + '</td>' + 
+                                                                '<td>' + stat.against + '</td></tr>')})
+                            }
+        
+      })
+    
+      }
+      else {
     $.each(standings, function(group, teams) {
       if (group != 'Score' && group != 'Bonus') {
       $('#stand_tbl_cards').append('<div class=card>' +
@@ -185,6 +209,8 @@ function buildStandingTable(data) {
                         }
     
   })
+  }
+  
   $('#table_div').append('<br>')
   $('#standing_tbl_status').remove()
   })

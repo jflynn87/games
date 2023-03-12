@@ -37,7 +37,7 @@ class Stage(models.Model):
     score_url = models.URLField(null=True)
 
     def __str__(self):
-        return str(self.name)
+        return str(self.event) + ' ' + str(self.name)
 
     def started(self):
         if self.set_started:
@@ -57,7 +57,7 @@ class Group(models.Model):
     group = models.CharField(max_length=20)
 
     def __str__(self):
-        return str(self.group)
+        return str(self.stage) + ' ' + str(self.group)
 
     def perfect_picks(self, espn, user):
     
@@ -70,7 +70,16 @@ class Group(models.Model):
              return True
         return False
 
-    def wbc_perfect_picks(self):
+    def wbc_perfect_picks(self, data, user):
+        x = [k for k, v in sorted(data.get(self.group).items(), key= lambda r: r[1].get('rank'))]
+        print (x)
+        if Picks.objects.filter(team__full_name=x[0], rank=1, user=user).exists() and \
+            Picks.objects.filter(team__full_name=x[1], rank=2, user=user).exists() and \
+            Picks.objects.filter(team__full_name=x[2], rank=3, user=user).exists() and \
+            Picks.objects.filter(team__full_name=x[3], rank=4, user=user).exists() and \
+            Picks.objects.filter(team__full_name=x[4], rank=5, user=user).exists():
+             print ('WBC Perfect Picks ', self.group, user)
+             return True
         return False
 
 class Team(models.Model):
@@ -106,8 +115,6 @@ class Team(models.Model):
     def ko_path(self):
         if self.rank in [1, 10, 3, 12]:
             path = []
-
-
 
 
 class Picks (models.Model):

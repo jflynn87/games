@@ -3,7 +3,7 @@ os.environ.setdefault("DJANGO_SETTINGS_MODULE","gamesProj.settings")
 import django
 django.setup()
 
-from wc_app import wc_group_data, wc_ko_data, wbc_group, wbc_group_standings
+from wc_app import wc_group_data, wc_ko_data, wbc_group, wbc_group_standings, mlb_group_stage
 from wc_app.models import Event, Group, Team, Picks, Stage, Data
 from django.contrib.auth.models import User
 from django.db.models import Min, Q, Count, Sum, Max
@@ -16,10 +16,26 @@ from datetime import datetime
 
 start = datetime.now()
 
-import ssl 
+d = Data.objects.get(stage__current=True)
+d.force_refresh = True
+d.save()
+exit()
 
+for t in Team.objects.filter(group__group="Final 8"):
+    print (t, t.rank)
+exit()
 e = wbc_group_standings.ESPNData()
-data = e.get_team_data()
+#data = e.get_team_data()
+pool = e.teams_by_pool()
+for p, v in pool.items():
+    print (p)
+    for key, team_d in v.items():
+        print (team_d)
+
+print (datetime.now() - start)
+
+
+exit()
 
 #usa = [data.get('rank') for key, team_info in e.get_team_data() for team_name, data in team_info.items() if team_name == t.get('full_name')][0]
 #print (data)

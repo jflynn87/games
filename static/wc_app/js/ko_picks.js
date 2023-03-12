@@ -64,8 +64,6 @@ function initPicks(picks, data) {
 }
 
 
-
-
 function teamPicked(ele) {
     //console.log('teamPicked', ele.id)
     var path = findPath(ele)
@@ -73,6 +71,9 @@ function teamPicked(ele) {
     var i = path.indexOf(parseInt(matchId))
     
     //console.log('click ', matchId, i)
+
+    if ($('#event_type').text() == 'wbc') {wbcPath(ele, matchId, path)} 
+    else {
     if (i == -1) {
         console.log(' -1 error')
     }
@@ -173,25 +174,66 @@ function teamPicked(ele) {
         .append('<input type=hidden value=' + $('#' + ele.id).attr('data-key') +' name=' + ele.id +'></>')
     }
     else {console.log('else error')}
+    
 var cf = checkForward(ele, matchId)
 cf.then(checkComplete())
+    }
 }
     
+function wbcPath(ele, matchId, path) {
+    var path = findPath(ele)
+    //var matchId = ele.id.split('_')[0].substring(1)
+    var i = path.indexOf(parseInt(matchId))
+    top = [1, 3, 5]
+    bottom = [2,]
+
+    if (i == -1) {
+        alert('Something went wrong, please try again')
+    }
+    else {
+        if (parseInt(matchId) % 2 != 0 ) {
+            $('#m' + path[i+1]  + '_fav').text($('#' + ele.id).text())
+            .attr('data-key', $('#' + ele.id).attr('data-key'))
+            .append('<img id=m' + path[i+1] + '_fav_flag style=height:20;width:20; src=' + $('#' + ele.id + '_flag').attr('src') + '>')
+            .append('<input type=hidden value=' + $('#' + ele.id).attr('data-key') +' name=' + ele.id + '></>')}
+        else {$('#m' + path[i+1] + '_dog').text($('#' + ele.id).text())
+            .attr('data-key', $('#' + ele.id).attr('data-key'))
+            .append('<img id=m' + path[i+1] + '_dog_flag style=height:20;width:20; src=' + $('#' + ele.id + '_flag').attr('src') + '>')
+            .append('<input type=hidden value=' + $('#' + ele.id).attr('data-key') +' name=' + ele.id + '></>')}
+
+    }
+    var cf = checkForward(ele, matchId)
+    cf.then(checkComplete())
+
+}
+
 function findPath(ele) {
+    if ($('#event_type').text() == 'wbc') {
+
+        pathArray = [
+            [1, 5, 7, 8],
+            [2, 5, 7, 8],
+            [3, 6, 7, 8],
+            [4, 6, 7, 8]
+        ]
+    }
+    else {
     pathArray = [
         [1, 2, 9, 13, 15, 16], 
         [3, 4, 10, 13, 15, 16], 
         [5, 6, 11, 14, 15, 16], 
         [7, 8, 12, 14, 15, 16]
             ]
-
+        }
     var p = []        
     $.each(pathArray, function(i, path) {
+        
         if (path.indexOf(parseInt(ele.id.split('_')[0].substring(1))) != -1) {
             p = path
             return false
         }
     } )
+
     return p
 }
 
@@ -267,12 +309,12 @@ function resetChamp() {
 function checkComplete() {
     picks = $('input').filter(function() {return $(this).val() > ''})
     //console.log(picks)
-    //console.log('picks len ', picks.length)
-    if (picks.length == 19) {  //19 to skip token
+    console.log('picks len ', picks.length)
+    if (picks.length == parseInt($('#picks').text()) +1) {  //19 to skip token
         $('#sub_btn').text('Submit Picks').attr('disabled', false)
     }
     else {
-        $('#sub_btn').text(picks.length -1 + ' of 18 picks').attr('disabled', true)
+        $('#sub_btn').text(picks.length -1 + ' of ' + $('#picks').text() + ' picks').attr('disabled', true)
     }
 }
 
