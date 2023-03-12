@@ -1,5 +1,6 @@
 {%extends "wc_app/wc_base.html"%}
 {%load static%}
+{%load compress%}
 {%block body_block%}
 <link rel="stylesheet" href={%static 'golf_app/css/scores.css' %}>
 <link rel="stylesheet" href={%static 'wc_app/css/ko_scores.css' %}>
@@ -13,11 +14,14 @@
 <h4 id="status" onclick="getTable()">Updating Scores <span class="spinner-border spinner-border-sm align-items-center " style="color:red; margin: 5px" role="status" ></span> </h4>
 <div id="table_div"></div>
 <div id="scores_div"></div>
+{%compress js%}
 <script type="text/javascript" src="{%static 'wc_app/js/scores.js'%}"></script>
-
+{%endcompress%}
 {%else%}
 <div id="scores_div"></div>
+{%compress js%}
 <script type="text/javascript" src="{%static 'wc_app/js/ko_scores.js'%}"></script>
+{%endcompress%}
 {%endif%}
 {%else%}
 <h4>Come back when games begin</h4>
