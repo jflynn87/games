@@ -36,29 +36,72 @@ $(document).ready(function() {
 
 function createMatches(data) {
     return new Promise(function (resolve,reject) {
+
         $.each(data, function(match_num, teams) {
                     
             $('#m' + match_num.split('_')[1] + '_fav').text(teams.fav + '(' + teams.fav_fifa_rank + ')')
             .append('<img id=m' + match_num.split('_')[1] + '_fav_flag style=height:20;width:20; src=' + teams.fav_flag + '>')
             .attr('data-key', teams.fav_pk)
             
-            $('#m' + match_num.split('_')[1] + '_fav').on('click', function() {teamPicked(this)})
-            
             $('#m' + match_num.split('_')[1] + '_dog').text(teams.dog + '(' + teams.dog_fifa_rank + ')')
             .append('<img id=m' + match_num.split('_')[1] + '_dog_flag style=height:20;width:20; src=' + teams.dog_flag + '>')
             .attr('data-key', teams.dog_pk)
-            
+
+            $('#m' + match_num.split('_')[1] + '_fav').on('click', function() {teamPicked(this)})
             $('#m' + match_num.split('_')[1] + '_dog').on('click', function() {teamPicked(this)})
+
         })
-        resolve()        
+        var ep = earlyPicks(data)
+        ep.then((response) => {console.log('ealy picks resolved');
+                                resolve()
+         })
+     
     })
    
 }
+
+function earlyPicks(data) {
+    return new Promise(function (resolve,reject) {
+    
+        $.each($('.matchup li'), function(i, ele) {
+        if ($('#early_picks_period').text() == 'True') {
+            var key = 'match_' + ele.id[1]
+
+            if (data[key]) {
+                $('#m' + ele.id[1] + '_fav').on('click', function() {teamPicked(this)})
+                $('#m' + ele.id[1] + '_dog').on('click', function() {teamPicked(this)})
+                        }
+            else {
+                $('#m' + ele.id[1] + '_fav').off('click').text('coming soon...')
+                $('#m' + ele.id[1] + '_dog').off('click').text('coming soon...')
+    
+                 }
+            }
+        else {
+            $('#m' + ele.id[1] + '_fav').on('click', function() {teamPicked(this)})
+            $('#m' + ele.id[1] + '_dog').on('click', function() {teamPicked(this)})
+
+            if (data['match_' + ele.id[1]] && data['match_' + ele.id[1]].early_game == true) {
+                $('#m' + ele.id[1] + '_fav').off('click')
+                $('#m' + ele.id[1] + '_dog').off('click')
+
+            }
+                
+        }
+    })
+    
+    resolve()
+})
+}
+
+
 
 function initPicks(picks, data) {
     $.each(picks, function(i, pick) {
         //console.log('init pick ', pick.fields.data.from_ele , $('#' + pick.fields.data.from_ele)[0])
         //teamPicked($('#' + pick.fields.data.from_ele))
+
+        teamPicked($('#' + pick.fields.data.from_ele)[0])
         $('#' + pick.fields.data.from_ele).trigger('click')
     })
 }
@@ -282,7 +325,7 @@ function checkForward(ele, matchId) {
 
 function resetEle(ele) {
     return new Promise(function (resolve,reject) {
-    console.log('resetEle: ', ele.text(), ele.attr('data-key'), ele.attr('id'), $('#third_place').attr('data-key'),$('#m16_fav').attr('data-key') )
+    //console.log('resetEle: ', ele.text(), ele.attr('data-key'), ele.attr('id'), $('#third_place').attr('data-key'),$('#m16_fav').attr('data-key') )
     ele.text('')
     ele.data('key', '')
     $('input[name=' + ele.attr('id').split('_')[0].substring(1) + ']').val('')
@@ -292,14 +335,14 @@ function resetEle(ele) {
 }
 
 function resetChamp() {
-    console.log('reset chanp')
-    console.log('third ', $('#third_place').attr('data-key'), $('#m16_fav').attr('data-key'),  $('#m16_dog').attr('data-key'))
+    
+    //console.log('third ', $('#third_place').attr('data-key'), $('#m16_fav').attr('data-key'),  $('#m16_dog').attr('data-key'))
     if ($('#champion').attr('data-key') != $('#m15_fav').attr('data-key') && $('#champion').attr('data-key') != $('#m15_dog').attr('data-key')) {
         $('#champion').text('')
         $('#champion').data('key', '')
     }
     if ($('#third_place').attr('data-key') != $('#m16_fav').attr('data-key') && $('#third_place').attr('data-key') != $('#m16_dog').attr('data-key')) {
-        console.log("IF OK")
+        
         $('#third_place').text('')
         $('#third_place').data('key', '')
     }
@@ -309,12 +352,23 @@ function resetChamp() {
 function checkComplete() {
     picks = $('input').filter(function() {return $(this).val() > ''})
     //console.log(picks)
-    console.log('picks len ', picks.length)
+    //console.log('picks len ', picks.length)
+    if ($('#early_picks_period').text() == 'True') {
+        if (picks.length == parseInt($('#early_picks').text()) +1) {  //19 to skip token
+            $('#sub_btn').text('Submit Picks').attr('disabled', false)
+        }
+        else {
+            $('#sub_btn').text(picks.length -1 + ' of ' + $('#_early_picks').text() + ' picks').attr('disabled', true)
+        }
+    
+    }
+    else {
     if (picks.length == parseInt($('#picks').text()) +1) {  //19 to skip token
         $('#sub_btn').text('Submit Picks').attr('disabled', false)
     }
     else {
         $('#sub_btn').text(picks.length -1 + ' of ' + $('#picks').text() + ' picks').attr('disabled', true)
+    }
     }
 }
 

@@ -35,6 +35,7 @@ class Stage(models.Model):
     set_not_started = models.BooleanField(default=False)
     pick_type = models.CharField(max_length=100, choices=PICK_TYPE_CHOICES)
     score_url = models.URLField(null=True)
+    early_picks_period = models.BooleanField(default=False)
 
     def __str__(self):
         return str(self.event) + ' ' + str(self.name)
@@ -89,6 +90,7 @@ class Team(models.Model):
     flag_link = models.URLField(null=True, blank=True)
     info_link = models.URLField(null=True, blank=True)
     full_name = models.CharField(max_length=200, null=True, blank=True)
+    early_game = models.BooleanField(default=False, null=True)
     #stage = models.ForeignKey(Stage, on_delete=models.CASCADE)
 
     def __str__(self):

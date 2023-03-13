@@ -16,13 +16,9 @@ from datetime import datetime
 
 start = datetime.now()
 
-d = Data.objects.get(stage__current=True)
-d.force_refresh = True
-d.save()
-exit()
 
 for t in Team.objects.filter(group__group="Final 8"):
-    print (t, t.rank)
+    print (t, t.rank, t.early_game)
 exit()
 e = wbc_group_standings.ESPNData()
 #data = e.get_team_data()

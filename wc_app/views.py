@@ -511,9 +511,13 @@ class KOBracketAPI(APIView):
         stage = Stage.objects.get(name='Knockout Stage', event__current=True)
         #games = []
         if stage.event.data.get('event_type') == 'wbc':
-            order = [1, 4, 3, 2, 5, 8, 7, 6]
+            if stage.early_picks_period:
+                order = [1, 4]
+            else:
+                order = [1, 4, 3, 2, 5, 8, 7, 6]
             m = 1
             data_obj = Data.objects.get(stage__event__current=True, stage__name='Group Stage')
+            
             for i, o in enumerate(order):
                 if i % 2 == 0:
                     if i == 0:
@@ -536,8 +540,9 @@ class KOBracketAPI(APIView):
                                 'dog_pk': dog.pk, 
                                 'dog_flag': dog_data.flag_link,
                                 'dog_fifa_rank': data_obj.group_data.get(dog_data.group.group).get(dog_data.full_name).get('rank'),
-                    
+                                'early_game': fav.early_game            
                                 }
+                    
                     m +=1
                 
         else:    
@@ -615,18 +620,20 @@ class CreateKOTeamsAPI(APIView):
             group = Group.objects.get(stage__event__current=True, group__in=['Final 16', 'Final 8'])
             stage = group.stage
             
-            if  Picks.objects.filter(team__group__stage__event__current=True, team__group=group).exists(): #16 for world cup, 8 for WBC
+            
+            if  Picks.objects.filter(team__group__stage__event__current=True, team__group=group).exclude(team__early_game=True).exists():
                 print ('CReate KO Team - too late picks already exist')
                 d['error'] = 'too late picks already exist'
                 return JsonResponse(d, status=200)
+            elif Picks.objects.filter(team__group__stage__event__current=True, team__group=group, team__early_game=True).exists():
+                Team.objects.filter(group=group).exclude(early_game=True).delete()
             else:
                 Team.objects.filter(group=group).delete()
-                
 
             data_obj = Data.objects.get(stage__event__current=True, stage__name='Group Stage')
             
             ko_group = Group.objects.get(stage=stage)
-            print ('AAAAAAAA', data_obj.stage)
+
             pools = ['Pool A', 'Pool B', 'Pool C', 'Pool D']
             for g in Group.objects.filter(stage=Stage.objects.get(current=True, name="Group Stage")):
                 #rank = [data.get('rank') for k,v in espn.items() for t, data  in v.items() if t == team.name][0]
@@ -636,15 +643,24 @@ class CreateKOTeamsAPI(APIView):
                 #print (g.group[-1].lower(),ord(g.group[-1].lower()) -96, d)
                 print ('DD ', d)
                 if stage.event.data.get('event_type') == 'wbc':
-                    for x in d:
-                        t_data = Team.objects.get(full_name=x[0], group__stage__name="Group Stage", group__stage__event__current=True)
-                        team = Team()
-                        team.group = ko_group
-                        team.name = x[0]
-                        team.full_name = x[0]
-                        team.rank = (pools.index(t_data.group.group) * 2) + x[1]
-                        team.flag_link = t_data.flag_link
-                        team.save()
+                    
+                    for i, x in enumerate(d):
+                        if Team.objects.filter(full_name=x[0], group__stage=stage, group__stage__event__current=True ).exists():
+                            print ('Skipping setup game exists: ', stage, x[0])
+                        else:
+                            t_data = Team.objects.get(full_name=x[0], group__stage__name="Group Stage", group__stage__event__current=True)
+                            team = Team()
+                            team.group = ko_group
+                            team.name = x[0]
+                            team.full_name = x[0]
+                            team.rank = (pools.index(t_data.group.group) * 2) + x[1]
+                            team.flag_link = t_data.flag_link
+                            if stage.event.data.get('early_ko_games'):
+                                pool = [x for x in stage.event.data.get('early_ko_games') if x.split('_')[0] == t_data.group.group]
+                                print ('Early Game POOL ', pool)
+                            if pool and int(pool[0].split('_')[1]) == int(x[1]):
+                                team.early_game=True
+                            team.save()
                 else:
                     for x in d:
                         if int(x[1]) == 1:

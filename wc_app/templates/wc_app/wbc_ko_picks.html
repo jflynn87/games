@@ -19,7 +19,10 @@
 <body>
   <p id="picks_user" hidden>{{picks_user.username}}</p>
   <p id="event_type" hidden>wbc</p>
-  <p id="picks">7</p>
+  <p id="picks" hidden>7</p>
+  <p id="early_picks" hidden>1</p>
+  <p id="early_picks_period" hidden>{{stage.early_picks_period}}</p>
+   
   <header class="hero">
     <div class="hero-wrap">
 {%if user.is_superuser%}
@@ -44,20 +47,26 @@
     <div class="round round-two current">
       <div class="round-details">Quarter Finals<br/><span class="date">correct: 10pts</span></div>     
       <ul class="matchup">
-        <li id='m1_fav' class="team team-top" onclick="teamPicked(this)"></li>
-        <li id='m1_dog' class="team team-bottom" onclick="teamPicked(this)"></li>
+        <!-- <li id='m1_fav' class="team team-top" onclick="teamPicked(this)"></li>
+        <li id='m1_dog' class="team team-bottom" onclick="teamPicked(this)"></li> -->
+        <li id='m1_fav' class="team team-top" ></li>
+        <li id='m1_dog' class="team team-bottom"></li>
+
       </ul> 
       <ul class="matchup">
-        <li id='m2_fav' class="team team-top" onclick="teamPicked(this)"></li>
-        <li id='m2_dog' class="team team-bottom" onclick="teamPicked(this)"></li>
+        <!-- <li id='m2_fav' class="team team-top" onclick="teamPicked(this)"></li>
+        <li id='m2_dog' class="team team-bottom" onclick="teamPicked(this)"></li> -->
+        <li id='m2_fav' class="team team-top"></li>
+        <li id='m2_dog' class="team team-bottom"></li>
+
       </ul> 
     </div>  <!-- END ROUND TWO -->
     
     <div class="round round-three current">
       <div class="round-details">Semi Finals<br/><span class="date">correct: 15pts</span></div>     
       <ul class="matchup">
-        <li id='m5_fav' class="team team-top" onclick="teamPicked(this)"></li>
-        <li id='m5_dog' class="team team-bottom" onclick="teamPicked(this)"></li>
+        <li id='m5_fav' class="team team-top" ></li>
+        <li id='m5_dog' class="team team-bottom" ></li>
       </ul> 
     </div>  <!-- END ROUND THREE -->    
   </div> 
@@ -67,14 +76,14 @@
       <i class="fa fa-trophy"></i>
       <div class="round-details">Championship <br/><span class="date">Mar 21</span></div>    
       <ul class ="matchup championship current">
-        <li id='m7_fav' class="team team-top" onclick="teamPicked(this)"></li>
-        <li id='m7_dog' class="team team-bottom" onclick="teamPicked(this)"></li>
+        <li id='m7_fav' class="team team-top" ></li>
+        <li id='m7_dog' class="team team-bottom" ></li>
       </ul>
       <br>
       <div class="round-details">Champion<br/><span class="date">correct: 30pts</span></div>    
       <p></p>
       <ul class ="matchup championship current">
-        <li id='m8_fav' class="team team-top" onclick="teamPicked(this)"></li>
+        <li id='m8_fav' class="team team-top" ></li>
         
       </ul>
 
@@ -88,20 +97,20 @@
     <div class="round round-three current">
       <div class="round-details">SemiFinals<br/><span class="date">correct: 15pts</span></div>           
       <ul class="matchup">
-        <li id='m6_fav' class="team team-top" onclick="teamPicked(this)"></li>
-        <li id='m6_dog' class="team team-bottom" onclick="teamPicked(this)"></li>
+        <li id='m6_fav' class="team team-top" ></li>
+        <li id='m6_dog' class="team team-bottom" ></li>
       </ul> 
     </div>  <!-- END ROUND THREE -->  
 
     <div class="round round-two current">
       <div class="round-details">QuaterFinals<br/><span class="date">correct: 10pts</span></div>           
       <ul class="matchup">
-        <li id='m3_fav' class="team team-top" onclick="teamPicked(this)"></li>
-        <li id='m3_dog' class="team team-bottom" onclick="teamPicked(this)"></li>
+        <li id='m3_fav' class="team team-top" ></li>
+        <li id='m3_dog' class="team team-bottom" ></li>
       </ul> 
       <ul class="matchup">
-        <li id='m4_fav' class="team team-top" onclick="teamPicked(this)"></li>
-        <li id='m4_dog' class="team team-bottom" onclick="teamPicked(this)"></li>
+        <li id='m4_fav' class="team team-top" ></li>
+        <li id='m4_dog' class="team team-bottom" ></li>
       </ul> 
     </div>  <!-- END ROUND TWO -->
   </div>

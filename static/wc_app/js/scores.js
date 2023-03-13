@@ -143,7 +143,7 @@ function sortGroup(tableId) {
       x = rows[i].getElementsByTagName('td')[0].innerHTML;
       //console.log('x', x)
       y = rows[i + 1].getElementsByTagName('td')[0].innerHTML;
-      console.log('xy ' ,x, y)
+      //console.log('xy ' ,x, y)
       
       if (Number(x) > Number(y)) {
         //console.log(i, Number(x), Number(y))
