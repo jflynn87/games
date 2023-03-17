@@ -6,6 +6,7 @@
 <link rel="stylesheet" href={%static 'wc_app/css/ko_scores.css' %}>
 <h1>Scores {{stage.event.name}} </h1>
 <p id="stage_key" hidden>{{stage.pk}}</p>
+<p id="event_type" hidden>{{stage.event.data.event_type}}</p>
 
 <h3 id="stage_name">{{stage.name}} Scores</h3>
 {%if stage.started%}

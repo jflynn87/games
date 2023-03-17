@@ -36,6 +36,13 @@ from operator import itemgetter
 
 start = datetime.now()
 
+pga = pga_t_data.PGAData()
+
+print (pga.get_full_list())
+print (pga.next_t())
+
+exit()
+
 s = Season.objects.get(current=True)
 #t = Tournament.objects.filter(season__current=True).order_by('-pk')[1]
 t = Tournament.objects.get(current=True)

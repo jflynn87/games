@@ -97,13 +97,13 @@ class PGAData(object):
     def next_t(self):
 
         curr_week = datetime.today().isocalendar()[1]
-        next_week = min([x.get('date')[0].get('weeknumber') for x in self.t_data if int(x.get('date')[0].get('weeknumber')) > int(curr_week)])
+        next_week = min([x.get('date')[0].get('weeknumber') for x in self.t_data if int(x.get('date')[0].get('weeknumber')) == int(curr_week)])
         if next_week:
             w = next_week
         else:
             w = min([x.get('date')[0].get('weeknumber') for x in self.t_data])
               
-        return [x.get('permNum') for x in self.t_data if str(x.get('date')[0].get('weeknumber')) == str(w)  and x.get('primaryEvent')][0]
+        return [x.get('permNum') for x in self.t_data if str(x.get('date')[0].get('weeknumber')) == str(w)  and x.get('primaryEvent') == "Y"][0]
 
 
     # copied from espn schedule, use to fix this class

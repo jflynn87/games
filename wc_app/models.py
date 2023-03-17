@@ -185,24 +185,51 @@ class Picks (models.Model):
             elif self.rank == 16 and not (self.team.name in data.get('round-of-16').get('losers') or self.team.name in data.get('quarterfinals').get('losers') or self.team.name in data.get('semifinals').get('losers') or self.team.name in data.get('3rd-place').get('losers')):
                 best_score += 20
 
+        elif source == 'wbc_api':
+            if self.rank < 5 and self.team.full_name in data.get('2nd Round').get('winners'):
+                p_score += 10
+            elif self.rank < 7 and self.team.full_name in data.get('Semi-Finals').get('winners'):
+                p_score += 15
+            elif self.rank == 7 and self.team.full_name in data.get('Finals').get('winners'):
+                p_score +=30
+    
+            if self.rank < 5 and self.team.full_name not in data.get('2nd Round').get('losers'):
+                best_score += 10
+            elif self.rank < 7 and self.team.full_name not in data.get('2nd Round').get('losers') or self.team.full_name in data.get('Semi-Finals').get('losers'):
+                best_score += 15
+            elif self.rank == 7 and self.team.full_name not in data.get('2nd Round').get('losers') or self.team.full_name in data.get('Semi-Finals').get('losers') or self.team.full_name in data.get('Finals').get('losers'):
+                best_score += 30
+
+
         else:
             raise Exception ('invalid source') 
 
-
+        print (self.user, self.team, self.rank, p_score, best_score)
+        print (data)
         return (p_score, best_score)
 
     def in_out(self, data):
         result = 'in'
-        if self.rank < 9:
-           return result
-        elif self.rank in [9, 10, 11, 12] and self.team.name in data.get('round-of-16').get('losers'):
-            result = 'out'
-        elif self.team.name in data.get('round-of-16').get('losers') or self.team.name in data.get('quarterfinals').get('losers'):
-            result = 'out'
-        #elif self.rank == 15 and (self.team.name in data.get('round-of-16').get('losers') or self.team.name in data.get('quarterfinals').get('losers') or self.team.name in data.get('semifinals').get('losers') ):
-        #    result = 'out'
-        #elif self.rank == 16 and self.team.name not in data.get('3rd-place').get('losers'):
-        #    best_score += 20
+        
+        if self.team.group.stage.event.data.get('event_type') == 'wbc':
+            if self.rank < 5:
+                return result
+            elif self.rank in [5, 6] and self.team.name in data.get('2nd Round').get('losers'):
+                result = 'out'
+            elif self.team.name in data.get('2nd Round').get('losers') or self.team.name in data.get('Semi-Finals').get('losers'):
+                result = 'out'
+        else:            
+            if self.rank < 9:
+                return result
+            elif self.rank in [9, 10, 11, 12] and self.team.name in data.get('round-of-16').get('losers'):
+                result = 'out'
+            elif self.team.name in data.get('round-of-16').get('losers') or self.team.name in data.get('quarterfinals').get('losers'):
+                result = 'out'
+            #elif self.rank == 15 and (self.team.name in data.get('round-of-16').get('losers') or self.team.name in data.get('quarterfinals').get('losers') or self.team.name in data.get('semifinals').get('losers') ):
+            #    result = 'out'
+            #elif self.rank == 16 and self.team.name not in data.get('3rd-place').get('losers'):
+            #    best_score += 20
+
         return result
 
 

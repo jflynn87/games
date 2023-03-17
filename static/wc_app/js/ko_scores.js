@@ -17,10 +17,15 @@ $(document).ready(function () {
       $('#scores_div').append('<p><a href=wc_scores/group>Group Stage Scores</a></p>')
     $('#scores_div').append('<table id=score_table class="table table-bordered table-sm"></table>')
     $('#score_table').append('<thead></thead>')
+    if ($('#event_type').text() == 'wbc') {
+      var t = buildWBCTable(data)
+      t.then(sort_table('score_table')    )
+    }
+    else {
     $('#score_table').find('thead').append('<th class=border>Player</th><th class=border>Total Score</th><th class=border>Rd of 16</th>' + 
                                             '<th class=border>Quarters</th><th class=border>Semis</th><th class=border>Third</th><th class=border>Champion</th> ')
     $('#score_table').append('<tbody id=score_table_body></tbody>')
-    }
+    
     $.each(data, function(user, d) {
       if (user != 'results') {
         
@@ -37,12 +42,39 @@ $(document).ready(function () {
         addPicks(user, d.picks, data.results)
       }
     })
-      
+  
     sort_table('score_table')    
-})
+    }}
+  })
 
 
 })
+
+function buildWBCTable(data) {
+  return new Promise(function (resolve,reject) {
+  $('#score_table').find('thead').append('<th class=border>Player</th><th class=border>Total Score</th>' + 
+  '<th class=border>Quarters</th><th class=border>Semis</th><th class=border>Champion</th> ')
+  $('#score_table').append('<tbody id=score_table_body></tbody>')
+
+  $.each(data, function(user, d) {
+  if (user != 'results') {
+
+    $('#score_table').append('<tr id=' + user + '_row class=small><td>' + user + '</td> <td><p style=font-weight:bold;>Total: ' + d.Score + '</p>' + 
+          '<p><a href=/wc_app/wc_ko_picks_view/' + user + '>KO:  ' + d.ko_stage_score  + '</a></p>' +
+          '<p>Group Stage: ' + d.group_stage_score  + '</p>' + 
+          '<p>Best possible score: ' + d.best_score  + '</p>' + 
+          '</td>' + 
+          '<td id=' + user + '_quarters_cell></td>' +
+          '<td id=' + user + '_semis_cell></td>'+ 
+          '<td id=' + user + '_champ_cell></td>' +
+          '</tr>'
+          )
+      addWBCPicks(user, d.picks, data.results)
+  }
+  })
+  resolve()
+})
+}
 
 function sort_table(tableId) {
     var table, rows, swtiching, i, x, y, shouldSwitch;
@@ -144,4 +176,50 @@ function addPicks(user, data, results) {
             
         })
     }
+
+function addWBCPicks(user, data, results) {
+      $.each(data, function(i, info) {
+
+            if (i + 1 < 5) {
+                if (results['2nd Round'].losers.indexOf(info[0]) != -1) {
+                
+                  c = 'loser'
+                }
+                else if (results['2nd Round'].winners.indexOf(info[0]) != -1) {
+                  c= 'winner'
+                }
+                else {c = ''}
+
+                $('#' + user + '_quarters_cell').append('<p><img src=' + info[1] + ' style=height:20;width:20;><span class=' + c +  ' >' + info[0] + ' : ' + info[3] +' pts</span></p>')
+              }
+            else if (i + 1 ==5 || i+1 ==6) {
+              if (results['Semi-Finals'].losers.indexOf(info[0]) != -1 || info[4] == 'out') {
+                
+                c = 'loser'
+              }
+              else if (results['Semi-Finals'].winners.indexOf(info[0]) != -1) {
+                c= 'winner'
+              }
+              else {c = ''}
+
+              $('#' + user + '_semis_cell').append('<p><img src=' + info[1] + ' style=height:20;width:20;><span class=' + c +  ' >' + info[0] + ' : ' + info[3] +' pts</span></p>')
+            }
+            else if (i + 1 == 7) {
+              if (results['Finals'].losers.indexOf(info[0]) != -1 || info[4] == 'out') {
+                
+                c = 'loser'
+              }
+              else if (results['Finals'].winners.indexOf(info[0]) != -1) {
+                c= 'winner'
+              }
+              else {c = ''}
+
+                $('#' + user + '_champ_cell').append('<p><img src=' + info[1] + ' style=height:20;width:20;><span class=' + c +  ' >' + info[0] + ' : ' + info[3] +' pts</span></p>')
+            }
+
+            
+        })
+    }
+
+
 

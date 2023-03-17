@@ -476,13 +476,15 @@ def setup(request):
 
                 espn_curr_event = espn_data.current_event()[0]
                 espn_t_num = espn_curr_event.get('link').split('=')[1]
+                pga = pga_t_data.PGAData()
+                next_pga_t_num = (pga.next_t(), pga.get_t_name(pga.next_t()))
             except Exception as e:
                 print ('setup current event exception', e)
                 espn_curr_event = []
                 espn_t_num = ''
                 espn_data = {}
                 espn_sched = {}
-
+                next_pga_t_num = ''
             
 
             return render(request, 'golf_app/setup.html', {'status': data,
@@ -493,6 +495,7 @@ def setup(request):
                                                             'pga_t_num': pga_t_num,
                                                             'first_golfer': Golfer.objects.first(),
                                                             'last_golfer': Golfer.objects.last(),
+                                                            'next_pga_t_num': next_pga_t_num,
                                                             #'first_field': first_field,
                                                             #'last_field': last_field,
                             })

@@ -3,7 +3,7 @@ from django.views.generic import TemplateView
 from django.contrib.auth.mixins import LoginRequiredMixin
 from wc_app.models import Event, Group, Team, Picks, Stage, AccessLog, TotalScore, Data
 from django.contrib.auth.models import User
-from wc_app import wc_group_data, wc_ko_data, wbc_group_standings, mlb_group_stage
+from wc_app import wc_group_data, wc_ko_data, wbc_group_standings, mlb_group_stage, wbc_ko_data
 from django.core import serializers
 from django.http import HttpResponse, HttpResponseRedirect
 from datetime import datetime
@@ -224,7 +224,7 @@ def wbc_scores(stage, users, data_obj):
             data_obj.display_data = d
             data_obj.save()
         except Exception as e1:
-            print ('WC data save failed', stage, e1)
+            print ('WBC data save failed', stage, e1)
 
 
     elif stage.pick_type == '2': #braket
@@ -233,8 +233,10 @@ def wbc_scores(stage, users, data_obj):
         if stage.complete:
             d = data_obj.display_data
         else:
-            espn = wc_ko_data.ESPNData(source='api')
-            winners_losers = espn.api_winners_losers()
+            #espn = wc_ko_data.ESPNData(source='api')
+            #winners_losers = espn.api_winners_losers()
+            espn = wbc_ko_data.ESPNData()
+            winners_losers = espn.winners()
             
             for u, stats in d.items():
                 score = 0
@@ -245,7 +247,7 @@ def wbc_scores(stage, users, data_obj):
                     #if p.rank in [13, 14]:
                     #    fix = p.ko_fix_picks()
                     #    p = fix
-                    p_score = p.calc_score(winners_losers, 'api')
+                    p_score = p.calc_score(winners_losers, 'wbc_api')
 
                     pick_list.append([p.team.name, p.team.flag_link, p.rank, p_score[0], p.in_out(winners_losers)])
                     score += p_score[0]
@@ -270,7 +272,7 @@ def wbc_scores(stage, users, data_obj):
                 data_obj.display_data = d
                 data_obj.save()
             except Exception as e1:
-                    print ('WC data save failed', stage, e1)
+                    print ('WBC KO data save failed', stage, e1)
 
     print ('WC scores duration: ', datetime.now() - start)
     return d
