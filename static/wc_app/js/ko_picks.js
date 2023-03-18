@@ -100,7 +100,7 @@ function initPicks(picks, data) {
     $.each(picks, function(i, pick) {
         //console.log('init pick ', pick.fields.data.from_ele , $('#' + pick.fields.data.from_ele)[0])
         //teamPicked($('#' + pick.fields.data.from_ele))
-
+        //console.log('e; ', $('#' + pick.fields.data.from_ele)[0])
         teamPicked($('#' + pick.fields.data.from_ele)[0])
         $('#' + pick.fields.data.from_ele).trigger('click')
     })
@@ -227,13 +227,14 @@ function wbcPath(ele, matchId, path) {
     var path = findPath(ele)
     //var matchId = ele.id.split('_')[0].substring(1)
     var i = path.indexOf(parseInt(matchId))
-    top = [1, 3, 5]
-    bottom = [2,]
+    //top = [1, 3, 5]
+    //bottom = [2,]
 
     if (i == -1) {
         alert('Something went wrong, please try again')
     }
     else {
+        //console.log(matchId, parseInt(matchId) % 2, $('#' + ele.id).text(), ele.id)
         if (parseInt(matchId) % 2 != 0 ) {
             $('#m' + path[i+1]  + '_fav').text($('#' + ele.id).text())
             .attr('data-key', $('#' + ele.id).attr('data-key'))
@@ -253,12 +254,12 @@ function wbcPath(ele, matchId, path) {
 function findPath(ele) {
     if ($('#event_type').text() == 'wbc') {
 
-        pathArray = [
-            [1, 5, 7, 8],
-            [2, 5, 7, 8],
-            [3, 6, 7, 8],
-            [4, 6, 7, 8]
-        ]
+         pathArray = [
+             [1, 5, 7, 8],
+             [2, 5, 7, 8],
+             [3, 6, 7, 8],
+             [4, 6, 7, 8]
+         ]
     }
     else {
     pathArray = [

@@ -16,12 +16,68 @@ from datetime import datetime
 
 start = datetime.now()
 
-e = wbc_ko_data.ESPNData()
-data = e.data
-print (e.data)
+#e = wbc_ko_data.ESPNData()
+#data = e.data
+#print (e.data)
 
-#for p in Picks.objects.filter(user__pk=1, team__group__stage__current=True):
-#    print (p, p.rank)
+data_obj = Data.objects.get(stage__event__current=True, stage__name='Group Stage')
+
+Picks.objects.filter(team__group__stage__current=True, rank__in=[5,6,7]).delete()
+
+for t in Team.objects.filter(group__stage__current=True):
+    if t.full_name == 'United States':
+        t.rank = 2
+    elif t.full_name == 'Venezuela':
+        t.rank = 3
+    #elif t.full_name == 'Australia':
+    #    t.rank = 4
+    elif t.full_name == 'Japan':
+        t.rank = 5
+    elif t.full_name == 'Puerto Rico':
+        t.rank = 6
+    elif t.full_name == 'Mexico':
+        t.rank = 7
+    elif t.full_name == 'Italy':
+        t.rank = 8
+    elif t.full_name in ['Cuba', 'Australia']:
+        continue
+
+    else: raise Exception('t rank issue ', t)
+
+    t.early_game = True
+    t.save()
+
+for p in Picks.objects.filter(team__group__stage__current=True):
+    print (p.team.full_name)
+    if p.team.full_name != 'United States':
+        group_team = Team.objects.get(group__stage__name='Group Stage', full_name=p.team.full_name, group__stage__event__current=True)
+    else:        
+        group_team = Team.objects.get(group__stage__name='Group Stage', full_name='USA', group__stage__event__current=True)
+    data = data_obj.group_data.get(group_team.group.group).get(group_team.full_name).get('rank')
+    print ('data: ', p.team, type(data), data)
+    if data == 1:
+        f = 'fav'
+    elif data == 2:
+        f = 'dog'
+    else:
+        raise Exception ('bad')
+    print (p.team, f)
+    if p.data.get('from_ele')[:2] == 'm2':
+        p.data = {'from_ele': 'm3_' + f}
+        print ('M2 - M3', p.data)
+        p.save()
+    elif p.data.get('from_ele')[:2] == 'm3':
+        p.data = {'from_ele': 'm4_' + f}
+        print ('M3 - M4', p.data)
+        p.save()
+    elif p.data.get('from_ele')[:2] == 'm4':
+        p.data = {'from_ele': 'm2_' + f}
+        print ('M4 - M2', p.data)
+        p.save()
+    print ('--------------------------------------------')
+
+
+
 
 #e = wbc_group_standings.ESPNData()
 #data = e.get_team_data()
