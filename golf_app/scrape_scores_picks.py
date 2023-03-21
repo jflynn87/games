@@ -444,9 +444,10 @@ class ScrapeScores(object):
             options = ChromeOptions()
             options.add_argument("--headless")
             options.add_argument("--disable-gpu")
-
+            options.add_argument("--no-sandbox")
+            
             driver = Chrome(options=options)
-
+            time.sleep(30)
             print ('driver pre url: ', datetime.now() - start)
             driver.get(self.url)
             print ('driver after url: ', datetime.now() - start)
