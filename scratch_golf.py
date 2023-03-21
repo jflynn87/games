@@ -36,12 +36,18 @@ from operator import itemgetter
 
 start = datetime.now()
 
-pga = pga_t_data.PGAData()
+# pga = pga_t_data.PGAData()
 
-print (pga.get_full_list())
-print (pga.next_t())
+# print (pga.get_full_list())
+# print (pga.next_t())
+
+# exit()
+t = Tournament.objects.get(current=True)
+o = scrape_scores_picks.ScrapeScores(tournament=t, url="https://www.pgatour.com/tournaments/2023/world-golf-championships-dell-technologies-match-play/R2023470/group-stage")
+print (o.mp_brackets())
 
 exit()
+
 
 s = Season.objects.get(current=True)
 #t = Tournament.objects.filter(season__current=True).order_by('-pk')[1]

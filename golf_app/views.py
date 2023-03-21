@@ -16,7 +16,7 @@ import datetime
 from golf_app import populateField, manual_score, withdraw, scrape_espn, \
      mp_calc_scores, golf_serializers, utils, olympic_sd, espn_api, \
      ryder_cup_scores, espn_ryder_cup, bonus_details, espn_schedule, scrape_scores_picks, \
-     scrape_cbs_golf, fedex_email, pga_t_data 
+     scrape_cbs_golf, fedex_email, pga_t_data, populateMPField 
 
 from django.utils import timezone
 from django.core.exceptions import ObjectDoesNotExist
@@ -2706,7 +2706,12 @@ class BuildFieldAPI(APIView):
             if Tournament.objects.filter(season__current=True, pga_tournament_num=pga_t_num).exists():
                 d['error'] = {'msg': 'Tournament for that pga t number and season already exists'}
             else:
-                populateField.create_groups(pga_t_num, espn_t_num)
+                if pga_t_num not in ['470']:
+                    populateField.create_groups(pga_t_num, espn_t_num)
+                elif pga_t_num == '470':
+                    populateMPField.create_groups(pga_t_num)
+                else:
+                    print ("UNKNOWN T NUM PATH: ", pga_t_num)
                 d['status'] = {'msg': 'complete'}
 
 

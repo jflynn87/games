@@ -144,7 +144,7 @@ def get_worldrank():
 def setup_t(tournament_number, espn_t_num=None):
     '''takes a t number as a string, returns a tournament object'''
     season = Season.objects.get(current=True)
-    print ('getting field')
+    print ('getting field PGA Num: ', tournament_number, ' ESPN NUM: ', espn_t_num)
     if tournament_number != '999': #olympics
         json_url = 'https://statdata-api-prod.pgatour.com/api/clientfile/Field?T_CODE=r&T_NUM=' + str(tournament_number) +  '&YEAR=' + str(season) + '&format=json'
         print (json_url)
@@ -154,7 +154,7 @@ def setup_t(tournament_number, espn_t_num=None):
             req = Request(json_url, headers={'User-Agent': 'Mozilla/5.0'})
             data = json.loads(urlopen(req).read())
             
-            print (data["Tournament"]["T_ID"][1:5], str(season))
+            print ('Seasons: ', data["Tournament"]["T_ID"][1:5], str(season))
             if data["Tournament"]["T_ID"][1:5] != str(season):
                 print ('check field, looks bad!')
                 raise LookupError('Tournament season mismatch: ', data["Tournament"]["T_ID"]) 
@@ -168,7 +168,7 @@ def setup_t(tournament_number, espn_t_num=None):
 
         tourny.season = season
         start_date = datetime.date.today()
-        print (start_date)
+        print ('T Start Date: ', start_date)
         while start_date.weekday() != 3:
             start_date += datetime.timedelta(1)
         tourny.start_date = start_date
@@ -183,7 +183,7 @@ def setup_t(tournament_number, espn_t_num=None):
         tourny.saved_cut_num = 65
         tourny.saved_round = 1
         tourny.saved_cut_round = 2
-        if espn_t_num:
+        if espn_t_num or tourny.pga_tournament_num != '470':
             tourny.espn_t_num = espn_t_num
         else:    
             tourny.espn_t_num = scrape_espn.ScrapeESPN(tourny).get_t_num()
@@ -228,7 +228,9 @@ def get_field(t, owgr_rankings):
     field_dict = {}
     if t.pga_tournament_num == '470':
         print ('match play')
-        mp_dict = scrape_scores_picks.ScrapeScores(t, 'https://www.pgatour.com/competition/' + str(t.season.season) + '/wgc-dell-technologies-match-play/group-stage.html').mp_brackets()
+        #mp_dict = scrape_scores_picks.ScrapeScores(t, 'https://www.pgatour.com/competition/' + str(t.season.season) + '/wgc-dell-technologies-match-play/group-stage.html').mp_brackets()
+        scrape_scores_picks.ScrapeScores(tournament=t, url="https://www.pgatour.com/tournaments/2023/world-golf-championships-dell-technologies-match-play/R2023470/group-stage")
+        print ('back from scrpate')
         for player, data in mp_dict.items():
             ranks = utils.fix_name(player, owgr_rankings)
             field_dict[player] = {'pga_num': data.get('pga_num'),

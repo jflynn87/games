@@ -14,11 +14,11 @@ import collections
 
 
 
-def configure_groups(field_list):
+def configure_groups():
     '''creates 12 groups of 4,  assumes 64 player tournament'''
     print ('config groups')
 
-    print ('len field list in configure_groups: ', len(field_list))
+    #print ('len field list in configure_groups: ', len(field_list))
 
     group = 1
     while group < 17:
@@ -53,17 +53,23 @@ def create_groups(tournament_number):
         print ('setting up first tournament of season')
 
     print ('going to get_field')
-    field = populateField.get_field(tournament_number)
-    OWGR_rankings =  populateField.get_worldrank()
+    #OWGR_rankings =  populateField.get_worldrank()
+    #print ("OWGR Count: ", len(OWGR_rankings))
+    t = populateField.setup_t(tournament_number, 'X')
+    
+    print ('SETUP MP T obj: ', t)
+    #field = populateField.get_field(t, OWGR_rankings)
+    bracket = scrape_scores_picks.ScrapeScores(tournament=t, url="https://www.pgatour.com/tournaments/2023/world-golf-championships-dell-technologies-match-play/R2023470/group-stage").mp_brackets()
+    
     #OWGR_rankings = {}
    
     print ('a')
-    configure_groups(field)
+    configure_groups()
     print ('c')
     tournament = Tournament.objects.get(current=True, season=season)
     print ('d')
 
-    bracket = scrape_scores_picks.ScrapeScores(tournament, 'https://www.pgatour.com/competition/' + str(season.season) + '/wgc-dell-technologies-match-play/group-stage.html').mp_brackets()
+    #bracket = scrape_scores_picks.ScrapeScores(tournament, 'https://www.pgatour.com/competition/' + str(season.season) + '/wgc-dell-technologies-match-play/group-stage.html').mp_brackets()
     #prior_year_sd(tournament)
 
     #print (len(field))
@@ -71,106 +77,124 @@ def create_groups(tournament_number):
     group_dict = {}
     name_switch = False
     name_issues = []
-    for player in field:
-        #print (player)
-        if Name.objects.filter(PGA_name=player).exists():
-            name_switch = True
-            name = Name.objects.get(PGA_name=player)
-            player = name.OWGR_name
-            print ('owgr player', player)
-            print ('pga player', name)
 
-        # fix this to get 0 index of ranking list
-        try:
-            #rank = OWGR_rankings[player.capitalize()][0]
-            #rank = OWGR_rankings[player.capitalize()]
-            rank = OWGR_rankings[player]
-        except Exception:
-            try:
-                lookup = utils.fix_name(player, OWGR_rankings)
-                print ('not in owgr', player, lookup)
-                name_issues.append((player, lookup))
-                rank = lookup[1]
-                #rank = PGA_rankings[player]
-            except Exception as e:
-                print ('no rank found', player, e)
-                rank = [9999, 9999, 9999]
+    for group, golfers in bracket.items():
+        g = Group.objects.get(tournament=t, number=group.split(' ')[1])
+        for golfer_name, data in golfers.items():
+            print (golfer_name, data)
+            
+            if golfer_name == "Tom Kim":
+                golfer_name = "Joohyung Kim"
+            
+            golfer_obj = Golfer.objects.get(golfer_name=golfer_name)
+            if golfer_name == "Joohyung Kim":
+                golfer_name = "Tom Kim"
 
-        if name_switch:
-            print ('name switch', player, name)
-            player = name.PGA_name
-            name_switch = False
+            Field.objects.get_or_create(tournament=t, playerName=golfer_name, \
+              currentWGR=data.get('rank'), sow_WGR=0, soy_WGR=0, \
+              group=g, alternate=None, \
+              playerID=None, pic_link= 'x.com', \
+              map_link= 'x.com', golfer=golfer_obj, handi=0)
+#ayer in bracket:
+    #     #print (player)
+    #     if Name.objects.filter(PGA_name=player).exists():
+    #         name_switch = True
+    #         name = Name.objects.get(PGA_name=player)
+    #         player = name.OWGR_name
+    #         print ('owgr player', player)
+    #         print ('pga player', name)
 
-        group_dict[player] = [rank, field.get(player)]
+    #     # fix this to get 0 index of ranking list
+    #     try:
+    #         #rank = OWGR_rankings[player.capitalize()][0]
+    #         #rank = OWGR_rankings[player.capitalize()]
+    #         rank = OWGR_rankings[player]
+    #     except Exception:
+    #         try:
+    #             lookup = utils.fix_name(player, OWGR_rankings)
+    #             print ('not in owgr', player, lookup)
+    #             name_issues.append((player, lookup))
+    #             rank = lookup[1]
+    #             #rank = PGA_rankings[player]
+    #         except Exception as e:
+    #             print ('no rank found', player, e)
+    #             rank = [9999, 9999, 9999]
+
+    #     if name_switch:
+    #         print ('name switch', player, name)
+    #         player = name.PGA_name
+    #         name_switch = False
+
+    #     group_dict[player] = [rank, field.get(player)]
  
 
-    player_cnt = 1
-    group_num = 1
+    # player_cnt = 1
+    # group_num = 1
 
-    groups = Group.objects.get(tournament=tournament, number=group_num)
-    print ('name issues: ', name_issues)
-    #print ('group_dict before field save', group_dict)
+    # groups = Group.objects.get(tournament=tournament, number=group_num)
+    # print ('name issues: ', name_issues)
+    # #print ('group_dict before field save', group_dict)
 
-    #create dict of player links for picture lookup
-    #import urllib
+    # #create dict of player links for picture lookup
+    # #import urllib
 
-    json_url = 'https://www.pgatour.com/players.html'
-    html = urllib.request.urlopen("https://www.pgatour.com/players.html")
-    soup = BeautifulSoup(html, 'html.parser')
+    # json_url = 'https://www.pgatour.com/players.html'
+    # html = urllib.request.urlopen("https://www.pgatour.com/players.html")
+    # soup = BeautifulSoup(html, 'html.parser')
 
 
-    #players =  (soup.find("div", {'class': 'directory-item'}).find_all('option'))
-    players =  soup.find("div", {'class': 'overview'})
-    golfer_dict = {}
-    #print (players)
-    #print (players.find_all('a', {'class': 'directory-item'}))
-    for p in players.find_all('span', {'class': 'player-flag'}):
-        #print ('players', p)
-        link = ''
-        p_text = str(p)[47:]
-        for char in p_text:
-            if char == '"':
-                break
-            else:
-                link = link + char
-            golfer_dict[link[:5]]=link
-    espn_players = get_espn_players()
-    print ('xxxxxxx', espn_players)
-    #for k, v in sorted(group_dict.items(), key=lambda x: x[1][0]):
-        #print ('key/val: ', k, v)
-        #map_link = get_flag(k, v, espn_players)
-        #print (k, map_link)
-        #print (k)
-    for golfer, group in bracket.items():
-            #print (golfer.split(' ')[1], len(golfer.split(' ')[1]),  k.split(' ')[1].rstrip(), len(k.split(' ')[1].rstrip()))
-        #print (golfer, group, group_dict.get(golfer))
-        #map_link = get_flag(golfer, group_dict.get(golfer), espn_players)
-            #if golfer.split(' ')[1] == k.split(' ')[1].rstrip():
-            #    print ('MAtch', golfer.split(' ')[1], len(golfer.split(' ')[1]),  k.split(' ')[1].rstrip(), len(k.split(' ')[1].rstrip()))
-        g = group.split(' ')[1]
-         #       break
+    # #players =  (soup.find("div", {'class': 'directory-item'}).find_all('option'))
+    # players =  soup.find("div", {'class': 'overview'})
+    # golfer_dict = {}
+    # #print (players)
+    # #print (players.find_all('a', {'class': 'directory-item'}))
+    # for p in players.find_all('span', {'class': 'player-flag'}):
+    #     #print ('players', p)
+    #     link = ''
+    #     p_text = str(p)[47:]
+    #     for char in p_text:
+    #         if char == '"':
+    #             break
+    #         else:
+    #             link = link + char
+    #         golfer_dict[link[:5]]=link
+    # espn_players = get_espn_players()
+    # print ('xxxxxxx', espn_players)
+    # #for k, v in sorted(group_dict.items(), key=lambda x: x[1][0]):
+    #     #print ('key/val: ', k, v)
+    #     #map_link = get_flag(k, v, espn_players)
+    #     #print (k, map_link)
+    #     #print (k)
+    # for golfer, group in bracket.items():
+    #         #print (golfer.split(' ')[1], len(golfer.split(' ')[1]),  k.split(' ')[1].rstrip(), len(k.split(' ')[1].rstrip()))
+    #     #print (golfer, group, group_dict.get(golfer))
+    #     #map_link = get_flag(golfer, group_dict.get(golfer), espn_players)
+    #         #if golfer.split(' ')[1] == k.split(' ')[1].rstrip():
+    #         #    print ('MAtch', golfer.split(' ')[1], len(golfer.split(' ')[1]),  k.split(' ')[1].rstrip(), len(k.split(' ')[1].rstrip()))
+    #     g = group.split(' ')[1]
+    #      #       break
 
-        #print ('group: ', k, group)
-        print ('1 ', golfer)
-        golfer_n = golfer.split('(')[0].rstrip()
+    #     #print ('group: ', k, group)
+    #     print ('1 ', golfer)
+    #     golfer_n = golfer.split('(')[0].rstrip()
 
-        ranks = utils.fix_name(golfer_n, OWGR_rankings)
-        print ('2', golfer, golfer_n, ranks)
+    #     ranks = utils.fix_name(golfer_n, OWGR_rankings)
+    #     print ('2', golfer, golfer_n, ranks)
         
-        golfer_obj, created = Golfer.objects.get_or_create(golfer_name=golfer_n)
-        flag = get_flag(golfer_n, golfer_n, espn_players)
-        pic = get_pick_link(golfer_obj.golfer_pga_num)
-        g_obj = Group.objects.get(tournament=tournament, number=g)
-        Field.objects.get_or_create(tournament=tournament, playerName=golfer_n, \
-             currentWGR=ranks[1][0], sow_WGR=ranks[1][1], soy_WGR=ranks[1][2], \
-             group=g_obj, alternate=None, \
-             playerID=None, pic_link= pic, \
-             map_link= flag, golfer=golfer_obj, handi=0)
+    #     golfer_obj, created = Golfer.objects.get_or_create(golfer_name=golfer_n)
+    #     flag = get_flag(golfer_n, golfer_n, espn_players)
+    #     pic = get_pick_link(golfer_obj.golfer_pga_num)
+    #     g_obj = Group.objects.get(tournament=tournament, number=g)
+    #     Field.objects.get_or_create(tournament=tournament, playerName=golfer_n, \
+    #          currentWGR=ranks[1][0], sow_WGR=ranks[1][1], soy_WGR=ranks[1][2], \
+    #          group=g_obj, alternate=None, \
+    #          playerID=None, pic_link= pic, \
+    #          map_link= flag, golfer=golfer_obj, handi=0)
 
 
-    #print ('checking issue field count', Field.objects.filter(tournament=tournament).count(), 'field len: ', len(field), group_num )
-    #if Field.objects.filter(tournament=tournament).count() < len(field):
-    #groups = Group.objects.get(tournament=tournament,number=group_num)
+    # #print ('checking issue field count', Field.objects.filter(tournament=tournament).count(), 'field len: ', len(field), group_num )
+    # #if Field.objects.filter(tournament=tournament).count() < len(field):
+    # #groups = Group.objects.get(tournament=tournament,number=group_num)
 
 
  
