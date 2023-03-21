@@ -59,8 +59,10 @@ def create_groups(tournament_number):
     
     print ('SETUP MP T obj: ', t)
     #field = populateField.get_field(t, OWGR_rankings)
-    bracket = scrape_scores_picks.ScrapeScores(tournament=t, url="https://www.pgatour.com/tournaments/2023/world-golf-championships-dell-technologies-match-play/R2023470/group-stage").mp_brackets()
-    
+    #bracket = scrape_scores_picks.ScrapeScores(tournament=t, url="https://www.pgatour.com/tournaments/2023/world-golf-championships-dell-technologies-match-play/R2023470/group-stage").mp_brackets()
+    with open('mp_field.json') as field:
+        b = field.read()
+    bracket = json.loads(b)
     #OWGR_rankings = {}
    
     print ('a')

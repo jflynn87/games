@@ -192,12 +192,15 @@ class Picks (models.Model):
                 p_score += 15
             elif self.rank == 7 and self.team.full_name in data.get('Finals').get('winners'):
                 p_score +=30
-    
-            if self.rank < 5 and self.team.full_name not in data.get('2nd Round').get('losers'):
+            print (self, self.rank, self.team.full_name)
+            if self.rank < 5 and not self.team.full_name in data.get('2nd Round').get('losers'):
+                print ('A')
                 best_score += 10
-            elif self.rank < 7 and self.team.full_name not in data.get('2nd Round').get('losers') or self.team.full_name in data.get('Semi-Finals').get('losers'):
+            elif self.rank in [5, 6] and not (self.team.full_name in data.get('2nd Round').get('losers') or self.team.full_name in data.get('Semi-Finals').get('losers')):
+                print ('B')
                 best_score += 15
-            elif self.rank == 7 and self.team.full_name not in data.get('2nd Round').get('losers') or self.team.full_name in data.get('Semi-Finals').get('losers') or self.team.full_name in data.get('Finals').get('losers'):
+            elif self.rank == 7 and not (self.team.full_name in data.get('2nd Round').get('losers') or self.team.full_name in data.get('Semi-Finals').get('losers') or self.team.full_name in data.get('Finals').get('losers')):
+                print ('C')
                 best_score += 30
 
 

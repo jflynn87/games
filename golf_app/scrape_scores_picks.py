@@ -447,12 +447,12 @@ class ScrapeScores(object):
             options.add_argument("--no-sandbox")
             
             driver = Chrome(options=options)
-            time.sleep(30)
+            #time.sleep(30)
             print ('driver pre url: ', datetime.now() - start)
             driver.get(self.url)
             print ('driver after url: ', datetime.now() - start)
             print (driver.title)
-            time.sleep(30)
+            
             soup = BeautifulSoup(driver.page_source, 'html.parser')
             print ('MP driver after soup: ', datetime.now() - start)
 

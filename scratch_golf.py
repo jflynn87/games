@@ -44,7 +44,10 @@ start = datetime.now()
 # exit()
 t = Tournament.objects.get(current=True)
 o = scrape_scores_picks.ScrapeScores(tournament=t, url="https://www.pgatour.com/tournaments/2023/world-golf-championships-dell-technologies-match-play/R2023470/group-stage")
-print (o.mp_brackets())
+f = open('mp_field.json', 'a')
+d = o.mp_brackets()
+f.write(json.dumps(d))
+f.close()
 
 exit()
 
