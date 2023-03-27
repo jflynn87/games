@@ -1445,7 +1445,7 @@ class MPScoresAPI(APIView):
                         ScoreDetails.objects.filter(pick__playerName__tournament=t, pick__user=u, score=2).exists() and \
                         ScoreDetails.objects.filter(pick__playerName__tournament=t, pick__user=u, score=3).exists():
                         print ('MP Trifecta: ', u)
-                        bd, created = BonusDetails.objects.get_or_create(user=w.user, tournament=t, bonus_type='6')
+                        bd, created = BonusDetails.objects.get_or_create(user=u, tournament=t, bonus_type='6')
                         bd.bonus_points = 25
                         bd.save()
                         total = TotalScore.objects.get(tournament=t, user=u)
