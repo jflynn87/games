@@ -110,7 +110,7 @@ class ESPNData(object):
             completed = 0
 
             for c in self.event_data.get('competitions'):
-                if c[0].get('description') in ["Third Place", "Championship"]:
+                if c[0].get('description') in ["Third Place", "Championship", "Finals"]:
                     if c[0].get('competitors')[0].get('status').get('type').get('completed'): 
                         completed += 1
 
@@ -555,9 +555,11 @@ class ESPNData(object):
                         d['third'] = golfer.get('athlete').get('id')
                     elif match.get('description') == 'Third Place' and not golfer.get('score').get('winner'):
                         d['fourth'] = golfer.get('athlete').get('id')
-                    elif match.get('description') == 'Championship' and golfer.get('score').get('winner'):
+                    #elif match.get('description') == 'Championship' and golfer.get('score').get('winner'):
+                    elif match.get('description') == 'Finals' and golfer.get('score').get('winner'):
                         d['first'] = golfer.get('athlete').get('id')
-                    elif match.get('description') == 'Championship' and golfer.get('score').get('winner') == False:
+                    #elif match.get('description') == 'Championship' and golfer.get('score').get('winner') == False:
+                    elif match.get('description') == 'Finals' and golfer.get('score').get('winner') == False:
                         d['second'] = golfer.get('athlete').get('id')
 
         return d
