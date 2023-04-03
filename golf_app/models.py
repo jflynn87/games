@@ -177,6 +177,7 @@ class Tournament(models.Model):
 
     class Meta():
         unique_together = ('season', 'pga_tournament_num')
+        indexes = [models.Index(fields=['season', 'pga_tournament_num']),]
 
 
     #def get_queryset(self):t
@@ -185,8 +186,20 @@ class Tournament(models.Model):
     def __str__(self):
         return self.name
 
+    
     def natural_key(self):
         return self.name
+
+    
+    def prior_t(self):
+        if Tournament.objects.filter(season=self.season).exclude(pk__gte=self.pk).exists():
+            keys = Tournament.objects.filter(season=self.season).exclude(pk__gte=self.pk).values_list('pk', flat=True)
+            return Tournament.objects.get(pk=max(keys))
+        else:
+            #should only need for first T of season
+            keys = Tournament.objects.all().exclude(pk__gte=self.pk).values_list('pk', flat=True)
+            return Tournament.objects.get(pk=max(keys))
+    
 
     def started(self):
         start = datetime.now()
@@ -898,8 +911,6 @@ class Golfer(models.Model):
     def get_fedex_stats(self):
         #not reliable as pga site frequently fails to load player
         try:
-            #link = get_pga_player_link(pga_num, golfer)
-            #print (self.get_pga_player_link())
             player_html = urllib.request.urlopen(self.get_pga_player_link())
             player_soup = BeautifulSoup(player_html, 'html.parser')
             fedex_rank = player_soup.find('div', {'class': 'career-notes'}).find_all('div',{'class': 'value'})[0].text.lstrip().rstrip()

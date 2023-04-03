@@ -790,14 +790,15 @@ def get_fedex_data(tournament=None, update=False):
     data = {}
     try:
         season = Season.objects.get(current=True)
-        prior_t = Tournament.objects.filter(season__current=True).order_by('-pk')[1]
+        #prior_t = Tournament.objects.filter(season__current=True).order_by('-pk')[1]
+        print_t = tournament.prior_t()
         #print (prior_t.fedex_data)
         c = 0    
         #for g in FedExField.objects.filter(season__season__current=True, golfer__espn_number='9780'):
         g_count = FedExField.objects.filter(season__season__current=True).count()
         for g in FedExField.objects.filter(season__season__current=True):
             if g.golfer.espn_number:
-                g_data = espn_golfer_api.ESPNGolfer(g.golfer.espn_number)
+                g_data = espn_golfer_stats_api.ESPNGolfer(g.golfer.espn_number)
                 if g_data.fedex_rank():
                     try:
                         prior = prior_t.fedex_data.get(g.golfer.golfer_name).get('rank')

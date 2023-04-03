@@ -36,12 +36,12 @@ from operator import itemgetter
 
 start = datetime.now()
 
-# pga = pga_t_data.PGAData()
+season = Season.objects.get(current=True)
 
-# print (pga.get_full_list())
-# print (pga.next_t())
-
-# exit()
+for t in Tournament.objects.filter(season=season):
+    print (t)
+    print (t, t.prior_t())
+exit()
 t = Tournament.objects.get(current=True)
 o = scrape_scores_picks.ScrapeScores(tournament=t, url="https://www.pgatour.com/tournaments/2023/world-golf-championships-dell-technologies-match-play/R2023470/group-stage")
 f = open('mp_field.json', 'a')
