@@ -249,6 +249,9 @@ function buildForm(info, groups, field, golfers, partners, picks, tStarted, star
                 p_golferName.style.fontWeight = 'bold'
     
                 p_golferFlag.src = partner[0].flag_link
+                p_golferFlag.style.height = '20px'
+                p_golferFlag.style.width = '20px'
+
                 p.append(' & ')
                 p.append(p_golferPic)
                 p.append(p_golferName)
