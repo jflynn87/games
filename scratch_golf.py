@@ -36,19 +36,17 @@ from operator import itemgetter
 
 start = datetime.now()
 
-season = Season.objects.get(current=True)
-
-for t in Tournament.objects.filter(season=season):
-    print (t)
-    print (t, t.prior_t())
-exit()
 t = Tournament.objects.get(current=True)
-o = scrape_scores_picks.ScrapeScores(tournament=t, url="https://www.pgatour.com/tournaments/2023/world-golf-championships-dell-technologies-match-play/R2023470/group-stage")
-f = open('mp_field.json', 'a')
-d = o.mp_brackets()
-f.write(json.dumps(d))
-f.close()
+z = Tournament.objects.get(season__current=True, pga_tournament_num='018')
+sd = ScoreDict.objects.get(tournament=z)
+#print (Field.objects.get(golfer__espn_number='1276', tournament=z))
+print (sd.data_valid())
 
+if not sd.data_valid():
+    sd.update_sd_data()
+
+for f in Field.objects.filter(tournament=t, golfer__golfer_name__in=["Patrick Cantlay", "Xander Schauffele"]):
+    print (f.recent_results())
 exit()
 
 

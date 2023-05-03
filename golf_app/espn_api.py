@@ -595,6 +595,7 @@ class ESPNData(object):
 
         return [wins, loss, draw]
 
+
     def mp_group_rank(self, golfer, records=None):
         '''takes a field object'''
         if not records:
@@ -627,3 +628,7 @@ class ESPNData(object):
 
         print (self.golfer_data(espn_num))
         return 
+    
+    def zurich_golfer_rank(self, golfer):
+        '''takes a golfer object returns a string'''
+        pass

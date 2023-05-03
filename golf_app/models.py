@@ -1031,20 +1031,21 @@ class Field(models.Model):
         from golf_app import espn_api
         data = {}
         start = datetime.now()
-        try:
-            for t in Tournament.objects.all().order_by('pk').exclude(pga_tournament_num='468').reverse()[1:5]:  # excld ryder cup
+        for t in Tournament.objects.all().order_by('pk').exclude(pga_tournament_num='468').reverse()[1:5]:  # excld ryder cup
+            try:
+
                 if Field.objects.filter(tournament=t, golfer=self.golfer).exclude(withdrawn=True).exclude(golfer__espn_number__isnull=True).exists():
                     sd = ScoreDict.objects.get(tournament=t)
                     #f = Field.objects.get(tournament=t, golfer__espn_number=self.golfer.espn_number)
                     f = Field.objects.get(tournament=t, golfer=self.golfer)
                     
-                    if t.pga_tournament_num != '470':
+                    if t.pga_tournament_num not in ['470',]:
                         x = [v.get('rank') for k, v in sd.data.items() if k !='info' and v.get('pga_num') in [self.golfer.espn_number, self.golfer.golfer_pga_num]]
                         if len(x) > 0:
                             data.update({t.pk:{'name': t.name, 'rank': x[0]}})
                         else:
                             data.update({t.pk:{'name': t.name, 'rank': 'DNP'}})    
-                    else:
+                    elif t.pga_tournament_num == '470':
                         #data.update({t.pk: {'name': t.name, 'rank': 'MP ' + str(self.get_mp_result(t))}})  #for 2021 using pga data
                         espn = espn_api.ESPNData(t=f.tournament, data=sd.espn_api_data)
                         data.update({t.pk: {'name': t.name, 'rank': 'MP ' + str(self.mp_calc_score(espn.mp_golfers_per_round(), espn))}})
@@ -1058,9 +1059,9 @@ class Field(models.Model):
                         data.update({t.pk:{'name': t.name, 'rank': 'DNP'}})    
                 else:
                     data.update({t.pk:{'name': t.name, 'rank': 'DNP'}})
-        except Exception as e:
-            print ('recent results exception', e, t, self, self.golfer.golfer_pga_num)
-            data.update({t.pk:{'name': t.name, 'rank': 'DNP'}})
+            except Exception as e:
+                print ('recent results exception', e, t, self, self.golfer.golfer_pga_num)
+                data.update({t.pk:{'name': t.name, 'rank': 'error'}})
         #print ('recent results: ', self, datetime.now() - start)
         return data
 
@@ -1457,9 +1458,10 @@ class ScoreDict(models.Model):
     
     def data_valid(self):
         
-        if self.tournament.special_field():
+        if self.tournament.special_field() and self.tournament.pga_tournament_num != '018':
             return True
 
+        if not self.data: return False
         good = True
         field_len = Field.objects.filter(tournament=self.tournament).count()
         sd_len = len(self.data) - 1  #minus 1 for the info entry
@@ -1525,24 +1527,51 @@ def build_zurich_data(sd):
 
     for data in espn.field_data:
         for r in data.get('roster'):
-            f = Field.objects.get(Q(golfer__espn_number=str(r.get('playerId'))) | Q(partner_golfer__espn_number=str(r.get('playerId'))), tournament=sd.tournament)
-            id = r.get('playerId')
-            d[r.get('athlete').get('displayName')] = {'pga_num': str(id),
-                                                      'r1': espn.get_round_score(id, 1),
-                                                      'r2': espn.get_round_score(id, 2),
-                                                      'r3': espn.get_round_score(id, 3),
-                                                      'r4': espn.get_round_score(id, 4),
-                                                      'rank': espn.get_rank(id),
-                                                      'thru': espn.get_thru(id),
-                                                      'group': f.group.number,
-                                                      'change': '',
-                                                      'handicap': f.handi,
-                                                      'round_score': '',
-                                                      'total_strokes': '',
-                                                      'total_score': espn.to_par(id)
+ 
+            try:
+ 
+                print ('build zurich data for espn_num: {}, {}'.format(r.get('playerID'), r.get('athlete').get('displayName')))
+                f = Field.objects.get(Q(golfer__espn_number=str(r.get('playerId'))) | Q(partner_golfer__espn_number=str(r.get('playerId'))), tournament=sd.tournament)
+                id = r.get('playerId')
+                d[r.get('athlete').get('displayName')] = {'pga_num': str(id),
+                                                        'r1': espn.get_round_score(id, 1),
+                                                        'r2': espn.get_round_score(id, 2),
+                                                        'r3': espn.get_round_score(id, 3),
+                                                        'r4': espn.get_round_score(id, 4),
+                                                        'rank': espn.get_rank(id),
+                                                        'thru': espn.get_thru(id),
+                                                        'group': f.group.number,
+                                                        'change': '',
+                                                        'handicap': f.handi,
+                                                        'round_score': '',
+                                                        'total_strokes': '',
+                                                        'total_score': espn.to_par(id)
 
-            
-            }
+                
+                }
+            except Exception as e:
+                print ('Issue wiht Zurich sd {}'.format(e))
+                try:
+                    d[r.get('athlete').get('displayName')] = {'pga_num': str(id),
+                                                        'r1': espn.get_round_score(id, 1),
+                                                        'r2': espn.get_round_score(id, 2),
+                                                        'r3': espn.get_round_score(id, 3),
+                                                        'r4': espn.get_round_score(id, 4),
+                                                        'rank': espn.get_rank(id),
+                                                        'thru': espn.get_thru(id),
+                                                        'group': 'none',
+                                                        'change': '',
+                                                        'handicap': '',
+                                                        'round_score': '',
+                                                        'total_strokes': '',
+                                                        'total_score': espn.to_par(id)
+
+                
+                                                             }
+                except Exception as f:
+                    print ('Zurich SD execpt exception {}'.format(f))
+                    continue
+
 
     return d
 
