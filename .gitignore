@@ -1,5 +1,6 @@
 db.sqlite3
 *.sql
+.env
 
 
 #all below from react addition
