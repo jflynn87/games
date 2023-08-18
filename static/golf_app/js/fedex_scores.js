@@ -115,7 +115,10 @@ function detail() {
         $.each(data, function(golfer, d) {
             let filler = /[\s\.\,\']/g;
             g = golfer.replace(filler, '_')
-            $('#fedex_detail_table').append('<tr id='+ g +'_row class=small style=font-weight:bold;><td style=position:sticky;left:0;background:white;>' + golfer + '</td></tr>')    
+            console.log(golfer,d)
+            $('#fedex_detail_table').append('<tr id='+ g +'_row class=small style=font-weight:bold;><td style=position:sticky;left:0;background:white;>' + golfer
+                                            + ' (rank:' + d.rank + ', soy rank:' + d.soy_owgr + ')'  
+                                            + '</td></tr>')    
             $.each(t, function(i, user) {
                 e = document.createElement('td')
                 //eSpan = document.createElement('span')
