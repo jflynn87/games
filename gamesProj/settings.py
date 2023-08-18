@@ -11,6 +11,15 @@ https://docs.djangoproject.com/en/2.0/ref/settings/
 """
 
 import os
+from pathlib import Path
+from dotenv import load_dotenv
+
+if os.environ.get('env') == 'local_env':
+    basepath = Path()
+    #basedir = str(basepath.cwd())
+    envars = basepath.cwd() / '.env'
+    load_dotenv(envars)
+
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
