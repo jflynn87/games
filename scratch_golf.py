@@ -36,26 +36,24 @@ from operator import itemgetter
 
 start = datetime.now()
 
-t = Tournament.objects.get(current=True)
-z = Tournament.objects.get(season__current=True, pga_tournament_num='018')
-sd = ScoreDict.objects.get(tournament=z)
-#print (Field.objects.get(golfer__espn_number='1276', tournament=z))
-print (sd.data_valid())
-
-if not sd.data_valid():
-    sd.update_sd_data()
-
-for f in Field.objects.filter(tournament=t, golfer__golfer_name__in=["Patrick Cantlay", "Xander Schauffele"]):
-    print (f.recent_results())
-exit()
-
 
 s = Season.objects.get(current=True)
-#t = Tournament.objects.filter(season__current=True).order_by('-pk')[1]
-t = Tournament.objects.get(current=True)
-for g in Golfer.objects.all():
-    g.flag_link = g.get_flag()
-    g.save()
+user = User.objects.get(username__contains='shi')
+score = FedExPicks.objects.filter(pick__season__season=s, user=user).aggregate(Sum('score')).get('score__sum')
+print (score)
+#if FedExPicks.objects.filter(pick__season__season=self, user=user, top_3=True, rank__in=[1, 2, 3]).exists():
+top3 = FedExSeason.objects.get(season=s).top_3()
+print (top3)
+for p in FedExPicks.objects.filter(pick__season__season=s, user=user, top_3=True, pick__golfer__golfer_name__in=top3.keys()):
+    fed_ex_rank = [x.get('rank') for k, x in top3.items() if k == p.pick.golfer.golfer_name][0]
+    if fed_ex_rank in [1, '1']:
+        score -= 100
+    elif fed_ex_rank in [2, '2']:
+        score -= 75
+    elif fed_ex_rank in [3, '3']:
+        score -= 50
+
+print (score)
 exit()
 
 ## for f in Field.objects.filter(tournament=t)[:5]:

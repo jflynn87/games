@@ -1,7 +1,8 @@
 db.sqlite3
 *.sql
 .env
-
+db-backup.sql
+credentials.json
 
 #all below from react addition
 

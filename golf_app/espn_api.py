@@ -214,12 +214,14 @@ class ESPNData(object):
                 #print ('issue wiht cut num, returning saved model num', e)
                 return self.t.saved_cut_num
         else:
-            cuts = [v for v in self.field_data if v.get('status').get('type').get('id') == '3']
+            #changed to not cut - should only be here for no cut events
+            cuts = [v for v in self.field_data if v.get('status').get('type').get('id') != '3']
             return len(cuts) + 1  
         
 
     def get_rank(self, espn_number):
         golfer_data = self.golfer_data(espn_number)
+        
         if not golfer_data:
             return self.cut_num()
         if golfer_data.get('status').get('type').get('id') in ['3']:

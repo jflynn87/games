@@ -121,11 +121,11 @@ class Season(models.Model):
             top3 = FedExSeason.objects.get(season=self).top_3()
             for p in FedExPicks.objects.filter(pick__season__season=self, user=user, top_3=True, pick__golfer__golfer_name__in=top3.keys()):
                 fed_ex_rank = [x.get('rank') for k, x in top3.items() if k == p.pick.golfer.golfer_name][0]
-                if fed_ex_rank == '1':
+                if fed_ex_rank in [1, '1']:
                     score -= 100
-                elif fed_ex_rank == '2':
+                elif fed_ex_rank in [2, '2']:
                     score -= 75
-                elif fed_ex_rank == '3':
+                elif fed_ex_rank in [3, '3']:
                     score -= 50
         
         return score
@@ -1191,7 +1191,7 @@ class Field(models.Model):
                 print ('WD? not found in espn: ',  self.playerName, self.golfer.espn_number) 
                 cut = True
                 score = (int(api_data.cut_num()) - int(self.handi)) + api_data.cut_penalty(self)
-        #print ('golfer:', self.playerName, 'calc SCORE ', score, 'cut ', cut)
+        #print ('golfer:', self.playerName, 'calc SCORE ', score, 'cut: ', cut)
         #print ('calc score dur: ', self, datetime.now() - start)
         return {'score': score, 'cut': cut}
 
@@ -1814,7 +1814,7 @@ class FedExSeason(models.Model):
             t = Tournament.objects.get(current=True)
         
         if t.fedex_data:
-            return {k:v for k,v in t.fedex_data.items() if v.get('rank') in ['1', '2', '3']}
+            return {k:v for k,v in t.fedex_data.items() if v.get('rank') in [1, 2, 3, '1', '2', '3']}
         else:
             return {}
 
