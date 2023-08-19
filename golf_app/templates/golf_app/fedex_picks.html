@@ -17,7 +17,9 @@
 <h5>Note: Scores are as of the end of the {{prior_t.name}}</h5>
 {%endif%}
 
+{%compress js%}
 <script type="text/javascript" src="{%static 'golf_app/js/fedex_scores.js'%}"></script> 
+{%endcompress%}
 <p id='allow_picks' hidden>{{ season.allow_picks|yesno:"true,false,none" }}</p>
 <div id='intro'></div>
 <div id='status'><script type="text/javascript">loadStatus()</script></div>
