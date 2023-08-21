@@ -51,9 +51,10 @@ def load_sched(payload=None, nfl_season_type=None):
                 else:
                     week.current = True
                 week.season = season.season
-                #week.week = week_cnt
+                #week.week = str(season.season)
+                week.week = week_cnt
                 week.game_cnt = 0
-                #week.save()
+                week.save()
 
                 if nfl_season_type == 'REG':
                     p = week_cnt
@@ -61,6 +62,7 @@ def load_sched(payload=None, nfl_season_type=None):
                     p = None
 
                 espn =  espn_data.ESPNData(payload=p, nfl_season_type=nfl_season_type)
+                print ('espn data len', len(espn.get_data()))
                 for k, v in espn.get_data().items():
                         print (k, v, week)
                         game, created = Games.objects.get_or_create(eid=k, week=week)
