@@ -10,7 +10,7 @@ function draw_chart() {
   .then((response) => response.json())
   .then((responseJSON) => {
     json_data =  responseJSON
-    console.log(json_data)
+    //console.log(json_data)
     $('#chart-sect').remove()
     $('#chart').append("<div id='chart-sect'><h4 id='chart_status_msg' class=status'>Loading Chart ...</h4> <canvas id='trend_chart' class='chart-style'></canvas></div>")
     
@@ -63,8 +63,8 @@ function draw_chart() {
                 
             }
 
-    var oldChart = ctx
-
+    //var oldChart = ctx
+    console.log(data)
     var myChart = new Chart(ctx, 
     {type: 'line',
      data: data,

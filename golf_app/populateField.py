@@ -781,7 +781,7 @@ def get_individual_stats(t=None, update=False):
 
 def get_fedex_data(tournament=None, update=False):
     '''takes an optional tournament object to update/setup, returns a dict'''
-    print ('updating fedex data')    
+    print ('updating fedex data', tournament, update)    
     start = datetime.datetime.now()
     if tournament and not update:
         if tournament.fedex_data and len(tournament.fedex_data) > 0:
