@@ -848,8 +848,8 @@ function buildHeader(cpPicks) {
         
     if ($('#pga_t_num').text() == 468) {
         var intl = "Europe"
-        var low_points = 14
-        var high_points = 28
+        var lowPoints = 14
+        var highPoints = 28
     }
     else {
         var intl = "International"

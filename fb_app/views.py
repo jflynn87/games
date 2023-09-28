@@ -295,8 +295,8 @@ class GameListView(LoginRequiredMixin,ListView):
          if picks_check[0]:
             print ('pick valid' + str(picks_check[0]))
          else:
-            print ('FB picks error ', error, week, team_dict)
             error = picks_check[1]
+            print ('FB picks error ', error, week, team_dict)
             return render (request, 'fb_app/games_list.html', {
             'form': formset,
             'message': error,

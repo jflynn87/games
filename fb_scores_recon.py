@@ -67,7 +67,7 @@ def clean_up_dup_weeks():
                         dup.delete()
                         i += 1
 
-week = Week.objects.get(season_model__current=True, week=7)
+week = Week.objects.get(season_model__current=True, week=2)
 week.save()
 recalc('Football Fools')
 #clean_up_dup_weeks()

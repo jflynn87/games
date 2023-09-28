@@ -37,6 +37,11 @@ from operator import itemgetter
 start = datetime.now()
 
 
+for f in Field.objects.filter(tournament__current=True, tournament__pga_tournament_num='468').order_by('group__number'):
+    print (f, f.teamID, f.group) 
+
+exit()
+
 s = Season.objects.get(current=True)
 user = User.objects.get(username__contains='shi')
 score = FedExPicks.objects.filter(pick__season__season=s, user=user).aggregate(Sum('score')).get('score__sum')

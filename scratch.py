@@ -42,12 +42,19 @@ import pprint
 from docx.api import Document   
 
 
-week = Week.objects.get(current=True)
-player = Player.objects.get(name__pk=1)
+week = Week.objects.get(season_model__current=True, week=2)
+l = League.objects.get(league="Football Fools")
 
+u = week.update_scores(l, True)
+
+for p in Player.objects.filter(league=l):
+    print (WeekScore.objects.filter(player=p, week__season_model=week.season_model).values('player__name__username').annotate(Sum('score')))
+
+for g in Games.objects.filter(week__week=2, week__season_model__current=True):
+    print(g.home, g.home_score, g.away, g.away_score, g.qtr)
 #print (player.season_picks_weekly_details(week))
 
-print (Games.objects.filter(week__season_model__current=True, tie=True).count())
+#print (Games.objects.filter(week__season_model__current=True, tie=True).count())
 
 exit()
 

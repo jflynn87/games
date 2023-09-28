@@ -266,6 +266,53 @@ def get_field(t, owgr_rankings):
                                     'flag': stats.get('flag')}
         #field_dict['info'] = mens_field.get('info')
     #elif t.pga_tournament_num == 'RYDCUP':
+    elif t.pga_tournament_num == '468':
+        us_team = ['Scottie Scheffler',
+            'Wyndham Clark',
+            'Patrick Cantlay',
+            'Brian Harman',
+            'Max Homa',
+            'Xander Schauffele',
+            'Sam Burns',
+            'Rickie Fowler',
+            'Brooks Koepka',
+            'Collin Morikawa',
+            'Jordan Spieth',
+            'Justin Thomas']
+
+        euro_team = ['Rory McIlroy',
+            'Jon Rahm',
+            'Robert MacIntyre',
+            'Yannik Paul',
+            'Adrian Meronk',
+            'Victor Perez',
+            'Tommy Fleetwood',
+            'Rasmus Hojgaard',
+            'Adrian Otaegui',
+            'Alexander Björk',
+            'Shane Lowry',
+            'Joost Luiten']
+        
+        for u in us_team:
+            print ('RYDER player: ', u)
+            ranks = utils.fix_name(u, owgr_rankings)
+            g = Golfer.objects.get(golfer_name=u) 
+            field_dict[u] = {'pga_num': g.golfer_pga_num,
+                                    'team': 'USA',
+                                    'curr_owgr': ranks[1][0],
+                                    'soy_owgr': ranks[1][2],
+                                    'sow_owgr': ranks[1][1]}
+        for i in euro_team:
+            print ('RYDER player: ', i)
+            ranks = utils.fix_name(u, owgr_rankings)
+            g = Golfer.objects.get(golfer_name=i) 
+ 
+            field_dict[i] = {'pga_num': g.golfer_pga_num,
+                                    'team': 'INTL',
+                                    'curr_owgr': ranks[1][0],
+                                    'soy_owgr': ranks[1][2],
+                                    'sow_owgr': ranks[1][1]}
+
     else:
         try:
             headers = {'User-Agent': 'Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.149 Mobile Safari/537.36'}
