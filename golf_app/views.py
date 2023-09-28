@@ -1969,8 +1969,9 @@ class RyderCupScoresView(LoginRequiredMixin, TemplateView):
         else:
             t = None
         
-        if not t.picks_complete():
-            t.missing_picks()
+        #comment out in 2023 as it is not part of season
+        #if t.started() and not t.picks_complete():
+        #    t.missing_picks()
 
         picks = {}
         for u in s.get_users('obj'):

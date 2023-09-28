@@ -281,17 +281,17 @@ def get_field(t, owgr_rankings):
             'Justin Thomas']
 
         euro_team = ['Rory McIlroy',
-            'Jon Rahm',
-            'Robert MacIntyre',
-            'Yannik Paul',
-            'Adrian Meronk',
-            'Victor Perez',
-            'Tommy Fleetwood',
-            'Rasmus Hojgaard',
-            'Adrian Otaegui',
-            'Alexander Björk',
-            'Shane Lowry',
-            'Joost Luiten']
+                        'Jon Rahm',
+                        'Viktor Hovland',
+                        'Tyrrell Hatton',
+                        'Matt Fitzpatrick',
+                        'Robert MacIntyre',
+                        'Shane Lowry',
+                        'Tommy Fleetwood',
+                        'Justin Rose',
+                        'Sepp Straka',
+                        'Nicolai Hojgaard',
+                        'Ludvig Aberg']
         
         for u in us_team:
             print ('RYDER player: ', u)

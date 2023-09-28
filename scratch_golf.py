@@ -37,8 +37,8 @@ from operator import itemgetter
 start = datetime.now()
 
 
-for f in Field.objects.filter(tournament__current=True, tournament__pga_tournament_num='468').order_by('group__number'):
-    print (f, f.teamID, f.group) 
+for p in Picks.objects.filter(playerName__tournament__current=True).order_by('user', 'playerName__group__number'):
+    print (p.user, p) 
 
 exit()
 
