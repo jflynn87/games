@@ -247,6 +247,9 @@ class Tournament(models.Model):
         return TotalScore.objects.filter(tournament=self, score=winning_score.get('score__min'))
 
     def picks_complete(self):
+        if self.pga_tournament_num in ['500', '468']:
+            return True
+        
         if self.started():
             c = len(self.season.get_users())
             expected_picks = 0
