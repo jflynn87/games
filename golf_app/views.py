@@ -208,7 +208,7 @@ class NewFieldListView(LoginRequiredMixin,TemplateView):
             if data.get('ryder_cup')[0] == "USA":
                 cp.country = 'USA'
             elif tournament.pga_tournament_num == '468':
-                cp.county = "EUR"
+                cp.country = "EUR"
             elif tournament.pga_tournament_num == '500':
                 cp.country = 'INTL'
             else:
@@ -1975,7 +1975,8 @@ class RyderCupScoresView(LoginRequiredMixin, TemplateView):
 
         picks = {}
         for u in s.get_users('obj'):
-            picks[u.username] = Picks.objects.filter(playerName__tournament=t, user=u).count()
+            if Picks.objects.filter(playerName__tournament=t, user=u).exists():
+                picks[u.username] = Picks.objects.filter(playerName__tournament=t, user=u).count()
         context.update({
             'picks': picks,
              't': t,
@@ -2013,6 +2014,8 @@ class RyderCupScoresAPI(APIView):
             #    data['field'].update({f.golfer.espn_number: f.playerName})
 
             for user in s.get_users('obj'):
+                if not Picks.objects.filter(playerName__tournament=t, user=user).exists():
+                    continue
                 print ('BBBBBB', user)
                 #user = User.objects.get(pk=u.get('user'))
                 print (user, totals.get(user.username))

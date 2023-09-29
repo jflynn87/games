@@ -22,6 +22,7 @@ function buildTable(picks) {
           picks_l = Object.keys(picks).length
 
           for (let i=0; i < picks_l; i++) {
+            console.log('I', Object.keys(picks)[i], Object.values(picks)[i])
               if (Object.keys(picks)[i] != 'score_dict' && Object.keys(picks)[i] != 'field') {
               $('#score_tbl_body').append('<tr id=' + Object.keys(picks)[i] + '-row><td id=' + Object.keys(picks)[i] + '-name style=font-weight:bold>' + Object.keys(picks)[i] + '</td></tr>' )
               if (Object.values(picks)[i].bonus) {
