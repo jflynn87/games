@@ -20,10 +20,13 @@ class Score(object):
     
     def __init__(self, score_dict, tournament=None):
         if not tournament:
-            self.tournament = Tournament.objects.get(season__current=True, pga_tournament_num='500  ')
+            #self.tournament = Tournament.objects.get(season__current=True, pga_tournament_num='500  ')
+            self.tournament = Tournament.objects.get(current=True)
         else:
             self.tournament = tournament
         
+        if self.tournament.pga_tournament_num not in ['468', '500']:
+            raise Exception('Wrong Tournament, only for RC or Pres Cup')
         self.score_dict = score_dict
 
 
@@ -91,6 +94,8 @@ class Score(object):
 
         
         for player in self.tournament.season.get_users():
+            if not Picks.objects.filter(playerName__tournament=self.tournament, user__pk=player.get('user')).exists():
+                continue
             ts_loop_start = datetime.now()
             user = User.objects.get(pk=player.get('user'))
             sd = ScoreDetails.objects.filter(pick__playerName__tournament=self.tournament, user=user)
