@@ -16,10 +16,17 @@ class FieldAdmin(admin.ModelAdmin):
     list_display = ['tournament', 'playerName']
     list_filter = ['tournament',]
 
+    def queryset(self, request):
+        qs = super(FieldAdmin, self).queryset(request)
+        return qs.filter(tournament__season__current=True)
 
 class PicksAdmin(admin.ModelAdmin):
     list_display = ['user', 'playerName']
     list_filter = ['playerName__tournament', 'user' ]
+
+    def queryset(self, request):
+        qs = super(PicksAdmin, self).queryset(request)
+        return qs.filter(playerName__tournament__season__current=True)
 
 
 class BonusDetailsAdmin(admin.ModelAdmin):

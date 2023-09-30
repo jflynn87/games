@@ -71,7 +71,7 @@ class Score(object):
                         if len(match_score) == 0:
                             score += 5    
                         elif match_score[0].get('draw'):
-                            score -= 5
+                            score -= 0
                         elif match_score[0].get('winner'):
                             score -= 10
                             #score -= int(match_score[0].get('value'))
