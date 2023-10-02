@@ -114,9 +114,12 @@ class Score(object):
         if self.score_dict.get('overall').get('complete'):
             print ('RYDER Cup complete: ', self.score_dict.get('overall').get('complete'))
             overall = [v for k, v in self.score_dict.items() if k =='overall']
-            #print (overall)
-            winning_team = [k for k, v in overall[0].items() if k not in ['status', 'complete'] and v.get('score').get('value') > 10]
-            winning_score = [v.get('score').get('value') for k, v in overall[0].items() if k not in ['status', 'complete'] and v.get('score').get('value') > 10]
+            print ('Overall: ', overall)
+            
+            #winning_team = [k for k, v in overall[0].items() if k not in ['status', 'complete'] and v.get('score').get('value') > 10]
+            #winning_score = [v.get('score').get('value') for k, v in overall[0].items() if k not in ['status', 'complete'] and v.get('score').get('value') > 10]
+            winning_team = [k for k, v in overall[0].items() if k not in ['status', 'complete'] and v.get('score').get('winner')]
+            winning_score = [v.get('score').get('value') for k, v in overall[0].items() if k not in ['status', 'complete'] and v.get('score').get('winner')]
             print ('winning team: ', winning_team[0], winning_score[0])
             
             #need this as model and dict have different euro/EUR
@@ -124,7 +127,7 @@ class Score(object):
             if winning_team[0] == "USA":
                 winning_team = 'USA'
             elif winning_team[0] == 'EUR':
-                winning_team = 'euro'
+                winning_team = 'EUR'
             elif winning_team[0] == 'INTL':
                 winning_team = 'INTL'
 

@@ -2913,15 +2913,17 @@ class StartedDataAPI(APIView):
         
         start = datetime.datetime.now()
         d = {}
+        t = Tournament.objects.get(pk=pk)
+        started_golfers = []
+        lock_groups = []  
+
         try:
-            t = Tournament.objects.get(pk=pk)
-            started_golfers = []
-            lock_groups = []  
             espn = espn_api.ESPNData()
             after_espn_start = datetime.datetime.now()
             if t.special_field() and (t.started() and not t.late_picks):
                 t_started = True
                 started_golfers = list(Field.objects.filter(tournament=t).values_list('golfer__espn_number', flat=True))
+
             elif t.special_field() and (t.set_notstarted or t.late_picks):
                 t_started = False
             elif t.set_started:
@@ -2945,9 +2947,15 @@ class StartedDataAPI(APIView):
             print ('GetStertedDataAPI after espn time: ', datetime.datetime.now() - after_espn_start)
             print (d)
         except Exception as e:
-            d['t_started'] =  False
+            if t.started():
+                d['t_started'] =  True    
+                for g in Group.objects.filter(tournament=t):
+                    lock_groups.append(g.pk) 
+            else:
+                d['t_started'] =  False
+            d['lock_groups'] = lock_groups
             d['started_golfers'] = []
-            d['lock_groups'] = []
+            
             d['all_golfers_started'] = False
             d['late_picks'] = False
 
