@@ -35,6 +35,7 @@ from django.core.mail import send_mail
 from django.core import serializers
 from collections import OrderedDict
 import numpy as np
+import ssl
 
 
 class FieldListView1(LoginRequiredMixin, TemplateView):
@@ -457,9 +458,16 @@ def setup(request):
                 t = None
             json_url = 'https://statdata.pgatour.com/r/current/message.json'
             #print (json_url)
-
-            with urllib.request.urlopen(json_url) as field_json_url:
-                data = json.loads(field_json_url.read().decode())
+            
+            try:
+                with urllib.request.urlopen(json_url) as field_json_url:
+                    data = json.loads(field_json_url.read().decode())
+            except Exception as pga_e:
+                print ('PGA current message error: ', pga_e)
+                print ('Try with no SSL')
+                ssl._create_default_https_context = ssl._create_unverified_context
+                with urllib.request.urlopen(json_url) as field_json_url:
+                    data = json.loads(field_json_url.read().decode())
 
             pga_t_num = data.get('tid')
 

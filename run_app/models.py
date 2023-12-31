@@ -57,6 +57,8 @@ class Plan(models.Model):
     name = models.CharField(max_length=100)
     start_date = models.DateField()
     end_date = models.DateField()
+    current = models.BooleanField(default=False)
+    url = models.URLField()
 
     def __str__(self):
         return self.name

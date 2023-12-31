@@ -37,8 +37,10 @@ from operator import itemgetter
 start = datetime.now()
 
 
-for p in Picks.objects.filter(playerName__tournament__current=True).order_by('user', 'playerName__group__number'):
-    print (p.user, p) 
+s = Season.objects.get(season=2023)
+for key, val in s.data.items():
+    for s in val:
+        print(s.keys())
 
 exit()
 

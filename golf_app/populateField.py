@@ -147,7 +147,7 @@ def setup_t(tournament_number, espn_t_num=None):
     print ('getting field PGA Num: ', tournament_number, ' ESPN NUM: ', espn_t_num)
     if tournament_number != '999': #olympics
         json_url = 'https://statdata-api-prod.pgatour.com/api/clientfile/Field?T_CODE=r&T_NUM=' + str(tournament_number) +  '&YEAR=' + str(season) + '&format=json'
-        print (json_url)
+        print ('PGA URL: ', json_url)
         tourny = Tournament()    
         try:
                 

@@ -8,6 +8,7 @@ from django.contrib.auth.models import User
 from django.core.exceptions import ObjectDoesNotExist
 from fb_app import validate_picks
 from docx.api import Document   
+ 
 
 def readSheet(file,numPlayers,override_week=None):
         '''takes a pick file and updates week, owner list and picsk'''
@@ -17,7 +18,6 @@ def readSheet(file,numPlayers,override_week=None):
         #soup = BeautifulSoup(xml,"xml")
         #document = Document('ff_test.docx')
         document = Document(file)
-
         table = document.tables[0]
 
         sheet = []

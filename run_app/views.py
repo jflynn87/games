@@ -241,7 +241,24 @@ class ScheduleView(DetailView):
 
 
 
-            if plan.end_date - datetime.datetime.now().date() > datetime.timedelta(days=7):
+            if datetime.datetime.now().date() < plan.start_date + datetime.timedelta(days=7):
+                print ('WEEK 1 logic')
+                context.update( {
+                'plan': plan,
+                'last_week': None,
+                'current_week': Schedule.objects.filter(plan__pk=self.kwargs.get('pk'), week__in=[current_week.get('week')]),
+                'next_week': Schedule.objects.filter(plan__pk=self.kwargs.get('pk'), week__in=[next_week.get('week')]),
+                'schedule': Schedule.objects.filter(plan__pk=self.kwargs.get('pk')).exclude(week__in=[current_week.get('week'), next_week.get('week')]).order_by('date'),
+                'expected': expected,
+                'actual': actual,
+                #'base_expected': base_expected,
+                #'base_actual': base_actual,
+                'race_expected': race_expected,
+                'race_actual': race_actual,
+
+                })
+
+            elif plan.end_date - datetime.datetime.now().date() > datetime.timedelta(days=7):
                 context.update( {
                 'plan': plan,
                 'last_week': Schedule.objects.filter(plan__pk=self.kwargs.get('pk'), week__in=[last_week.get('week')]),

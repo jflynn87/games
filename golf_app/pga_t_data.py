@@ -2,7 +2,7 @@ import urllib.request
 import json
 from golf_app.models import Season, Tournament
 from datetime import date, datetime
-
+import ssl
 
 class PGAData(object):
     
@@ -16,6 +16,7 @@ class PGAData(object):
         if self.season.data and not update:
             self.data = self.season.data
         else:
+            ssl._create_default_https_context = ssl._create_unverified_context
             url = 'https://statdata.pgatour.com/r/current/schedule.json'
             with urllib.request.urlopen(url) as schedule_json_url:
                 self.data = json.loads(schedule_json_url.read().decode())
@@ -97,6 +98,8 @@ class PGAData(object):
     def next_t(self):
 
         curr_week = datetime.today().isocalendar()[1]
+        if curr_week > 50:
+            curr_week = 1
         next_week = min([x.get('date')[0].get('weeknumber') for x in self.t_data if int(x.get('date')[0].get('weeknumber')) == int(curr_week)])
         if next_week:
             w = next_week
