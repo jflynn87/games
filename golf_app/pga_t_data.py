@@ -23,8 +23,10 @@ class PGAData(object):
 
         if t:
             self.t = t
-        else:
+        elif Tournament.objects.filter(season=self.season, current=True):
             self.t = Tournament.objects.get(current=True) 
+        else:
+            self.t = Tournament()
         
         if update:
             self.season.data = self.data
