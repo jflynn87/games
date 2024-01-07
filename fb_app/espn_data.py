@@ -28,8 +28,11 @@ class ESPNData(object):
             payload = {'week': str(payload)}
 
         #payload = {}  #works for pre season/current week?
-        self.data = requests.get(url, headers=headers, params=payload).json() 
-
+        try:
+            self.data = requests.get(url, headers=headers, params=payload).json() 
+        except Exception as e:
+            print ('EPSN GET DATA Execptin', e)
+            self.data = {}
 
 
     def get_orig_data(self):

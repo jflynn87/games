@@ -23,7 +23,7 @@ from bs4 import BeautifulSoup
 
 class Season(models.Model):
     #season = models.CharField(max_length=10, null=True)
-    season = models.IntegerField(default=0)
+    season = models.IntegerField(default=0, unique=True)
     current = models.BooleanField()
     data = models.JSONField(null=True, blank=True)
 
@@ -455,35 +455,53 @@ class Tournament(models.Model):
                 return all_countries.get(gender).get(country)
         return 0
 
-    def field_quality(self):
+    def field_quality(self, espn=None):
         if self.major:
             return "major"
-        from golf_app import utils , pga_t_data
-        
-        if int(self.season.season) < 2023:
-            f_len = Field.objects.filter(tournament=self).count()
-            #owgr_sum = Field.objects.filter(tournament=self).exclude(currentWGR=9999).aggregate(Sum('currentWGR'))
-            #unranked = Field.objects.filter(tournament=self, currentWGR=9999).count()
-            top_100 = round(Field.objects.filter(tournament=self, currentWGR__lte=122).count()/f_len,2)
-
-            if top_100 > .3:
-                return "strong"
-            else:
-                return "weak"
-        else:
-            t_data = pga_t_data.PGAData(season=self.season)
-            t_type = t_data.get_t_type(self.pga_tournament_num)
-            if t_type == 'MJR':
-                return 'major'
-            elif t_type in ['PLF', 'PLS'] or self.pga_tournament_num == '500':  #500 for Pres cup
+        from golf_app import utils , pga_t_data, espn_api
+        if int(self.season.season) <= 2024:
+            if self.major:
+                return "major"
+            
+            if self.special_field():
                 return 'special'
-            elif int(t_data.get_purse(self.pga_tournament_num).replace(',', '')) >= 10000000:
+
+            if not espn:
+                espn = espn_api.ESPNData()
+            
+            if int(espn.purse()) >= 10000000:
                 return 'strong'
-            elif int(t_data.get_purse(self.pga_tournament_num).replace(',','')) < 10000000:
+            elif int(espn.purse()) < 10000000:
                 return 'weak'
             else:
-                print ('field quality in else, why?')
+                print ('field quality lookup in else, why?')
                 return 'weak'
+
+        ## pre 2024 season logic, based on pga.com data        
+        # if int(self.season.season) < 2023:
+        #     f_len = Field.objects.filter(tournament=self).count()
+        #     #owgr_sum = Field.objects.filter(tournament=self).exclude(currentWGR=9999).aggregate(Sum('currentWGR'))
+        #     #unranked = Field.objects.filter(tournament=self, currentWGR=9999).count()
+        #     top_100 = round(Field.objects.filter(tournament=self, currentWGR__lte=122).count()/f_len,2)
+
+        #     if top_100 > .3:
+        #         return "strong"
+        #     else:
+        #         return "weak"
+        # else:
+        #     t_data = pga_t_data.PGAData(season=self.season)
+        #     t_type = t_data.get_t_type(self.pga_tournament_num)
+        #     if t_type == 'MJR':
+        #         return 'major'
+        #     elif t_type in ['PLF', 'PLS'] or self.pga_tournament_num == '500':  #500 for Pres cup
+        #         return 'special'
+        #     elif int(t_data.get_purse(self.pga_tournament_num).replace(',', '')) >= 10000000:
+        #         return 'strong'
+        #     elif int(t_data.get_purse(self.pga_tournament_num).replace(',','')) < 10000000:
+        #         return 'weak'
+        #     else:
+        #         print ('field quality in else, why?')
+        #         return 'weak'
 
 
 
@@ -667,7 +685,7 @@ class Golfer(models.Model):
     golfer_name = models.CharField(max_length=100)
     pic_link  = models.URLField(max_length=500, null=True, blank=True)
     flag_link = models.URLField(max_length=500, null=True, blank=True)
-    espn_number = models.CharField(max_length=100, null=True, blank=True)
+    espn_number = models.CharField(max_length=100, null=True, blank=True) #need to fix some dupes to make this unique
     results = models.JSONField(null=True, blank=True)
 
 
@@ -960,6 +978,7 @@ class Field(models.Model):
 
     class Meta:
         ordering = ['-tournament', 'group', 'currentWGR']
+        #unique_together = ['tournament', 'golfer']
         
 
     def __str__(self):

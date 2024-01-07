@@ -634,3 +634,6 @@ class ESPNData(object):
     def zurich_golfer_rank(self, golfer):
         '''takes a golfer object returns a string'''
         pass
+
+    def purse(self):
+        return self.event_data.get('purse')

@@ -13,7 +13,7 @@ from datetime import datetime, timedelta
 from golf_app import populateField, calc_leaderboard, manual_score, bonus_details, espn_api, \
                      round_by_round, scrape_espn, utils, golf_serializers, espn_schedule, \
                      scrape_scores_picks, espn_ryder_cup, withdraw, fedex_email, pga_t_data, fedexData, \
-                     setup_fedex_field, espn_golfer_stats_api, espn_golfer_base_data_api
+                     setup_fedex_field, espn_golfer_stats_api, espn_golfer_base_data_api, espn_schedule
 from django.db.models import Count, Sum
 from unidecode import unidecode as decode
 import json
@@ -37,10 +37,38 @@ from operator import itemgetter
 start = datetime.now()
 
 
-s = Season.objects.get(season=2023)
-for key, val in s.data.items():
-    for s in val:
-        print(s.keys())
+## use this to clean up dulpicate golfers
+l = list(Golfer.objects.all().values_list('espn_number', flat=True))
+dupes = set([x for x in l if l.count(x) > 1])
+
+for d in dupes:
+    print (d)
+    golfers = Golfer.objects.filter(espn_number=d)
+    for g in golfers:
+        print (g.golfer_name)
+        print (Field.objects.filter(golfer=g))
+        
+## end dupe golfers block
+
+espn = espn_schedule.ESPNSchedule()
+print (espn.get_event_list())
+    
+    
+    
+
+#print (dupes)
+exit()
+
+print (Field.objects.get(pk=6625), Field.objects.get(pk=6625).tournament.season)
+print (Golfer.objects.filter(golfer_name__contains='Points'))
+exit()
+
+for t in Tournament.objects.all():
+    l = list(Field.objects.filter(tournament=t).values_list('golfer__golfer_name', flat=True))
+    print (t, len(l))
+    
+    if dupes:
+        print (t, dupes)
 
 exit()
 
