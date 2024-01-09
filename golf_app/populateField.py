@@ -355,7 +355,8 @@ def get_field(t, owgr_rankings):
                     print ('build field found golfer', g_obj)
                 except Exception as f:
                     print ('build field cant find: ', name, ' trying setup')
-                    pga_num = find_pga_num(name)
+                    #pga_num = find_pga_num(name)
+                    pga_num = None
                     
                     if not pga_num:
                         g_obj = get_golfer(player=name, pga_num=None, espn_num=golfer.get('athlete').get('id'))
