@@ -36,28 +36,29 @@ from operator import itemgetter
 
 start = datetime.now()
 
+Season.objects.all().exclude(current=True).delete()
 
-## use this to clean up dulpicate golfers
-l = list(Golfer.objects.all().values_list('espn_number', flat=True))
-dupes = set([x for x in l if l.count(x) > 1])
+# ## use this to clean up dulpicate golfers
+# l = list(Golfer.objects.all().values_list('espn_number', flat=True))
+# dupes = set([x for x in l if l.count(x) > 1])
 
-for d in dupes:
-    print (d)
-    golfers = Golfer.objects.filter(espn_number=d)
-    for g in golfers:
-        print (g.golfer_name)
-        print (Field.objects.filter(golfer=g))
+# for d in dupes:
+#     print (d)
+#     golfers = Golfer.objects.filter(espn_number=d)
+#     for g in golfers:
+#         print (g.golfer_name)
+#         print (Field.objects.filter(golfer=g))
         
-## end dupe golfers block
+# ## end dupe golfers block
 
-espn = espn_schedule.ESPNSchedule()
-print (espn.get_event_list())
+# espn = espn_schedule.ESPNSchedule()
+# print (espn.get_event_list())
     
     
     
 
-#print (dupes)
-exit()
+# #print (dupes)
+# exit()
 
 print (Field.objects.get(pk=6625), Field.objects.get(pk=6625).tournament.season)
 print (Golfer.objects.filter(golfer_name__contains='Points'))

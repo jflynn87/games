@@ -120,8 +120,9 @@ class ShoeListView(ListView):
 
     def get_context_data(self, **kwargs):
         context = super(ShoeListView, self).get_context_data(**kwargs)
-        dist = Run.objects.values('shoes').annotate(total_dist=Sum('dist')).order_by('-shoes__id')
-        list = zip(self.object_list, dist)
+        #dist = Run.objects.values('shoes').annotate(total_dist=Sum('dist')).order_by('-shoes__id')
+        #list = zip(self.object_list, dist)
+        shoe_list = Shoes.objects.all().order_by('-id')
         num_runs = Run.objects.all().count()
         total_dist = Run.objects.aggregate(Sum('dist'))
         runtime = Run.objects.aggregate(Sum('time'))
@@ -131,7 +132,7 @@ class ShoeListView(ListView):
         summary_list = [num_runs, total_dist, total_time, total_cals, start_date]
 
         context.update({
-             'shoes_list': list,
+             'shoes_list': shoe_list,
              'total_dist': total_dist,
              'num_runs': num_runs,
              'total_time': total_time,

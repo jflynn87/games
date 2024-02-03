@@ -22,12 +22,12 @@
     <th>Distance</th>
   </thead>
   <tbody>
-    {%for shoe, dist in shoes_list%}
+    {%for shoe in shoes_list%}
     <tr>
       <td><a href='/run_app/update_shoe/{{shoe.id}}/'>{{shoe.name}}</td>
         <td>{{shoe.active}}</td>
-
-        <td>{{dist.total_dist|floatformat}}</td>
+        <td>{{shoe.dist|floatformat}}</td>
+        <!-- <td>{{dist.total_dist|floatformat}}</td> -->
 
     </tr>
     {%endfor%}

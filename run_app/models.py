@@ -29,6 +29,9 @@ class Shoes(models.Model):
                 pass
         super(Shoes, self).save(*args, **kwargs)
 
+    def dist(self):
+        return Run.objects.filter(shoes=self).aggregate(models.Sum('dist'))['dist__sum']
+
 
 class Run(models.Model):
     LOCATION_CHOICES = (

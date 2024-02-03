@@ -177,7 +177,7 @@ class Tournament(models.Model):
 
     class Meta():
         unique_together = ('season', 'pga_tournament_num')
-        indexes = [models.Index(fields=['season', 'pga_tournament_num']),]
+        indexes = [models.Index(fields=['season', 'pga_tournament_num']), models.Index(fields=['start_date'])]
 
 
     #def get_queryset(self):t
@@ -467,7 +467,7 @@ class Tournament(models.Model):
                 return 'special'
 
             if not espn:
-                espn = espn_api.ESPNData()
+                espn = espn_api.ESPNData(t=self)
             
             if int(espn.purse()) >= 10000000:
                 return 'strong'
