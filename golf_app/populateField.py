@@ -93,8 +93,8 @@ def update_t_data(season):
             return t_data
         
     print ("UPDATING PGA T DATA")
-    new_t_data = pga_t_data.PGAData(update=True)
-
+    #new_t_data = pga_t_data.PGAData(update=True)
+    new_t_data = pga_t_data.PGAData(update=False)
     return new_t_data
         
 

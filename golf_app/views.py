@@ -459,17 +459,19 @@ def setup(request):
             json_url = 'https://statdata.pgatour.com/r/current/message.json'
             #print (json_url)
             
-            try:
-                with urllib.request.urlopen(json_url) as field_json_url:
-                    data = json.loads(field_json_url.read().decode())
-            except Exception as pga_e:
-                print ('PGA current message error: ', pga_e)
-                print ('Try with no SSL')
-                ssl._create_default_https_context = ssl._create_unverified_context
-                with urllib.request.urlopen(json_url) as field_json_url:
-                    data = json.loads(field_json_url.read().decode())
+            #try:
+            #    with urllib.request.urlopen(json_url) as field_json_url:
+            #        data = json.loads(field_json_url.read().decode())
+            #except Exception as pga_e:
+            #    print ('PGA current message error: ', pga_e)
+            #    print ('Try with no SSL')
+            #    ssl._create_default_https_context = ssl._create_unverified_context
+            #    with urllib.request.urlopen(json_url) as field_json_url:
+            #        data = json.loads(field_json_url.read().decode())
 
-            pga_t_num = data.get('tid')
+            #pga_t_num = data.get('tid')
+            data = ''
+            pga_t_num = '003'
 
             #if pga_t_num == t.pga_tournament_num:
             #first_field = Field.objects.filter(tournament=t).first().pk
