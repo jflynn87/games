@@ -16,6 +16,7 @@ import string
 from operator import itemgetter
 from requests import get
 import time
+from unidecode import unidecode as decode
 
 
 @transaction.atomic
@@ -312,7 +313,9 @@ def get_field(t, owgr_rankings):
                                     'curr_owgr': ranks[1][0],
                                     'soy_owgr': ranks[1][2],
                                     'sow_owgr': ranks[1][1]}
-
+    elif t.pga_tournament_num == '018': #zurich
+        field_dict = zurich_field(owgr_rankings)
+        print ('zurich field dict: ', len(field_dict))
     else:
         try:
             headers = {'User-Agent': 'Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.149 Mobile Safari/537.36'}
@@ -504,7 +507,8 @@ def create_field(field, tournament):
     if tournament.pga_tournament_num == '470':
         sorted_field = field
     elif tournament.pga_tournament_num == '018':
-        sorted_field = zurich_field(field) #Zurich team logic
+        #sorted_field = zurich_field(field) #Zurich team logic
+        sorted_field = field
     else:
         sorted_field = OrderedDict({k:v for k,v in sorted(field.items(), key=lambda item: int(item[1].get('curr_owgr')))})
         #print (sorted_field)
@@ -513,7 +517,10 @@ def create_field(field, tournament):
 
     for player, info in sorted_field.items():
         print (player, info)
-        golfer = get_golfer(player, info.get('pga_num'), espn_data)
+        if tournament.pga_tournament_num != '018':
+            golfer = get_golfer(player, info.get('pga_num'), espn_data)
+        else:
+            golfer = Golfer.objects.filter(golfer_name=player).first()
         group = Group.objects.get(tournament=tournament, number=group_num)
         #print (player, info)
         f = Field()
@@ -527,7 +534,10 @@ def create_field(field, tournament):
         if info.get('team'):
             f.teamID = info.get('team')
             f.partner = info.get('partner')
-            f.partner_golfer = get_golfer(info.get('partner'), info.get('partner_pga_num'), espn_data)
+            if tournament.pga_tournament_num != '018':
+                f.partner_golfer = get_golfer(info.get('partner'), info.get('partner_pga_num'), espn_data)
+            else:
+                f.partner_golfer = Golfer.objects.filter(golfer_name=info.get('partner')).first()
             f.partner_owgr = info.get('partner_owgr')
             f.currentWGR = info.get('team_owgr')
         else:
@@ -1035,35 +1045,92 @@ def prior_year_sd(t, current=None):
     return sd.data
                 
 
-def zurich_field(field):
-    field_dict = {}
-    for k, v in sorted(field.items(), key=lambda item: item[1].get('curr_owgr')):
-        team= v.get('team')
-        print (team)
-        #print (field_dict)
-        data = [k for k, v in field_dict.items() if v.get('team') == team]
-        print (data)
-        if len(data) > 0:
-            #partner
-            field_dict[data[0]].update({
-                'partner': k,
-                'partner_pga_num': v.get('pga_num'),
-                'partner_owgr': v.get('curr_owgr'),
-                'team_owgr': v.get('curr_owgr') + field_dict.get(data[0]).get('curr_owgr')
+# def zurich_field(field):
+#     field_dict = {}
+#     for k, v in sorted(field.items(), key=lambda item: item[1].get('curr_owgr')):
+#         team= v.get('team')
+#         print (team)
+#         #print (field_dict)
+#         data = [k for k, v in field_dict.items() if v.get('team') == team]
+#         print (data)
+#         if len(data) > 0:
+#             #partner
+#             field_dict[data[0]].update({
+#                 'partner': k,
+#                 'partner_pga_num': v.get('pga_num'),
+#                 'partner_owgr': v.get('curr_owgr'),
+#                 'team_owgr': v.get('curr_owgr') + field_dict.get(data[0]).get('curr_owgr')
                 
-            })
-        else:
-            #main guy
-            field_dict[k] = {
-                'pga_num': v.get('pga_num'),
-                'curr_owgr': v.get('curr_owgr'),
-                'soy_owgr': v.get('soy_owgr'),
-                'sow_owgr': v.get('sow_owgr'),
-                'team': team
-            }
+#             })
+#         else:
+#             #main guy
+#             field_dict[k] = {
+#                 'pga_num': v.get('pga_num'),
+#                 'curr_owgr': v.get('curr_owgr'),
+#                 'soy_owgr': v.get('soy_owgr'),
+#                 'sow_owgr': v.get('sow_owgr'),
+#                 'team': team
+#             }
 
-    return OrderedDict(sorted(field_dict.items(), key=lambda item: item[1].get('team_owgr')))
-    #return OrderedDict({k:v for k,v in sorted(field.items(), key=lambda item: item['team']['curr_wgr'] + item['team']['curr_wgr'])})
+#     return OrderedDict(sorted(field_dict.items(), key=lambda item: item[1].get('team_owgr')))
+#     #return OrderedDict({k:v for k,v in sorted(field.items(), key=lambda item: item['team']['curr_wgr'] + item['team']['curr_wgr'])})
     
+def zurich_field(owgr):
+    d = {}
+    url = 'https://zurichgolfclassic.com/players/'
+    html = urllib.request.urlopen(url)
+    soup = BeautifulSoup(html, 'html.parser')
+    golfers = []
+    for i, g in enumerate(soup.find_all('div', {'class': 'entry-content'})[1].find_all('p')):
+        l = [decode(x) for x in g.text.replace('\xa0', '').replace(',', '').split(' ') if x != '']
+        g_l = []
+        if len(l) == 4:
+            g_l.append(l[1] + ' ' + l[0])
+            g_l.append(l[3] + ' ' + l[2])
+        elif 'Potter' in l:
+            print (l[1] + ' ' + l[0] + ', ' + l[4] + ' ' + l[2] + ' ' + l[3])
+            g_l.append(l[1] + ' ' + l[0])
+            g_l.append(l[4] + ' ' + l[2] + ', Jr.')
+        elif 'de' in l:
+            print (l[1] + ' ' + l[0] + ', ' + l[5] + ' ' + l[2] + ' ' + l[3] + ' ' + l[4])
+            g_l.append(l[1] + ' ' + l[0])
+            g_l.append(l[5] + ' ' + l[2] + ' ' + l[3] + ' ' + l[4])
+        elif 'Pau' in l:
+            print (l[2] + ' ' + l[0] + ' ' + l[1] + ', ' + l[5] + ' ' + l[3] + ' ' + l[4])
+            g_l.append(l[2] + ' ' + l[0] + ' ' + l[1])
+            g_l.append(l[5] + ' ' + l[3] + ' ' + l[4])
+        if len(g_l) != 2:
+            print (l)
+            continue
+        try:
+            g1 = Golfer.objects.get(golfer_name=g_l[0])
+        except Exception as e1:
+            print (e1)
+            g1 = Golfer.objects.filter(golfer_name=g_l[0])
+            if len(g1) >= 1:
+                g1 = g1[0]
+            else:
+                g1 = Golfer.objects.create(golfer_name=g_l[0])
+                g1.save()
+        try:
+            g2 = Golfer.objects.get(golfer_name=g_l[1])
+        except Exception as e2:
+            print (e2)
+            g2 = Golfer.objects.filter(golfer_name=g_l[1])
+            if len(g2) >= 1:
+                g2 = g2[0]
+            else:
+                g2 = Golfer.objects.create(golfer_name=g_l[1])
+                g2.save()
+        g1_owgr = utils.fix_name(g1.golfer_name, owgr)[1][0]
+        g2_owgr = utils.fix_name(g2.golfer_name, owgr)[1][0]
+        
+        d[g1.golfer_name] = {'partner': g2.golfer_name,
+                 'partner_owgr': g2_owgr,
+                 'team_owgr': int(g1_owgr) + int(g2_owgr),
+                  'curr_owgr': g1_owgr,
+                  'team': 'team' + str(i)
+                }
+    return OrderedDict(sorted(d.items(), key=lambda item: item[1].get('team_owgr')))
 
-    
+

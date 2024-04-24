@@ -160,7 +160,7 @@ class Tournament(models.Model):
     set_notstarted = models.BooleanField(default=False)
     manual_score_file = models.BooleanField(default=False)
     score_update_time = models.DateTimeField(null=True, blank=True)
-    cut_score = models.CharField(max_length=100, null=True, blank=True)
+    cut_score = models.CharField(max_length=100, null=True, blank=True)  #use to override cust issues from data source
     has_cut = models.BooleanField(default=True)
     leaders = models.CharField(null=True, max_length=500, blank=True)
     playoff = models.BooleanField(default=False)

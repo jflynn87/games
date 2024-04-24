@@ -19,9 +19,6 @@ class StravaData(object):
         self.auth_url = "https://www.strava.com/oauth/token"
 
         payload = {
-            #'client_id': "46693",
-            #'client_secret': '5a55efcff63411fa6cac5bf4e2fc2d43114eb7bc',
-            #'refresh_token': '4e0be9e1f0e57ce37ea03760e99110ebcea609b0',
             'client_id': os.environ['strava_client_id'],
             'client_secret': os.environ['strava_client_secret'],
             'refresh_token': os.environ['strava_refresh_token'],

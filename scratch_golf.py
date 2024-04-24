@@ -33,10 +33,65 @@ import numpy as np
 import pytz
 from operator import itemgetter
 
+from unidecode import unidecode as decode
+
 
 start = datetime.now()
 
-Season.objects.all().exclude(current=True).delete()
+#scrape website
+url = 'https://zurichgolfclassic.com/players/'
+#req = Request(url)
+html = urllib.request.urlopen(url)
+soup = BeautifulSoup(html, 'html.parser')
+golfers = []
+for i, g in enumerate(soup.find_all('div', {'class': 'entry-content'})[1].find_all('p')):
+    l = [decode(x) for x in g.text.replace('\xa0', '').replace(',', '').split(' ') if x != '']
+    g_l = []
+    if len(l) == 4:
+        g_l.append(l[1] + ' ' + l[0])
+        g_l.append(l[3] + ' ' + l[2])
+    elif 'Potter' in l:
+        print (l[1] + ' ' + l[0] + ', ' + l[4] + ' ' + l[2] + ' ' + l[3])
+        g_l.append(l[1] + ' ' + l[0])
+        g_l.append(l[4] + ' ' + l[2] + ', Jr.')
+    elif 'de' in l:
+        print (l[1] + ' ' + l[0] + ', ' + l[5] + ' ' + l[2] + ' ' + l[3] + ' ' + l[4])
+        g_l.append(l[1] + ' ' + l[0])
+        g_l.append(l[5] + ' ' + l[2] + ' ' + l[3] + ' ' + l[4])
+    elif 'Pau' in l:
+        print (l[2] + ' ' + l[0] + ' ' + l[1] + ', ' + l[5] + ' ' + l[3] + ' ' + l[4])
+        g_l.append(l[2] + ' ' + l[0] + ' ' + l[1])
+        g_l.append(l[5] + ' ' + l[3] + ' ' + l[4])
+    if len(g_l) != 2:
+        print (l)
+        continue
+    try:
+        g1 = Golfer.objects.get(golfer_name=g_l[0])
+    except Exception as e1:
+        print (e1)
+        g1 = Golfer.objects.filter(golfer_name=g_l[0])
+        if len(g1) >= 1:
+            g1 = g1[0]
+        else:
+            g1 = Golfer.objects.create(golfer_name=g_l[0])
+            g1.save()
+    try:
+        g2 = Golfer.objects.get(golfer_name=g_l[1])
+    except Exception as e2:
+        print (e2)
+        g2 = Golfer.objects.filter(golfer_name=g_l[1])
+        if len(g2) >= 1:
+            g2 = g2[0]
+        else:
+            g2 = Golfer.objects.create(golfer_name=g_l[1])
+            g2.save()
+    golfers.append({'team': 'team' + str(i), 'golfer': g1, 'partner': g2})
+    
+for line in golfers:
+    print (line)
+
+
+
 
 # ## use this to clean up dulpicate golfers
 # l = list(Golfer.objects.all().values_list('espn_number', flat=True))
@@ -60,8 +115,6 @@ Season.objects.all().exclude(current=True).delete()
 # #print (dupes)
 # exit()
 
-print (Field.objects.get(pk=6625), Field.objects.get(pk=6625).tournament.season)
-print (Golfer.objects.filter(golfer_name__contains='Points'))
 exit()
 
 for t in Tournament.objects.all():

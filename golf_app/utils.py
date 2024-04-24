@@ -74,7 +74,8 @@ def fix_name(player, owgr_rankings, log=None):
 
     from golf_app.models import Name
     #need to import here to avoid cicular import error
-    
+    log = True
+    print ('FIX: ', player)
     if owgr_rankings.get(player.replace('.', '').replace('-', '')) != None:
         #print ('returning match', owgr_rankings.get(player.replace('.', '').replace('-', '')))
         return (player, owgr_rankings.get(player.replace('.', '').replace('-', '')))
