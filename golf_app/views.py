@@ -2093,6 +2093,7 @@ class ApiScoresView(LoginRequiredMixin, TemplateView):
            return context
 
         ## from here all logic should only happen if tournament has started
+        print ('HERE', tournament.special_field())
         if not tournament.complete and not tournament.picks_complete() and not tournament.special_field():
                print ('picks not complete')
                tournament.missing_picks()

@@ -509,7 +509,8 @@ class Tournament(models.Model):
 
 
     def special_field(self):
-        if self.pga_tournament_num in ['999', '470', '468', '018']:
+        #if self.pga_tournament_num in ['999', '470', '468', '018']:
+        if self.pga_tournament_num in ['999', '470', '468']:
             return True
         else:
             return False
