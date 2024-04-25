@@ -2093,7 +2093,7 @@ class ApiScoresView(LoginRequiredMixin, TemplateView):
            return context
 
         ## from here all logic should only happen if tournament has started
-        print ('HERE', tournament.special_field())
+        
         if not tournament.complete and not tournament.picks_complete() and not tournament.special_field():
                print ('picks not complete')
                tournament.missing_picks()
@@ -2931,7 +2931,7 @@ class StartedDataAPI(APIView):
         try:
             espn = espn_api.ESPNData()
             after_espn_start = datetime.datetime.now()
-            if t.special_field() and (t.started() and not t.late_picks):
+            if (t.special_field() or t.pga_tournament_num =='018') and (t.started() and not t.late_picks):
                 t_started = True
                 started_golfers = list(Field.objects.filter(tournament=t).values_list('golfer__espn_number', flat=True))
 
