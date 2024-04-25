@@ -464,6 +464,8 @@ class Tournament(models.Model):
                 return "major"
             
             if self.special_field():
+                if self.pga_tournament_num == '018':
+                    return 'weak'
                 return 'special'
 
             if not espn:

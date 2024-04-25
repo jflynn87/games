@@ -38,6 +38,15 @@ from unidecode import unidecode as decode
 
 start = datetime.now()
 
+g = Golfer.objects.filter(golfer_pga_num='')
+dupes = set(g.golfer_name for g in g)
+print (len(dupes))
+print (dupes)
+print (Golfer.objects.all().count())
+no_espn = Golfer.objects.filter(espn_number__isnull=True, golfer_pga_num='')
+print (no_espn)
+exit()
+
 #scrape website
 url = 'https://zurichgolfclassic.com/players/'
 #req = Request(url)
