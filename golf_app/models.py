@@ -141,7 +141,8 @@ class Season(models.Model):
         return 4
 
     def special_fields(self):
-        return ['999', '470', '468', '018']
+        #return ['999', '470', '468', '018']
+        return ['999', '470', '468']
 
 
 
