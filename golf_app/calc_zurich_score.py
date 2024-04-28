@@ -7,6 +7,7 @@ from django.contrib.auth.models import User
 
 class CalcZurichScore(object):
     def __init__(self, t, d, data=None):
+        print ('CALC ZURICH SCORE INIT')
         self.t = t
         self.d = d
         
