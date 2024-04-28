@@ -17,8 +17,6 @@ class CalcZurichScore(object):
             self.data = self.get_espn_score_data()
 
 
-
-
     def calc_score(self):
         '''takes a tornament object and dict, updates and returns the dict'''
         start = datetime.now()

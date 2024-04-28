@@ -2620,8 +2620,17 @@ class PGALeaderboard(APIView):
         
         start = datetime.datetime.now()
         d = {}
+
         try:
             t = Tournament.objects.get(pk=pk)
+            print ('GET LEADERBOARD t', t)
+            if t.pga_tournament_num == '018':
+                #z = calc_zurich_score.CalcZurichScore(t, d=t.season.get_users())
+                d['leaderboard'] = {'key': {'rank': 'n/a', 'change': 'n/a', 'golfer_name': 'n/a', 'total_score': 'n/a', 'thru': 'n/a' , 'curr_round_score': 'n/a', 
+                                'r1': 'n/a', 'r2': 'n/a', 'r3': 'n/a', 'r4': 'n/a'},
+                                'key1': {'rank': 'n/a', 'change': 'n/a', 'golfer_name': 'n/a', 'total_score': 'n/a', 'thru': 'n/a' , 'curr_round_score': 'n/a', 
+                                'r1': 'n/a', 'r2': 'n/a', 'r3': 'n/a', 'r4': 'n/a'}}
+                return JsonResponse(json.dumps(d), status=200, safe=False)
             if t.complete or not refresh:
                 sd = ScoreDict.objects.get(tournament=t)
                 data = sd.espn_api_data
@@ -2651,6 +2660,7 @@ class SummaryStatsAPI(APIView):
             sd = ScoreDict.objects.get(tournament=t)
             if t.pga_tournament_num == '018':
                 z = calc_zurich_score.CalcZurichScore(t, d=t.season.get_users())
+                print ('ZURICH DATA: ', len(z.data))
                 d['source'] = 'espn_api'
                 d['cut_num'] = t.cut_score
                 d['cut_info'] = 'E'
