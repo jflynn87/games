@@ -34,6 +34,7 @@ class CalcZurichScore(object):
         print ('OPEN WORKS')
         soup = BeautifulSoup(html, 'html.parser')
         print ('SOUP WORKS')
+        print ('SOUP ', soup)
         golfers = []
         for data in soup.find_all('div', {'class': 'Wrapper'})[1]:
             print ('DATa WORKS', data)
