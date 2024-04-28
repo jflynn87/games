@@ -36,6 +36,7 @@ class CalcZurichScore(object):
         print ('SOUP WORKS')
         golfers = []
         for data in soup.find_all('div', {'class': 'Wrapper'})[1]:
+            print ('DATa WORKS', data)
             for i, line in enumerate([x for x in data.text.split('\n') if x != '']):
                 if 'Round' in line:
                     self.current_round = line.strip('<pre>')
