@@ -40,7 +40,7 @@ class CalcZurichScore(object):
         for i, data in enumerate(soup.find_all('div', {'class': 'Wrapper'})):
             print ("IIIIIII ", i)
             print (data)
-        for data in soup.find_all('div', {'class': 'Wrapper'})[1]:
+        for data in soup.find_all('div', {'class': 'Wrapper'})[2]:
             print ('DATa WORKS', data)
             for i, line in enumerate([x for x in data.text.split('\n') if x != '']):
                 if 'Round' in line:
