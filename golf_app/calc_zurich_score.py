@@ -29,8 +29,11 @@ class CalcZurichScore(object):
 
     def get_espn_score_data(self):
         url = 'https://www.espn.com/golf/leaderboard'
+        headers = {'User-Agent': 'Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.149 Mobile Safari/537.36'}
         html = urllib.request.urlopen(url)
+        print ('OPEN WORKS')
         soup = BeautifulSoup(html, 'html.parser')
+        print ('SOUP WORKS')
         golfers = []
         for data in soup.find_all('div', {'class': 'Wrapper'})[1]:
             for i, line in enumerate([x for x in data.text.split('\n') if x != '']):
