@@ -2132,7 +2132,7 @@ class EspnApiScores(APIView):
         try:
 
             t = Tournament.objects.get(pk=pk)
-
+            print ('ESPNAPI Scores t: ', t.name, t.pga_tournament_num)
             if not t.started():
                 return JsonResponse({'msg': 'Tournament Not Started'}, status=200, safe=False)
 
@@ -2141,6 +2141,7 @@ class EspnApiScores(APIView):
                                 'cuts': 0}
 
             if t.pga_tournament_num == '018':
+                print ('IN ZURICH')
                 z = calc_zurich_score.CalcZurichScore(t, d=Season.objects.get(current=True).get_users())
                 d = {}
                 
