@@ -16,7 +16,7 @@ import datetime
 from golf_app import populateField, manual_score, withdraw, scrape_espn, \
      mp_calc_scores, golf_serializers, utils, olympic_sd, espn_api, \
      ryder_cup_scores, espn_ryder_cup, bonus_details, espn_schedule, scrape_scores_picks, \
-     scrape_cbs_golf, fedex_email, pga_t_data, populateMPField 
+     scrape_cbs_golf, fedex_email, pga_t_data, populateMPField, calc_zurich_score
 
 from django.utils import timezone
 from django.core.exceptions import ObjectDoesNotExist
@@ -2140,6 +2140,16 @@ class EspnApiScores(APIView):
                 d[u.username] = {'score': 0,
                                 'cuts': 0}
 
+            if t.pga_tournament_num == '018':
+                z = calc_zurich_score.CalcZurichScore(t, d=Season.objects.get(current=True).get_users())
+                d = {}
+                
+                
+                d.update(z.calc_score())
+                                
+                print ('Zurich Score: ', d)
+                return JsonResponse(d, status=200, safe=False)
+
             if t.complete and not rerun:
                 data = return_sd_data(t,d)
                 print ("Tournament Complete dur: ", datetime.datetime.now() - start)
@@ -2638,7 +2648,17 @@ class SummaryStatsAPI(APIView):
         try:
             t = Tournament.objects.get(pk=pk)
             sd = ScoreDict.objects.get(tournament=t)
-            if t.good_api_data():
+            if t.pga_tournament_num == '018':
+                z = calc_zurich_score.CalcZurichScore(t, d=t.season.get_users())
+                d['source'] = 'espn_api'
+                d['cut_num'] = t.cut_score
+                d['cut_info'] = 'E'
+                d['leaders'] = z.leaders(z.data)
+                d['leader_score'] = z.leader_score(z.data)
+                d['curr_round'] = z.current_round.split('-')[0].split(' ')[1]
+                d['round_status'] = z.current_round.split('-')[1].strip('\t').strip()
+                print ('DDDDDDDDDDDD', d)
+            elif t.good_api_data():
                 if t.complete:
                     #sd = ScoreDict.objects.get(tournament=t)
                     data = sd.espn_api_data

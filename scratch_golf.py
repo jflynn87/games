@@ -13,7 +13,7 @@ from datetime import datetime, timedelta
 from golf_app import populateField, calc_leaderboard, manual_score, bonus_details, espn_api, \
                      round_by_round, scrape_espn, utils, golf_serializers, espn_schedule, \
                      scrape_scores_picks, espn_ryder_cup, withdraw, fedex_email, pga_t_data, fedexData, \
-                     setup_fedex_field, espn_golfer_stats_api, espn_golfer_base_data_api, espn_schedule
+                     setup_fedex_field, espn_golfer_stats_api, espn_golfer_base_data_api, espn_schedule, calc_zurich_score
 from django.db.models import Count, Sum
 from unidecode import unidecode as decode
 import json
@@ -32,11 +32,23 @@ from django.http import HttpRequest
 import numpy as np
 import pytz
 from operator import itemgetter
+from django.core.exceptions import ObjectDoesNotExist
 
 from unidecode import unidecode as decode
 
 
-start = datetime.now()
+t = Tournament.objects.get(current=True)
+users = Season.objects.get(current=True).get_users()
+
+g = Golfer.objects.get(golfer_name='Trace Crowe')
+print (g.espn_number)
+
+
+z = calc_zurich_score.CalcZurichScore(t, d=users)
+s = z.calc_score()
+print (s)
+
+exit()
 
 g = Golfer.objects.filter(golfer_pga_num='')
 dupes = set(g.golfer_name for g in g)

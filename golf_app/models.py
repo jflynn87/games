@@ -1199,7 +1199,17 @@ class Field(models.Model):
             else:
                 score = [v.get('rank') - handi for v in sd.values() if v.get('espn_num') == self.golfer.espn_number][0]
         
-        
+        if self.tournament.pga_tournament_num == '018':
+            print ('calc for: {}'.format(self.playerName))
+            data = [x for x in api_data if x.get('espn_number') == self.golfer.espn_number][0]
+
+            if data.get('rank') == 'CUT': 
+                score = self.tournament.cut_score
+                cut = True
+            else:
+                score = int(data.get('rank'))
+                cut = False
+            return {'score': score, 'cut': cut}
         if api_data:
             #print ('models calc score: ', self, api_data.get_rank(self.golfer.espn_number), int(api_data.cut_num()))
             if api_data.golfer_data(self.golfer.espn_number):
