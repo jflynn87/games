@@ -28,9 +28,10 @@ class CalcZurichScore(object):
         return (s)
 
     def get_espn_score_data(self):
-        url = 'https://www.espn.com/golf/leaderboard'
-        headers = {'User-Agent': 'Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.149 Mobile Safari/537.36'}
-        html = urllib.request.urlopen(url)
+        url = f'https://www.espn.com/golf/leaderboard'
+        headers = {'User-Agent': 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:82.0) Gecko/20100101 Firefox/82.0'}
+        req = urllib.request.Request(url, headers=headers)
+        html = urllib.request.urlopen(req)
         print ('OPEN WORKS')
         soup = BeautifulSoup(html, 'html.parser')
         print ('SOUP WORKS')
