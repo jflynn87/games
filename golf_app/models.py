@@ -463,10 +463,9 @@ class Tournament(models.Model):
         if int(self.season.season) <= 2024:
             if self.major:
                 return "major"
-            
+            if self.pga_tournament_num == '018':
+                return 'weak'            
             if self.special_field():
-                if self.pga_tournament_num == '018':
-                    return 'weak'
                 return 'special'
 
             if not espn:
