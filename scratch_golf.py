@@ -40,8 +40,9 @@ from unidecode import unidecode as decode
 t = Tournament.objects.get(current=True)
 users = Season.objects.get(current=True).get_users()
 
-g = Golfer.objects.get(golfer_name='Trace Crowe')
-print (g.espn_number)
+#g = Golfer.objects.get(golfer_name='S.H. Kim')
+#print (Golfer.objects.get(golfer_name='S.H. Kim'))
+#print (g.espn_number)
 
 
 z = calc_zurich_score.CalcZurichScore(t, d=users)

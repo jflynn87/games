@@ -1,9 +1,10 @@
 from datetime import datetime
 import urllib
 from bs4 import BeautifulSoup
-from golf_app.models import Field, Picks, Group, ScoreDetails, PickMethod, BonusDetails, TotalScore
+from golf_app.models import Field, Picks, Group, ScoreDetails, PickMethod, BonusDetails, TotalScore, ScoreDict
 from django.db.models import Sum
 from django.contrib.auth.models import User
+import os
 
 class CalcZurichScore(object):
     def __init__(self, t, d, data=None):
@@ -12,9 +13,13 @@ class CalcZurichScore(object):
         self.d = d
         
         if data:
+            print ('COMPLETE USING PASSED INDATA')
             self.data = data
         else:
             self.data = self.get_espn_score_data()
+        sd, created = ScoreDict.objects.get_or_create(tournament=self.t)
+        sd.espn_api_data = self.data
+        sd.save()
 
 
     def calc_score(self):
@@ -34,20 +39,22 @@ class CalcZurichScore(object):
         html = urllib.request.urlopen(req)
         print ('OPEN WORKS')
         soup = BeautifulSoup(html, 'html.parser')
-        print ('SOUP WORKS')
+        #print ('SOUP WORKS')
         print ('SOUP ', len(soup.find_all('div', {'class': 'Wrapper'})[0]))
         golfers = []
-        for i, data in enumerate(soup.find_all('div', {'class': 'Wrapper'})):
-            print ("IIIIIII ", i)
-            print (data)
-        for data in soup.find_all('div', {'class': 'Wrapper'})[2]:
-            print ('DATa WORKS', data)
-            for i, line in enumerate([x for x in data.text.split('\n') if x != '']):
+        if os.environ.get('DEBUG'):
+            idx = 1
+        else:
+            idx =2
+        for data in soup.find_all('div', {'class': 'Wrapper'})[idx]:
+            #print ('DATa WORKS', data)
+            for i, line in enumerate([x for x in data.text.split('\n') if x not in ['', ' ', '\n', '\t', '\r'] and len(x) > 2]):
+                #print ('LINE: ', line, len(line))
                 if 'Round' in line:
-                    self.current_round = line.strip('<pre>')
-                elif i < 5:
-                    continue
-                else:
+                    print (line.strip('<pre>'))
+                #elif i < 5:
+                #    continue
+                elif line[2].isdigit() or line[0] == 'C':
                     rank = line.split('.',1)[0].strip()
                     golfer = line.split('.', 1)[1].lstrip().split('/')[0]
                     if '.' in golfer and 'Jr.' not in golfer: golfer = golfer.split('.')[1]
@@ -67,7 +74,9 @@ class CalcZurichScore(object):
                         score = 'E'
                     thru = line[-16:].strip()
                     golfers.append({'rank': rank, 'golfer': golfer, 'partner': partner, 'score': score, 'thru': thru})
-                
+                else:
+                    #print ('skipping: ', line)
+                    continue
                 #print ('Rank: {}, Team: {}, {}, score: {}, {}'.format(rank, golfer, partner, score, thru))
         for f in Field.objects.filter(tournament=self.t):
             if len([x for x in golfers if x.get('golfer') in f.playerName.split(' ')[1] and x.get('partner') in f.partner_golfer.golfer_name]) == 1:
@@ -107,6 +116,15 @@ class CalcZurichScore(object):
         if not data:
             self.data = data
         big = self.best_in_group()
+        score_d = {}
+        if self.t.complete:
+            for u in self.d:
+                ts = TotalScore.objects.get(user=User.objects.get(pk=u.get('user')), tournament=self.t)
+                score_d[u.get('user')] = {'score': ts.score, 'cuts': ts.cut_count}
+            score_d.update({'group_stats': big})
+            return score_d
+                
+
         g_list = Picks.objects.filter(playerName__tournament=self.t).values_list('playerName__pk', flat=True)
         golfers = [*set(g_list)]
 
@@ -125,10 +143,11 @@ class CalcZurichScore(object):
                                                                                                                  gross_score=gross_score)
 
             print (p.playerName, score.get('score'))
-        score_d = {}
+        
         for u in self.d:
             user = User.objects.get(pk=u.get('user'))
-            player_score = Picks.objects.filter(playerName__tournament=self.t, user=user).aggregate(Sum('score'))
+            #player_score = Picks.objects.filter(playerName__tournament=self.t, user=user).aggregate(Sum('score'))
+            player_score = ScoreDetails.objects.filter(pick__playerName__tournament=self.t, user=user).aggregate(Sum('score'))
             c = 0
             if not PickMethod.objects.filter(tournament=self.t, user=user, method='3').exists():
                 for p in Picks.objects.filter(playerName__tournament=self.t, user=user):

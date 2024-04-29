@@ -2142,14 +2142,16 @@ class EspnApiScores(APIView):
 
             if t.pga_tournament_num == '018':
                 print ('IN ZURICH')
-                z = calc_zurich_score.CalcZurichScore(t, d=Season.objects.get(current=True).get_users())
-                d = {}
-                
-                
-                d.update(z.calc_score())
+                if not t.complete:
+                    z = calc_zurich_score.CalcZurichScore(t, d=Season.objects.get(current=True).get_users())
+                else:
+                    z = calc_zurich_score.CalcZurichScore(t, d=Season.objects.get(current=True).get_users(), data=ScoreDict.objects.get(tournament=t).espn_api_data) 
+
+            d = {}
+            d.update(z.calc_score())
                                 
-                print ('Zurich Score: ', d)
-                return JsonResponse(d, status=200, safe=False)
+            print ('Zurich Score: ', d)
+            return JsonResponse(d, status=200, safe=False)
 
             if t.complete and not rerun:
                 data = return_sd_data(t,d)
@@ -2659,16 +2661,19 @@ class SummaryStatsAPI(APIView):
             t = Tournament.objects.get(pk=pk)
             sd = ScoreDict.objects.get(tournament=t)
             if t.pga_tournament_num == '018':
-                z = calc_zurich_score.CalcZurichScore(t, d=t.season.get_users())
+                if not t.complete:
+                    z = calc_zurich_score.CalcZurichScore(t, d=t.season.get_users())
+                else:
+                    z = calc_zurich_score.CalcZurichScore(t, d=t.season.get_users(), data=sd.espn_api_data)
                 print ('ZURICH DATA: ', len(z.data))
                 d['source'] = 'espn_api'
                 d['cut_num'] = t.cut_score
                 d['cut_info'] = 'E'
                 d['leaders'] = z.leaders(z.data)
                 d['leader_score'] = z.leader_score(z.data)
-                d['curr_round'] = z.current_round.split('-')[0].split(' ')[1]
-                d['round_status'] = z.current_round.split('-')[1].strip('\t').strip()
-                print ('DDDDDDDDDDDD', d)
+                d['curr_round'] = z.current_round().split('-')[0].split(' ')[1]
+                d['round_status'] = z.current_round().split('-')[1].strip('\t').strip()
+                
             elif t.good_api_data():
                 if t.complete:
                     #sd = ScoreDict.objects.get(tournament=t)

@@ -43,6 +43,7 @@ class PickMethodAdmin(admin.ModelAdmin):
 
 class GolferAdmin(admin.ModelAdmin):
     list_display = ['golfer_name,',]
+    search_fields = ['golfer_name']
 
 class PGAWebScoresAdmin(admin.ModelAdmin):
     list_filter = ['tournament']
