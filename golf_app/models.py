@@ -93,24 +93,6 @@ class Season(models.Model):
                                 
                                 
         return json.dumps(sorted_dict)
-        # else:
-        #     for u in self.get_users('obj'):
-        #         t_scores = TotalScore.objects.filter(tournament__season=self, user=u, tournament__pk__lte=tournament.pk).aggregate(Sum('score'))
-        #         total_score = 0 if t_scores.get('score__sum') is None else t_scores.get('score__sum')
-        #         score_dict[u.username] = {'score__sum': total_score, 't_scores': t_scores.get('score__sum'), 'fed_ex_score': self.fed_ex_scores(u, tournament)}
-        #     min_score = min(score_dict.items(), key=lambda v: v[1].get('score__sum'))[1].get('score__sum')
-        #     second = sorted(score_dict.items(), key=lambda v: v[1].get('score__sum'))[1][1].get('score__sum')
-
-        #     #print ('fed ex scores: ', fed_ex_scores)
-        #     for i, (user, data) in enumerate(sorted(score_dict.items(), key=lambda v: v[1].get('score__sum'))):
-        #         sorted_dict[user] = {'total': score_dict.get(user).get('score__sum'), 'diff':  int(min_score) - int(data.get('score__sum')), 'rank': i+1, 
-        #                             'points_behind_second': int(second) - int(data.get('score__sum')),
-        #                             'fed_ex_score': score_dict.get(user).get('fed_ex_score'),
-        #                             'player': user
-        #                             }
-                                    
-                                    
-        #     return json.dumps(sorted_dict)
 
     def fed_ex_scores(self, user, t=None):
 

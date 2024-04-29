@@ -385,7 +385,7 @@ class SeasonTotalView(ListView):
             score_list = []
             second_half_score_list = []  #added for Mark
             for score in TotalScore.objects.filter(tournament=tournament).order_by('user_id'):
-                 print (tournament, score.user, score.score, total_scores.get(score.user))
+                 #print (tournament, score.user, score.score, total_scores.get(score.user))
                  score_list.append(score)
                  total_score = total_scores.get(score.user)
                  total_scores[score.user] = total_score + score.score
@@ -417,7 +417,7 @@ class SeasonTotalView(ListView):
         #added for Mark
         #for s in second_half_scores.values():
         #    total_second_half_score_list.append(s)
-        print (total_score_list)
+        
         ranks = ss.rankdata(total_score_list, method='min')
         rank_list = []
         for rank in ranks:
