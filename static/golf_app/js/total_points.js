@@ -7,7 +7,7 @@ $(document).ready(function () {
          $.each(points, function(player,data) {
              console.log(player, data.fed_ex_score)
              $('#weekly_total_' + player).text(data.t_scores)
-             $('#fedex_' + player).text(data.fed_ex_score)
+            //  $('#fedex_' + player).text(data.fed_ex_score)
              $('#total_' + player).text(data.total)
              $('#rank_' + player).text(data.rank)
          })

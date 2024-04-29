@@ -36,18 +36,23 @@ from django.core.exceptions import ObjectDoesNotExist
 
 from unidecode import unidecode as decode
 
+for t in Tournament.objects.all():
+    t.fedex_data = {'test': 'test'}
+    t.round_data = {'test': 'test'}
+    t.individual_stats = {'test': 'test'}
+    t.save()
 
-t = Tournament.objects.get(current=True)
-users = Season.objects.get(current=True).get_users()
-
+#t = Tournament.objects.get(current=True)
+#users = Season.objects.get(current=True).get_users('obj')
+#print (users)
 #g = Golfer.objects.get(golfer_name='S.H. Kim')
 #print (Golfer.objects.get(golfer_name='S.H. Kim'))
 #print (g.espn_number)
 
 
-z = calc_zurich_score.CalcZurichScore(t, d=users)
-s = z.calc_score()
-print (s)
+#z = calc_zurich_score.CalcZurichScore(t, d=users)
+#s = z.calc_score()
+#print (s)
 
 exit()
 

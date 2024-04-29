@@ -359,22 +359,33 @@ class SeasonTotalView(ListView):
         total_scores = {}
         second_half_scores = {}
         mark_date = datetime.datetime.strptime('2019-3-20', '%Y-%m-%d')
+        users = Season.objects.get(current=True).get_users('obj')
 
-        for user in TotalScore.objects.values('user_id').distinct().order_by('user_id'):
-            user_key = user.get('user_id')
-            user_list.append(User.objects.get(pk=user_key))
-            winner_dict[User.objects.get(pk=user_key)]=0
-            total_scores[User.objects.get(pk=user_key)]=0
+        #for user in TotalScore.objects.filter(Season.objects.get(current=True)).values('user_id').distinct().order_by('user_id'):
+        for user in users:
+            #user_key = user.get('user_id')
+            #user_list.append(User.objects.get(pk=user_key))
+            #winner_dict[User.objects.get(pk=user_key)]=0
+            #total_scores[User.objects.get(pk=user_key)]=0
             #added second half for Mark
-            second_half_scores[User.objects.get(pk=user_key)]=0
+            #second_half_scores[User.objects.get(pk=user_key)]=0
+            user_list.append(user)
+            winner_dict[user]=0
+            total_scores[user]=0
+            #added second half for Mark
+            second_half_scores[user]=0
 
-        for user in TotalScore.objects.values('user').distinct().order_by('user_id'):
-            winner_dict[(User.objects.get(pk=user.get('user')))]=0
+        #for user in TotalScore.objects.filter(Season.objects.get(current=True)).values('user').distinct().order_by('user_id'):
+        #for user in users:
+            #winner_dict[(User.objects.get(pk=user.get('user')))]=0
+        #    winner_dict[user]=0
 
+        #for tournament in Tournament.objects.filter(season__current=True).order_by('-start_date'):
         for tournament in Tournament.objects.filter(season__current=True).order_by('-start_date'):
             score_list = []
             second_half_score_list = []  #added for Mark
             for score in TotalScore.objects.filter(tournament=tournament).order_by('user_id'):
+                 print (tournament, score.user, score.score, total_scores.get(score.user))
                  score_list.append(score)
                  total_score = total_scores.get(score.user)
                  total_scores[score.user] = total_score + score.score
@@ -395,36 +406,27 @@ class SeasonTotalView(ListView):
                         else:
                             winner_dict[winner.user] = winner_dict.get(winner.user) + 30/tournament.num_of_winners()
                     else:
-                        # field_quality = tournament.field_quality()
-                        # if field_quality == 'major':
-                        #     winner_dict[winner.user] = winner_dict.get(winner.user) + 100/tournament.num_of_winners()
-                        # elif field_quality == 'special':
-                        #     winner_dict[winner.user] = winner_dict.get(winner.user) + 75/tournament.num_of_winners()
-                        # elif field_quality == 'strong':
-                        #     winner_dict[winner.user] = winner_dict.get(winner.user) + 50/tournament.num_of_winners()
-                        # elif field_quality == 'weak':
-                        #     winner_dict[winner.user] = winner_dict.get(winner.user) + 25/tournament.num_of_winners()
                         winner_dict[winner.user] = winner_dict.get(winner.user) + tournament.prize()/tournament.num_of_winners()
 
             display_dict[tournament] = score_list
-
+        print (total_scores)
         total_score_list = []
-        total_second_half_score_list = []
+        #total_second_half_score_list = []
         for score in total_scores.values():
             total_score_list.append(score)
         #added for Mark
-        for s in second_half_scores.values():
-            total_second_half_score_list.append(s)
-
+        #for s in second_half_scores.values():
+        #    total_second_half_score_list.append(s)
+        print (total_score_list)
         ranks = ss.rankdata(total_score_list, method='min')
         rank_list = []
         for rank in ranks:
             rank_list.append(rank)
 
-        second_half_ranks = ss.rankdata(total_second_half_score_list, method='min')
-        second_half_rank_list = []
-        for rank in second_half_ranks:
-            second_half_rank_list.append(rank)
+        #second_half_ranks = ss.rankdata(total_second_half_score_list, method='min')
+        #second_half_rank_list = []
+        #for rank in second_half_ranks:
+        #    second_half_rank_list.append(rank)
 
         #print ('display_dict', display_dict)
         #print ()
@@ -439,9 +441,9 @@ class SeasonTotalView(ListView):
         'rank_list': rank_list,
         'totals_list': total_score_list,
         #'totals_list': 
-        'second_half_list': total_second_half_score_list,
+        #'second_half_list': total_second_half_score_list,
         'prize_list': winner_dict,
-        'second_half_rank_list': second_half_rank_list,
+        #'second_half_rank_list': second_half_rank_list,
         'season': Season.objects.get(current=True),
 
         })

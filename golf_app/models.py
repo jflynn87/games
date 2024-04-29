@@ -76,7 +76,8 @@ class Season(models.Model):
             t_scores = TotalScore.objects.filter(tournament__pk__in=t_list, user=u).aggregate(Sum('score'))
             total_score = 0 if t_scores.get('score__sum') is None else t_scores.get('score__sum')
             score_dict[u.username] = {'score__sum': total_score, 
-                                    'fed_ex_score': self.fed_ex_scores(u)}
+                                    #'fed_ex_score': self.fed_ex_scores(u)
+                                    }
         #print (score_dict)
         min_score = min(score_dict.items(), key=lambda v: v[1].get('score__sum'))[1].get('score__sum')
         second = sorted(score_dict.items(), key=lambda v: v[1].get('score__sum'))[1][1].get('score__sum')
@@ -85,7 +86,7 @@ class Season(models.Model):
         for i, (user, data) in enumerate(sorted(score_dict.items(), key=lambda v: v[1].get('score__sum'))):
             sorted_dict[user] = {'total': score_dict.get(user).get('score__sum'), 'diff':  int(min_score) - int(data.get('score__sum')), 'rank': i+1, 
                                 'points_behind_second': int(second) - int(data.get('score__sum')), #'t_scores': score_dict.get(user).get('t_scores'),
-                                'fed_ex_score': score_dict.get(user).get('fed_ex_score'),
+                                #'fed_ex_score': score_dict.get(user).get('fed_ex_score'),
                                 'player': user
 
                                     }
