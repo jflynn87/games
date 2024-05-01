@@ -190,9 +190,9 @@ return new Promise(function (resolve,reject) {
             var loop_updates = lastField - firstField
       }
       else {
-      var loop_updates = 20
-      var loops =  Math.floor(Number(lastField-firstField)/20)
-      remainder = Number(lastField-firstField)%20
+      var loop_updates = 10
+      var loops =  Math.floor(Number(lastField-firstField)/10)
+      remainder = Number(lastField-firstField)%10
 
       }
       for (let i=1; i <= loops; i++) {
@@ -220,10 +220,11 @@ return new Promise(function (resolve,reject) {
            
             })
             .then((response) => {
-                  console.log('all field updates done, resolving')
-                  resolve()
+                  console.log('field updates done, resolving idx: ', i, loops)
+                  //resolve()
                         })
-                        
+                        console.log('all field updates done, resolving')
+                        resolve()    
                   }
       
       })
@@ -251,9 +252,10 @@ function golferResultsUpdates() {
           var firstGolfer = Number($('#first_golfer_key').text())
           var lastGolfer = Number($('#last_golfer_key').text())
           console.log('Golfer Keys: ', lastGolfer, firstGolfer)
-          var loop_s = 100
+          var loop_s = 25
           var loops =  Math.floor(Number(lastGolfer-firstGolfer)/loop_s)
-          remainder = Number(lastGolfer-firstGolfer)%200
+          //remainder = Number(lastGolfer-firstGolfer)%200
+          remainder = Number(lastGolfer-firstGolfer)%loop_s
           //console.log('loops: ', loops, remainder)
           //$('#setup_table tr:last').after('<tr id=all_golfers_status><td>Updating all golfers</td><td>' + 0 + '</td></tr>')
           
