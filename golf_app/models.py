@@ -729,7 +729,7 @@ class Golfer(models.Model):
             return d
         else:
             last_played = Field.objects.filter(tournament__season=season, golfer=self).exclude(tournament__current=True). \
-              exclude(tournament__pga_tournament_num__in=season.special_fields()).latest('pk')
+              exclude(tournament__pga_tournament_num__in=season.special_fields()).exclude(tournament__pga_tournament_num='018').latest('pk')
             #print ('diff: ', fields - last_played.season_stats.get('played'), fields, last_played.season_stats.get('played'))
             if rerun:        
                 print ('summary stats: ', self.golfer_name, ' : rerun updating all tournaments')
@@ -1041,26 +1041,13 @@ class Field(models.Model):
         from golf_app import espn_api
         data = {}
         start = datetime.now()
-        for t in Tournament.objects.all().order_by('pk').exclude(pga_tournament_num='468').reverse()[1:5]:  # excld ryder cup
+        for t in Tournament.objects.all().order_by('pk').exclude(pga_tournament_num__in=['468', '018']).reverse()[1:5]:  # excld ryder cup
             try:
-
                 if Field.objects.filter(tournament=t, golfer=self.golfer).exclude(withdrawn=True).exclude(golfer__espn_number__isnull=True).exists():
                     sd = ScoreDict.objects.get(tournament=t)
-                    #f = Field.objects.get(tournament=t, golfer__espn_number=self.golfer.espn_number)
                     f = Field.objects.get(tournament=t, golfer=self.golfer)
-                    
-                    #if t.pga_tournament_num not in ['470',]:
-                    #    x = [v.get('rank') for k, v in sd.data.items() if k !='info' and v.get('pga_num') in [self.golfer.espn_number, self.golfer.golfer_pga_num]]
-                    #    if len(x) > 0:
-                    #        data.update({t.pk:{'name': t.name, 'rank': x[0]}})
-                    #    else:
-                    #        data.update({t.pk:{'name': t.name, 'rank': 'DNP'}})    
-                    #elif t.pga_tournament_num == '470':
-                    #    #data.update({t.pk: {'name': t.name, 'rank': 'MP ' + str(self.get_mp_result(t))}})  #for 2021 using pga data
                     espn = espn_api.ESPNData(t=f.tournament, data=sd.espn_api_data)
                     data.update({t.pk: {'name': t.name, 'rank': str(espn.get_rank(f.golfer.espn_number))}})
-                    ## if match play re-enable this.
-                    #data.update({t.pk: {'name': t.name, 'rank': 'MP ' + str(self.mp_calc_score(espn.mp_golfers_per_round(), espn))}})
                 elif Field.objects.filter(tournament=t, partner_golfer__espn_number=self.golfer.espn_number).exclude(withdrawn=True).exclude(partner_golfer__espn_number__isnull=True).exists():
                     sd = ScoreDict.objects.get(tournament=t)
                     f = Field.objects.get(tournament=t, partner_golfer__espn_number=self.golfer.espn_number)
