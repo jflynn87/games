@@ -2149,11 +2149,11 @@ class EspnApiScores(APIView):
                 else:
                     z = calc_zurich_score.CalcZurichScore(t, d=Season.objects.get(current=True).get_users(), data=ScoreDict.objects.get(tournament=t).espn_api_data) 
 
-            d = {}
-            d.update(z.calc_score())
+                d = {}
+                d.update(z.calc_score())
                                 
-            print ('Zurich Score: ', d)
-            return JsonResponse(d, status=200, safe=False)
+                print ('Zurich Score: ', d)
+                return JsonResponse(d, status=200, safe=False)
 
             if t.complete and not rerun:
                 data = return_sd_data(t,d)
