@@ -144,7 +144,7 @@ class NewFieldListView(LoginRequiredMixin,TemplateView):
         if tournament.pga_tournament_num not in ['500', '468'] and \
             tournament.started() and not tournament.late_picks:
             espn = espn_api.ESPNData()
-            msg = 'Golfer already palying: '
+            msg = 'Golfer already playing: '
             error = False
             for p in pick_list:
                 if not Picks.objects.filter(playerName__pk=p).exists():  #only check new picks, front end should prevent new picks so just a saftey net
@@ -158,8 +158,8 @@ class NewFieldListView(LoginRequiredMixin,TemplateView):
                 return HttpResponse(json.dumps(response), content_type='application/json')
             
         
-        print ('user', user)
-        print ('started', tournament.started())
+        #print ('user', user)
+        #print ('started', tournament.started())
 
         # if tournament.started() and tournament.late_picks is False:
         #     print ('picks too late', user, datetime.datetime.now())
@@ -185,7 +185,7 @@ class NewFieldListView(LoginRequiredMixin,TemplateView):
                 field_list.append(Field.objects.get(pk=id))                    
             tournament.save_picks(field_list, user, 'self')
         
-        if tournament.pga_tournament_num == '999':
+        if tournament.pga_tournament_num == '999' and 'random' not in pick_list:
             for mens_pick in  data.get('men_countries'):
                 cp = CountryPicks()
                 cp.user = user
@@ -1053,18 +1053,46 @@ class CBSScores(APIView):
 
 class GetFieldCSV(APIView):
 
-    def get(self, num):
-        print ('get field csv', self.request.GET)
+    def get(self, request, num):
+        print ('get field csv', num)
+        data = []
         try:
-            t = Tournament.objects.get(pk=self.request.GET.get('tournament'))
-            data = serializers.serialize('json', Field.objects.filter(tournament=t),  use_natural_foreign_keys=True)
-            #data = golf_serializers.FieldSerializer(Field.objects.filter(tournament=t), many=True).data
-            #return JsonResponse(data, 200)
-            print (data)
+            #t = Tournament.objects.get(pk=self.request.GET.get('tournament'))
+            t = Tournament.objects.get(pk=int(num))
+            #data = serializers.serialize('json', Field.objects.filter(tournament=t),  use_natural_foreign_keys=True)
+            header = ['PGA ID', 'Golfer', 'Group ID',
+                       'currentWGR', 'sow_WGR', 'soy_WGR',
+                        'prior year finish', 'handicap',
+                        'FedEx Rank', 'FedEx Points',
+                        'Season Played', 'Season Won', 'Season 2-10',
+                        'Season 11-29', 'Season 30 - 49', 'Season > 50', 'Season Cut',
+                        'SG Off Tee Rank', 'SG Off Tee', 'SG Approach Rank', 'SG Approach',
+                        'SG Around Green Rank', 'SG Around Green',
+                        'SG Putting Rank', 'SG Putting',]
+                        
+            for t4 in t.season.last_4():
+                header.append(t4.name)
+ 
+            data.append(header)
+            print (t)
+            for f in Field.objects.filter(tournament=t):
+                #print (f.season_stats)
+                data.append([f.golfer.golfer_pga_num, f.playerName, f.group.number,
+                             f.currentWGR, f.sow_WGR, f.soy_WGR,
+                              f.prior_year, f.handi,
+                              'n/a', 'n/a',
+                              f.season_stats.get('played'), f.season_stats.get('won'), f.season_stats.get('top10'),
+                              f.season_stats.get('bet11_29'), f.season_stats.get('bet30_49'), f.season_stats.get('over50'), f.season_stats.get('cuts'),
+
+
+                              
+                              ])
+                break
+            print (data[0:2])
             return Response(data, 200)
         except Exception as e:
             print ('exception', e)
-            return Response(json.dumps({e}), 500)
+            return Response(str(e), 500)
 
 
 class GetGroupNum(APIView):
@@ -1775,19 +1803,8 @@ class OlympicGolfersByCountry(APIView):
         try:
             t = Tournament.objects.get(pga_tournament_num='999', season__current=True)
             d = t.get_country_counts()
-            # sex = 'men'
-            # d = {'men': {}, 'women': {}}
-            # for f in Field.objects.filter(tournament=t):
-            #     if f.playerName == "Nelly Korda":  #top ranked in 2021
-            #         sex = 'women'
-            #     country = f.golfer.flag_link.split('/')[9][0:3].upper()
-            #     if country == "NIR":  #for Rory
-            #         country = "IRL"
-            #     if d.get(sex).get(country):
-            #         d.get(sex).update({country: d.get(sex).get(country) +  1})
-            #     else:
-            #         d.get(sex).update({country: 1})
             return JsonResponse(d)
+
         except Exception as e:
             print ('get olympic get players by country exception: ', e)
             return JsonResponse({'msg': e})
@@ -1798,7 +1815,7 @@ class GetCountryPicks(APIView):
         print ('GETCOUNTRY API request', self.request.user, pga_t_num)
         t = Tournament.objects.get(pga_tournament_num=pga_t_num, season__current=True)
 
-        if t.pga_tournament_num not in ['500', '468']:
+        if t.pga_tournament_num not in ['500', '468', '999']:
             return JsonResponse(json.dumps({}), status=200, safe=False)
         try:
             if user == 'user':

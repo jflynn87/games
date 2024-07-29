@@ -1,4 +1,5 @@
 $(document).ready(function () {
+    console.log('new field js ready', $('#pga_t_num').text())
     start = new Date()
     var t_key = $('#tournament_key').text()
     Promise.all([
@@ -32,13 +33,18 @@ $(document).ready(function () {
          $.each(picksObjs, function(i, p) {
              picks.push(p.fields.playerName)
          })
+
          
          fedexPicks = responseJSON[5].data
          cpPicks = responseJSON[6]
          console.log('cp: ', cpPicks)
+        //  countryPicks = []
+        //     $.each(cpPicks, function(i, p) {
+        //         countryPicks.push(p.fields.country)
+        //     })
 
-         if ($('#pga_t_num').text() == 468 || $('#pga_t_num').text() == 500) {
-            buildHeader(cpPicks)
+         if ($('#pga_t_num').text() == 468 || $('#pga_t_num').text() == 500 || $('#pga_t_num').text() == 999) {
+            buildHeader(cpPicks, info)
          }
 
          //console.log(info)
@@ -212,7 +218,8 @@ function buildForm(info, groups, field, golfers, partners, picks, tStarted, star
             golferFlag = document.createElement('img')
             
             golferPic.src = golfer[0].pic_link
-                        
+            golferPic.alt = ''
+            golferPic.style.height = '200px'                        
             
             if (f.fields.partner) {
                 golferName.innerHTML = f.fields.playerName + '(' + (Number(f.fields.currentWGR) - Number(f.fields.partner_owgr)).toString() + ')'
@@ -221,8 +228,8 @@ function buildForm(info, groups, field, golfers, partners, picks, tStarted, star
             golferName.style.fontWeight = 'bold'
 
             golferFlag.src = golfer[0].flag_link
-            golferFlag.style.height = '20px'
-            golferFlag.style.width = '20px'
+            golferFlag.style.height = '30px'
+            golferFlag.style.width = '30px'
 
             golferP1.append(golferPic)
             golferP1.append(golferName)
@@ -244,13 +251,15 @@ function buildForm(info, groups, field, golfers, partners, picks, tStarted, star
                 p_golferFlag = document.createElement('img')
                 
                 p_golferPic.src = partner[0].pic_link
+                p_golferPic.alt = ''
+                p_golferPic.style.height = '200px'
                 
                 p_golferName.innerHTML = partner[0].golfer_name + '('+ f.fields.partner_owgr + ')'
                 p_golferName.style.fontWeight = 'bold'
     
                 p_golferFlag.src = partner[0].flag_link
-                p_golferFlag.style.height = '20px'
-                p_golferFlag.style.width = '20px'
+                p_golferFlag.style.height = '30px'
+                p_golferFlag.style.width = '30px'
 
                 p.append(' & ')
                 p.append(p_golferPic)
@@ -843,7 +852,7 @@ function clear_submitting() {
 }
 
 
-function buildHeader(cpPicks) {
+function buildHeader(cpPicks, info) {
     var eventName = $('#t-name').text()
         
     if ($('#pga_t_num').text() == 468) {
@@ -873,8 +882,18 @@ function buildHeader(cpPicks) {
         }
         instructions = instructions + tie
     }
-    else if ($('#pga_t_num').text() == 999) {
-        var instructions = '<p>Olympics, build this</p>'
+    else if ($('#pga_t_num').text() == '999') {
+        var instructions =  '<h4>Instructions</h4>' +
+                            '<ul>' +      
+                            '<li>Two week event, combine scores for mens and womens picks</li>' +
+                           '<li>One pick per group, and pick 3 countries for men and women medals</li>' +
+                            '<li>Medal pick bonuses: Gold -50, Silver -35, Bronze -20, +5 for each golfer above 1 per country.  No ordering reqiured, e.g. if pick 3 wins gold it gets the gold bonus</li>' + 
+                            '<li>Each country can only be picked once per gender</li>' +
+                            "<li>Women's ranks are actual rank + 1000</li>" +
+                            '<li>Bonus for best in group and winning golfer pick.  Bonus multipliers are  based on groups within each event</li>' +
+                            '</ul>'
+
+
     }
     else {
         //var instructions = '<p>Enter 2 picks for group 1, and 1 pick for remaining groups</p>'
@@ -901,18 +920,18 @@ function buildHeader(cpPicks) {
 
    // $('#field_sect').append('<form id=pick_form method=post></form>')
 
-    if ($('#pga_t_num').text() == 999) {
+    if ($('#pga_t_num').text() == '999') {
         console.log('add countries here')
         //$('#field_sect #pick_form').append('<div id=mens_countries></div>')
         $('#field_sect #pick_form').append('<table id=mens_countries_picks' + " class=table> \
                                         <thead class=total_score> <th> Men's Medal Countries" + '</th> </thead>' +
                                         '</table>')
-        $('#mens_countries_picks').append('<tr><td>Pick 3 countries, -50 for gold, -35 for silver, -20 for bronze.  Add +5 for each golfer above 1 per country.</td></tr>')
+        $('#mens_countries_picks').append('<tr><td>Pick 3 countries, -50 for gold, -35 for silver, -20 for bronze.  Add +5 for each golfer above 1 per country.  No ordering required.</td></tr>')
         
         $('#field_sect #pick_form').append('<table id=womens_countries_picks' + " class=table> \
                                         <thead class=total_score> <th> Women's Medal Countries" + '</th> </thead>' +
                                         '</table>')
-        $('#womens_countries_picks').append('<tr><td>Pick 3 countries, -50 for gold, -35 for silver, -20 for bronze.  Add +5 for each golfer above 1 per country.</td></tr>')
+        $('#womens_countries_picks').append('<tr><td>Pick 3 countries, -50 for gold, -35 for silver, -20 for bronze.  Add +5 for each golfer above 1 per country. No ordering required.</td></tr>')
         
         fetch("/golf_app/get_country_counts/",         
         {method: "GET",
@@ -921,13 +940,13 @@ function buildHeader(cpPicks) {
     .then((responseJSON) => {
         data = responseJSON
         console.log('countries: ', data)
-        formatMenMedals(data)
-        formatWomenMedals(data)
+        formatMenMedals(data, info, cpPicks)
+        formatWomenMedals(data, info, cpPicks)
     })
     }
 
     //Ryder Cup
-    if ($('#pga_t_num').text() == 468 | 500) {
+    if ($('#pga_t_num').text() == 468 || $('#pga_t_num').text() == 500) {
 
         $('#field_sect #pick_form').append('<table id=ryderCup_picks' + " class=table> \
         <thead class=total_score> <th colspan=2>Special " + eventName +  " Picks " + '</th> </thead>' +
@@ -938,6 +957,7 @@ function buildHeader(cpPicks) {
              '<input id=winning_points class="form-control"  type=number placeholder="enter between ' + lowPoints + ' - ' + highPoints +'" step=0.5 min="' + lowPoints +  '"max="' + highPoints + '"><textbox></textbox></input></p>')
         
         if (cpPicks.length > 0) {
+            if ($('#pga_t_num').text() == 468 || $('#pga_t_num').text() == 500) {
             console.log(cpPicks[0].ryder_cup_score)
             if (cpPicks[0].country == 'USA') {$('#winning_team').val('USA')}
             else {$('#winning_team').val('euro')}
@@ -972,7 +992,7 @@ function buildHeader(cpPicks) {
                 $('#pick-status').empty()                            
                 checkComplete(info)})
         
-
+        }
         $('#random-line').remove()
 
         }
@@ -983,5 +1003,74 @@ function buildHeader(cpPicks) {
         console.log("random submitted!")  
         create_post_random();
     });
+}
+
+function formatMenMedals(data, info, cpPicks) {
+    
+    $('#mens_countries_picks').append('<tr><td>Pick 1:  <select id=men_1_country> </select><td> </tr>')
+    $('#mens_countries_picks').append('<tr><td>Pick 2:  <select id=men_2_country> </select><td> </tr>')
+    $('#mens_countries_picks').append('<tr><td>Pick 3:  <select id=men_3_country> </select><td> </tr>')
+
+    
+    $('#mens_countries_picks').on('change', function(evt) {
+            $('#pick-status').empty()
+            //get_info(info, null)
+            checkComplete(info) })
+    
+    $.each(data.men, function(country, count) {
+        if (country.indexOf(cpPicks[0].country) != -1) {
+            $('#men_1_country').append('<option selected value=' + country + '>' + country + ': ' + count + '</option>')
+        }
+        else {
+            $('#men_1_country').append('<option value=' + country + '>' + country + ': ' + count + '</option>')
+        }
+        if (country.indexOf(cpPicks[1].country) != -1) {
+            $('#men_2_country').append('<option selected value=' + country + '>' + country + ': ' + count + '</option>')
+        }
+        else {
+            $('#men_2_country').append('<option value=' + country + '>' + country + ': ' + count + '</option>')
+        }
+        if (country.indexOf(cpPicks[2].country) != -1) {
+        $('#men_3_country').append('<option selected value=' + country + '>' + country + ': ' + count + '</option>')
+        }
+        else {
+            $('#men_3_country').append('<option value=' + country + '>' + country + ': ' + count + '</option>')
+        }
+        
+    })
+    }
+
+function formatWomenMedals(data, info, cpPicks) {
+    $('#womens_countries_picks').append('<tr><td>Pick 1:  <select id=women_1_country> </select><td> </tr>')
+    $('#womens_countries_picks').append('<tr><td>Pick 2:  <select id=women_2_country> </select><td> </tr>')
+    $('#womens_countries_picks').append('<tr><td>Pick 3:  <select id=women_3_country> </select><td> </tr>')
+
+    $('#womens_countries_picks').on('change', function(evt) {
+        $('#pick-status').empty()
+        //get_info(info, null)
+        checkComplete(info) })
+    
+    $.each(data.woman, function(country, count) {
+        if (country.indexOf(cpPicks[3].country) != -1) {
+        $('#women_1_country').append('<option selected value=' + country + '>' + country + ': ' + count + '</option>')
+        }
+        else {
+        $('#women_1_country').append('<option value=' + country + '>' + country + ': ' + count + '</option>')
+        }
+        if (country.indexOf(cpPicks[4].country) != -1) {
+        $('#women_2_country').append('<option selected value=' + country + '>' + country + ': ' + count + '</option>')
+        }
+        else {
+            $('#women_2_country').append('<option value=' + country + '>' + country + ': ' + count + '</option>')
+        }
+        if (country.indexOf(cpPicks[5].country) != -1) {
+        $('#women_3_country').append('<option selected value=' + country + '>' + country + ': ' + count + '</option>')
+        }
+        else {
+            $('#women_3_country').append('<option value=' + country + '>' + country + ': ' + count + '</option>')
+        }
+        
+    })
+
 }
 

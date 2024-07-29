@@ -125,8 +125,10 @@ class Season(models.Model):
 
     def special_fields(self):
         #return ['999', '470', '468', '018']
-        return ['999', '470', '468']
+        return ['470', '468']
 
+    def last_4(self):
+        return Tournament.objects.all().order_by('pk').exclude(pga_tournament_num__in=['468', '018']).reverse()[1:5]
 
 
 class Tournament(models.Model):
@@ -295,6 +297,25 @@ class Tournament(models.Model):
             cp.tournament = self
             cp.user = user
             cp.save()
+        elif self.pga_tournament_num == '999':
+            countries = self.get_country_counts()
+            print ('countries', countries.get('men').keys())
+            for mens_pick in random.choices(list(countries.get('men').keys()), k=3):
+                cp = CountryPicks()
+                cp.user = user
+                cp.tournament = self
+                cp.country = mens_pick
+                cp.gender = "men"
+                cp.save()
+
+            for womens_pick in random.choices(list(countries.get('woman').keys()), k=3):
+                cp = CountryPicks()
+                cp.user = user
+                cp.tournament = self
+                cp.country = womens_pick
+                cp.gender = 'women'
+                cp.save()
+
         print ('saving random', user, datetime.now(), random_picks)
         self.save_picks(random_picks, user, mode)
 
@@ -349,6 +370,8 @@ class Tournament(models.Model):
         #    return True
         #else:
         #    return False
+        if self.pga_tournament_num in ['999']:
+            return False
         g_1 = Group.objects.get(tournament=self, number=1)
         if g_1.playerCnt >= 10:
             return True
@@ -419,7 +442,10 @@ class Tournament(models.Model):
             d = {'men': {}, 'woman': {}}
             for f in Field.objects.filter(tournament=self):
                 if f.playerName == "Nelly Korda": sex = 'woman'  # top ranked woman
+                #print (f, f.golfer.flag_link)
+                #print (f.golfer.flag_link.split('/')[9][0:3])
                 country = f.golfer.flag_link.split('/')[9][0:3].upper()
+                #print (f, country)
                 if self.pga_tournament_num == '999' and country == "NIR": #For Rory
                     country = "IRL"
                 if d.get(sex).get(country):
@@ -429,7 +455,7 @@ class Tournament(models.Model):
                 
             return d
         except Exception as e:
-            return {'msg': e}
+            return {'msg': str(e)}
 
     def individual_country_count(self, country, gender):
         '''takes a t obj and strings for country and gender, returns an int'''
@@ -448,6 +474,8 @@ class Tournament(models.Model):
                 return "major"
             if self.pga_tournament_num == '018':
                 return 'weak'            
+            if self.pga_tournament_num == '999':
+                return "strong"
             if self.special_field():
                 return 'special'
 

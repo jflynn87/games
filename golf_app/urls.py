@@ -27,7 +27,7 @@ urlpatterns= [
     #url(r'^get_info/$',views.GetInfo.as_view(),name='get_info'),
     path('get_info/<int:pk>/',views.GetInfo.as_view(),name='get_info'),
     url(r'^cbs_scores/$',views.CBSScores.as_view(),name='cbs_scores'),
-    url(r'^get_field_csv/$',views.GetFieldCSV.as_view(),name='get_field_csv'),
+    path('get_field_csv/<str:num>',views.GetFieldCSV.as_view()),
     url(r'^get_group_num/$',views.GetGroupNum.as_view(),name='get_group_num'),
     path('golf_leaderboard/', views.GolfLeaderboard.as_view()),
     path('golf_withdraw/', views.Withdraw.as_view()),

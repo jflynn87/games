@@ -111,12 +111,12 @@ def get_womans_rankings():
     #print (rankslist)
     owgr_dict = {}
 
-    with open('rolexrankings_2021-07-19.csv', newline='') as csvfile:
+    with open('golf_app/womans_owgr.csv', newline='', encoding='utf-8-sig') as csvfile:
         data = csv.reader(csvfile, delimiter=',', quotechar='|')
         next(data)
         for row in data:
             #print (row[0])
-            owgr_dict[string.capwords(row[2].lower())] = {'rank': row[0]}
+            owgr_dict[string.capwords(row[3].lower())] = {'rank': row[0]}
     #for row in rankslist.find_all('tr')[1:]:
            #try:
             #    player = row[0]
@@ -125,6 +125,7 @@ def get_womans_rankings():
            #except Exception as e:
            #     print('exeption 1',row,e)
     
+    print ('womans ranks ', owgr_dict)
     return owgr_dict
 
 
@@ -242,7 +243,8 @@ def get_field(t, owgr_rankings):
         print ('mp field dict: ', field_dict)
     elif t.pga_tournament_num == '999': #Olympics
         # update this to use the class from olympics_sd.py
-        mens_field = scrape_espn.ScrapeESPN(tournament=t, url='https://www.espn.com/golf/leaderboard?tournamentId=401285309', setup=True).get_data()    
+        #mens_field = scrape_espn.ScrapeESPN(tournament=t, url='https://www.espn.com/golf/leaderboard?tournamentId=401285309', setup=True).get_data()
+        mens_field = scrape_espn.ScrapeESPN(tournament=t, url='https://www.espn.com/golf/leaderboard/_/tour/mens-olympics-golf', setup=True).get_data()
         womens_field = scrape_espn.ScrapeESPN(tournament=t, url="https://www.espn.com/golf/leaderboard/_/tour/womens-olympics-golf", setup=True).get_data()
         
         for man, data in mens_field.items():
@@ -376,7 +378,10 @@ def get_field(t, owgr_rankings):
                                     'sow_owgr': ranks[1][1]}
 
 
-    print (field_dict)
+    # print ('Full Field start print')
+    # for k,v in field_dict.items():
+    #     print (k, v)
+    print ('field dict len: ', len(field_dict))
     return field_dict
 
 
@@ -594,10 +599,14 @@ def create_olympic_field(field, tournament):
     for player, info in sorted_field.items():
         print (player, info)
         if info.get('espn_num') and Golfer.objects.filter(espn_number=info.get('espn_num')).exists():
-            golfer = Golfer.objects.get(espn_number=info.get('espn_num'))
+            golfer = Golfer.objects.filter(espn_number=info.get('espn_num')).latest('pk')
+            golfer.pic_link = 'https://a.espncdn.com/combiner/i?img=/i/headshots/golf/players/full/' + str(info.get('espn_num')) + '.png&w=350&h=254'
+            golfer.flag_link = info.get('flag')
+            golfer.save()
         elif Golfer.objects.filter(golfer_name=player).exists():
-            golfer = Golfer.objects.get(golfer_name=player)
+            golfer = Golfer.objects.filter(golfer_name=player).latest('pk')
             golfer.espn_number = info.get('espn_num')
+            golfer.pic_link = 'https://a.espncdn.com/combiner/i?img=/i/headshots/golf/players/full/' + str(info.get('espn_num')) + '.png&w=350&h=254'
             if not golfer.flag_link or golfer.flag_link == '':
                 golfer.flag_link = info.get('flag')
             golfer.save()
@@ -606,6 +615,7 @@ def create_olympic_field(field, tournament):
             golfer.golfer_name=player
             golfer.espn_number = info.get('espn_num')
             golfer.flag_link = info.get('flag')
+            golfer.pic_link = 'https://a.espncdn.com/combiner/i?img=/i/headshots/golf/players/full/' + str(info.get('espn_num')) + '.png&w=350&h=254'
             golfer.save()
 
 
@@ -631,8 +641,12 @@ def create_olympic_field(field, tournament):
             player_cnt = 1
 
     #need to do this after full field is saved for the calcs to work.  No h/c in MP
-    fed_ex = get_fedex_data(tournament)
-    individual_stats = get_individual_stats()
+    if tournament.pga_tournament_num not in ['999',]:
+        fed_ex = get_fedex_data(tournament)
+        individual_stats = get_individual_stats()
+    else:
+        fed_ex = {}
+        individual_stats = {}
 
     for f in Field.objects.filter(tournament=tournament):
         if tournament.pga_tournament_num not in ['470', '018']:
@@ -640,30 +654,31 @@ def create_olympic_field(field, tournament):
         else:
             f.handi = 0
 
-        f.prior_year = f.prior_year_finish()
-        recent = OrderedDict(sorted(f.recent_results().items(), reverse=True))
-        f.recent = recent
-        f.season_stats = f.golfer.summary_stats(tournament.season) 
+        if tournament.pga_tournament_num not in ['999',]:
+            f.prior_year = f.prior_year_finish()
+            recent = OrderedDict(sorted(f.recent_results().items(), reverse=True))
+            f.recent = recent
+            f.season_stats = f.golfer.summary_stats(tournament.season) 
 
-       # print (fed_ex)#
-        if fed_ex.get(f.playerName):
-           f.season_stats.update({'fed_ex_points': fed_ex.get(f.playerName).get('points'),
-                                  'fed_ex_rank': fed_ex.get(f.playerName).get('rank')})
-        else:
-           f.season_stats.update({'fed_ex_points': 'n/a',
-                                  'fed_ex_rank': 'n/a'})
+            if fed_ex.get(f.playerName):
+                f.season_stats.update({'fed_ex_points': fed_ex.get(f.playerName).get('points'),
+                                    'fed_ex_rank': fed_ex.get(f.playerName).get('rank')})
+            else:
+                f.season_stats.update({'fed_ex_points': 'n/a',
+                                    'fed_ex_rank': 'n/a'})
 
-        if individual_stats.get(f.playerName):
-            player_s = individual_stats.get(f.playerName)
-            for k, v in player_s.items():
-                if k != 'pga_num':
-                    f.season_stats.update({k: v})
+            if individual_stats.get(f.playerName):
+                player_s = individual_stats.get(f.playerName)
+                for k, v in player_s.items():
+                    if k != 'pga_num':
+                        f.season_stats.update({k: v})
         
         f.save()
-
-    for g in Golfer.objects.all():
-        g.results = g.get_season_results()
-        g.save()
+    # print ('update golfers')
+    # for g in Golfer.objects.all():
+    #     print ('updating golfer: ', g)
+    #     g.results = g.get_season_results()
+    #     g.save()
 
 
     print ('saved field objects')
@@ -849,7 +864,7 @@ def get_fedex_data(tournament=None, update=False):
     try:
         season = Season.objects.get(current=True)
         #prior_t = Tournament.objects.filter(season__current=True).order_by('-pk')[1]
-        print_t = tournament.prior_t()
+        prior_t = tournament.prior_t()
         #print (prior_t.fedex_data)
         c = 0    
         #for g in FedExField.objects.filter(season__season__current=True, golfer__espn_number='9780'):

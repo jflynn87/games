@@ -419,8 +419,14 @@ $(document).on("click", "#download_excel", function() {
         row['soy_wgr'] = golfer['fields']['soy_WGR']
         row['prior_year'] = golfer.fields.prior_year
         row['handi'] = golfer['fields']['handi']
-        row['fedex_rank'] = golfer.fields.season_stats.fed_ex_rank
-        row['fedex_points'] = golfer.fields.season_stats.fed_ex_points
+        
+        try 
+        {row['fedex_rank'] = golfer.fields.season_stats.fed_ex_rank
+        row['fedex_points'] = golfer.fields.season_stats.fed_ex_points}
+        catch(e){
+          row['fedex_rank'] = ''
+        row['fedex_points'] = ''}
+        
         row['played'] = golfer.fields.season_stats.played 
         row['won'] = golfer.fields.season_stats.won
         row['top10'] = golfer.fields.season_stats.top10

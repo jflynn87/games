@@ -1,7 +1,5 @@
 from configparser import DuplicateOptionError
 import os
-
-
 os.environ.setdefault("DJANGO_SETTINGS_MODULE","gamesProj.settings")
 import django
 django.setup()
@@ -33,37 +31,36 @@ import numpy as np
 import pytz
 from operator import itemgetter
 from django.core.exceptions import ObjectDoesNotExist
+import requests
+
 
 from unidecode import unidecode as decode
 
-for t in Tournament.objects.all():
-    t.fedex_data = {'test': 'test'}
-    t.round_data = {'test': 'test'}
-    t.individual_stats = {'test': 'test'}
-    t.save()
+for s in Season.objects.all().exclude(season=2021):
+    s.delete()
 
-#t = Tournament.objects.get(current=True)
-#users = Season.objects.get(current=True).get_users('obj')
-#print (users)
-#g = Golfer.objects.get(golfer_name='S.H. Kim')
-#print (Golfer.objects.get(golfer_name='S.H. Kim'))
-#print (g.espn_number)
-
-
-#z = calc_zurich_score.CalcZurichScore(t, d=users)
-#s = z.calc_score()
-#print (s)
+s21 = Season.objects.get(season=2021)
+s21.current = True  
+s21.save()
 
 exit()
 
-g = Golfer.objects.filter(golfer_pga_num='')
-dupes = set(g.golfer_name for g in g)
-print (len(dupes))
-print (dupes)
-print (Golfer.objects.all().count())
-no_espn = Golfer.objects.filter(espn_number__isnull=True, golfer_pga_num='')
-print (no_espn)
+t = Tournament.objects.get(current=True)
+print (t)
+
+for f in Field.objects.filter(tournament__current=True, handi__isnull=True):
+    print (f.tournament, f.group.number, f, f.currentWGR)
+    f.handi = f.handicap()
+    f.save()
+    
+print (Field.objects.filter(tournament__current=True, handi__isnull=True).count())
+
+#url = 'http://127.0.0.1:8000/golf_app/get_field_csv/' + str(t.pk) 
+#req = requests.get(url)
+#print (req)
+
 exit()
+
 
 #scrape website
 url = 'https://zurichgolfclassic.com/players/'

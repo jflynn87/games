@@ -13,6 +13,7 @@ class GroupAdmin(admin.ModelAdmin):
     list_filter = ['tournament',]
 
 class FieldAdmin(admin.ModelAdmin):
+    list_select_related = True
     list_display = ['tournament', 'playerName']
     list_filter = ['tournament',]
 

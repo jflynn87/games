@@ -23,9 +23,9 @@ class ESPNData(object):
         else:
             self.t = Tournament.objects.get(current=True)
 
-        #with open('byron_nelson_r2.json') as json_file:
-        #    data = json.load(json_file)
-        #self.all_data = data
+
+        if self.t.pga_tournament_num == '999':
+            return
 
         if data:
             self.all_data = data 
@@ -201,8 +201,12 @@ class ESPNData(object):
         #clean this up, added for round 1 based on espn not having a cut round or score.  they have cutRound == 0 
         if self.t.has_cut and int(self.get_round()) <= int(self.t.saved_cut_round) and self.event_data.get('tournament').get('cutRound') == 0:
             #move this to be the cut_line funciton
-            return  min(int(x.get('status').get('position').get('id')) for x in self.field_data \
-                     if int(x.get('status').get('position').get('id')) > int(self.t.saved_cut_num)) 
+            try:
+                return  min(int(x.get('status').get('position').get('id')) for x in self.field_data \
+                     if int(x.get('status').get('position').get('id')) > int(self.t.saved_cut_num))
+            except Exception as e1:
+                print ('cut e1 : ', e1)
+                return self.t.saved_cut_num 
 
         if self.event_data.get('tournament').get('cutCount') != 0:
             return self.event_data.get('tournament').get('cutCount') + 1
@@ -228,7 +232,10 @@ class ESPNData(object):
            return self.cut_num()
            #return golfer_data.get('status').get('type').get('shortDetail')
         else:
-           return golfer_data.get('status').get('position').get('id')
+           if golfer_data.get('status').get('position').get('id').isdigit():
+               return golfer_data.get('status').get('position').get('id')
+           else:
+               return self.cut_num()
 
 
     def get_rank_display(self, espn_number):
@@ -251,7 +258,7 @@ class ESPNData(object):
             try:
                 #golfers = g.get_golfers()
                 golfers = self.made_cut_golfers(g.get_golfers())
-                
+                #print ('golfers: ', golfers)
                 if self.t.pga_tournament_num == '018':
                     min_score = min([int(x.get('status').get('position').get('id')) for x in self.field_data if str(x.get('roster')[0].get('playerId')) in golfers or str(x.get('roster')[1].get('playerId')) in golfers])
                     best = []
@@ -263,7 +270,11 @@ class ESPNData(object):
                         best.append(one)
                     cuts = self.cut_count(g)
                 else:
-                    min_score = min([int(self.get_rank(x.get('id'))) - Field.objects.values('handi').get(tournament=self.t, golfer__espn_number=x.get('id')).get('handi') for x in self.field_data if x.get('id') in golfers])
+                    try:
+                        min_score = min([int(self.get_rank(x.get('id'))) - Field.objects.values('handi').get(tournament=self.t, golfer__espn_number=x.get('id')).get('handi') for x in self.field_data if x.get('id') in golfers])
+                    except Exception as me:
+                        print ('min score issue: ', me)
+                        min_score = 0 
                     best = [x.get('athlete').get('id') for x in self.field_data if x.get('id') in golfers and int(self.get_rank(x.get('id'))) - Field.objects.values('handi').get(tournament=self.t, golfer__espn_number=x.get('id')).get('handi') == min_score]
                     cuts = len(self.regular_cut_golfers(g.get_golfers()))
                     #cuts = len([x.get('athlete').get('id') for x in self.field_data if x.get('id') in golfers and x.get('status').get('type').get('id') == '3'])
@@ -292,6 +303,9 @@ class ESPNData(object):
                 g.cutCount = cuts
                 g.save()
             except Exception as e:
+                #for x in golfers:
+                #    print (self.golfer_data(x))
+                #    print (self.get_rank(x), Field.objects.values('handi').get(tournament=self.t, golfer__espn_number=x).get('handi'))
                 print ('espn api group stats issue: ', g, e)
                 d[str(g.number)] = {'golfers': [],
                                     'golfer_espn_nums': [],

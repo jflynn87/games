@@ -104,15 +104,31 @@ $('#download_excel').html('Preparing Data...')
           row['soy_wgr'] = golfer['fields']['soy_WGR']
           row['prior_year'] = golfer.fields.prior_year
           row['handi'] = golfer['fields']['handi']
-          row['fedex_rank'] = golfer.fields.season_stats.fed_ex_rank
-          row['fedex_points'] = golfer.fields.season_stats.fed_ex_points
-          row['played'] = golfer.fields.season_stats.played 
-          row['won'] = golfer.fields.season_stats.won
-          row['top10'] = golfer.fields.season_stats.top10
-          row['bet11_29'] = golfer.fields.season_stats.bet11_29
-          row['bet30_49'] = golfer.fields.season_stats.bet30_49
-          row['over50'] = golfer.fields.season_stats.over50
-          row['cuts'] = golfer.fields.season_stats.cuts
+          try {
+            row['fedex_rank'] = golfer.fields.season_stats.fed_ex_rank
+            row['fedex_points'] = golfer.fields.season_stats.fed_ex_points }
+          catch (e) {
+            row['fedex_rank'] = 'n/a'
+            row['fedex_points'] = 'n/a'
+          }
+          try {
+              row['played'] = golfer.fields.season_stats.played 
+            row['won'] = golfer.fields.season_stats.won
+            row['top10'] = golfer.fields.season_stats.top10
+            row['bet11_29'] = golfer.fields.season_stats.bet11_29
+            row['bet30_49'] = golfer.fields.season_stats.bet30_49
+            row['over50'] = golfer.fields.season_stats.over50
+           row['cuts'] = golfer.fields.season_stats.cuts
+          }
+          catch (e) {
+            row['played'] = 'n/a'
+            row['won'] = 'n/a'
+            row['top10'] = 'n/a'
+            row['bet11_29'] = 'n/a'
+            row['bet30_49'] = 'n/a'
+            row['over50'] = 'n/a'
+            row['cuts'] = 'n/a'
+          }
           try {
             row['sg_off_tee_rank'] = golfer.fields.season_stats.off_tee.rank
           }

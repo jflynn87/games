@@ -297,9 +297,9 @@ function buildHeader() {
     //     '<br></div>')
 
     $('#field_sect').append('<form id=pick_form method=post></form>')
-
-    if ($('#pga_t_num').text() == 999) {
-        console.log('add countries here')
+    console.log('pga_t_num: ', $('#pga_t_num').text())
+    if ($('#pga_t_num').text() == '999') {
+        console.log('XXXXadd countries here')
         //$('#field_sect #pick_form').append('<div id=mens_countries></div>')
         $('#field_sect #pick_form').append('<table id=mens_countries_picks' + " class=table> \
                                         <thead class=total_score> <th> Men's Medal Countries" + '</th> </thead>' +
@@ -603,6 +603,7 @@ function build_golfer_row(field, pick_array) {
     img = document.createElement('img')
     img.src = field.golfer.pic_link
     flag = document.createElement('img')
+
     flag.src = field.golfer.flag_link
     google = document.createElement('a')
     google.href = 'https://www.google.com/search?q=' + field.playerName
