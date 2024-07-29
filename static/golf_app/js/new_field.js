@@ -84,11 +84,11 @@ $(document).ready(function () {
             if (s_data['t_started'] == false)
                 {$('#random_btn').attr('disabled', false)}
 
-            $('#random_form').on('submit', function(event){
-                event.preventDefault();
-                console.log("form submitted!")  
-                create_post_random();
-            });
+            // $('#random_form').on('submit', function(event){
+            //     event.preventDefault();
+            //     console.log("form submitted!")  
+            //     create_post_random();
+            // });
             validatePicks(info)
             console.log('done: ', new Date() - start)
             })
@@ -1018,19 +1018,19 @@ function formatMenMedals(data, info, cpPicks) {
             checkComplete(info) })
     
     $.each(data.men, function(country, count) {
-        if (country.indexOf(cpPicks[0].country) != -1) {
+        if (cpPicks.length > 1 && country.indexOf(cpPicks[0].country) != -1) {
             $('#men_1_country').append('<option selected value=' + country + '>' + country + ': ' + count + '</option>')
         }
         else {
             $('#men_1_country').append('<option value=' + country + '>' + country + ': ' + count + '</option>')
         }
-        if (country.indexOf(cpPicks[1].country) != -1) {
+        if (cpPicks.length > 1 && country.indexOf(cpPicks[1].country) != -1) {
             $('#men_2_country').append('<option selected value=' + country + '>' + country + ': ' + count + '</option>')
         }
         else {
             $('#men_2_country').append('<option value=' + country + '>' + country + ': ' + count + '</option>')
         }
-        if (country.indexOf(cpPicks[2].country) != -1) {
+        if (cpPicks.length > 1 && country.indexOf(cpPicks[2].country) != -1) {
         $('#men_3_country').append('<option selected value=' + country + '>' + country + ': ' + count + '</option>')
         }
         else {
@@ -1051,19 +1051,19 @@ function formatWomenMedals(data, info, cpPicks) {
         checkComplete(info) })
     
     $.each(data.woman, function(country, count) {
-        if (country.indexOf(cpPicks[3].country) != -1) {
+        if (cpPicks.length > 1 && country.indexOf(cpPicks[3].country) != -1) {
         $('#women_1_country').append('<option selected value=' + country + '>' + country + ': ' + count + '</option>')
         }
         else {
         $('#women_1_country').append('<option value=' + country + '>' + country + ': ' + count + '</option>')
         }
-        if (country.indexOf(cpPicks[4].country) != -1) {
+        if (cpPicks.length > 1 && country.indexOf(cpPicks[4].country) != -1) {
         $('#women_2_country').append('<option selected value=' + country + '>' + country + ': ' + count + '</option>')
         }
         else {
             $('#women_2_country').append('<option value=' + country + '>' + country + ': ' + count + '</option>')
         }
-        if (country.indexOf(cpPicks[5].country) != -1) {
+        if (cpPicks.length > 1 && country.indexOf(cpPicks[5].country) != -1) {
         $('#women_3_country').append('<option selected value=' + country + '>' + country + ': ' + count + '</option>')
         }
         else {
