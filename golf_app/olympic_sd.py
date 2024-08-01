@@ -20,7 +20,7 @@ class OlympicScores(object):
     
     def __init__(self, mens_url=None, womens_url=None):
         if not mens_url:
-            self.mens_url = 'https://www.espn.com/golf/leaderboard?tournamentId=401285309'
+            self.mens_url = 'https://www.espn.com/golf/leaderboard/_/tour/womens-olympics-golf'
         else:
             self.mens_url = url
         

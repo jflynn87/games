@@ -30,7 +30,6 @@
 
 <div id='picks_summary'></div>
 <div id='picks_info'></div>
-
 <div id='status'><h4>updating scores <span class='status' style="size: 200%;">....</span></h4></div>
 <!-- <div id='picks_info'> -->
   <div id=scores-div hidden>
@@ -39,6 +38,9 @@
         <tr style="background-color: lightblue;">
         <th>Player</th>
         <th>Bonus</th>
+        {%if t.pga_tournament_num == '999'%}
+        <th>Countries</th>
+        {%endif%}
         {%for g in groups%}
           <th id="grp-colspan-{{g.number}}" colspan="{{g.num_of_picks}}">{{g.number}}</th>
         {%endfor%}
@@ -53,12 +55,27 @@
             <p id='score_{{p.user.username}}'>{{p.user|total_score}} / ...</p>
           </td>
           <td id=msg_{{p.user.username}}>updating info......</td>
-            <td id={{p.pk}} class='{{p.playerName.golfer.espn_number}}'>
+          
+          {%if t.pga_tournament_num == '999'%}
+          <td id="countries_{{p.user.username}}">
+            <script type="text/javascript">
+              var cPicks = $.parseJSON('{{cp|safe}}');
+              $.each(cPicks, function(i, data){
+                if (data.user_name == '{{p.user.username}}'){
+                  $('#countries_{{p.user.username}}').append('<p> <img src='+ data.flag_link+'></img></p>');
+              }
+            });
+
+            </script>
+          </td>
+          {%endif%}
+          
+          <td id={{p.pk}} class='{{p.playerName.golfer.espn_number}}'>
               <span class=watermark><p> {{p.user.username}} : {{p.playerName.group.number}} </p> </span>
-              <p><img src="{{p.playerName.golfer.pic_link}}"></img>
+              <p><img height="100" src="{{p.playerName.golfer.pic_link}}"></img>
                   <img height='20' src="{{p.playerName.golfer.flag_link}}" alt=""></img>
                   {%if p.playerName.partner%}
-                  <img src="{{p.playerName.partner_golfer.pic_link}}"></img>
+                  <img height='100' src="{{p.playerName.partner_golfer.pic_link}}"></img>
                   <img height='20' src="{{p.playerName.partner_golfer.flag_link}}" alt=""></img>
                   {%endif%}
               </p>
@@ -75,10 +92,10 @@
           {%else%}
             <td id={{p.pk}} class='{{p.playerName.golfer.espn_number}}'>
               <span class=watermark><p> {{p.user.username}} : {{p.playerName.group.number}} </p> </span>
-              <p><img src="{{p.playerName.golfer.pic_link}}"></img>
+              <p><img height='100' src="{{p.playerName.golfer.pic_link}}"></img>
               <img height='20' src="{{p.playerName.golfer.flag_link}}" alt=""></img>
               {%if p.playerName.partner%}
-              <img src="{{p.playerName.partner_golfer.pic_link}}"></img>
+              <img height='100' src="{{p.playerName.partner_golfer.pic_link}}"></img>
               <img height='20' src="{{p.playerName.partner_golfer.flag_link}}" alt=""></img>
               {%endif%}
             </p>
@@ -95,6 +112,9 @@
         <tr id="big">
           <th>Best Picks</th>
           <td></td>
+          {%if t.pga_tournament_num == '999'%}
+          <td></td>
+          {%endif%}
           {%for g in groups%}
           <td id='big-{{g.number}}'>....</td>
           {%endfor%}
@@ -102,6 +122,10 @@
         <tr id="cuts">
           <th>Cuts</th>
           <td></td>
+          {%if t.pga_tournament_num == '999'%}
+          <td></td>
+          {%endif%}
+
           {%for g in groups%}
           <td id='cuts-{{g.number}}'>....</td>
           {%endfor%}

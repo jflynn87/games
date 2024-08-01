@@ -15,7 +15,7 @@ class ESPNData(object):
         field_data is the actual golfers in the tournament'''
 
     #only use event_data for match play events, other data not reliable.
-    def __init__(self, t=None, data=None, force_refresh=False, setup=False, update_sd=True):
+    def __init__(self, t=None, data=None, force_refresh=False, setup=False, update_sd=True, t_num=None):
         start = datetime.now()
 
         if t:
@@ -23,20 +23,20 @@ class ESPNData(object):
         else:
             self.t = Tournament.objects.get(current=True)
 
-
-        if self.t.pga_tournament_num == '999':
-            return
-
         if data:
             self.all_data = data 
         elif self.t.complete and not force_refresh:
             sd = ScoreDict.objects.get(tournament=self.t)
             self.all_data = sd.espn_api_data
+        elif t_num:
+            headers = {'User-Agent': 'Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.149 Mobile Safari/537.36'}
+            url = 'https://site.web.api.espn.com/apis/site/v2/sports/golf/leaderboard?event=' + str(t_num)
+            self.all_data = get(url, headers=headers).json()
         else:
             pre_data = datetime.now()
             headers = {'User-Agent': 'Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.149 Mobile Safari/537.36'}
             url =  "https://site.web.api.espn.com/apis/site/v2/sports/golf/leaderboard?league=pga"
-            #url = 'https://site.web.api.espn.com/apis/site/v2/sports/golf/leaderboard?event=401243007'  #match play 2021 for testing
+            #url = 'https://site.web.api.espn.com/apis/site/v2/sports/golf/leaderboard?event=401580621'  #match play 2021 for testing
             self.all_data = get(url, headers=headers).json()
             print ('post refresh data dur: ', datetime.now() - pre_data)
 
@@ -53,7 +53,10 @@ class ESPNData(object):
         self.field_data = {}
 
         try:
-            self.event_data = [v for v in self.all_data.get('events') if v.get('id') == self.t.espn_t_num][0]
+            if self.t.pga_tournament_num == '999':
+                self.event_data = [v for v in self.all_data.get('events') if v.get('id') in ['401643692', '401580621']][0]
+            else:
+                self.event_data = [v for v in self.all_data.get('events') if v.get('id') == self.t.espn_t_num][0]
         except Exception as e:
             print ('ERROR espn api didnt find tournament, trying by espn num: ', self.t.name, self.t.espn_t_num)
             try: 

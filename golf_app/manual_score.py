@@ -6,12 +6,12 @@ from django.contrib.auth.models import User
 import csv
 #from golf_app import calc_score
 from golf_app import utils
-from datetime import datetime
+from datetime import datetime, timezone
 from django.db.models import Count, Max, Min, Sum
 from django.db import transaction
 import random
 from unidecode import unidecode
-from django.utils import timezone
+#from django.utils import timezone
 from django.db.models import Q
 from golf_app import golf_serializers
 from django.http import JsonResponse
@@ -257,7 +257,7 @@ class Score(object):
         if self.score_dict.get('info').get('complete') == True:
             self.tournament.complete = True
 
-        self.tournament.score_update_time = datetime.now(tz=timezone.utc) 
+        self.tournament.score_update_time = datetime.timezone(timezone.utc) 
         self.tournament.save()
             
         print ('score loop duration', datetime.now() - loop_start)

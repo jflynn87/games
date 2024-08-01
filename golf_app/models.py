@@ -475,7 +475,7 @@ class Tournament(models.Model):
             if self.pga_tournament_num == '018':
                 return 'weak'            
             if self.pga_tournament_num == '999':
-                return "strong"
+                return "major"
             if self.special_field():
                 return 'special'
 
@@ -1176,7 +1176,12 @@ class Field(models.Model):
         if not sd and not api_data:
             raise Exception('field calc score requires either a score dict or api data')
         
-        if self.handi:  #need this check for fields before handi logic
+        if self.tournament.pga_tournament_num == '999':
+            if self.group.number >= 6:
+                handi = self.handi-10
+            else:
+                handi = self.handi
+        elif self.handi:  #need this check for fields before handi logic
             handi = self.handi
         else: 
             handi = 0
@@ -1213,16 +1218,19 @@ class Field(models.Model):
                 if api_data.golfer_data(self.golfer.espn_number).get('status').get('type').get('id') == "3":
                     if self.post_cut_wd(api_data=api_data):
                         cut = False
-                        score = int(api_data.post_cut_wd_score()) - int(self.handi)
+                        #score = int(api_data.post_cut_wd_score()) - int(self.handi)
+                        score = int(api_data.post_cut_wd_score()) - int(handi) #changed for olymipics
                     else:
                         cut = True
-                        score = (int(api_data.cut_num()) - int(self.handi)) + api_data.cut_penalty(self)
+                        #score = (int(api_data.cut_num()) - int(self.handi)) + api_data.cut_penalty(self)
+                        score = (int(api_data.cut_num()) - int(handi)) + api_data.cut_penalty(self) #changed for olymipics
                 elif self.tournament.has_cut and int(api_data.get_round()) <= int(self.tournament.saved_cut_round) \
                      and int(api_data.get_rank(self.golfer.espn_number)) >= int(api_data.cut_num()):
                     cut = True
                     score = (api_data.cut_num() - int(self.handi)) + api_data.cut_penalty(self)
                 else: 
-                    score = int(api_data.get_rank(self.golfer.espn_number)) - int(self.handi)
+                    #score = int(api_data.get_rank(self.golfer.espn_number)) - int(self.handi)
+                    score = int(api_data.get_rank(self.golfer.espn_number)) - int(handi) #changed for olymipics
 
             else:
                 print ('WD? not found in espn: ',  self.playerName, self.golfer.espn_number) 

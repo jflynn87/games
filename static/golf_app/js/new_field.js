@@ -44,7 +44,7 @@ $(document).ready(function () {
         //     })
 
          if ($('#pga_t_num').text() == 468 || $('#pga_t_num').text() == 500 || $('#pga_t_num').text() == 999) {
-            buildHeader(cpPicks, info)
+            buildHeader(cpPicks, info, tStarted, latePicks)
          }
 
          //console.log(info)
@@ -852,7 +852,7 @@ function clear_submitting() {
 }
 
 
-function buildHeader(cpPicks, info) {
+function buildHeader(cpPicks, info, tStarted, latePicks) {
     var eventName = $('#t-name').text()
         
     if ($('#pga_t_num').text() == 468) {
@@ -940,8 +940,8 @@ function buildHeader(cpPicks, info) {
     .then((responseJSON) => {
         data = responseJSON
         console.log('countries: ', data)
-        formatMenMedals(data, info, cpPicks)
-        formatWomenMedals(data, info, cpPicks)
+        formatMenMedals(data, info, cpPicks, tStarted, latePicks)
+        formatWomenMedals(data, info, cpPicks, tStarted, latePicks)
     })
     }
 
@@ -1005,72 +1005,107 @@ function buildHeader(cpPicks, info) {
     });
 }
 
-function formatMenMedals(data, info, cpPicks) {
+function formatMenMedals(data, info, cpPicks, tStarted, latePicks) {
     
+
     $('#mens_countries_picks').append('<tr><td>Pick 1:  <select id=men_1_country> </select><td> </tr>')
     $('#mens_countries_picks').append('<tr><td>Pick 2:  <select id=men_2_country> </select><td> </tr>')
     $('#mens_countries_picks').append('<tr><td>Pick 3:  <select id=men_3_country> </select><td> </tr>')
 
+    if (tStarted && ! latePicks) {
+        $.each(data.men, function(country, count) {
+            if (cpPicks.length > 1 && country.indexOf(cpPicks[0].country) != -1) {
+                $('#men_1_country').append('<option selected value=' + country + ' disabled>' + country + ': ' + count + '</option>')
+            }
+            if (cpPicks.length > 1 && country.indexOf(cpPicks[1].country) != -1) {
+                $('#men_2_country').append('<option selected value=' + country + ' disabled>' + country + ': ' + count + '</option>')
+            }
+            if (cpPicks.length > 1 && country.indexOf(cpPicks[2].country) != -1) {
+                $('#men_3_country').append('<option selected value=' + country + ' disabled>' + country + ': ' + count + '</option>')
+            }
+        })
+        }
+
+    else {
     
-    $('#mens_countries_picks').on('change', function(evt) {
-            $('#pick-status').empty()
-            //get_info(info, null)
-            checkComplete(info) })
-    
-    $.each(data.men, function(country, count) {
-        if (cpPicks.length > 1 && country.indexOf(cpPicks[0].country) != -1) {
-            $('#men_1_country').append('<option selected value=' + country + '>' + country + ': ' + count + '</option>')
-        }
-        else {
-            $('#men_1_country').append('<option value=' + country + '>' + country + ': ' + count + '</option>')
-        }
-        if (cpPicks.length > 1 && country.indexOf(cpPicks[1].country) != -1) {
-            $('#men_2_country').append('<option selected value=' + country + '>' + country + ': ' + count + '</option>')
-        }
-        else {
-            $('#men_2_country').append('<option value=' + country + '>' + country + ': ' + count + '</option>')
-        }
-        if (cpPicks.length > 1 && country.indexOf(cpPicks[2].country) != -1) {
-        $('#men_3_country').append('<option selected value=' + country + '>' + country + ': ' + count + '</option>')
-        }
-        else {
-            $('#men_3_country').append('<option value=' + country + '>' + country + ': ' + count + '</option>')
-        }
         
-    })
+        $('#mens_countries_picks').on('change', function(evt) {
+                $('#pick-status').empty()
+                //get_info(info, null)
+                checkComplete(info) })
+        
+        $.each(data.men, function(country, count) {
+            if (cpPicks.length > 1 && country.indexOf(cpPicks[0].country) != -1) {
+                $('#men_1_country').append('<option selected value=' + country + '>' + country + ': ' + count + '</option>')
+            }
+            else {
+                $('#men_1_country').append('<option value=' + country + '>' + country + ': ' + count + '</option>')
+            }
+            if (cpPicks.length > 1 && country.indexOf(cpPicks[1].country) != -1) {
+                $('#men_2_country').append('<option selected value=' + country + '>' + country + ': ' + count + '</option>')
+            }
+            else {
+                $('#men_2_country').append('<option value=' + country + '>' + country + ': ' + count + '</option>')
+            }
+            if (cpPicks.length > 1 && country.indexOf(cpPicks[2].country) != -1) {
+            $('#men_3_country').append('<option selected value=' + country + '>' + country + ': ' + count + '</option>')
+            }
+            else {
+                $('#men_3_country').append('<option value=' + country + '>' + country + ': ' + count + '</option>')
+            }
+            
+        })
+      }
     }
 
-function formatWomenMedals(data, info, cpPicks) {
+function formatWomenMedals(data, info, cpPicks, tStarted, latePicks) {
     $('#womens_countries_picks').append('<tr><td>Pick 1:  <select id=women_1_country> </select><td> </tr>')
     $('#womens_countries_picks').append('<tr><td>Pick 2:  <select id=women_2_country> </select><td> </tr>')
     $('#womens_countries_picks').append('<tr><td>Pick 3:  <select id=women_3_country> </select><td> </tr>')
 
-    $('#womens_countries_picks').on('change', function(evt) {
-        $('#pick-status').empty()
-        //get_info(info, null)
-        checkComplete(info) })
-    
-    $.each(data.woman, function(country, count) {
-        if (cpPicks.length > 1 && country.indexOf(cpPicks[3].country) != -1) {
-        $('#women_1_country').append('<option selected value=' + country + '>' + country + ': ' + count + '</option>')
+    if (tStarted && ! latePicks) {
+        $.each(data.woman, function(country, count) {
+            
+            if (cpPicks.length > 1 && country.indexOf(cpPicks[3].country) != -1) {
+                $('#women_1_country').append('<option selected value=' + country + ' disabled>' + country + ': ' + count + '</option>')
+            }
+            if (cpPicks.length > 1 && country.indexOf(cpPicks[4].country) != -1) {
+                $('#women_2_country').append('<option selected value=' + country + ' disabled>' + country + ': ' + count + '</option>')
+            }
+            if (cpPicks.length > 1 && country.indexOf(cpPicks[5].country) != -1) {
+                $('#women_3_country').append('<option selected value=' + country + ' disabled>' + country + ': ' + count + '</option>')
+            }
+        })
         }
-        else {
-        $('#women_1_country').append('<option value=' + country + '>' + country + ': ' + count + '</option>')
-        }
-        if (cpPicks.length > 1 && country.indexOf(cpPicks[4].country) != -1) {
-        $('#women_2_country').append('<option selected value=' + country + '>' + country + ': ' + count + '</option>')
-        }
-        else {
-            $('#women_2_country').append('<option value=' + country + '>' + country + ': ' + count + '</option>')
-        }
-        if (cpPicks.length > 1 && country.indexOf(cpPicks[5].country) != -1) {
-        $('#women_3_country').append('<option selected value=' + country + '>' + country + ': ' + count + '</option>')
-        }
-        else {
-            $('#women_3_country').append('<option value=' + country + '>' + country + ': ' + count + '</option>')
-        }
-        
-    })
 
+    else {
+    
+        $('#womens_countries_picks').on('change', function(evt) {
+            $('#pick-status').empty()
+            //get_info(info, null)
+            checkComplete(info) })
+        
+        $.each(data.woman, function(country, count) {
+            if (cpPicks.length > 1 && country.indexOf(cpPicks[3].country) != -1) {
+            $('#women_1_country').append('<option selected value=' + country + '>' + country + ': ' + count + '</option>')
+            }
+            else {
+            $('#women_1_country').append('<option value=' + country + '>' + country + ': ' + count + '</option>')
+            }
+            if (cpPicks.length > 1 && country.indexOf(cpPicks[4].country) != -1) {
+            $('#women_2_country').append('<option selected value=' + country + '>' + country + ': ' + count + '</option>')
+            }
+            else {
+                $('#women_2_country').append('<option value=' + country + '>' + country + ': ' + count + '</option>')
+            }
+            if (cpPicks.length > 1 && country.indexOf(cpPicks[5].country) != -1) {
+            $('#women_3_country').append('<option selected value=' + country + '>' + country + ': ' + count + '</option>')
+            }
+            else {
+                $('#women_3_country').append('<option value=' + country + '>' + country + ': ' + count + '</option>')
+            }
+            
+        })
+    }
 }
 

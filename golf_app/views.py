@@ -2130,9 +2130,14 @@ class ApiScoresView(LoginRequiredMixin, TemplateView):
                 new_lines.append(i)
         #ts = TotalScore.objects.filter(tournament=tournament).order_by('score')    
         #print ('TOTAL SCORES: ', Picks.objects.filter(playerName__tournament=tournament).order_by(ts, 'playerName__group__number'))
+        cp = {}
+        if tournament.pga_tournament_num == '999':
+            cp = golf_serializers.CountryPicks(CountryPicks.objects.filter(tournament=tournament), many=True).data
+        
         context.update({'t': tournament, 
                         'groups': Group.objects.filter(tournament=tournament),
                         'picks': Picks.objects.filter(playerName__tournament=tournament).order_by('user', 'playerName__group__number'),
+                        'cp': json.dumps(cp),
                         #'ts': ts,
                         'new_lines': new_lines,
                         
@@ -2182,8 +2187,26 @@ class EspnApiScores(APIView):
                 sd = ScoreDict.objects.get(tournament=t)
                 espn = espn_api.ESPNData(t=t, force_refresh=False, update_sd=False, data=sd.espn_api_data)
             else:    
-                espn = espn_api.ESPNData(t=t, force_refresh=True, update_sd=True)
-            
+                if t.pga_tournament_num == '999':
+                    print ('OLYMPICS Scores API')
+                    men = espn_api.ESPNData(t=Tournament.objects.get(current=True), t_num='401580621')
+                    print ('MEN ', len(men.field_data), 'STARTED: ', men.started(), 'COMPLETE: ', men.tournament_complete())
+                    women = espn_api.ESPNData(t=Tournament.objects.get(current=True), t_num='401643692')
+                    print ('WOMEN ', len(women.field_data), 'STARTED: ', women.started(), 'COMPLETE: ', women.tournament_complete())
+
+                    field = men.field_data + women.field_data
+
+                    if not men.tournament_complete():
+                        print ('Men in progress')
+                        men.event_data.get('competitions')[0].update({'competitors': field})
+                        espn = espn_api.ESPNData(t=Tournament.objects.get(current=True), data=men.all_data)
+                    else:
+                        print ("Women in progress or all complete")
+                        women.event_data.get('competitions')[0].update({'competitors': field})
+                        espn = espn_api.ESPNData(t=Tournament.objects.get(current=True), data=women.all_data)
+                    print ('Olympics Total golfers: {}, men: {}, women: {}'.format(len(espn.field_data), len(men.field_data), len(women.field_data)))
+                else:
+                    espn = espn_api.ESPNData(t=t, force_refresh=True, update_sd=True)
             
             ## use this to test from file and comment out the espn line above
             #with open('open_champ_r2.json') as json_file:
@@ -2209,72 +2232,15 @@ class EspnApiScores(APIView):
             g_list = Picks.objects.filter(playerName__tournament=t).values_list('playerName__pk', flat=True)
             golfers = [*set(g_list)]
             
+            
             for golfer in golfers:
                 #print (golfer)
                 p = Picks.objects.filter(playerName__pk=golfer).first()
                 s = pick_calc_score(p.pk, espn, big, t, d, cut_num)
-                # start_golfer_score = datetime.datetime.now()
-                # pick = Picks.objects.filter(playerName__tournament=t, playerName__golfer__espn_number=golfer).first()
-                # score = pick.playerName.calc_score(api_data=espn)
-                # #print (pick, score)
+                #print ('pick calc score: ', p, s)
 
-                # bonus = 0
-
-                # bd = bonus_details.BonusDtl(espn_api=espn, espn_scrape_data=None, tournament=t, inquiry=False)  
-                # bd_big = bd.best_in_group(big, pick)
-                # if bd_big:
-                #     #print ('BIG: ', pick, bonus)
-                #     bonus += 10
-                # if bd.winner(pick):
-                #     bonus += bd.winner_points(pick)
-                # if espn.tournament_complete() and espn.playoff():
-                #     if bd.playoff_loser(pick):
-                #         bonus += 25
-
-                # for p in Picks.objects.filter(playerName__tournament=t, playerName__golfer__espn_number=pick.playerName.golfer.espn_number):
-                #     if score.get('cut'):
-                #         d.get(p.user.username).update({'cuts': d.get(p.user.username).get('cuts') + 1})
-                #     if PickMethod.objects.filter(user=p.user, method__in=[1,2], tournament=t).exists():
-                #         d.get(p.user.username).update({'score': d.get(p.user.username).get('score') + ((score.get('score') - bonus))})
-                #     else:
-                #         d.get(p.user.username).update({'score': (d.get(p.user.username).get('score') + score.get('score'))})
-
-                # rank = espn.get_rank(pick.playerName.golfer.espn_number)
-                # golfer_data = espn.golfer_data(pick.playerName.golfer.espn_number)
-                
-                # if rank in t.not_playing_list():
-                #     today_score = rank
-                #     gross_score = cut_num  #should just use the score from model calc_score i think
-                # else:
-                #     today_score = ''  #fix this, but does it matter?
-                #     gross_score = rank
-                
-                # thru = espn.get_thru(pick.playerName.golfer.espn_number)
-                
-                # if golfer_data: #need this check for pre-start WD
-                #     if golfer_data.get('statistics') and len(golfer_data.get('statistics')) >0:
-                #         to_par = golfer_data.get('statistics')[0].get('displayValue')
-                #         sod_position = golfer_data.get('movement')
-                #     else:
-                #         to_par = ''
-                #         sod_position = ''
-                # else:
-                #         to_par = 'WD'
-                #         sod_position = 'WD'
-
-                
-                # sd = ScoreDetails.objects.filter(pick__playerName__tournament=t, pick__playerName=pick.playerName).update(  
-                #                     today_score=today_score,
-                #                     thru = thru,
-                #                     gross_score=gross_score,
-                #                     score=score.get('score'),
-                #                     toPar = to_par,
-                #                     sod_position=sod_position
-                # )
-
-                # #print (pick, 'dur: ', datetime.datetime.now() - start_golfer_score)
-                # #print ('score check: ', d.get('john'), pick, score)
             print ('for loop dur: ', datetime.datetime.now() - start_calc_score)
+
             bd = bonus_details.BonusDtl(espn_api=espn, espn_scrape_data=None, tournament=t, inquiry=False)  
             if bd.no_cut_exists():
                 no_cuts = bd.update_cut_bonus()

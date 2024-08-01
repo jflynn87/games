@@ -36,12 +36,30 @@ import requests
 
 from unidecode import unidecode as decode
 
-for s in Season.objects.all().exclude(season=2021):
-    s.delete()
 
-s21 = Season.objects.get(season=2021)
-s21.current = True  
-s21.save()
+men = espn_api.ESPNData(t=Tournament.objects.get(current=True), t_num='401580621')
+print ('MEN ', len(men.field_data), men.started(), men.tournament_complete())
+women = espn_api.ESPNData(t=Tournament.objects.get(current=True), t_num='401643692')
+print ('WOMEN ', len(women.field_data), women.started(), women.tournament_complete())
+
+field = men.field_data + women.field_data
+
+if not men.tournament_complete():
+    print (len(men.event_data.get('competitions')[0].get('competitors')))
+    men.event_data.get('competitions')[0].update({'competitors': field})
+    
+    print (len(men.event_data.get('competitions')[0].get('competitors')))
+    espn = espn_api.ESPNData(t=Tournament.objects.get(current=True), data=men.all_data)
+elif not women.tournament_complete():
+    women.event_data.get('competitions')[0].update({'competitors': field})
+    d = women
+    espn = espn_api.ESPNData(t=Tournament.objects.get(current=True), data=women.all_data)
+
+
+
+
+for g in espn.field_data:
+    print (g.get('athlete').get('displayName'), g.get('rank'))
 
 exit()
 

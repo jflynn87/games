@@ -130,15 +130,19 @@ class GolferSerializer(serializers.ModelSerializer):
 
 
 class CountryPicks(serializers.ModelSerializer):
-    get_flag = serializers.SerializerMethodField('get_flag_link')
+    flag_link = serializers.SerializerMethodField('get_flag_link')
+    user_name = serializers.SerializerMethodField('get_user_name')
 
     class Meta:
         model = CountryPicks
         fields = '__all__'
-        depth = 1   
+        #depth = 1   
 
-    def get_flag_link(self, countrypick):
-        return countrypick.get_flag()
+    def get_flag_link(self, country):
+        return country.get_flag()
+    
+    def get_user_name(self, country):
+        return country.user.username
 
 
 class PicksSerializer(serializers.ModelSerializer):

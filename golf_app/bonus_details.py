@@ -196,6 +196,8 @@ class BonusDtl(object):
             return False
         elif not self.t_complete:
             return False
+        elif self.t.pga_tournament_num == '999':
+            return False
         
         top_3 = self.espn_api.winner()+self.espn_api.second_place()+self.espn_api.third_place()
         
