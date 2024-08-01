@@ -2189,24 +2189,25 @@ class EspnApiScores(APIView):
             else:    
                 if t.pga_tournament_num == '999':
                     print ('OLYMPICS Scores API')
-                    men = espn_api.ESPNData(t=Tournament.objects.get(current=True), t_num='401580621')
-                    print ('MEN ', len(men.field_data), 'STARTED: ', men.started(), 'COMPLETE: ', men.tournament_complete())
-                    women = espn_api.ESPNData(t=Tournament.objects.get(current=True), t_num='401643692')
-                    print ('WOMEN ', len(women.field_data), 'STARTED: ', women.started(), 'COMPLETE: ', women.tournament_complete())
+                    espn = olympic_espn_api(t)
+                #     men = espn_api.ESPNData(t=Tournament.objects.get(current=True), t_num='401580621')
+                #     print ('MEN ', len(men.field_data), 'STARTED: ', men.started(), 'COMPLETE: ', men.tournament_complete())
+                #     women = espn_api.ESPNData(t=Tournament.objects.get(current=True), t_num='401643692')
+                #     print ('WOMEN ', len(women.field_data), 'STARTED: ', women.started(), 'COMPLETE: ', women.tournament_complete())
 
-                    field = men.field_data + women.field_data
+                #     field = men.field_data + women.field_data
 
-                    if not men.tournament_complete():
-                        print ('Men in progress')
-                        men.event_data.get('competitions')[0].update({'competitors': field})
-                        espn = espn_api.ESPNData(t=Tournament.objects.get(current=True), data=men.all_data)
-                    else:
-                        print ("Women in progress or all complete")
-                        women.event_data.get('competitions')[0].update({'competitors': field})
-                        espn = espn_api.ESPNData(t=Tournament.objects.get(current=True), data=women.all_data)
-                    print ('Olympics Total golfers: {}, men: {}, women: {}'.format(len(espn.field_data), len(men.field_data), len(women.field_data)))
-                else:
-                    espn = espn_api.ESPNData(t=t, force_refresh=True, update_sd=True)
+                #     if not men.tournament_complete():
+                #         print ('Men in progress')
+                #         men.event_data.get('competitions')[0].update({'competitors': field})
+                #         espn = espn_api.ESPNData(t=Tournament.objects.get(current=True), data=men.all_data)
+                #     else:
+                #         print ("Women in progress or all complete")
+                #         women.event_data.get('competitions')[0].update({'competitors': field})
+                #         espn = espn_api.ESPNData(t=Tournament.objects.get(current=True), data=women.all_data)
+                #     print ('Olympics Total golfers: {}, men: {}, women: {}'.format(len(espn.field_data), len(men.field_data), len(women.field_data)))
+                # else:
+                #     espn = espn_api.ESPNData(t=t, force_refresh=True, update_sd=True)
             
             ## use this to test from file and comment out the espn line above
             #with open('open_champ_r2.json') as json_file:
@@ -2281,6 +2282,32 @@ class EspnApiScores(APIView):
         print (d)    
         print ('update scores full process total time: ', datetime.datetime.now() - start)
         return JsonResponse(d, status=200, safe=False)
+
+def olympic_espn_api(t):
+    print ('OLYMPICS Get API', t)
+    if t.pga_tournament_num == '999':
+        print ('OLYMPICS Scores API')
+        men = espn_api.ESPNData(t=Tournament.objects.get(current=True), t_num='401580621')
+        print ('MEN ', len(men.field_data), 'STARTED: ', men.started(), 'COMPLETE: ', men.tournament_complete())
+        women = espn_api.ESPNData(t=Tournament.objects.get(current=True), t_num='401643692')
+        print ('WOMEN ', len(women.field_data), 'STARTED: ', women.started(), 'COMPLETE: ', women.tournament_complete())
+
+        field = men.field_data + women.field_data
+
+        if not men.tournament_complete():
+            print ('Men in progress')
+            men.event_data.get('competitions')[0].update({'competitors': field})
+            espn = espn_api.ESPNData(t=Tournament.objects.get(current=True), data=men.all_data)
+        else:
+            print ("Women in progress or all complete")
+            women.event_data.get('competitions')[0].update({'competitors': field})
+            espn = espn_api.ESPNData(t=Tournament.objects.get(current=True), data=women.all_data)
+        print ('Olympics Total golfers: {}, men: {}, women: {}'.format(len(espn.field_data), len(men.field_data), len(women.field_data)))
+    else:
+        espn = espn_api.ESPNData(t=t, force_refresh=True, update_sd=True)
+
+    return espn
+
 
 def return_sd_data(t,d):
     start = datetime.datetime.now()
@@ -2610,7 +2637,8 @@ class PGALeaderboard(APIView):
 
         try:
             t = Tournament.objects.get(pk=pk)
-            print ('GET LEADERBOARD t', t)
+            print ('GET LEADERBOARD t', t.pga_tournament_num, refresh)
+            if t.pga_tournament_num == '999': refresh = True
             if t.pga_tournament_num == '018':
                 #z = calc_zurich_score.CalcZurichScore(t, d=t.season.get_users())
                 d['leaderboard'] = {'key': {'rank': 'n/a', 'change': 'n/a', 'golfer_name': 'n/a', 'total_score': 'n/a', 'thru': 'n/a' , 'curr_round_score': 'n/a', 
@@ -2622,6 +2650,8 @@ class PGALeaderboard(APIView):
                 sd = ScoreDict.objects.get(tournament=t)
                 data = sd.espn_api_data
                 espn = espn = espn_api.ESPNData(t=t, data=data)
+            elif t.pga_tournament_num == '999':
+                espn = olympic_espn_api(t)
             else:
                 espn = espn_api.ESPNData(force_refresh=True)
             
@@ -2659,6 +2689,15 @@ class SummaryStatsAPI(APIView):
                 d['curr_round'] = z.current_round().split('-')[0].split(' ')[1]
                 d['round_status'] = z.current_round().split('-')[1].strip('\t').strip()
                 
+            elif t.pga_tournament_num == '999':
+                espn = olympic_espn_api(t)
+                d['source'] = 'espn_api'
+                d['cut_num'] = espn.cut_num()
+                d['cut_info'] = espn.cut_line()
+                d['leaders'] = espn.leaders()
+                d['leader_score'] = espn.leader_score()
+                d['curr_round'] = espn.get_round()
+                d['round_status'] = espn.get_round_status()
             elif t.good_api_data():
                 if t.complete:
                     #sd = ScoreDict.objects.get(tournament=t)

@@ -54,7 +54,7 @@ class ESPNData(object):
 
         try:
             if self.t.pga_tournament_num == '999':
-                self.event_data = [v for v in self.all_data.get('events') if v.get('id') in ['401643692', '401580621']][0]
+                self.event_data = [v for v in self.all_data.get('events') if v.get('id') in ['401580621', '401643692']][0] #  womens event id '401643692'
             else:
                 self.event_data = [v for v in self.all_data.get('events') if v.get('id') == self.t.espn_t_num][0]
         except Exception as e:
@@ -432,6 +432,32 @@ class ESPNData(object):
                                         'espn_num': '' #data.get('id') 
                     
                 }            
+        elif self.t.pga_tournament_num == '999':
+            for i, data in enumerate(self.field_data):
+                #print ('LB DATA: ', data.get('id'), self.get_thru(data.get('id')))
+                golfer_data = self.golfer_data(data.get('id'))
+                thru = self.get_thru(data.get('id'))
+                if i <= 59: 
+                    sort_order = golfer_data.get('sortOrder')
+                else:
+                    sort_order = 60 + golfer_data.get('sortOrder')
+                d[sort_order] = {
+                                        #'rank': self.get_rank(data.get('id')),
+                                        'rank': self.get_rank_display(data.get('id')),
+                                        'r1': self.get_round_score(data.get('id'), 1),
+                                        'r2': self.get_round_score(data.get('id'), 2),
+                                        'r3': self.get_round_score(data.get('id'), 3),
+                                        'r4': self.get_round_score(data.get('id'), 4),
+                                        #'total_score': golfer_data.get('score').get('displayValue'),
+                                        'total_score': self.to_par(data.get('id')),
+                                        'change': golfer_data.get('movement'),
+                                        #'thru': golfer_data.get('status').get('type').get('shortDetail'),
+                                        'thru': thru,
+                                        'curr_round_score': self.current_round_to_par(data.get('id')),
+                                        'golfer_name': golfer_data.get('athlete').get('displayName'),
+                                        'espn_num': data.get('id') 
+
+                }
         else:
             for data in self.field_data:
                 #print ('LB DATA: ', data.get('id'), self.get_thru(data.get('id')))
@@ -482,6 +508,7 @@ class ESPNData(object):
 
     def leaders(self):
         try:
+            print ('LEADERS ', [v.get('athlete').get('displayName') for v in self.field_data if self.get_rank(v.get('id')) == '1'])
             return [v.get('athlete').get('displayName') for v in self.field_data if self.get_rank(v.get('id')) == '1']
         except Exception as e:
             print ('espn api leaders exception: ', e)
@@ -495,7 +522,7 @@ class ESPNData(object):
             #return [v.get('score').get('displayValue') for v in self.field_data if self.get_rank(v.get('id')) == '1'][0]
         except Exception as e:
             print ('espn api leader score exception: ', e)
-            return ['']
+            return ''
 
     def post_cut(self):
         if not self.t.has_cut:

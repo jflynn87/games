@@ -1065,7 +1065,6 @@ function formatWomenMedals(data, info, cpPicks, tStarted, latePicks) {
 
     if (tStarted && ! latePicks) {
         $.each(data.woman, function(country, count) {
-            
             if (cpPicks.length > 1 && country.indexOf(cpPicks[3].country) != -1) {
                 $('#women_1_country').append('<option selected value=' + country + ' disabled>' + country + ': ' + count + '</option>')
             }

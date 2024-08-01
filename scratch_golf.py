@@ -55,11 +55,11 @@ elif not women.tournament_complete():
     d = women
     espn = espn_api.ESPNData(t=Tournament.objects.get(current=True), data=women.all_data)
 
+print (espn.leaders())
+print (espn.leader_score())
 
-
-
-for g in espn.field_data:
-    print (g.get('athlete').get('displayName'), g.get('rank'))
+#for g in espn.field_data:
+#    print (g.get('athlete').get('displayName'), g.get('rank'))
 
 exit()
 
