@@ -2189,25 +2189,8 @@ class EspnApiScores(APIView):
             else:    
                 if t.pga_tournament_num == '999':
                     print ('OLYMPICS Scores API')
-                    espn = olympic_espn_api(t)
-                #     men = espn_api.ESPNData(t=Tournament.objects.get(current=True), t_num='401580621')
-                #     print ('MEN ', len(men.field_data), 'STARTED: ', men.started(), 'COMPLETE: ', men.tournament_complete())
-                #     women = espn_api.ESPNData(t=Tournament.objects.get(current=True), t_num='401643692')
-                #     print ('WOMEN ', len(women.field_data), 'STARTED: ', women.started(), 'COMPLETE: ', women.tournament_complete())
-
-                #     field = men.field_data + women.field_data
-
-                #     if not men.tournament_complete():
-                #         print ('Men in progress')
-                #         men.event_data.get('competitions')[0].update({'competitors': field})
-                #         espn = espn_api.ESPNData(t=Tournament.objects.get(current=True), data=men.all_data)
-                #     else:
-                #         print ("Women in progress or all complete")
-                #         women.event_data.get('competitions')[0].update({'competitors': field})
-                #         espn = espn_api.ESPNData(t=Tournament.objects.get(current=True), data=women.all_data)
-                #     print ('Olympics Total golfers: {}, men: {}, women: {}'.format(len(espn.field_data), len(men.field_data), len(women.field_data)))
-                # else:
-                #     espn = espn_api.ESPNData(t=t, force_refresh=True, update_sd=True)
+                    oly_d = olympic_espn_api(t)
+                    espn = oly_d.get('espn')
             
             ## use this to test from file and comment out the espn line above
             #with open('open_champ_r2.json') as json_file:
@@ -2238,7 +2221,6 @@ class EspnApiScores(APIView):
                 #print (golfer)
                 p = Picks.objects.filter(playerName__pk=golfer).first()
                 s = pick_calc_score(p.pk, espn, big, t, d, cut_num)
-                #print ('pick calc score: ', p, s)
 
             print ('for loop dur: ', datetime.datetime.now() - start_calc_score)
 
@@ -2248,6 +2230,14 @@ class EspnApiScores(APIView):
                 for u, b in no_cuts.items():
                     d.get(u.username).update({'score': d.get(u.username).get('score') - b})   
 
+            if t.pga_tournament_num == '999':
+                for username in d.keys():
+                    u = User.objects.get(username=username)
+                    men_medals_bonus = bonus_details.BonusDtl(espn_api=oly_d.get('men'), tournament=t).olympic_medals_bonus(u, 'men')
+                    print ('BACK')
+                    women_medals_bonus = bonus_details.BonusDtl(espn_api=oly_d.get('women'), tournament=t).olympic_medals_bonus(u, 'women')
+                    d.get(username).update({'score': d.get(username).get('score') - (men_medals_bonus + women_medals_bonus)}) 
+                print ('thru olympic medals bonus')
             if espn.tournament_complete():
                 t.complete = True
                 t.save()
@@ -2263,6 +2253,7 @@ class EspnApiScores(APIView):
                 for winner in winner_list:
                     d.get(winner).update({'score': d.get(winner).get('score') - t.winner_bonus_points()})
                     #d.get(winner).update({'score': d.get(winner).get('score') - overall_bd.weekly_winner_points()})
+            
             for username in d.keys():
                 user = User.objects.get(username=username)
                 ts, created = TotalScore.objects.get_or_create(user=user, tournament=t)
@@ -2286,7 +2277,6 @@ class EspnApiScores(APIView):
 def olympic_espn_api(t):
     print ('OLYMPICS Get API', t)
     if t.pga_tournament_num == '999':
-        print ('OLYMPICS Scores API')
         men = espn_api.ESPNData(t=Tournament.objects.get(current=True), t_num='401580621')
         print ('MEN ', len(men.field_data), 'STARTED: ', men.started(), 'COMPLETE: ', men.tournament_complete())
         women = espn_api.ESPNData(t=Tournament.objects.get(current=True), t_num='401643692')
@@ -2297,14 +2287,17 @@ def olympic_espn_api(t):
         if not men.tournament_complete():
             print ('Men in progress')
             men.event_data.get('competitions')[0].update({'competitors': field})
-            espn = espn_api.ESPNData(t=Tournament.objects.get(current=True), data=men.all_data)
+            espn = {'espn': espn_api.ESPNData(t=Tournament.objects.get(current=True), data=men.all_data),
+             'men': men, 'women': women}
         else:
             print ("Women in progress or all complete")
             women.event_data.get('competitions')[0].update({'competitors': field})
-            espn = espn_api.ESPNData(t=Tournament.objects.get(current=True), data=women.all_data)
-        print ('Olympics Total golfers: {}, men: {}, women: {}'.format(len(espn.field_data), len(men.field_data), len(women.field_data)))
+            espn = {'espn': espn_api.ESPNData(t=Tournament.objects.get(current=True), data=women.all_data),
+             'men': men, 'women': women}
+        print ('Olympics Total golfers: {}, men: {}, women: {}'.format(len(espn.get('espn').field_data), len(men.field_data), len(women.field_data)))
     else:
-        espn = espn_api.ESPNData(t=t, force_refresh=True, update_sd=True)
+        raise ValueError('Not an Olympic Tournament')
+        #espn = {'espn': espn_api.ESPNData(t=t, force_refresh=True, update_sd=True)}
 
     return espn
 
@@ -2361,8 +2354,13 @@ def pick_calc_score(p_key, espn, big, t, d, cut_num=None):
         if bd_big:
             #print ('BIG: ', pick, bonus)
             bonus += 10
-        if bd.winner(pick):
-            bonus += bd.winner_points(pick)
+        if t.pga_tournament_num == '999':
+            if bd.olympic_winners(pick):
+                bonus += (bd.winner_points(pick) - 10)
+        else:
+            if bd.winner(pick):
+                bonus += bd.winner_points(pick)
+        
         if espn.tournament_complete() and espn.playoff():
             if bd.playoff_loser(pick):
                 bonus += 25
@@ -2651,7 +2649,9 @@ class PGALeaderboard(APIView):
                 data = sd.espn_api_data
                 espn = espn = espn_api.ESPNData(t=t, data=data)
             elif t.pga_tournament_num == '999':
-                espn = olympic_espn_api(t)
+                print ('O Leaderboard API   ')
+                espn = olympic_espn_api(t).get('espn')
+                print ('ESPN ', espn)
             else:
                 espn = espn_api.ESPNData(force_refresh=True)
             
@@ -2690,7 +2690,9 @@ class SummaryStatsAPI(APIView):
                 d['round_status'] = z.current_round().split('-')[1].strip('\t').strip()
                 
             elif t.pga_tournament_num == '999':
-                espn = olympic_espn_api(t)
+                print ('O summary stats')
+                espn = olympic_espn_api(t).get('espn')
+                print ('espn ', espn)
                 d['source'] = 'espn_api'
                 d['cut_num'] = espn.cut_num()
                 d['cut_info'] = espn.cut_line()

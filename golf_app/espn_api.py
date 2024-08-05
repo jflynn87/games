@@ -681,3 +681,19 @@ class ESPNData(object):
 
     def purse(self):
         return self.event_data.get('purse')
+    
+    def olympic_gold_winner(self):
+        print ('GOLD BD ', self.tournament_complete(), self.event_data.get('name'))
+        if self.tournament_complete():
+            return [x.get('athlete').get('id') for x in self.field_data if x.get('status').get('position').get('id') == '1'][0]
+        return False
+    
+    def olympic_silver_winner(self):
+        if self.tournament_complete():
+            return [x.get('athlete').get('id') for x in self.field_data if x.get('status').get('position').get('id') == '2'][0]
+        return False
+    
+    def olympic_bronze_winner(self):
+        if self.tournament_complete():
+            return [x.get('athlete').get('id') for x in self.field_data if x.get('status').get('position').get('id') == '3'][0]
+        return False

@@ -1,5 +1,5 @@
 
-from golf_app.models import Picks, Tournament, BonusDetails, PickMethod, Field, ScoreDetails, TotalScore
+from golf_app.models import Picks, Tournament, BonusDetails, PickMethod, Field, ScoreDetails, TotalScore, CountryPicks, Golfer
 from django.contrib.auth.models import User
 
 class BonusDtl(object):
@@ -118,8 +118,45 @@ class BonusDtl(object):
 
 
     def winner_points(self, pick):
+        if self.tournament.pga_tournament_num == '999':
+            if pick.playerName.group.number > 5:
+                return  50 + ((pick.playerName.group.number - 5) * 2)
+
         return  50 + (pick.playerName.group.number * 2)
         
+
+    def olympic_winners(self, pick):
+        '''takes an api object and score dict, returns a list of winners or None'''
+        
+        if not self.espn_api:
+            raise Exception('must provide an espn api object')
+        
+        if self.calc_olympic_bonuses():
+            if pick.playerName.group.number > 5 and not self.t_complete:
+                return False
+            elif self.espn_api.get_rank(pick.playerName.golfer.espn_number) in ['1', 1]:
+                for winner in Picks.objects.filter(playerName=pick.playerName):
+                    if not PickMethod.objects.filter(user=winner.user, method='3', tournament=winner.playerName.tournament).exists():
+                        print ('winner: ', winner, winner.user, self.espn_api.get_rank(winner.playerName.golfer.espn_number))
+                        # note prints 2 times because of best in group check
+                        if winner.playerName.group.number > 5:
+                            group = winner.playerName.group.number - 5
+                        else:
+                            group = winner.playerName.group.number
+                        if not self.inquiry:
+                            bd, created = BonusDetails.objects.get_or_create(user=winner.user, tournament=winner.playerName.tournament, bonus_type='1')
+                            bd.bonus_points = self.winner_points(pick)
+                            bd.save()
+                return True
+
+        return False
+
+
+    def calc_olympic_bonuses(self):
+        if 'women' in self.espn_api.event_data.get('league').get('name').lower():
+            return True
+        return False
+
 
     def weekly_winner(self, scores):
         '''takes an api object and score dict, returns a list of winners or None'''
@@ -162,6 +199,9 @@ class BonusDtl(object):
     def playoff_loser(self, pick):
         if not self.t_complete:
             return False
+        if self.t.pga_tournament_num == '999':
+            return False
+        
         if self.espn_scrape_data:
             ## this looks wrong, check
             if self.espn_scrape_data and self.espn_scrape_data.get('info').get('playoff'):
@@ -212,7 +252,6 @@ class BonusDtl(object):
                     return True
 
         return False
-                
 
 
     def no_cut_exists(self):
@@ -227,9 +266,11 @@ class BonusDtl(object):
         
         return False
 
+
     def no_cut_bonus(self):
         if self.espn_api:
             return len(self.espn_api.field_data) - (self.espn_api.cut_num() - 1)
+
 
     def update_cut_bonus(self):
         no_cut_points = self.no_cut_bonus()
@@ -244,3 +285,74 @@ class BonusDtl(object):
                     d[ts.user] = no_cut_points
         return d
 
+
+    def olympic_medals_bonus(self, user, gender):
+        print ('MEDAL calcs', self.tournament.pga_tournament_num, gender)
+        if self.tournament.pga_tournament_num != '999':
+            return False
+        if not self.t_complete: return 0
+        print ('MEDAL calcs')
+        
+        bonus = 0
+        gold_winner = self.espn_api.olympic_gold_winner()
+        print ('GOLD WINNER ', gold_winner)
+        if not gold_winner:
+            return 0
+        print ('GOLD: ', gold_winner, gender)
+        gold_golfer = Golfer.objects.get(espn_number=gold_winner)
+        if CountryPicks.objects.filter(tournament=self.tournament, country=gold_golfer.country(), user=user, gender=gender).exists():
+            c = CountryPicks.objects.get(tournament=self.tournament, user=user, country=gold_golfer.country(), gender=gender)
+            num_of_golfers = self.tournament.individual_country_count(gold_golfer.country(), gender)
+            c.score = 50 - (5* (num_of_golfers -1))
+            bonus += c.score
+            c.save()
+        silver_winner = self.espn_api.olympic_silver_winner()
+        print ('Silver ', silver_winner, gender)
+        silver_golfer = Golfer.objects.get(espn_number=silver_winner)
+        if CountryPicks.objects.filter(tournament=self.tournament, country=silver_golfer.country(), user=user, gender=gender).exists():
+            c = CountryPicks.objects.get(tournament=self.tournament, user=user, country=silver_golfer.country(), gender=gender)
+            num_of_golfers = self.tournament.individual_country_count(silver_golfer.country(), gender)
+            c.score = 35 - (5* (num_of_golfers -1))
+            bonus += c.score
+            c.save()
+        bronze_winner = self.espn_api.olympic_bronze_winner()
+        print ('Bronze ', bronze_winner, gender)
+        bronze_golfer = Golfer.objects.get(espn_number=bronze_winner)
+        if CountryPicks.objects.filter(tournament=self.tournament, country=bronze_golfer.country(), user=user, gender=gender).exists():
+            c = CountryPicks.objects.get(tournament=self.tournament, user=user, country=bronze_golfer.country(), gender=gender)
+            num_of_golfers = self.tournament.individual_country_count(bronze_golfer.country(), gender)
+            c.score = 20 - (5* (num_of_golfers -1))
+            bonus += c.score
+            c.save()
+        # print ('checkng women')
+        # if self.calc_olympic_bonuses() and self_t_complete:
+        #     gold_winner = [v.get('pga_num') for k,v in self.score_dict.items() if k != 'info' and v.get('rank') == 1 and v.get('gender') == 'women']
+        #     print ('women golf winner: ', gold_winner)
+        #     gold_golfer = Golfer.objects.get(espn_number=gold_winner[0])
+        #     print ('w gold winner: ', gold_golfer, gold_golfer.country())
+        #     if CountryPicks.objects.filter(country=gold_golfer.country(), user=user, gender='woman').exists():
+        #         c = CountryPicks.objects.get(user=user, country=gold_golfer.country(), gender='woman')
+        #         num_of_golfers = self.tournament.individual_country_count(gold_golfer.country(), 'woman')
+        #         c.score = 50 - (5* (num_of_golfers -1))
+        #         bonus += c.score
+        #         c.save()
+        #     silver_winner = [v.get('pga_num') for k,v in self.score_dict.items() if k != 'info' and v.get('rank') == 2 and v.get('gender') == 'women']
+        #     silver_golfer = Golfer.objects.get(espn_number=silver_winner[0])
+        #     print ('w silver winner: ', silver_golfer, silver_golfer.country())
+        #     if CountryPicks.objects.filter(country=silver_golfer.country(), user=user, gender='woman').exists():
+        #         c = CountryPicks.objects.get(user=user, country=silver_golfer.country(), gender='woman')
+        #         num_of_golfers = self.tournament.individual_country_count(silver_golfer.country(), 'woman')
+        #         c.score = 35 - (5* (num_of_golfers -1))
+        #         bonus += c.score
+        #         c.save()
+        #     bronze_winner = [v.get('pga_num') for k,v in self.score_dict.items() if k != 'info' and v.get('rank') == 3 and v.get('gender') == 'women']
+        #     bronze_golfer = Golfer.objects.get(espn_number=bronze_winner[0])
+        #     print ('w bronze winner: ', bronze_golfer, bronze_golfer.country())
+        #     if CountryPicks.objects.filter(country=bronze_golfer.country(), user=user, gender='woman').exists():
+        #         c = CountryPicks.objects.get(user=user, country=bronze_golfer.country(), gender='woman')
+        #         num_of_golfers = self.tournament.individual_country_count(bronze_golfer.country(), 'woman')
+        #         c.score = 20 - (5* (num_of_golfers -1))
+        #         bonus += c.score
+        #         c.save()
+
+        return bonus
