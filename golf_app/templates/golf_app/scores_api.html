@@ -62,7 +62,7 @@
               var cPicks = $.parseJSON('{{cp|safe}}');
               $.each(cPicks, function(i, data){
                 if (data.user_name == '{{p.user.username}}'){
-                  $('#countries_{{p.user.username}}').append('<p> <img src='+ data.flag_link+'></img></p>');
+                  $('#countries_{{p.user.username}}').append('<p> <img src='+ data.flag_link+'></img>' + ' -' +data.score + '</p>');
               }
             });
 
