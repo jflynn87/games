@@ -308,7 +308,7 @@ class Tournament(models.Model):
                 cp.gender = "men"
                 cp.save()
 
-            for womens_pick in random.choices(list(countries.get('woman').keys()), k=3):
+            for womens_pick in random.choices(list(countries.get('women').keys()), k=3):
                 cp = CountryPicks()
                 cp.user = user
                 cp.tournament = self
@@ -439,9 +439,9 @@ class Tournament(models.Model):
         try:
             #t = Tournament.objects.get(pga_tournament_num='999')
             sex = 'men'
-            d = {'men': {}, 'woman': {}}
+            d = {'men': {}, 'women': {}}
             for f in Field.objects.filter(tournament=self):
-                if f.playerName == "Nelly Korda": sex = 'woman'  # top ranked woman
+                if f.playerName == "Nelly Korda": sex = 'women'  # top ranked woman
                 #print (f, f.golfer.flag_link)
                 #print (f.golfer.flag_link.split('/')[9][0:3])
                 country = f.golfer.flag_link.split('/')[9][0:3].upper()

@@ -1064,7 +1064,7 @@ function formatWomenMedals(data, info, cpPicks, tStarted, latePicks) {
     $('#womens_countries_picks').append('<tr><td>Pick 3:  <select id=women_3_country> </select><td> </tr>')
 
     if (tStarted && ! latePicks) {
-        $.each(data.woman, function(country, count) {
+        $.each(data.women, function(country, count) {
             if (cpPicks.length > 1 && country.indexOf(cpPicks[3].country) != -1) {
                 $('#women_1_country').append('<option selected value=' + country + ' disabled>' + country + ': ' + count + '</option>')
             }
@@ -1084,7 +1084,7 @@ function formatWomenMedals(data, info, cpPicks, tStarted, latePicks) {
             //get_info(info, null)
             checkComplete(info) })
         
-        $.each(data.woman, function(country, count) {
+        $.each(data.women, function(country, count) {
             if (cpPicks.length > 1 && country.indexOf(cpPicks[3].country) != -1) {
             $('#women_1_country').append('<option selected value=' + country + '>' + country + ': ' + count + '</option>')
             }

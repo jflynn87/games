@@ -540,6 +540,9 @@ class ESPNData(object):
     def cut_line(self):
         cut_info = {'line_type': '',
                     'cut_score': 'No Cut Line'}
+        
+        if self.t.pga_tournament_num == '999':
+            return cut_info
 
         if self.event_data.get('tournament').get('cutRound') and int(self.event_data.get('tournament').get('cutRound')) < int(self.get_round()):
             cut_info.update({'line_type': 'Actual',
