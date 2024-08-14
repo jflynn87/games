@@ -200,7 +200,7 @@ class ScrapeESPN(object):
                     }
 
                 elif (len(td) == 10 and score_dict.get('info').get('round') != 1):  #tournament complete - doesn't work when complete
-                    print ('espn scrape in len 10 logic')
+                    #print ('espn scrape in len 10 logic')
                     if td[2].text in self.tournament.not_playing_list():
                        rank = td[2].text 
                     else:

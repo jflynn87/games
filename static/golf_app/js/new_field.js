@@ -84,11 +84,11 @@ $(document).ready(function () {
             if (s_data['t_started'] == false)
                 {$('#random_btn').attr('disabled', false)}
 
-            // $('#random_form').on('submit', function(event){
-            //     event.preventDefault();
-            //     console.log("form submitted!")  
-            //     create_post_random();
-            // });
+            $('#random_form').on('submit', function(event){
+                event.preventDefault();
+                console.log("form submitted!")  
+                create_post_random();
+             });
             validatePicks(info)
             console.log('done: ', new Date() - start)
             })
