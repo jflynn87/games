@@ -37,68 +37,6 @@ import requests
 from unidecode import unidecode as decode
 
 t = Tournament.objects.get(current=True)
-sd = ScoreDict.objects.get(tournament=t)
-
-print (len(sd.espn_api_data.get('events')[0].get('competitions')[0].get('competitors')))
-
-exit()
-
-men = espn_api.ESPNData(t=Tournament.objects.get(current=True), t_num='401580621', update_sd=False)
-print ('MEN ', len(men.field_data), 'STARTED: ', men.started(), 'COMPLETE: ', men.tournament_complete())
-women = espn_api.ESPNData(t=Tournament.objects.get(current=True), t_num='401643692', update_sd=False)
-print ('WOMEN ', len(women.field_data), 'STARTED: ', women.started(), 'COMPLETE: ', women.tournament_complete())
-
-field = men.field_data + women.field_data
-
-if not men.tournament_complete():
-    print ('Men in progress')
-    men.event_data.get('competitions')[0].update({'competitors': field})
-    espn = {'espn': espn_api.ESPNData(t=Tournament.objects.get(current=True), data=men.all_data, update_sd=False),
-        'men': men, 'women': women}
-else:
-    print ("Women in progress or all complete")
-    women.event_data.get('competitions')[0].update({'competitors': field})
-    espn = {'espn': espn_api.ESPNData(t=Tournament.objects.get(current=True), data=women.all_data, update_sd=False),
-        'men': men, 'women': women}
-
-print ('Olympics Total golfers: {}, men: {}, women: {}'.format(len(espn.get('espn').field_data), len(men.field_data), len(women.field_data)))
-
-sd = ScoreDict.objects.get(tournament=t)
-sd.espn_api_data = espn.get('espn').all_data
-sd.save()
-
-print (len(sd.espn_api_data.get('events')[0].get('competitions')[0].get('competitors')  ))
-#print (sd.espn_api_data.get('events'))
-exit()
-
-
-men = espn_api.ESPNData(t=Tournament.objects.get(current=True), t_num='401580621')
-print ('MEN ', len(men.field_data), men.started(), men.tournament_complete())
-women = espn_api.ESPNData(t=Tournament.objects.get(current=True), t_num='401643692')
-print ('WOMEN ', len(women.field_data), women.started(), women.tournament_complete())
-
-field = men.field_data + women.field_data
-
-if not men.tournament_complete():
-    print (len(men.event_data.get('competitions')[0].get('competitors')))
-    men.event_data.get('competitions')[0].update({'competitors': field})
-    
-    print (len(men.event_data.get('competitions')[0].get('competitors')))
-    espn = espn_api.ESPNData(t=Tournament.objects.get(current=True), data=men.all_data)
-elif not women.tournament_complete():
-    women.event_data.get('competitions')[0].update({'competitors': field})
-    d = women
-    espn = espn_api.ESPNData(t=Tournament.objects.get(current=True), data=women.all_data)
-
-print (espn.leaders())
-print (espn.leader_score())
-
-#for g in espn.field_data:
-#    print (g.get('athlete').get('displayName'), g.get('rank'))
-
-exit()
-
-t = Tournament.objects.get(current=True)
 print (t)
 
 for f in Field.objects.filter(tournament__current=True, handi__isnull=True):

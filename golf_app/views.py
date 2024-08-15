@@ -2191,6 +2191,8 @@ class EspnApiScores(APIView):
                     print ('OLYMPICS Scores API')
                     oly_d = olympic_espn_api(t)
                     espn = oly_d.get('espn')
+                else:
+                    espn = espn_api.ESPNData(t=t)
             
             ## use this to test from file and comment out the espn line above
             #with open('open_champ_r2.json') as json_file:
@@ -2204,6 +2206,7 @@ class EspnApiScores(APIView):
             #    return JsonResponse(data, status=200, safe=False)
 
             start_big = datetime.datetime.now()
+            
             big = espn.group_stats()
             print ('big dur ', datetime.datetime.now() - start_big)
 

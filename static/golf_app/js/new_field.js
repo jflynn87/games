@@ -219,7 +219,9 @@ function buildForm(info, groups, field, golfers, partners, picks, tStarted, star
             
             golferPic.src = golfer[0].pic_link
             golferPic.alt = ''
-            golferPic.style.height = '200px'                        
+            golferPic.style.height = '125px'               
+            golferPic.style.borderRadius = '40%'         
+            golferPic.style.backgroundColor = 'lightgray'
             
             if (f.fields.partner) {
                 golferName.innerHTML = f.fields.playerName + '(' + (Number(f.fields.currentWGR) - Number(f.fields.partner_owgr)).toString() + ')'
