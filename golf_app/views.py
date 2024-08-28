@@ -2876,16 +2876,20 @@ class UpdateGolferResultsAPI(APIView):
             print ('NEW golfers adding to max key', newest_g)
             max_key = newest_g.pk
 
-        try:
-            for g in Golfer.objects.filter(pk__gte=min_key, pk__lte=max_key):
+        
+        for g in Golfer.objects.filter(pk__gte=min_key, pk__lte=max_key):
+            try:
                 g.results = g.get_season_results()
                 g.save()
 
-            d['status'] = {'msg': 'Golfer Results Updates Complete range pks: ' + str(min_key) + ' - ' + str(max_key)}
+            except Exception as e:
+                print ('Update Golfer Results API error: ', g, e)
+
+        d['status'] = {'msg': 'Golfer Results Updates Complete range pks: ' + str(min_key) + ' - ' + str(max_key)}
         
-        except Exception as e:
-            print ('Update Golfer Results API error: ', e)
-            d['error'] = {'msg': str(e)}
+        #except Exception as e:
+        #    print ('Update Golfer Results API error: ', e)
+        #    d['error'] = {'msg': str(e)}
         
         print ('Update Golfer Results API time: ', datetime.datetime.now() - start, 'range: ', str(min_key), ' - ', str(max_key))
 

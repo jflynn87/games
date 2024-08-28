@@ -851,6 +851,7 @@ class Golfer(models.Model):
         '''takes a golfer and an optional season object, returns a dict with only the updated data'''
         # fix so this runs from 2021 and beyond
         start = datetime.now()
+        print (self.golfer_name, 'get season results start')
         if not season:
             curr_s = Season.objects.get(current=True)
             if Tournament.objects.filter(season=curr_s).count() > 1:
@@ -861,9 +862,13 @@ class Golfer(models.Model):
         if t_list:
             tournaments=t_list
         elif self.results and not rerun:
-            tournaments = Tournament.objects.filter(season__season__gte='2021').exclude(pk__in=list(self.results.keys())).exclude(current=True).exclude(pga_tournament_num='468') #ryder cup
+            g_tournaments = Field.objects.filter(tournament__season=season, golfer=self).exclude(tournament__current=True).exclude(tournament__pga_tournament_num='468').values_list('tournament__pk',flat=True).order_by('tournament__pk')
+            tournaments = Tournament.objects.filter(pk__in=g_tournaments)
+            #tournaments = Tournament.objects.filter(season__season__gte='2021').exclude(pk__in=list(self.results.keys())).exclude(current=True).exclude(pga_tournament_num='468') #ryder cup
         else:
-            tournaments = Tournament.objects.filter(season__season__gte='2021').exclude(current=True).exclude(pga_tournament_num='468')
+            g_tournaments = Field.objects.filter(tournament__season=season, golfer=self).exclude(tournament__current=True).exclude(tournament__pga_tournament_num='468').values_list('tournament__pk',flat=True).order_by('tournament__pk')
+            tournaments = Tournament.objects.filter(pk__in=g_tournaments)
+            #tournaments = Tournament.objects.filter(season__season__gte='2021').exclude(current=True).exclude(pga_tournament_num='468')
             self.results = {}
         
         # print ('Updating golfer results: ', self)
@@ -871,7 +876,8 @@ class Golfer(models.Model):
         for t in tournaments:
             sd = ScoreDict.objects.get(tournament=t)
             if not t.special_field() or (t.season.season > 2021 and t.pga_tournament_num == '018'):
-                score = [v for k, v in sd.data.items() if k != 'info' and v.get('pga_num') == self.espn_number] 
+                print ('A')
+                score = [v for k, v in sd.data.items() if k != 'info' and v.get('espn_num') == self.espn_number] 
                 #print (score[0].get('rank'))
                 if score:
                     rank = score[0].get('rank')
@@ -887,15 +893,18 @@ class Golfer(models.Model):
             #    else:
             #        rank = 'n/a'
             elif t.season.season >= 2022 and t.pga_tournament_num == '470' and Field.objects.filter(golfer=self, tournament=t).exists():
+                print ('B')
                 from golf_app import espn_api
                 sd = ScoreDict.objects.get(tournament=t)
                 espn = espn_api.ESPNData(t=t, data=sd.espn_api_data)
                 f = Field.objects.get(golfer=self, tournament=t)
                 rank = str(f.mp_calc_score(espn.mp_golfers_per_round(), espn))
             elif t.season.season == 2021 and t.pga_tournament_num == '470' and Field.objects.filter(golfer=self, tournament=t).exists():
+                print ('C')
                 f = Field.objects.get(golfer=self, tournament=t)
                 rank = str(f.get_mp_result(t))
             else:
+                print ('D')
                 rank = 'n/a'
 
             res = self.results
@@ -959,7 +968,8 @@ class Golfer(models.Model):
              return {'rank': None, 'points': None}
 
     def get_pic_link(self):
-        return "https://pga-tour-res.cloudinary.com/image/upload/c_fill,d_headshots_default.png,f_auto,g_face:center,h_85,q_auto,r_max,w_85/headshots_" + self.golfer_pga_num + ".png"
+        #return "https://pga-tour-res.cloudinary.com/image/upload/c_fill,d_headshots_default.png,f_auto,g_face:center,h_85,q_auto,r_max,w_85/headshots_" + self.golfer_pga_num + ".png"
+        return 'https://a.espncdn.com/combiner/i?img=/i/headshots/golf/players/full/' + str(self.espn_number) + '.png&w=350&h=254'
 
 
     def country(self):
@@ -1027,12 +1037,12 @@ class Field(models.Model):
         try:
             sd = ScoreDict.objects.get(tournament=t)
             if t.pga_tournament_num != "470":
-                rank = [v.get('rank') for k, v in sd.data.items() if k !='info' and v.get('pga_num') in [self.golfer.espn_number, self.golfer.golfer_pga_num]]
+                rank = [v.get('rank') for k, v in sd.data.items() if k !='info' and v.get('espn_num') in [self.golfer.espn_number, self.golfer.golfer_pga_num]]
                 #print (rank)
                 if rank[0] != '-':
                     return rank[0]
                 else:
-                    mdf = [v for k, v in sd.data.items() if k !='info' and v.get('pga_num') in [self.golfer.espn_number, self.golfer.golfer_pga_num]]
+                    mdf = [v for k, v in sd.data.items() if k !='info' and v.get('espn_num') in [self.golfer.espn_number, self.golfer.golfer_pga_num]]
                     if mdf[0].get('r4') == '--' and int(mdf[0].get('r3')) > 0:
                         return "MDF"
                     else:

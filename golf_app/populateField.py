@@ -228,20 +228,20 @@ def get_field(t, owgr_rankings):
     '''takes a tournament object, goes to web to get field and returns a dict'''
     print ('getting field get_field func')        
     field_dict = {}
-    if t.pga_tournament_num == '470':
-        print ('match play')
-        #mp_dict = scrape_scores_picks.ScrapeScores(t, 'https://www.pgatour.com/competition/' + str(t.season.season) + '/wgc-dell-technologies-match-play/group-stage.html').mp_brackets()
-        scrape_scores_picks.ScrapeScores(tournament=t, url="https://www.pgatour.com/tournaments/2023/world-golf-championships-dell-technologies-match-play/R2023470/group-stage")
-        print ('back from scrpate')
-        for player, data in mp_dict.items():
-            ranks = utils.fix_name(player, owgr_rankings)
-            field_dict[player] = {'pga_num': data.get('pga_num'),
-                                  'curr_owgr': ranks[1][0],
-                                  'soy_owgr': ranks[1][2],
-                                  'sow_owgr': ranks[1][1]
-                                }
-        print ('mp field dict: ', field_dict)
-    elif t.pga_tournament_num == '999': #Olympics
+    # if t.pga_tournament_num == '470':
+    #     print ('match play')
+    #     #mp_dict = scrape_scores_picks.ScrapeScores(t, 'https://www.pgatour.com/competition/' + str(t.season.season) + '/wgc-dell-technologies-match-play/group-stage.html').mp_brackets()
+    #     scrape_scores_picks.ScrapeScores(tournament=t, url="https://www.pgatour.com/tournaments/2023/world-golf-championships-dell-technologies-match-play/R2023470/group-stage")
+    #     print ('back from scrpate')
+    #     for player, data in mp_dict.items():
+    #         ranks = utils.fix_name(player, owgr_rankings)
+    #         field_dict[player] = {'pga_num': data.get('pga_num'),
+    #                               'curr_owgr': ranks[1][0],
+    #                               'soy_owgr': ranks[1][2],
+    #                               'sow_owgr': ranks[1][1]
+    #                             }
+    #     print ('mp field dict: ', field_dict)
+    if t.pga_tournament_num == '999': #Olympics
         # update this to use the class from olympics_sd.py
         #mens_field = scrape_espn.ScrapeESPN(tournament=t, url='https://www.espn.com/golf/leaderboard?tournamentId=401285309', setup=True).get_data()
         mens_field = scrape_espn.ScrapeESPN(tournament=t, url='https://www.espn.com/golf/leaderboard/_/tour/mens-olympics-golf', setup=True).get_data()
@@ -250,7 +250,7 @@ def get_field(t, owgr_rankings):
         for man, data in mens_field.items():
             if man != 'info':
                 ranks = utils.fix_name(man, owgr_rankings)
-                field_dict[man] = {'espn_num': data.get('pga_num'),
+                field_dict[man] = {'espn_num': data.get('espn_num'),
                                     'sex': 'dude',
                                   'curr_owgr': ranks[1][0],
                                   'soy_owgr': ranks[1][2],
@@ -263,7 +263,7 @@ def get_field(t, owgr_rankings):
             
             if woman != 'info':
                 rank = utils.fix_name(woman, womens_ranks)
-                field_dict[woman] ={'espn_num': stats.get('pga_num'),
+                field_dict[woman] ={'espn_num': stats.get('espn_num'),
                                     'sex': 'chick',
                                     'curr_owgr': int(rank[1].get('rank')) + 1000,
                                     'flag': stats.get('flag')}
@@ -300,7 +300,7 @@ def get_field(t, owgr_rankings):
             print ('RYDER player: ', u)
             ranks = utils.fix_name(u, owgr_rankings)
             g = Golfer.objects.get(golfer_name=u) 
-            field_dict[u] = {'pga_num': g.golfer_pga_num,
+            field_dict[u] = {'espn_num': g.espn_number,
                                     'team': 'USA',
                                     'curr_owgr': ranks[1][0],
                                     'soy_owgr': ranks[1][2],
@@ -310,7 +310,7 @@ def get_field(t, owgr_rankings):
             ranks = utils.fix_name(u, owgr_rankings)
             g = Golfer.objects.get(golfer_name=i) 
  
-            field_dict[i] = {'pga_num': g.golfer_pga_num,
+            field_dict[i] = {'espn_num': g.espn_number,
                                     'team': 'INTL',
                                     'curr_owgr': ranks[1][0],
                                     'soy_owgr': ranks[1][2],
@@ -319,65 +319,68 @@ def get_field(t, owgr_rankings):
         field_dict = zurich_field(owgr_rankings)
         print ('zurich field dict: ', len(field_dict))
     else:
+        # try:
+        #     headers = {'User-Agent': 'Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.149 Mobile Safari/537.36'}
+        #     json_url = 'https://statdata-api-prod.pgatour.com/api/clientfile/Field?T_CODE=r&T_NUM=' + str(t.pga_tournament_num) +  '&YEAR=' + str(t.season.season) + '&format=json'
+        #     print (json_url)
+
+        #     req = Request(json_url, headers=headers)
+        #     data = json.loads(urlopen(req).read())
+        #     print ('data', len(data))
+        #     for player in data["Tournament"]["Players"][0:]:
+        #         if player["isAlternate"] == "Yes":
+        #                 #exclude alternates from the field
+        #                 continue
+
+        #         name = (' '.join(reversed(player["PlayerName"].rsplit(', ', 1))))
+        #         playerID = player['TournamentPlayerId']
+        #         if player.get('TeamID'):
+        #             team = player.get('TeamID')
+        #         elif player.get('cupTeam'):
+        #             team = player.get('cupTeam')
+        #         else:
+        #             team = None
+
+        #         ranks = utils.fix_name(name, owgr_rankings)
+        #         field_dict[name] = {'espn_number': playerID,
+        #                             'team': team,
+        #                             'curr_owgr': ranks[1][0],
+        #                             'soy_owgr': ranks[1][2],
+        #                             'sow_owgr': ranks[1][1]}
         try:
-            headers = {'User-Agent': 'Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.149 Mobile Safari/537.36'}
-            json_url = 'https://statdata-api-prod.pgatour.com/api/clientfile/Field?T_CODE=r&T_NUM=' + str(t.pga_tournament_num) +  '&YEAR=' + str(t.season.season) + '&format=json'
-            print (json_url)
-
-            req = Request(json_url, headers=headers)
-            data = json.loads(urlopen(req).read())
-            print ('data', len(data))
-            for player in data["Tournament"]["Players"][0:]:
-                if player["isAlternate"] == "Yes":
-                        #exclude alternates from the field
-                        continue
-
-                name = (' '.join(reversed(player["PlayerName"].rsplit(', ', 1))))
-                playerID = player['TournamentPlayerId']
-                if player.get('TeamID'):
-                    team = player.get('TeamID')
-                elif player.get('cupTeam'):
-                    team = player.get('cupTeam')
-                else:
-                    team = None
-
-                ranks = utils.fix_name(name, owgr_rankings)
-                field_dict[name] = {'pga_num': playerID,
-                                    'team': team,
-                                    'curr_owgr': ranks[1][0],
-                                    'soy_owgr': ranks[1][2],
-                                    'sow_owgr': ranks[1][1]}
-        except Exception as e:
-            print ('pga scrape failed: ', e)   #to use this need to update to key everything from espn_num
+            
             data = espn_api.ESPNData(t=t, force_refresh=True, setup=True).field()
 
             for golfer in data:
                 name = golfer.get('athlete').get('displayName')
                 ranks = utils.fix_name(name, owgr_rankings)
                 #need this for now, fix rest of code to use ESPN
-                try:
-                    g_obj = Golfer.objects.get(espn_number=golfer.get('athlete').get('id'))
-                    print ('build field found golfer', g_obj)
-                except Exception as f:
-                    print ('build field cant find: ', name, ' trying setup')
-                    #pga_num = find_pga_num(name)
-                    pga_num = None
-                    
-                    if not pga_num:
-                        g_obj = get_golfer(player=name, pga_num=None, espn_num=golfer.get('athlete').get('id'))
-                    elif len(pga_num) == 1:
-                        g_obj = get_golfer(player=name, pga_num=pga_num[0], espn_num=golfer.get('athlete').get('id') )
-                    else:
-                        g_obj = get_golfer(player=name, pga_num=None, espn_num=golfer.get('athlete').get('id'))
+                #try:
+                #g_obj = Golfer.objects.get(espn_number=golfer.get('athlete').get('id'))
+                #print ('build field found golfer', g_obj)
+                #except Exception as f:
+                #print ('build field cant find: ', name, ' trying setup')
+                #pga_num = find_pga_num(name)
+                #pga_num = None
+                
+                #if not pga_num:
+                #    g_obj = get_golfer(player=name, pga_num=None, espn_num=golfer.get('athlete').get('id'))
+                #elif len(pga_num) == 1:
+                #    g_obj = get_golfer(player=name, pga_num=pga_num[0], espn_num=golfer.get('athlete').get('id') )
+                #else:
+                #g_obj = get_golfer(player=name, pga_num=None, espn_num=golfer.get('athlete').get('id'))
 
+                g_obj = get_golfer(player=name, pga_num=None, espn_num=golfer.get('athlete').get('id'))
                 ranks = utils.fix_name(name, owgr_rankings)
-                field_dict[name] = {'pga_num': g_obj.golfer_pga_num, 
+                field_dict[name] = {'espn_num': g_obj.espn_number, 
                                     'team': None,
                                     'curr_owgr': ranks[1][0],
                                     'soy_owgr': ranks[1][2],
                                     'sow_owgr': ranks[1][1]}
 
-
+        except Exception as e:
+            print ('ESPN Field init failed: ', e)
+            raise Exception('ESPN field init failed: ', e)
     # print ('Full Field start print')
     # for k,v in field_dict.items():
     #     print (k, v)
@@ -523,7 +526,7 @@ def create_field(field, tournament):
     for player, info in sorted_field.items():
         print (player, info)
         if tournament.pga_tournament_num != '018':
-            golfer = get_golfer(player, info.get('pga_num'), espn_data)
+            golfer = get_golfer(player, pga_num=None, espn_num=info.get('espn_num'))
         else:
             golfer = Golfer.objects.filter(golfer_name=player).first()
         group = Group.objects.get(tournament=tournament, number=group_num)
@@ -533,14 +536,14 @@ def create_field(field, tournament):
         f.tournament = tournament
         f.playerName = player
         f.alternate = False
-        f.playerID = info.get('pga_num')
+        f.playerID = info.get('espn_num')
         f.golfer = golfer
         f.group = group
         if info.get('team'):
             f.teamID = info.get('team')
             f.partner = info.get('partner')
             if tournament.pga_tournament_num != '018':
-                f.partner_golfer = get_golfer(info.get('partner'), info.get('partner_pga_num'), espn_data)
+                f.partner_golfer = get_golfer(info.get('partner'), pga_num=None, espn_num=info.get('partner_espn_num'))
             else:
                 f.partner_golfer = Golfer.objects.filter(golfer_name=info.get('partner')).first()
             f.partner_owgr = info.get('partner_owgr')
@@ -670,7 +673,7 @@ def create_olympic_field(field, tournament):
             if individual_stats.get(f.playerName):
                 player_s = individual_stats.get(f.playerName)
                 for k, v in player_s.items():
-                    if k != 'pga_num':
+                    if k != 'espn_num':
                         f.season_stats.update({k: v})
         
         f.save()
@@ -698,8 +701,8 @@ def create_ryder_cup_field(field, tournament):
 
     for player, info in sorted_intl.items():
         print (player, info)
-        golfer = get_golfer(player, info.get('pga_num'), espn_data)
-        golfer = Golfer.objects.get(golfer_pga_num=info.get('pga_num'))  #assume any ryder cup golfer already set up
+        golfer = get_golfer(player, espn_num=info.get('espn_num'))
+        golfer = Golfer.objects.get(espn_number=info.get('espn_num'))  #assume any ryder cup golfer already set up
         group = Group.objects.get(tournament=tournament, number=group_num)
         #print (player, info)
         f = Field()
@@ -707,7 +710,7 @@ def create_ryder_cup_field(field, tournament):
         f.tournament = tournament
         f.playerName = player
         f.alternate = False
-        f.playerID = info.get('pga_num')
+        f.playerID = info.get('espn_num')
         f.golfer = golfer
         f.group = group
         f.teamID = info.get('team')
@@ -733,7 +736,7 @@ def create_ryder_cup_field(field, tournament):
 
     for player, info in sorted_usa.items():
         print (player, info)
-        golfer = get_golfer(player, info.get('pga_num'), espn_data)
+        golfer = get_golfer(player, pga_num=None, espn_num=info.get('espn_num'))
         group = Group.objects.get(tournament=tournament, number=group_num)
         #print (player, info)
         f = Field()
@@ -741,7 +744,7 @@ def create_ryder_cup_field(field, tournament):
         f.tournament = tournament
         f.playerName = player
         f.alternate = False
-        f.playerID = info.get('pga_num')
+        f.playerID = info.get('espn_num')
         f.golfer = golfer
         f.group = group
         f.teamID = info.get('team')
@@ -917,38 +920,47 @@ def get_fedex_data(tournament=None, update=False):
 def get_golfer(player, pga_num=None, espn_data=None, espn_num=None):
     '''takes a pga_num string, returns a golfer object.  creates golfer if it doesnt exist'''
     #player is the golfer name
-    if pga_num and Golfer.objects.filter(golfer_pga_num=pga_num).exists():
-        golfer = Golfer.objects.get(golfer_pga_num=pga_num)
-    elif Golfer.objects.filter(golfer_name=player, golfer_pga_num__in=['', None]).exists() and pga_num:
-        golfer = Golfer.objects.get(golfer_name=player, golfer_pga_num__in=['', None])
-        golfer.golfer_pga_num = pga_num
-        golfer.save()
-    else:
-        g = Golfer()
-        if pga_num:
-            g.golfer_pga_num=pga_num
-        else:
-            g.golfer_pga_num = ''
-        g.golfer_name = player
-        g.save()
-        golfer = g
-    
-    if golfer.pic_link in [' ', None]:
+    #if pga_num and Golfer.objects.filter(golfer_pga_num=pga_num).exists():
+    #    golfer = Golfer.objects.get(golfer_pga_num=pga_num)
+    if espn_num and Golfer.objects.filter(espn_number=espn_num).exists():
+        golfer = Golfer.objects.filter(espn_number=espn_num).latest('pk')
         golfer.pic_link = golfer.get_pic_link()
         golfer.save()
-
-    if golfer.flag_link in [' ', None]:
-        golfer.flag_link = golfer.get_flag()
+    #elif Golfer.objects.filter(golfer_name=player, golfer_pga_num__in=['', None]).exists() and pga_num:
+    elif Golfer.objects.filter(golfer_name=player, espn_number__in=['', None]).exists() and espn_num:
+        #golfer = Golfer.objects.get(golfer_name=player, golfer_pga_num__in=['', None])
+        golfer = Golfer.objects.filter(golfer_name=player, espn_number__in=['', None]).latest('pk')
+        golfer.golfer_espn_number = espn_num
+        golfer.pic_link = golfer.get_pic_link()
+        #golfer.pic_link = 'https://a.espncdn.com/combiner/i?img=/i/headshots/golf/players/full/' + str(espn_num) + '.png&w=350&h=254'
         golfer.save()
+    else:
+        golfer = Golfer()
+        if espn_num:
+            golfer.espn_number=espn_num
+        else:
+            golfer.espn_number = ''
+        golfer.golfer_name = player
+        golfer.pic_link = g.get_pic_link()
+        golfer.save()
+        #golfer = g
+    
+    # if golfer.pic_link in [' ', None]:
+    #     golfer.pic_link = golfer.get_pic_link()
+    #     golfer.save()
 
-    if espn_num:
-        golfer.espn_num = espn_num
-    elif golfer.espn_number in [' ', None] and espn_data:
-        golfer.espn_number = get_espn_num(player, espn_data)
+    # if golfer.flag_link in [' ', None]:
+    #     golfer.flag_link = golfer.get_flag()
+    #     golfer.save()
+
+    #if espn_num:
+    #    golfer.espn_num = espn_num
+    #elif golfer.espn_number in [' ', None] and espn_data:
+    #    golfer.espn_number = get_espn_num(player, espn_data)
     #else:
     #    golfer.espn_number = ''
 
-    golfer.save() 
+    #golfer.save() 
     
     return golfer
 
@@ -1002,7 +1014,7 @@ def get_espn_num(player, espn_data):
     if espn_data.get(player):
         print ('returning found: ', player, espn_data.get(player))
         #return player, espn_data.get(player)
-        return espn_data.get(player).get('pga_num')
+        return espn_data.get(player).get('espn_num')
     else:
         print ('not found, fixing: ', player)
         fixed_data = utils.fix_name(player, espn_data)
@@ -1012,7 +1024,7 @@ def get_espn_num(player, espn_data):
             return None
         else:
             #return player, fixed_data[1]
-            return fixed_data[1].get('pga_num')
+            return fixed_data[1].get('espn_num')
         
     return
 
@@ -1043,8 +1055,9 @@ def prior_year_sd(t, current=None):
     print ('proir T: ', prior_t, prior_t.season)
     sd, created = ScoreDict.objects.get_or_create(tournament=prior_t)
     if not created:
-        pga_nums = [v.get('pga_num') for (k,v) in sd.data.items() if k != 'info' and v.get('pga_num')] 
-        print ('prior SD # of pga nums: ', len(pga_nums))
+        #pga_nums = [v.get('pga_num') for (k,v) in sd.data.items() if k != 'info' and v.get('pga_num')] 
+        espn_nums = [v.get('espn_num') for (k,v) in sd.data.items() if k != 'info' and v.get('espn_num')] 
+        print ('prior SD # of pga nums: ', len(espn_nums))
     else:
         print ('created score dict')
 
