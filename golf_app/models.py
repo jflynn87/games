@@ -476,46 +476,28 @@ class Tournament(models.Model):
                 return 'weak'            
             if self.pga_tournament_num == '999':
                 return "major"
+            if self.pga_tournament_num in ['060', '028', '027']:
+                return 'special'
             if self.special_field():
                 return 'special'
 
             if not espn:
                 espn = espn_api.ESPNData(t=self)
-            
-            if int(espn.purse()) >= 10000000:
+            purse = espn.purse()
+            print ('PURSE: ', purse)
+            if not purse:
+                if self.pga_tournament_num == '060':
+                    return 'strong'
+                else:
+                    print ('ESPN PURSE not available')
+                    return 'weak'
+            elif int(purse) >= 10000000:
                 return 'strong'
-            elif int(espn.purse()) < 10000000:
+            elif int(purse) < 10000000:
                 return 'weak'
             else:
                 print ('field quality lookup in else, why?')
                 return 'weak'
-
-        ## pre 2024 season logic, based on pga.com data        
-        # if int(self.season.season) < 2023:
-        #     f_len = Field.objects.filter(tournament=self).count()
-        #     #owgr_sum = Field.objects.filter(tournament=self).exclude(currentWGR=9999).aggregate(Sum('currentWGR'))
-        #     #unranked = Field.objects.filter(tournament=self, currentWGR=9999).count()
-        #     top_100 = round(Field.objects.filter(tournament=self, currentWGR__lte=122).count()/f_len,2)
-
-        #     if top_100 > .3:
-        #         return "strong"
-        #     else:
-        #         return "weak"
-        # else:
-        #     t_data = pga_t_data.PGAData(season=self.season)
-        #     t_type = t_data.get_t_type(self.pga_tournament_num)
-        #     if t_type == 'MJR':
-        #         return 'major'
-        #     elif t_type in ['PLF', 'PLS'] or self.pga_tournament_num == '500':  #500 for Pres cup
-        #         return 'special'
-        #     elif int(t_data.get_purse(self.pga_tournament_num).replace(',', '')) >= 10000000:
-        #         return 'strong'
-        #     elif int(t_data.get_purse(self.pga_tournament_num).replace(',','')) < 10000000:
-        #         return 'weak'
-        #     else:
-        #         print ('field quality in else, why?')
-        #         return 'weak'
-
 
 
     def special_field(self):

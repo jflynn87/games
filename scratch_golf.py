@@ -37,8 +37,8 @@ import requests
 from unidecode import unidecode as decode
 
 t = Tournament.objects.get(current=True)
-print (t)
-
+print (t, t.pk)
+exit()
 for f in Field.objects.filter(tournament__current=True, handi__isnull=True):
     print (f.tournament, f.group.number, f, f.currentWGR)
     f.handi = f.handicap()

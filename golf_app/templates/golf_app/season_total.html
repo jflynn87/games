@@ -58,7 +58,7 @@
 </thead>
 <tbody>
   <tr>
-  {%for t, score in display_dict.items%}
+  {%for t, data in display_dict.items%}
   {%if t == 'totals'%}
   <td>Totals:</td>
   {%else%}
@@ -69,7 +69,8 @@
   <td> <a href="{%url 'golf_app:api_scores_view' pk=t.pk %}">{{t.name}}: ${{t.prize}}</td>
   {%endif%}
   {%endif%}
-  {%for s in score%}
+  
+  {%for s in data.scores%}
     {%if t != "totals"%}
       {%if s.score or s.score == 0%}
       <td>{{s.score}}</td>

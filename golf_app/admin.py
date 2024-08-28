@@ -98,6 +98,9 @@ class FedExPicksAdmin(admin.ModelAdmin):
 class RoundAdmin(admin.ModelAdmin):
     list_display = ['tournament', 'round_num', 'status']
 
+#class TournamentAdmin(admin.ModelAdmin):
+#    list_display = ['season', 'name', 'pk']
+
 admin.site.register(Tournament)
 admin.site.register(Field, FieldAdmin)
 admin.site.register(Picks, PicksAdmin)

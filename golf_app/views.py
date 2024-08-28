@@ -363,25 +363,13 @@ class SeasonTotalView(ListView):
 
         #for user in TotalScore.objects.filter(Season.objects.get(current=True)).values('user_id').distinct().order_by('user_id'):
         for user in users:
-            #user_key = user.get('user_id')
-            #user_list.append(User.objects.get(pk=user_key))
-            #winner_dict[User.objects.get(pk=user_key)]=0
-            #total_scores[User.objects.get(pk=user_key)]=0
-            #added second half for Mark
-            #second_half_scores[User.objects.get(pk=user_key)]=0
             user_list.append(user)
             winner_dict[user]=0
             total_scores[user]=0
             #added second half for Mark
             second_half_scores[user]=0
 
-        #for user in TotalScore.objects.filter(Season.objects.get(current=True)).values('user').distinct().order_by('user_id'):
-        #for user in users:
-            #winner_dict[(User.objects.get(pk=user.get('user')))]=0
-        #    winner_dict[user]=0
-
-        #for tournament in Tournament.objects.filter(season__current=True).order_by('-start_date'):
-        for tournament in Tournament.objects.filter(season__current=True).order_by('-start_date'):
+        for tournament in Tournament.objects.filter(season__current=True):
             score_list = []
             second_half_score_list = []  #added for Mark
             for score in TotalScore.objects.filter(tournament=tournament).order_by('user_id'):
@@ -407,9 +395,9 @@ class SeasonTotalView(ListView):
                             winner_dict[winner.user] = winner_dict.get(winner.user) + 30/tournament.num_of_winners()
                     else:
                         winner_dict[winner.user] = winner_dict.get(winner.user) + tournament.prize()/tournament.num_of_winners()
-
-            display_dict[tournament] = score_list
-        print (total_scores)
+ 
+            display_dict[tournament] = {'scores': score_list, 'pk': tournament.pk}
+        #print (total_scores)
         total_score_list = []
         #total_second_half_score_list = []
         for score in total_scores.values():
@@ -435,8 +423,9 @@ class SeasonTotalView(ListView):
         #print ('full season totals',total_score_list)
 
         context = super(SeasonTotalView, self).get_context_data(**kwargs)
+        print (display_dict)
         context.update({
-        'display_dict':  display_dict,
+        'display_dict':  dict(sorted(display_dict.items(), key=lambda x: x[1]['pk'], reverse=True)),
         'user_list': user_list,
         'rank_list': rank_list,
         'totals_list': total_score_list,
@@ -1587,9 +1576,12 @@ class TrendDataAPI(APIView):
                 diff_dict[u.username] = []
 
             if num_of_t == "all":
-                t_qs = Tournament.objects.filter(season__pk=season.pk).order_by('pk')
+                #t_qs = Tournament.objects.filter(season__pk=season.pk).order_by('pk')
+                t_qs = Tournament.objects.filter(season__pk=season.pk)
             else:
-                t_qs = reversed(Tournament.objects.filter(season__pk=season.pk).order_by('-pk')[:int(num_of_t)])
+                #t_qs = reversed(Tournament.objects.filter(season__pk=season.pk).order_by('-pk')[:int(num_of_t)])
+                t_qs = reversed(Tournament.objects.filter(season__pk=season.pk)[:int(num_of_t)])
+
 
             for t in t_qs:
                 #print (t)
@@ -1601,10 +1593,11 @@ class TrendDataAPI(APIView):
                     l = diff_dict[user]
                     l.append(stats['diff'])
                     diff_dict[user] = l
-                    
 
+            print (diff_dict)        
+            #diff_dict = dict(sorted(diff_dict.items(), key=lambda x: x[0]))
             #diff_dict['min_scale'] = min([min(v) for v in diff_dict.values()])
-            #print ('diff_dict')
+            
             return JsonResponse(data={'labels': labels, 'data': diff_dict, 'min_scale': min([min(v) for v in diff_dict.values()])}, status=200)
         except Exception as e:
             print ('Trend Data API failed: ', e)
