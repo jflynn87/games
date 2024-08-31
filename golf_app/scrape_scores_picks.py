@@ -4,13 +4,13 @@ from datetime import datetime, timedelta
 
 #from django.db.models import Min, Q, Count, Sum, Max
 from requests import get
-from selenium import webdriver
-import urllib
-from selenium.webdriver import Chrome, ChromeOptions
-from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
-from selenium.webdriver.support import expected_conditions as EC
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.common.by import By
+# from selenium import webdriver
+# import urllib
+# from selenium.webdriver import Chrome, ChromeOptions
+# from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
+# from selenium.webdriver.support import expected_conditions as EC
+# from selenium.webdriver.support.ui import WebDriverWait
+# from selenium.webdriver.common.by import By
 import json
 from golf_app import utils
 from bs4 import BeautifulSoup

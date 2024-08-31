@@ -7,9 +7,9 @@ from datetime import datetime, timedelta
 
 from django.db.models import Min, Q, Count, Sum, Max
 from requests import get
-from selenium import webdriver
+#from selenium import webdriver
 import urllib
-from selenium.webdriver import Chrome, ChromeOptions
+#from selenium.webdriver import Chrome, ChromeOptions
 import json
 from golf_app import calc_score, utils
 

@@ -5,14 +5,14 @@ from datetime import datetime, timedelta
 
 from django.db.models import Min, Q, Count, Sum, Max
 from requests import get
-from selenium import webdriver
+#from selenium import webdriver
 import urllib
-from selenium.webdriver import Chrome, ChromeOptions
+#from selenium.webdriver import Chrome, ChromeOptions
 import json
 import time
-from selenium.webdriver.common.by import By
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as ec
+#from selenium.webdriver.common.by import By
+#from selenium.webdriver.support.ui import WebDriverWait
+#from selenium.webdriver.support import expected_conditions as ec
 
 
 

@@ -2,11 +2,6 @@ from fb_app.models import Teams
 import urllib3.request
 from bs4 import BeautifulSoup
 
-from selenium.webdriver import Chrome, ChromeOptions
-from selenium.webdriver.common.by import By
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
-
 
 class Spreads(object):
 

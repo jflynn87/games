@@ -22,7 +22,7 @@ import sys
 #from PyQt5.QtWebEngineWidgets import QWebEngineView
 from bs4 import BeautifulSoup
 from urllib.request import Request, urlopen
-from selenium import webdriver
+#from selenium import webdriver
 import urllib
 import json
 from golf_app import views, manual_score, populateField, withdraw, scrape_scores_picks, utils, scrape_cbs_golf, scrape_masters, scrape_espn

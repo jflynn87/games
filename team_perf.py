@@ -15,7 +15,7 @@ from urllib import request
 import json
 #from fb_app.scores import Scores
 #from urllib.request import Request, urlopen
-from selenium.webdriver import Chrome, ChromeOptions
+#from selenium.webdriver import Chrome, ChromeOptions
 #
 
 #

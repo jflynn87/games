@@ -9,9 +9,9 @@ from datetime import datetime, timedelta
 
 from django.db.models import Min, Q, Count, Sum, Max
 from requests import get
-from selenium import webdriver
+#from selenium import webdriver
 import urllib
-from selenium.webdriver import Chrome
+#from selenium.webdriver import Chrome
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import transaction
 
