@@ -1,5 +1,4 @@
 from datetime import datetime, timedelta
-from tkinter import N
 
 import requests
 import json
