@@ -1,5 +1,5 @@
-from tkinter import E
-from venv import create
+#from tkinter import E
+#from venv import create
 from django.shortcuts import render, redirect
 from django.views.generic import TemplateView, ListView
 from golf_app.models import CountryPicks, Field, Tournament, Picks, Group, TotalScore, ScoreDetails, \
