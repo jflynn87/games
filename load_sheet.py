@@ -112,7 +112,7 @@ def readSheet(file,numPlayers,override_week=None):
             #print (player)
             #winner = 1
             print ('player', player)
-            user = User.objects.get(username=player)
+            user = User.objects.get(username=player.replace(' ', ''))
             player = Player.objects.get(name=user)
             if sheet_scores:
                 scores = MikeScore()
@@ -174,6 +174,6 @@ def readSheet(file,numPlayers,override_week=None):
 
 
 
-readSheet('2023-2024 FOOTBALL FOOLS.docx', 27)
+readSheet('FOOTBALL Sheet 2024.docx', 27)
 #readSheet('ff_test.docx', 26)
 

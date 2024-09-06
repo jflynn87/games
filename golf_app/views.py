@@ -21,7 +21,7 @@ from golf_app import populateField, manual_score, withdraw, scrape_espn, \
 from django.utils import timezone
 from django.core.exceptions import ObjectDoesNotExist
 from django.db.models import Min, Q, Count, Sum, Max
-import scipy.stats as ss
+#import scipy.stats as ss
 from django.http import JsonResponse
 import json
 import random
@@ -34,7 +34,7 @@ from rest_framework.generics import ListAPIView
 from django.core.mail import send_mail
 from django.core import serializers
 from collections import OrderedDict
-import numpy as np
+#import numpy as np
 import ssl
 
 
@@ -406,7 +406,8 @@ class SeasonTotalView(ListView):
         #for s in second_half_scores.values():
         #    total_second_half_score_list.append(s)
         
-        ranks = ss.rankdata(total_score_list, method='min')
+        #ranks = ss.rankdata(total_score_list, method='min')
+        ranks = [sorted(total_score_list).index(x) for x in total_score_list]
         rank_list = []
         for rank in ranks:
             rank_list.append(rank)

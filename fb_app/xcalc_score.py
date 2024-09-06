@@ -9,7 +9,7 @@ import datetime
 import urllib3
 import urllib
 import json
-import scipy.stats as ss
+#import scipy.stats as ss
 from django.db.models import Q
 
 def calc_scores(league, week, loser_list=None, proj_loser_list=None):

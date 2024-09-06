@@ -6,7 +6,7 @@ from django.shortcuts import render, get_object_or_404, redirect
 from django.core.exceptions import ObjectDoesNotExist
 from django.db.models import Count, Sum, Q, Min
 import datetime
-import scipy.stats as ss
+#import scipy.stats as ss
 
 def calc_score(t_args, request=None):
         '''takes in a request, caclulates and returns the score to the web site.

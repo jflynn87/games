@@ -1,5 +1,5 @@
 from golf_app.models import Picks, ScoreDict
-from scipy.stats import rankdata
+#from scipy.stats import rankdata
 
 
 class LeaderBoard(object):

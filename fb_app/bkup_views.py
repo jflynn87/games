@@ -15,7 +15,7 @@ from django.db.models import Q
 import urllib3
 import json
 import datetime
-import scipy.stats as ss
+#import scipy.stats as ss
 from django.forms import formset_factory
 from fb_app import calc_score
 

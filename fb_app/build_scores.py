@@ -8,7 +8,7 @@ import datetime
 import urllib3
 import urllib
 import json
-import scipy.stats as ss
+#import scipy.stats as ss
 from django.db.models import Q
 
 def build_scores_context(user, league, winner_list=None):
@@ -148,9 +148,12 @@ def build_scores_context(user, league, winner_list=None):
             total_score_list.append(total_score)
 
 
-        ranks = ss.rankdata(scores_list, method='min')
-        projected_ranks = ss.rankdata(projected_scores_list, method='min')
-        season_ranks = ss.rankdata(total_score_list, method='min')
+        #ranks = ss.rankdata(scores_list, method='min')
+        ranks = [index for element, index in sorted(zip(scores_list, range(len(scores_list))))]
+        #projected_ranks = ss.rankdata(projected_scores_list, method='min')
+        projected_ranks = [index for element, index in sorted(zip(projected_scores_list, range(len(projected_scores_list))))]
+        #season_ranks = ss.rankdata(total_score_list, method='min')
+        season_ranks = [index for element, index in sorted(zip(total_score_list, range(len(total_score_list))))]
         print ('sending context')
         print (datetime.datetime.now())
         print ('scores', scores_list)

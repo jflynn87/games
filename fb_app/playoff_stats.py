@@ -1,5 +1,5 @@
 from fb_app.models import Games, PlayoffStats
-import scipy.stats as ss
+#import scipy.stats as ss
 from django.db.models import Sum
 
 class Stats(object):

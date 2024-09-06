@@ -1,5 +1,5 @@
 from fb_app.models import Games, WeekScore, Player
-import scipy.stats as ss
+#import scipy.stats as ss
 from django.db.models import Sum
 
 class Scores(object):
@@ -29,7 +29,9 @@ class Scores(object):
 
     def get_week_rank(self):
         rank_dict = {}
-        ranks = ss.rankdata(list(self.get_week_scores().values()), method='min')
+        #ranks = ss.rankdata(list(self.get_week_scores().values()), method='min')
+        l = list(self.get_week_scores().values())
+        ranks = [sorted(l).index(x)+1 for x in l]
         for i, (player, rank) in enumerate(self.get_week_scores().items()):
             rank_dict[player]=ranks[i]
         return rank_dict
@@ -44,7 +46,10 @@ class Scores(object):
 
     def get_week_proj_rank(self):
         proj_rank_dict = {}
-        proj_ranks = ss.rankdata(list(self.get_week_proj().values()), method='min')
+        #proj_ranks = ss.rankdata(list(self.get_week_proj().values()), method='min')
+        l = list(self.get_week_proj().values())
+        proj_ranks = [sorted(l).index(x)+1 for x in l]
+
         for i, (player, rank) in enumerate(self.get_week_proj().items()):
             proj_rank_dict[player]=proj_ranks[i]
         return proj_rank_dict
@@ -61,7 +66,9 @@ class Scores(object):
 
     def get_season_rank(self):
         season_rank_dict = {}
-        season_ranks = ss.rankdata(list(self.get_season_total().values()), method='min')
+        #season_ranks = ss.rankdata(list(self.get_season_total().values()), method='min')
+        l = list(self.get_season_total().values())
+        season_ranks = [sorted(l).index(x)+1 for x in l]
         for i, (player, rank) in enumerate(self.get_season_total().items()):
             season_rank_dict[player]=season_ranks[i]
         return season_rank_dict

@@ -10,7 +10,7 @@ import datetime
 import urllib3
 import urllib
 import json
-import scipy.stats as ss
+#import scipy.stats as ss
 #from django.db.models import Q
 from bs4 import BeautifulSoup
 from fb_app import scrape_cbs, espn_data
@@ -151,7 +151,8 @@ class Week(models.Model):
             u.append(score.player.name.username)
             l.append(score.score)
 
-        l_rank = ss.rankdata(l, method='min')
+        #l_rank = ss.rankdata(l, method='min')
+        l_rank = [sorted(l).index(x)+1 for x in l]
         d = {}
 
         for i, user in enumerate(u):
@@ -173,7 +174,8 @@ class Week(models.Model):
                 u.append(user)
                 l.append(score.get('proj_score'))
 
-        l_rank = ss.rankdata(l, method='min')
+        #l_rank = ss.rankdata(l, method='min')
+        l_rank = [sorted(l).index(x)+1 for x in l]
         d = {}
 
         for i, user in enumerate(u):
@@ -468,7 +470,8 @@ class League(models.Model):
             u.append(player.name.username)
             l.append(player.season_total())
 
-        l_rank = ss.rankdata(l, method='min')
+        #l_rank = ss.rankdata(l, method='min')
+        l_rank = [sorted(l).index(x)+1 for x in l]
         d = {}
 
         for i, user in enumerate(u):

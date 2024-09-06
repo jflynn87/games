@@ -7,7 +7,7 @@ from datetime import datetime
 from django.db.models.base import Model
 from django.forms import JSONField
 
-from scipy.stats.stats import rankdata
+#from scipy.stats.stats import rankdata
 from golf_app import utils 
 from django.db import transaction
 from unidecode import unidecode

@@ -18,7 +18,7 @@ import urllib3
 import json
 import datetime
 
-import scipy.stats as ss
+#import scipy.stats as ss
 from django.forms import formset_factory, modelformset_factory
 from collections import OrderedDict
 from rest_framework.views import APIView
@@ -343,7 +343,8 @@ class SeasonTotals(ListView):
                 total_score += weeks.score
             total_score_list.append(total_score)
 
-        season_ranks = ss.rankdata(total_score_list, method='min') 
+        #season_ranks = ss.rankdata(total_score_list, method='min') 
+        season_ranks = [sorted(total_score_list).index(x)+1 for x in total_score_list]
 
         context.update({
         'players': Player.objects.filter(league=league, active=True).order_by('name_id'),
