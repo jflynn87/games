@@ -59,11 +59,11 @@ def readSheet(file,numPlayers,override_week=None):
 
 
         for row in table.rows:
-            for cell in row.cells:
+            for cell in row.cells[1:]:
                 #print(cell.text.strip()[0:3], type(cell.text.strip()))
-                if cell.text.strip() in ('',' ', '1','2','3','4','5','6','7','8','9','10','11','12','13','14','15','16', '17', '18'):
-                    continue
-                elif len(cell.text) > 1 \
+                #if cell.text.strip() in ('',' ', '1','2','3','4','5','6','7','8','9','10','11','12','13','14','15','16'):
+                #    continue
+                if len(cell.text) > 1 \
                     and len(cell.text.strip().split(' ')) ==1:
                     
                     sheet.append(cell.text.strip())
@@ -174,6 +174,6 @@ def readSheet(file,numPlayers,override_week=None):
 
 
 
-readSheet('FOOTBALL Sheet 2024.docx', 27)
+readSheet('FOOTBALL_sheet_2024.docx', 27)
 #readSheet('ff_test.docx', 26)
 
