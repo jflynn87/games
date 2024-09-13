@@ -174,6 +174,6 @@ def readSheet(file,numPlayers,override_week=None):
 
 
 
-readSheet('FOOTBALL_sheet_2024.docx', 27)
+readSheet('Football_sheet_2024.docx', 27)
 #readSheet('ff_test.docx', 26)
 
