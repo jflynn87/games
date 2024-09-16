@@ -671,7 +671,7 @@ class Picks(models.Model):
 
     class Meta:
         #index_together = ['week', 'player']
-        unique_together = ['week', 'player']
+        unique_together = ['week', 'player', 'team']
 
 
     def is_loser(self):
