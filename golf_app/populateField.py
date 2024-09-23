@@ -26,7 +26,9 @@ def create_groups(tournament_number, espn_t_num=None):
     print ('starting populte field', tournament_number)
     season = Season.objects.get(current=True)
 
-    t_data = update_t_data(season)
+    if tournament_number != '500':
+        t_data = update_t_data(season)
+    
     if Tournament.objects.filter(season=season).count() > 0 and tournament_number != '999':  #skip for olympics
         try:
             last_tournament = Tournament.objects.get(current=True, complete=True, season=season)
@@ -269,7 +271,33 @@ def get_field(t, owgr_rankings):
                                     'flag': stats.get('flag')}
         #field_dict['info'] = mens_field.get('info')
     #elif t.pga_tournament_num == 'RYDCUP':
-    elif t.pga_tournament_num == '468':
+    elif t.pga_tournament_num in ['468', '500']:
+        # us_team = ['Scottie Scheffler',
+        #     'Wyndham Clark',
+        #     'Patrick Cantlay',
+        #     'Brian Harman',
+        #     'Max Homa',
+        #     'Xander Schauffele',
+        #     'Sam Burns',
+        #     'Rickie Fowler',
+        #     'Brooks Koepka',
+        #     'Collin Morikawa',
+        #     'Jordan Spieth',
+        #     'Justin Thomas']
+
+        # euro_team = ['Rory McIlroy',
+        #                 'Jon Rahm',
+        #                 'Viktor Hovland',
+        #                 'Tyrrell Hatton',
+        #                 'Matt Fitzpatrick',
+        #                 'Robert MacIntyre',
+        #                 'Shane Lowry',
+        #                 'Tommy Fleetwood',
+        #                 'Justin Rose',
+        #                 'Sepp Straka',
+        #                 'Nicolai Hojgaard',
+        #                 'Ludvig Aberg']
+        
         us_team = ['Scottie Scheffler',
             'Wyndham Clark',
             'Patrick Cantlay',
@@ -277,24 +305,24 @@ def get_field(t, owgr_rankings):
             'Max Homa',
             'Xander Schauffele',
             'Sam Burns',
-            'Rickie Fowler',
-            'Brooks Koepka',
+            'Russell Henley',
+            'Tony Finau',
             'Collin Morikawa',
-            'Jordan Spieth',
-            'Justin Thomas']
-
-        euro_team = ['Rory McIlroy',
-                        'Jon Rahm',
-                        'Viktor Hovland',
-                        'Tyrrell Hatton',
-                        'Matt Fitzpatrick',
-                        'Robert MacIntyre',
-                        'Shane Lowry',
-                        'Tommy Fleetwood',
-                        'Justin Rose',
-                        'Sepp Straka',
-                        'Nicolai Hojgaard',
-                        'Ludvig Aberg']
+            'Keegan Bradley',
+            'Sahith Theegala']
+        
+        euro_team = ['Hideki Matsuyama',
+                     'Sungjae Im',
+                     'Adam Scott',
+                     'Joohyung Kim',
+                     'Jason Day',
+                     'Byeong Hun An',
+                     'Christiaan Bezuidenhout',
+                     'Corey Conners',
+                     'Mackenzie Hughes',
+                     'Si Woo Kim',
+                     'Min Woo Lee',
+                     'Taylor Pendrith']
         
         for u in us_team:
             print ('RYDER player: ', u)
@@ -645,10 +673,10 @@ def create_olympic_field(field, tournament):
 
     #need to do this after full field is saved for the calcs to work.  No h/c in MP
     if tournament.pga_tournament_num not in ['999',]:
-        fed_ex = get_fedex_data(tournament)
+        #fed_ex = get_fedex_data(tournament)
         individual_stats = get_individual_stats()
     else:
-        fed_ex = {}
+        #fed_ex = {}
         individual_stats = {}
 
     for f in Field.objects.filter(tournament=tournament):
@@ -663,12 +691,12 @@ def create_olympic_field(field, tournament):
             f.recent = recent
             f.season_stats = f.golfer.summary_stats(tournament.season) 
 
-            if fed_ex.get(f.playerName):
-                f.season_stats.update({'fed_ex_points': fed_ex.get(f.playerName).get('points'),
-                                    'fed_ex_rank': fed_ex.get(f.playerName).get('rank')})
-            else:
-                f.season_stats.update({'fed_ex_points': 'n/a',
-                                    'fed_ex_rank': 'n/a'})
+            #if fed_ex.get(f.playerName):
+            #    f.season_stats.update({'fed_ex_points': fed_ex.get(f.playerName).get('points'),
+            #                        'fed_ex_rank': fed_ex.get(f.playerName).get('rank')})
+            #else:
+            #   f.season_stats.update({'fed_ex_points': 'n/a',
+            #                        'fed_ex_rank': 'n/a'})
 
             if individual_stats.get(f.playerName):
                 player_s = individual_stats.get(f.playerName)
@@ -762,7 +790,7 @@ def create_ryder_cup_field(field, tournament):
             player_cnt = 1
 
     #need to do this after full field is saved for the calcs to work.  No h/c in MP
-    fed_ex = get_fedex_data(tournament)
+    #fed_ex = get_fedex_data(tournament)
     individual_stats = get_individual_stats()
 
     #should be moved to sepatate api

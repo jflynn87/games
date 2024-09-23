@@ -71,7 +71,8 @@ class FieldListView1(LoginRequiredMixin, TemplateView):
 
         context.update({
             'tournament': tournament,
-            'fedex_season': FedExSeason.objects.get(season=tournament.season)
+            'fedex_season': None
+            #'fedex_season': FedExSeason.objects.get(season=tournament.season)
             #'t_started': t_started,
             #'picks': picks,
             #'started_golfers': started_golfers,

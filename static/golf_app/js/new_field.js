@@ -8,7 +8,7 @@ $(document).ready(function () {
     fetch("/golf_app/get_golfers_obj/" + t_key).then(response => response.json()),
     fetch("/golf_app/get_started_data/" + t_key).then(response => response.json()),
     fetch("/golf_app/field_get_picks/").then(response => response.json()),
-    fetch("/golf_app/fedex_picks_api/" + $('#fedex_season_key').text() + '/' + 'by_user').then(response => response.json()),
+    //fetch("/golf_app/fedex_picks_api/" + $('#fedex_season_key').text() + '/' + 'by_user').then(response => response.json()),
     fetch("/golf_app/get_country_picks/" + $('#pga_t_num').text() + '/user').then(response => response.json()),  //warp in an if?         
        ])
     .then((responseJSON) => {
@@ -35,8 +35,9 @@ $(document).ready(function () {
          })
 
          
-         fedexPicks = responseJSON[5].data
-         cpPicks = responseJSON[6]
+         //fedexPicks = responseJSON[5].data
+         //cpPicks = responseJSON[6]
+         cpPicks = responseJSON[5]
          console.log('cp: ', cpPicks)
         //  countryPicks = []
         //     $.each(cpPicks, function(i, p) {
@@ -55,7 +56,8 @@ $(document).ready(function () {
          //console.log(fedexPicks)
          //console.log(picks)
 
-         const build = buildForm(info, groups, field, golfers, partners, picks, tStarted, startedGolfers, lockedGroups, fedexPicks)
+         //const build = buildForm(info, groups, field, golfers, partners, picks, tStarted, startedGolfers, lockedGroups, fedexPicks)
+         const build = buildForm(info, groups, field, golfers, partners, picks, tStarted, startedGolfers, lockedGroups)
          build.then((response) => {
             $('#status').html('<h4>Ready for Picks</h4>');
             console.log('ready for picks; ', new Date() - start);
@@ -96,7 +98,8 @@ $(document).ready(function () {
 
 })
 
-function buildForm(info, groups, field, golfers, partners, picks, tStarted, startedGolfers, lockedGroups, fedexPicks) {
+//function buildForm(info, groups, field, golfers, partners, picks, tStarted, startedGolfers, lockedGroups, fedexPicks) {
+function buildForm(info, groups, field, golfers, partners, picks, tStarted, startedGolfers, lockedGroups) {
     return new Promise(function (resolve) {
         fieldLen = field.length
 
@@ -205,14 +208,14 @@ function buildForm(info, groups, field, golfers, partners, picks, tStarted, star
             
             golferP1 = document.createElement('p')
 
-            if (fedexPicks.indexOf(golfer[0].id) != -1) {
-                fedex = document.createElement('img')
-                fedex.src = '/static/img/fedex.jpg'
-                fedex.style.width = '30px'
-                //fedex.style.border='1px solid lightblue';
-                golferP1.appendChild(fedex)
+            //if (fedexPicks.indexOf(golfer[0].id) != -1) {
+            //    fedex = document.createElement('img')
+            //    fedex.src = '/static/img/fedex.jpg'
+            //    fedex.style.width = '30px'
+            //    //fedex.style.border='1px solid lightblue';
+            //    golferP1.appendChild(fedex)
         
-            }
+            //}
             golferPic = document.createElement('img')
             golferName = document.createElement('span')
             golferFlag = document.createElement('img')
@@ -242,12 +245,12 @@ function buildForm(info, groups, field, golfers, partners, picks, tStarted, star
                 
                 var partner = partners.filter(p => {
                     return p.id == f.fields.partner_golfer})
-                if (fedexPicks.indexOf(partner[0].id) != -1) {
-                    p_fedex = document.createElement('img')
-                    p_fedex.src = '/static/img/fedex.jpg'
-                    p_fedex.style.width = '30px'
-                    p.appendChild(fedex)
-                    }
+                //if (fedexPicks.indexOf(partner[0].id) != -1) {
+                //   p_fedex = document.createElement('img')
+                //    p_fedex.src = '/static/img/fedex.jpg'
+                //    p_fedex.style.width = '30px'
+                //    p.appendChild(fedex)
+                //    }
                 p_golferPic = document.createElement('img')
                 p_golferName = document.createElement('span')
                 p_golferFlag = document.createElement('img')
@@ -300,15 +303,16 @@ function buildForm(info, groups, field, golfers, partners, picks, tStarted, star
             golferTd.append(golferP2)
 
             golferP3 = document.createElement('p')
-            try {
-            if (f.fields.season_stats.fed_ex_rank != 'n/a') {
-                fedexTotals = f.fields.season_stats.fed_ex_rank + '/' + f.fields.season_stats.fed_ex_points}
-            else {fedexTotals = 'n/a'}
-            }
-            catch(error) {fedexTotals = 'error'}
+            //try {
+            //if (f.fields.season_stats.fed_ex_rank != 'n/a') {
+            //    fedexTotals = f.fields.season_stats.fed_ex_rank + '/' + f.fields.season_stats.fed_ex_points}
+            //else {fedexTotals = 'n/a'}
+           // }
+           // catch(error) {fedexTotals = 'error'}
 
             golferP3.innerHTML = 'OWGR: ' + f.fields.currentWGR + '; Handicap: ' + f.fields.handi +
-                                 '; FedEx: ' + fedexTotals + '; Prior Year: ' + f.fields.prior_year
+                                '; Prior Year: ' + f.fields.prior_year
+                               //  '; FedEx: ' + fedexTotals + '; Prior Year: ' + f.fields.prior_year
             golferP3.style.fontWeight = 'bold'
             
             golferTd.append(golferP3)
@@ -409,7 +413,8 @@ function build_stats_row(field) {
         stats_table.style.width = '85%'
         stats_table.classList.add('table',  'stats-row')
 
-        let rowA_header_fields = ['Current OWGR', 'Last Week OWGR', 'Last Season OWGR', 'FedEx Cup']
+        //let rowA_header_fields = ['Current OWGR', 'Last Week OWGR', 'Last Season OWGR', 'FedEx Cup']
+        let rowA_header_fields = ['Current OWGR', 'Last Week OWGR', 'Last Season OWGR']
         rowA_field_l = rowA_header_fields.length
         rowA_header = document.createElement('tr')
         rowA_header_cells = []
@@ -436,18 +441,18 @@ function build_stats_row(field) {
             soyOWGR = document.createElement('td')
             soyOWGR.innerHTML = field.soy_WGR
             soyOWGR.colSpan = 2
-            fedEx = document.createElement('td')
-            try {
-            fedEx.innerHTML = 'rank: ' + field.season_stats.fed_ex_rank + '; points:' + field.season_stats.fed_ex_points
+            //fedEx = document.createElement('td')
+            //try {
+            //fedEx.innerHTML = 'rank: ' + field.season_stats.fed_ex_rank + '; points:' + field.season_stats.fed_ex_points
 
-            }
-            catch (error)
-            {fedEx.innerHTML = 'rank: n/a'}
-            fedEx.colSpan = 2
+            //}
+            //catch (error)
+            //{fedEx.innerHTML = 'rank: n/a'}
+            //fedEx.colSpan = 2
             stats_rowA.append(currOWGR)
             stats_rowA.append(sowOWGR)
             stats_rowA.append(soyOWGR)
-            stats_rowA.append(fedEx)
+            //stats_rowA.append(fedEx)
         stats_table.appendChild(stats_rowA)
             
 
@@ -725,8 +730,8 @@ function checkComplete(info) {
           if ($('#winning_team').val() && parseFloat($('#winning_points').val()) > 14) {
               ryder_ok = true
           }
-        else {ryder_o = false}
-     //   console.log(ryder_o)
+        else {ryder_oK = false}
+        //console.log('RYDER OK ', ryder_oK)
         }
   
         //console.log(Object.keys(picks).length, countries_ok)
