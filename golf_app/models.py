@@ -125,7 +125,7 @@ class Season(models.Model):
 
     def special_fields(self):
         #return ['999', '470', '468', '018']
-        return ['470', '468']
+        return ['470', '468', '500']
 
     def last_4(self):
         return Tournament.objects.all().order_by('pk').exclude(pga_tournament_num__in=['468', '018']).reverse()[1:5]
@@ -469,35 +469,35 @@ class Tournament(models.Model):
         if self.major:
             return "major"
         from golf_app import utils , pga_t_data, espn_api
-        if int(self.season.season) <= 2024:
-            if self.major:
-                return "major"
-            if self.pga_tournament_num == '018':
-                return 'weak'            
-            if self.pga_tournament_num == '999':
-                return "major"
-            if self.pga_tournament_num in ['060', '028', '027']:
-                return 'special'
-            if self.special_field():
-                return 'special'
+        #if int(self.season.season) <= 2030:
+        if self.major:
+            return "major"
+        if self.pga_tournament_num == '018':
+            return 'weak'            
+        if self.pga_tournament_num == '999':
+            return "major"
+        if self.pga_tournament_num in ['060', '028', '027', '500']:
+            return 'special'
+        if self.special_field():
+            return 'special'
 
-            if not espn:
-                espn = espn_api.ESPNData(t=self)
-            purse = espn.purse()
-            print ('PURSE: ', purse)
-            if not purse:
-                if self.pga_tournament_num == '060':
-                    return 'strong'
-                else:
-                    print ('ESPN PURSE not available')
-                    return 'weak'
-            elif int(purse) >= 10000000:
+        if not espn:
+            espn = espn_api.ESPNData(t=self)
+        purse = espn.purse()
+        print ('PURSE: ', purse)
+        if not purse:
+            if self.pga_tournament_num == '060':
                 return 'strong'
-            elif int(purse) < 10000000:
-                return 'weak'
             else:
-                print ('field quality lookup in else, why?')
+                print ('ESPN PURSE not available')
                 return 'weak'
+        elif int(purse) >= 10000000:
+            return 'strong'
+        elif int(purse) < 10000000:
+            return 'weak'
+        else:
+            print ('field quality lookup in else, why?')
+            return 'weak'
 
 
     def special_field(self):
