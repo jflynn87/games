@@ -1986,13 +1986,25 @@ class RyderCupScoresView(LoginRequiredMixin, TemplateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         s = Season.objects.get(current=True)
-        if pga_t_data.PGAData(season=s).ryder_or_pres() == 'ryder':
-            t = Tournament.objects.get(pga_tournament_num='468', season=s)
-        elif pga_t_data.PGAData(season=s).ryder_or_pres() == 'presidents':
-            t = Tournament.objects.get(pga_tournament_num='500', season=s)
-        else:
-            t = None
+        # if pga_t_data.PGAData(season=s).ryder_or_pres() == 'ryder':
+        #     t = Tournament.objects.get(pga_tournament_num='468', season=s)
+        # elif pga_t_data.PGAData(season=s).ryder_or_pres() == 'presidents':
+        #     t = Tournament.objects.get(pga_tournament_num='500', season=s)
+        # else:
+        #     t = None
         
+        t = Tournament.objects.get(current=True)
+
+        if not t.started():
+           self.template_name = 'golf_app/pre_start.html'
+
+           context.update({'user_dict': s.get_users(),
+                           'tournament': t,
+                          # 'lookup_errors': scores[4],
+                                                    })
+
+           return context
+
         #comment out in 2023 as it is not part of season
         #if t.started() and not t.picks_complete():
         #    t.missing_picks()
