@@ -1996,9 +1996,14 @@ class RyderCupScoresView(LoginRequiredMixin, TemplateView):
         t = Tournament.objects.get(current=True)
 
         if not t.started():
+           user_dict = {}
+           for user in t.season.get_users('obj'):
+               count = Picks.objects.filter(playerName__tournament=t, user=user).aggregate(Count('playerName'))
+               user_dict[user.username]=count.get('playerName__count')
+
            self.template_name = 'golf_app/pre_start.html'
 
-           context.update({'user_dict': s.get_users(),
+           context.update({'user_dict': user_dict,
                            'tournament': t,
                           # 'lookup_errors': scores[4],
                                                     })
