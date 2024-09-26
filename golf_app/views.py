@@ -2031,12 +2031,13 @@ class RyderCupScoresAPI(APIView):
     def get(self,request):
         data = {}
         s = Season.objects.get(current=True)
-        if pga_t_data.PGAData(season=s).ryder_or_pres() == 'ryder':
-            t = Tournament.objects.get(season=s, pga_tournament_num='468')
-        elif pga_t_data.PGAData(season=s).ryder_or_pres() == 'presidents':
-            t = Tournament.objects.get(pga_tournament_num='500', season=s)
-        else:
-            t = None
+        t = Tournament.objects.get(current=True)
+        # if pga_t_data.PGAData(season=s).ryder_or_pres() == 'ryder':
+        #     t = Tournament.objects.get(season=s, pga_tournament_num='468')
+        # elif pga_t_data.PGAData(season=s).ryder_or_pres() == 'presidents':
+        #     t = Tournament.objects.get(pga_tournament_num='500', season=s)
+        # else:
+        #     t = None
 
         try:
             if t.complete:
