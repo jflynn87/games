@@ -128,7 +128,9 @@ class Season(models.Model):
         return ['470', '468', '500']
 
     def last_4(self):
-        return Tournament.objects.all().order_by('pk').exclude(pga_tournament_num__in=['468', '018']).reverse()[1:5]
+        #return Tournament.objects.all().order_by('pk').exclude(pga_tournament_num__in=['468', '018']).reverse()[1:5]
+        return Tournament.objects.all().order_by('pk').exclude(pga_tournament_num__in=['468', '018' '999']) \
+                .exclude(current=True).reverse()[1:5]
 
 
 class Tournament(models.Model):

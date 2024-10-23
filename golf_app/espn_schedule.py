@@ -19,8 +19,15 @@ class ESPNSchedule(object):
 
         s = Season.objects.get(current=True)
 
+        #get month from start datetime object
+        if start < datetime(int(s.season), 1,1):
+            season_year = int(s.season) - 1
+        else:
+            season_year = s.season
+
+
         headers = {'User-Agent': 'Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.149 Mobile Safari/537.36'}
-        url = 'https://www.espn.com/golf/schedule/_/season/' + str(s.season) + '/tour/pga?_xhr=pageContent'
+        url = 'https://www.espn.com/golf/schedule/_/season/' + str(season_year) + '/tour/pga?_xhr=pageContent'
         self.schedule = get(url, headers=headers).json()
 
         self.events_to_exclude = ['The Match', 'Corales Puntacana Championship', 'Puerto Rico Open', 'Barracuda Championship', 'Barbasol Championship']

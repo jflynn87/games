@@ -26,9 +26,10 @@ def create_groups(tournament_number, espn_t_num=None):
     print ('starting populte field', tournament_number)
     season = Season.objects.get(current=True)
 
-    if tournament_number != '500':
-        t_data = update_t_data(season)
-    
+    #if tournament_number not in ['500', 500]:
+    #    print ('Z')
+    #    t_data = update_t_data(season)
+
     if Tournament.objects.filter(season=season).count() > 0 and tournament_number != '999':  #skip for olympics
         try:
             last_tournament = Tournament.objects.get(current=True, complete=True, season=season)
@@ -36,9 +37,9 @@ def create_groups(tournament_number, espn_t_num=None):
             last_tournament.save()
             key = {}
             key['pk']=last_tournament.pk
-
             for sd in ScoreDict.objects.filter(tournament__season=season):
-                if not sd.data_valid():
+               
+                if sd.tournament.pga_tournament_num not in ['468', '500'] and not sd.data_valid():
                     sd.update_sd_data()
 
 
@@ -969,7 +970,7 @@ def get_golfer(player, pga_num=None, espn_data=None, espn_num=None):
         else:
             golfer.espn_number = ''
         golfer.golfer_name = player
-        golfer.pic_link = g.get_pic_link()
+        golfer.pic_link = golfer.get_pic_link()
         golfer.save()
         #golfer = g
     

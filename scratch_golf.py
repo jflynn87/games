@@ -27,7 +27,7 @@ from pprint import pprint
 import csv
 from rest_framework.request import Request
 from django.http import HttpRequest
-import numpy as np
+
 import pytz
 from operator import itemgetter
 from django.core.exceptions import ObjectDoesNotExist
@@ -36,19 +36,34 @@ import requests
 
 from unidecode import unidecode as decode
 
-t = Tournament.objects.get(current=True)
-print (t, t.pk)
-exit()
-for f in Field.objects.filter(tournament__current=True, handi__isnull=True):
-    print (f.tournament, f.group.number, f, f.currentWGR)
-    f.handi = f.handicap()
-    f.save()
-    
-print (Field.objects.filter(tournament__current=True, handi__isnull=True).count())
+field = serializers.serialize('json', Field.objects.filter(tournament__current=True),  use_natural_foreign_keys=True)
 
-#url = 'http://127.0.0.1:8000/golf_app/get_field_csv/' + str(t.pk) 
-#req = requests.get(url)
-#print (req)
+print (field)
+
+for f in json.loads(field): 
+    print (f)
+    print ('----------------------------------------------------------------')
+exit()
+
+
+with open('text_newcsv.csv', 'w', encoding='utf-8-sig') as f:
+    writer = csv.writer(f)
+    header = ['ESPN ID', 'Golfer', 'Group ID', 'currentWGR', 'sow_WGR', 'soy_WGR', 'prior year finish',
+              'handicap', 'FedEx Rank', 'FedEx Points', 'Season Played', 'Season Won', 'Season 2-10', 
+              'Season 11-29', 'Season 30 - 49', 'Season > 50', 'Season Cut', 'SG Off Tee Rank', 'SG Off Tee',
+              'SG Approach Rank', 'SG Approach', 'SG Around Green Rank', 'SG Around Green',
+        	  'SG Putting Rank', 'SG Putting']
+    for t in Season.objects.get(current=True).last_4():
+        header.append(t.name)
+
+    for f in Field.objects.filter(tournament__current=True):
+
+        writer.writerow(f.golfer.espn_number, f.playerName, f.group.number, f.currentWGR, f.sow_WGR, f.soy_WGR,
+                        f.prior_year, f.handi, 'FedEx Rank', 'FedEx Points', 'Season Played', 'Season Won', 'Season 2-10', 
+              'Season 11-29', 'Season 30 - 49', 'Season > 50', 'Season Cut', 'SG Off Tee Rank', 'SG Off Tee',
+              'SG Approach Rank', 'SG Approach', 'SG Around Green Rank', 'SG Around Green',
+        	  'SG Putting Rank', 'SG Putting', f.recent.get())
+
 
 exit()
 

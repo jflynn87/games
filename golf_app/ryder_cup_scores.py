@@ -37,10 +37,11 @@ class Score(object):
         #    return
 
         for p in Picks.objects.filter(playerName__tournament=self.tournament).values('playerName').distinct():
+            
             pick_loop_start = datetime.now()
             
             pick = Picks.objects.filter(playerName__pk=p.get('playerName')).first()
-
+            print ('pick loop start: ', pick)
             sd, sd_created = ScoreDetails.objects.get_or_create(user=pick.user, pick=pick)
             score = 0
             for session, match in self.score_dict.items():
@@ -63,7 +64,7 @@ class Score(object):
                         m_data = [v for k,v in data.items()][0]
                         #print (m_data)
                         winning_holes = [v.get('score').get('value') for k,v in m_data.items() if k != 'status' and v.get('score').get('winner')]
-                        #print ('winning holes', winning_holes)
+                        print ('winning holes', winning_holes)
 
                         #winning_holes = [v.get('score').get('value') for k,v in match.items() if k !='status' and v.get('score').get('winner') == True]
                         

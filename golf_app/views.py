@@ -449,7 +449,7 @@ def setup(request):
                 t = Tournament.objects.get(current=True)
             else:
                 t = None
-            json_url = 'https://statdata.pgatour.com/r/current/message.json'
+            #json_url = 'https://statdata.pgatour.com/r/current/message.json'
             #print (json_url)
             
             #try:
@@ -463,8 +463,8 @@ def setup(request):
             #        data = json.loads(field_json_url.read().decode())
 
             #pga_t_num = data.get('tid')
-            data = ''
-            pga_t_num = '003'
+            #data = ''
+            #pga_t_num = '003'
 
             #if pga_t_num == t.pga_tournament_num:
             #first_field = Field.objects.filter(tournament=t).first().pk
@@ -479,8 +479,9 @@ def setup(request):
 
                 espn_curr_event = espn_data.current_event()[0]
                 espn_t_num = espn_curr_event.get('link').split('=')[1]
-                pga = pga_t_data.PGAData()
-                next_pga_t_num = (pga.next_t(), pga.get_t_name(pga.next_t()))
+                #pga = pga_t_data.PGAData()
+                #next_pga_t_num = (pga.next_t(), pga.get_t_name(pga.next_t()))
+                next_pga_t_num = ''
             except Exception as e:
                 print ('setup current event exception', e)
                 espn_curr_event = []
@@ -490,12 +491,12 @@ def setup(request):
                 next_pga_t_num = ''
             
 
-            return render(request, 'golf_app/setup.html', {'status': data,
+            return render(request, 'golf_app/setup.html', {'status': '',
                                                             'tournament': t,
                                                             'espn_sched': espn_sched,
                                                             'curr_event': espn_curr_event,
                                                             'espn_t_num': espn_t_num,
-                                                            'pga_t_num': pga_t_num,
+                                                            'pga_t_num': '',
                                                             'first_golfer': Golfer.objects.first(),
                                                             'last_golfer': Golfer.objects.last(),
                                                             'next_pga_t_num': next_pga_t_num,
@@ -2045,7 +2046,7 @@ class RyderCupScoresAPI(APIView):
                 score_dict = espn_ryder_cup.ESPNData(data=sd.data).field()
             else:
                 score_dict = espn_ryder_cup.ESPNData().field()
-            print ("AAAAAAAAA")
+        
             scores = ryder_cup_scores.Score(score_dict).update_scores()
             totals = ryder_cup_scores.Score(score_dict).total_scores()
             print ('ryder cyup view totals: ', totals)
