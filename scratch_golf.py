@@ -36,13 +36,11 @@ import requests
 
 from unidecode import unidecode as decode
 
-field = serializers.serialize('json', Field.objects.filter(tournament__current=True),  use_natural_foreign_keys=True)
 
-print (field)
-
-for f in json.loads(field): 
-    print (f)
-    print ('----------------------------------------------------------------')
+stats = espn_golfer_stats_api.ESPNGolfer('9478')
+for s in stats.all_stats:
+    print (s)
+    print ('-'*50)
 exit()
 
 

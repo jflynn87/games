@@ -321,6 +321,9 @@ class ESPNData(object):
 
     def cut_penalty(self, p):
         '''takes a field obj and a score obj, returns an int'''
+        if not self.t.has_cut:
+            return 0
+        
         if not p.group.cut_penalty():
             return 0
 
