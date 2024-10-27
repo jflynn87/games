@@ -165,6 +165,7 @@ class BonusDtl(object):
             winning_score = min(v.get('score') for k,v in scores.items())
             print ('winning socre: ', winning_score)
             weekly_winner = [k for k,v in scores.items() if v.get('score') == winning_score]
+
             print ('weekly winner', winning_score, weekly_winner)
             
             for winner in weekly_winner:
@@ -175,7 +176,8 @@ class BonusDtl(object):
                     #bd.bonus_points = self.weekly_winner_points()
                     bd.bonus_points = self.tournament.winner_bonus_points() / self.tournament.num_of_winners()
                     bd.save()
-
+                else:
+                    weekly_winner.remove(winner)
             return weekly_winner
         else:
             return None

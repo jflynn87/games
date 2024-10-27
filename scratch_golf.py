@@ -36,11 +36,11 @@ import requests
 
 from unidecode import unidecode as decode
 
+pm = PickMethod.objects.filter(tournament__current=True).exclude(method__in=[1,2])
 
-stats = espn_golfer_stats_api.ESPNGolfer('9478')
-for s in stats.all_stats:
-    print (s)
-    print ('-'*50)
+for     p in pm:
+    print (p.tournament, p.method, p.user.username)
+
 exit()
 
 
