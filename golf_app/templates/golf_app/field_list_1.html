@@ -70,16 +70,16 @@
     </form>
 </div>
     <span style="float: right;" >
-        <a href="#" id="download_excel" onclick="downloadExcel()">
+        <a href={{ s3_url }} id="download_excel" >
         <i class="fas fa-file-download" title="Download Excel" data-toggle="tooltip"> Download Excel</i>
         </a>
     </span>
 {%else%}
 <p>
-    <span style="float: right;">  
-    <a href="#" id="download_excel">
-    <i class="fas fa-file-download" title="Download Excel" data-toggle="tooltip"> Download Excel</i>
-    </a>
+    <span style="float: right;" >
+        <a href={{ s3_url }} id="download_excel" >
+        <i class="fas fa-file-download" title="Download Excel" data-toggle="tooltip"> Download Excel</i>
+        </a>
     </span>
 </p>
 {%endif%} 

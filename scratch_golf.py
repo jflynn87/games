@@ -11,7 +11,7 @@ from datetime import datetime, timedelta
 from golf_app import populateField, calc_leaderboard, manual_score, bonus_details, espn_api, \
                      round_by_round, scrape_espn, utils, golf_serializers, espn_schedule, \
                      scrape_scores_picks, espn_ryder_cup, withdraw, fedex_email, pga_t_data, fedexData, \
-                     setup_fedex_field, espn_golfer_stats_api, espn_golfer_base_data_api, espn_schedule, calc_zurich_score
+                     setup_fedex_field, espn_golfer_stats_api, espn_golfer_base_data_api, espn_schedule, calc_zurich_score, create_field_csv
 from django.db.models import Count, Sum
 from unidecode import unidecode as decode
 import json
@@ -36,10 +36,39 @@ import requests
 
 from unidecode import unidecode as decode
 
-pm = PickMethod.objects.filter(tournament__current=True).exclude(method__in=[1,2])
+# # ## use this to clean up dulpicate golfers
+# l = list(Golfer.objects.all().values_list('espn_number', flat=True))
+# dupes = set([x for x in l if l.count(x) > 1])
+# print (len(dupes))
+# for d in dupes:
+#     print ('dupe: ', d)
+#     latest = Golfer.objects.filter(espn_number=d).latest('pk')
+#     golfers = Golfer.objects.filter(espn_number=d).exclude(pk=latest.pk)
+#     for g in golfers:
+#         print (g.golfer_name)
+#         fields = Field.objects.filter(golfer=g)
+#         for f in fields:
+#             f.golfer = latest
+#             f.save()
+#         g.delete()
 
-for     p in pm:
-    print (p.tournament, p.method, p.user.username)
+# print (Field.objects.filter(golfer__isnull=True).count())
+
+# ## end dupe golfers block
+
+# exit()
+
+#espn = espn_schedule.ESPNSchedule()
+#print (espn.get_event_list())
+start = datetime.now()
+t = Tournament.objects.get(current=True)    
+f = create_field_csv.FieldCSV(t).create_file()
+print (datetime.now() - start)
+
+
+#print (dupes)
+exit()
+
 
 exit()
 
@@ -120,28 +149,6 @@ for line in golfers:
 
 
 
-
-# ## use this to clean up dulpicate golfers
-# l = list(Golfer.objects.all().values_list('espn_number', flat=True))
-# dupes = set([x for x in l if l.count(x) > 1])
-
-# for d in dupes:
-#     print (d)
-#     golfers = Golfer.objects.filter(espn_number=d)
-#     for g in golfers:
-#         print (g.golfer_name)
-#         print (Field.objects.filter(golfer=g))
-        
-# ## end dupe golfers block
-
-# espn = espn_schedule.ESPNSchedule()
-# print (espn.get_event_list())
-    
-    
-    
-
-# #print (dupes)
-# exit()
 
 exit()
 

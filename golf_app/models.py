@@ -129,7 +129,7 @@ class Season(models.Model):
 
     def last_4(self):
         #return Tournament.objects.all().order_by('pk').exclude(pga_tournament_num__in=['468', '018']).reverse()[1:5]
-        return Tournament.objects.all().order_by('pk').exclude(pga_tournament_num__in=['468', '018' '999']) \
+        return Tournament.objects.all().order_by('pk').exclude(pga_tournament_num__in=['468', '500', '018' '999']) \
                 .exclude(current=True).reverse()[1:5]
 
 
@@ -174,6 +174,9 @@ class Tournament(models.Model):
     def __str__(self):
         return self.name
 
+
+    def s3_csv_key(self):
+        return f'fields/field_{self.season.season}_{self.name}.csv'
     
     def natural_key(self):
         return self.name
@@ -504,7 +507,7 @@ class Tournament(models.Model):
 
     def special_field(self):
         #if self.pga_tournament_num in ['999', '470', '468', '018']:
-        if self.pga_tournament_num in ['999', '470', '468']:
+        if self.pga_tournament_num in ['999', '470', '468', '500']:
             return True
         else:
             return False
@@ -745,7 +748,7 @@ class Golfer(models.Model):
             #print ('diff: ', fields - last_played.season_stats.get('played'), fields, last_played.season_stats.get('played'))
             if rerun:        
                 print ('summary stats: ', self.golfer_name, ' : rerun updating all tournaments')
-                fields = Field.objects.filter((Q(golfer=self) | Q(partner_golfer=self)), tournament__season=season).exclude(tournament__current=True).exclude(tournament__pga_tournament_num='468').values_list('tournament__pk',flat=True).order_by('tournament__pk')
+                fields = Field.objects.filter((Q(golfer=self) | Q(partner_golfer=self)), tournament__season=season).exclude(tournament__current=True).exclude(tournament__pga_tournament_num__in=['468', '500']).values_list('tournament__pk',flat=True).order_by('tournament__pk')
                 t_list = Tournament.objects.filter(pk__in=fields)
             elif fields == last_played.season_stats.get('played'):
                 print ('summary stats: ', self.golfer_name, ' : no change returning last t stats')
@@ -764,7 +767,7 @@ class Golfer(models.Model):
                         }
             else:
                 print ('summary stats: ', self.golfer_name, ' : updating all tournaments')
-                fields = Field.objects.filter((Q(golfer=self) | Q(partner_golfer=self)), tournament__season=season).exclude(tournament__current=True).exclude(tournament__pga_tournament_num='468').values_list('tournament__pk',flat=True).order_by('tournament__pk')
+                fields = Field.objects.filter((Q(golfer=self) | Q(partner_golfer=self)), tournament__season=season).exclude(tournament__current=True).exclude(tournament__pga_tournament_num__in=['468', '500']).values_list('tournament__pk',flat=True).order_by('tournament__pk')
                 #print (fields)
                 t_list = Tournament.objects.filter(pk__in=fields)
 
@@ -846,11 +849,11 @@ class Golfer(models.Model):
         if t_list:
             tournaments=t_list
         elif self.results and not rerun:
-            g_tournaments = Field.objects.filter(tournament__season=season, golfer=self).exclude(tournament__current=True).exclude(tournament__pga_tournament_num='468').values_list('tournament__pk',flat=True).order_by('tournament__pk')
+            g_tournaments = Field.objects.filter(tournament__season=season, golfer=self).exclude(tournament__current=True).exclude(tournament__pga_tournament_num__in=['468', '500']).values_list('tournament__pk',flat=True).order_by('tournament__pk')
             tournaments = Tournament.objects.filter(pk__in=g_tournaments)
             #tournaments = Tournament.objects.filter(season__season__gte='2021').exclude(pk__in=list(self.results.keys())).exclude(current=True).exclude(pga_tournament_num='468') #ryder cup
         else:
-            g_tournaments = Field.objects.filter(tournament__season=season, golfer=self).exclude(tournament__current=True).exclude(tournament__pga_tournament_num='468').values_list('tournament__pk',flat=True).order_by('tournament__pk')
+            g_tournaments = Field.objects.filter(tournament__season=season, golfer=self).exclude(tournament__current=True).exclude(tournament__pga_tournament_num__in=['468', '500']).values_list('tournament__pk',flat=True).order_by('tournament__pk')
             tournaments = Tournament.objects.filter(pk__in=g_tournaments)
             #tournaments = Tournament.objects.filter(season__season__gte='2021').exclude(current=True).exclude(pga_tournament_num='468')
             self.results = {}
@@ -859,10 +862,13 @@ class Golfer(models.Model):
         #print ('golfer results post t : ', self, datetime.now() - pre_t, tournaments)
         for t in tournaments:
             sd = ScoreDict.objects.get(tournament=t)
-            if not t.special_field() or (t.season.season > 2021 and t.pga_tournament_num == '018'):
-                print ('A')
-                score = [v for k, v in sd.data.items() if k != 'info' and v.get('espn_num') == self.espn_number] 
-                #print (score[0].get('rank'))
+            
+            if not sd.data:
+                print ('no SD', t)
+                rank = 'n/a'
+            elif not t.special_field() or (t.season.season > 2021 and t.pga_tournament_num == '018'):
+                score = [v for k, v in sd.data.items() if k != 'info' and v.get('pga_num') == self.espn_number] 
+                #print (score)
                 if score:
                     rank = score[0].get('rank')
                 else:
@@ -1063,7 +1069,10 @@ class Field(models.Model):
         from golf_app import espn_api
         data = {}
         start = datetime.now()
-        for t in Tournament.objects.all().order_by('pk').exclude(pga_tournament_num__in=['468', '018']).reverse()[1:5]:  # excld ryder cup
+
+        tournaments = Tournament.objects.all().order_by('pk').exclude(pga_tournament_num__in=['468', '500' '018']).reverse()[1:5]
+        
+        for t in tournaments:  # excld ryder cup
             try:
                 if Field.objects.filter(tournament=t, golfer=self.golfer).exclude(withdrawn=True).exclude(golfer__espn_number__isnull=True).exists():
                     sd = ScoreDict.objects.get(tournament=t)
@@ -1133,9 +1142,9 @@ class Field(models.Model):
     def playing(self, score_dict=None):
         from golf_app import scrape_espn
 
-        if self.tournament.pga_tournament_num == '468' and not self.tournament.started():
+        if self.tournament.pga_tournament_num in ['468', '500'] and not self.tournament.started():
             return False
-        elif self.tournament.pga_tournament_num == '468' and self.tournament.started():
+        elif self.tournament.pga_tournament_num in ['468', '500'] and self.tournament.started():
             return True
 
 

@@ -17,6 +17,7 @@ from operator import itemgetter
 from requests import get
 import time
 from unidecode import unidecode as decode
+from golf_app.create_field_csv import FieldCSV
 
 
 @transaction.atomic
@@ -87,6 +88,14 @@ def create_groups(tournament_number, espn_t_num=None):
         create_ryder_cup_field(field, tournament)
     else:
         create_field(field, tournament)
+
+    print ('Creating CSV file: ', datetime.datetime.now())
+    data_file = FieldCSV(tournament).create_file()
+    if data_file:
+        print ('CSV file created: ', datetime.datetime.now())
+    else:
+        print ('CSV file creation failed: ', datetime.datetime.now())
+
     return ({'msg: ', tournament.name, ' Field complete'})
 
 
@@ -557,7 +566,7 @@ def create_field(field, tournament):
         if tournament.pga_tournament_num != '018':
             golfer = get_golfer(player, pga_num=None, espn_num=info.get('espn_num'))
         else:
-            golfer = Golfer.objects.filter(golfer_name=player).first()
+            golfer = Golfer.objects.filter(golfer_name=player).latest('pk')
         group = Group.objects.get(tournament=tournament, number=group_num)
         #print (player, info)
         f = Field()
@@ -953,16 +962,18 @@ def get_golfer(player, pga_num=None, espn_data=None, espn_num=None):
     #    golfer = Golfer.objects.get(golfer_pga_num=pga_num)
     if espn_num and Golfer.objects.filter(espn_number=espn_num).exists():
         golfer = Golfer.objects.filter(espn_number=espn_num).latest('pk')
-        golfer.pic_link = golfer.get_pic_link()
-        golfer.save()
+        #golfer.pic_link = golfer.get_pic_link()
+        #golfer.flag_link = golfer.get_flag()
+        #golfer.save()
     #elif Golfer.objects.filter(golfer_name=player, golfer_pga_num__in=['', None]).exists() and pga_num:
     elif Golfer.objects.filter(golfer_name=player, espn_number__in=['', None]).exists() and espn_num:
         #golfer = Golfer.objects.get(golfer_name=player, golfer_pga_num__in=['', None])
         golfer = Golfer.objects.filter(golfer_name=player, espn_number__in=['', None]).latest('pk')
-        golfer.golfer_espn_number = espn_num
-        golfer.pic_link = golfer.get_pic_link()
+        golfer.espn_number = espn_num
+        #golfer.pic_link = golfer.get_pic_link()
+        #golfer.flag_link = golfer.get_flag()
         #golfer.pic_link = 'https://a.espncdn.com/combiner/i?img=/i/headshots/golf/players/full/' + str(espn_num) + '.png&w=350&h=254'
-        golfer.save()
+        #golfer.save()
     else:
         golfer = Golfer()
         if espn_num:
@@ -970,10 +981,14 @@ def get_golfer(player, pga_num=None, espn_data=None, espn_num=None):
         else:
             golfer.espn_number = ''
         golfer.golfer_name = player
-        golfer.pic_link = golfer.get_pic_link()
-        golfer.save()
+        #golfer.pic_link = golfer.get_pic_link()
+        #golfer.flag_link = golfer.get_flag()
+        #golfer.save()
         #golfer = g
-    
+    golfer.pic_link = golfer.get_pic_link()
+    golfer.flag_link = golfer.get_flag()
+    golfer.save()
+
     # if golfer.pic_link in [' ', None]:
     #     golfer.pic_link = golfer.get_pic_link()
     #     golfer.save()
