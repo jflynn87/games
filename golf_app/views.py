@@ -33,7 +33,7 @@ from collections import OrderedDict
 #import ssl
 import boto3
 import os
-
+from golf_app.create_field_csv import FieldCSV
 
 class FieldListView1(LoginRequiredMixin, TemplateView):
     login_url = 'login'
@@ -78,150 +78,150 @@ class FieldListView1(LoginRequiredMixin, TemplateView):
         return url
 
 
-# class NewFieldListView(LoginRequiredMixin,TemplateView):
-#     login_url = 'login'
-#     template_name = 'golf_app/field_list_a.html'
-#     model = Field
-#     #redirect_field_name = 'next'
+class NewFieldListView(LoginRequiredMixin,TemplateView):
+    login_url = 'login'
+    template_name = 'golf_app/field_list_a.html'
+    model = Field
+    #redirect_field_name = 'next'
 
-#     def get_context_data(self,**kwargs):
-#         context = super(NewFieldListView, self).get_context_data(**kwargs)
-#         utils.save_access_log(self.request, 'picks')
-#         try:
-#             tournament = Tournament.objects.get(current=True)
-#         except Exception:
-#             t = Tournament.objects.all().order_by('-pk').first()
-#             if t.pga_tournament_num == '999':
-#                 tournament=Tournament.objects.get(season__current=True, pga_tournament_num='999')
-#             else: tournament = None
+    def get_context_data(self,**kwargs):
+        context = super(NewFieldListView, self).get_context_data(**kwargs)
+        utils.save_access_log(self.request, 'picks')
+        try:
+            tournament = Tournament.objects.get(current=True)
+        except Exception:
+            t = Tournament.objects.all().order_by('-pk').first()
+            if t.pga_tournament_num == '999':
+                tournament=Tournament.objects.get(season__current=True, pga_tournament_num='999')
+            else: tournament = None
 
-#         context.update({
-#         #'field_list': Field.objects.filter(tournament=Tournament.objects.get(current=True)),
-#         'tournament': tournament,
-#         'groups': Group.objects.filter(tournament=tournament)
-#         #'error_message': error_message
-#         })
-#         return context
+        context.update({
+        #'field_list': Field.objects.filter(tournament=Tournament.objects.get(current=True)),
+        'tournament': tournament,
+        'groups': Group.objects.filter(tournament=tournament)
+        #'error_message': error_message
+        })
+        return context
 
-#     @transaction.atomic
-#     def post(self, request):
-#         start = datetime.datetime.now()
-#         data = json.loads(self.request.body)
-#         print ('start of picks submit: ', request.user, data)
-#         pick_list = data.get('pick_list')
-#         print ('pick_list', pick_list)
-#         tournament = Tournament.objects.get(current=True)
-#         #groups = Group.objects.filter(tournament=tournament)
-#         user = User.objects.get(username=request.user)
+    @transaction.atomic
+    def post(self, request):
+        start = datetime.datetime.now()
+        data = json.loads(self.request.body)
+        print ('start of picks submit: ', request.user, data)
+        pick_list = data.get('pick_list')
+        print ('pick_list', pick_list)
+        tournament = Tournament.objects.get(current=True)
+        #groups = Group.objects.filter(tournament=tournament)
+        user = User.objects.get(username=request.user)
 
-#         if 'random' not in pick_list:
-#             if len(pick_list) != tournament.total_required_picks():
-#                 print ('total picks match: ', len(pick_list), tournament.total_required_picks())
-#                 msg = 'Something went wrong, wrong number of picks.  Expected: ' + str(tournament.total_required_picks()) + ' received: ' + str(len(pick_list)) + ' Please try again'
-#                 response = {'status': 0, 'message': msg} 
-#                 return HttpResponse(json.dumps(response), content_type='application/json')
+        if 'random' not in pick_list:
+            if len(pick_list) != tournament.total_required_picks():
+                print ('total picks match: ', len(pick_list), tournament.total_required_picks())
+                msg = 'Something went wrong, wrong number of picks.  Expected: ' + str(tournament.total_required_picks()) + ' received: ' + str(len(pick_list)) + ' Please try again'
+                response = {'status': 0, 'message': msg} 
+                return HttpResponse(json.dumps(response), content_type='application/json')
 
-#             for group in Group.objects.filter(tournament=tournament):
-#                 count = Field.objects.filter(group=group, pk__in=pick_list).count()
-#                 if count == group.num_of_picks():
-#                     print ('group ok: ', group, ' : count: ', count)
-#                 else:
-#                     print ('group ERROR: ', group, ' : count: ', count)
-#                     msg = 'Pick error: Group - ' + str(group.number) + ' expected' + str(group.num_of_picks()) + ' picks.  Actual Picks: ' + str(count)
-#                     response = {'status': 0, 'message': msg} 
-#                     return HttpResponse(json.dumps(response), content_type='application/json')
+            for group in Group.objects.filter(tournament=tournament):
+                count = Field.objects.filter(group=group, pk__in=pick_list).count()
+                if count == group.num_of_picks():
+                    print ('group ok: ', group, ' : count: ', count)
+                else:
+                    print ('group ERROR: ', group, ' : count: ', count)
+                    msg = 'Pick error: Group - ' + str(group.number) + ' expected' + str(group.num_of_picks()) + ' picks.  Actual Picks: ' + str(count)
+                    response = {'status': 0, 'message': msg} 
+                    return HttpResponse(json.dumps(response), content_type='application/json')
 
-#         if tournament.pga_tournament_num not in ['500', '468'] and \
-#             tournament.started() and not tournament.late_picks:
-#             espn = espn_api.ESPNData()
-#             msg = 'Golfer already playing: '
-#             error = False
-#             for p in pick_list:
-#                 if not Picks.objects.filter(playerName__pk=p).exists():  #only check new picks, front end should prevent new picks so just a saftey net
-#                     f = Field.objects.get(pk=p)
-#                     if espn.player_started(f.golfer.espn_number):
-#                         print ('picked started golfer: ', self.request.user, f)
-#                         msg = msg + ' ' + f.playerName 
-#                         error = True
-#             if error:
-#                 response = {'status': 0, 'message': msg} 
-#                 return HttpResponse(json.dumps(response), content_type='application/json')
+        if tournament.pga_tournament_num not in ['500', '468'] and \
+            tournament.started() and not tournament.late_picks:
+            espn = espn_api.ESPNData()
+            msg = 'Golfer already playing: '
+            error = False
+            for p in pick_list:
+                if not Picks.objects.filter(playerName__pk=p).exists():  #only check new picks, front end should prevent new picks so just a saftey net
+                    f = Field.objects.get(pk=p)
+                    if espn.player_started(f.golfer.espn_number):
+                        print ('picked started golfer: ', self.request.user, f)
+                        msg = msg + ' ' + f.playerName 
+                        error = True
+            if error:
+                response = {'status': 0, 'message': msg} 
+                return HttpResponse(json.dumps(response), content_type='application/json')
             
         
-#         #print ('user', user)
-#         #print ('started', tournament.started())
+        #print ('user', user)
+        #print ('started', tournament.started())
 
-#         # if tournament.started() and tournament.late_picks is False:
-#         #     print ('picks too late', user, datetime.datetime.now())
-#         #     print (timezone.now())
-#         #     msg = 'Too late for picks, tournament started'
-#         #     response = {'status': 0, 'message': msg} 
-#         #     return HttpResponse(json.dumps(response), content_type='application/json')
+        # if tournament.started() and tournament.late_picks is False:
+        #     print ('picks too late', user, datetime.datetime.now())
+        #     print (timezone.now())
+        #     msg = 'Too late for picks, tournament started'
+        #     response = {'status': 0, 'message': msg} 
+        #     return HttpResponse(json.dumps(response), content_type='application/json')
 
         
-#         if Picks.objects.filter(playerName__tournament=tournament, user=user).count()>0:
-#             Picks.objects.filter(playerName__tournament=tournament, user=user).delete()
-#             ScoreDetails.objects.filter(pick__playerName__tournament=tournament, user=user).delete()
+        if Picks.objects.filter(playerName__tournament=tournament, user=user).count()>0:
+            Picks.objects.filter(playerName__tournament=tournament, user=user).delete()
+            ScoreDetails.objects.filter(pick__playerName__tournament=tournament, user=user).delete()
 
-#         if CountryPicks.objects.filter(user=user, tournament=tournament).count() > 0:
-#             CountryPicks.objects.filter(user=user, tournament=tournament).delete()
+        if CountryPicks.objects.filter(user=user, tournament=tournament).count() > 0:
+            CountryPicks.objects.filter(user=user, tournament=tournament).delete()
 
-#         if 'random' in pick_list:
-#             picks = tournament.create_picks(user, 'random')    
-#             print ('random picks submitted', user, datetime.datetime.now(), picks)
-#         else:
-#             field_list = []
-#             for id in pick_list:
-#                 field_list.append(Field.objects.get(pk=id))                    
-#             tournament.save_picks(field_list, user, 'self')
+        if 'random' in pick_list:
+            picks = tournament.create_picks(user, 'random')    
+            print ('random picks submitted', user, datetime.datetime.now(), picks)
+        else:
+            field_list = []
+            for id in pick_list:
+                field_list.append(Field.objects.get(pk=id))                    
+            tournament.save_picks(field_list, user, 'self')
         
-#         if tournament.pga_tournament_num == '999' and 'random' not in pick_list:
-#             for mens_pick in  data.get('men_countries'):
-#                 cp = CountryPicks()
-#                 cp.user = user
-#                 cp.tournament = tournament
-#                 cp.country = mens_pick
-#                 cp.gender = "men"
-#                 cp.save()
+        if tournament.pga_tournament_num == '999' and 'random' not in pick_list:
+            for mens_pick in  data.get('men_countries'):
+                cp = CountryPicks()
+                cp.user = user
+                cp.tournament = tournament
+                cp.country = mens_pick
+                cp.gender = "men"
+                cp.save()
 
-#             for womens_pick in  data.get('women_countries'):
-#                 cp = CountryPicks()
-#                 cp.user = user
-#                 cp.tournament = tournament
-#                 cp.country = womens_pick
-#                 cp.gender = 'women'
-#                 cp.save()
+            for womens_pick in  data.get('women_countries'):
+                cp = CountryPicks()
+                cp.user = user
+                cp.tournament = tournament
+                cp.country = womens_pick
+                cp.gender = 'women'
+                cp.save()
 
-#         if tournament.pga_tournament_num in ['468', '500']:  #Ryder/Pres Cup
-#             cp = CountryPicks()
-#             cp.user = user
-#             cp.tournament = tournament
-#             if data.get('ryder_cup')[0] == "USA":
-#                 cp.country = 'USA'
-#             elif tournament.pga_tournament_num == '468':
-#                 cp.country = "EUR"
-#             elif tournament.pga_tournament_num == '500':
-#                 cp.country = 'INTL'
-#             else:
-#                 cp.country = 'bad data'
+        if tournament.pga_tournament_num in ['468', '500']:  #Ryder/Pres Cup
+            cp = CountryPicks()
+            cp.user = user
+            cp.tournament = tournament
+            if data.get('ryder_cup')[0] == "USA":
+                cp.country = 'USA'
+            elif tournament.pga_tournament_num == '468':
+                cp.country = "EUR"
+            elif tournament.pga_tournament_num == '500':
+                cp.country = 'INTL'
+            else:
+                cp.country = 'bad data'
 
-#             cp.ryder_cup_score = data.get('ryder_cup')[1]
-#             cp.gender = 'men'
-#             cp.save()
+            cp.ryder_cup_score = data.get('ryder_cup')[1]
+            cp.gender = 'men'
+            cp.save()
             
 
-#         print ('user submitting picks', datetime.datetime.now(), request.user, Picks.objects.filter(playerName__tournament=tournament, user=user))
-#         print ('submit picks duration: ',  datetime.datetime.now() - start)
+        print ('user submitting picks', datetime.datetime.now(), request.user, Picks.objects.filter(playerName__tournament=tournament, user=user))
+        print ('submit picks duration: ',  datetime.datetime.now() - start)
     
-#         if UserProfile.objects.filter(user=user).exists():
-#             profile = UserProfile.objects.get(user=user)
-#             if profile.email_picks:
-#                 email_picks(tournament, user)
+        if UserProfile.objects.filter(user=user).exists():
+            profile = UserProfile.objects.get(user=user)
+            if profile.email_picks:
+                email_picks(tournament, user)
 
-#         #return redirect('golf_app:picks_list')
-#         msg = 'Picks Submitted'
-#         response = {'status': 1, 'message': msg, 'url': '/golf_app/picks_list'} 
-#         return HttpResponse(json.dumps(response), content_type='application/json')
+        #return redirect('golf_app:picks_list')
+        msg = 'Picks Submitted'
+        response = {'status': 1, 'message': msg, 'url': '/golf_app/picks_list'} 
+        return HttpResponse(json.dumps(response), content_type='application/json')
 
 
 
@@ -3638,3 +3638,16 @@ class SetupGolferStatsAPI(APIView):
         except Exception as e:
             print ('setup golfer stats API exception: ', e)
             return JsonResponse({'error': {'msg': str(e)}})
+
+class CreateFieldCSVAPI(APIView):
+    def get(self, request, **kwargs):
+        try:
+            if kwargs:
+                t = Tournament.objects.get(pk=kwargs.get('pk')) #confirm this works
+            else:
+                t= Tournament.objects.get(current=True)
+            f = FieldCSV(t).create_file()
+            return JsonResponse(f, status=200, safe=True)
+        except Exception as e:
+            print ('CreateCSV error: ', str(e))
+            return JsonResponse({'error': str(e)}, status=400)

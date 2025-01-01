@@ -1023,11 +1023,11 @@ class Field(models.Model):
                 except Exception as e2:
                     print ('cant find prior tournament ', e2)
                     return 'n/a'
-        #print (t, t.season)
+        print (t, t.season)
         try:
             sd = ScoreDict.objects.get(tournament=t)
             if t.pga_tournament_num != "470":
-                rank = [v.get('rank') for k, v in sd.data.items() if k !='info' and v.get('espn_num') in [self.golfer.espn_number, self.golfer.golfer_pga_num]]
+                rank = [v.get('rank') for k, v in sd.data.items() if k !='info' and v.get('pga_num') in [self.golfer.espn_number, self.golfer.golfer_pga_num]]
                 #print (rank)
                 if rank[0] != '-':
                     return rank[0]

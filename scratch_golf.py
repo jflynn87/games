@@ -36,6 +36,12 @@ import requests
 
 from unidecode import unidecode as decode
 
+
+for f in Field.objects.filter(tournament__current=True):
+    print (f, f.prior_year_finish())
+
+exit()
+
 # # ## use this to clean up dulpicate golfers
 # l = list(Golfer.objects.all().values_list('espn_number', flat=True))
 # dupes = set([x for x in l if l.count(x) > 1])

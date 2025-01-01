@@ -3,6 +3,9 @@
 {%load compress%}
 {%block body_block%}
 
+{%compress js%}
+<script type="text/javascript" src="{%static 'golf_app/js/create_field_csv.js'%}"></script> 
+{%endcompress%}
 
 <h1>Run Setup</h1>
 
@@ -29,8 +32,10 @@
 <p><button class='btn btn-primary' id='update_stats' onclick="updateFedEx()">Update FedEx Data</button></p>
 <p><button class='btn btn-primary' id='update_stats' onclick="updateGolferStats()">Update Golfer Stats on T</button></p>
 <p><button class='btn btn-primary' id='update_stats' onclick="golferResultsUpdates()">Update Golfer Results</button><p>
-<p><button class='btn btn-primary' id='update_stats' onclick="emailReport('john')">Email John</button>
-<button class='btn btn-primary' id='email_report' onclick="emailReport('all')">Email All</button></p>
+ <p><button class='btn btn-primary' id='create_csv' onclick="createFieldCSV()">Create Field CSV</button><p>
+
+  <!-- <p><button class='btn btn-primary' id='update_stats' onclick="emailReport('john')">Email John</button>
+<button class='btn btn-primary' id='email_report' onclick="emailReport('all')">Email All</button></p> -->
 <br>
 <br>
 <p id="first_golfer_key" hidden>{{first_golfer.pk}}</p>

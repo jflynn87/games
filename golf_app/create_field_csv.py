@@ -24,6 +24,7 @@ class FieldCSV(object):
         self.s3_bucket = 'jflynn87-games-files'  # Configure your bucket name
         self.s3_key = self.t.s3_csv_key()  # Define your S3 path/key
 
+   
     def create_file(self):
         csv_buffer = StringIO()
         writer = csv.writer(csv_buffer)
@@ -49,15 +50,17 @@ class FieldCSV(object):
                 ContentType='text/csv'
             )
             
-            return True
+            return self.s3_key
             
         except Exception as e:
             print(f"Error uploading to S3: {str(e)}")
-            return False
+            return f"error {e}"
 
     def format_row(self, f):
-        print ('F ', f, f.season_stats)
-        s = f.season_stats.get('stats', {})
+        if f.season_stats:
+            s = f.season_stats.get('stats', {'no_stats': ''})
+        else:
+            s = {'no_stats': ''}
         
         row = [f.golfer.espn_number, f.playerName, f.group.number, f.currentWGR, f.sow_WGR, f.soy_WGR, f.prior_year, f.handi, 
                s.get('fed_ex_rank', ''), s.get('fed_ex_points', ''), s.get('played', ''), s.get('won', ''), s.get('top10', ''), s.get('bet11_29', ''), 
@@ -65,7 +68,7 @@ class FieldCSV(object):
                ]
         
         season_results = f.golfer.get_season_results(t_list=self.all_tournaments)
-        #print (f.playerName, season_results)
+
         for t in self.all_tournaments:
             row.append(season_results.get(t.pk).get('rank', 'n/a'))
         return row
