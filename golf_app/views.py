@@ -362,7 +362,7 @@ class SeasonTotalView(ListView):
         for tournament in Tournament.objects.filter(season__current=True):
             score_list = []
             second_half_score_list = []  #added for Mark
-            for score in TotalScore.objects.filter(tournament=tournament).order_by('user_id'):
+            for score in sorted(TotalScore.objects.filter(tournament=tournament), key=lambda x:x.user_id):
                  #print (tournament, score.user, score.score, total_scores.get(score.user))
                  score_list.append(score)
                  total_score = total_scores.get(score.user)
@@ -731,7 +731,7 @@ class NewScoresView(LoginRequiredMixin,TemplateView):  #changed from ListView 1/
 
         #score_dict = scrape_espn.ScrapeESPN().get_data()
 
-        context.update({'scores':TotalScore.objects.filter(tournament=tournament).order_by('score'),
+        context.update({'scores':sorted(TotalScore.objects.filter(tournament=tournament), key=lambda x:x.score),
                         'detail_list':None,
                         'leader_list':None,
                         'cut_data':None,
@@ -785,7 +785,7 @@ class OlympicScoresView(LoginRequiredMixin,ListView):
 
         #score_dict = scrape_espn.ScrapeESPN().get_data()
 
-        context.update({'scores':TotalScore.objects.filter(tournament=tournament).order_by('score'),
+        context.update({'scores':sorted(TotalScore.objects.filter(tournament=tournament), key=lambda x:x.score),
                         'detail_list':None,
                         'leader_list':None,
                         'cut_data':None,
@@ -1198,7 +1198,7 @@ class ScoresByPlayerView(LoginRequiredMixin,TemplateView):
 
         #score_dict = scrape_espn.ScrapeESPN().get_data()
 
-        context.update({'scores':TotalScore.objects.filter(tournament=tournament).order_by('score'),
+        context.update({'scores':sorted(TotalScore.objects.filter(tournament=tournament), key=lambda x:x.score),
                         'detail_list':None,
                         'leader_list':None,
                         'cut_data':None,
@@ -1331,7 +1331,8 @@ class RecentFormAPI(APIView):
             data[player_num]['recent'] = {}
             
             #result_list = []
-            for t in reversed(Tournament.objects.all().order_by('-pk')[1:5]):
+            #for t in reversed(Tournament.objects.all().order_by('-pk')[1:5]):
+            for t in sorted(Tournament.objects.all(), key=lambda x:x.pk, reverse=True)[1:5]:
                 if Field.objects.filter(tournament=t, golfer__espn_number=player_num).exists():
                     f = Field.objects.get(tournament=t, golfer__espn_number=player_num)
                     sd = ScoreDict.objects.get(tournament=t)

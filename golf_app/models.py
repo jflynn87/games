@@ -38,11 +38,12 @@ class Season(models.Model):
         l = []
 
         if Tournament.objects.filter(season=self).count() > 1:
-            first_t = Tournament.objects.filter(season=self).first()
+            #first_t = Tournament.objects.filter(season=self).first()
+            first_t = Tournament.objects.filter(season=self).earliest('pk')
         else:
             first_t = Tournament.objects.filter(season__season=str(int(self.season) - 1)).first()
             f = True
-
+        
         users =list(TotalScore.objects.filter(tournament=first_t).values('user'))
 
         if f:
