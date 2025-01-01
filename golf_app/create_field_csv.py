@@ -56,11 +56,12 @@ class FieldCSV(object):
             return False
 
     def format_row(self, f):
-        s = f.season_stats
+        print ('F ', f, f.season_stats)
+        s = f.season_stats.get('stats', {})
         
         row = [f.golfer.espn_number, f.playerName, f.group.number, f.currentWGR, f.sow_WGR, f.soy_WGR, f.prior_year, f.handi, 
-               s.get('fed_ex_rank'), s.get('fed_ex_points'), s.get('played'), s.get('won'), s.get('top10'), s.get('bet11_29'), 
-               s.get('bet30_49'), s.get('over50'), s.get('cuts'), 
+               s.get('fed_ex_rank', ''), s.get('fed_ex_points', ''), s.get('played', ''), s.get('won', ''), s.get('top10', ''), s.get('bet11_29', ''), 
+               s.get('bet30_49', ''), s.get('over50', ''), s.get('cuts', ''), 
                ]
         
         season_results = f.golfer.get_season_results(t_list=self.all_tournaments)

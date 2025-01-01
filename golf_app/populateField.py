@@ -89,12 +89,12 @@ def create_groups(tournament_number, espn_t_num=None):
     else:
         create_field(field, tournament)
 
-    print ('Creating CSV file: ', datetime.datetime.now())
-    data_file = FieldCSV(tournament).create_file()
-    if data_file:
-        print ('CSV file created: ', datetime.datetime.now())
-    else:
-        print ('CSV file creation failed: ', datetime.datetime.now())
+    # print ('Creating CSV file: ', datetime.datetime.now())
+    # data_file = FieldCSV(tournament).create_file()
+    # if data_file:
+    #     print ('CSV file created: ', datetime.datetime.now())
+    # else:
+    #     print ('CSV file creation failed: ', datetime.datetime.now())
 
     return ({'msg: ', tournament.name, ' Field complete'})
 
