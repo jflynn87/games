@@ -1,4 +1,5 @@
 function createFieldCSV() {
+    console.log('Create CSV')
     fetch('/golf_app/create_field_csv')
     .then((response) =>{
         if (! response.ok) {

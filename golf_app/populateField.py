@@ -839,6 +839,7 @@ def create_ryder_cup_field(field, tournament):
 
 def get_individual_stats(t=None, update=False):
     start = datetime.datetime.now()
+    return {} #this caused mysql buffer errors, if re-enable use different apporach
     d = {}
 
     if not t:
@@ -855,37 +856,6 @@ def get_individual_stats(t=None, update=False):
         t.individual_stats = d
         t.save()
 
-    #PGA changed website can't scrape
-    # for stat in StatLinks.objects.all():
-    #     print (stat.link)
-    #     try: 
-    #         html = urllib.request.urlopen(stat.link)
-    #         soup = BeautifulSoup(html, 'html.parser')
-
-    #         for row in soup.find('table', {'id': 'statsTable'}).find_all('tr')[1:]:
-    #             if d.get(row.find('td', {'class': 'player-name'}).text.strip()):
-    #                 d[row.find('td', {'class': 'player-name'}).text.strip()].update({stat.name: {
-    #                                                                     'rank': row.find_all('td')[0].text.strip(),
-    #                                                                     #'rounds': row.find_all('td')[3].text,
-    #                                                                     'average': row.find_all('td')[4].text,
-    #                                                                     'total_sg': row.find_all('td')[5].text,
-    #                                                                     #'measured_rounds': row.find_all('td')[6].text
-    #                                                                     }})
-    #             else:
-    #                 d[row.find('td', {'class': 'player-name'}).text.strip()] = {'pga_num': row.get('id').strip('playerStatsRow'),
-    #                                                                             'stats_rounds': row.find_all('td')[3].text,
-    #                                                                             'stats_measured_rounds': row.find_all('td')[6].text
-    #                                                                             }
-    #                 d[row.find('td', {'class': 'player-name'}).text.strip()].update( 
-    #                                                                     {stat.name: {'rank': row.find_all('td')[0].text.strip(),
-    #                                                                     #'rounds': row.find_all('td')[3].text,
-    #                                                                     'average': row.find_all('td')[4].text,
-    #                                                                     'total_sg': row.find_all('td')[5].text,
-    #                                                                     #'measured_rounds': row.find_all('td')[6].text
-    #                                                                     }})
-
-    #         t.individual_stats = d
-    #         t.save()
 
     except Exception as e:
         print ('get_individual_stats exception ', e)
@@ -1078,8 +1048,9 @@ def get_espn_players(t):
     return espn_data
 
 
-def prior_year_sd(t, current=None):
-    '''takes a tournament and bool, returns nothing.  Current skips prior year and resets the SD for that tournament'''
+def prior_year_sd(t, current=None, regen=False):
+    '''takes a tournament and bool, returns nothing.  Current resets the SD for the provided tournament.  Set regen to True to force recreation'''
+
     if not current:
         try:
             prior_season = Season.objects.get(season=int(t.season.season)-1)
@@ -1105,7 +1076,9 @@ def prior_year_sd(t, current=None):
     else:
         print ('created score dict')
 
-    if (not created and (not sd.data or len(sd.data) == 0 or not sd.data.get('info'))) or created:  #added info check to update if not from espn
+    if regen or \
+        (not created and (not sd.data or len(sd.data) == 0 or not sd.data.get('info'))) \
+        or created:  #added info check to update if not from espn
         print ('updating prior SD', prior_t)
         espn_t_num = scrape_espn.ScrapeESPN(prior_t).get_t_num(prior_season)
         print ('espn T num', espn_t_num)

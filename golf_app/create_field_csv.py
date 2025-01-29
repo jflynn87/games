@@ -63,8 +63,8 @@ class FieldCSV(object):
             s = {'no_stats': ''}
         
         row = [f.golfer.espn_number, f.playerName, f.group.number, f.currentWGR, f.sow_WGR, f.soy_WGR, f.prior_year, f.handi, 
-               s.get('fed_ex_rank', ''), s.get('fed_ex_points', ''), s.get('played', ''), s.get('won', ''), s.get('top10', ''), s.get('bet11_29', ''), 
-               s.get('bet30_49', ''), s.get('over50', ''), s.get('cuts', ''), 
+               s.get('fed_ex_rank', ''), s.get('fed_ex_points', ''), s.get('played', '0'), s.get('won', '0'), s.get('top10', '0'), s.get('bet11_29', '0'), 
+               s.get('bet30_49', '0'), s.get('over50', '0'), s.get('cuts', '0'), 
                ]
         
         season_results = f.golfer.get_season_results(t_list=self.all_tournaments)

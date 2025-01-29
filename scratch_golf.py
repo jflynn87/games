@@ -37,8 +37,14 @@ import requests
 from unidecode import unidecode as decode
 
 
-for f in Field.objects.filter(tournament__current=True):
-    print (f, f.prior_year_finish())
+#for f in Field.objects.filter(tournament__current=True):
+#    print (f, f.prior_year)
+
+t = Tournament.objects.get(season__season=2024, pga_tournament_num='005')
+last = populateField.prior_year_sd(t, current=True ,regen=True)
+sd = ScoreDict.objects.get(tournament=t)
+
+#print (sd.data)
 
 exit()
 

@@ -1024,7 +1024,7 @@ class Field(models.Model):
                 except Exception as e2:
                     print ('cant find prior tournament ', e2)
                     return 'n/a'
-        print (t, t.season)
+        #print (t, t.season)
         try:
             sd = ScoreDict.objects.get(tournament=t)
             if t.pga_tournament_num != "470":

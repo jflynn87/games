@@ -199,13 +199,13 @@ class ScrapeESPN(object):
                                         'tot_strokes': td[11].text,
                     }
 
-                elif (len(td) == 10 and score_dict.get('info').get('round') != 1):  #tournament complete - doesn't work when complete
-                    #print ('espn scrape in len 10 logic')
+                elif (len(td) == 10 and score_dict.get('info').get('round') != 1):  #tournament complete - fixed jan 29/2025 to work when complete
+                    print ('espn scrape in len 10 logic')
                     if td[2].text in self.tournament.not_playing_list():
                        rank = td[2].text 
                     else:
-                       rank = td[0].text
-
+                       rank = td[1].text
+                    print (row.a.text, rank)
                     score_dict[row.a.text] = {
                                         'pga_num': row.a['href'].split('/')[7],
                                         'rank': rank,

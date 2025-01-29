@@ -438,29 +438,6 @@ def setup(request):
                 t = Tournament.objects.get(current=True)
             else:
                 t = None
-            #json_url = 'https://statdata.pgatour.com/r/current/message.json'
-            #print (json_url)
-            
-            #try:
-            #    with urllib.request.urlopen(json_url) as field_json_url:
-            #        data = json.loads(field_json_url.read().decode())
-            #except Exception as pga_e:
-            #    print ('PGA current message error: ', pga_e)
-            #    print ('Try with no SSL')
-            #    ssl._create_default_https_context = ssl._create_unverified_context
-            #    with urllib.request.urlopen(json_url) as field_json_url:
-            #        data = json.loads(field_json_url.read().decode())
-
-            #pga_t_num = data.get('tid')
-            #data = ''
-            #pga_t_num = '003'
-
-            #if pga_t_num == t.pga_tournament_num:
-            #first_field = Field.objects.filter(tournament=t).first().pk
-            #last_field = Field.objects.filter(tournament=t).latest('pk').pk
-            #else:
-            #    first_field = 0
-            #    last_field = 0
             
             try:
                 espn_data = espn_schedule.ESPNSchedule()
@@ -470,7 +447,14 @@ def setup(request):
                 espn_t_num = espn_curr_event.get('link').split('=')[1]
                 #pga = pga_t_data.PGAData()
                 #next_pga_t_num = (pga.next_t(), pga.get_t_name(pga.next_t()))
-                next_pga_t_num = ''
+                last_season = Season.objects.get(season=t.season.season -1)
+                try:
+                    next_pga_t_num = Tournament.objects.get(name=espn_curr_event.get('name'), season=last_season)
+                    next_pga_t_num = str(next_pga_t_num.pga_tournament_num) + ' ' + str(next_pga_t_num.name)
+                except Exception as e:
+                    print ('setup current event exception', e)
+                    next_pga_t_num = ''
+                
             except Exception as e:
                 print ('setup current event exception', e)
                 espn_curr_event = []
@@ -3648,7 +3632,7 @@ class CreateFieldCSVAPI(APIView):
             else:
                 t= Tournament.objects.get(current=True)
             f = FieldCSV(t).create_file()
-            return JsonResponse(f, status=200, safe=True)
+            return JsonResponse(f, status=200, safe=False)
         except Exception as e:
             print ('CreateCSV error: ', str(e))
             return JsonResponse({'error': str(e)}, status=400)
