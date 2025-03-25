@@ -3553,6 +3553,7 @@ class CreateFieldCSVAPI(APIView):
                 print ('DEV')
                 f = FieldCSV(t).create_file()
             else:
+                print ('Creating CSV')
                 f = FieldCSV(t, task_id=task_id, mode=mode).create_file()
             
             f = {'msg': 'CSV created', 'url': f}
@@ -3590,7 +3591,7 @@ class AsyncCreateFieldCSV(APIView):
 
         task = AsyncTaskManager()
         task_id = task.start_async_task('create_field_csv', meta_data)
-        print (f'Task ID: {task_id}')
+        print (f'Async API started Task ID: {task_id}')
         prog = f'0 of {field_records}'
         meta_data.update({'task_id': task_id})
         update_progress = task.update_progress(progress=prog, status='STARTED', meta_data=meta_data)

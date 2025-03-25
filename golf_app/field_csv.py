@@ -73,11 +73,8 @@ class FieldCSV(object):
             return f"error {e}"
 
     def format_row(self, f):
-        #if f.season_stats:
-        #    s = f.season_stats.get('stats', {'no_stats': ''})
-        #else:
-        #    s = {'no_stats': ''}
         s = DynamoStatsTable().get_item(pk=str(f.tournament.pk), sk=str(f.pk))
+        print (f'Dyn Stats {f},  {s}')
         season_results = s.get('season')
         
         row = [f.golfer.espn_number, f.playerName, f.group.number, f.currentWGR, f.sow_WGR, f.soy_WGR, f.prior_year, f.handi, 
