@@ -2,6 +2,8 @@ from re import split
 from unidecode import unidecode as decode
 from datetime import datetime
 import os
+from decimal import Decimal
+
 
 
 def format_score(score):
@@ -70,14 +72,12 @@ def format_name(name):
 
 
 def fix_name(player, owgr_rankings, log=None):
-    '''takes a string and a dict and returns a dict?'''
+    '''takes a string and a dict and returns a tuple'''
 
-    from golf_app.models import Name
-    #need to import here to avoid cicular import error
-    log = True
-    print ('FIX: ', player)
-    if owgr_rankings.get(player.replace('.', '').replace('-', '')) != None:
-        #print ('returning match', owgr_rankings.get(player.replace('.', '').replace('-', '')))
+    log = False
+    if log:
+        print ('FIX: ', player, len(owgr_rankings))
+    if owgr_rankings.get(player.replace('.', '').replace('-', '').replace(' ', '')) != None:
         return (player, owgr_rankings.get(player.replace('.', '').replace('-', '')))
 
     if owgr_rankings.get(decode(player)):
@@ -85,19 +85,22 @@ def fix_name(player, owgr_rankings, log=None):
             print ('unidecoded name dict match: ', player, owgr_rankings.get(decode(player)))
         return (player, owgr_rankings.get(decode(player)))
 
-    #lower = {k:v for k,v in owgr_rankings.items() if player.lower() == k.lower()}
     lower = [v for k,v in owgr_rankings.items() if player.lower() == k.lower()]
     if len(lower) > 0:
         return (player, lower[0])
 
-    replace_list = ['-', "'"]
+    replace_list = ['-', "'", " "]
     for char in replace_list:
         strip  = [v for k,v in owgr_rankings.items() if player.replace(char, '').lower() == k.replace(char, '').lower()]
         if len(strip) > 0:
             return (player, strip[0])
 
     if log:
-        print (['player', player])
+        print (['Checking name in db', player])
+
+    from golf_app.models import Name
+    #need to import here to avoid cicular import error
+    
     if Name.objects.filter(PGA_name=player).exists():
         if log:
             print ('player mathc')
@@ -115,6 +118,7 @@ def fix_name(player, owgr_rankings, log=None):
         last_name = last[len(last)-1]
     
     possible_matches = {k:v for k,v in owgr_rankings.items() if decode(last_name.strip(',')) in decode(k)}
+    
     if log:
         print ('player: ', player)
     #print ('possible name mathces: ', player, possible_matches)
@@ -123,7 +127,6 @@ def fix_name(player, owgr_rankings, log=None):
 
     #for k, v in owgr_rankings.items():
     for k, v in possible_matches.items():
-        
         owgr_name = k.replace(',', '').split(' ')
         if log:
             print ('looping thru possible: ', pga_name, owgr_name)
@@ -137,24 +140,12 @@ def fix_name(player, owgr_rankings, log=None):
                 if log:
                     print ('last name, first name match, middle first intial match', player, owgr_name)
                 return k, v
-        #elif len(owgr_name) - 1 == len(pga_name) or len(owgr_name) == len(pga_name) - 1 \
-        #    and (owgr_name[0] == pga_name[0] \
-        #    and decode(owgr_name[len(owgr_name) -1]) == decode(pga_name[len(pga_name) -1])):
-        #    print ('strip middle stuff, first and last match', pga_name, owgr_name)
-        #    return k, v
-
-
         elif decode(owgr_name[len(owgr_name)-2]) == decode(pga_name[len(pga_name)-1]) \
             and k.split(' ')[0] == player.split(' ')[0]:
-            #and k[0:1] == player[0:1]:  initial logic checks for charaacter of first name so causing false positives
             if log:
                 print ('XXXXX fix this for dru love')
                 print ('last name, first initial match, cut owgr suffix', k, v, player, owgr_name)
             return k, v
-        #elif len(owgr_name) == 3 and len(pga_name) == 3 and unidecode.unidecode(owgr_name[len(owgr_name)-2]) == unidecode.unidecode(pga_name[len(pga_name)-2]) \
-        #    and unidecode.unidecode(owgr_name[0]) == unidecode.unidecode(pga_name[0]):
-        #    print ('last name, first name, cut both suffix', player)
-        #    return k, v
         elif decode(owgr_name[0].replace('-', '')) == decode(pga_name[len(pga_name)-1].replace('-', '')) \
             and decode(owgr_name[len(owgr_name)-1].replace('-', '')) == decode(pga_name[0].replace('-', '')):
             if log:
@@ -165,14 +156,6 @@ def fix_name(player, owgr_rankings, log=None):
             if log:
                 print ('last name, first two letter match', player, owgr_name)
             return k, v
-
-
-    # s_name = [v for k, v in owgr_rankings.items() if k.split('(')[0] == player.split('(')[0]]
-    # if len(s_name) ==1:
-    #     print ('split from ( match: ', player, s_name[0])
-    #     return (player, s_name[0])
-
-    
 
     if log or os.environ.get("DEBUG") != "True":
         print ('fix names didnt find match', player)
@@ -264,7 +247,143 @@ def post_cut_wd_count(t, sd=None, api_data=None):
         return len([x.get('athlete').get('id') for x in api_data if x.get('status').get('type').get('id') == '3' \
                 and x.get('status').get('type').get('shortDetail') in l and int(x.get('status').get('period')) > t.saved_cut_round]) 
 
-    
-    
-        
 
+def name_first_last(n):
+    '''
+    Converts "lastname, firstname" to "firstname lastname"
+    Preserves spaces in both first and last names
+    Examples:
+        "Smith, John" -> "John Smith"
+        "de la Cruz, Maria" -> "Maria de la Cruz"
+        "Kim, Ye Jin" -> "Ye Jin Kim"
+        "Lee, Sung Hee" -> "Sung Hee Lee"
+    '''
+    if not n or ',' not in n:
+        return n
+        
+    # Split on first comma only
+    parts = n.split(',', 1)
+    last_name = parts[0].strip()
+    first_name = parts[1].strip()
+    
+    return f"{first_name} {last_name}"
+
+def convert_floats_to_decimal(data):
+    """Convert all float values in a dict/list structure to Decimal"""
+    if isinstance(data, dict):
+        return {k: convert_floats_to_decimal(v) for k, v in data.items()}
+    elif isinstance(data, list):
+        return [convert_floats_to_decimal(v) for v in data]
+    elif isinstance(data, float):
+        return Decimal(str(data))  # Convert to string first for better precision
+    return data
+
+# #try this later, Q suggestion for more robust process
+# def normalize_name(name: str, remove_suffixes: bool = True) -> str:
+#     """
+#     Normalizes a player name by applying consistent formatting rules.
+    
+#     Args:
+#         name: The player name to normalize
+#         remove_suffixes: Whether to remove common suffixes like Jr., III, etc.
+    
+#     Returns:
+#         Normalized name string
+        
+#     Examples:
+#         >>> normalize_name("TIGER WOODS")
+#         "Tiger Woods"
+#         >>> normalize_name("de la Cruz, José-María")
+#         "Jose-Maria de la Cruz"
+#         >>> normalize_name("JOHNSON, Dustin (Jr.)")
+#         "Dustin Johnson"
+#         >>> normalize_name("JOHNSON, Dustin (Jr.)", remove_suffixes=False)
+#         "Dustin Johnson Jr."
+#     """
+#     if not name:
+#         return ""
+
+#     # Common suffixes to handle
+#     SUFFIXES = {
+#         'JR', 'JR.', 'SR', 'SR.', 'II', 'III', 'IV', 
+#         '(A)', '(A.)', '(AM)', '(AM.)', '(AMATEUR)'
+#     }
+
+#     # Special case prefixes that should remain lowercase
+#     NAME_PREFIXES = {'de', 'van', 'von', 'del', 'della', 'la', 'das', 'dos'}
+
+#     def clean_string(text: str) -> str:
+#         """Remove extra whitespace and standardize separators"""
+#         # Replace multiple spaces with single space
+#         text = ' '.join(text.split())
+#         # Remove parentheses
+#         text = text.replace('(', '').replace(')', '')
+#         return text.strip()
+
+#     def handle_suffix(name_parts: list) -> tuple[list, str]:
+#         """Separate name and suffix"""
+#         suffix = ''
+#         clean_parts = []
+        
+#         for part in name_parts:
+#             part = part.strip('(),')
+#             if part.upper() in SUFFIXES:
+#                 suffix = part
+#             else:
+#                 clean_parts.append(part)
+                
+#         return clean_parts, suffix
+
+#     # First, decode any special characters
+#     name = decode(name)
+    
+#     # Handle "lastname, firstname" format
+#     if ',' in name:
+#         last_name, first_name = name.split(',', 1)
+#         name = f"{first_name.strip()} {last_name.strip()}"
+    
+#     # Clean and split the name
+#     name = clean_string(name)
+#     parts = name.split()
+    
+#     # Handle suffixes
+#     name_parts, suffix = handle_suffix(parts)
+    
+#     # Properly capitalize each part
+#     normalized_parts = []
+#     for part in name_parts:
+#         # Handle hyphenated names
+#         if '-' in part:
+#             normalized_parts.append('-'.join(p.capitalize() for p in part.split('-')))
+#         # Handle prefixes
+#         elif part.lower() in NAME_PREFIXES:
+#             normalized_parts.append(part.lower())
+#         # Normal capitalization
+#         else:
+#             normalized_parts.append(part.capitalize())
+    
+#     # Reconstruct the name
+#     normalized_name = ' '.join(normalized_parts)
+    
+#     # Add suffix if requested
+#     if not remove_suffixes and suffix:
+#         normalized_name = f"{normalized_name} {suffix.title()}"
+    
+#     return normalized_name
+
+
+# def fix_name(player, d, log=None):
+#     """takes a string and a dict and returns a tuple"""
+    
+#     # Normalize both the player name and all OWGR names for comparison
+#     normalized_player = normalize_name(player)
+#     normalized_rankings = {
+#         normalize_name(k): v 
+#         for k, v in d.items()
+#     }
+    
+#     # Direct match with normalized names
+#     if normalized_player in normalized_rankings:
+#         return (player, normalized_rankings[normalized_player])
+    
+    # Continue with other matching strategies...

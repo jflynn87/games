@@ -80,6 +80,7 @@ function totalScores( ) {
             $.each(data, function(user, score) {
             if (Object.keys(score) != 'group_stats'){
             $('#score_' + user).html(score.score + ' / ' + score.cuts)
+            $('#ts_' + user).append('<p>Rank: ' + score.rank + '</p>')
             }
 
             } )
@@ -142,7 +143,7 @@ function udatePickData() {
 
                   if (not_playing.indexOf(pick.thru) != -1) {$('#' + pick.pick.id).addClass('cut')}  
                   if ($('#pga_t_num').text() == '470' && pick.score == '17') {$('#' + pick.pick.id).addClass('cut')}
-                  if ($('#' + pick.pick.id).hasClass('best') && $('#' +pick.pick.id).hasClass('cut')) {
+                  if ($('#' + pick.pick.id).hasClass('best') && $('#' + pick.pick.id).hasClass('cut')) {
                         $('#' + pick.pick.id).removeClass('cut').removeClass('best')
                         $('#' + pick.pick.id).css('background-color', '#465945')
                   }
@@ -225,8 +226,9 @@ function msgs() {
             )
       .then((response) => response.json())
       .then((responseJSON) => {
-            console.log('get msgs api returned')
+            
             data = $.parseJSON(responseJSON)
+            //console.log('get msgs api returned ', data)
              $.each(data.handicap, function(user, handi) {
                    $('#msg_' + user).text('h/c: ' + handi.total)
              })
@@ -265,17 +267,4 @@ function get_records() {
 
     })
     }
-// function get_ranks() {
-//       fetch("/golf_app/get_mp_ranks/" + $('#tournament_key').text(),
-//       {method: "GET",
-//        })
-//       .then((response) => response.json())
-//       .then((responseJSON) => {
-//         rankData = responseJSON
-
-//         $.each(rankData, function(field, rank) {
-//               $('#' + field + '-p2').append('<p>grp rank: ' + rank + '</p>')
-//         })
-//       })
-// }
     

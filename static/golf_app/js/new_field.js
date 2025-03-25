@@ -105,10 +105,10 @@ function buildForm(info, groups, field, golfers, partners, picks, tStarted, star
 
         for (let i=0; i < fieldLen; i++) {
             f = field[i]
-            
+            var group = groups.filter(grp => {
+                return Number(grp.pk) == Number(f.fields.group)})
+        
             if (i==0 || f.fields.group != field[i-1].fields.group) {
-                var group = groups.filter(grp => {
-                    return grp.pk == Number(f.fields.group)})
                 
                 table_grp_num = group[0].fields.number
                 frag = new DocumentFragment()
@@ -134,9 +134,8 @@ function buildForm(info, groups, field, golfers, partners, picks, tStarted, star
                 table.append(header)
         
             }
-            
-            var group = groups.filter(g => {
-                return g.pk == Number(f.fields.group)})
+            //var group = groups.filter(g => {
+            //    return Number(g.pk) === Number(f.fields.group)})
             
             numPicks = info[group[0].fields.number]
             if (numPicks == '1') {selectType = 'radio'}
@@ -170,9 +169,9 @@ function buildForm(info, groups, field, golfers, partners, picks, tStarted, star
             }
             selectI.addEventListener('change', function() {validatePicks(info, this)})
 
-
             var golfer = golfers.filter(g => {
-                return g.id == Number(f.fields.golfer)})
+                return Number(g.id) == Number(f.fields.golfer)
+            })
 
             if (f.fields.withdrawn == true) {
                   
@@ -203,7 +202,8 @@ function buildForm(info, groups, field, golfers, partners, picks, tStarted, star
     
 
             golferTd = document.createElement('td')
-            golferTd.id = 'playerInfo' + golfer[0].espn_number
+            //golferTd.id = 'playerInfo' + golfer[0].espn_number
+            golferTd.id = 'playerInfo' + f.pk
             golferTd.addEventListener('click', function() {getStatsData(this.parentNode)})
             
             golferP1 = document.createElement('p')
@@ -244,7 +244,7 @@ function buildForm(info, groups, field, golfers, partners, picks, tStarted, star
                 p = document.createElement('span')
                 
                 var partner = partners.filter(p => {
-                    return p.id == f.fields.partner_golfer})
+                    return Number(p.id) == Number(f.fields.partner_golfer)})
                 //if (fedexPicks.indexOf(partner[0].id) != -1) {
                 //   p_fedex = document.createElement('img')
                 //    p_fedex.src = '/static/img/fedex.jpg'
@@ -375,13 +375,15 @@ function getStatsData(ele) {
       body: JSON.stringify({'tournament_key': $('#tournament_key').text(),
                           'golfer_list': [golfer_id],
                           'group': '',
+                          'field_id': field_id,
                           'no_api': true})
     })
     .then((response) => response.json())
     .then((responseJSON) => {
       data = responseJSON
+      //console.log('stats data ', data)
       
-      var stats = build_stats_row(data[0])
+      var stats = build_stats_row(data)
 
       
       row.deleteCell(0)
@@ -399,7 +401,6 @@ function getStatsData(ele) {
   
 
 function build_stats_row(field) {
-    //console.log(field)
     let stats_row = document.createElement('tr');
     stats_row.id = 'stats_row-' + field.id
     stats_row.style.width = 100%
@@ -413,8 +414,8 @@ function build_stats_row(field) {
         stats_table.style.width = '85%'
         stats_table.classList.add('table',  'stats-row')
 
-        //let rowA_header_fields = ['Current OWGR', 'Last Week OWGR', 'Last Season OWGR', 'FedEx Cup']
-        let rowA_header_fields = ['Current OWGR', 'Last Week OWGR', 'Last Season OWGR']
+        let rowA_header_fields = ['Current OWGR', 'Last Week OWGR', 'Last Season OWGR', 'FedEx Cup']
+        //let rowA_header_fields = ['Current OWGR', 'Last Week OWGR', 'Last Season OWGR']
         rowA_field_l = rowA_header_fields.length
         rowA_header = document.createElement('tr')
         rowA_header_cells = []
@@ -441,18 +442,18 @@ function build_stats_row(field) {
             soyOWGR = document.createElement('td')
             soyOWGR.innerHTML = field.soy_WGR
             soyOWGR.colSpan = 2
-            //fedEx = document.createElement('td')
-            //try {
-            //fedEx.innerHTML = 'rank: ' + field.season_stats.fed_ex_rank + '; points:' + field.season_stats.fed_ex_points
+            fedEx = document.createElement('td')
+            try {
+            fedEx.innerHTML = 'rank: ' + field.fedex_rank + '; points:' + field.fedex_points
 
-            //}
-            //catch (error)
-            //{fedEx.innerHTML = 'rank: n/a'}
-            //fedEx.colSpan = 2
+            }
+            catch (error)
+            {fedEx.innerHTML = 'rank: n/a'}
+            fedEx.colSpan = 2
             stats_rowA.append(currOWGR)
             stats_rowA.append(sowOWGR)
             stats_rowA.append(soyOWGR)
-            //stats_rowA.append(fedEx)
+            stats_rowA.append(fedEx)
         stats_table.appendChild(stats_rowA)
             
 
@@ -482,7 +483,7 @@ function build_stats_row(field) {
         prior_year.colSpan = 2
         
         recent_form = document.createElement('td')
-        recent_form.id = 'recent' + field.golfer.espn_number
+        recent_form.id = 'recent' + field.golfer
         recent_form.colSpan = 4
         
         recent_p = document.createElement('p')
@@ -533,7 +534,7 @@ function build_stats_row(field) {
         stats_table.appendChild(stats_rowC)
 
         let rowD_header = document.createElement('tr')
-        rowD_header_fields = ['Played', 'Won', '2-10', '11-29', '30-49', '50', 'Cuts']
+        rowD_header_fields = ['Played', 'Won', '2-10', '11-29', '30-49', '50', 'Cuts', '']
 
         rowD_field_l = rowD_header_fields.length
         
@@ -552,33 +553,36 @@ function build_stats_row(field) {
         let stats_rowD = document.createElement('tr')
             let cellA = document.createElement('td')
                 cellA.colSpan = 1
-                cellA.innerHTML = field.season_stats.played
+                cellA.innerHTML = field.season.played
                 stats_rowD.appendChild(cellA)
             let cellB = document.createElement('td')
                 cellB.colSpan = 1
-                cellB.innerHTML = field.season_stats.won
+                cellB.innerHTML = field.season.won
                 stats_rowD.appendChild(cellB)
             let cellC = document.createElement('td')
                 cellC.colSpan = 1
-                cellC.innerHTML = field.season_stats.top10
+                cellC.innerHTML = field.season.top10
                 stats_rowD.appendChild(cellC)
             let cellD = document.createElement('td')
                 cellD.colSpan = 1
-                cellD.innerHTML = field.season_stats.bet11_29
+                cellD.innerHTML = field.season.bet11_29
                 stats_rowD.appendChild(cellD)
             let cellE = document.createElement('td')
                 cellE.colSpan = 1
-                cellE.innerHTML = field.season_stats.bet30_49
+                cellE.innerHTML = field.season.bet30_49
                 stats_rowD.appendChild(cellE)
             let cellF = document.createElement('td')
                 cellF.colSpan = 1
-                cellF.innerHTML = field.season_stats.over50
+                cellF.innerHTML = field.season.over50
                 stats_rowD.appendChild(cellF)
             let cellG = document.createElement('td')
                 cellG.colSpan = 1
-                cellG.innerHTML = field.season_stats.cuts
+                cellG.innerHTML = field.season.cuts
                 stats_rowD.appendChild(cellG)
-            
+            let cellH = document.createElement('td')
+                cellH.colSpan = 1
+                cellH.innerHTML = ''
+                stats_rowD.appendChild(cellH)
             stats_table.appendChild(rowD_header)
             stats_table.appendChild(stats_rowD)
 
@@ -592,7 +596,7 @@ function build_stats_row(field) {
 
 
             let rowE_header = document.createElement('tr')
-            rowE_header_fields = ['Off Tee Rank', 'Off Tee', 'Approach Rank', 'Approach', 'Around Green Rank', 'Around Green', 'Putting Rank', 'Putting']
+            rowE_header_fields = ['Total SG', 'Off Tee', 'Approach', 'Around Green', 'Tee to Green', 'Putting', '', '']
 
             rowE_field_l = rowE_header_fields.length
             
@@ -607,49 +611,43 @@ function build_stats_row(field) {
             }
             
             let stats_rowE = document.createElement('tr')
-
-            if (field.season_stats.off_tee === undefined) {
+            if (Object.keys(field.shots_gained).length == 0) {
                 let sg_cellA = document.createElement('td')
-                sg_cellA.innerHTML = "No STATS"
+                sg_cellA.innerHTML = "No SG STATS"
                 stats_rowE.appendChild(sg_cellA) }
             else {
                 let sg_cellA = document.createElement('td')
-                    sg_cellA.innerHTML = field.season_stats.off_tee.rank
+                    sg_cellA.innerHTML = formatNum(field.shots_gained.sg_raw)
                     stats_rowE.appendChild(sg_cellA)
 
                 let sg_cellB = document.createElement('td')
-                    sg_cellB.innerHTML = field.season_stats.off_tee.average
+                    sg_cellB.innerHTML = formatNum(field.shots_gained.ott_raw)
                     stats_rowE.appendChild(sg_cellB)
 
                 let sg_cellC = document.createElement('td')
-                    sg_cellC.innerHTML = field.season_stats.approach_green.rank
+                    sg_cellC.innerHTML = formatNum(field.shots_gained.app_raw)
                     stats_rowE.appendChild(sg_cellC)
 
                 let sg_cellD = document.createElement('td')
-                    sg_cellD.innerHTML = field.season_stats.approach_green.average 
+                    sg_cellD.innerHTML = formatNum(field.shots_gained.arg_raw)
                     stats_rowE.appendChild(sg_cellD)
 
                 let sg_cellE = document.createElement('td')
-                    sg_cellE.innerHTML = field.season_stats.around_green.rank
+                    sg_cellE.innerHTML = formatNum(field.shots_gained.t2g_raw)
                     stats_rowE.appendChild(sg_cellE)
 
                 let sg_cellF = document.createElement('td')
-                    sg_cellF.innerHTML = field.season_stats.around_green.average
+                    sg_cellF.innerHTML = formatNum(field.shots_gained.putt_raw)
                     stats_rowE.appendChild(sg_cellF)
 
                 let sg_cellG = document.createElement('td')
-                    try {
-                    sg_cellG.innerHTML = field.season_stats.putting.rank } 
-                    catch {sg_cellG.innerHTML = 'error'}
+                    sg_cellG.innerHTML = ''
                     stats_rowE.appendChild(sg_cellG)
-
                 let sg_cellH = document.createElement('td')
-                    try {
-                        sg_cellH.innerHTML = field.season_stats.putting.average}
-                    catch {sg_cellH.innerHTML = '0'}
+                    sg_cellH.innerHTML = ''
                     stats_rowE.appendChild(sg_cellH)
-       
-            }
+
+                }
 
             stats_table.appendChild(rowE_header)
             stats_table.appendChild(stats_rowE)
@@ -657,6 +655,20 @@ function build_stats_row(field) {
         stats_cell.append(stats_table)
 
         return stats_cell
+}
+
+function formatNum(num){
+    console.log(num)
+    try {
+        let n = Math.round(parseFloat(num) *100)/100
+        if (n > 0) {return '+' + n.toString()}
+        else if (n == 0) {return '0'}
+        else if (n < 0) {return n.toString()}
+    }
+    
+    catch (error) {
+        console.log('Num coversion error ', error)
+        return num}
 }
 
 function validatePicks(info, ele) {

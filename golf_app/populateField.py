@@ -1,5 +1,4 @@
 from golf_app.models import Field, Group, Tournament, Season, Golfer, ScoreDict, StatLinks, FedExSeason, FedExField
-import urllib3
 from django.core.exceptions import ObjectDoesNotExist
 from golf_app import scrape_cbs_golf, scrape_espn, utils, scrape_scores_picks, populateMPField, populateZurichField, espn_api, pga_t_data, espn_golfer_stats_api
 from django.db import transaction
@@ -8,16 +7,14 @@ from urllib.request import Request, urlopen
 from bs4 import BeautifulSoup
 import json
 import datetime
-import unidecode 
-#import collections
 from collections import OrderedDict
 import csv
 import string
 from operator import itemgetter
 from requests import get
-import time
 from unidecode import unidecode as decode
-from golf_app.create_field_csv import FieldCSV
+from user_app.services import DynamoStatsTable
+from golf_app.data_golf import DataGolf, GolferSG
 
 
 @transaction.atomic
@@ -240,22 +237,8 @@ def get_field(t, owgr_rankings):
     '''takes a tournament object, goes to web to get field and returns a dict'''
     print ('getting field get_field func')        
     field_dict = {}
-    # if t.pga_tournament_num == '470':
-    #     print ('match play')
-    #     #mp_dict = scrape_scores_picks.ScrapeScores(t, 'https://www.pgatour.com/competition/' + str(t.season.season) + '/wgc-dell-technologies-match-play/group-stage.html').mp_brackets()
-    #     scrape_scores_picks.ScrapeScores(tournament=t, url="https://www.pgatour.com/tournaments/2023/world-golf-championships-dell-technologies-match-play/R2023470/group-stage")
-    #     print ('back from scrpate')
-    #     for player, data in mp_dict.items():
-    #         ranks = utils.fix_name(player, owgr_rankings)
-    #         field_dict[player] = {'pga_num': data.get('pga_num'),
-    #                               'curr_owgr': ranks[1][0],
-    #                               'soy_owgr': ranks[1][2],
-    #                               'sow_owgr': ranks[1][1]
-    #                             }
-    #     print ('mp field dict: ', field_dict)
     if t.pga_tournament_num == '999': #Olympics
         # update this to use the class from olympics_sd.py
-        #mens_field = scrape_espn.ScrapeESPN(tournament=t, url='https://www.espn.com/golf/leaderboard?tournamentId=401285309', setup=True).get_data()
         mens_field = scrape_espn.ScrapeESPN(tournament=t, url='https://www.espn.com/golf/leaderboard/_/tour/mens-olympics-golf', setup=True).get_data()
         womens_field = scrape_espn.ScrapeESPN(tournament=t, url="https://www.espn.com/golf/leaderboard/_/tour/womens-olympics-golf", setup=True).get_data()
         
@@ -282,32 +265,6 @@ def get_field(t, owgr_rankings):
         #field_dict['info'] = mens_field.get('info')
     #elif t.pga_tournament_num == 'RYDCUP':
     elif t.pga_tournament_num in ['468', '500']:
-        # us_team = ['Scottie Scheffler',
-        #     'Wyndham Clark',
-        #     'Patrick Cantlay',
-        #     'Brian Harman',
-        #     'Max Homa',
-        #     'Xander Schauffele',
-        #     'Sam Burns',
-        #     'Rickie Fowler',
-        #     'Brooks Koepka',
-        #     'Collin Morikawa',
-        #     'Jordan Spieth',
-        #     'Justin Thomas']
-
-        # euro_team = ['Rory McIlroy',
-        #                 'Jon Rahm',
-        #                 'Viktor Hovland',
-        #                 'Tyrrell Hatton',
-        #                 'Matt Fitzpatrick',
-        #                 'Robert MacIntyre',
-        #                 'Shane Lowry',
-        #                 'Tommy Fleetwood',
-        #                 'Justin Rose',
-        #                 'Sepp Straka',
-        #                 'Nicolai Hojgaard',
-        #                 'Ludvig Aberg']
-        
         us_team = ['Scottie Scheffler',
             'Wyndham Clark',
             'Patrick Cantlay',
@@ -568,30 +525,31 @@ def create_field(field, tournament):
         else:
             golfer = Golfer.objects.filter(golfer_name=player).latest('pk')
         group = Group.objects.get(tournament=tournament, number=group_num)
-        #print (player, info)
-        f = Field()
+        f = create_field_rec(player, info, group, golfer)
+         #print (player, info)
+        # f = Field()
 
-        f.tournament = tournament
-        f.playerName = player
-        f.alternate = False
-        f.playerID = info.get('espn_num')
-        f.golfer = golfer
-        f.group = group
-        if info.get('team'):
-            f.teamID = info.get('team')
-            f.partner = info.get('partner')
-            if tournament.pga_tournament_num != '018':
-                f.partner_golfer = get_golfer(info.get('partner'), pga_num=None, espn_num=info.get('partner_espn_num'))
-            else:
-                f.partner_golfer = Golfer.objects.filter(golfer_name=info.get('partner')).first()
-            f.partner_owgr = info.get('partner_owgr')
-            f.currentWGR = info.get('team_owgr')
-        else:
-            f.currentWGR = info.get('curr_owgr')
-            f.sow_WGR = info.get('sow_owgr')
-            f.soy_WGR = info.get('soy_owgr')
+        # f.tournament = tournament
+        # f.playerName = player
+        # f.alternate = False
+        # f.playerID = info.get('espn_num')
+        # f.golfer = golfer
+        # f.group = group
+        # if info.get('team'):
+        #     f.teamID = info.get('team')
+        #     f.partner = info.get('partner')
+        #     if tournament.pga_tournament_num != '018':
+        #         f.partner_golfer = get_golfer(info.get('partner'), pga_num=None, espn_num=info.get('partner_espn_num'))
+        #     else:
+        #         f.partner_golfer = Golfer.objects.filter(golfer_name=info.get('partner')).first()
+        #     f.partner_owgr = info.get('partner_owgr')
+        #     f.currentWGR = info.get('team_owgr')
+        # else:
+        #     f.currentWGR = info.get('curr_owgr')
+        #     f.sow_WGR = info.get('sow_owgr')
+        #     f.soy_WGR = info.get('soy_owgr')
 
-        f.save()
+        # f.save()
     
         if player_cnt < group.playerCnt:
             player_cnt += 1
@@ -600,18 +558,39 @@ def create_field(field, tournament):
             player_cnt = 1
 
     print ('saved field objects')
-    # doing here to save this data before updating the field by field records
-    #move these to separate path
-    #fed_ex = get_fedex_data(tournament)
-    #individual_stats = get_individual_stats()
 
+def create_field_rec(player, info, group, golfer):
+        f = Field()
+
+        f.tournament = group.tournament
+        f.playerName = player
+        f.alternate = False
+        f.playerID = info.get('espn_num')
+        f.golfer = golfer
+        f.group = group
+        if info.get('team'):
+            f.teamID = info.get('team')
+            f.partner = info.get('partner')
+            if group.tournament.pga_tournament_num != '018':
+                f.partner_golfer = get_golfer(info.get('partner'), pga_num=None, espn_num=info.get('partner_espn_num'))
+            else:
+                f.partner_golfer = Golfer.objects.filter(golfer_name=info.get('partner')).first()
+            f.partner_owgr = info.get('partner_owgr')
+            f.currentWGR = info.get('team_owgr')
+        else:
+            f.currentWGR = info.get('curr_owgr') if info.get('curr_owgr') else 999
+            f.sow_WGR = info.get('sow_owgr') if info.get('sow_owgr') else 999
+            f.soy_WGR = info.get('soy_owgr') if info.get('soy_owgr') else 999
+
+        f.save()
+
+        return f
 
 def setup_fedex_data(t=None, update=False):
     if not t:
         t= Tournament.objects.get(current=True)
-    
     try:
-        fedex = get_fedex_data(t,update)
+        fedex = get_fedex_data(t)
     except Exception as e:
         print ('populate field setup_fedex_data issue: ', e)
         return {}
@@ -689,17 +668,29 @@ def create_olympic_field(field, tournament):
         #fed_ex = {}
         individual_stats = {}
 
+    #move this to the api running in views.py?
+    dg = DataGolf(t=tournament, create=True)
     for f in Field.objects.filter(tournament=tournament):
+        d = {}
         if tournament.pga_tournament_num not in ['470', '018']:
             f.handi = f.handicap()
         else:
             f.handi = 0
-
+        l = []
         if tournament.pga_tournament_num not in ['999',]:
             f.prior_year = f.prior_year_finish()
             recent = OrderedDict(sorted(f.recent_results().items(), reverse=True))
-            f.recent = recent
-            f.season_stats = f.golfer.summary_stats(tournament.season) 
+            season_stats = f.golfer.summary_stats(tournament.season) 
+            sg = GolferSG(tournament, f).get_stats()
+            d['pk'] = str(f.tournament.pk)
+            d['sk'] = str(f.pk)
+            d.update(recent)
+            d.update(season_stats)
+            d.update(sg)
+            l.append(d)
+            #f.recent = recent
+            #f.season_stats = f.golfer.summary_stats(tournament.season) 
+            
 
             #if fed_ex.get(f.playerName):
             #    f.season_stats.update({'fed_ex_points': fed_ex.get(f.playerName).get('points'),
@@ -708,13 +699,14 @@ def create_olympic_field(field, tournament):
             #   f.season_stats.update({'fed_ex_points': 'n/a',
             #                        'fed_ex_rank': 'n/a'})
 
-            if individual_stats.get(f.playerName):
-                player_s = individual_stats.get(f.playerName)
-                for k, v in player_s.items():
-                    if k != 'espn_num':
-                        f.season_stats.update({k: v})
+            #if individual_stats.get(f.playerName):
+            #    player_s = individual_stats.get(f.playerName)
+            #    for k, v in player_s.items():
+            #        if k != 'espn_num':
+            #            f.season_stats.update({k: v})
         
         f.save()
+    resp = DynamoStatsTable().batch_upsert(l)
     # print ('update golfers')
     # for g in Golfer.objects.all():
     #     print ('updating golfer: ', g)
@@ -863,67 +855,76 @@ def get_individual_stats(t=None, update=False):
     return d
 
 
-def get_fedex_data(tournament=None, update=False):
-    '''takes an optional tournament object to update/setup, returns a dict'''
-    print ('updating fedex data', tournament, update)    
+def get_fedex_data(tournament=None):
     start = datetime.datetime.now()
-    if tournament and not update:
-        if tournament.fedex_data and len(tournament.fedex_data) > 0:
-            return tournament.fedex_data
-
-    data = {}
+    if not tournament:
+        tournament = Tournament.objects.get(current=True)
+    l = []
     try:
-        season = Season.objects.get(current=True)
-        #prior_t = Tournament.objects.filter(season__current=True).order_by('-pk')[1]
-        prior_t = tournament.prior_t()
-        #print (prior_t.fedex_data)
-        c = 0    
-        #for g in FedExField.objects.filter(season__season__current=True, golfer__espn_number='9780'):
-        g_count = FedExField.objects.filter(season__season__current=True).count()
-        for g in FedExField.objects.filter(season__season__current=True):
-            if g.golfer.espn_number:
-                g_data = espn_golfer_stats_api.ESPNGolfer(g.golfer.espn_number)
-                if g_data.fedex_rank():
-                    try:
-                        prior = prior_t.fedex_data.get(g.golfer.golfer_name).get('rank')
-                    except Exception as e:
-                        prior = ''
-                    data[g.golfer.golfer_name] = {'rank': g_data.fedex_rank(), 'points': g_data.fedex_points(), 'last_week_rank': prior }
-            c += 1
-            if c % 20 == 0:
-                print ('fedex data updated: ', c, ' of ', g_count, ' dur: ', datetime.datetime.now() - start)
-            elif c == g_count:
-                print ('fedex updates completed: ', c, ' of ', g_count)
-        # link = 'https://www.pgatour.com/fedexcup/official-standings.html'
-        # fed_ex_html = urllib.request.urlopen(link)
-        # fed_ex_soup = BeautifulSoup(fed_ex_html, 'html.parser')
-        # rows = fed_ex_soup.find('table', {'class': 'table-fedexcup-standings'}).find_all('tr')
-        # fedex_data_year = fed_ex_soup.find('h2', {'class': 'title'}).text.strip()[:4]
-        # if Tournament.objects.filter(season__current=True).count() > 0 and not str(season.season) == str(fedex_data_year):
-        #     print ('fedex data season mismatch')
-        #     return {}
-        # try:
-        #     for row in rows[1:]:
-        #         tds = row.find_all('td')
-        #         if not tds[0].get('class'):
-        #         #    print (tds[2].text.strip())
-        #             data[tds[2].text.replace(u'\xa0', u' ')] = {'rank': tds[0].text, 
-        #                                  'last_week_rank': tds[1].text,
-        #                                 'points': tds[4].text.strip().replace(',', '')}
-        # except Exception as e:
-        #     print ('fedex mapping issue ', e)
+        field = Field.objects.filter(tournament=tournament)
+        field_c = field.count()
+        for i, f in enumerate(field):
+            try:
+                e = espn_golfer_stats_api.ESPNGolfer(f.golfer.espn_number)
+                fedex_rank = e.fedex_rank()
+                fedex_points = e.fedex_points()
+                l.append({'pk': str(tournament.pk),
+                          'sk': str(f.pk),
+                          'fedex_rank': fedex_rank,
+                          'fedex_points': fedex_points
+                          })
+                
+            except Exception as inner_e:
+                print (f'fedex inner exception {f}, {inner_e}')
+            if i % 20 == 0:
+                print (f'Get FedEx Data processed: {i+1} of {field_c}, dur: {datetime.datetime.now() - start}')
+    except Exception as e:
+        print ('fedex exception ', e)
+    
+    return l
 
-        # fedex_data_year = fed_ex_soup.find('h2', {'class': 'title'}).text.strip()[:4]
-        if tournament:
-            tournament.fedex_data = data
-            tournament.save()
-            fedex_season = FedExSeason.objects.get(season=tournament.season).update_player_points()
+# def get_fedex_data(tournament=None, update=False):
+#     '''takes an optional tournament object to update/setup, returns a dict'''
+#     print ('updating fedex data', tournament, update)    
+#     start = datetime.datetime.now()
+#     if tournament and not update:
+#         if tournament.fedex_data and len(tournament.fedex_data) > 0:
+#             return tournament.fedex_data
 
-    except Exception as ex:
-        print ('fedex overall issue ', ex)
+#     data = {}
+#     try:
+#         season = Season.objects.get(current=True)
+#         #prior_t = Tournament.objects.filter(season__current=True).order_by('-pk')[1]
+#         prior_t = tournament.prior_t()
+#         #print (prior_t.fedex_data)
+#         c = 0    
+#         #for g in FedExField.objects.filter(season__season__current=True, golfer__espn_number='9780'):
+#         g_count = FedExField.objects.filter(season__season__current=True).count()
+#         for g in FedExField.objects.filter(season__season__current=True):
+#             if g.golfer.espn_number:
+#                 g_data = espn_golfer_stats_api.ESPNGolfer(g.golfer.espn_number)
+#                 if g_data.fedex_rank():
+#                     try:
+#                         prior = prior_t.fedex_data.get(g.golfer.golfer_name).get('rank')
+#                     except Exception as e:
+#                         prior = ''
+#                     data[g.golfer.golfer_name] = {'rank': g_data.fedex_rank(), 'points': g_data.fedex_points(), 'last_week_rank': prior }
+#             c += 1
+#             if c % 20 == 0:
+#                 print ('fedex data updated: ', c, ' of ', g_count, ' dur: ', datetime.datetime.now() - start)
+#             elif c == g_count:
+#                 print ('fedex updates completed: ', c, ' of ', g_count)
+
+#         if tournament:
+#             tournament.fedex_data = data
+#             tournament.save()
+#             fedex_season = FedExSeason.objects.get(season=tournament.season).update_player_points()
+
+#     except Exception as ex:
+#         print ('fedex overall issue ', ex)
 
 
-    return data
+#     return data
 
 def get_golfer(player, pga_num=None, espn_data=None, espn_num=None):
     '''takes a pga_num string, returns a golfer object.  creates golfer if it doesnt exist'''

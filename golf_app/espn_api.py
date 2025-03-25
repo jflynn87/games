@@ -24,6 +24,7 @@ class ESPNData(object):
             self.t = Tournament.objects.get(current=True)
 
         if data:
+            print (f'ESPN API init with data: {self.t}')
             self.all_data = data 
         elif self.t.complete and not force_refresh:
             sd = ScoreDict.objects.get(tournament=self.t)
@@ -38,7 +39,7 @@ class ESPNData(object):
             url =  "https://site.web.api.espn.com/apis/site/v2/sports/golf/leaderboard?league=pga"
             #url = 'https://site.web.api.espn.com/apis/site/v2/sports/golf/leaderboard?event=401580621'  #match play 2021 for testing
             self.all_data = get(url, headers=headers).json()
-            print ('post refresh data dur: ', datetime.now() - pre_data)
+            #print ('post refresh data dur: ', datetime.now() - pre_data)
 
         if not setup:
             sd = ScoreDict.objects.get(tournament=self.t)
@@ -63,10 +64,10 @@ class ESPNData(object):
                 url = 'https://site.web.api.espn.com/apis/site/v2/sports/golf/leaderboard?event=' + str(self.t.espn_t_num)
                 self.all_data = get(url, headers=headers).json()
 
-                print(url)
+                #print(url)
                 self.event_data = [v for v in self.all_data.get('events') if v.get('id') == self.t.espn_t_num][0]
             except Exception as f:
-                print (print ('ERROR espn api didnt find t twice: ', self.t.name, self.t.espn_t_num))
+                print ('ERROR espn api didnt find t twice: ', self.t.name, self.t.espn_t_num)
                 raise Exception('ESPN API failed to initialize, tournamant number not in events')         
         
         self.competition_data = self.event_data.get('competitions')[0]
@@ -78,15 +79,15 @@ class ESPNData(object):
 
         pre_sd = datetime.now()
         
-        if len(self.field_data) >0 and update_sd and not data:
-            print ('UPDATING SD DATA')
+        if len(self.field_data) > 0 and update_sd and not data:
+            #print (f'UPDATING SD DATA: {self.t}')
             sd, created = ScoreDict.objects.get_or_create(tournament=self.t)
             sd.espn_api_data = self.all_data
             sd.save()
 
         #print ('sd save dur: ', datetime.now() - pre_sd)
         #print ('data set up: ', datetime.now() - data_start)
-        #print ('espn API Init complete, field len: ', len(self.field_data), ' dur: ', datetime.now() - start)
+        print (f'espn API Init complete {self.t}, field len: {len(self.field_data)}, dur: {datetime.now() - start}')
 
 
     def get_t_name(self):  #need to test this to confirm it works
@@ -228,6 +229,8 @@ class ESPNData(object):
 
     def get_rank(self, espn_number):
         golfer_data = self.golfer_data(espn_number)
+
+        #print ('data ', golfer_data)
         
         if not golfer_data:
             return self.cut_num()

@@ -189,21 +189,13 @@ function buildHeader() {
 
     $('#top_sect').append('<div id=too_late hidden><br> <p>Tournament Started, too late for picks</p></div>')
 
-    // $('#top_sect').append('<span style="float: right;" >' + 
-    //     '<a href="#" id="download" >' +
-    //     '<i class="fas fa-file-download" title="Download CSV" data-toggle="tooltip"> Download Data</i>' +
-    //     '</a>' +
-    //     '</span>')
 
     $('#top_sect').append('<span style="float: right;" >' + 
         '<a href="#" id="download_excel" >' +
-        '<i class="fas fa-file-download" title="Download Excel" data-toggle="tooltip"> Download Excel</i>' +
+        '<i class="fas fa-file-download" title="Download Excel" data-toggle="tooltip">XX Download Excel</i>' +
         '</a>' +
         '</span>')
 
-    // $('#top_sect').append('<br> <div id=stats-dtl-toggle>' + 
-    //     '<h5>Show Stats <i class="fa fa-plus-circle show" style="color:lightblue"></i></h5>' +
-    //     '<br></div>')
 
     $('#field_sect').append('<form id=pick_form method=post></form>')
 

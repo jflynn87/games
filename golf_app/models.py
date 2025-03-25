@@ -8,7 +8,7 @@ from django.db.models.base import Model
 from django.forms import JSONField
 
 #from scipy.stats.stats import rankdata
-from golf_app import utils 
+from golf_app import utils
 from django.db import transaction
 from unidecode import unidecode
 import json
@@ -17,7 +17,9 @@ import urllib
 import unidecode 
 from collections import OrderedDict
 from bs4 import BeautifulSoup
-
+import boto3
+import os
+from user_app.services import DynamoStatsTable
 
 # Create your models here.
 
@@ -86,10 +88,8 @@ class Season(models.Model):
         #print ('fed ex scores: ', fed_ex_scores)
         for i, (user, data) in enumerate(sorted(score_dict.items(), key=lambda v: v[1].get('score__sum'))):
             sorted_dict[user] = {'total': score_dict.get(user).get('score__sum'), 'diff':  int(min_score) - int(data.get('score__sum')), 'rank': i+1, 
-                                'points_behind_second': int(second) - int(data.get('score__sum')), #'t_scores': score_dict.get(user).get('t_scores'),
-                                #'fed_ex_score': score_dict.get(user).get('fed_ex_score'),
+                                'points_behind_second': int(second) - int(data.get('score__sum')),
                                 'player': user
-
                                     }
                                 
                                 
@@ -700,14 +700,6 @@ class Golfer(models.Model):
         else:
             return self.golfer_name.split(' ')[0] + '-' + self.golfer_name.split(' ')[1]
 
-    # def golfer_link(self):
-        
-    #     if  self.golfer_name[1]=='.' and self.golfer_name[3] =='.':
-    #         name = str(self.golfer_pga_num) + '.' + self.pga_web_name_format()
-    #     else:
-    #         name = str(self.golfer_pga_num) + '.' + self.pga_web_name_format()
-    #     return 'https://www.pgatour.com/players/player.' + unidecode(name) + '.html'
-
     def espn_link(self):
         if not self.espn_number:
             return None
@@ -788,6 +780,7 @@ class Golfer(models.Model):
 
         
         #for sd in ScoreDict.objects.filter(tournament__season=season).exclude(tournament__current=True):
+        #print (t_list)
         for sd in ScoreDict.objects.filter(tournament__pk__in=t_list):
             #if sd.tournament.pga_tournament_num == '470':
             if sd.tournament.special_field() and sd.tournament.pga_tournament_num != '018':
@@ -798,32 +791,35 @@ class Golfer(models.Model):
                 #if sd.data:
                 #    x = [v.get('rank') for k, v in sd.data.items() if k !='info' and v.get('pga_num') in [self.espn_number, self.golfer_pga_num]]
                 #    print (sd.tournament, x)
-                x = [r for r in espn_api.ESPNData().get_rank(self.espn_number)]
+                e = espn_api.ESPNData(t=sd.tournament, data=sd.espn_api_data, force_refresh=False, setup=False, update_sd=False)
+                x = e.get_rank(self.espn_number)
+                #print (sd.tournament, x)
                 if not x:
                     print (self, 'not in sd: ', sd.tournament)
                     continue
                     
-                elif x[0] in sd.tournament.not_playing_list():
+                elif x in sd.tournament.not_playing_list() or\
+                    x == e.cut_num():
                     played += 1
                     t = d.get('cuts') + 1
                     d.update({'cuts':  t})
-                elif utils.formatRank(x[0]) == 1:
+                elif utils.formatRank(x) == 1:
                     played += 1
                     t = d.get('won') + 1
                     d.update({'won':  t})
-                elif utils.formatRank(x[0]) < 11:
+                elif utils.formatRank(x) < 11:
                     played += 1
                     t = d.get('top10') + 1
                     d.update({'top10':  t})
-                elif utils.formatRank(x[0]) < 30:
+                elif utils.formatRank(x) < 30:
                     played += 1
                     t = d.get('bet11_29') + 1
                     d.update({'bet11_29':  t})
-                elif utils.formatRank(x[0]) < 50:
+                elif utils.formatRank(x) < 50:
                     played += 1
                     t = d.get('bet30_49') + 1
                     d.update({'bet30_49':  t})
-                elif utils.formatRank(x[0]) >= 50:
+                elif utils.formatRank(x) >= 50:
                     played += 1
                     t = d.get('over50') + 1
                     d.update({'over50':  t})
@@ -839,7 +835,7 @@ class Golfer(models.Model):
         '''takes a golfer and an optional season object, returns a dict with only the updated data'''
         # fix so this runs from 2021 and beyond
         start = datetime.now()
-        print (self.golfer_name, 'get season results start')
+        #print (self.golfer_name, 'get season results start')
         if not season:
             curr_s = Season.objects.get(current=True)
             if Tournament.objects.filter(season=curr_s).count() > 1:
@@ -928,35 +924,38 @@ class Golfer(models.Model):
 
     def get_flag(self):
         from golf_app import espn_golfer_base_data_api
-        #try:
-        #     player_html = urllib.request.urlopen(self.get_pga_player_link())
-        #     player_soup = BeautifulSoup(player_html, 'html.parser')
-        #     country = (player_soup.find('div', {'class': 'country'}))
-        #     flag = country.find('img').get('src')
-
-        #     return  "https://www.pgatour.com" + flag
-        # except Exception as e:
-        #     print ('Issue with PGA.com Flag lookup use espn?: ', self.golfer_name, e)
-        #     return None
         try:
             return espn_golfer_base_data_api.ESPNGolfer(self.espn_number).get_flag()
         except Exception as e:
             print ('issue with espn flag lookup', e)
             return None
 
-
-    def get_fedex_stats(self):
-        #not reliable as pga site frequently fails to load player
+    def get_fedex_data(self):
+        from golf_app.espn_golfer_stats_api import ESPNGolfer
         try:
-            player_html = urllib.request.urlopen(self.get_pga_player_link())
-            player_soup = BeautifulSoup(player_html, 'html.parser')
-            fedex_rank = player_soup.find('div', {'class': 'career-notes'}).find_all('div',{'class': 'value'})[0].text.lstrip().rstrip()
-            fedex_points = player_soup.find('div', {'class': 'career-notes'}).find_all('div',{'class': 'value'})[1].text.lstrip().rstrip()
+            e = ESPNGolfer(self.espn_number)
+            rank = e.fedex_rank()
+            points = e.fedex_points()
 
-            return  {'rank': fedex_rank, 'points': fedex_points}
         except Exception as e:
-             print ('Issue with get_fedex_stats: ', self.golfer_name, e)
-             return {'rank': None, 'points': None}
+            print ('Golfer model get_fedex_data issue with lookup', e)
+            rank = None
+            points = None
+
+        return {'fedex_rank': rank, 'fedex_points': points}
+    
+    # def get_fedex_stats(self):
+    #     #not reliable as pga site frequently fails to load player
+    #     try:
+    #         player_html = urllib.request.urlopen(self.get_pga_player_link())
+    #         player_soup = BeautifulSoup(player_html, 'html.parser')
+    #         fedex_rank = player_soup.find('div', {'class': 'career-notes'}).find_all('div',{'class': 'value'})[0].text.lstrip().rstrip()
+    #         fedex_points = player_soup.find('div', {'class': 'career-notes'}).find_all('div',{'class': 'value'})[1].text.lstrip().rstrip()
+
+    #         return  {'rank': fedex_rank, 'points': fedex_points}
+    #     except Exception as e:
+    #          print ('Issue with get_fedex_stats: ', self.golfer_name, e)
+    #          return {'rank': None, 'points': None}
 
     def get_pic_link(self):
         #return "https://pga-tour-res.cloudinary.com/image/upload/c_fill,d_headshots_default.png,f_auto,g_face:center,h_85,q_auto,r_max,w_85/headshots_" + self.golfer_pga_num + ".png"
@@ -1079,20 +1078,20 @@ class Field(models.Model):
                     sd = ScoreDict.objects.get(tournament=t)
                     f = Field.objects.get(tournament=t, golfer=self.golfer)
                     espn = espn_api.ESPNData(t=f.tournament, data=sd.espn_api_data)
-                    data.update({t.pk: {'name': t.name, 'rank': str(espn.get_rank(f.golfer.espn_number))}})
+                    data.update({str(t.pk): {'name': t.name, 'rank': str(espn.get_rank(f.golfer.espn_number))}})
                 elif Field.objects.filter(tournament=t, partner_golfer__espn_number=self.golfer.espn_number).exclude(withdrawn=True).exclude(partner_golfer__espn_number__isnull=True).exists():
                     sd = ScoreDict.objects.get(tournament=t)
                     f = Field.objects.get(tournament=t, partner_golfer__espn_number=self.golfer.espn_number)
                     x = [v.get('rank') for k, v in sd.data.items() if k !='info' and v.get('pga_num') in [self.golfer.espn_number, self.golfer.golfer_pga_num]]
                     if len(x) > 0:
-                        data.update({t.pk:{'name': t.name, 'rank': x[0]}})
+                        data.update({str(t.pk):{'name': t.name, 'rank': x[0]}})
                     else:
-                        data.update({t.pk:{'name': t.name, 'rank': 'DNP'}})    
+                        data.update({str(t.pk):{'name': t.name, 'rank': 'DNP'}})    
                 else:
-                    data.update({t.pk:{'name': t.name, 'rank': 'DNP'}})
+                    data.update({str(t.pk):{'name': t.name, 'rank': 'DNP'}})
             except Exception as e:
                 print ('recent results exception', e, t, self, self.golfer.golfer_pga_num)
-                data.update({t.pk:{'name': t.name, 'rank': 'error'}})
+                data.update({str(t.pk):{'name': t.name, 'rank': 'error'}})
         #print ('recent results: ', self, datetime.now() - start)
         return data
 
@@ -1293,6 +1292,15 @@ class Field(models.Model):
             return 1
 
         return 0
+
+
+    def get_stats_data(self):
+        stats_table = DynamoStatsTable().table
+
+        resp = stats_table.get_item(Key={'pk': str(self.tournament.pk),
+                                         'sk': str(self.pk)
+                                         })
+        return resp.get('Item')
 
 
 class PGAWebScores(models.Model):
@@ -1530,7 +1538,7 @@ class ScoreDict(models.Model):
             return False
 
         best = ScoreDetails.objects.filter(pick__playerName__tournament=self.tournament).exclude(gross_score__isnull=True).order_by('gross_score').first()
-        print (best)
+        #print (best)
         
         match = {k:v for k,v in self.data.items() if k != 'info' and v.get('pga_num') == \
             best.pick.playerName.golfer.espn_number and utils.formatRank(v.get('rank'), self.tournament) == best.gross_score}
@@ -1539,6 +1547,19 @@ class ScoreDict(models.Model):
             print ('not match match: ', match)
             good = False
         
+        from golf_app.populateField import get_golfer, create_field_rec
+        for k,v in self.data.items():
+            if k != 'info':
+                if not Field.objects.filter(golfer__espn_number=v.get('pga_num'), tournament=self.tournament).exists():
+                    print ('No Data for, adding: ', k , v)
+                    golfer = get_golfer(k, pga_num=None, espn_num=v.get('pga_num'))
+                    print (golfer)
+                    max_group = Group.objects.filter(tournament=self.tournament).aggregate(Max('number'))
+                    print ('MG ', max_group)
+                    group = Group.objects.get(tournament=self.tournament, number=max_group.get('number__max'))
+                    field = create_field_rec(k, v, group, golfer)
+                    good = False
+
         return good
 
 

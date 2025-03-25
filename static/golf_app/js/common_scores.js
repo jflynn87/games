@@ -67,7 +67,7 @@ function buildLeaderboard(t) {
     .then((response) => response.json())
     .then((responseJSON) => {
           data = $.parseJSON(responseJSON).leaderboard
-          console.log('DD ', data)
+          //console.log('DD ', data)
           $('#det-list').empty()
           $('#det-list').append('<table id="det-table" class="table">' + '</table>');
         
@@ -97,7 +97,7 @@ function buildLeaderboard(t) {
           values = Object.values(data)
           for (let i=1; i <= data_l; i++) {
             let d = data[i]
-            console.log('DDD', d)
+            //console.log('DDD', d)
             let row_fields = [d.rank, d.change, d.golfer_name, d.total_score, d.thru, d.curr_round_score, 
                                 d.r1, d.r2, d.r3, d.r4]
               

@@ -9,6 +9,8 @@
 {%compress js%}
 <script type="text/javascript" src="{%static 'golf_app/js/new_field.js'%}"></script>  
 <script type="text/javascript" src="{%static 'golf_app/js/excel_download.js'%}"></script>  
+<script type="text/javascript" src="{%static 'golf_app/js/create_field_csv.js'%}"></script> 
+
 {%endcompress%}
 
 
@@ -62,31 +64,46 @@
     <div id="top-sect">
     <br>
     <div id="random-line">
-    <form name="random" method="post" id="random_form">
-        {%csrf_token%}
-        <input type="text" name="random" value="random" hidden>
-        <h5>Click for random picks  <input type='submit' id="random_btn" class="btn btn-primary" value="Random Picks" disabled></h5>
-        
-    </form>
-</div>
-    <span style="float: right;" >
-        <a href={{ s3_url }} id="download_excel" >
-        <i class="fas fa-file-download" title="Download Excel" data-toggle="tooltip"> Download Excel</i>
-        </a>
-    </span>
-{%else%}
-<p>
-    <span style="float: right;" >
-        <a href={{ s3_url }} id="download_excel" >
-        <i class="fas fa-file-download" title="Download Excel" data-toggle="tooltip"> Download Excel</i>
-        </a>
-    </span>
-</p>
+        <form name="random" method="post" id="random_form">
+            {%csrf_token%}
+            <input type="text" name="random" value="random" hidden>
+            <h5>Click for random picks  <input type='submit' id="random_btn" class="btn btn-primary" value="Random Picks" disabled></h5>
+        </form>
+    </div>
 {%endif%} 
+<span style="float: right;" >
+    <div id="csv_div">
+        <script>
+            createCSVDiv('{{tournament.pk}}')
+        </script>
+    </div>
+    <!-- <div id="csv_div">
+    <div id="download_file_div">
+        <a href={{ s3_url }} id="download_excel" >
+        <i class="fas fa-file-download" title="Download Excel" data-toggle="tooltip">Download Excel</i>
+        </a>
+    </div>
+    <div id="generate_file_div">
+        <button class="btn btn-primary" id="create_csv" onclick="createFieldCSV('{{tournament.pk}}')">Generate CSV</button>
+    </div>
+    </div>
+    <script type="text/javascript">
+        console.log("{{s3_url}}")
+        if ($("{{s3_url}}") == 'None') {
+            $('#download_file_div').attr('hidden', false)
+            $('#generate_file_div').attr('hidden', true)
+            }
+        else {
+            $('#download_file_div').attr('hidden', true)
+            $('#generate_file_div').attr('hidden', false)
+            }
+        
+    </script> -->
+</span> 
 
 <h2 id='error_msg'></h2>
-
-</div>
+ 
+</div> 
 <div id="status"><h4>Loading Data <span class="status">....</span></h4></div>
 <div id="top_sect"></div>
 
@@ -99,10 +116,11 @@
 </div>
 
 
-
+<!-- 
 <script type="text/javascript" src="//unpkg.com/xlsx/dist/xlsx.full.min.js"></script>
 
 <script type="text/javascript" src="//unpkg.com/xlsx/dist/xlsx.full.min.js"></script>
+ -->
 {%compress css%}
 <link rel="stylesheet" href='{%static "golf_app/css/load.css"%}'> 
 {%endcompress%}

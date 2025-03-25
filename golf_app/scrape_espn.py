@@ -29,7 +29,7 @@ class ScrapeESPN(object):
 
     def get_data(self):
         start = datetime.now()
-        print ('scraping golf espn com')
+        print (f'scraping golf espn com for {self.tournament}')
         
         sd, created = ScoreDict.objects.get_or_create(tournament=self.tournament)
         if self.setup:
@@ -200,12 +200,12 @@ class ScrapeESPN(object):
                     }
 
                 elif (len(td) == 10 and score_dict.get('info').get('round') != 1):  #tournament complete - fixed jan 29/2025 to work when complete
-                    print ('espn scrape in len 10 logic')
+                    #print ('espn scrape in len 10 logic')
                     if td[2].text in self.tournament.not_playing_list():
                        rank = td[2].text 
                     else:
                        rank = td[1].text
-                    print (row.a.text, rank)
+                    #print (row.a.text, rank)
                     score_dict[row.a.text] = {
                                         'pga_num': row.a['href'].split('/')[7],
                                         'rank': rank,
@@ -293,7 +293,7 @@ class ScrapeESPN(object):
             #print (score_dict['Sungjae Im'])
             #print (score_dict['Patrick Reed'])
             #print ([v for v in score_dict.values() if v.get('rank') == '-'])
-            print ('info before cut num calc: ', score_dict.get('info'), 'scrape duration: ', datetime.now() - start)
+            #print ('info before cut num calc: ', score_dict.get('info'), 'scrape duration: ', datetime.now() - start)
             cut_calc_start = datetime.now()
             try:
                 if score_dict.get('info').get('round_status') == 'Not Started' and score_dict.get('info').get('round') == 1 and self.tournament.has_cut:

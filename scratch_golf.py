@@ -1,4 +1,3 @@
-from configparser import DuplicateOptionError
 import os
 os.environ.setdefault("DJANGO_SETTINGS_MODULE","gamesProj.settings")
 import django
@@ -8,10 +7,11 @@ from golf_app.models import Tournament, TotalScore, ScoreDetails, Picks, PickMet
          FedExSeason, FedExField, FedExPicks
 from django.contrib.auth.models import User
 from datetime import datetime, timedelta
-from golf_app import populateField, calc_leaderboard, manual_score, bonus_details, espn_api, \
+from golf_app import field_csv, populateField, calc_leaderboard, manual_score, bonus_details, espn_api, \
                      round_by_round, scrape_espn, utils, golf_serializers, espn_schedule, \
                      scrape_scores_picks, espn_ryder_cup, withdraw, fedex_email, pga_t_data, fedexData, \
-                     setup_fedex_field, espn_golfer_stats_api, espn_golfer_base_data_api, espn_schedule, calc_zurich_score, create_field_csv
+                     espn_golfer_stats_api
+                     
 from django.db.models import Count, Sum
 from unidecode import unidecode as decode
 import json
@@ -32,10 +32,118 @@ import pytz
 from operator import itemgetter
 from django.core.exceptions import ObjectDoesNotExist
 import requests
-
-
+from uuid import uuid4
 from unidecode import unidecode as decode
 
+from user_app.services import CognitoService, DynamoStatsTable
+import secrets
+import string
+import boto3
+from boto3.dynamodb.conditions import Key
+from golf_app.data_golf import DataGolf, GolferSG
+
+
+
+#sk = '40403'
+#pk = '381'
+
+#print (Field.objects.get(pk=int(sk)))
+#exit()
+f = Field.objects.get(tournament__current=True, playerName__icontains='Xander')
+pk = str(f.tournament.pk)
+sk = str(f.pk)
+d = DynamoStatsTable().table
+resp = d.get_item(Key={'pk': pk, 'sk': sk})
+for k, v in resp["Item"].items():
+    print (k,v)
+exit()
+
+t =Tournament.objects.get(current=True)
+
+dg = DataGolf(t=t, create=True)
+
+for f in Field.objects.filter(tournament=t):
+    #print (f, GolferSG(t, f).data)
+    e = espn_golfer_stats_api.ESPNGolfer(f.golfer.espn_number)
+    print (f, e.fedex_rank(), e.fedex_points())
+
+exit()
+
+
+
+
+def generate_secure_password(length=24):
+    """Generate a secure password that meets Cognito requirements"""
+    # Define character sets
+    uppercase = string.ascii_uppercase
+    lowercase = string.ascii_lowercase
+    digits = string.digits
+    special = "!@#$%^&*()_+-=[]{}|'"
+    
+    # Ensure at least one of each required character type
+    password = [
+        secrets.choice(uppercase),
+        secrets.choice(lowercase),
+        secrets.choice(digits),
+        secrets.choice(special)
+    ]
+    
+    # Fill the rest of the password
+    all_characters = uppercase + lowercase + digits + special
+    password.extend(secrets.choice(all_characters) for _ in range(length - 4))
+    
+    # Shuffle the password characters
+    secrets.SystemRandom().shuffle(password)
+    
+    return ''.join(password)
+
+# Use it in your code
+# #password = generate_secure_password()
+# password = os.environ.get('COGNITO_SERVICE_PASSWORD')
+# username = os.environ.get('COGNITO_SERVICE_USERNAME')
+
+# cognito = CognitoService(username=username, password=password)
+
+# #if cognito.setup_service_account():
+#     # Test the regular authentication flow
+# if cognito.test_service_account():
+#     print("Service account setup and authentication successful")
+#     print("Save these credentials securely:")
+#     print(f"Username: {username}")
+    
+#     token = cognito.get_token()
+#     print (f'Token {token}')
+
+c = 0
+for t in Tournament.objects.all():
+    winner = t.winner()
+    w_pick = False
+    for w in winner:
+        cuts = TotalScore.objects.get(tournament=t, user=w.user).cut_count
+        if cuts and cuts > 3:
+            for p in Picks.objects.filter(playerName__tournament=t, user=w.user):
+                if p.is_winner():
+                    w_pick = True
+                    break
+            if not w_pick:
+                players = TotalScore.objects.filter(tournament=t).count()
+                c += 1
+                print (f'{w.user.username} {t.season} {t} cuts: {cuts} total players: {players}')
+print (c)
+exit()
+
+dynamodb = boto3.resource('dynamodb',
+            aws_access_key_id=os.environ.get('AWS_GAMES_KEY'),
+            aws_secret_access_key=os.environ.get('AWS_GAMES_SECRET'),
+            region_name='us-west-2')
+table = dynamodb.Table('TASK_STATUS_TABLE')
+
+response = table.query(KeyConditionExpression=Key('pk').eq('4617fa19-2958-4ef2-b891-bae33fece9ff'))
+
+for item in response.get('Items', []):
+    print (item)
+    print ('-'*50)
+exit()
 
 #for f in Field.objects.filter(tournament__current=True):
 #    print (f, f.prior_year)
@@ -74,7 +182,7 @@ exit()
 #print (espn.get_event_list())
 start = datetime.now()
 t = Tournament.objects.get(current=True)    
-f = create_field_csv.FieldCSV(t).create_file()
+f = field_csv.FieldCSV(t).create_file()
 print (datetime.now() - start)
 
 

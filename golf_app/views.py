@@ -10,6 +10,7 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.urls import reverse, reverse_lazy
 from django.contrib.auth.models import User
+from django.forms import model_to_dict
 import datetime
 from golf_app import populateField, manual_score, withdraw, scrape_espn, \
      mp_calc_scores, golf_serializers, utils, olympic_sd, espn_api, \
@@ -33,9 +34,17 @@ from collections import OrderedDict
 #import ssl
 import boto3
 import os
-from golf_app.create_field_csv import FieldCSV
+from golf_app.field_csv import FieldCSV
+from user_app.tasks import AsyncTaskManager
+from user_app.services import CognitoService, s3Client, DynamoStatsTable
+from dotenv import load_dotenv
+from user_app.services import DynamoStatsTable
+from golf_app.data_golf import GolferSG, DataGolf
+from golf_app.espn_golfer_stats_api import ESPNGolfer
+
 
 class FieldListView1(LoginRequiredMixin, TemplateView):
+    '''this is the class used on GET to for the field picks page'''
     login_url = 'login'
     template_name = 'golf_app/field_list_1.html'
 
@@ -51,34 +60,72 @@ class FieldListView1(LoginRequiredMixin, TemplateView):
         context.update({
             'tournament': tournament,
             'fedex_season': None,
-            's3_url': self.signed_url(tournament)
+            #'s3_url': self.signed_url(tournament)
 
         })
 
         print ('new field 1 context dur: ', datetime.datetime.now() - start)
         return context
 
+    # def check_file_exists(self, s3_client, bucket_name, key):
+    #     try:
+    #         s3_client.head_object(Bucket=bucket_name, Key=key)
+    #         return True
+    #     except s3_client.exceptions.ClientError as e:
+    #         return False
+            
+    
+    # def signed_url(self, t):
+    #     try:
+    #         s3 = boto3.client('s3',
+    #                 aws_access_key_id=os.environ.get('AWS_GAMES_KEY'),
+    #                 aws_secret_access_key=os.environ.get('AWS_GAMES_SECRET'),
+    #                 region_name='us-west-2'
+    #             )
+    #         bucket = 'jflynn87-games-files'
+    #         key = t.s3_csv_key()
+    #         if not self.check_file_exists(s3, bucket, key):
+    #             url = s3.generate_presigned_url(
+    #                 ClientMethod='get_object',
+    #                 Params={
+    #                     'Bucket': bucket,
+    #                     'Key': key,
+    #                     'ResponseContentType': 'text/csv'
+    #                 },
+    #                 ExpiresIn=86400
+    #             )
+
+    #             return url
+    #         else:
+    #             return None
+    #     except Exception as e:
+    #         print ('error in signed url: ', e)
+    #         return None
+        
+
+class FieldCSVSignedURL(APIView):
+    
     def signed_url(self, t):
-        s3 = boto3.client('s3',
-                aws_access_key_id=os.environ.get('AWS_GAMES_KEY'),
-                aws_secret_access_key=os.environ.get('AWS_GAMES_SECRET'),
-                region_name='us-west-2'
-            )
+        try:
+            bucket = 'jflynn87-games-files'
+            key = t.s3_csv_key()
+            client = s3Client(bucket=bucket, key=key)
+            if client.file_exists():
+                return client.get_signed_url()
+            else:
+                return None
+        except Exception as e:
+            print ('error in signed url views: ', e)
+            return None
 
-        url = s3.generate_presigned_url(
-            ClientMethod='get_object',
-            Params={
-                'Bucket': 'jflynn87-games-files',
-                'Key': t.s3_csv_key(),
-                'ResponseContentType': 'text/csv'
-            },
-            ExpiresIn=86400
-        )
-
-        return url
+    def get(self, request):
+        t = Tournament.objects.get(current=True)
+        url = self.signed_url(t)
+        return Response({'url': url})
 
 
 class NewFieldListView(LoginRequiredMixin,TemplateView):
+    '''this is the class used for the post of picks from the field page'''
     login_url = 'login'
     template_name = 'golf_app/field_list_a.html'
     model = Field
@@ -147,17 +194,6 @@ class NewFieldListView(LoginRequiredMixin,TemplateView):
                 response = {'status': 0, 'message': msg} 
                 return HttpResponse(json.dumps(response), content_type='application/json')
             
-        
-        #print ('user', user)
-        #print ('started', tournament.started())
-
-        # if tournament.started() and tournament.late_picks is False:
-        #     print ('picks too late', user, datetime.datetime.now())
-        #     print (timezone.now())
-        #     msg = 'Too late for picks, tournament started'
-        #     response = {'status': 0, 'message': msg} 
-        #     return HttpResponse(json.dumps(response), content_type='application/json')
-
         
         if Picks.objects.filter(playerName__tournament=tournament, user=user).count()>0:
             Picks.objects.filter(playerName__tournament=tournament, user=user).delete()
@@ -296,6 +332,7 @@ class ScoreGetPicks(ListAPIView):
         print ('return serialized piks: ', datetime.datetime.now() - start)
         return queryset
            
+
 class GetPicks(APIView):
     
     def get(self, num):
@@ -389,29 +426,14 @@ class SeasonTotalView(ListView):
             display_dict[tournament] = {'scores': score_list, 'pk': tournament.pk}
         #print (total_scores)
         total_score_list = []
-        #total_second_half_score_list = []
+
         for score in total_scores.values():
             total_score_list.append(score)
-        #added for Mark
-        #for s in second_half_scores.values():
-        #    total_second_half_score_list.append(s)
-        
-        #ranks = ss.rankdata(total_score_list, method='min')
+
         ranks = [sorted(total_score_list).index(x) for x in total_score_list]
         rank_list = []
         for rank in ranks:
             rank_list.append(rank)
-
-        #second_half_ranks = ss.rankdata(total_second_half_score_list, method='min')
-        #second_half_rank_list = []
-        #for rank in second_half_ranks:
-        #    second_half_rank_list.append(rank)
-
-        #print ('display_dict', display_dict)
-        #print ()
-        #print ('winner dict', winner_dict)
-        #print ('second half totals', total_second_half_score_list)
-        #print ('full season totals',total_score_list)
 
         context = super(SeasonTotalView, self).get_context_data(**kwargs)
         print (display_dict)
@@ -420,10 +442,7 @@ class SeasonTotalView(ListView):
         'user_list': user_list,
         'rank_list': rank_list,
         'totals_list': total_score_list,
-        #'totals_list': 
-        #'second_half_list': total_second_half_score_list,
         'prize_list': winner_dict,
-        #'second_half_rank_list': second_half_rank_list,
         'season': Season.objects.get(current=True),
 
         })
@@ -445,8 +464,6 @@ def setup(request):
 
                 espn_curr_event = espn_data.current_event()[0]
                 espn_t_num = espn_curr_event.get('link').split('=')[1]
-                #pga = pga_t_data.PGAData()
-                #next_pga_t_num = (pga.next_t(), pga.get_t_name(pga.next_t()))
                 last_season = Season.objects.get(season=t.season.season -1)
                 try:
                     next_pga_t_num = Tournament.objects.get(name=espn_curr_event.get('name'), season=last_season)
@@ -509,224 +526,224 @@ class AboutView(TemplateView):
     template_name='golf_app/about.html'
 
 
-class GetScores(APIView):
+# class GetScores(APIView):
    
-    def get(self, request, tournament):
+#     def get(self, request, tournament):
         
-        #print ('GetScores API VIEW', self.request.GET.get('tournament'))
-        #t = Tournament.objects.get(pk=self.request.GET.get('tournament'))
-        if tournament:
-            t = Tournament.objects.get(pk=tournament)
-        else:
-            t = Tournament.objects.get(current=True)
+#         #print ('GetScores API VIEW', self.request.GET.get('tournament'))
+#         #t = Tournament.objects.get(pk=self.request.GET.get('tournament'))
+#         if tournament:
+#             t = Tournament.objects.get(pk=tournament)
+#         else:
+#             t = Tournament.objects.get(current=True)
 
-        sd = ScoreDict.objects.get(tournament=t)
-        info = get_info(t)
+#         sd = ScoreDict.objects.get(tournament=t)
+#         info = get_info(t)
 
-        if t.complete:
-            display_data = json.loads(sd.pick_data)
+#         if t.complete:
+#             display_data = json.loads(sd.pick_data)
                 
-            return Response(({'picks': display_data.get('display_data').get('picks'),
-                            'totals': display_data.get('display_data').get('totals'),
-                            'leaders': display_data.get('display_data').get('leaders'),
-                            'cut_line': display_data.get('display_data').get('cut_line'),
-                            'optimal': display_data.get('display_data').get('optimal'), 
-                            'scores': display_data.get('display_data').get('scores'),
-                            'season_totals': display_data.get('display_data').get('season_totals'),
-                            'info': json.dumps(info),
-                            't_data': serializers.serialize("json", [t])
-            }), 200)
+#             return Response(({'picks': display_data.get('display_data').get('picks'),
+#                             'totals': display_data.get('display_data').get('totals'),
+#                             'leaders': display_data.get('display_data').get('leaders'),
+#                             'cut_line': display_data.get('display_data').get('cut_line'),
+#                             'optimal': display_data.get('display_data').get('optimal'), 
+#                             'scores': display_data.get('display_data').get('scores'),
+#                             'season_totals': display_data.get('display_data').get('season_totals'),
+#                             'info': json.dumps(info),
+#                             't_data': serializers.serialize("json", [t])
+#             }), 200)
 
 
-        if (t.current and not t.complete) or t.pga_tournament_num == '999':
-            print ('scraping')
-            if t.pga_tournament_num == '470': 
-                return HttpResponse('Wrong link, use MP link')
-            elif t.pga_tournament_num == '018':
-                score_dict = scrape_cbs_golf.ScrapeCBS().get_data()
-            elif t.pga_tournament_num == '999':
-                score_dict = olympic_sd.OlympicScores().get_sd()
-                print ('Olympic score dict: ', score_dict)
-            else:
-                score_dict = scrape_espn.ScrapeESPN(setup=True).get_data()
-        else:
-            print ('not scraping')
-            try:
-                score_dict = sd.pick_data()
-            except Exception as e:
-                score_dict = {}
-                #score_dict = get_score_dict(t)
-                print ('error using old score dict method', t, e)
+#         if (t.current and not t.complete) or t.pga_tournament_num == '999':
+#             print ('scraping')
+#             if t.pga_tournament_num == '470': 
+#                 return HttpResponse('Wrong link, use MP link')
+#             elif t.pga_tournament_num == '018':
+#                 score_dict = scrape_cbs_golf.ScrapeCBS().get_data()
+#             elif t.pga_tournament_num == '999':
+#                 score_dict = olympic_sd.OlympicScores().get_sd()
+#                 print ('Olympic score dict: ', score_dict)
+#             else:
+#                 score_dict = scrape_espn.ScrapeESPN(setup=True).get_data()
+#         else:
+#             print ('not scraping')
+#             try:
+#                 score_dict = sd.pick_data()
+#             except Exception as e:
+#                 score_dict = {}
+#                 #score_dict = get_score_dict(t)
+#                 print ('error using old score dict method', t, e)
         
-        scores = manual_score.Score(score_dict, t, 'json')
-        # change so this isn't executed when complete, add function to get total scores without updating
-        print ('XXXXXX', score_dict.get('info'), t.started())
-        if len(score_dict) == 0: 
-            #(score_dict.get('info').get('round') == 1 and score_dict.get('info').get('round_status') == 'Not Started'):
-            print ('score_dict empty', score_dict.get('info'))
-            for sd in ScoreDetails.objects.filter(pick__playerName__tournament=t):
-                sd.sod_position = ' '
-                sd.save()
-            return Response(({}), 200)
+#         scores = manual_score.Score(score_dict, t, 'json')
+#         # change so this isn't executed when complete, add function to get total scores without updating
+#         print ('XXXXXX', score_dict.get('info'), t.started())
+#         if len(score_dict) == 0: 
+#             #(score_dict.get('info').get('round') == 1 and score_dict.get('info').get('round_status') == 'Not Started'):
+#             print ('score_dict empty', score_dict.get('info'))
+#             for sd in ScoreDetails.objects.filter(pick__playerName__tournament=t):
+#                 sd.sod_position = ' '
+#                 sd.save()
+#             return Response(({}), 200)
         
-        if (t.current and len(score_dict) != 0) or t.pga_tournament_num == '999':
-            optimal_picks = {}
-            for g in Group.objects.filter(tournament=t):
-                opt = scores.optimal_picks(g.number)
-                optimal_picks[str(g.number)] = {
-                                                'golfer': opt[0],
-                                                'rank': opt[1],
-                                                'cuts': opt[2],
-                                                'total_golfers': g.playerCnt
-                } 
+#         if (t.current and len(score_dict) != 0) or t.pga_tournament_num == '999':
+#             optimal_picks = {}
+#             for g in Group.objects.filter(tournament=t):
+#                 opt = scores.optimal_picks(g.number)
+#                 optimal_picks[str(g.number)] = {
+#                                                 'golfer': opt[0],
+#                                                 'rank': opt[1],
+#                                                 'cuts': opt[2],
+#                                                 'total_golfers': g.playerCnt
+#                 } 
 
-            scores.update_scores(optimal_picks)
+#             scores.update_scores(optimal_picks)
         
-        ts = scores.total_scores()
-        picks_ret = datetime.datetime.now()
-        d = {'msg': 'no data'}
-        print ('get picks duration:: ', datetime.datetime.now()- picks_ret)
+#         ts = scores.total_scores()
+#         picks_ret = datetime.datetime.now()
+#         d = {'msg': 'no data'}
+#         print ('get picks duration:: ', datetime.datetime.now()- picks_ret)
 
-        leaders = scores.get_leader()
-        totals = Season.objects.get(season=int(t.season.season)).get_total_points()
-        print ("TOTALS ", totals)
-        t_data = serializers.serialize("json", [t, ])
-        display_dict = {}
-        display_dict['display_data'] = {'picks': d,
-                          'totals': ts,
-                          'leaders': leaders,
-                          'cut_line': score_dict.get('info').get('cut_line'),
-                          'optimal': json.dumps(optimal_picks),
-                          'scores': json.dumps(OrderedDict(score_dict)),
-                          'season_totals': totals,
-                          't_data': t_data,
-                          'round_status': score_dict.get('info').get('round_status')}
+#         leaders = scores.get_leader()
+#         totals = Season.objects.get(season=int(t.season.season)).get_total_points()
+#         print ("TOTALS ", totals)
+#         t_data = serializers.serialize("json", [t, ])
+#         display_dict = {}
+#         display_dict['display_data'] = {'picks': d,
+#                           'totals': ts,
+#                           'leaders': leaders,
+#                           'cut_line': score_dict.get('info').get('cut_line'),
+#                           'optimal': json.dumps(optimal_picks),
+#                           'scores': json.dumps(OrderedDict(score_dict)),
+#                           'season_totals': totals,
+#                           't_data': t_data,
+#                           'round_status': score_dict.get('info').get('round_status')}
  
-        sd.pick_data = json.dumps(display_dict)
-        sd.data = score_dict 
-        sd.save()
+#         sd.pick_data = json.dumps(display_dict)
+#         sd.data = score_dict 
+#         sd.save()
 
-        #t.saved_cut_num = score_dict.get('info').get('cut_num')
-        t.saved_round = score_dict.get('info').get('round')
-        t.save()
+#         #t.saved_cut_num = score_dict.get('info').get('cut_num')
+#         t.saved_round = score_dict.get('info').get('round')
+#         t.save()
 
-        return Response(({'picks': d,
-                          'totals': ts,
-                          'leaders': leaders,
-                          'cut_line': score_dict.get('info').get('cut_line'),
-                          'optimal': json.dumps(optimal_picks),
-                          'scores': json.dumps(OrderedDict(score_dict)),
-                          'season_totals': totals,
-                          'info': json.dumps(info),
-                          't_data': t_data,
-                          'round_status': score_dict.get('info').get('round_status')
-         }), 200)
+#         return Response(({'picks': d,
+#                           'totals': ts,
+#                           'leaders': leaders,
+#                           'cut_line': score_dict.get('info').get('cut_line'),
+#                           'optimal': json.dumps(optimal_picks),
+#                           'scores': json.dumps(OrderedDict(score_dict)),
+#                           'season_totals': totals,
+#                           'info': json.dumps(info),
+#                           't_data': t_data,
+#                           'round_status': score_dict.get('info').get('round_status')
+#          }), 200)
 
-class GetDBScores(APIView):
+# class GetDBScores(APIView):
     
-    def get(self, num):
+#     def get(self, num):
         
-        print ('GetScores API VIEW', self.request.GET.get('tournament'))
-        t = Tournament.objects.get(pk=self.request.GET.get('tournament'))
-        sd, created = ScoreDict.objects.get_or_create(tournament=t)
-        if created:
-            sd.pick_data = {}
-            sd.data = {}
-            sd.save()
-        info = get_info(t)
-        t_data = serializers.serialize("json", [t, ])
+#         print ('GetScores API VIEW', self.request.GET.get('tournament'))
+#         t = Tournament.objects.get(pk=self.request.GET.get('tournament'))
+#         sd, created = ScoreDict.objects.get_or_create(tournament=t)
+#         if created:
+#             sd.pick_data = {}
+#             sd.data = {}
+#             sd.save()
+#         info = get_info(t)
+#         t_data = serializers.serialize("json", [t, ])
 
-        try:
-            if sd.pick_data:
-                display_data = json.loads(sd.pick_data)
-            else:
-                display_data = ''
+#         try:
+#             if sd.pick_data:
+#                 display_data = json.loads(sd.pick_data)
+#             else:
+#                 display_data = ''
 
-            if len(display_data) > 0:    
-                return Response(({'picks': display_data.get('display_data').get('picks'),
-                                'totals': display_data.get('display_data').get('totals'),
-                                'leaders': display_data.get('display_data').get('leaders'),
-                                'cut_line': display_data.get('display_data').get('cut_line'),
-                                'optimal': display_data.get('display_data').get('optimal'), 
-                                'scores': display_data.get('display_data').get('scores'),
-                                'season_totals': display_data.get('display_data').get('season_totals'),
-                                'info': json.dumps(info),
-                                't_data': display_data.get('display_data').get('t_data'),
-                                'round_status': display_data.get('display_data').get('round_status')
-                }), 200)
-            else:
-                print ('no db scores returnng empty dicts')
-                # return Response(({'picks': ' ',
-                #                 'totals': ' ',
-                #                 'leaders': ' ', 
-                #                 'cut_line': ' ',
-                #                 'optimal': ' ', 
-                #                 'scores': ' ',
-                #                 'season_totals': ' ',
-                #                 'info': json.dumps(info),
-                #                 't_data': ' ',
-                #                 'round_status': ' '
-                # }), 200)
-                return Response({})
+#             if len(display_data) > 0:    
+#                 return Response(({'picks': display_data.get('display_data').get('picks'),
+#                                 'totals': display_data.get('display_data').get('totals'),
+#                                 'leaders': display_data.get('display_data').get('leaders'),
+#                                 'cut_line': display_data.get('display_data').get('cut_line'),
+#                                 'optimal': display_data.get('display_data').get('optimal'), 
+#                                 'scores': display_data.get('display_data').get('scores'),
+#                                 'season_totals': display_data.get('display_data').get('season_totals'),
+#                                 'info': json.dumps(info),
+#                                 't_data': display_data.get('display_data').get('t_data'),
+#                                 'round_status': display_data.get('display_data').get('round_status')
+#                 }), 200)
+#             else:
+#                 print ('no db scores returnng empty dicts')
+#                 # return Response(({'picks': ' ',
+#                 #                 'totals': ' ',
+#                 #                 'leaders': ' ', 
+#                 #                 'cut_line': ' ',
+#                 #                 'optimal': ' ', 
+#                 #                 'scores': ' ',
+#                 #                 'season_totals': ' ',
+#                 #                 'info': json.dumps(info),
+#                 #                 't_data': ' ',
+#                 #                 'round_status': ' '
+#                 # }), 200)
+#                 return Response({})
                 
                
-        except Exception as e:
-            print ('old logic', e)
-            return (redirect('golf_app:get_scores'), num)
-            #GetScores().get(self.request)
-            #return Response({}, 200)
+#         except Exception as e:
+#             print ('old logic', e)
+#             return (redirect('golf_app:get_scores'), num)
+#             #GetScores().get(self.request)
+#             #return Response({}, 200)
 
-class NewScoresView(LoginRequiredMixin,TemplateView):  #changed from ListView 1/5/2022
-    login_url = 'login'
-    template_name = 'golf_app/scores.html'
-    #queryset = Picks.objects.filter(playerName__tournament__current=True) 
+# class NewScoresView(LoginRequiredMixin,TemplateView):  #changed from ListView 1/5/2022
+#     login_url = 'login'
+#     template_name = 'golf_app/scores.html'
+#     #queryset = Picks.objects.filter(playerName__tournament__current=True) 
 
-    def get_context_data(self, **kwargs):
-        context = super(NewScoresView, self).get_context_data(**kwargs)
-        start = datetime.datetime.now()
-        if self.request.user.is_authenticated:
-            utils.save_access_log(self.request, 'current week scores')
+#     def get_context_data(self, **kwargs):
+#         context = super(NewScoresView, self).get_context_data(**kwargs)
+#         start = datetime.datetime.now()
+#         if self.request.user.is_authenticated:
+#             utils.save_access_log(self.request, 'current week scores')
 
-        if self.kwargs.get('pk') != None:
-            print (self.kwargs)
-            tournament = Tournament.objects.get(pk=self.kwargs.get('pk'))
-        else:
-            tournament = Tournament.objects.get(current=True)
+#         if self.kwargs.get('pk') != None:
+#             print (self.kwargs)
+#             tournament = Tournament.objects.get(pk=self.kwargs.get('pk'))
+#         else:
+#             tournament = Tournament.objects.get(current=True)
         
-        if not tournament.started():
-           user_dict = {}
-           for user in tournament.season.get_users('obj'):
-               count = Picks.objects.filter(playerName__tournament=tournament, user=user).aggregate(Count('playerName'))
-               print ('count: ', count)
-               user_dict[user.username]=count.get('playerName__count')
+#         if not tournament.started():
+#            user_dict = {}
+#            for user in tournament.season.get_users('obj'):
+#                count = Picks.objects.filter(playerName__tournament=tournament, user=user).aggregate(Count('playerName'))
+#                print ('count: ', count)
+#                user_dict[user.username]=count.get('playerName__count')
 
-           self.template_name = 'golf_app/pre_start.html'
+#            self.template_name = 'golf_app/pre_start.html'
 
-           context.update({'user_dict': user_dict,
-                           'tournament': tournament,
-                          # 'lookup_errors': scores[4],
-                                                    })
+#            context.update({'user_dict': user_dict,
+#                            'tournament': tournament,
+#                           # 'lookup_errors': scores[4],
+#                                                     })
 
-           return context
-        ## from here all logic should only happen if tournament has started
-        if not tournament.complete and not tournament.picks_complete():
-               print ('picks not complete')
-               tournament.missing_picks()
+#            return context
+#         ## from here all logic should only happen if tournament has started
+#         if not tournament.complete and not tournament.picks_complete():
+#                print ('picks not complete')
+#                tournament.missing_picks()
 
-        #score_dict = scrape_espn.ScrapeESPN().get_data()
+#         #score_dict = scrape_espn.ScrapeESPN().get_data()
 
-        context.update({'scores':sorted(TotalScore.objects.filter(tournament=tournament), key=lambda x:x.score),
-                        'detail_list':None,
-                        'leader_list':None,
-                        'cut_data':None,
-                        'lookup_errors': None,
-                        'tournament': tournament,
-                        'thru_list': [],
-                        'groups': Group.objects.filter(tournament=tournament),
-                        #'score_dict': score_dict,
-                                    })
-        print ('scores context duration', datetime.datetime.now() -start)
-        return context        
+#         context.update({'scores':sorted(TotalScore.objects.filter(tournament=tournament), key=lambda x:x.score),
+#                         'detail_list':None,
+#                         'leader_list':None,
+#                         'cut_data':None,
+#                         'lookup_errors': None,
+#                         'tournament': tournament,
+#                         'thru_list': [],
+#                         'groups': Group.objects.filter(tournament=tournament),
+#                         #'score_dict': score_dict,
+#                                     })
+#         print ('scores context duration', datetime.datetime.now() -start)
+#         return context        
 
 
 class OlympicScoresView(LoginRequiredMixin,ListView):
@@ -784,22 +801,22 @@ class OlympicScoresView(LoginRequiredMixin,ListView):
 
 
 
-#from golf_app import manual_score
-class ManualScoresView(LoginRequiredMixin,ListView):
-    login_url = 'login'
-    template_name = 'golf_app/scores.html'
-    #form=CreateManualScoresForm
-    #golfers = manual_score.Score('016').get_picked_golfers()
-    queryset = Picks.objects.filter(playerName__tournament__current=True) 
+# #from golf_app import manual_score
+# class ManualScoresView(LoginRequiredMixin,ListView):
+#     login_url = 'login'
+#     template_name = 'golf_app/scores.html'
+#     #form=CreateManualScoresForm
+#     #golfers = manual_score.Score('016').get_picked_golfers()
+#     queryset = Picks.objects.filter(playerName__tournament__current=True) 
 
-def get_score_dict(tournament):
-    '''takes a tournament obj and returns a dict of the picks with scores'''
-    score_dict = {}
-    for s in ScoreDetails.objects.filter(pick__playerName__tournament=tournament):
-        score_dict[s.pick.playerName.playerName] = \
-        {'rank': s.score, 'change': None, 'thru': s.thru, 'total_score': s.toPar, 'round_score': s.today_score}
-    #print ('get_score_dict', score_dict)
-    return score_dict
+# def get_score_dict(tournament):
+#     '''takes a tournament obj and returns a dict of the picks with scores'''
+#     score_dict = {}
+#     for s in ScoreDetails.objects.filter(pick__playerName__tournament=tournament):
+#         score_dict[s.pick.playerName.playerName] = \
+#         {'rank': s.score, 'change': None, 'thru': s.thru, 'total_score': s.toPar, 'round_score': s.today_score}
+#     #print ('get_score_dict', score_dict)
+#     return score_dict
 
 
 class CheckStarted(APIView):
@@ -827,82 +844,10 @@ class CheckStarted(APIView):
                  t_status['started'] = False
                  t_status['late_picks'] = t.late_picks
 
-            # if not t.started():
-            #     #score_dict = scrape_espn.ScrapeESPN().get_data()
-            #     status = scrape_espn.ScrapeESPN().status_check()
-            #     if status == "Tournament Field":
-            #         t_status['status'] = 'Not Started'
-            #     #print ('score dict started check: ', score_dict.get('info'))
-            #     else:
-            #         score_dict = scrape_espn.ScrapeESPN().get_data()
-            #         score = manual_score.Score(score_dict, t)
-            #         t_status['status'] = 'Started - refresh to see picks'
-                #round = t.get_round()
-                    #t_round = score_dict.get('info').get('round')
-
-   
-                #if t_round != None and t_round != 'Tournament Field' and t_round > 0:
-                #if t_round != None and (t_round != 1 and score_dict.get('round_status') != "Not Started"):
-                #    print ('started updating scores')
-                #    score.update_scores() 
-                #if t.started():
-                #    t_status['status'] = 'Started - refresh to see picks'
-                #else:
-                #    t_status['status'] = 'Not Started'
-                #t_status['status'] = tourn.started()
-                #print ('responding', t_status)
             return Response(json.dumps(t_status), 200)
         except Exception as e:
             print ('error', e)
             return Response(json.dumps({'status': str(e)}), 500)
-
-    # def get(self, t_pk):
-       
-    #     try:
-    #         t = Tournament.objects.get(pk=self.request.GET.get('t_pk'))
-    #         if not t.started():
-    #             pga_web = scrape_scores.ScrapeScores(t)
-    #             score_dict = pga_web.scrape()
-    #         print (t.started())
-    #         return Response(t.started, 200)
-    #     except Exception as e:
-    #         return Response(e, 500)
-
-            
-# class PriorResult(APIView):
-#     def get(self, num):
-#         print ('start prior result')
-#         try:
-#             results_list = []
-#             current_t = Tournament.objects.get(current=True)
-#             season = int(current_t.season.season)
-#             t = Tournament.objects.get(name=current_t.name, season__season=(season-1))
-#             print (t)
-#             for score in ScoreDetails.objects.filter(pick__playerName__tournament=t).order_by('score').values('pick__playerName__playerName', 'score').distinct():
-#                 print (score)
-#                 results_list.append({'golfer': score.get('pick__playerName__playerName'), 'score': score.get('score')})
-
-#             return Response(json.dumps(results_list), 200)
-#         except Exception as e:
-#             print ('exception', e)
-#             return Response(e, 500)
-
-class OptimalPicks(APIView):
-    pass
-    # def get(self, num):
-        
-    #     try:
-    #         result_dict = {}
-    #         t = Tournament.objects.get(pk=self.request.GET.get('tournament'))
-            
-    #         for g in Group.objects.filter(tournament=t):
-    #             result_dict[g.number] = g.best_picks()
-
-    #         print ('optimal_picks', result_dict)
-    #         return Response(json.dumps(result_dict), 200)
-    #     except Exception as e:
-    #         print ('exception', e)
-    #         return Response(json.dumps({e}), 500)
 
 
 class GetInfo(APIView):
@@ -912,7 +857,6 @@ class GetInfo(APIView):
         #print (self.request.GET)
         try:
             info_dict = {}
-            #t = Tournament.objects.get(pk=self.request.GET.get('tournament'))
             t = Tournament.objects.get(pk=pk)
             total_picks = 0
 
@@ -920,11 +864,6 @@ class GetInfo(APIView):
                 info_dict[g.number] = g.num_of_picks()
                 total_picks += g.num_of_picks()
             info_dict['total'] = total_picks
-            #info_dict['started'] = t.started()
-
-            #info_dict['complete'] = t.complete
-
-            #print ('info dict class', info_dict)
             return Response(json.dumps(info_dict), 200)
         except Exception as e:
             print ('exception', e)
@@ -950,147 +889,147 @@ def get_info(t):
 
 
 
-class CBSScores(APIView):
+# class CBSScores(APIView):
 
-    ## not started, add code
+#     ## not started, add code
 
-    def get(self, num):
-        #print (self.request.GET)
+#     def get(self, num):
+#         #print (self.request.GET)
 
-        try:
+#         try:
             
-            #info_dict = {}
-            t = Tournament.objects.get(pk=self.request.GET.get('tournament'))
+#             #info_dict = {}
+#             t = Tournament.objects.get(pk=self.request.GET.get('tournament'))
 
-            if t.complete:
-                return Response(({}), 200)
+#             if t.complete:
+#                 return Response(({}), 200)
 
-            sd = ScoreDict.objects.get(tournament=t)
-            info = get_info(t)
-            if not t.current:
-                return (json.dumps({'error': 'only for current tournament'}), 500)
+#             sd = ScoreDict.objects.get(tournament=t)
+#             info = get_info(t)
+#             if not t.current:
+#                 return (json.dumps({'error': 'only for current tournament'}), 500)
 
-            score_dict = scrape_cbs_golf.ScrapeCBS().get_data()
+#             score_dict = scrape_cbs_golf.ScrapeCBS().get_data()
 
         
-            scores = manual_score.Score(score_dict, t, 'json')
-            # change so this isn't executed when complete, add function to get total scores without updating
-            #print (len(score_dict))
-            if len(score_dict) == 0:
-                print ('score_dict empty')
-                return Response(({}), 200)
+#             scores = manual_score.Score(score_dict, t, 'json')
+#             # change so this isn't executed when complete, add function to get total scores without updating
+#             #print (len(score_dict))
+#             if len(score_dict) == 0:
+#                 print ('score_dict empty')
+#                 return Response(({}), 200)
         
-            if t.current and len(score_dict) != 0:
-                scores.update_scores()
+#             if t.current and len(score_dict) != 0:
+#                 scores.update_scores()
         
-                ts = scores.total_scores()
-                d = scores.get_picks_by_user() 
-                leaders = scores.get_leader()
-                optimal = t.optimal_picks()
-                totals = Season.objects.get(season=t.season).get_total_points()
+#                 ts = scores.total_scores()
+#                 d = scores.get_picks_by_user() 
+#                 leaders = scores.get_leader()
+#                 optimal = t.optimal_picks()
+#                 totals = Season.objects.get(season=t.season).get_total_points()
 
-                display_dict = {}
-                display_dict['display_data'] = {'picks': d,
-                                'totals': ts,
-                                'leaders': leaders,
-                                'cut_line': t.cut_score,
-                                'optimal': optimal,
-                                'scores': json.dumps(score_dict),
-                                'season_totals': totals,}
+#                 display_dict = {}
+#                 display_dict['display_data'] = {'picks': d,
+#                                 'totals': ts,
+#                                 'leaders': leaders,
+#                                 'cut_line': t.cut_score,
+#                                 'optimal': optimal,
+#                                 'scores': json.dumps(score_dict),
+#                                 'season_totals': totals,}
 
-                sd.cbs_data = json.dumps(display_dict)
-                sd.save()
+#                 sd.cbs_data = json.dumps(display_dict)
+#                 sd.save()
 
-                return Response(({'picks': d,
-                                'totals': ts,
-                                'leaders': leaders,
-                                'cut_line': t.cut_score,
-                                'optimal': optimal,
-                                'scores': json.dumps(score_dict),
-                                'season_totals': totals,
-                                'info': json.dumps(info),
-                }), 200)
+#                 return Response(({'picks': d,
+#                                 'totals': ts,
+#                                 'leaders': leaders,
+#                                 'cut_line': t.cut_score,
+#                                 'optimal': optimal,
+#                                 'scores': json.dumps(score_dict),
+#                                 'season_totals': totals,
+#                                 'info': json.dumps(info),
+#                 }), 200)
 
-        except Exception as e:
-            print ('exception', e)
-            return Response(json.dumps({'error': e}), 500)
+#         except Exception as e:
+#             print ('exception', e)
+#             return Response(json.dumps({'error': e}), 500)
 
 
-class GetFieldCSV(APIView):
+# class GetFieldCSV(APIView):
 
-    def get(self, request, num):
-        print ('get field csv', num)
-        data = []
-        try:
-            #t = Tournament.objects.get(pk=self.request.GET.get('tournament'))
-            t = Tournament.objects.get(pk=int(num))
-            #data = serializers.serialize('json', Field.objects.filter(tournament=t),  use_natural_foreign_keys=True)
-            header = ['PGA ID', 'Golfer', 'Group ID',
-                       'currentWGR', 'sow_WGR', 'soy_WGR',
-                        'prior year finish', 'handicap',
-                        'FedEx Rank', 'FedEx Points',
-                        'Season Played', 'Season Won', 'Season 2-10',
-                        'Season 11-29', 'Season 30 - 49', 'Season > 50', 'Season Cut',
-                        'SG Off Tee Rank', 'SG Off Tee', 'SG Approach Rank', 'SG Approach',
-                        'SG Around Green Rank', 'SG Around Green',
-                        'SG Putting Rank', 'SG Putting',]
+#     def get(self, request, num):
+#         print ('get field csv', num)
+#         data = []
+#         try:
+#             #t = Tournament.objects.get(pk=self.request.GET.get('tournament'))
+#             t = Tournament.objects.get(pk=int(num))
+#             #data = serializers.serialize('json', Field.objects.filter(tournament=t),  use_natural_foreign_keys=True)
+#             header = ['PGA ID', 'Golfer', 'Group ID',
+#                        'currentWGR', 'sow_WGR', 'soy_WGR',
+#                         'prior year finish', 'handicap',
+#                         'FedEx Rank', 'FedEx Points',
+#                         'Season Played', 'Season Won', 'Season 2-10',
+#                         'Season 11-29', 'Season 30 - 49', 'Season > 50', 'Season Cut',
+#                         'SG Off Tee Rank', 'SG Off Tee', 'SG Approach Rank', 'SG Approach',
+#                         'SG Around Green Rank', 'SG Around Green',
+#                         'SG Putting Rank', 'SG Putting',]
                         
-            for t4 in t.season.last_4():
-                header.append(t4.name)
+#             for t4 in t.season.last_4():
+#                 header.append(t4.name)
  
-            data.append(header)
-            print (t)
-            for f in Field.objects.filter(tournament=t):
-                #print (f.season_stats)
-                data.append([f.golfer.golfer_pga_num, f.playerName, f.group.number,
-                             f.currentWGR, f.sow_WGR, f.soy_WGR,
-                              f.prior_year, f.handi,
-                              'n/a', 'n/a',
-                              f.season_stats.get('played'), f.season_stats.get('won'), f.season_stats.get('top10'),
-                              f.season_stats.get('bet11_29'), f.season_stats.get('bet30_49'), f.season_stats.get('over50'), f.season_stats.get('cuts'),
+#             data.append(header)
+#             print (t)
+#             for f in Field.objects.filter(tournament=t):
+#                 #print (f.season_stats)
+#                 data.append([f.golfer.golfer_pga_num, f.playerName, f.group.number,
+#                              f.currentWGR, f.sow_WGR, f.soy_WGR,
+#                               f.prior_year, f.handi,
+#                               'n/a', 'n/a',
+#                               f.season_stats.get('played'), f.season_stats.get('won'), f.season_stats.get('top10'),
+#                               f.season_stats.get('bet11_29'), f.season_stats.get('bet30_49'), f.season_stats.get('over50'), f.season_stats.get('cuts'),
 
 
                               
-                              ])
-                break
-            print (data[0:2])
-            return Response(data, 200)
-        except Exception as e:
-            print ('exception', e)
-            return Response(str(e), 500)
+#                               ])
+#                 break
+#             print (data[0:2])
+#             return Response(data, 200)
+#         except Exception as e:
+#             print ('exception', e)
+#             return Response(str(e), 500)
 
 
-class GetGroupNum(APIView):
+# class GetGroupNum(APIView):
 
-    def get(self, request):
-        print ('get group num', self.request.GET.get('group_pk'))
-        try:
-            #t = Tournament.objects.get(pk=self.request.GET.get('tournament'))
-            #data = serializers.serialize('json', Field.objects.filter(tournament=t))
-            group = Group.objects.get(pk=self.request.GET.get('group_pk'))
+#     def get(self, request):
+#         print ('get group num', self.request.GET.get('group_pk'))
+#         try:
+#             #t = Tournament.objects.get(pk=self.request.GET.get('tournament'))
+#             #data = serializers.serialize('json', Field.objects.filter(tournament=t))
+#             group = Group.objects.get(pk=self.request.GET.get('group_pk'))
 
-            return Response(json.dumps({'group_num': group.number}), 200)
-            # return Response(json.dumps(data), 200)
-        except Exception as e:
-            print ('exception', e)
-            return Response(json.dumps({e}), 500)
+#             return Response(json.dumps({'group_num': group.number}), 200)
+#             # return Response(json.dumps(data), 200)
+#         except Exception as e:
+#             print ('exception', e)
+#             return Response(json.dumps({e}), 500)
 
-    def post(self, request):
-        print ('get group num', request.data)
-        try:
-            group_dict = {}
-            t = Tournament.objects.get(pk=request.data.get('tournament_key'))
-            #data = serializers.serialize('json', Group.objects.filter(tournament=t))
-            for g in Group.objects.filter(tournament=t):
-                group_dict[g.pk] = g.number
+#     def post(self, request):
+#         print ('get group num', request.data)
+#         try:
+#             group_dict = {}
+#             t = Tournament.objects.get(pk=request.data.get('tournament_key'))
+#             #data = serializers.serialize('json', Group.objects.filter(tournament=t))
+#             for g in Group.objects.filter(tournament=t):
+#                 group_dict[g.pk] = g.number
 
 
-            #return Response(json.dumps({'group_num': group.number}), 200)
-            print (group_dict)
-            return Response(json.dumps([group_dict]), 200)
-        except Exception as e:
-            print ('exception', e)
-            return Response(json.dumps({e}), 500)
+#             #return Response(json.dumps({'group_num': group.number}), 200)
+#             print (group_dict)
+#             return Response(json.dumps([group_dict]), 200)
+#         except Exception as e:
+#             print ('exception', e)
+#             return Response(json.dumps({e}), 500)
 
 class GolfLeaderboard(APIView):
     def get(self, request):
@@ -1109,23 +1048,24 @@ class GolfLeaderboard(APIView):
             sorted_data['error'] = {'msg': str(e)}
                 
         return Response(json.dumps(sorted_data), 200)
+    
 
 class Withdraw(APIView):
     def get(self, request):
 
         try:
-            
             wds = withdraw.WDCheck().check_wd()
             print ('wds', wds['wd_list'])
             wd_picks = withdraw.WDCheck().check_wd_picks()
             wds.update({'wd_picks': wd_picks})
-            print (wds)
+            #print (wds)
 
         except Exception as e:
             print ('WD Check error: ', e)
             wds = {'msg': str(e)}
                 
         return JsonResponse(wds, status=200)
+    
 
 class ValidateESPN(APIView):
     def get(self, request):
@@ -1146,119 +1086,82 @@ class ValidateESPN(APIView):
         return JsonResponse(issues, status=200)
 
 
-class ScoresByPlayerView(LoginRequiredMixin,TemplateView):
-    login_url = 'login'
-    template_name = 'golf_app/scores.html'
-    #queryset = Picks.objects.filter(playerName__tournament__current=True) 
+# class ScoresByPlayerView(LoginRequiredMixin,TemplateView):
+#     login_url = 'login'
+#     template_name = 'golf_app/scores.html'
+#     #queryset = Picks.objects.filter(playerName__tournament__current=True) 
 
-    def get_context_data(self, **kwargs):
-        context = super(ScoresByPlayerView, self).get_context_data(**kwargs)
-        start = datetime.datetime.now()
-        if self.kwargs.get('pk') != None:
-            print (self.kwargs)
-            tournament = Tournament.objects.get(pk=self.kwargs.get('pk'))
-        else:
-            tournament = Tournament.objects.get(current=True)
+#     def get_context_data(self, **kwargs):
+#         context = super(ScoresByPlayerView, self).get_context_data(**kwargs)
+#         start = datetime.datetime.now()
+#         if self.kwargs.get('pk') != None:
+#             print (self.kwargs)
+#             tournament = Tournament.objects.get(pk=self.kwargs.get('pk'))
+#         else:
+#             tournament = Tournament.objects.get(current=True)
         
-        if not tournament.started():
-           user_dict = {}
-           for user in Picks.objects.filter(playerName__tournament=tournament).values('user__username').annotate(Count('playerName')):
-               user_dict[user.get('user__username')]=user.get('playerName__count')
-               if tournament.pga_tournament_num == '470': #special logic for match player
-                  scores = (None, None, None, None,None)
-               #else:  scores=calc_score.calc_score(self.kwargs, request)
-           self.template_name = 'golf_app/pre_start.html'
+#         if not tournament.started():
+#            user_dict = {}
+#            for user in Picks.objects.filter(playerName__tournament=tournament).values('user__username').annotate(Count('playerName')):
+#                user_dict[user.get('user__username')]=user.get('playerName__count')
+#                if tournament.pga_tournament_num == '470': #special logic for match player
+#                   scores = (None, None, None, None,None)
+#                #else:  scores=calc_score.calc_score(self.kwargs, request)
+#            self.template_name = 'golf_app/pre_start.html'
 
-           context.update({'user_dict': user_dict,
-                           'tournament': tournament,
-                          # 'lookup_errors': scores[4],
-                                                    })
+#            context.update({'user_dict': user_dict,
+#                            'tournament': tournament,
+#                           # 'lookup_errors': scores[4],
+#                                                     })
 
-           return context
-        ## from here all logic should only happen if tournament has started
-        if not tournament.picks_complete():
-               print ('picks not complete')
-               tournament.missing_picks()
+#            return context
+#         ## from here all logic should only happen if tournament has started
+#         if not tournament.picks_complete():
+#                print ('picks not complete')
+#                tournament.missing_picks()
 
-        #score_dict = scrape_espn.ScrapeESPN().get_data()
+#         #score_dict = scrape_espn.ScrapeESPN().get_data()
 
-        context.update({'scores':sorted(TotalScore.objects.filter(tournament=tournament), key=lambda x:x.score),
-                        'detail_list':None,
-                        'leader_list':None,
-                        'cut_data':None,
-                        'lookup_errors': None,
-                        'tournament': tournament,
-                        'thru_list': [],
-                        'groups': Group.objects.filter(tournament=tournament), 
-                        #'score_dict': score_dict,
-                                    })
-        print ('scores context duration', datetime.datetime.now() -start)
-        return context        
+#         context.update({'scores':sorted(TotalScore.objects.filter(tournament=tournament), key=lambda x:x.score),
+#                         'detail_list':None,
+#                         'leader_list':None,
+#                         'cut_data':None,
+#                         'lookup_errors': None,
+#                         'tournament': tournament,
+#                         'thru_list': [],
+#                         'groups': Group.objects.filter(tournament=tournament), 
+#                         #'score_dict': score_dict,
+#                                     })
+#         print ('scores context duration', datetime.datetime.now() -start)
+#         return context        
 
 
 class ESPNScoreDict(APIView):
     def get(self, request, pk):
         return JsonResponse(scrape_espn.ScrapeESPN().get_data(), status=200)
-        # try:
-        #     data = {}
-        #     data['users'] = {}
-        #     user_list = []
-        #     t = Tournament.objects.get(pk=pk)
-        #     #t = Tournament.objects.get(current=True)
-        #     users = t.season.get_users()
-        #     for user in users:
-        #         data['users'].update({
-        #                              user.get('user'): str(User.objects.get(pk=user.get('user')))
-        #         })
-        #         user_list.append(user.get('user'))
-        #     #data['users'] = user_list
-        #     score_dict = scrape_espn.ScrapeESPN().get_data()            
-        #     optimal_picks = {}
-        #     score = manual_score.Score(score_dict, t)
-        #     for g in Group.objects.filter(tournament=t):
-        #         opt = score.optimal_picks(g.number)
-        #         optimal_picks[str(g.number)] = {
-        #                                         'golfer': opt[0],
-        #                                         'rank': opt[1],
-        #                                         'cuts': opt[2],
-        #                                         'total_golfers': g.playerCnt
-        #         } 
-
-        #     data['optimal_picks'] = optimal_picks
-        #     data['score_dict'] = score_dict
-        #     data['t_data'] = serializers.serialize("json", [t, ])
-        #     data['info'] = get_info(t)
-        #     data['season_totals'] = Season.objects.get(season=t.season).get_total_points()
-        #     data['leaders'] = score.get_leader()
-        #     #print (type(data))
-        # except Exception as e:
-        #     print ('espn score dict api error: ', e)
-        #     data['msg'] = {'msg': str(e)}
-                
-        # return JsonResponse(data, status=200)
 
 
-class ScoresByPlayerAPI(APIView):
-    def post(self, request):
-        try:
-            print ('request.POST.data: ', request.data )
-            data = {}
-            u = User.objects.get(pk=request.data.get('user_pk'))
-            t = Tournament.objects.get(pk=request.data.get('tournament_key'))
-            score = manual_score.Score(request.data.get('score_dict'), t, 'json')
-            update = score.update_scores_player(u, request.data.get('optimal_picks'))
+# class ScoresByPlayerAPI(APIView):
+#     def post(self, request):
+#         try:
+#             print ('request.POST.data: ', request.data )
+#             data = {}
+#             u = User.objects.get(pk=request.data.get('user_pk'))
+#             t = Tournament.objects.get(pk=request.data.get('tournament_key'))
+#             score = manual_score.Score(request.data.get('score_dict'), t, 'json')
+#             update = score.update_scores_player(u, request.data.get('optimal_picks'))
             
-            #data['picks'] = score.get_picks_by_user(u)
-            data['totals'] = score.player_total_score(u)
-            #print ('by player scores: ', data)
-            #data = serializers.serialize('json', ScoreDetails.objects.filter(user=u, pick__playerName__tournament=t))
+#             #data['picks'] = score.get_picks_by_user(u)
+#             data['totals'] = score.player_total_score(u)
+#             #print ('by player scores: ', data)
+#             #data = serializers.serialize('json', ScoreDetails.objects.filter(user=u, pick__playerName__tournament=t))
 
-        except Exception as e:
-            print ('score by player api error: ', e)
-            data = {'msg': str(e)}
+#         except Exception as e:
+#             print ('score by player api error: ', e)
+#             data = {'msg': str(e)}
                 
-        #return JsonResponse(data, status=200)
-        return JsonResponse(data, status=200)
+#         #return JsonResponse(data, status=200)
+#         return JsonResponse(data, status=200)
 
 
 class PriorResultAPI(APIView):
@@ -1288,7 +1191,9 @@ class PriorResultAPI(APIView):
                 elif len(request.data.get('golfer_list')) == 0:
                     data= golf_serializers.PreStartFieldSerializer(Field.objects.filter(tournament=t, group__number=request.data.get('group')), many=True).data
                 else:
-                    data = golf_serializers.PreStartFieldSerializer(Field.objects.filter(tournament=t, golfer__espn_number__in=request.data.get('golfer_list')), many=True).data
+                   #data = golf_serializers.PreStartFieldSerializer(Field.objects.filter(tournament=t, golfer__espn_number__in=request.data.get('golfer_list')), many=True).data
+                   data = DynamoStatsTable().get_item(pk=request.data.get('tournament_key'), sk=request.data.get('field_id'))
+                   data.update({k:v for k,v in model_to_dict(Field.objects.get(pk=request.data.get('field_id'))).items() if k not in ['recent', 'season_stats']})
             else:
                 espn_data = espn_api.ESPNData()
                 context = {'espn_data': espn_data, 'user': self.request.user}
@@ -1298,12 +1203,16 @@ class PriorResultAPI(APIView):
                     data= golf_serializers.NewFieldSerializer(Field.objects.filter(tournament=t, group__number=request.data.get('group')), context=context, many=True).data
                 else:
                     data = golf_serializers.NewFieldSerializer(Field.objects.filter(tournament=t, golfer__espn_number__in=request.data.get('golfer_list')), context=context, many=True).data
+                    
+                    
         except Exception as e:
             print ('prior result api error: ', e) 
             data = json.dumps({'msg': str(e)})
                 
         #return JsonResponse(data, status=200)
         print ('prior result duration Group: ', request.data.get('group'), datetime.datetime.now() - start)
+        #print ('prior: ', data)
+
         return JsonResponse(data, status=200, safe=False)
 
 
@@ -1334,6 +1243,7 @@ class RecentFormAPI(APIView):
                 
         #return JsonResponse(data, status=200)
         return JsonResponse(data, status=200)
+
 
 #class UpdateFieldView(FormView):
 class UpdateFieldView(LoginRequiredMixin, TemplateView):
@@ -1496,13 +1406,6 @@ class MPRecordsAPI(APIView):
 
             return JsonResponse(d, status=200)
         
-        #    data = {}
-        #    #pk = request.GET.get('pk')
-        #    t = Tournament.objects.get(pk=pk)
-        #    #t = Tournament.objects.get(season__current=True, pga_tournament_num='470')
-        #    data = scrape_scores_picks.ScrapeScores(t, 'https://www.pgatour.com/competition/' + str(t.season.season) + '/wgc-dell-technologies-match-play/group-stage.html').mp_brackets()
-        #    print ('pm records: ', data)
-        #    return JsonResponse(data, status=200)
         except Exception as e:
             print ('MP records API failed: ', e)
             return JsonResponse({'key': 'error'}, status=401)
@@ -1525,13 +1428,6 @@ class MPRankInGroup(APIView):
 
             return JsonResponse(d, status=200)
         
-        #    data = {}
-        #    #pk = request.GET.get('pk')
-        #    t = Tournament.objects.get(pk=pk)
-        #    #t = Tournament.objects.get(season__current=True, pga_tournament_num='470')
-        #    data = scrape_scores_picks.ScrapeScores(t, 'https://www.pgatour.com/competition/' + str(t.season.season) + '/wgc-dell-technologies-match-play/group-stage.html').mp_brackets()
-        #    print ('pm records: ', data)
-        #    return JsonResponse(data, status=200)
         except Exception as e:
             print ('MP rank API failed: ', e)
             return JsonResponse({'key': 'error'}, status=400)
@@ -1618,117 +1514,117 @@ class GetGolferLinks(APIView):
             return JsonResponse({'msg': e})
 
 
-class AuctionPickCreateView(LoginRequiredMixin,TemplateView):
-     login_url = 'login'
-     template_name = 'golf_app/auctionpick_form.html'
+# class AuctionPickCreateView(LoginRequiredMixin,TemplateView):
+#      login_url = 'login'
+#      template_name = 'golf_app/auctionpick_form.html'
      
 
-     def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context.update({
-             't': Tournament.objects.get(current=True),
-         })
+#      def get_context_data(self, **kwargs):
+#         context = super().get_context_data(**kwargs)
+#         context.update({
+#              't': Tournament.objects.get(current=True),
+#          })
 
-        return context
+#         return context
 
-     @transaction.atomic
-     def post(self, request):
+#      @transaction.atomic
+#      def post(self, request):
 
-        data = json.loads(self.request.body)
-        print (data, type(data))
-        pick_list = data.get('pick_list')
-        print ('pick_list', pick_list)
-        tournament = Tournament.objects.get(current=True)
-        #groups = Group.objects.filter(tournament=tournament)
-        user = User.objects.get(username=request.user)
+#         data = json.loads(self.request.body)
+#         print (data, type(data))
+#         pick_list = data.get('pick_list')
+#         print ('pick_list', pick_list)
+#         tournament = Tournament.objects.get(current=True)
+#         #groups = Group.objects.filter(tournament=tournament)
+#         user = User.objects.get(username=request.user)
 
-        if 'random' not in pick_list:
-            if len(pick_list) != tournament.total_required_picks():
-                print ('total picks match: ', len(pick_list), tournament.total_required_picks())
-                msg = 'Something went wrong, wrong number of picks.  Expected: ' + str(tournament.total_required_picks()) + ' received: ' + str(len(pick_list)) + ' Please try again'
-                response = {'status': 0, 'message': msg} 
-                return HttpResponse(json.dumps(response), content_type='application/json')
+#         if 'random' not in pick_list:
+#             if len(pick_list) != tournament.total_required_picks():
+#                 print ('total picks match: ', len(pick_list), tournament.total_required_picks())
+#                 msg = 'Something went wrong, wrong number of picks.  Expected: ' + str(tournament.total_required_picks()) + ' received: ' + str(len(pick_list)) + ' Please try again'
+#                 response = {'status': 0, 'message': msg} 
+#                 return HttpResponse(json.dumps(response), content_type='application/json')
 
-            for group in Group.objects.filter(tournament=tournament):
-                count = Field.objects.filter(group=group, pk__in=pick_list).count()
-                if count == group.num_of_picks():
-                    print ('group ok: ', group, ' : count: ', count)
-                else:
-                    print ('group ERROR: ', group, ' : count: ', count)
-                    msg = 'Pick error: Group - ' + str(group.number) + ' expected' + str(group.num_of_picks()) + ' picks.  Actual Picks: ' + str(count)
-                    response = {'status': 0, 'message': msg} 
-                    return HttpResponse(json.dumps(response), content_type='application/json')
+#             for group in Group.objects.filter(tournament=tournament):
+#                 count = Field.objects.filter(group=group, pk__in=pick_list).count()
+#                 if count == group.num_of_picks():
+#                     print ('group ok: ', group, ' : count: ', count)
+#                 else:
+#                     print ('group ERROR: ', group, ' : count: ', count)
+#                     msg = 'Pick error: Group - ' + str(group.number) + ' expected' + str(group.num_of_picks()) + ' picks.  Actual Picks: ' + str(count)
+#                     response = {'status': 0, 'message': msg} 
+#                     return HttpResponse(json.dumps(response), content_type='application/json')
 
-        print ('user', user)
-        print ('started', tournament.started())
+#         print ('user', user)
+#         print ('started', tournament.started())
 
-        if tournament.started() and tournament.late_picks is False:
-            print ('picks too late', user, datetime.datetime.now())
-            print (timezone.now())
-            msg = 'Too late for picks, tournament started'
-            response = {'status': 0, 'message': msg} 
-            return HttpResponse(json.dumps(response), content_type='application/json')
+#         if tournament.started() and tournament.late_picks is False:
+#             print ('picks too late', user, datetime.datetime.now())
+#             print (timezone.now())
+#             msg = 'Too late for picks, tournament started'
+#             response = {'status': 0, 'message': msg} 
+#             return HttpResponse(json.dumps(response), content_type='application/json')
 
         
-        if Picks.objects.filter(playerName__tournament=tournament, user=user).count()>0:
-            Picks.objects.filter(playerName__tournament=tournament, user=user).delete()
-            ScoreDetails.objects.filter(pick__playerName__tournament=tournament, user=user).delete()
+#         if Picks.objects.filter(playerName__tournament=tournament, user=user).count()>0:
+#             Picks.objects.filter(playerName__tournament=tournament, user=user).delete()
+#             ScoreDetails.objects.filter(pick__playerName__tournament=tournament, user=user).delete()
 
-        if 'random' in pick_list:
-            picks = tournament.create_picks(user, 'random')    
-            print ('random picks submitted', user, datetime.datetime.now(), picks)
-        else:
-            field_list = []
-            for id in pick_list:
-                field_list.append(Field.objects.get(pk=id))                    
-            tournament.save_picks(field_list, user, 'self')
+#         if 'random' in pick_list:
+#             picks = tournament.create_picks(user, 'random')    
+#             print ('random picks submitted', user, datetime.datetime.now(), picks)
+#         else:
+#             field_list = []
+#             for id in pick_list:
+#                 field_list.append(Field.objects.get(pk=id))                    
+#             tournament.save_picks(field_list, user, 'self')
 
-        print ('user submitting picks', datetime.datetime.now(), request.user, Picks.objects.filter(playerName__tournament=tournament, user=user))
+#         print ('user submitting picks', datetime.datetime.now(), request.user, Picks.objects.filter(playerName__tournament=tournament, user=user))
     
-        if UserProfile.objects.filter(user=user).exists():
-            profile = UserProfile.objects.get(user=user)
-            if profile.email_picks:
-                email_picks(tournament, user)
+#         if UserProfile.objects.filter(user=user).exists():
+#             profile = UserProfile.objects.get(user=user)
+#             if profile.email_picks:
+#                 email_picks(tournament, user)
 
-        #return redirect('golf_app:picks_list')
-        msg = 'Picks Submitted'
-        response = {'status': 1, 'message': msg, 'url': '/golf_app/picks_list'} 
-        return HttpResponse(json.dumps(response), content_type='application/json')
+#         #return redirect('golf_app:picks_list')
+#         msg = 'Picks Submitted'
+#         response = {'status': 1, 'message': msg, 'url': '/golf_app/picks_list'} 
+#         return HttpResponse(json.dumps(response), content_type='application/json')
 
 
-class AuctionScores(APIView):
-    def get(self, request):
-        totals = {}
-        try:
-            start = datetime.datetime.now()
-            score_dict = scrape_espn.ScrapeESPN().get_data()
+# class AuctionScores(APIView):
+#     def get(self, request):
+#         totals = {}
+#         try:
+#             start = datetime.datetime.now()
+#             score_dict = scrape_espn.ScrapeESPN().get_data()
             
-            t = Tournament.objects.get(current=True)
-            for u in User.objects.filter(username__in=['john', 'jcarl62', 'ryosuke']):
-                totals[u.username] = {'total': 0}
-            for i, pick in enumerate(AuctionPick.objects.filter(playerName__tournament=t)):
-                sd = [v for v in score_dict.values() if v.get('pga_num') == pick.playerName.golfer.espn_number]
-                print (pick, sd[0].get('rank'))
+#             t = Tournament.objects.get(current=True)
+#             for u in User.objects.filter(username__in=['john', 'jcarl62', 'ryosuke']):
+#                 totals[u.username] = {'total': 0}
+#             for i, pick in enumerate(AuctionPick.objects.filter(playerName__tournament=t)):
+#                 sd = [v for v in score_dict.values() if v.get('pga_num') == pick.playerName.golfer.espn_number]
+#                 print (pick, sd[0].get('rank'))
                 
-                if int(utils.formatRank(sd[0].get('rank'))) > score_dict.get('info').get('cut_num') or sd[0].get('rank') in t.not_playing_list():
-                    total = totals[pick.user.username].get('total') + int(score_dict.get('info').get('cut_num'))
-                    rank = rank = (score_dict.get('info').get('cut_num'))
-                else:
-                    total = totals[pick.user.username].get('total') + int(utils.formatRank(sd[0].get('rank')))
-                    rank = utils.formatRank(sd[0].get('rank'))
+#                 if int(utils.formatRank(sd[0].get('rank'))) > score_dict.get('info').get('cut_num') or sd[0].get('rank') in t.not_playing_list():
+#                     total = totals[pick.user.username].get('total') + int(score_dict.get('info').get('cut_num'))
+#                     rank = rank = (score_dict.get('info').get('cut_num'))
+#                 else:
+#                     total = totals[pick.user.username].get('total') + int(utils.formatRank(sd[0].get('rank')))
+#                     rank = utils.formatRank(sd[0].get('rank'))
                 
-                totals[pick.user.username].update({pick.playerName.playerName: 
-                                                   {'rank': rank,
-                                                   'score': sd[0].get('total_score')}
-                                                    #'total': total
-                                                    })
-                totals[pick.user.username].update({'total': total})
+#                 totals[pick.user.username].update({pick.playerName.playerName: 
+#                                                    {'rank': rank,
+#                                                    'score': sd[0].get('total_score')}
+#                                                     #'total': total
+#                                                     })
+#                 totals[pick.user.username].update({'total': total})
 
-        except Exception as e:
-            totals['msg'] = {'error': e}
+#         except Exception as e:
+#             totals['msg'] = {'error': e}
 
-        print (totals)
-        return JsonResponse(totals, status=200)
+#         print (totals)
+#         return JsonResponse(totals, status=200)
 
 
 class GetGolfers(APIView):
@@ -2105,34 +2001,36 @@ class ApiScoresView(LoginRequiredMixin, TemplateView):
                print ('picks not complete')
                tournament.missing_picks()
 
-        new_lines = []
-        picks_c = Picks.objects.filter(playerName__tournament=tournament).count()
-        users = Picks.objects.filter(playerName__tournament=tournament).values('user__username').distinct().count()
+        #new_lines = []
+        #picks_c = Picks.objects.filter(playerName__tournament=tournament).count()
+        #users = Picks.objects.filter(playerName__tournament=tournament).values('user__username').distinct().count()
         
-        cells_per_row = picks_c / users
-        #print (cells_per_row)
+        #cells_per_row = picks_c / users
+        #print ('TS ', ts)
 
-        for i in range(picks_c):
-    
-            if i % cells_per_row == 1:
-                new_lines.append(i)
-        #ts = TotalScore.objects.filter(tournament=tournament).order_by('score')    
-        #print ('TOTAL SCORES: ', Picks.objects.filter(playerName__tournament=tournament).order_by(ts, 'playerName__group__number'))
+        #for i in range(picks_c):
+        #    if i % cells_per_row == 1:
+        #        new_lines.append(i)
+        d = {}
+        ts = TotalScore.objects.filter(tournament=tournament).order_by('-score')        
+        for t in ts:
+            d[t] = Picks.objects.filter(playerName__tournament=tournament, user=t.user).order_by('user', 'playerName__group__number')
+
         cp = {}
         if tournament.pga_tournament_num == '999':
             cp = golf_serializers.CountryPicks(CountryPicks.objects.filter(tournament=tournament), many=True).data
         
         context.update({'t': tournament, 
                         'groups': Group.objects.filter(tournament=tournament),
-                        'picks': Picks.objects.filter(playerName__tournament=tournament).order_by('user', 'playerName__group__number'),
+                        #'picks': Picks.objects.filter(playerName__tournament=tournament).order_by('user', 'playerName__group__number'),
                         'cp': json.dumps(cp),
                         #'ts': ts,
-                        'new_lines': new_lines,
+                        'd': d
+                        #'new_lines': new_lines,
                         
                                     })
         print ('api scores context duration', datetime.datetime.now() -start)
         return context        
-
 
 
 class EspnApiScores(APIView):
@@ -2182,17 +2080,6 @@ class EspnApiScores(APIView):
                 else:
                     espn = espn_api.ESPNData(t=t)
             
-            ## use this to test from file and comment out the espn line above
-            #with open('open_champ_r2.json') as json_file:
-            #    data = json.load(json_file)
-            #espn = espn_api.ESPNData(t=t, data=data)
-
-
-            #if not espn.needs_update():
-            #    data = return_sd_data(t,d)
-            #    print ('API update not required, returning SD data dur: ', datetime.datetime.now() - start)
-            #    return JsonResponse(data, status=200, safe=False)
-
             start_big = datetime.datetime.now()
             
             big = espn.group_stats()
@@ -2254,13 +2141,20 @@ class EspnApiScores(APIView):
             d['group_stats'] = {}
             d.get('group_stats').update(big)
 
+            scores_rank = sorted(set([x.get('score') for k, x in d.items() if k != 'group_stats']))
+            for k, v in d.items():
+                if k != 'group_stats':
+                    v.update({'rank': scores_rank.index(v.get('score')) + 1})
+            
             print ('calc score dur: ', datetime.datetime.now() - start_calc_score)
         
         except Exception as e:
             print ('ESPN SCORES API EXCEPTION: ', e)
             d['error'] = {'source': 'EspnApiScores',
                           'msg': str(e)} 
-        print (d)    
+        
+        print ('D', d)    
+
         print ('update scores full process total time: ', datetime.datetime.now() - start)
         return JsonResponse(d, status=200, safe=False)
 
@@ -2289,7 +2183,7 @@ def olympic_espn_api(t):
             women.event_data.get('competitions')[0].update({'competitors': field})
             espn = {'espn': espn_api.ESPNData(t=Tournament.objects.get(current=True), data=women.all_data, update_sd=False),
              'men': men, 'women': women}
-            print ('DDDDDDDDDDDDDDDDD ', len(women.field_data))
+            print ('WWWWWWWWWWWWWWWWWWWWWWWW ', len(women.field_data))
         
         sd = ScoreDict.objects.get(tournament=t)
         sd.espn_api_data = espn.get('espn').all_data
@@ -2802,54 +2696,59 @@ class BuildFieldAPI(APIView):
 
 
 class FieldUpdatesAPI(APIView):
-    def get(self, request, min_key, max_key):
-        #print ('updateing field data: ', min_key, '  ', max_key)
+    def get(self, request):
+        print ('Updating Field stats data')
         start = datetime.datetime.now()
         t = Tournament.objects.get(current=True)
-        d = {}
+        l = []
         try:
-            fed_ex = populateField.get_fedex_data(t)
-            individual_stats = populateField.get_individual_stats()
-
-            #for f in Field.objects.filter(tournament=t):
-            for f in Field.objects.filter(pk__gte=min_key, pk__lte=max_key):
-                s = datetime.datetime.now()
-                #print ('udpating field: ', f)
-                if t.pga_tournament_num not in ['470', '018', '500', '468']:
-                    f.handi = f.handicap()
-                else:
-                    f.handi = 0
-
+            dg = DataGolf(t=t, create=True)
+            print ('GD DATA ', type(dg.data))
+            for i, f in enumerate(Field.objects.filter(tournament=t)):
+                f.handi = f.handicap()
                 f.prior_year = f.prior_year_finish()
-
-                recent = OrderedDict(sorted(f.recent_results().items(), reverse=True))
-
-                f.recent = recent
-                f.season_stats = f.golfer.summary_stats(t.season) 
-
-                if fed_ex.get(f.playerName):
-                    f.season_stats.update({'fed_ex_points': fed_ex.get(f.playerName).get('points'),
-                                           'fed_ex_rank': fed_ex.get(f.playerName).get('rank')})
-                else:
-                    f.season_stats.update({'fed_ex_points': 'n/a',
-                                           'fed_ex_rank': 'n/a'})
-
-                if individual_stats.get(f.playerName):
-                    player_s = individual_stats.get(f.playerName)
-                    for k, v in player_s.items():
-                        if k != 'pga_num':
-                            f.season_stats.update({k: v})
-                #print ('saving field: ', f, datetime.datetime.now() - s)
                 f.save()
+                try:
+                    print (f'----------- Updating Stats:  {f.playerName} --------------------------')
+                    d = {}
+                    if t.pga_tournament_num not in ['999',]:
+                        recent = OrderedDict(sorted(f.recent_results().items(), reverse=True))
+                        season_stats = f.golfer.summary_stats(t.season) 
+                        dg_player_stats = dg.get_player_stats(f.playerName)
+                        if dg_player_stats:
+                            sg = GolferSG(t, f, data=dg_player_stats).format_data() 
+                        else:
+                            sg = {}
+                        fed_ex = f.golfer.get_fedex_data()
+                        d['pk'] = str(f.tournament.pk)
+                        d['sk'] = str(f.pk)
+                        d.update({'recent': recent})
+                        d.update({'season': season_stats})
+                        d.update({'shots_gained': sg})  
+                        d.update(fed_ex) #not adding a key as values are clear and consistent
+                        l.append(d)
+                
+                    #f.save()
+                except Exception as e:
+                    print (f'FieldUpdateAPI field loop error: {f}, {e}')
 
-            d['status'] = {'msg': 'Updated Field Records: ' + str(Field.objects.get(pk=min_key)) + str(Field.objects.get(pk=max_key))}
+                if i % 20 == 0:
+                    print (f'******************** Field Update API processed {i+1} *******************************' )
+            
+            print (f'----------------- Pre dynamo save Field Stats, saving {len(l)} records --------------------------------')
+
+            resp = DynamoStatsTable().batch_upsert(utils.convert_floats_to_decimal(l))
+
+            d['status'] = {'msg': f'Updated Field Records: {len(l)}'}
+            status = 200
         except Exception as e:
-            print ('Update Field API error: ', f, e)
+            print ('Update Field API error: ', e)
             d['error'] = {'msg': str(e)}
+            status = 500
         
-        print ('Update Field API time: ', datetime.datetime.now() - start, min_key, '  ', max_key)
+        print ('Update Field API time: ', datetime.datetime.now() - start)
 
-        return JsonResponse(json.dumps(d), status=200, safe=False)
+        return JsonResponse(json.dumps(d), status=status, safe=False)
 
 
 class UpdateGolferResultsAPI(APIView):
@@ -2980,7 +2879,7 @@ class GetGolfersOBJAPI(APIView):
             print ('GetGolferOBJAPI error: ', e)
             d['error'] = {'msg': str(e)}
         
-        print ('GetGolferOBJAPI time: ', datetime.datetime.now() - start)
+        print ('******** GetGolferOBJAPI time: ', datetime.datetime.now() - start)
 
         return JsonResponse(json.dumps(d), status=200, safe=False)
 
@@ -3600,11 +3499,20 @@ class SetupFedexDataAPI(APIView):
         start = datetime.datetime.now()
         try:
             data = {}
-            print ('DATA ', request.data)
-            t= Tournament.objects.get(pga_tournament_num=request.data.get('pga_t_num'), season__current=True)
-            data = populateField.setup_fedex_data(t, update=True)  #is there a better way to do the update ind?
+            #print ('DATA ', request.data)
+            #t= Tournament.objects.get(pga_tournament_num=request.data.get('pga_t_num'), season__current=True)
+            t= Tournament.objects.get(current=True)
+            data = utils.convert_floats_to_decimal(populateField.setup_fedex_data(t))
+            #print (f'fedex data save {len(data)}')
+            dynamo_table = DynamoStatsTable().table
+            #print (dynamo_table, type(data))
+            with dynamo_table.batch_writer() as batch:
+                for item in data:
+                    #print(type(item), item)
+                    batch.put_item(Item=item)
+
             print ('setup fedex API duration: ', datetime.datetime. now() - start)
-            return JsonResponse(data, status=200)
+            return JsonResponse(data, status=200, safe=False)
         except Exception as e:
             print ('setup fedex data API exception: ', e)
             return JsonResponse({'error': {'msg': str(e)}})
@@ -3624,15 +3532,60 @@ class SetupGolferStatsAPI(APIView):
             print ('setup golfer stats API exception: ', e)
             return JsonResponse({'error': {'msg': str(e)}})
 
+
 class CreateFieldCSVAPI(APIView):
     def get(self, request, **kwargs):
+        task_id = request.GET.get('task_id', None)
+        mode = request.GET.get('mode', '')
+        print (f'CREATEFieldCSVAPI task_id: {task_id}, mode: {mode}')
         try:
             if kwargs:
                 t = Tournament.objects.get(pk=kwargs.get('pk')) #confirm this works
             else:
                 t= Tournament.objects.get(current=True)
-            f = FieldCSV(t).create_file()
+            if os.environ.get('ENV') == 'DEV':
+                print ('DEV')
+                f = FieldCSV(t).create_file()
+            else:
+                f = FieldCSV(t, task_id=task_id, mode=mode).create_file()
+            
+            f = {'msg': 'CSV created', 'url': f}
             return JsonResponse(f, status=200, safe=False)
         except Exception as e:
             print ('CreateCSV error: ', str(e))
             return JsonResponse({'error': str(e)}, status=400)
+        
+
+class AsyncCreateFieldCSV(APIView):
+    def get(self,request, **kwargs):
+        pk = request.GET.get('pk', None)
+        if pk:
+            t = Tournament.objects.get(pk=pk)
+        else:
+            t = Tournament.objects.get(current=True)
+
+        cognito_password = os.environ.get('COGNITO_SERVICE_PASSWORD')
+        cognito_username = os.environ.get('COGNITO_SERVICE_USERNAME')
+
+        cognito = CognitoService(username=cognito_username, password=cognito_password)
+
+        token = cognito.get_token()
+
+        mode = request.GET.get('mode', '')
+
+        field_records = Field.objects.filter(tournament=t).count()
+
+        meta_data = {'total_records': field_records,
+                     'user': self.request.user.username,
+                     'start_time': datetime.datetime.now().strftime("%m/%d/%Y, %H:%M:%S"),
+                     'job_url': 'create_field_csv',
+                     'mode': mode,
+                     'token': token}
+
+        task = AsyncTaskManager()
+        task_id = task.start_async_task('create_field_csv', meta_data)
+        print (f'Task ID: {task_id}')
+        prog = f'0 of {field_records}'
+        meta_data.update({'task_id': task_id})
+        update_progress = task.update_progress(progress=prog, status='STARTED', meta_data=meta_data)
+        return JsonResponse({'task_id': task_id}, status=200)

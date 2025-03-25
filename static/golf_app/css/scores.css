@@ -3,8 +3,7 @@ td .watermarkAll {
   color: red;
   position: relative;
   opacity: 50%;
-  
-  
+    
 }
 
 #overlay{	
@@ -17,12 +16,14 @@ td .watermarkAll {
 	display: none;
 	background: rgba(0,0,0,0.6);
 }
+
 .cv-spinner {
 	height: 100%;
 	display: flex;
 	justify-content: center;
 	align-items: center;  
 }
+
 .spinner {
 	width: 40px;
 	height: 40px;
@@ -46,7 +47,6 @@ td .watermarkAll {
 
 .bonus {
   color: red;
-  
   font: anton;
   
 }
@@ -64,8 +64,7 @@ td .all_watermark {
   color: red;
   position: relative;
   opacity: 50%;
-  
-  
+    
 }
 
 
@@ -86,3 +85,17 @@ td .watermark {
   
 }
 
+/* Default styling for larger screens (vertical layout) */
+#picks_summary {
+    display: flex;
+    flex-direction: column;
+}
+
+/* Media query for smaller screens (horizontal layout) */
+@media screen and (max-width: 768px) {
+    #picks_summary {
+        display: flex;
+        flex-direction: row;
+        overflow-x: auto; /* Allows horizontal scrolling if needed */
+    }
+}

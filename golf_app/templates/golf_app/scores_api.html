@@ -47,8 +47,37 @@
         </tr>
       </thead>
       <tbody>
-        {%for p in picks %}
-        {%if forloop.counter in new_lines %}
+        {%for ts, picks in d.items%}
+          <tr id="totals{{ts.user.username}}" class="small">
+            <td id=ts_{{ts.user.username}} style="font-weight: bold;">
+              <p id='name_{{ts.user.username}}'> {{ts.user.username}}</p>
+              <p id='score_{{ts.user.username}}'>{{ts.user|total_score}} / ...</p>
+            </td>
+            <td id=msg_{{ts.user.username}}>updating info <span class="status">....</span></td>
+            {%for p in picks%}
+            <td id={{p.pk}} class={{p.playerName.golfer.espn_number}}>
+              <span class=watermark><p> {{p.user.username}} : {{p.playerName.group.number}} </p> </span>
+              <p><img height="100" src="{{p.playerName.golfer.pic_link}}" style="border-radius:50%"></img>
+                  <img height='20' src="{{p.playerName.golfer.flag_link}}" alt="" style="border-radius:50%"></img>
+                  {%if p.playerName.partner%}
+                  <img height='100' src="{{p.playerName.partner_golfer.pic_link}}" style="border-radius:50%"></img>
+                  <img height='20' src="{{p.playerName.partner_golfer.flag_link}}" alt="" style="border-radius:50%"></img>
+                  {%endif%}
+                  <p style="font-weight: bold;">{{p.playerName}}
+                    {%if p.playerName.partner%}
+                    <p style="font-weight: bold;">{{p.playerName.partner}}</p>
+                    {%endif%}
+    
+                  </p>
+                  <p id='{{p.pk}}-score'>....</p>
+                  <p id="{{p.pk}}-p2">...</p>
+    
+            </td>
+            {%endfor%}
+          </tr>
+          {%endfor%}
+<!--         {%for p in picks %}
+         {%if forloop.counter in new_lines %}
         <tr id=totals{{p.user.username}} class="small">
           <td id=ts_{{p.user.username}} style="font-weight: bold;">
             <p id='name_{{p.user.username}}'> {{p.user.username}}</p>
@@ -109,7 +138,7 @@
           </td>
           {%endif%}
         {%endfor%}
-        <tr id="big">
+ -->        <tr id="big">
           <th>Best Picks</th>
           <td></td>
           {%if t.pga_tournament_num == '999'%}
@@ -143,9 +172,7 @@
 {%endif%}
 
 {%compress js%}
-
   <script type="text/javascript" src="{%static 'golf_app/js/api_scores.js'%}"></script>
-
   <script type="text/javascript" src="{%static 'golf_app/js/getPicksSummary.js'%}"></script> 
 {%endcompress%}
 
