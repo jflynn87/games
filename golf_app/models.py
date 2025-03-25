@@ -738,8 +738,9 @@ class Golfer(models.Model):
         else:
             last_played = Field.objects.filter(tournament__season=season, golfer=self).exclude(tournament__current=True). \
               exclude(tournament__pga_tournament_num__in=season.special_fields()).exclude(tournament__pga_tournament_num='018').latest('pk')
+            print (last_played.tournament)
             #print ('diff: ', fields - last_played.season_stats.get('played'), fields, last_played.season_stats.get('played'))
-            if rerun:        
+            if rerun or not last_played.season_stats:        
                 print ('summary stats: ', self.golfer_name, ' : rerun updating all tournaments')
                 fields = Field.objects.filter((Q(golfer=self) | Q(partner_golfer=self)), tournament__season=season).exclude(tournament__current=True).exclude(tournament__pga_tournament_num__in=['468', '500']).values_list('tournament__pk',flat=True).order_by('tournament__pk')
                 t_list = Tournament.objects.filter(pk__in=fields)

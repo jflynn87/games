@@ -49,9 +49,13 @@ from golf_app.data_golf import DataGolf, GolferSG
 
 #print (Field.objects.get(pk=int(sk)))
 #exit()
-f = Field.objects.get(tournament__current=True, playerName__icontains='Xander')
+f = Field.objects.get(tournament__current=True, playerName__icontains='Castillo')
 pk = str(f.tournament.pk)
-sk = str(f.pk)
+season = f.golfer.summary_stats(f.tournament.season)
+print (season)\
+
+exit()
+
 d = DynamoStatsTable().table
 resp = d.get_item(Key={'pk': pk, 'sk': sk})
 for k, v in resp["Item"].items():

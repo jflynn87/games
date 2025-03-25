@@ -414,6 +414,8 @@ function build_stats_row(field) {
         stats_table.style.width = '85%'
         stats_table.classList.add('table',  'stats-row')
 
+    try {
+
         let rowA_header_fields = ['Current OWGR', 'Last Week OWGR', 'Last Season OWGR', 'FedEx Cup']
         //let rowA_header_fields = ['Current OWGR', 'Last Week OWGR', 'Last Season OWGR']
         rowA_field_l = rowA_header_fields.length
@@ -653,6 +655,11 @@ function build_stats_row(field) {
             stats_table.appendChild(stats_rowE)
             
         stats_cell.append(stats_table)
+        }
+        catch(error) {
+            stats_cell.innerText = 'ERROR'
+        }
+
 
         return stats_cell
 }

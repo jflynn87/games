@@ -1193,6 +1193,7 @@ class PriorResultAPI(APIView):
                 else:
                    #data = golf_serializers.PreStartFieldSerializer(Field.objects.filter(tournament=t, golfer__espn_number__in=request.data.get('golfer_list')), many=True).data
                    data = DynamoStatsTable().get_item(pk=request.data.get('tournament_key'), sk=request.data.get('field_id'))
+                   print ('DATA ', data)
                    data.update({k:v for k,v in model_to_dict(Field.objects.get(pk=request.data.get('field_id'))).items() if k not in ['recent', 'season_stats']})
             else:
                 espn_data = espn_api.ESPNData()
@@ -2713,13 +2714,18 @@ class FieldUpdatesAPI(APIView):
                     d = {}
                     if t.pga_tournament_num not in ['999',]:
                         recent = OrderedDict(sorted(f.recent_results().items(), reverse=True))
+                        print ('past recent')
                         season_stats = f.golfer.summary_stats(t.season) 
+                        print ('past season stats')
                         dg_player_stats = dg.get_player_stats(f.playerName)
+                        print ('past dg stats')
                         if dg_player_stats:
                             sg = GolferSG(t, f, data=dg_player_stats).format_data() 
                         else:
                             sg = {}
+                        print ('past SG')
                         fed_ex = f.golfer.get_fedex_data()
+                        print ('past fedex')
                         d['pk'] = str(f.tournament.pk)
                         d['sk'] = str(f.pk)
                         d.update({'recent': recent})
