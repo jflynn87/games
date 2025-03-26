@@ -35,6 +35,7 @@ class FieldCSV(object):
 
         if self.mode == 'async':
             self.task = AsyncTaskManager(task_id=task_id)
+            self.task_id = task_id
 
    
     def create_file(self):
@@ -47,7 +48,7 @@ class FieldCSV(object):
             data.append(self.format_row(f))
             if self.mode == 'async' and i % 10:
                 progress = f"Processed {i+1} of {len(self.field)}"
-                self.task.update_progress(self.task_id, progress=progress, staus="IN_PROGRESS", meta_data={})
+                self.task.update_progress(progress=progress, staus="IN_PROGRESS", meta_data={})
 
         writer.writerows(data)
 
