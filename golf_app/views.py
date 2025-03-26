@@ -1487,7 +1487,7 @@ class SeasonStats(APIView):
             t= Tournament.objects.get(pk=request.data.get('tournament_key'))
             for espn_num in request.data.get('golfer_list'):
                 g = Golfer.objects.get(espn_number=espn_num)
-                data.update({g.espn_number: g.summary_stats(t.season)})
+                data.update({g.espn_number: g.summary_stats(t.season, rerun=True)})  #setting to rerun on march 26 2025 to fix old data issues
             print ('season stats api duration: ', datetime.datetime. now() - start)
             return JsonResponse(data, status=200)
         except Exception as e:
@@ -2715,7 +2715,7 @@ class FieldUpdatesAPI(APIView):
                     if t.pga_tournament_num not in ['999',]:
                         recent = OrderedDict(sorted(f.recent_results().items(), reverse=True))
                         print ('past recent')
-                        season_stats = f.golfer.summary_stats(t.season) 
+                        season_stats = f.golfer.summary_stats(t.season, rerun=True)  #setting to rerun to fix data on march 26 ,2025
                         print ('past season stats')
                         dg_player_stats = dg.get_player_stats(f.playerName)
                         print ('past dg stats')
