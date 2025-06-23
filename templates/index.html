@@ -196,18 +196,6 @@
                                     '</table>')
 
       var team_keys = []
-      //if (Object.keys(data).length == 0) {
-        //console.log('no games')
-        //row = document.createElement('tr')
-        //row.id = Object.keys(data)[0]
-        //td1 = document.createElement('td')
-        //td1.innerHTML = 'No Games'
-        //row.append(td1)
-
-        //$('#baseball_table').append(row)
-
-      //}
-      //else {
       for (i=0; i< Object.keys(data).length; i++) {
         team_keys = []
         $.each(Object.values(data)[i], function(k, v) {
@@ -246,10 +234,10 @@
         row.append(td6)
 
         $('#baseball_table').append(row)
-        $('#baseball_scores').append('<p><a href:https://mlb.primotact.com>MLB Game</a></p>')
-        $('#baseball_scores').attr('hidden', false)     
       } }
     
+        $('#baseball_scores').append('<p><a href=https://mlb.primotact.com target="_blank">MLB Game</a></p>')
+        $('#baseball_scores').attr('hidden', false)     
 
   
 })

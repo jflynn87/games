@@ -69,21 +69,34 @@ function buildLeaderboard(t) {
           data = $.parseJSON(responseJSON).leaderboard
           //console.log('DD ', data)
           $('#det-list').empty()
+          $('#det-list').append('<h3 class="bg-info center text-white">Leader Board</h3>');
+          $('#det-list').append('<div class=p-2><a href="#"> <button class="btn btn-secondary"> return to top</button> </a></div>');
           $('#det-list').append('<table id="det-table" class="table">' + '</table>');
         
-          top_header_fields = ['Tournament Scores', ' ', '<a href="#"> <button> return to top</button> </a>', ' ', ' ', ' ', ' ', ' ', ' ', ' ']
-          thf_l = top_header_fields.length
-          th_cells = []
-          let top_header = document.createElement('tr')
-          top_header.style.background = 'lightblue';
-          for (let i=0; i < thf_l; i++) {
-              th_cells.push(document.createElement('th'))
-              th_cells[i].innerHTML = top_header_fields[i]
-              top_header.append(th_cells[i])
-                                        }
+          // top_header_fields = ['<a href="#"> <button class="btn btn-secondary"> return to top</button> </a>', 'Leader Board']
+          // thf_l = top_header_fields.length
+          // th_cells = []
+          // let top_header = document.createElement('tr')
+          // top_header.style.background = 'lightblue';
+          // for (let i=0; i < thf_l; i++) {
+          //     th_cells.push(document.createElement('th'))
+          //     th_cells[i].innerHTML = top_header_fields[i]
+          //     if (i == 0) {
+          //       th_cells[i].setAttribute('colspan', '2')
+          //       th_cells[i].style.textAlign = 'left'
+          //     }
+          //     if (i == 1) {
+          //       th_cells[i].setAttribute('colspan', '8')
+          //       th_cells[i].style.textAlign = 'center'
+          //     }
+          //   top_header.append(th_cells[i])
+          //                               }
         
+          header = document.createElement('tr');
+          top_header = document.createElement('tr');
           second_header_fields = ['Position', 'Change ', 'Golfer', 'Total ', 'Thru ', 'Round', 'R1 ', 'R2 ', 'R3 ', 'R4']
-          shf_l = top_header_fields.length
+          //shf_l = top_header_fields.length
+          shf_l = second_header_fields.length
           sh_cells = []
           let second_header = document.createElement('tr');
           for (let i=0; i < shf_l; i++) {
