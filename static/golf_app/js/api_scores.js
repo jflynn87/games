@@ -8,6 +8,7 @@ $(document).ready(function() {
       //$.getScript('/static/golf_app/js/common_scores.js')
       const common = load_common()
       common.then((response) => $('#totals-table').ready(function() {sort_table('totals-table');
+                                                                        sortUserCards();
                                                                      $('#scores-div').attr('hidden', false)}))
       
       const fn1 = totalScores()
@@ -19,6 +20,7 @@ $(document).ready(function() {
             console.log('total scores done')
       seasonPoints()
       sort_table('totals-table')
+      sortUserCards()
       udatePickData()
       if ($('#pga_t_num').text() != '470')
       {
@@ -66,7 +68,15 @@ function totalScores( ) {
       fetch(url,
       {method: "GET",
       })
-      .then((response) => response.json())
+      .then((response) => {
+            if (!response.ok) {
+                  console.log('Network response was not ok ' + response.statusText);
+                  $('#status').html('<h4>Scores not updated - ' + response.status + ' ' + response.statusText + '</h4>')
+                  reject(response.statusText)
+            }
+            else {
+                  return response.json()}
+            })
       .then((responseJSON) => {
             console.log('ts api returned')
             data = responseJSON
@@ -79,8 +89,12 @@ function totalScores( ) {
 
             $.each(data, function(user, score) {
             if (Object.keys(score) != 'group_stats'){
-            $('#score_' + user).html(score.score + ' / ' + score.cuts)
-            $('#ts_' + user).append('<p>Rank: ' + score.rank + '</p>')
+                  console.log('user: ', user, ' score: ', score)
+                  // For table view
+                  $('#score_table_' + user).text(score.score + '/' + (score.cuts ? score.cuts : '0'));
+                  // For card view
+                  $('#score_card_' + user).text(score.score + '/' + (score.cuts ? score.cuts : '0'));
+                  $('#ts_' + user).append('<p>Rank: ' + (score.rank ? score.rank : '') + '</p>');
             }
 
             } )
@@ -115,42 +129,60 @@ function udatePickData() {
                   )
             .then((response) => response.json())
             .then((responseJSON) => {
-                  console.log('picks data api returned')
+                  
                   data = responseJSON
+                  console.log('picks api returned: ', data)
+                  
                   $.each(data, function(i, pick) {
+                        // Format SOD
+                        let sod = pick.sod_position ? format_move(parseInt(pick.sod_position)) : '';
 
-                  if (pick.sod_position) {sod = format_move(parseInt(pick.sod_position))}
-                  else {sod = ''}
+                        // Format thru
+                        let thru = '';
+                        try {
+                              if (pick.thru && pick.thru.slice(-1) == 'Z') {
+                                    thru = new Date(pick.thru).toLocaleTimeString([], {hour: 'numeric', minute:'2-digit'});
+                              } else {
+                                    thru = pick.thru;
+                              }
+                        } catch { thru = ''; }
 
-                  try {if (pick.thru.slice(-1) == 'Z') {
-                        var utcDate = pick.thru;
-                        thru = new Date (utcDate).toLocaleTimeString([], {hour: 'numeric', minute:'2-digit'})
-                  }
-                  else {thru = pick.thru}}
-                  catch {thru = ''}
-                  
-                  $('#' + pick.pick.id + '-score').html(
-                         '<p>' + pick.score + 
-                         '<span > <a id=tt-' + pick.id + 
-                         ' data-toggle="tooltip" > <i class="fa fa-info-circle" style="color:blue;"></i> </a> </span>' +
-                         '  ' + sod + '</p>') 
+                        // Score HTML (with tooltip)
+                        let scoreHtml = '<p>' + pick.score +
+                              '<span> <a id="tt-' + pick.id +
+                              '" data-toggle="tooltip"><i class="fa fa-info-circle" style="color:blue;"></i></a></span> ' +
+                              sod + '</p>';
 
-                  if ($('#pga_t_num').text() != '470')
-                         {$('#' + pick.pick.id + '-p2').html('<p>' + pick.toPar + ' (' + thru + ')</p>')}
+                        // ToPar HTML
+                        let toParHtml = '<p>' + pick.toPar + ' (' + thru + ')</p>';
 
-                  $('#tt-' + pick.id + '[data-toggle="tooltip"]').tooltip({trigger:"hover",
-                  delay:{"show":400,"hide":800}, "title": 'gross score: ' + pick.gross_score})
+                        // --- Update Card View ---
+                        $('#pickrow_' + pick.pick.id + ' #' + pick.pick.id + '-score').html(scoreHtml);
+                        $('#pickrow_' + pick.pick.id + ' #' + pick.pick.id + '-p2').html(toParHtml);
 
-                  if (not_playing.indexOf(pick.thru) != -1) {$('#' + pick.pick.id).addClass('cut')}  
-                  if ($('#pga_t_num').text() == '470' && pick.score == '17') {$('#' + pick.pick.id).addClass('cut')}
-                  if ($('#' + pick.pick.id).hasClass('best') && $('#' + pick.pick.id).hasClass('cut')) {
-                        $('#' + pick.pick.id).removeClass('cut').removeClass('best')
-                        $('#' + pick.pick.id).css('background-color', '#465945')
-                  }
-                  
-            resolve(data)})
-            })
-      })
+                        // --- Update Table View ---
+                        // If your table cell contains the same score and toPar fields, update them too:
+                        $('#' + pick.pick.id + ' #' + pick.pick.id + '-score').html(scoreHtml);
+                        $('#' + pick.pick.id + ' #' + pick.pick.id + '-p2').html(toParHtml);
+
+                        // If your table cell is just a single cell, you may want to update its HTML directly:
+                        // $('#' + pick.pick.id).html(scoreHtml + toParHtml);
+
+                        // Tooltip
+                        $('#tt-' + pick.id + '[data-toggle="tooltip"]').tooltip({
+                              trigger: "hover",
+                              delay: {"show": 400, "hide": 800},
+                              "title": 'gross score: ' + pick.gross_score
+                        });
+
+                        // --- Classes for cut/best ---
+                        if (not_playing.indexOf(pick.thru) != -1) {
+                              $('#' + pick.pick.id).removeClass('cut best').addClass('cut');           // Table
+                              $('#pickrow_' + pick.pick.id).removeClass('cut best').addClass('cut');   // Card
+                        }
+                        });
+                              })
+})
 }
 
 
@@ -220,31 +252,23 @@ function summary_data() {
 }
 
 function msgs() {
-      fetch("/golf_app/get_msgs/" + $('#tournament_key').text(),
-      {method: "GET",
-      }
-            )
-      .then((response) => response.json())
-      .then((responseJSON) => {
-            
-            data = $.parseJSON(responseJSON)
-            //console.log('get msgs api returned ', data)
-             $.each(data.handicap, function(user, handi) {
-                   $('#msg_' + user).text('h/c: ' + handi.total)
-             })
-            
-            $.each(data.pick_method, function(i, info) {
-                  if (info.method == '3'){
-                        $('#msg_'+ info.user.username).append('<p>Auto Picks - no bonuses')
-                  }
-            })
-            $.each(data.bonus_dtl, function(i, info) {
-                  $('#msg_' + info.user.username).append('<p>' + info.bonus_type_desc + ': -' + info.bonus_points + '</p>')
-            })
-      })
-}
+    fetch("/golf_app/get_msgs/" + $('#tournament_key').text(), {method: "GET"})
+    .then((response) => response.json())
+    .then((responseJSON) => {
+        let data = $.parseJSON(responseJSON);
 
-// get_records used for match play to display group stage results
+        // Get all users from handicap (or another reliable source)
+        let users = Object.keys(data.handicap);
+
+        $.each(users, function(i, user) {
+            // Table: use <br>
+            $('#msg_' + user).html(buildMsgLines(user, data, 'br'));
+            // Card: use <div>
+            $('#bonus_' + user).html(buildMsgLines(user, data, 'div'));
+            $('#bonus_' + user).addClass('msgs-bg');
+        });
+    });
+}// get_records used for match play to display group stage results
 function get_records() {
       fetch("/golf_app/get_mp_records/" + $('#tournament_key').text(),
       {method: "GET",
@@ -268,3 +292,43 @@ function get_records() {
     })
     }
     
+
+function sortUserCards() {
+    // Collect all user cards
+    let cards = Array.from(document.querySelectorAll('.user-card'));
+    // Extract score from the score_card_USERNAME span
+    cards.sort((a, b) => {
+        let aUser = a.id.replace('card-', '');
+        let bUser = b.id.replace('card-', '');
+        let aScore = parseInt($('#score_card_' + aUser).text().trim()) || 9999;
+        let bScore = parseInt($('#score_card_' + bUser).text().trim()) || 9999;
+        return aScore - bScore; // Lower score is better
+    });
+    // Re-append cards in sorted order
+    let parent = cards[0]?.parentNode;
+    if (parent) {
+        cards.forEach(card => parent.appendChild(card));
+    }
+}
+
+function buildMsgLines(user, data, lineTag) {
+    let lines = [];
+    if (data.handicap && data.handicap[user]) {
+        lines.push('h/c: ' + data.handicap[user].total);
+    }
+    if (data.pick_method) {
+        $.each(data.pick_method, function(i, info) {
+            if (info.user.username === user && info.method == '3') {
+                lines.push('Auto Picks - no bonuses');
+            }
+        });
+    }
+    if (data.bonus_dtl) {
+        $.each(data.bonus_dtl, function(i, info) {
+            if (info.user.username === user) {
+                lines.push(info.bonus_type_desc + ': -' + info.bonus_points);
+            }
+        });
+    }
+    return lines.map(l => `<${lineTag}>${l}</${lineTag}>`).join('');
+}

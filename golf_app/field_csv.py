@@ -9,6 +9,8 @@ from user_app.services import DynamoStatsTable
 
 class FieldCSV(object):
     def __init__(self, tournament, mode=None, task_id=None):
+        '''takes a tournament object as a dice, a list of dicts for the season tournaments
+        and a list of field records as a dict and an optional string task id'''
         self.t = tournament
         self.all_tournaments_presort = Tournament.objects.filter(season__season__in = [self.t.season.season, self.t.season.season -1]).exclude(pga_tournament_num__in=['468', '500', '999']).exclude(current=True)
         self.all_tournaments = sorted(self.all_tournaments_presort, key=lambda x: x.pk, reverse=True)
@@ -75,8 +77,11 @@ class FieldCSV(object):
 
     def format_row(self, f):
         s = DynamoStatsTable().get_item(pk=str(f.tournament.pk), sk=str(f.pk))
-        print (f'Dyn Stats {f},  {s}')
+        if not s:
+            s = {}
+        #print (f'Dyn Stats {f},  {s}')
         season_results = s.get('season')
+        print (f'Season results: {f.playerName}  {season_results}')
         
         row = [f.golfer.espn_number, f.playerName, f.group.number, f.currentWGR, f.sow_WGR, f.soy_WGR, f.prior_year, f.handi, 
                s.get('fedex_rank', ''), s.get('fedex_points', ''), season_results.get('played', '0'),

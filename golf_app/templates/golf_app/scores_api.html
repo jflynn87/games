@@ -3,13 +3,137 @@
 {%load static%}
 {%load compress%}
 
-
 {%block body_block%}
 {%compress css%}
 <link rel="stylesheet" href={%static 'golf_app/css/scores.css' %}>
 {%endcompress%}
 <link href="https://fonts.googleapis.com/css?family=Anton&display=swap" rel="stylesheet">
 
+<style>
+  #scores-div {
+    overflow-x: auto;
+    width: 100%;
+  }
+  #totals-table {
+    min-width: 600px;
+    width: 100%;
+  }
+  @media (max-width: 768px) {
+    #totals-table th, #totals-table td {
+      font-size: 12px;
+      padding: 4px;
+    }
+    #totals-table img {
+      height: 40px !important;
+      max-width: 40px !important;
+    }
+    #scores-div {
+      padding: 0;
+    }
+    h4, #leader, #cut_line, #issues {
+      font-size: 1em;
+    }
+  }
+  @media (max-width: 480px) {
+    #totals-table th, #totals-table td {
+      font-size: 10px;
+      padding: 2px;
+    }
+    #totals-table img {
+      height: 24px !important;
+      max-width: 24px !important;
+    }
+  }
+  .user-card { display: none; }
+  @media (max-width: 768px) {
+    #scores-div { display: none; }
+    .user-card { 
+      display: block; 
+      border: 1px solid #ccc; 
+      border-radius: 8px; 
+      margin-bottom: 12px; 
+      padding: 10px; 
+      background: #f9f9f9;
+    }
+    .user-card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      cursor: pointer;
+    }
+    .user-card-content {
+      display: none;
+      margin-top: 8px;
+    }
+    .user-card.expanded .user-card-content {
+      display: block;
+    }
+    .expand-btn {
+      font-size: 1.5em;
+      background: none;
+      border: none;
+      cursor: pointer;
+      outline: none;
+    }
+    #det-list {
+      width: 100%;
+      overflow-x: auto;
+      font-size: 1em;
+    }
+    #det-list table {
+      width: 100%;
+      border-collapse: collapse;
+      table-layout: fixed;
+    }
+    #det-list th, #det-list td {
+      padding: 4px 2px;
+      font-size: 0.95em;
+      word-break: break-word;
+      max-width: 80px;
+      text-align: center;
+    }
+    @media (max-width: 768px) {
+      #det-list {
+        font-size: 0.85em;
+      }
+      #det-list th, #det-list td {
+        font-size: 0.8em;
+        padding: 2px 1px;
+        max-width: 50px;
+      }
+    }
+  }
+  .hourglass-anim {
+    display: inline-block;
+    animation: hourglass-spin 1s steps(8) infinite;
+    font-size: 1.5em;
+    vertical-align: middle;
+  }
+  @keyframes hourglass-spin {
+    0%   { content: "⌛"; }
+    12%  { content: "⏳"; }
+    25%  { content: "⌛"; }
+    37%  { content: "⏳"; }
+    50%  { content: "⌛"; }
+    62%  { content: "⏳"; }
+    75%  { content: "⌛"; }
+    87%  { content: "⏳"; }
+    100% { content: "⌛"; }
+  }
+
+  .msgs-bg {
+  
+  font-weight: 600;
+  text-align: center;
+  border-radius: 6px;
+  padding: 6px 10px;
+  margin-bottom: 8px;
+  margin-top: 4px;
+  display: inline-block;
+  width: 100%;
+}
+
+</style>
 
 <p hidden id='tournament_key'>{{t.pk}}</p>
 <p hidden id='season_key'>{{t.season.pk}}</p>
@@ -22,7 +146,7 @@
   {%endfor%}
 {%endif%}
 
-<h4>{{t.name}}</h4>
+<h4>{{t.name}}xx</h4>
 
 <p id='leader'>leaders ... </p>
 <p id='cut_line'>cut info ... </p>
@@ -30,12 +154,55 @@
 
 <div id='picks_summary'></div>
 <div id='picks_info'></div>
-<div id='status'><h4>updating scores <span class='status' style="size: 200%;">....</span></h4></div>
-<!-- <div id='picks_info'> -->
-  <div id=scores-div hidden>
-    <table id='totals-table' class='table table-bordered table-sm '>
-      <thead>
-        <tr style="background-color: lightblue;">
+<div id='status'>
+  <h4>
+    updating scores 
+    <span class='status' style="font-size: 1.5em;">
+      <span class="hourglass-anim">⌛</span>
+    </span>
+  </h4>
+</div>
+
+<!-- MOBILE CARDS: Place these OUTSIDE the scores-div -->
+<div>
+{% for ts, picks in d.items %}
+  <div class="user-card" id="card-{{ts.user.username}}">
+    <div class="user-card-header" onclick="toggleCard('{{ts.user.username}}')">
+      <span>
+        <strong>{{ts.user.username}}</strong>
+        (<span id="score_card_{{ts.user.username}}">{{ts.user|total_score}}</span>)
+      </span>
+      <button class="expand-btn" id="btn-{{ts.user.username}}">+</button>
+    </div>
+    <div class="user-card-content" id="content-{{ts.user.username}}">
+      <div id="bonus_{{ts.user.username}}" class="msgs-bg></div>
+      {% for p in picks %}
+        <div id=pickrow_{{p.pk}} style="margin: 8px 0; border-bottom: 1px solid #eee;" class="{{p.playerName.golfer.espn_number}}">
+          <img height="40" src="{{p.playerName.golfer.pic_link}}" style="border-radius:50%">
+          <img height="16" src="{{p.playerName.golfer.flag_link}}" alt="" style="border-radius:50%">
+          {% if p.playerName.partner %}
+            <img height="40" src="{{p.playerName.partner_golfer.pic_link}}" style="border-radius:50%">
+            <img height="16" src="{{p.playerName.partner_golfer.flag_link}}" alt="" style="border-radius:50%">
+          {% endif %}
+          <div style="font-weight: bold;">{{p.playerName}}
+            {% if p.playerName.partner %}
+              &amp; {{p.playerName.partner}}
+            {% endif %}
+          </div>
+          <div id="{{p.pk}}-score">....</div>
+          <div id="{{p.pk}}-p2">...</div>
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+{% endfor %}
+</div>
+
+<!-- DESKTOP TABLE -->
+<div id="scores-div">
+  <table id='totals-table' class='table table-bordered table-sm '>
+    <thead>
+      <tr style="background-color: lightblue;">
         <th>Player</th>
         <th>Bonus</th>
         {%if t.pga_tournament_num == '999'%}
@@ -44,132 +211,80 @@
         {%for g in groups%}
           <th id="grp-colspan-{{g.number}}" colspan="{{g.num_of_picks}}">{{g.number}}</th>
         {%endfor%}
-        </tr>
-      </thead>
-      <tbody>
-        {%for ts, picks in d.items%}
-          <tr id="totals{{ts.user.username}}" class="small">
-            <td id=ts_{{ts.user.username}} style="font-weight: bold;">
-              <p id='name_{{ts.user.username}}'> {{ts.user.username}}</p>
-              <p id='score_{{ts.user.username}}'>{{ts.user|total_score}} / ...</p>
-            </td>
-            <td id=msg_{{ts.user.username}}>updating info <span class="status">....</span></td>
-            {%for p in picks%}
-            <td id={{p.pk}} class={{p.playerName.golfer.espn_number}}>
-              <span class=watermark><p> {{p.user.username}} : {{p.playerName.group.number}} </p> </span>
-              <p><img height="100" src="{{p.playerName.golfer.pic_link}}" style="border-radius:50%"></img>
-                  <img height='20' src="{{p.playerName.golfer.flag_link}}" alt="" style="border-radius:50%"></img>
-                  {%if p.playerName.partner%}
-                  <img height='100' src="{{p.playerName.partner_golfer.pic_link}}" style="border-radius:50%"></img>
-                  <img height='20' src="{{p.playerName.partner_golfer.flag_link}}" alt="" style="border-radius:50%"></img>
-                  {%endif%}
-                  <p style="font-weight: bold;">{{p.playerName}}
-                    {%if p.playerName.partner%}
-                    <p style="font-weight: bold;">{{p.playerName.partner}}</p>
-                    {%endif%}
-    
-                  </p>
-                  <p id='{{p.pk}}-score'>....</p>
-                  <p id="{{p.pk}}-p2">...</p>
-    
-            </td>
-            {%endfor%}
-          </tr>
-          {%endfor%}
-<!--         {%for p in picks %}
-         {%if forloop.counter in new_lines %}
-        <tr id=totals{{p.user.username}} class="small">
-          <td id=ts_{{p.user.username}} style="font-weight: bold;">
-            <p id='name_{{p.user.username}}'> {{p.user.username}}</p>
-            <p id='score_{{p.user.username}}'>{{p.user|total_score}} / ...</p>
+      </tr>
+    </thead>
+    <tbody>
+      {%for ts, picks in d.items%}
+        <tr id="totals{{ts.user.username}}" class="small">
+          <td id="ts_{{ts.user.username}}" style="font-weight: bold;">
+            <p id='name_{{ts.user.username}}'> {{ts.user.username}}</p>
+            <p id='score_table_{{ts.user.username}}'>{{ts.user|total_score}} / ...</p>
           </td>
-          <td id=msg_{{p.user.username}}>updating info......</td>
-          
-          {%if t.pga_tournament_num == '999'%}
-          <td id="countries_{{p.user.username}}">
-            <script type="text/javascript">
-              var cPicks = $.parseJSON('{{cp|safe}}');
-              $.each(cPicks, function(i, data){
-                if (data.user_name == '{{p.user.username}}'){
-                  $('#countries_{{p.user.username}}').append('<p> <img src='+ data.flag_link+'></img>' + ' -' +data.score + '</p>');
-              }
-            });
-
-            </script>
-          </td>
-          {%endif%}
-          
-          <td id={{p.pk}} class='{{p.playerName.golfer.espn_number}}'>
-              <span class=watermark><p> {{p.user.username}} : {{p.playerName.group.number}} </p> </span>
-              <p><img height="100" src="{{p.playerName.golfer.pic_link}}" style="border-radius:50%"></img>
-                  <img height='20' src="{{p.playerName.golfer.flag_link}}" alt="" style="border-radius:50%"></img>
-                  {%if p.playerName.partner%}
-                  <img height='100' src="{{p.playerName.partner_golfer.pic_link}}" style="border-radius:50%"></img>
-                  <img height='20' src="{{p.playerName.partner_golfer.flag_link}}" alt="" style="border-radius:50%"></img>
-                  {%endif%}
-              </p>
-              <p style="font-weight: bold;">{{p.playerName}}
-                {%if p.playerName.partner%}
-                <p style="font-weight: bold;">{{p.playerName.partner}}</p>
-                {%endif%}
-
-              </p>
-              <p id='{{p.pk}}-score'>....</p>
-              <p id="{{p.pk}}-p2">...</p>
-             
-          </td>
-          {%else%}
-            <td id={{p.pk}} class='{{p.playerName.golfer.espn_number}}'>
-              <span class=watermark><p> {{p.user.username}} : {{p.playerName.group.number}} </p> </span>
-              <p><img height='100' src="{{p.playerName.golfer.pic_link}}" style="border-radius:50%"></img>
-              <img height='20' src="{{p.playerName.golfer.flag_link}}" alt="" style="border-radius:50%"></img>
+          <td id="msg_{{ts.user.username}}">updating info <span class="status">....</span></td>
+          {%for p in picks%}
+          <td id="{{p.pk}}" class="{{p.playerName.golfer.espn_number}}">
+            <span class=watermark><p> {{p.user.username}} : {{p.playerName.group.number}} </p> </span>
+            <p><img height="100" src="{{p.playerName.golfer.pic_link}}" style="border-radius:50%"></p>
+            <img height='20' src="{{p.playerName.golfer.flag_link}}" alt="" style="border-radius:50%">
+            {%if p.playerName.partner%}
+            <img height='100' src="{{p.playerName.partner_golfer.pic_link}}" style="border-radius:50%">
+            <img height='20' src="{{p.playerName.partner_golfer.flag_link}}" alt="" style="border-radius:50%">
+            {%endif%}
+            <p style="font-weight: bold;">{{p.playerName}}
               {%if p.playerName.partner%}
-              <img height='100' src="{{p.playerName.partner_golfer.pic_link}}" style="border-radius:50%"></img>
-              <img height='20' src="{{p.playerName.partner_golfer.flag_link}}" alt="" style="border-radius:50%"></img>
+                <p style="font-weight: bold;">{{p.playerName.partner}}</p>
               {%endif%}
             </p>
-             <p style="font-weight: bold;">{{p.playerName}}</p>
-             {%if p.playerName.partner%}
-               <p style="font-weight: bold;">{{p.playerName.partner}}</p>
-             {%endif%}
-
-             <p id='{{p.pk}}-score'>....</p>
-             <p id="{{p.pk}}-p2"></p>
+            <p id='{{p.pk}}-score'>....</p>
+            <p id="{{p.pk}}-p2"></p>
           </td>
-          {%endif%}
+          {%endfor%}
+        </tr>
+      {%endfor%}
+      <tr id="big">
+        <th>Best Picks</th>
+        <td></td>
+        {%if t.pga_tournament_num == '999'%}
+        <td></td>
+        {%endif%}
+        {%for g in groups%}
+        <td id='big-{{g.number}}'>....</td>
         {%endfor%}
- -->        <tr id="big">
-          <th>Best Picks</th>
-          <td></td>
-          {%if t.pga_tournament_num == '999'%}
-          <td></td>
-          {%endif%}
-          {%for g in groups%}
-          <td id='big-{{g.number}}'>....</td>
-          {%endfor%}
-        </tr>
-        <tr id="cuts">
-          <th>Cuts</th>
-          <td></td>
-          {%if t.pga_tournament_num == '999'%}
-          <td></td>
-          {%endif%}
-
-          {%for g in groups%}
-          <td id='cuts-{{g.number}}'>....</td>
-          {%endfor%}
-        </tr>
-      </tbody>
-    </table>
+      </tr>
+      <tr id="cuts">
+        <th>Cuts</th>
+        <td></td>
+        {%if t.pga_tournament_num == '999'%}
+        <td></td>
+        {%endif%}
+        {%for g in groups%}
+        <td id='cuts-{{g.number}}'>....</td>
+        {%endfor%}
+      </tr>
+    </tbody>
+  </table>
 </div>
-
 
 <p><a href='https://www.pgatour.com/leaderboard.html' target="_blank">Click for PGA.com Leaderboard</a></p>
 <div id='det-list'></div>
 {%if t.special_field == False%}
     <h4 id='lb_status'>Loading Leaderboard...</h4>
-</div>
 {%endif%}
+
+<script>
+  // Simple expand/collapse for cards
+  function toggleCard(username) {
+    var card = document.getElementById('card-' + username);
+    var btn = document.getElementById('btn-' + username);
+    if (card.classList.contains('expanded')) {
+      card.classList.remove('expanded');
+      btn.textContent = '+';
+    } else {
+      card.classList.add('expanded');
+      btn.textContent = '−';
+    }
+  }
+</script>
 
 {%compress js%}
   <script type="text/javascript" src="{%static 'golf_app/js/api_scores.js'%}"></script>

@@ -17,6 +17,7 @@ from golf_app import populateField, manual_score, withdraw, scrape_espn, \
      ryder_cup_scores, espn_ryder_cup, bonus_details, espn_schedule, scrape_scores_picks, \
      scrape_cbs_golf, fedex_email, pga_t_data, populateMPField, calc_zurich_score
 
+
 from django.utils import timezone
 from django.core.exceptions import ObjectDoesNotExist
 from django.db.models import Min, Q, Count, Sum, Max
@@ -461,8 +462,8 @@ def setup(request):
             try:
                 espn_data = espn_schedule.ESPNSchedule()
                 espn_sched = espn_data.get_event_list()
-
                 espn_curr_event = espn_data.current_event()[0]
+
                 espn_t_num = espn_curr_event.get('link').split('=')[1]
                 last_season = Season.objects.get(season=t.season.season -1)
                 try:
@@ -1171,6 +1172,8 @@ class PriorResultAPI(APIView):
         try:
             t= Tournament.objects.get(current=True)
             data= golf_serializers.PreStartFieldSerializer(Field.objects.filter(tournament=t), many=True).data
+            print (data)
+            print (type(data))
         except Exception as e:
             print ('prior res get API error; ', e)
             data = json.dumps({'msg': str(e)})
@@ -2153,11 +2156,19 @@ class EspnApiScores(APIView):
             print ('ESPN SCORES API EXCEPTION: ', e)
             d['error'] = {'source': 'EspnApiScores',
                           'msg': str(e)} 
-        
-        print ('D', d)    
+        print (d)
+        sorted_d = OrderedDict(
+            sorted(
+                ((k, v) for k, v in d.items() if k != 'group_stats'),
+                key=lambda item: item[1]['score']
+            )
+        )
+        if 'group_stats' in d:
+            sorted_d['group_stats'] = d['group_stats']
 
-        print ('update scores full process total time: ', datetime.datetime.now() - start)
-        return JsonResponse(d, status=200, safe=False)
+        print (sorted_d)
+
+        return JsonResponse(sorted_d, status=200, safe=False)
 
 def olympic_espn_api(t):
     print ('OLYMPICS Get API', t)
@@ -2743,8 +2754,9 @@ class FieldUpdatesAPI(APIView):
             
             print (f'----------------- Pre dynamo save Field Stats, saving {len(l)} records --------------------------------')
 
-            resp = DynamoStatsTable().batch_upsert(utils.convert_floats_to_decimal(l))
-
+            safe_l = utils.convert_floats_to_decimal(l)
+            resp = DynamoStatsTable().batch_upsert(safe_l)
+            
             d['status'] = {'msg': f'Updated Field Records: {len(l)}'}
             status = 200
         except Exception as e:
@@ -2753,8 +2765,8 @@ class FieldUpdatesAPI(APIView):
             status = 500
         
         print ('Update Field API time: ', datetime.datetime.now() - start)
-
-        return JsonResponse(json.dumps(d), status=status, safe=False)
+        print (f'Field API list len: {len(l)}')
+        return JsonResponse(safe_l, status=status, safe=False)
 
 
 class UpdateGolferResultsAPI(APIView):
@@ -3580,14 +3592,19 @@ class AsyncCreateFieldCSV(APIView):
 
         mode = request.GET.get('mode', '')
 
-        field_records = Field.objects.filter(tournament=t).count()
+        field = Field.objects.filter(tournament=t)
+        field_records = field.count()
+        self.all_tournaments_presort = Tournament.objects.filter(season__season__in = [self.t.season.season, self.t.season.season -1]).exclude(pga_tournament_num__in=['468', '500', '999']).exclude(current=True)
+        self.all_tournaments = sorted(self.all_tournaments_presort, key=lambda x: x.pk, reverse=True)
 
         meta_data = {'total_records': field_records,
                      'user': self.request.user.username,
                      'start_time': datetime.datetime.now().strftime("%m/%d/%Y, %H:%M:%S"),
                      'job_url': 'create_field_csv',
                      'mode': mode,
-                     'token': token}
+                     'token': token,
+                        'tournament': serializers.serialize('json', t),
+                          }
 
         task = AsyncTaskManager()
         task_id = task.start_async_task('create_field_csv', meta_data)

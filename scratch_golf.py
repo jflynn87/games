@@ -49,11 +49,12 @@ from golf_app.data_golf import DataGolf, GolferSG
 
 #print (Field.objects.get(pk=int(sk)))
 #exit()
-f = Field.objects.get(tournament__current=True, playerName__icontains='Castillo')
-pk = str(f.tournament.pk)
-season = f.golfer.summary_stats(f.tournament.season)
-print (season)\
 
+
+t = Tournament.objects.get(current=True)
+f = field_csv.FieldCSV(t)
+f_csv = f.create_file()
+print (f_csv)
 exit()
 
 d = DynamoStatsTable().table

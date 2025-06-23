@@ -717,7 +717,7 @@ class Golfer(models.Model):
     def natural_key(self):
         return self.golfer_pga_num
 
-    def summary_stats(self, season, rerun=False):
+    def  summary_stats(self, season, rerun=False):
         '''takes a golfer object and season object, returns a dict'''
         start = datetime.now()
         d = {'played': 0,
@@ -897,10 +897,16 @@ class Golfer(models.Model):
 
             res = self.results
             #self.results.update({t.pk: {'rank': rank,
-            res.update({t.pk: {'rank': rank,
+            if res:
+                res.update({t.pk: {'rank': rank,
                                 't_name': t.name,
                                 'season': t.season.season
-                }})
+                    }})
+            else:
+                res = {t.pk: {'rank': rank,
+                                't_name': t.name,
+                                'season': t.season.season
+                    }}
             self.results = res
 
 

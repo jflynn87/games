@@ -30,6 +30,7 @@ class ESPNData(object):
             sd = ScoreDict.objects.get(tournament=self.t)
             self.all_data = sd.espn_api_data
         elif t_num:
+            print ('TNUM, ', t_num)
             headers = {'User-Agent': 'Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.149 Mobile Safari/537.36'}
             url = 'https://site.web.api.espn.com/apis/site/v2/sports/golf/leaderboard?event=' + str(t_num)
             self.all_data = get(url, headers=headers).json()
