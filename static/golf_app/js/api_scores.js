@@ -86,6 +86,7 @@ function totalScores( ) {
             }
             bestInGroup(data.group_stats)
             cuts(data.group_stats)
+            mobileSummary(data)
 
             $.each(data, function(user, score) {
             if (Object.keys(score) != 'group_stats'){
@@ -116,6 +117,7 @@ function seasonPoints() {
             data = $.parseJSON(responseJSON)
             $.each(data, function(user, info) {
             $('#name_' + user).html(user + '  ('  + info.diff + ' / ' + info.points_behind_second + ')')
+            $('#card_season_' + user).html('  Seaon behind: ('  + info.diff + ' / ' + info.points_behind_second + ')').addClass('small').addClass('text-muted').addClass('text-center')
       resolve(data)})
       })
 })
@@ -191,14 +193,18 @@ function bestInGroup(data) {
             $.each(info.golfers, function(i,golfer) {
             if (i==0){
                   $('#big-' + group).html(golfer) 
+                  $('#best-picks-mobile-' + group).html(golfer)
+
                         }
             else {
                   $('#big-' + group).append('<p>' + golfer + '</p>')
+                  
                   }
                                                     })
             colspan = $('#grp-colspan-' + group).attr('colspan')
-
+            
             $('#big-' + group).attr('colspan', colspan).addClass('small').attr('align', 'center')
+
       })
 }
 
@@ -206,12 +212,23 @@ function bestInGroup(data) {
 function cuts(data) {
       $.each(data, function(group, info) {
           $('#cuts-' + group).html(info.cuts + '/' + info.total_golfers) 
-
+            
             colspan = $('#grp-colspan-' + group).attr('colspan')
             
             $('#cuts-' + group).attr('colspan', colspan).addClass('small').attr('align', 'center')
+            
       })            
 }
+
+function mobileSummary(data) {
+$.each(data.group_stats, function(group, info) {
+      console.log('mobile summary group: ', group, ' info: ', info)
+    let line = 'Group ' + group + ': '+  
+               '<span class="text-left"> ' + info.golfers +
+               ' | Cuts: ' + info.cuts + '/' + info.total_golfers + '</span>';
+                  $('#group-mobile-' + group).html(line);
+      });
+      }
 
 function updateBigPicks(group_stats, picks) {
       $.each(group_stats, function(group, stats) {
