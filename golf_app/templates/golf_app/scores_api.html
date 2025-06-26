@@ -182,7 +182,7 @@
       <button class="expand-btn" id="btn-{{ts.user.username}}">+</button>
     </div>
     <div class="user-card-content" id="content-{{ts.user.username}}">
-      <div id="bonus_{{ts.user.username}}" class="msgs-bg></div>
+      <div id="bonus_{{ts.user.username}}" class="msgs-bg"></div>
       {% for p in picks %}
         <div id=pickrow_{{p.pk}} style="margin: 8px 0; border-bottom: 1px solid #eee;" class="{{p.playerName.golfer.espn_number}}">
           <img height="40" src="{{p.playerName.golfer.pic_link}}" style="border-radius:50%">
