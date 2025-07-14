@@ -117,7 +117,7 @@ function seasonPoints() {
             data = $.parseJSON(responseJSON)
             $.each(data, function(user, info) {
             $('#name_' + user).html(user + '  ('  + info.diff + ' / ' + info.points_behind_second + ')')
-            $('#card_season_' + user).html('  Seaon behind: ('  + info.diff + ' / ' + info.points_behind_second + ')').addClass('small').addClass('text-muted').addClass('text-center')
+            $('#card_season_' + user).html('  Season behind: ('  + info.diff + ' / ' + info.points_behind_second + ')').addClass('small').addClass('text-muted').addClass('text-center')
       resolve(data)})
       })
 })
@@ -158,9 +158,15 @@ function udatePickData() {
                         // ToPar HTML
                         let toParHtml = '<p>' + pick.toPar + ' (' + thru + ')</p>';
 
+                        let combinedHtml = '<span>' + pick.score +
+                        '<span> <a id="tt-' + pick.id +
+                        '" data-toggle="tooltip"><i class="fa fa-info-circle" style="color:blue;"></i></a></span> ' +
+                        sod + ' ' + pick.toPar + ' (' + thru + ')</span>';
+
                         // --- Update Card View ---
-                        $('#pickrow_' + pick.pick.id + ' #' + pick.pick.id + '-score').html(scoreHtml);
-                        $('#pickrow_' + pick.pick.id + ' #' + pick.pick.id + '-p2').html(toParHtml);
+                        //$('#pickrow_' + pick.pick.id + ' #' + pick.pick.id + '-score').html(scoreHtml);
+                        //$('#pickrow_' + pick.pick.id + ' #' + pick.pick.id + '-p2').text(toParHtml);
+                        $('#pickrow_' + pick.pick.id + ' #' + pick.pick.id + '-score').html(combinedHtml);
 
                         // --- Update Table View ---
                         // If your table cell contains the same score and toPar fields, update them too:

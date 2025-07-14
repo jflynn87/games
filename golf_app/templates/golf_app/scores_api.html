@@ -138,6 +138,8 @@
 @media (max-width: 768px) {
   #group-stats-mobile { display: block; }
 }
+
+
 </style>
 
 <p hidden id='tournament_key'>{{t.pk}}</p>
@@ -191,13 +193,14 @@
             <img height="40" src="{{p.playerName.partner_golfer.pic_link}}" style="border-radius:50%">
             <img height="16" src="{{p.playerName.partner_golfer.flag_link}}" alt="" style="border-radius:50%">
           {% endif %}
-          <div style="font-weight: bold;">{{p.playerName}}
+          <span style="font-weight: bold;">{{p.playerName}}
             {% if p.playerName.partner %}
               &amp; {{p.playerName.partner}}
             {% endif %}
-          </div>
-          <div id="{{p.pk}}-score">....</div>
-          <div id="{{p.pk}}-p2">...</div>
+          </span>
+        
+          <div id="{{p.pk}}-score" class="ps-5">....</div>
+          <!-- <div id="{{p.pk}}-p2">...</div> -->
         </div>
       {% endfor %}
     </div>
@@ -299,6 +302,7 @@
     }
   }
 </script>
+
 
 {%compress js%}
   <script type="text/javascript" src="{%static 'golf_app/js/api_scores.js'%}"></script>
