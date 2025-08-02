@@ -139,6 +139,10 @@
   #group-stats-mobile { display: block; }
 }
 
+@media (max-width: 768px) {
+  #expand-all-container { display: block !important; }
+}
+
 
 </style>
 
@@ -172,6 +176,35 @@
 
 <!-- MOBILE CARDS: Place these OUTSIDE the scores-div -->
 <div>
+    <!-- Expand All button for mobile -->
+<div id="expand-all-container" style="display: none; margin-bottom: 10px;">
+  <button id="expand-all-btn" onclick="toggleAllCards()" style="background: #007bff; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer;">Show All Picks</button>
+</div>
+<script>
+let allExpanded = false;
+
+function toggleAllCards() {
+  const cards = document.querySelectorAll('.user-card');
+  const btn = document.getElementById('expand-all-btn');
+  
+  cards.forEach(card => {
+    const username = card.id.replace('card-', '');
+    const cardBtn = document.getElementById('btn-' + username);
+    
+    if (allExpanded) {
+      card.classList.remove('expanded');
+      cardBtn.textContent = '+';
+    } else {
+      card.classList.add('expanded');
+      cardBtn.textContent = '−';
+    }
+  });
+  
+  allExpanded = !allExpanded;
+  btn.textContent = allExpanded ? 'Collapse All' : 'Expand All';
+}
+</script>
+
 {% for ts, picks in d.items %}
   <div class="user-card" id="card-{{ts.user.username}}">
     <div class="d-flex align-items-center justify-content-between"  onclick="toggleCard('{{ts.user.username}}')">
@@ -199,7 +232,7 @@
             {% endif %}
           </span>
         
-          <div id="{{p.pk}}-score" class="ps-5">....</div>
+          <span id="{{p.pk}}-score" class="p-3">....</span>
           <!-- <div id="{{p.pk}}-p2">...</div> -->
         </div>
       {% endfor %}
