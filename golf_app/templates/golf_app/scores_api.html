@@ -136,7 +136,16 @@
 
 #group-stats-mobile { display: none; }
 @media (max-width: 768px) {
-  #group-stats-mobile { display: block; }
+#group-stats-mobile { display: block; }
+#group-stats-mobile { display: block; }
+.user-card-content div[id^="pickrow_"] {
+  white-space: nowrap;
+  font-size: 14px;
+}
+.user-card-content div[id^="pickrow_"] span {
+  font-size: clamp(10px, 3vw, 14px);
+}
+
 }
 
 @media (max-width: 768px) {
