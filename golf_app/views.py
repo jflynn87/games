@@ -1454,10 +1454,10 @@ class TrendDataAPI(APIView):
 
             if num_of_t == "all":
                 #t_qs = Tournament.objects.filter(season__pk=season.pk).order_by('pk')
-                t_qs = Tournament.objects.filter(season__pk=season.pk)
+                t_qs = Tournament.objects.filter(season__pk=season.pk).order_by('pk')
             else:
                 #t_qs = reversed(Tournament.objects.filter(season__pk=season.pk).order_by('-pk')[:int(num_of_t)])
-                t_qs = reversed(Tournament.objects.filter(season__pk=season.pk)[:int(num_of_t)])
+                t_qs = reversed(Tournament.objects.filter(season__pk=season.pk).order_by('pk')[:int(num_of_t)])
 
 
             for t in t_qs:
