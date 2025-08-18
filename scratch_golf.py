@@ -43,13 +43,10 @@ from boto3.dynamodb.conditions import Key
 from golf_app.data_golf import DataGolf, GolferSG
 
 
+r = HttpRequest()
+x = views.FieldUpdatesAPI().get(r)
 
-#sk = '40403'
-#pk = '381'
-
-#print (Field.objects.get(pk=int(sk)))
-#exit()
-
+exit()
 
 t = Tournament.objects.get(current=True)
 f = field_csv.FieldCSV(t)

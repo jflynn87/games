@@ -2726,7 +2726,7 @@ class FieldUpdatesAPI(APIView):
                     if t.pga_tournament_num not in ['999',]:
                         recent = OrderedDict(sorted(f.recent_results().items(), reverse=True))
                         print ('past recent')
-                        season_stats = f.golfer.summary_stats(t.season, rerun=True)  #setting to rerun to fix data on march 26 ,2025
+                        season_stats = f.golfer.summary_stats(t.season, rerun=False)  #setting to rerun to fix data on march 26 ,2025
                         print ('past season stats')
                         dg_player_stats = dg.get_player_stats(f.playerName)
                         print ('past dg stats')
