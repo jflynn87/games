@@ -43,6 +43,9 @@ from boto3.dynamodb.conditions import Key
 from golf_app.data_golf import DataGolf, GolferSG
 
 
+print (Golfer.objects.filter(golfer_name__icontains='Fitz'))
+
+exit()
 r = HttpRequest()
 x = views.FieldUpdatesAPI().get(r)
 

@@ -10,10 +10,10 @@ import ssl
 
 season = Season.objects.get(current=True)
 ssl._create_default_https_context = ssl._create_unverified_context
-pga = pga_t_data.PGAData(season, update=True)
+#pga = pga_t_data.PGAData(season, update=True)
 sched = espn_schedule.ESPNSchedule().get_event_list()
 
-print (pga.next_t())
+#print (pga.next_t())
 #for t, data in sched.items():
 #    print (t, data)
 

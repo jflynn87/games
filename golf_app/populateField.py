@@ -266,30 +266,30 @@ def get_field(t, owgr_rankings):
     #elif t.pga_tournament_num == 'RYDCUP':
     elif t.pga_tournament_num in ['468', '500']:
         us_team = ['Scottie Scheffler',
-            'Wyndham Clark',
-            'Patrick Cantlay',
-            'Brian Harman',
-            'Max Homa',
-            'Xander Schauffele',
             'Sam Burns',
+            'Patrick Cantlay',
+            'Bryson DeChambeau',
+            'Harris English',
+            'Xander Schauffele',
+            'Ben Griffin',
             'Russell Henley',
-            'Tony Finau',
+            'J.J. Spaun',
             'Collin Morikawa',
-            'Keegan Bradley',
-            'Sahith Theegala']
+            'Justin Thomas',
+            'Cameron Young']
         
-        euro_team = ['Hideki Matsuyama',
-                     'Sungjae Im',
-                     'Adam Scott',
-                     'Joohyung Kim',
-                     'Jason Day',
-                     'Byeong Hun An',
-                     'Christiaan Bezuidenhout',
-                     'Corey Conners',
-                     'Mackenzie Hughes',
-                     'Si Woo Kim',
-                     'Min Woo Lee',
-                     'Taylor Pendrith']
+        euro_team = ['Rory McIlroy',
+                     'Ludvig Aberg',
+                     'Matt Fitzpatrick',
+                     'Tommy Fleetwood',
+                     'Tyrrell Hatton',
+                     'Rasmus Hojgaard',
+                     'Viktor Hovland',
+                     'Shane Lowry',
+                     'Robert MacIntyre',
+                     'Jon Rahm',
+                     'Justin Rose',
+                     'Sepp Straka']
         
         for u in us_team:
             print ('RYDER player: ', u)
@@ -949,7 +949,7 @@ def get_golfer(player, pga_num=None, espn_data=None, espn_num=None):
     #    golfer.espn_number = ''
 
     #golfer.save() 
-    
+
     return golfer
 
 

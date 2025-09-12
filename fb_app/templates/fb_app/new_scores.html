@@ -16,16 +16,12 @@
 
 <div id='status' hidden></div>
 
-
-
-
 <p hidden id='week_pk'>{{week.pk}}</p>
 <p hidden id='week'>{{week.week}}</p>
 <p hidden id='season'>{{week.season_model.season}}</p>
 <p hidden id='league'>{{league.league}}</p>
 <!-- <p hidden id='game_cnt'>{{week.game_cnt}}</p> -->
 <p hidden id='game_cnt'>{{game_cnt}}</p>
-
 
 {%if view == 'pre_start'%}
 <h2>Week {{prior_week.week}} Results</h2>

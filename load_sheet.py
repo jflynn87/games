@@ -31,8 +31,7 @@ def readSheet(file,numPlayers,override_week=None):
         #    week.append(data.text)
         #week_str = ''.join(week)
         week_str = table.rows[0].cells[0].text.strip()
-        print ('week: ' + week_str)
-
+        print ('Sheet Week: ' + week_str)
 
         if not override_week:
             app_week = Week.objects.get(current=True)
@@ -44,7 +43,6 @@ def readSheet(file,numPlayers,override_week=None):
         else:
             mike_score_week = Week.objects.get(season_model__current=True, week=app_week.week - 1)
         
-
         if str(app_week.week) != week_str:
             print ("sheet week doesn't match model")
             print ('sheet weeK: ', week_str, 'db week: ', app_week.week)
@@ -54,39 +52,26 @@ def readSheet(file,numPlayers,override_week=None):
             Picks.objects.filter(player__league__league="Football Fools", week=app_week).delete()
             MikeScore.objects.filter(player__league__league="Football Fools", week=app_week).delete()
 
-
         #create a sheet with just players, picks and totals (totals assumes that the total is 2 digits and more than 16).
-
-
         for row in table.rows:
             for cell in row.cells[1:]:
-                #print(cell.text.strip()[0:3], type(cell.text.strip()))
-                #if cell.text.strip() in ('',' ', '1','2','3','4','5','6','7','8','9','10','11','12','13','14','15','16'):
-                #    continue
-                if len(cell.text) > 1 \
-                    and len(cell.text.strip().split(' ')) ==1:
+                # if len(cell.text) > 1 \
+                #     and len(cell.text.strip().split(' ')) ==1:
                     
+                #     sheet.append(cell.text.strip())
+                # elif len(cell.text.strip().split(' ')) > 1:
+                #     sheet.append(cell.text.strip().split(' ')[0] + ' ' + cell.text.strip().split(' ')[len(cell.text.strip().split(' '))-1])
+                if cell.text.strip() != '' and len(cell.text.strip()) > 1:
                     sheet.append(cell.text.strip())
-                #elif cell.text.strip()[0:2] == "LI":
-                #    sheet.append('LIL B')
-                elif len(cell.text.strip().split(' ')) > 1:
-                    sheet.append(cell.text.strip().split(' ')[0] + ' ' + cell.text.strip().split(' ')[len(cell.text.strip().split(' '))-1])
-
-        #for tag in soup.findAll('t'):
-        #    if tag.text not in (' ', '1','2','3','4','5','6','7','8','9','10','11','12','13','14','15','16', '17', '18'):
-                # if len(tag.text) > 1:
-                #     if tag.text == "LiL":
-                #         sheet.append("LiL B")
-                #     elif tag.text == "B":
-                #         print (tag.text)
-                #     else:
-                #         sheet.append(tag.text)
-
+                elif len(cell.text.strip()) == 1 and cell.text.strip().isdigit():
+                    sheet.append(cell.text.strip())
         print (sheet)
         sheet_scores = True
         print (len(sheet))
         print ('sheet len: ',  len(sheet))
         print ('numPlayers :', numPlayers)
+        print ('Game count ', app_week.game_cnt)
+        print ('expected: ', len(sheet)/numPlayers)
         if len(sheet)/numPlayers == app_week.game_cnt + 2:
             print ('full sheet')
         elif len(sheet)/numPlayers == app_week.game_cnt +1:
@@ -174,6 +159,6 @@ def readSheet(file,numPlayers,override_week=None):
 
 
 
-readSheet('Football_sheet_2024.docx', 27)
+readSheet('Football sheet 2025.docx', 27)
 #readSheet('ff_test.docx', 26)
 
