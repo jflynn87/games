@@ -1,5 +1,4 @@
 $(document).ready(function () {
-    console.log('new field js ready', $('#pga_t_num').text())
     start = new Date()
     var t_key = $('#tournament_key').text()
     Promise.all([
@@ -34,29 +33,13 @@ $(document).ready(function () {
              picks.push(p.fields.playerName)
          })
 
-         
-         //fedexPicks = responseJSON[5].data
-         //cpPicks = responseJSON[6]
          cpPicks = responseJSON[5]
          console.log('cp: ', cpPicks)
-        //  countryPicks = []
-        //     $.each(cpPicks, function(i, p) {
-        //         countryPicks.push(p.fields.country)
-        //     })
 
          if ($('#pga_t_num').text() == 468 || $('#pga_t_num').text() == 500 || $('#pga_t_num').text() == 999) {
             buildHeader(cpPicks, info, tStarted, latePicks)
          }
 
-         //console.log(info)
-         //console.log(field)
-         //console.log(groups)
-         //console.log(tStarted)
-         //console.log(startedGolfers)
-         //console.log(fedexPicks)
-         //console.log(picks)
-
-         //const build = buildForm(info, groups, field, golfers, partners, picks, tStarted, startedGolfers, lockedGroups, fedexPicks)
          const build = buildForm(info, groups, field, golfers, partners, picks, tStarted, startedGolfers, lockedGroups)
          build.then((response) => {
             $('#status').html('<h4>Ready for Picks</h4>');
@@ -71,7 +54,6 @@ $(document).ready(function () {
             
             '<div id=pick-status></div>' + 
             '<div id=grp_6_buttons class=grp_6_buttons>' + 
-            //'<p id=jump_to style="background-color:lightgray; color:white; font-weight:bold;"> Jump to: ' +
             '</p>' +
             
             '</div>' +
@@ -98,7 +80,6 @@ $(document).ready(function () {
 
 })
 
-//function buildForm(info, groups, field, golfers, partners, picks, tStarted, startedGolfers, lockedGroups, fedexPicks) {
 function buildForm(info, groups, field, golfers, partners, picks, tStarted, startedGolfers, lockedGroups) {
     return new Promise(function (resolve) {
         fieldLen = field.length
@@ -118,8 +99,9 @@ function buildForm(info, groups, field, golfers, partners, picks, tStarted, star
         
                 header = document.createElement('thead')
                 hRow = document.createElement('tr')
-                hRow.classList = ['total_score']
+                //hRow.classList = ['bg-primary']
                 th = document.createElement('th')
+                th.classList.add('text-white', 'fw-bold', 'bg-primary')
                 th.colSpan = 2
                 th.innerHTML = 'Group ' + group[0].fields.number + ' - Pick ' + info[group[0].fields.number] + ' Golfers'
                 span = document.createElement('span')
@@ -134,8 +116,6 @@ function buildForm(info, groups, field, golfers, partners, picks, tStarted, star
                 table.append(header)
         
             }
-            //var group = groups.filter(g => {
-            //    return Number(g.pk) === Number(f.fields.group)})
             
             numPicks = info[group[0].fields.number]
             if (numPicks == '1') {selectType = 'radio'}
@@ -148,7 +128,6 @@ function buildForm(info, groups, field, golfers, partners, picks, tStarted, star
             inputTd = document.createElement('td')
             inputTd.id = 'input-' + f.pk
             inputTd.width = '2%'
-            //inputTd.style.borderRight = 'thinnest dashed gray'
 
             csrfP = document.createElement('p')
             csrfI = document.createElement('input')
@@ -202,20 +181,11 @@ function buildForm(info, groups, field, golfers, partners, picks, tStarted, star
     
 
             golferTd = document.createElement('td')
-            //golferTd.id = 'playerInfo' + golfer[0].espn_number
             golferTd.id = 'playerInfo' + f.pk
             golferTd.addEventListener('click', function() {getStatsData(this.parentNode)})
             
             golferP1 = document.createElement('p')
 
-            //if (fedexPicks.indexOf(golfer[0].id) != -1) {
-            //    fedex = document.createElement('img')
-            //    fedex.src = '/static/img/fedex.jpg'
-            //    fedex.style.width = '30px'
-            //    //fedex.style.border='1px solid lightblue';
-            //    golferP1.appendChild(fedex)
-        
-            //}
             golferPic = document.createElement('img')
             golferName = document.createElement('span')
             golferFlag = document.createElement('img')
@@ -245,12 +215,6 @@ function buildForm(info, groups, field, golfers, partners, picks, tStarted, star
                 
                 var partner = partners.filter(p => {
                     return Number(p.id) == Number(f.fields.partner_golfer)})
-                //if (fedexPicks.indexOf(partner[0].id) != -1) {
-                //   p_fedex = document.createElement('img')
-                //    p_fedex.src = '/static/img/fedex.jpg'
-                //    p_fedex.style.width = '30px'
-                //    p.appendChild(fedex)
-                //    }
                 p_golferPic = document.createElement('img')
                 p_golferName = document.createElement('span')
                 p_golferFlag = document.createElement('img')
@@ -303,16 +267,9 @@ function buildForm(info, groups, field, golfers, partners, picks, tStarted, star
             golferTd.append(golferP2)
 
             golferP3 = document.createElement('p')
-            //try {
-            //if (f.fields.season_stats.fed_ex_rank != 'n/a') {
-            //    fedexTotals = f.fields.season_stats.fed_ex_rank + '/' + f.fields.season_stats.fed_ex_points}
-            //else {fedexTotals = 'n/a'}
-           // }
-           // catch(error) {fedexTotals = 'error'}
 
             golferP3.innerHTML = 'OWGR: ' + f.fields.currentWGR + '; Handicap: ' + f.fields.handi +
                                 '; Prior Year: ' + f.fields.prior_year
-                               //  '; FedEx: ' + fedexTotals + '; Prior Year: ' + f.fields.prior_year
             golferP3.style.fontWeight = 'bold'
             
             golferTd.append(golferP3)
@@ -335,7 +292,6 @@ function buildForm(info, groups, field, golfers, partners, picks, tStarted, star
             statsRow.append(statsTd1)
 
             table.append(statsRow)
-
 
             frag.appendChild(table)
             document.getElementById('pick_form').appendChild(frag)
@@ -384,11 +340,8 @@ function getStatsData(ele) {
       //console.log('stats data ', data)
       
       var stats = build_stats_row(data)
-
-      
       row.deleteCell(0)
       row.appendChild(stats)
-    
       })
       .then(resolve())
                     }
@@ -417,7 +370,6 @@ function build_stats_row(field) {
     try {
 
         let rowA_header_fields = ['Current OWGR', 'Last Week OWGR', 'Last Season OWGR', 'FedEx Cup']
-        //let rowA_header_fields = ['Current OWGR', 'Last Week OWGR', 'Last Season OWGR']
         rowA_field_l = rowA_header_fields.length
         rowA_header = document.createElement('tr')
         rowA_header_cells = []
@@ -696,23 +648,29 @@ function validatePicks(info, ele) {
   
 }
 
-
 function checkComplete(info) {
 
     $('#pick-status').empty()
     $('#pick-status').append('<table id=status-tbl class="table table-sm"> </table>')
     $('#status-tbl').append('<tr id=picks-row> <td> Groups: </td> </tr>')
     $.each(info,  function(group, picks) {
+        if (group == 't_num') {
+            //skip
+            return 
+        }
        $('#picks-row').append('<td id=status-group' + group + '> <a href=#tbl-group-' + group + '>' + group + '</a> </td>')
     })  
        $('#status-tbl').append('<tr id=required-row> <td> Picks required: </td> </tr>')
        $.each(info,  function(group, picks) {
+        if (group == 't_num') {
+            return
+        }
           $('#required-row').append('<td id=required-group'+ group + '>' + picks + '</td>')
    })
    $('#status-tbl').append('<tr id=actual-row> <td> Total Picks: </td> </tr>')
    $.each(info,  function(group, picks) {
      //console.log('a ', group, picks, count_actual(group, picks))
-     if (group != "complete") {
+     if (group != "complete" && group != 't_num') {
       $('#actual-row').append('<td id=actual-group'+ group + '>' + count_actual(group, picks) + '</td>')
      }
   })
@@ -745,18 +703,15 @@ function checkComplete(info) {
         else {var ryder_ok = true}
   
         if ($('#pga_t_num').text() == '468' || $('#pga_t_num').text() == '500') {
-          console.log('complete chk ', $('#winning_points').val())
-          if ($('#winning_team').val() && parseFloat($('#winning_points').val()) > 14) {
+          //console.log('complete chk ', $('#winning_points').val())
+          var minPoints = 14
+          if ($('#pga_t_num').text() == '500') {minPoints = 15}
+          if ($('#winning_team').val() && parseFloat($('#winning_points').val()) >= minPoints) {
               ryder_ok = true
           }
         else {ryder_oK = false}
         //console.log('RYDER OK ', ryder_oK)
         }
-  
-        //console.log(Object.keys(picks).length, countries_ok)
-        //if (total == parseInt(info['total']) && countries_ok == true && ryder_ok == true) {
-        //console.log('all started data ', allGolfersStarted)
-        //console.log('lat picks ', latePicks)
         if (total == parseInt(info['total']) && countries_ok == true && ryder_ok == true && (! allGolfersStarted == true  || latePicks == true)) {
           $('#sub_button').removeAttr('disabled').attr('class', 'btn btn-primary').val('Submit Picks');
           $('#actual-grouptotal').css('background-color', '')  
@@ -867,7 +822,6 @@ function toggle_submitting() {
 
 }
 
-
 function clear_submitting() {
     $('#sub_button').removeAttr('disabled').attr('class', 'btn btn-primary')
     $('#sub_button').prop('value', 'Submit Picks')
@@ -950,12 +904,12 @@ function buildHeader(cpPicks, info, tStarted, latePicks) {
         console.log('add countries here')
         //$('#field_sect #pick_form').append('<div id=mens_countries></div>')
         $('#field_sect #pick_form').append('<table id=mens_countries_picks' + " class=table> \
-                                        <thead class=total_score> <th> Men's Medal Countries" + '</th> </thead>' +
+                                        <thead> <th class='bg-primary text-white fw-bold fs-2'> Men's Medal Countries" + '</th> </thead>' +
                                         '</table>')
         $('#mens_countries_picks').append('<tr><td>Pick 3 countries, -50 for gold, -35 for silver, -20 for bronze.  Add +5 for each golfer above 1 per country.  No ordering required.</td></tr>')
         
         $('#field_sect #pick_form').append('<table id=womens_countries_picks' + " class=table> \
-                                        <thead class=total_score> <th> Women's Medal Countries" + '</th> </thead>' +
+                                        <thead> <th class='bg-primary text-white fw-bold fs-2'> Women's Medal Countries" + '</th> </thead>' +
                                         '</table>')
         $('#womens_countries_picks').append('<tr><td>Pick 3 countries, -50 for gold, -35 for silver, -20 for bronze.  Add +5 for each golfer above 1 per country. No ordering required.</td></tr>')
         
@@ -973,52 +927,61 @@ function buildHeader(cpPicks, info, tStarted, latePicks) {
 
     //Ryder Cup
     if ($('#pga_t_num').text() == 468 || $('#pga_t_num').text() == 500) {
-
-        $('#field_sect #pick_form').append('<table id=ryderCup_picks' + " class=table> \
-        <thead class=total_score> <th colspan=2>Special " + eventName +  " Picks " + '</th> </thead>' +
+        $('#field_sect #pick_form').append('<table id=ryderCup_picks' + " class='table table-bordered'> \
+        <thead><tr> <th colspan=2 class='text-white fw-bold fs-2 bg-primary'>Special " + eventName +  " Picks " + '</th> </tr></thead>' +
         '</table>')
         $('#ryderCup_picks').append('<p><label for=winning_team style=font-weight:bold>Choose Winning Team</label>' +  
              '<select id=winning_team class="form-control"><option></option><option value=euro>' + intl + '</option><option value-usa>USA</option> </select> </p>' + 
              '<p><label for=winning_points style=font-weight:bold>Enter winning team score, number between' + lowPoints + ' - ' + highPoints + '</label>' + 
              '<input id=winning_points class="form-control"  type=number placeholder="enter between ' + lowPoints + ' - ' + highPoints +'" step=0.5 min="' + lowPoints +  '"max="' + highPoints + '"><textbox></textbox></input></p>')
-        
         if (cpPicks.length > 0) {
             if ($('#pga_t_num').text() == 468 || $('#pga_t_num').text() == 500) {
-            console.log(cpPicks[0].ryder_cup_score)
-            if (cpPicks[0].country == 'USA') {$('#winning_team').val('USA')}
-            else {$('#winning_team').val('euro')}
-            $('#winning_points').val(cpPicks[0].ryder_cup_score)
-            
-        }
+                console.log(cpPicks[0].ryder_cup_score)
+                if (cpPicks[0].country == 'USA') {$('#winning_team').val('USA')}
+                else {$('#winning_team').val('euro')}
+                $('#winning_points').val(cpPicks[0].ryder_cup_score)
+                }
+            }
 
-        $('#winning_points').on('change', function() {
-            
-            if (parseFloat($('#winning_points').val()) % 1 == 0 || parseFloat($('#winning_points').val()) % 1 == 0.5)
-                {
-                    if (parseFloat($('#winning_points').val()) >= lowPoints && parseFloat($('#winning_points').val()) <= highPoints) 
-                        {
-                             $('#pick-status').empty()
-                             checkComplete(info)
-                        }
+            $('#winning_points').on('input blur', function(event) {
+                
+                if (event.type === 'input' && $('#winning_points').val().length < 2) {
+                    $('#sub_button').prop('disabled', true).attr('class', 'btn btn-secondary').val('Fix Points')
+                    return false
+                    
+                }
+                if ($('#winning_points').val() === '') {
+                    $('#sub_button').prop('disabled', true).attr('class', 'btn btn-secondary').val('Fix Points')
+                    return false
+                    
+                }                console.log('edit')
+                if (parseFloat($('#winning_points').val()) % 1 == 0 || parseFloat($('#winning_points').val()) % 1 == 0.5)
+                    {
+                        if (parseFloat($('#winning_points').val()) >= lowPoints && parseFloat($('#winning_points').val()) <= highPoints) 
+                            {
+                                $('#pick-status').empty()
+                                checkComplete(info)
+                            }
+                        else {
+                            $('#winning_points').val('')                        
+                            $('#pick-status').empty()
+                            checkComplete(info)
+                            alert('Bad winning points entry: ' + $('#winning_points').val() + '. Please enter between ' + lowPoints +  ' and ' + highPoints)}
+                
+                    }   
                     else {
                         $('#winning_points').val('')                        
                         $('#pick-status').empty()
                         checkComplete(info)
-                        alert('Bad winning points entry: ' + $('#winning_points').val() + '. Please enter between ' + lowPoints +  ' and ' + highPoints)}
-            
-                }   
-                else {
-                       $('#winning_points').val('')                        
-                       $('#pick-status').empty()
-                       checkComplete(info)
-                       alert ('Bad winning points value, must be a whole number or .5')}
+                        alert ('Bad winning points value, must be a whole number or .5')}
             })
-
-        $('#winning_team').change(function() {console.log('selected team '), winning_team;
+                
+    
+        $('#winning_team').on('input', function() {console.log('selected team '), winning_team;
                 $('#pick-status').empty()                            
                 checkComplete(info)})
         
-        }
+        
         $('#random-line').remove()
 
         }
@@ -1105,7 +1068,7 @@ function formatWomenMedals(data, info, cpPicks, tStarted, latePicks) {
 
     else {
     
-        $('#womens_countries_picks').on('change', function(evt) {
+        $('#womens_countries_picks').on('input', function(evt) {
             $('#pick-status').empty()
             //get_info(info, null)
             checkComplete(info) })

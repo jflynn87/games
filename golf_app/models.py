@@ -46,7 +46,7 @@ class Season(models.Model):
             first_t = Tournament.objects.filter(season__season=str(int(self.season) - 1)).first()
             f = True
         
-        users =list(TotalScore.objects.filter(tournament=first_t).values('user'))
+        users =list(TotalScore.objects.filter(tournament=first_t, user__is_active=True).values('user'))
 
         if f:
             old = [v.get('user') for v in users]

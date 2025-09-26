@@ -211,7 +211,7 @@ class GameListView(LoginRequiredMixin,ListView):
                 'week': week,
 
                 })
-         pm.save()
+         #pm.save()
          i = 0
          picks_chk = []
          while i < len(pick_list):
@@ -252,7 +252,9 @@ class GameListView(LoginRequiredMixin,ListView):
              picks.save()
              i +=1
              pick_num -=1
-
+         
+         pm.save()
+         
          try:
             if player.email_picks:
                 email_picks(request.user, week)

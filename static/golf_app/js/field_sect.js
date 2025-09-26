@@ -88,7 +88,10 @@ $(document).ready(function () {
 
                     //there should be a faster way to check started and deal with buttons
                     checkStarted()
-
+                    console.log('Start Info', info)
+                    if (info['started'] == 'true') {
+                        $('#sub_button').remove()
+                    }
                     
 
                     
@@ -185,8 +188,6 @@ function formatSG(field) {
                 }
 
     }
-
-
 
 function checkStarted() {
     fetch("/golf_app/started/",         

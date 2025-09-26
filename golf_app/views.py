@@ -445,6 +445,7 @@ class SeasonTotalView(ListView):
         'totals_list': total_score_list,
         'prize_list': winner_dict,
         'season': Season.objects.get(current=True),
+        't': Tournament.objects.get(current=True),
 
         })
         return context
@@ -525,6 +526,11 @@ def setup(request):
 
 class AboutView(TemplateView):
     template_name='golf_app/about.html'
+
+    def get_context_data(self, **kwargs):
+        context = super(AboutView, self).get_context_data(**kwargs)
+        context['t'] = Tournament.objects.get(current=True)
+        return context
 
 
 # class GetScores(APIView):
@@ -853,18 +859,23 @@ class CheckStarted(APIView):
 
 class GetInfo(APIView):
 
-    def get(self, request, pk):
+    def get(self, request, pk=None):
         #print ('PK :: ', pk)
         #print (self.request.GET)
         try:
             info_dict = {}
-            t = Tournament.objects.get(pk=pk)
+            if pk:
+                t = Tournament.objects.get(pk=pk)
+            else:
+                t = Tournament.objects.get(current=True)
             total_picks = 0
 
             for g in Group.objects.filter(tournament=t):
                 info_dict[g.number] = g.num_of_picks()
                 total_picks += g.num_of_picks()
             info_dict['total'] = total_picks
+            info_dict['t_num'] = t.pga_tournament_num
+
             return Response(json.dumps(info_dict), 200)
         except Exception as e:
             print ('exception', e)
@@ -2327,7 +2338,8 @@ class AllTimeView(TemplateView):
         utils.save_access_log(self.request, 'all time')
         context.update({
             'users': Season.objects.get(current=True).get_users('obj'),
-            'seasons': Season.objects.all()
+            'seasons': Season.objects.all(),
+            't': Tournament.objects.get(current=True)
         })
 
         return context

@@ -72,14 +72,12 @@ class ESPNData(object):
                 raise Exception('ESPN API failed to initialize, tournamant number not in events')         
         
         self.competition_data = self.event_data.get('competitions')[0]
-        
-        if self.t.pga_tournament_num == '470':
+
+        if self.t.pga_tournament_num in ['470', '468']:
             self.field_data = self.competition_data[0].get('competitors')
         else:
             self.field_data = self.competition_data.get('competitors')
 
-        pre_sd = datetime.now()
-        
         if len(self.field_data) > 0 and update_sd and not data:
             #print (f'UPDATING SD DATA: {self.t}')
             sd, created = ScoreDict.objects.get_or_create(tournament=self.t)
@@ -166,6 +164,10 @@ class ESPNData(object):
         if not self.t.started():
             return False
         
+        if self.t.pga_tournament_num in ['468', '500', '999'] and \
+            self.t.started():
+            return True
+
         if self.get_round() > 1:
             return True
         elif len([v.get('id') for v in self.field_data if v.get('status').get('period') == 1 and v.get('status').get('type').get('name') == "STATUS_SCHEDULED"]) == 0:

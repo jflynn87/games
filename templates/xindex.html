@@ -1,0 +1,325 @@
+{% extends 'base.html' %}
+{%load static%}
+{%load compress%}
+
+
+<style>
+.card-hover {
+    transition: all 0.3s ease;
+}
+
+.card-hover:hover {
+    transform: translateY(-8px) scale(1.05); /* Adjusted hover effect */
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.25);
+}
+
+.card-img-top {
+    border-top-left-radius: .5rem;
+    border-top-right-radius: .5rem;
+    object-fit: cover;
+    height: 180px;
+}
+.card-title {
+    font-size: 1.3rem;
+    font-weight: 600;
+}
+.card-subtitle {
+    font-size: 1rem;
+    color: #6c757d;
+}
+
+body {
+    background-color: #f8f9fa;
+}
+.container.py-4 {
+    background: #fff;
+    border-radius: 1rem;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+    padding: 2rem 2rem 1rem 2rem;
+}
+.card {
+    background: linear-gradient(135deg, #f9fafb 80%, #e9ecef 100%);
+    border: 1px solid #e3e6ea;
+}
+.card-body {
+    padding: 1.5rem;
+}
+
+.card-img-top {
+    object-fit: cover;
+    height: 18rem; /* Adjust as needed */
+    border-top-left-radius: 0.5rem;
+    border-top-right-radius: 0.5rem;
+}
+.card-body .btn {
+    width: 100% !important;
+    margin-bottom: 1rem !important;
+}
+
+.card h3 {
+    text-align: center !important;
+}
+
+.card-hover {
+    transition: all 0.3s ease !important;
+}
+
+</style>
+ 
+{% block body_block %}
+<!--
+<link rel="stylesheet" href="{%static 'fb_app/css/my_style.css' %}">
+{%if not t.complete%} -->
+<!-- <script type="text/javascript" src="{%static 'golf_app/js/get_espn_data.js'%}"></script> -->
+{%endif%}
+<div id='baseball_scores' hidden>
+  <h4>Baseball Scores</h4>
+</div>
+<div class="container py-4" id="main_container"> 
+<div class="row row-cols-1 row-cols-md-2 row-cols-lg-4 g-4 justify-content-center">
+    <div class="col-12 col-lg-3 mb-4 card-hover">
+        <div class="card shadow rounded h-100 border-0 card-hover">
+            <h3>Golf Game</h3>
+            <img src="{% static 'img/IMG_4425.jpg' %}" class="card-img-top" style="height: 27rem;" alt="...">
+            <div class="card-body">
+                <h4 class="card-title" style="font-weight: bold;">Select an Option</h4>
+                <a href="{% url 'golf_app:new_field_list_1' %}">
+                    <button class="btn btn-primary mb-2">Make Picks</button>
+                </a>
+                <a href="{% url 'golf_app:api_scores_view' %}">
+                    <button class="btn btn-primary mb-2">Current Week Scores</button>
+                </a>
+                <a href="{% url 'golf_app:total_score' %}">
+                    <button class="btn btn-primary mb-2">Season Totals</button>
+                </a>
+                <a href="{% url 'golf_app:all_time' %}">
+                    <button class="btn btn-primary mb-2">All Time Stats</button>
+                </a>
+                <p>
+                <a href="{% url 'golf_app:about' %}">
+                    <button class="btn btn-primary mb-2">About</button>
+                </a>
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-12 col-lg-3 mb-4">
+      <div class='card h-100' id='golf_leaderboard'>
+        <h3>Golf Leaderboard</h3>
+        {%compress js%}
+        <script src='{% static "golf_app/js/leaderboard.js"%}' type="text/javascript" ></script>
+        {%endcompress%}
+        <script type="text/javascript"> update_lb();</script>
+        <img src="{%static '/img/Masters-leaderboard.gif'%}" class="card-img-top" style="height: 27rem;" alt="...">
+        <div id='golf_lb_body' class="card-body"></div>
+      </div>
+    </div>
+
+    <div class="col-12 col-lg-3 mb-4">
+      <div class="card h-100">
+        <h3>Football Game</h3>
+        <img src="{%static '/img/SBTrophy1050.jpg'%}" style="height: 27rem;" class="card-img-top" alt="...">
+        <div class="card-body">
+          <h4 class="card-title" style="font-weight: bold;">Select an Option</h4>
+          <a href="{% url 'fb_app:games_list' pk=fb_week.pk %}" class="btn btn-primary">Make Picks</a>
+          <br><br>
+          <a href="{% url 'fb_app:scores_list' %}" class="btn btn-primary">Current Week Scores</a>
+          <br><br>
+          <a href="{% url 'fb_app:season_total' %}" class="btn btn-primary">Season Totals</a>
+          <br><br>
+          {%if fb_week.season_model.started%}
+          <a href="{% url 'fb_app:all_games_score' %}" class="btn btn-primary">SP Results</a>
+          {%else%}
+          <a href="{% url 'fb_app:all_games' %}" class="btn btn-primary">Pick All Games</a>
+          {%endif%}
+          <br><br>
+          <a href="{% url 'fb_app:analytics' %}"> <button class="btn btn-primary">Analytics</button></a>
+          <br><br>
+          <a href="{% url 'fb_app:about'%}"> <button class="btn btn-primary">About</button></a>
+          {%if game%}
+          {%if picks%}
+          <br><br>
+          <a href="{% url 'fb_app:playoff_entry' pk=picks.pk %}"> <button class="btn btn-primary">Update Super Bowl</button></a>
+          {%else%}
+          <br><br>
+          <a href="{% url 'fb_app:playoff_entry' %}"> <button class="btn btn-primary">Super Bowl Picks</button></a>
+          {%endif%}
+          <br><br>
+          <a href="{% url 'fb_app:playoff_score' %}"> <button class="btn btn-primary">Super Bowl Score</button></a>
+          {%endif%}
+        </div>
+      </div>
+    </div>
+
+    <div class="col-12 col-lg-3 mb-4">
+      <div class='card h-100' id='fb_leaderboard'>
+        <h3>Football Leaderboard</h3>
+        {%compress js%}
+        <script src='{% static "fb_app/js/leaderboard.js"%}' type="text/javascript" ></script>
+        {%endcompress%}
+        <script type="text/javascript"> update_lb();</script>
+        <img src="{%static '/img/scoreboard.gif'%}" class="card-img-top" style="height: 27rem;" alt="...">
+        <div id='fb_lb_body' class='card-body'></div>
+      </div>
+    </div>
+
+    {%if event%}
+    <div class="col-12 col-lg-3 mb-4">
+      <div class="card h-100">
+        <h3>{{event.name}}</h3>
+        <img src="{% get_static_prefix %}{{event.logo_file}}" style="height: 27rem;" class="card-img-top" alt="...">
+        <div class="card-body">
+          <h4 class="card-title" style="font-weight: bold;">Select an Option</h4>
+          <a href="{% url 'wc_app:wc_group_picks'%}" class="btn btn-primary">Group Stage Picks</a>
+          <br><br>
+          <a href="{% url 'wc_app:wc_ko_picks_view'%}" class="btn btn-primary">Knockout Stage Picks</a>
+          <br><br>
+          <a href="{% url 'wc_app:wc_scores' %}" class="btn btn-primary">Scores</a>
+          <br><br>
+          <a href="{% url 'wc_app:wc_about' %}" class="btn btn-primary">About</a>
+        </div>
+      </div>
+    </div>
+    {%endif%}
+
+    {%if user.is_superuser%}
+    <div class="col-12 col-lg-3 mb-4">
+      <div class="card h-100">
+        <h3>John's Menu</h3>
+        <div class="card-body">
+          <div id="buttons">
+            <a href="{% url 'run_app:dashboard' %}"> <button class="btn btn-primary">Runs</button></a>
+            <a href="{% url 'golf_app:setup' %}"> <button class="btn btn-primary">Golf Setup</button></a>
+            <a href="{% url 'port_app:add_position' %}"> <button class="btn btn-primary">Portfolio</button></a>
+            <a href="{% url 'admin:index' %}"> <button class="btn btn-primary">Admin</button></a>
+            <a href="{% url 'golf_app:update_field'%}"> <button class="btn btn-primary">Update Field</button></a>
+            <a href="{% url 'fb_app:setup'%}"> <button class="btn btn-primary">Setup NFL</button></a>
+          </div>
+          <script src='{% static "run_app/js/update_stats.js"%}' type="text/javascript" ></script>    
+          <script src='{% static "run_app/js/run_plan_summary.js"%}' type="text/javascript" ></script>
+          <script src='{% static "run_app/js/this_week_run_plan.js"%}' type="text/javascript" ></script>
+          <div id="shoe_stats" >
+            <p id="shoe_update">Loading...</p>
+          </div>
+          <div id="run_plan_summary"></div>
+          <div id="this_week_run_plan"></div>
+          <script>
+            stats = updateRunData()
+            stats.then((response) => {runPlanSummary(); 
+                                      thisWeekRunPlan()})
+          </script>
+        </div>
+      </div>
+    </div>
+    {%endif%}
+  </div>
+</div>
+
+<p hidden id='username'>{{request.user.username}}</p>
+<p hidden id='tournament_key'>{{t.pk}}</p> 
+
+    {%if user.is_superuser%}
+    <div class=middle></div>
+  
+    <div class="card">
+    <h3>John's Menu</h3>
+    <div id="buttons">
+
+      <a href="{% url 'run_app:dashboard' %}"> <button class="btn btn-primary">Runs</button></a>
+      <a href="{% url 'golf_app:setup' %}"> <button class="btn btn-primary">Golf Setup</button></a>
+      <a href="{% url 'port_app:add_position' %}"> <button class="btn btn-primary">Portfolio</button></a>
+      <a href="{% url 'admin:index' %}"> <button class="btn btn-primary">Admin</button></a>
+      <a href="{% url 'golf_app:update_field'%}"> <button class="btn btn-primary">Update Field</button></a>
+      <a href="{% url 'fb_app:setup'%}"> <button class="btn btn-primary">Setup NFL</button></a>
+    </div>
+    <script src='{% static "run_app/js/update_stats.js"%}' type="text/javascript" ></script>    
+    <script src='{% static "run_app/js/run_plan_summary.js"%}' type="text/javascript" ></script>
+    <script src='{% static "run_app/js/this_week_run_plan.js"%}' type="text/javascript" ></script>
+      <div id="shoe_stats" >
+        <p id="shoe_update">Loading...</p>
+      </div>
+      <div id="run_plan_summary"></div>
+      <div id="this_week_run_plan">
+      </div>
+
+      <script>
+        stats = updateRunData()
+        stats.then((response) => {runPlanSummary(); 
+                                  thisWeekRunPlan()})
+      </script>
+      {%endif%}
+      </div>
+    <p hidden id='username'>{{request.user.username}}</p>
+    <p hidden id='tournament_key'>{{t.pk}}</p> 
+  </div>
+{%if user.is_superuser%}
+  <script>
+    fetch("/user_app/baseball_scores/",
+      {method: "GET",
+      })
+  .then((response) =>  response.json())
+  .then((responseJSON) => {
+      data = responseJSON
+      console.log('baseball: ', data, Object.keys(data).length)
+      if (Object.keys(data).length != 0) {
+      $('#baseball_scores').append('<table class=table id=baseball_table>' +
+                                    '<tr>' + 
+                                    '<th>Final</th>' + 
+                                    '<th>Inning</th>' + 
+                                    '<th>Team</th>' + 
+                                    '<th>Score</th>' + 
+                                    '<th>Team</th>' + 
+                                    '<th>Score</th>' + 
+                                    '</table>')
+
+      var team_keys = []
+      for (i=0; i< Object.keys(data).length; i++) {
+        team_keys = []
+        $.each(Object.values(data)[i], function(k, v) {
+          if (k.startsWith('team')) {
+          team_keys.push(k)}
+        } )
+        console.log(team_keys)
+        row = document.createElement('tr')
+        row.id = Object.keys(data)[i]
+        td1 = document.createElement('td')
+        td1.innerHTML = Object.values(data)[i].final
+        td2 = document.createElement('td')
+        td2.innerHTML = Object.values(data)[i].inning
+        td3 = document.createElement('td')
+        td4 = document.createElement('td')
+        td5 = document.createElement('td')
+        td6 = document.createElement('td')
+        console.log(i)
+        for (t=0; t < team_keys.length; t++) {
+            if (t==0) 
+            {td3.innerHTML =Object.values(data)[i][team_keys[t]].name
+              td4.innerHTML =Object.values(data)[i][team_keys[t]].score
+              if (Object.values(data)[i][team_keys[t]].winner == true) {td3.style.fontWeight = 'bold';}
+            }
+            else {td5.innerHTML =Object.values(data)[i][team_keys[t]].name
+                td6.innerHTML =Object.values(data)[i][team_keys[t]].score}
+        }
+     
+    
+       
+        row.append(td1)
+        row.append(td2)
+        row.append(td3)
+        row.append(td4)
+        row.append(td5)
+        row.append(td6)
+
+        $('#baseball_table').append(row)
+      } }
+    
+        $('#baseball_scores').append('<p><a href=https://mlb.primotact.com target="_blank">MLB Game</a></p>')
+        $('#baseball_scores').attr('hidden', false)     
+
+  
+})
+
+</script>
+{%endif%}
+{% endblock %}

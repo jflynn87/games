@@ -184,11 +184,10 @@ body {
   color: white;
 }
 
-.total_score {
-  background-color: darkgreen;
-  /* background-color: lightcoral; */
-  font-weight: bold;
-  color: white;
+.total_score  {
+  background-color: darkgreen !important;
+  font-weight: bold !important;
+  color: white !important;
 }
 
 .left_ryder_cup_score {
@@ -254,6 +253,17 @@ form #bottom_sect {
   right: 0;
 
 }
+
+.navbar-dark .navbar-nav .nav-link i {
+  font-size: 1.3em !important;
+  margin-right: 8px !important;
+
+}
+.navbar-dark .navbar-brand i {
+  font-size: 1.4em !important;
+  font-weight: 600 !important;
+}
+
 
 /*big scree */
 @media only screen and (min-width: 1199px) {
