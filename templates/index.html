@@ -105,6 +105,9 @@
                     <a href="{% url 'fb_app:games_list' pk=fb_week.pk %}" class="btn btn-primary">Make Picks</a>
                     <a href="{% url 'fb_app:scores_list' %}" class="btn btn-primary">Current Week Scores</a>
                     <a href="{% url 'fb_app:season_total' %}" class="btn btn-primary">Season Totals</a>
+                    {% if user.is_superuser %}
+                    <a href="{% url 'fb_app:fools' %}" class="btn btn-primary">Fools</a>
+                    {% endif %}
                     <a href="{% url 'fb_app:analytics' %}" class="btn btn-primary">Analytics</a>
                     <a href="{% url 'fb_app:about' %}" class="btn btn-primary">About</a>
                     {% if game %}
