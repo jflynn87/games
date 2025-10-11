@@ -52,11 +52,11 @@ td .watermarkAll {
 }
 
 .best {
-  background-color: lightgreen;
+  background-color: lightgreen !important;
 }
 
 .cut {
-  background-color: lightgray;
+  background-color: lightgray !important;
 }
 
 td .all_watermark {
