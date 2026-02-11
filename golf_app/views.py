@@ -3599,9 +3599,9 @@ class AsyncCreateFieldCSV(APIView):
     def get(self,request, **kwargs):
         pk = request.GET.get('pk', None)
         if pk:
-            t = Tournament.objects.get(pk=pk)
+            t = Tournament.objects.filter(pk=pk)
         else:
-            t = Tournament.objects.get(current=True)
+            t = Tournament.objects.filter(current=True)
 
         #cognito_password = os.environ.get('COGNITO_SERVICE_PASSWORD')
         #cognito_username = os.environ.get('COGNITO_SERVICE_USERNAME')
@@ -3612,7 +3612,7 @@ class AsyncCreateFieldCSV(APIView):
 
         mode = request.GET.get('mode', '')
 
-        field = Field.objects.filter(tournament=t)
+        field = Field.objects.filter(tournament=t.first())
         field_records = field.count()
         #self.all_tournaments_presort = Tournament.objects.filter(season__season__in = [self.t.season.season, self.t.season.season -1]).exclude(pga_tournament_num__in=['468', '500', '999']).exclude(current=True)
         #self.all_tournaments = sorted(self.all_tournaments_presort, key=lambda x: x.pk, reverse=True)
@@ -3623,7 +3623,7 @@ class AsyncCreateFieldCSV(APIView):
                      'job_url': 'create_field_csv',
                      'mode': mode,
                      #'token': token,
-                        'tournament': serializers.serialize('json', t),
+                    'tournament': serializers.serialize('json', t),
                           }
 
         task = AsyncTaskManager()
