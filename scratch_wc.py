@@ -16,6 +16,11 @@ from datetime import datetime
 
 start = datetime.now()
 
+d = wbc_group.TeamData().data
+print (d)
+
+exit()
+
 #e = wbc_ko_data.ESPNData()
 #data = e.data
 #print (e.data)

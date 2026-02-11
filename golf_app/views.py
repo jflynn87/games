@@ -3603,12 +3603,12 @@ class AsyncCreateFieldCSV(APIView):
         else:
             t = Tournament.objects.get(current=True)
 
-        cognito_password = os.environ.get('COGNITO_SERVICE_PASSWORD')
-        cognito_username = os.environ.get('COGNITO_SERVICE_USERNAME')
+        #cognito_password = os.environ.get('COGNITO_SERVICE_PASSWORD')
+        #cognito_username = os.environ.get('COGNITO_SERVICE_USERNAME')
 
-        cognito = CognitoService(username=cognito_username, password=cognito_password)
+        #cognito = CognitoService(username=cognito_username, password=cognito_password)
 
-        token = cognito.get_token()
+        #token = cognito.get_token()
 
         mode = request.GET.get('mode', '')
 
@@ -3622,7 +3622,7 @@ class AsyncCreateFieldCSV(APIView):
                      'start_time': datetime.datetime.now().strftime("%m/%d/%Y, %H:%M:%S"),
                      'job_url': 'create_field_csv',
                      'mode': mode,
-                     'token': token,
+                     #'token': token,
                         'tournament': serializers.serialize('json', t),
                           }
 

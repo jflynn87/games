@@ -6,8 +6,6 @@ import json
 import ssl
 from urllib.request import urlopen
 
-
-
 class TeamData(object):
     '''takes an optinal dict and provides funcitons to retrieve espn golf data,
         all_data is a list of dicts
@@ -22,7 +20,7 @@ class TeamData(object):
         if url:
             self.url = url
         else:
-            self.url = 'https://en.wikipedia.org/wiki/2023_World_Baseball_Classic'
+            self.url = 'https://en.wikipedia.org/wiki/2026_World_Baseball_Classic'
          
         e = Event.objects.get(current=True)
 
@@ -34,17 +32,21 @@ class TeamData(object):
         context = ssl._create_unverified_context()
         headers = {'User-Agent': 'Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.149 Mobile Safari/537.36'}
 
-        html = urlopen(self.url, context=context)
+        req = request.Request(self.url, headers=headers)
+        html = urlopen(req, context=context)
+
         soup = BeautifulSoup(html, 'html.parser')
 
         tables = soup.find_all('table', {'class': 'wikitable'})
 
-        table = tables[4]
+        table = tables[0]
         data = {}
         for i, row in enumerate(table.find_all('tr')):
+            #print (row)
             if i == 0:
                 for j, th in enumerate(row.find_all('th')):
                     t = th.text.split('(')[0].strip()
+                    #print (t)
                     data[t] = {}
                     if j == 0:
                         a = t
@@ -54,10 +56,11 @@ class TeamData(object):
                         c = t
                     elif j == 3:
                         d = t
-                    else:
-                        raise Exception('I index error, why are we here')
+                    #else:
+                        #raise Exception('I index error, why are we here')
             else:
                 for k, td in enumerate(row.find_all('td')):
+                    print (td)
                     country = td.text.split('(')[0].strip()
                     rank = td.text.split('(')[1].split(')')[0].strip()
                     flag = 'https:' + td.img.get('src')
@@ -69,8 +72,8 @@ class TeamData(object):
                         data[c].update({country: {'rank': rank, 'flag': flag}})
                     elif k == 3:
                         data[d].update({country: {'rank': rank, 'flag': flag}})
-                    else:
-                        raise Exception('J index issue, why here')
+                    #else:
+                    #   raise Exception('J index issue, why here')
 
         self.data = data
 
