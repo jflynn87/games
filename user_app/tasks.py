@@ -41,7 +41,7 @@ class AsyncTaskManager:
                  MessageAttributes={
                 'token': {
                     'DataType': 'String',
-                    'StringValue': task_data.get('token', '')
+                    'StringValue': task_data.get('token', 'no_token')
                 }
             }
                 
