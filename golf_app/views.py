@@ -3614,8 +3614,8 @@ class AsyncCreateFieldCSV(APIView):
 
         field = Field.objects.filter(tournament=t)
         field_records = field.count()
-        self.all_tournaments_presort = Tournament.objects.filter(season__season__in = [self.t.season.season, self.t.season.season -1]).exclude(pga_tournament_num__in=['468', '500', '999']).exclude(current=True)
-        self.all_tournaments = sorted(self.all_tournaments_presort, key=lambda x: x.pk, reverse=True)
+        #self.all_tournaments_presort = Tournament.objects.filter(season__season__in = [self.t.season.season, self.t.season.season -1]).exclude(pga_tournament_num__in=['468', '500', '999']).exclude(current=True)
+        #self.all_tournaments = sorted(self.all_tournaments_presort, key=lambda x: x.pk, reverse=True)
 
         meta_data = {'total_records': field_records,
                      'user': self.request.user.username,

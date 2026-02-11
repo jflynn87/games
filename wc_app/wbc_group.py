@@ -43,7 +43,7 @@ class TeamData(object):
         data = {}
         for i, row in enumerate(table.find_all('tr')):
             #print (row)
-            if i == 0:
+            if i == 0:  #header row                     
                 for j, th in enumerate(row.find_all('th')):
                     t = th.text.split('(')[0].strip()
                     #print (t)
