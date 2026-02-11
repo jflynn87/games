@@ -42,6 +42,11 @@ import pprint
 from docx.api import Document   
 
 
+for k,v in os.environ.items():
+    print (k,v)
+
+exit()
+
 week = Week.objects.get(season_model__current=True, week=2)
 l = League.objects.get(league="Football Fools")
 

@@ -12,6 +12,10 @@ class GroupAdmin(admin.ModelAdmin):
     list_display = ('tournament', 'number', 'playerCnt')
     list_filter = ['tournament',]
 
+    def queryset(self, request):
+        qs = super(GroupAdmin, self).queryset(request)
+        return qs.filter(tournament__season__current=True)
+
 class FieldAdmin(admin.ModelAdmin):
     list_select_related = True
     list_display = ['tournament', 'playerName']
@@ -34,13 +38,25 @@ class BonusDetailsAdmin(admin.ModelAdmin):
     list_display = ['tournament', 'user', 'winner_bonus', 'cut_bonus', 'major_bonus']
     list_filter = ['tournament', 'user']
 
+    def get_queryset(self, request):
+        qs = super().get_queryset(request)
+        return qs.filter(tournament__season__current=True)
+
 class ScoreDetailsAdmin(admin.ModelAdmin):
     list_display = ['user', 'pick', 'score']
     list_filter = ['pick__playerName__tournament', 'user']
 
+    def get_queryset(self, request):
+        qs = super().get_queryset(request)
+        return qs.filter(pick__playerName__tournament__season__current=True)
+
 class PickMethodAdmin(admin.ModelAdmin):
     list_display = ['user', 'tournament', 'method']
     list_filter = ['user', 'tournament', 'method']
+
+    def get_queryset(self, request):
+        qs = super().get_queryset(request)
+        return qs.filter(tournament__season__current=True)
 
 class GolferAdmin(admin.ModelAdmin):
     list_display = ['golfer_name,',]

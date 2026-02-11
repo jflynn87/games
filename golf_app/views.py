@@ -2726,8 +2726,13 @@ class FieldUpdatesAPI(APIView):
         t = Tournament.objects.get(current=True)
         l = []
         try:
-            dg = DataGolf(t=t, create=True)
-            print ('GD DATA ', type(dg.data))
+            try:
+                dg = DataGolf(t=t, create=True)
+            except Exception as dg_e:
+                print ('DataGolf exception: ', dg_e)
+                dg = {}
+            
+            #print ('GD DATA ', type(dg.data))
             for i, f in enumerate(Field.objects.filter(tournament=t)):
                 f.handi = f.handicap()
                 f.prior_year = f.prior_year_finish()
@@ -2740,7 +2745,10 @@ class FieldUpdatesAPI(APIView):
                         print ('past recent')
                         season_stats = f.golfer.summary_stats(t.season, rerun=False)  #setting to rerun to fix data on march 26 ,2025
                         print ('past season stats')
-                        dg_player_stats = dg.get_player_stats(f.playerName)
+                        if dg:
+                            dg_player_stats = dg.get_player_stats(f.playerName)
+                        else:
+                            dg_player_stats = {}
                         print ('past dg stats')
                         if dg_player_stats:
                             sg = GolferSG(t, f, data=dg_player_stats).format_data() 

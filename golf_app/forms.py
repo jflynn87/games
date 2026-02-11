@@ -25,11 +25,12 @@ class FieldForm(forms.ModelForm):
         self.fields['group'].label = ''
         self.fields['playerName'].label = ''
         self.fields['playerName'].disabled = True
+        self.fields['handi'].label = ''
         
 
     class Meta:
         model = Field    
-        fields = ['playerName', 'group',]
+        fields = ['playerName', 'handi', 'group',]
 
 FieldFormSet = modelformset_factory(Field, form=FieldForm, min_num=1, max_num=156, extra=0)
 

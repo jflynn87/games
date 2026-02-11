@@ -83,8 +83,10 @@ class GetSpreads(generics.ListAPIView):
                             game.spread = spread
                             game.save()
                             if game.fav == game.home:
+                                game = Games()
                                 games_dict.append((game.eid, game.fav.nfl_abbr, str(game.fav.get_record()), game.dog.nfl_abbr.lower(), str(game.dog.get_record()), spread))
                             else:
+                                game = Games
                                 games_dict.append((game.eid, game.fav.nfl_abbr.lower(), str(fav_obj.get_record()), game.dog.nfl_abbr, str(dog_obj.get_record()), spread))
                         else:
                             print ('game not found:', home_team, away_team)

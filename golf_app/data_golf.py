@@ -6,7 +6,7 @@ import os
 import boto3
 from golf_app.models import Tournament, Field
 from user_app.services import DynamoStatsTable
-
+import json
 
 STATS_TABLE = DynamoStatsTable()
 
@@ -63,11 +63,15 @@ class DataGolf(object):
             self.data = data
         else:
             if create:
+                season = str(self.t.season.season)
                 print (f'Creating ShotsGained for t: {self.t}')
                 headers = {'User-Agent': 'Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.149 Mobile Safari/537.36'}
                 html = get("https://datagolf.com/performance-table", headers=headers).text
                 table = html.split('var reload_data = ')[1].split("'")[1].split('var tour_dict = ')[0].replace(';', '').replace('\n', '').replace(' ', '')
-                self.data = ast.literal_eval(table).get('data').get('2025').get('table')
+                #print (season, type(season), json.loads(table))
+                #self.data = ast.literal_eval(table).get('data').get(season).get('table')
+                self.data = json.loads(table).get('data').get(season).get('table')
+                #print (self.data)
                 if save:
                     self.save_all_data()
             else:

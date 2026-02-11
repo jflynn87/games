@@ -42,8 +42,19 @@ import boto3
 from boto3.dynamodb.conditions import Key
 from golf_app.data_golf import DataGolf, GolferSG
 
+t= Tournament.objects.get(current=True)
+f = Field.objects.get(tournament=t, playerName__icontains='Si W')
 
-print (Golfer.objects.filter(golfer_name__icontains='Fitz'))
+dyn = DynamoStatsTable()
+item = dyn.table.get_item(Key={'pk': str(t.pk), 'sk': str(f.pk)})
+
+print (item.get('Item'))
+
+dg = DataGolf(t=t, create=True)
+pn = f.playerName.split(' ')[ -1]
+print (pn)
+stats = [x for x in dg.data if pn in x.get('player_name')]
+print (stats)
 
 exit()
 r = HttpRequest()
