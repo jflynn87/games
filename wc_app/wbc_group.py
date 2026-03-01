@@ -40,56 +40,56 @@ class TeamData(object):
         tables = soup.find_all('table', {'class': 'wikitable'})
 
         table = tables[0]
-        data = {}
-        for i, row in enumerate(table.find_all('tr')):
-            #print (row)
-            if i == 0:  #header row                     
-                for j, th in enumerate(row.find_all('th')):
-                    t = th.text.split('(')[0].strip()
-                    #print (t)
-                    data[t] = {}
-                    if j == 0:
-                        a = t
-                    elif j == 1: 
-                        b = t
-                    elif j == 2:
-                        c = t
-                    elif j == 3:
-                        d = t
-                    #else:
-                        #raise Exception('I index error, why are we here')
-            else:
-                for k, td in enumerate(row.find_all('td')):
-                    print (td)
-                    country = td.text.split('(')[0].strip()
-                    rank = td.text.split('(')[1].split(')')[0].strip()
-                    flag = 'https:' + td.img.get('src')
-                    if k == 0:
-                        data[a].update({country: {'rank': rank, 'flag': flag}})
-                    elif k == 1:
-                        data[b].update({country: {'rank': rank, 'flag': flag}})
-                    elif k == 2:
-                        data[c].update({country: {'rank': rank, 'flag': flag}})
-                    elif k == 3:
-                        data[d].update({country: {'rank': rank, 'flag': flag}})
-                    #else:
-                    #   raise Exception('J index issue, why here')
+        #print (table)
+        teams = {}
+
+        for i, row in enumerate(table.find_all('tr')[1:]):
+            th = row.find('th')
+            if th:
+                # Extract flag URL
+                img = th.find('img')
+                flag = 'https:' + img.get('src') if img else None
+                
+                # Extract team name from the link
+                link = th.find('a')
+                team_name = link.text.strip() if link else None
+                rank = row.find_all('td')[-1].text.strip()   
+                teams[team_name] = {
+                    'flag': flag,
+                    'rank': rank
+                }
+
+        pool = tables[2]
+        data = {'A': [], 'B': [], 'C': [], 'D': []}
+        groups = ['A', 'B', 'C', 'D']
+
+        for row in pool.find_all('tr')[1:]:
+            cells = row.find_all('td')
+            for i, cell in enumerate(cells):
+                if i < 4:  # Only process first 4 columns (A, B, C, D)
+                    team_link = cell.find('a')
+                    if team_link:
+                        team_name = team_link.text.strip()
+                        data[groups[i]].append({'team_name': team_name, 'flag': teams[team_name]['flag'], 'rank': teams[team_name]['rank']})
+
 
         self.data = data
 
-    def create_teams(self):
+    def create_teams(self, group_prefix=None):
         Group.objects.filter(stage=self.stage).delete()
         for group, teams in self.data.items():
             g = Group()
             g.stage = self.stage
-            g.group= group
+            g.group= group_prefix + group if group_prefix else group
             g.save()
-            for team, data in teams.items():
+            for team in teams:
                 t = Team()
                 t.group = g
-                t.name = team
-                t.rank = data.get('rank')
-                t.flag_link = data.get('flag')
-                t.full_name = team
+                t.name = team.get('team_name')
+                t.rank = team.get('rank')
+                t.flag_link = team.get('flag')
+                t.full_name = team.get('team_name')
                 t.save()
         return Team.objects.filter(group__stage=self.stage)
+
+

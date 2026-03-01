@@ -39,7 +39,7 @@ function buildTable() {
         $('#' + d.pk + '_row').append('<td style=width:30%> <a href=' + d.fields.info_link + '> <span><img src="' + d.fields.flag_link + '"></img></span>' + d.fields.full_name + '</a></td>' +
                                                         '<td>' + d.fields.rank + '</td>')
         //console.log('eventlistner group', d.fields.group)
-        document.getElementById('sel_' + d.pk).addEventListener('change', function () {checkComplete(document.getElementById('picks_table_' + d.fields.group))})
+        document.getElementById('sel_' + d.pk).addEventListener('change', function () {checkComplete()})
        
         if (picks.length > 0) {
             var pick = picks.find(t => t.fields.team === d.pk)
@@ -67,127 +67,54 @@ function buildTable() {
 
 }
 
-function checkComplete(table) {
-    groups = parseInt($('#group_count').text())
-    teamsPerGrp = parseInt($('#teams_per_group').text())
-    teams = groups * teamsPerGrp 
-
+function checkComplete() {
+    console.log('checking complete')
     $('#sub_btn').attr('disabled', true)
-    picks = $('.pick_input')
-    var pickArray = []
-    for (var i=0; i < picks.length; i++) {
-        pickArray.push(picks[i].value)
+    
+    var tables = $('table[id^="picks_table_"]')
+    var fns = []
+    
+    tables.each(function() {
+        var table = this
+        var picks = $(table).find('.pick_input')
+        var pickCount = picks.length
+        fns.push(checkGroup(table, pickCount))
+    })
+
+    if (fns.length > 0) {
+        Promise.all(fns).then((response) => {
+            console.log('Group check results:', response)
+            if (response.indexOf(false) == -1) {
+                $('#sub_btn').attr('disabled', false)
             }
-    
-    fns = []
-            
-    for (var i=0; i < groups; i++) {
-        fns.push(checkGroup($('.table')[i], teamsPerGrp))
+        })
     }
-
-    groupStatus = Promise.all(fns)
-    groupStatus.then((response) => {console.log('VV ', response);
-                                    if (response.indexOf(false) != -1) {
-                                        $('#sub_btn').attr('disabled', true)
-
-                                    }
-                                    else {
-                                        $('#sub_btn').attr('disabled', false)
-                                        }
-                                    })
-
-    //for (i=0; i <= $('.table').length; i++) {
-    //    var status  = checkGroup($('.table')[i], teamsPerGrp)
-    //    console.log('status ', status)
-    //    status.then((response) => {console.log('resp: ', response); grpArray.push(response)})
-    //    }      
-    //    console.log('grparray: ', grpArray)
-
-    
-    // one = pickArray.filter(i => i === '1').length
-    // two = pickArray.filter(i => i === '2').length
-    // three = pickArray.filter(i => i === '3').length
-    // four = pickArray.filter(i => i === '4').length
-    
-    // if (one == 8 && two == 8 && three == 8 && four == 8){
-    //     tables = document.getElementsByTagName('table')
-    //     groupArray = []
-        
-    //     for (var t=0; t< tables.length; t++) {
-    //         groupArray.push(checkGroups(tables[t]))}
-    //     //console.log(groupArray)
-    //     //console.log(groupArray.indexOf(false))
-    //     if (groupArray.indexOf(false) != -1){
-    //         $('#sub_btn').attr('disabled', true)
-    //         }
-    //     else {
-    //         $('#sub_btn').attr('disabled', false)
-    //     }
-    // }
-    // else if (table != undefined){
-    // checkGroups(table)
-    //             }
 }
 
 
 
 function checkGroup(table, pickCnt) {
+    console.log('checking group ', table.id)
     return new Promise(function(resolve, reject) {
-        picks = table.getElementsByClassName('pick_input')
+        var picks = table.getElementsByClassName('pick_input')
         var pickArray = []
         for (var i=0; i < picks.length; i++) {
             pickArray.push(picks[i].value)
-                }
-            for (var j=1; j <= pickCnt; j++) {
-                if (pickArray.indexOf(j.toString()) == -1) {
-                    console.log('grpChek resolving')
-                    resolve(false)
-                    if (pickArray.indexOf('0') == -1) {
-                        $('#' + table.id.split('_')[2] + '_status').html('- Error - Check Picks')
-                        $('#' + table.id.split('_')[2] + '_status').css('background-color', 'red')
-                    }
-                    return
-                }
-            //only here if picks good
-            $('#' + table.id.split('_')[2] + '_status').html(' - Picks Good')
-            $('#' + table.id.split('_')[2] + '_status').css('background-color', 'blue')
-
-            resolve(true)     
+        }
+        
+        // Check if all required picks (1 through pickCnt) are present exactly once
+        for (var j=1; j <= pickCnt; j++) {
+            if (pickArray.filter(p => p === j.toString()).length !== 1) {
+                $('#' + table.id.split('_')[2] + '_status').html('- Error - Check Picks')
+                $('#' + table.id.split('_')[2] + '_status').css('background-color', 'red')
+                resolve(false)
+                return
             }
+        }
+        
+        // Only reach here if all picks are good
+        $('#' + table.id.split('_')[2] + '_status').html(' - Picks Good')
+        $('#' + table.id.split('_')[2] + '_status').css('background-color', 'blue')
+        resolve(true)
     })
-
 }
-
-// function checkGroups(table){
-//     rows = table.rows
-
-//     pickArray = []
-//     //var one = 0 
-//     //var two = 0 
-//     //var three = 0 
-//     //var four = 0 
-//     for (i=2; i < rows.length; i++) {
-    
-//         pickArray.push(rows[i].cells[0].children[0].value)
-//              }
-
-//     one = pickArray.filter(c => c === '1').length
-//     two = pickArray.filter(c => c === '2').length
-//     three = pickArray.filter(c => c === '3').length
-//     four = pickArray.filter(c => c === '4').length
-//     total = one + two + three + four
-//     //console.log(table.id, one, two, three, four, total)
-//     if (one === 1 && two === 1 && three === 1 && four === 1) {
-//         $('#' + table.id.split('_')[2] + '_status').html(' - Picks Good')
-//         $('#' + table.id.split('_')[2] + '_status').css('background-color', 'blue')
-//         return true
-//     }
-//     else if (total == 0) {$('#' + table.id.split('_')[2] + '_status').html('- Make Picks')
-//                             return false}
-//     else if (total == 4) {$('#' + table.id.split('_')[2] + '_status').html('- Error - Check Picks')
-//                           $('#' + table.id.split('_')[2] + '_status').css('background-color', 'red')
-//                             return false}
-
-// }
-
-

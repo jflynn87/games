@@ -16,7 +16,8 @@ from datetime import datetime
 
 start = datetime.now()
 
-d = wbc_group.TeamData().data
+d = wbc_group.TeamData().create_teams()
+
 print (d)
 
 exit()
