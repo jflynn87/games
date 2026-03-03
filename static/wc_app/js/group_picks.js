@@ -36,7 +36,7 @@ function buildTable() {
                                          '</input> </td>')
 
 
-        $('#' + d.pk + '_row').append('<td style=width:30%> <a href=' + d.fields.info_link + '> <span><img src="' + d.fields.flag_link + '"></img></span>' + d.fields.full_name + '</a></td>' +
+        $('#' + d.pk + '_row').append('<td style=width:30%> <a target="_blank" href=' + d.fields.info_link + '> <span><img src="' + d.fields.flag_link + '"></img></span>' + d.fields.full_name + '</a></td>' +
                                                         '<td>' + d.fields.rank + '</td>')
         //console.log('eventlistner group', d.fields.group)
         document.getElementById('sel_' + d.pk).addEventListener('change', function () {checkComplete()})
