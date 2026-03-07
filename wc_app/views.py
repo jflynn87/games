@@ -139,14 +139,17 @@ class ScoresAPI(APIView):
             print ('score api stage: ', stage)
             users = stage.event.get_users()          
             data_obj, created = Data.objects.get_or_create(stage=stage)
-            if stage.event.data.get('event_type') == 'wbc':
+
+            if 'baseball' in stage.event.name.lower():
+                print ('baseball')
                 score = wbc_scores(stage, users, data_obj)
             else:
+                print ('soccer')
                 score = wc_scores(stage, users, data_obj)
 
             return JsonResponse(score, status=200, safe=False)
         except Exception as e2:
-            print ("WC SCORE init API ERRor", e2)
+            print ("WC SCORE API ERRor", e2)
             score = {}
             score['error'] = str(e2)
             return JsonResponse(score, status=200, safe=False)
@@ -173,10 +176,8 @@ def wbc_scores(stage, users, data_obj):
             print ('no updates, use saved data')
             print ('WC scores duration: ', datetime.now() - start)
             return data_obj.display_data
-            #return JsonResponse(data_obj.display_data, status=200, safe=False)
         
-        for team in Team.objects.filter(group__stage=stage): 
-           
+        for team in Team.objects.filter(group__stage=stage):
             rank = [data.get('rank') for k,v in espn.items() for t, data in v.items() if t == team.full_name][0]
             print ('RANKS: ', team, rank)
             for p in Picks.objects.filter(team=team):
@@ -188,14 +189,14 @@ def wbc_scores(stage, users, data_obj):
                     score = 0
                 
                 d.get(p.user.username).update({'Score': d.get(p.user.username).get('Score') + score})
-                
                 if d.get(p.user.username).get(team.group.group):
                     d.get(p.user.username).get(team.group.group).update(
                                             {team.name: 
                                             {'flag': p.team.flag_link,
                                             'rank': rank,
                                             'pick_rank': p.rank,
-                                            'points': score
+                                            'points': score,
+                                            'team_world_rank': p.team.rank
                                             }
                                                 })
                 else:
@@ -204,7 +205,8 @@ def wbc_scores(stage, users, data_obj):
                             {'flag': p.team.flag_link,
                             'rank': rank,
                             'pick_rank': p.rank,
-                            'points': score
+                            'points': score,
+                            'team_world_rank': p.team.rank
                             }
                             }})
 
@@ -435,7 +437,7 @@ class GroupStageTableAPI(APIView):
     def get(self, request):
         start = datetime.now()
         stage = Stage.objects.get(name="Group Stage", event__current=True)
-        if stage.event.data.get('event_type') == 'wbc':
+        if 'baseball' in stage.event.name.lower():
             d = wbc_group_standings.ESPNData().teams_by_pool()
 
             d['headers'] = ['Wins', 'Loss', 'PCT', 'GB', 'RS', 'RA']

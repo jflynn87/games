@@ -108,13 +108,14 @@ function sort_table(tableId) {
 function buildGroupTable(pick, user, group, tableId) {
   return new Promise(function (resolve,reject) {
   $.each(pick, function(team, team_d) {
-                                                
     if (team_d == 'perfect picks') {
         
         $('#' + user + group.substr(-1) + '_cell_tbl').css('background-color', 'lightgreen')}
     else {
     $('#' + user + group.substr(-1) + '_cell_tbl').append(
-    '<tr><td hidden>' + team_d.rank + '</td><td><img src=' + team_d.flag +' style=height:20; width:20;>' + team  + '</td><td>' +
+    '<tr><td hidden>' + team_d.rank + '</td><td><img src=' + team_d.flag +' style=height:20; width:20;>' + 
+      team  + '(' + team_d.team_world_rank + ')'
+      + '</td><td>' +
       team_d.pick_rank + '</td><td>' + team_d.points +  '</td>' +
       //'<td>' + team_d.team_rank + '</td>' +
      '</tr>' + 

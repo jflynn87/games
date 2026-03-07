@@ -72,6 +72,7 @@ class Group(models.Model):
         return False
 
     def wbc_perfect_picks(self, data, user):
+        print ('group data: ', type(data), self.group)
         x = [k for k, v in sorted(data.get(self.group).items(), key= lambda r: r[1].get('rank'))]
         print (x)
         if Picks.objects.filter(team__full_name=x[0], rank=1, user=user).exists() and \

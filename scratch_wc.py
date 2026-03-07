@@ -17,14 +17,13 @@ from datetime import datetime
 start = datetime.now()
 
 #d = wbc_group.TeamData().create_teams()
+stage = Stage.objects.current=True
 
-for t in Team.objects.filter(group__stage__current=True):
-    #print (t, t.rank)
-    if t.full_name == 'South Korea':
-        t.info_link = 'https://www.mlb.com/world-baseball-classic/roster/korea?season=2026'
-    else:
-        t.info_link = 'https://www.mlb.com/world-baseball-classic/roster/' + t.full_name.lower().replace(' ', '-') + '?season=2026'
-    t.save()
+d = mlb_group_stage.MLBData()
+
+s = d.get_team_data()
+
+print (s)
 
 
 exit()
