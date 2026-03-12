@@ -42,6 +42,23 @@ import boto3
 from boto3.dynamodb.conditions import Key
 from golf_app.data_golf import DataGolf, GolferSG
 
+
+t = Tournament.objects.get(current=True)
+picks = Picks.objects.filter(playerName__playerName='Jake Knapp', playerName__tournament=t)
+f = Field.objects.get(tournament=t, playerName='Pierceson Coody')
+
+for p in picks:
+    p.pick = f
+    p.save()
+
+exit()
+
+t = Tournament.objects.get(current=True)
+f = field_csv.FieldCSV(t)
+f_csv = f.create_file()
+print (f_csv)
+exit()
+
 t= Tournament.objects.get(current=True)
 f = Field.objects.get(tournament=t, playerName__icontains='Si W')
 
@@ -60,12 +77,6 @@ exit()
 r = HttpRequest()
 x = views.FieldUpdatesAPI().get(r)
 
-exit()
-
-t = Tournament.objects.get(current=True)
-f = field_csv.FieldCSV(t)
-f_csv = f.create_file()
-print (f_csv)
 exit()
 
 d = DynamoStatsTable().table

@@ -224,41 +224,94 @@ cf.then(checkComplete())
 }
     
 function wbcPath(ele, matchId, path) {
-    var path = findPath(ele)
-    //var matchId = ele.id.split('_')[0].substring(1)
     var i = path.indexOf(parseInt(matchId))
-    //top = [1, 3, 5]
-    //bottom = [2,]
 
     if (i == -1) {
         alert('Something went wrong, please try again')
     }
     else {
-        //console.log(matchId, parseInt(matchId) % 2, $('#' + ele.id).text(), ele.id)
-        if (parseInt(matchId) % 2 != 0 ) {
-            $('#m' + path[i+1]  + '_fav').text($('#' + ele.id).text())
+        // Quarterfinals (matches 1-4) -> Semifinals (matches 5-6)
+        if (parseInt(matchId) <= 4) {
+            var nextMatch = path[i+1]  // Get next match from path
+            
+            // Based on HTML layout:
+            // Left side: Match 1 (top) and Match 3 (bottom) -> Semifinal 1 (match 5)
+            // Right side: Match 2 (top) and Match 4 (bottom) -> Semifinal 2 (match 6)
+            if (parseInt(matchId) == 1 || parseInt(matchId) == 3) {
+                // Matches 1 and 3 go to semifinal 1 (match 5)
+                if (parseInt(matchId) == 1) {
+                    // Match 1 winner -> semifinal 1 top
+                    $('#m5_fav').text($('#' + ele.id).text())
+                    .attr('data-key', $('#' + ele.id).attr('data-key'))
+                    .append('<img id=m5_fav_flag style=height:20;width:20; src=' + $('#' + ele.id + '_flag').attr('src') + '>')
+                    .append('<input type=hidden value=' + $('#' + ele.id).attr('data-key') +' name=' + ele.id + '></>')
+                } else {
+                    // Match 3 winner -> semifinal 1 bottom
+                    $('#m5_dog').text($('#' + ele.id).text())
+                    .attr('data-key', $('#' + ele.id).attr('data-key'))
+                    .append('<img id=m5_dog_flag style=height:20;width:20; src=' + $('#' + ele.id + '_flag').attr('src') + '>')
+                    .append('<input type=hidden value=' + $('#' + ele.id).attr('data-key') +' name=' + ele.id + '></>')
+                }
+            } else {
+                // Matches 2 and 4 go to semifinal 2 (match 6)
+                if (parseInt(matchId) == 2) {
+                    // Match 2 winner -> semifinal 2 top
+                    $('#m6_fav').text($('#' + ele.id).text())
+                    .attr('data-key', $('#' + ele.id).attr('data-key'))
+                    .append('<img id=m6_fav_flag style=height:20;width:20; src=' + $('#' + ele.id + '_flag').attr('src') + '>')
+                    .append('<input type=hidden value=' + $('#' + ele.id).attr('data-key') +' name=' + ele.id + '></>')
+                } else {
+                    // Match 4 winner -> semifinal 2 bottom
+                    $('#m6_dog').text($('#' + ele.id).text())
+                    .attr('data-key', $('#' + ele.id).attr('data-key'))
+                    .append('<img id=m6_dog_flag style=height:20;width:20; src=' + $('#' + ele.id + '_flag').attr('src') + '>')
+                    .append('<input type=hidden value=' + $('#' + ele.id).attr('data-key') +' name=' + ele.id + '></>')
+                }
+            }
+        }
+        // Semifinals (matches 5-6) -> Championship (match 7)
+        else if (matchId == '5') {
+            $('#m7_fav').text($('#' + ele.id).text())
             .attr('data-key', $('#' + ele.id).attr('data-key'))
-            .append('<img id=m' + path[i+1] + '_fav_flag style=height:20;width:20; src=' + $('#' + ele.id + '_flag').attr('src') + '>')
-            .append('<input type=hidden value=' + $('#' + ele.id).attr('data-key') +' name=' + ele.id + '></>')}
-        else {$('#m' + path[i+1] + '_dog').text($('#' + ele.id).text())
+            .append('<img id=m7_fav_flag style=height:20;width:20; src=' + $('#' + ele.id + '_flag').attr('src') + '>')
+            .append('<input type=hidden value=' + $('#' + ele.id).attr('data-key') +' name=' + ele.id + '></>')
+        }
+        else if (matchId == '6') {
+            $('#m7_dog').text($('#' + ele.id).text())
             .attr('data-key', $('#' + ele.id).attr('data-key'))
-            .append('<img id=m' + path[i+1] + '_dog_flag style=height:20;width:20; src=' + $('#' + ele.id + '_flag').attr('src') + '>')
-            .append('<input type=hidden value=' + $('#' + ele.id).attr('data-key') +' name=' + ele.id + '></>')}
-
+            .append('<img id=m7_dog_flag style=height:20;width:20; src=' + $('#' + ele.id + '_flag').attr('src') + '>')
+            .append('<input type=hidden value=' + $('#' + ele.id).attr('data-key') +' name=' + ele.id + '></>')
+        }
+        // Championship (match 7) -> Champion (match 8)
+        else if (matchId == '7') {
+            $('#m8_fav').text($('#' + ele.id).text())
+            .attr('data-key', $('#' + ele.id).attr('data-key'))
+            .append('<img id=m8_fav_flag style=height:20;width:20; src=' + $('#' + ele.id + '_flag').attr('src') + '>')
+            .append('<input type=hidden value=' + $('#' + ele.id).attr('data-key') +' name=' + ele.id + '></>')
+        }
     }
     var cf = checkForward(ele, matchId)
     cf.then(checkComplete())
-
 }
+
 
 function findPath(ele) {
     if ($('#event_type').text() == 'wbc') {
-
+        // WBC 8-team bracket based on HTML layout:
+        // Left side: Match 1, Match 2 -> Semifinal 1 (match 5)
+        // Right side: Match 3, Match 4 -> Semifinal 2 (match 6) 
+        // Semifinal winners -> Championship (match 7)
+        // Championship winner -> Champion (match 8)
+        console.log('WBC')
          pathArray = [
-             [1, 5, 7, 8],
-             [2, 5, 7, 8],
-             [3, 6, 7, 8],
-             [4, 6, 7, 8]
+             [1, 5, 7, 8],  // Match 1 -> Semifinal 1 -> Championship -> Champion
+             [2, 6, 7, 8],  // Match 2 -> Semifinal 2 -> Championship -> Champion
+             [3, 5, 7, 8],  // Match 3 -> Semifinal 1 -> Championship -> Champion
+             [4, 6, 7, 8],  // Match 4 -> Semifinal 2 -> Championship -> Champion
+             [5, 7, 8],     // Semifinal 1 -> Championship -> Champion
+             [6, 7, 8],     // Semifinal 2 -> Championship -> Champion
+             [7, 8],        // Championship -> Champion
+             [8]            // Champion (final position)
          ]
     }
     else {
@@ -336,16 +389,22 @@ function resetEle(ele) {
 }
 
 function resetChamp() {
-    
-    //console.log('third ', $('#third_place').attr('data-key'), $('#m16_fav').attr('data-key'),  $('#m16_dog').attr('data-key'))
-    if ($('#champion').attr('data-key') != $('#m15_fav').attr('data-key') && $('#champion').attr('data-key') != $('#m15_dog').attr('data-key')) {
-        $('#champion').text('')
-        $('#champion').data('key', '')
-    }
-    if ($('#third_place').attr('data-key') != $('#m16_fav').attr('data-key') && $('#third_place').attr('data-key') != $('#m16_dog').attr('data-key')) {
-        
-        $('#third_place').text('')
-        $('#third_place').data('key', '')
+    if ($('#event_type').text() == 'wbc') {
+        // For WBC: check if champion (m8_fav) matches championship game (m7) participants
+        if ($('#m8_fav').attr('data-key') != $('#m7_fav').attr('data-key') && $('#m8_fav').attr('data-key') != $('#m7_dog').attr('data-key')) {
+            $('#m8_fav').text('')
+            $('#m8_fav').data('key', '')
+        }
+    } else {
+        // Original World Cup logic
+        if ($('#champion').attr('data-key') != $('#m15_fav').attr('data-key') && $('#champion').attr('data-key') != $('#m15_dog').attr('data-key')) {
+            $('#champion').text('')
+            $('#champion').data('key', '')
+        }
+        if ($('#third_place').attr('data-key') != $('#m16_fav').attr('data-key') && $('#third_place').attr('data-key') != $('#m16_dog').attr('data-key')) {
+            $('#third_place').text('')
+            $('#third_place').data('key', '')
+        }
     }
     return
 }

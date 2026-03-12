@@ -14,11 +14,17 @@ class ESPNData(object):
     def __init__(self, stage=None, dates=None):
         start = datetime.now()
 
-
+        self.stage = None
         if stage:
             self.stage = stage
         elif Stage.objects.filter(current=True).count() ==1:
             self.stage = Stage.objects.get(current=True)
+        else:
+            self.stage = Stage.objects.get(early_picks_period=True, event__current=True)
+
+        if not self.stage:
+            raise Exception ('must have a stage or a current stage for the event to init espn data')
+        
         if not dates:
             dates = self.stage.event.data.get('ko_dates')
 
@@ -27,11 +33,12 @@ class ESPNData(object):
         
         url = 'https://site.web.api.espn.com/apis/v2/scoreboard/header?sport=baseball&league=world-baseball-classic&dates=' \
                  + str(dates[0]) + '-' + str(dates[1])
-
+        #url = 'https://www.espn.com/world-baseball-classic/standings'
         headers = {'User-Agent': 'Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.149 Mobile Safari/537.36'}
         self.api_data = get(url, headers=headers).json()
 
         self.data = {}
+        print (self.api_data)
 
         if self.api_data.get('sports')[0].get('leagues')[0].get('id') == '3454':
             self.data = self.api_data.get('sports')[0].get('leagues')[0].get('events')

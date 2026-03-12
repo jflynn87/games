@@ -17,15 +17,19 @@
 </head>
 <body>
   <p id="picks_user" hidden>{{picks_user.username}}</p>
+  <p id="event_type" hidden>{{stage.event.event_type|default:"wc"}}</p>
+  <p id="picks" hidden>{{stage.total_picks|default:"18"}}</p>
+  <p id="early_picks" hidden>{{stage.early_picks|default:"0"}}</p>
+  <p id="early_picks_period" hidden>{{stage.early_picks_period|default:"False"}}</p>
   <header class="hero">
     <div class="hero-wrap">
 {%if user.is_superuser%}
       <button id="create_teams" class="btn btn-primary" onclick="createTeams()">Create Teams</button>
 {%endif%}
  
-      <h1 id="headline">World Cup Knockout Round</h1>
-     <p class="year"><i class="fa fa-star"></i> 2022 <i class="fa fa-star"></i></p>
-     <p>Qatar</p>
+      <h1 id="headline">{{stage.event.name}} Knockout Round</h1>
+     <p class="year"><i class="fa fa-star"></i> {{stage.event.year}} <i class="fa fa-star"></i></p>
+     <p>{{stage.event.location}}</p>
    </div>
   </header>
 <form method="POST">     
@@ -37,6 +41,19 @@
   <section id="bracket">
   <div class="container">
   <div class="split split-one">
+    {%if stage.event.event_type == 'wbc'%}
+    <div class="round round-one current">
+      <div class="round-details">Quarterfinals<br/><span class="date">correct: 10pts</span></div>
+      <ul class="matchup" id="match_1">
+        <li id='m1_fav' class="team team-top" onclick="teamPicked(this)"></li>
+        <li id='m1_dog' class="team team-bottom" onclick="teamPicked(this)"></li>
+      </ul>
+      <ul class="matchup" id="match_3">
+        <li id='m3_fav' class="team team-top" onclick="teamPicked(this)"></li>
+        <li id='m3_dog' class="team team-bottom" onclick="teamPicked(this)"></li>
+      </ul>     
+    </div>  <!-- END QUARTERFINALS -->
+    {%else%}
     <div class="round round-one current">
       <div class="round-details">Round 1<br/><span class="date">correct: 5pts</span></div>
       <ul class="matchup" id="match_1">
@@ -56,7 +73,17 @@
         <li id='m4_dog' class="team team-bottom"></span></li>
       </ul>     
     </div>  <!-- END ROUND ONE -->
+    {%endif%}
 
+    {%if stage.event.event_type == 'wbc'%}
+    <div class="round round-two current">
+      <div class="round-details">Semifinals<br/><span class="date">correct: 15pts</span></div>     
+      <ul class="matchup">
+        <li id='m5_fav' class="team team-top" onclick="teamPicked(this)"></li>
+        <li id='m5_dog' class="team team-bottom" onclick="teamPicked(this)"></li>
+      </ul> 
+    </div>  <!-- END SEMIFINALS -->
+    {%else%}
     <div class="round round-two current">
       <div class="round-details">Round 2<br/><span class="date">correct: 10pts</span></div>     
       <ul class="matchup">
@@ -68,19 +95,36 @@
         <li id='m10_dog' class="team team-bottom" onclick="teamPicked(this)"></li>
       </ul> 
     </div>  <!-- END ROUND TWO -->
+    {%endif%}
     
+    {%if stage.event.event_type != 'wbc'%}
     <div class="round round-three current">
       <div class="round-details">Round 3<br/><span class="date">correct: 15pts</span></div>     
       <ul class="matchup">
         <li id='m13_fav' class="team team-top" onclick="teamPicked(this)"></li>
         <li id='m13_dog' class="team team-bottom" onclick="teamPicked(this)"></li>
       </ul> 
-    </div>  <!-- END ROUND THREE -->    
+    </div>  <!-- END ROUND THREE -->
+    {%endif%}    
   </div> 
 
 <div class="champion">
     <div class="final">
       <i class="fa fa-trophy"></i>
+      {%if stage.event.event_type == 'wbc'%}
+      <div class="round-details">Championship<br/><span class="date">{{stage.event.championship_date|default:"TBD"}}</span></div>    
+      <ul class ="matchup championship current">
+        <li id='m7_fav' class="team team-top" onclick="teamPicked(this)"></li>
+        <li id='m7_dog' class="team team-bottom" onclick="teamPicked(this)"></li>
+      </ul>
+      <br>
+      <div class="round-details">Champion<br/><span class="date">correct: 25pts</span></div>    
+      <p></p>
+      <ul class ="matchup championship current">
+        <li id='m8_fav' class="team team-top" onclick="teamPicked(this)"></li>
+        
+      </ul>
+      {%else%}
       <div class="round-details">championship <br/><span class="date">Dec 19</span></div>    
       <ul class ="matchup championship current">
         <li id='m15_fav' class="team team-top" onclick="teamPicked(this)"></li>
@@ -93,8 +137,10 @@
         <li id='champion' class="team team-top" onclick="teamPicked(this)"></li>
         
       </ul>
+      {%endif%}
 
     </div>
+    {%if stage.event.event_type != 'wbc'%}
     <div class="semis-r">   
       <div class="round-details">Consolation<br/><span class="date">Dec 18</span></div>   
       <ul class ="matchup championship current">
@@ -108,13 +154,13 @@
         
       </ul>
 
-    </div>  
+    </div>
+    {%endif%}  
   </div>
 
 
   <div class="split split-two">
-
-
+    {%if stage.event.event_type != 'wbc'%}
     <div class="round round-three current">
       <div class="round-details">Round 3<br/><span class="date">correct: 15pts</span></div>           
       <ul class="matchup">
@@ -152,7 +198,27 @@
         <li id='m8_fav' class="team team-top"></li>
         <li id='m8_dog' class="team team-bottom"></li>
       </ul>     
-    </div>  <!-- END ROUND ONE -->                  
+    </div>  <!-- END ROUND ONE -->
+    {%else%}
+    <div class="round round-two current">
+      <div class="round-details">Semifinals<br/><span class="date">correct: 15pts</span></div>           
+      <ul class="matchup">
+        <li id='m6_fav' class="team team-top" onclick="teamPicked(this)"></li>
+        <li id='m6_dog' class="team team-bottom" onclick="teamPicked(this)"></li>
+      </ul> 
+    </div>  <!-- END SEMIFINALS -->
+    <div class="round round-one current">
+      <div class="round-details">Quarterfinals<br/><span class="date">correct: 10pts</span></div>
+      <ul class="matchup" id="match_2">
+        <li id='m2_fav' class="team team-top" onclick="teamPicked(this)"></li>
+        <li id='m2_dog' class="team team-bottom" onclick="teamPicked(this)"></li>
+      </ul>
+      <ul class="matchup" id="match_4">
+        <li id='m4_fav' class="team team-top" onclick="teamPicked(this)"></li>
+        <li id='m4_dog' class="team team-bottom" onclick="teamPicked(this)"></li>
+      </ul>     
+    </div>  <!-- END QUARTERFINALS -->
+    {%endif%}                  
   </div>
   </div>
   
@@ -162,7 +228,7 @@
         {%if stage.started or not stage.current%}
         <p style="color: white;">Picks not available</p>
         {%else%}
-        <p><button class="btn btn-primary" type="submit" id="sub_btn" disabled>0 of 18 picks</button></p>
+        <p><button class="btn btn-primary" type="submit" id="sub_btn" disabled>0 of {{stage.total_picks|default:"18"}} picks</button></p>
         {%endif%}
       </div>
   </section>

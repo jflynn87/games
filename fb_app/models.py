@@ -442,7 +442,6 @@ class Games(models.Model):
         return str(self.home) + str(self.away)
 
     class Meta:
-        #index_together = ['week', 'home', 'away']
         unique_together = ['week', 'home', 'away']
 
 
@@ -670,7 +669,6 @@ class Picks(models.Model):
         return str(self.player) + str(self.pick_num) + str(self.team)
 
     class Meta:
-        #index_together = ['week', 'player']
         unique_together = ['week', 'player', 'team']
 
 

@@ -16,21 +16,11 @@ from datetime import datetime
 
 start = datetime.now()
 
-#d = wbc_group.TeamData().create_teams()
-stage = Stage.objects.current=True
-
-d = mlb_group_stage.MLBData()
-
-s = d.get_team_data()
-
-print (s)
-
+e = wbc_ko_data.ESPNData()
+data = e.data
+print (e.data)
 
 exit()
-
-#e = wbc_ko_data.ESPNData()
-#data = e.data
-#print (e.data)
 
 data_obj = Data.objects.get(stage__event__current=True, stage__name='Group Stage')
 

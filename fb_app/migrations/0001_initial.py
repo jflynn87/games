@@ -274,12 +274,4 @@ class Migration(migrations.Migration):
             model_name='playoffpicks',
             constraint=models.UniqueConstraint(fields=('player', 'game'), name='duplicate_picks'),
         ),
-        migrations.AlterIndexTogether(
-            name='picks',
-            index_together={('week', 'player')},
-        ),
-        migrations.AlterIndexTogether(
-            name='games',
-            index_together={('week', 'home', 'away')},
-        ),
     ]

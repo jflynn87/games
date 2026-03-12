@@ -12,6 +12,7 @@ class Event(models.Model):
     set_not_started = models.BooleanField(default=False)
     logo_file = models.CharField(null=True, blank=True, max_length=200)
     data = models.JSONField(null=True, blank=True)
+    event_type = models.CharField(max_length=100, default='wc')
 
     def __str__(self):
         return str(self.name)

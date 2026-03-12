@@ -513,68 +513,92 @@ class KOBracketAPI(APIView):
         start = datetime.now()
         d = {}
         stage = Stage.objects.get(name='Knockout Stage', event__current=True)
-        #games = []
-        if stage.event.data.get('event_type') == 'wbc':
+        print(f"KO Stage: {stage}, Event Type: {stage.event.event_type}")
+        
+        # Check if teams exist
+        ko_teams = Team.objects.filter(group__stage=stage)
+        print(f"KO Teams count: {ko_teams.count()}")
+        for team in ko_teams:
+            print(f"Team: {team.name}, Rank: {team.rank}")
+        
+        if stage.event.event_type == 'wbc':
             if stage.early_picks_period:
-                order = [1, 4]
+                # Only show first match for early picks: D1 vs C2
+                matches_to_create = [(1, 2)]
             else:
-                order = [1, 4, 3, 2, 5, 8, 7, 6]
-            m = 1
-            data_obj = Data.objects.get(stage__event__current=True, stage__name='Group Stage')
+                # Correct bracket order: D1 vs C2, B1 vs A2, A1 vs B2, C1 vs D2
+                matches_to_create = [(1, 2), (3, 4), (5, 6), (7, 8)]
             
-            for i, o in enumerate(order):
-                if i % 2 == 0:
-                    if i == 0:
-                        match = 'match_1'
-                    else:
-                        match = 'match_' + str(m)
+            try:
+                data_obj = Data.objects.get(stage__event__current=True, stage__name='Group Stage')
+                print(f"Group data exists: {bool(data_obj.group_data)}")
+            except Exception as e:
+                print(f"Error getting group data: {e}")
+                data_obj = None
+            
+            for m, (fav_rank, dog_rank) in enumerate(matches_to_create, 1):
+                match = 'match_' + str(m)
+                print(f"Creating {match} with ranks {fav_rank} vs {dog_rank}")
+                
+                try:
+                    fav = Team.objects.get(group__stage=stage, rank=fav_rank)
+                    dog = Team.objects.get(group__stage=stage, rank=dog_rank)
+                    print(f"Found teams: {fav.name} vs {dog.name}")
 
-                    #print ('MATCH ', match, m, order[i], stage)
-                    fav = Team.objects.get(group__stage=stage, rank=order[i])
-                    dog = Team.objects.get(group__stage=stage, rank=order[i+1])
-
-                    fav_data = Team.objects.get(full_name=fav.name, group__stage__name="Group Stage", group__stage__event__current=True)
-                    dog_data = Team.objects.get(full_name=dog.name, group__stage__name="Group Stage", group__stage__event__current=True)
-                    #print ('XXCCX ', data_obj.group_data.get(fav.group.group), fav.group.group)
+                    # Try to get group stage data
+                    try:
+                        fav_data = Team.objects.get(full_name=fav.name, group__stage__name="Group Stage", group__stage__event__current=True)
+                        dog_data = Team.objects.get(full_name=dog.name, group__stage__name="Group Stage", group__stage__event__current=True)
+                        
+                        if data_obj and data_obj.group_data:
+                            fav_fifa_rank = data_obj.group_data.get(fav_data.group.group, {}).get(fav_data.full_name, {}).get('rank', 'N/A')
+                            dog_fifa_rank = data_obj.group_data.get(dog_data.group.group, {}).get(dog_data.full_name, {}).get('rank', 'N/A')
+                        else:
+                            fav_fifa_rank = 'N/A'
+                            dog_fifa_rank = 'N/A'
+                    except Exception as e:
+                        print(f"Error getting group stage data: {e}")
+                        fav_data = fav
+                        dog_data = dog
+                        fav_fifa_rank = 'N/A'
+                        dog_fifa_rank = 'N/A'
+                    
                     d[match] = {'fav': fav.name, 
                                 'fav_pk': fav.pk, 
-                                'fav_flag': fav_data.flag_link,
-                                'fav_fifa_rank': data_obj.group_data.get(fav_data.group.group).get(fav_data.full_name).get('rank'),
+                                'fav_flag': getattr(fav_data, 'flag_link', ''),
+                                'fav_fifa_rank': fav_fifa_rank,
                                 'dog': dog.name,
                                 'dog_pk': dog.pk, 
-                                'dog_flag': dog_data.flag_link,
-                                'dog_fifa_rank': data_obj.group_data.get(dog_data.group.group).get(dog_data.full_name).get('rank'),
-                                'early_game': fav.early_game            
+                                'dog_flag': getattr(dog_data, 'flag_link', ''),
+                                'dog_fifa_rank': dog_fifa_rank,
+                                'early_game': getattr(fav, 'early_game', False)            
                                 }
-                    
-                    m +=1
+                    print(f"Created match data: {d[match]}")
+                except Exception as e:
+                    print(f"Error creating match {match}: {e}")
                 
         else:    
-            order = [1,10, 3, 12, 5, 14, 7, 16, 2, 9, 4, 11, 6, 13, 8, 15]
-            m = 1
-            for i, team in enumerate(order):
-                if i % 2 == 0:
-                    fav = Team.objects.get(group__stage=stage, rank=order[i])
-                    dog = Team.objects.get(group__stage=stage, rank=order[i+1])
-                    #games.append([fav.name, dog.name])
-                    if i == 0:
-                        match = 'match_1' 
-                    else:
-                        match = 'match_' + str(m)
-                    m += 1
-                    fav_data = Team.objects.get(name=fav.name, group__stage__name="Group Stage", group__stage__event__current=True)
-                    dog_data = Team.objects.get(name=dog.name, group__stage__name="Group Stage", group__stage__event__current=True)
+            # Bracket matchups: positions that will meet in next round
+            matchups = [(1, 2), (3, 4), (5, 6), (7, 8), (9, 10), (11, 12), (13, 14), (15, 16)]
+            
+            for i, (fav_rank, dog_rank) in enumerate(matchups):
+                fav = Team.objects.get(group__stage=stage, rank=fav_rank)
+                dog = Team.objects.get(group__stage=stage, rank=dog_rank)
+                
+                match = 'match_' + str(i + 1)
+                
+                fav_data = Team.objects.get(name=fav.name, group__stage__name="Group Stage", group__stage__event__current=True)
+                dog_data = Team.objects.get(name=dog.name, group__stage__name="Group Stage", group__stage__event__current=True)
 
-                    d[match] = {'fav': fav.name, 
-                                'fav_pk': fav.pk, 
-                                'fav_flag': fav_data.flag_link,
-                                'fav_fifa_rank': fav_data.rank,
-                                'dog': dog.name,
-                                'dog_pk': dog.pk, 
-                                'dog_flag': dog_data.flag_link,
-                                'dog_fifa_rank': dog_data.rank,
-                    
-                                }
+                d[match] = {'fav': fav.name, 
+                            'fav_pk': fav.pk, 
+                            'fav_flag': fav_data.flag_link,
+                            'fav_fifa_rank': fav_data.rank,
+                            'dog': dog.name,
+                            'dog_pk': dog.pk, 
+                            'dog_flag': dog_data.flag_link,
+                            'dog_fifa_rank': dog_data.rank,
+                            }
 
         print ('picks user ', username)
         if username:
@@ -587,6 +611,7 @@ class KOBracketAPI(APIView):
         else:
             d['picks'] = json.dumps([])
 
+        print(f"Final API response keys: {list(d.keys())}")
         print ('WC KOBracketAPI duration: ', datetime.now() - start)
         return JsonResponse(d, status=200, safe=False)
 
@@ -638,32 +663,59 @@ class CreateKOTeamsAPI(APIView):
             
             ko_group = Group.objects.get(stage=stage)
 
-            pools = ['Pool A', 'Pool B', 'Pool C', 'Pool D']
+            pools = ['A', 'B', 'C', 'D']
             for g in Group.objects.filter(stage=Stage.objects.get(current=True, name="Group Stage")):
                 #rank = [data.get('rank') for k,v in espn.items() for t, data  in v.items() if t == team.name][0]
-                print (data_obj.group_data)
+                #print ('Data obj: ', data_obj.group_data)
                 d = [(t,data.get('rank')) for k,v in data_obj.group_data.items() for t, data in v.items() if data.get('rank') in ['1', '2', 1, 2] and k == g.group ]
                 
                 #print (g.group[-1].lower(),ord(g.group[-1].lower()) -96, d)
                 print ('DD ', d)
-                if stage.event.data.get('event_type') == 'wbc':
+                if stage.event.event_type == 'wbc':
                     
                     for i, x in enumerate(d):
-                        if Team.objects.filter(full_name=x[0], group__stage=stage, group__stage__event__current=True ).exists():
+                        if Team.objects.filter(full_name=fix_team_name(x[0]), group__stage=stage, group__stage__event__current=True ).exists():
                             print ('Skipping setup game exists: ', stage, x[0])
                         else:
-                            t_data = Team.objects.get(full_name=x[0], group__stage__name="Group Stage", group__stage__event__current=True)
+                            t_data = Team.objects.get(full_name=fix_team_name(x[0]), group__stage__name="Group Stage", group__stage__event__current=True)
                             team = Team()
                             team.group = ko_group
                             team.name = x[0]
                             team.full_name = x[0]
-                            team.rank = (pools.index(t_data.group.group) * 2) + x[1]
+                            
+                            # WBC Bracket Logic: Correct order
+                            # Match 1 (left): D1 vs C2
+                            # Match 2 (left): B1 vs A2  
+                            # Match 3 (right): A1 vs B2
+                            # Match 4 (right): C1 vs D2
+                            group_letter = t_data.group.group
+                            rank_in_group = x[1]
+                            print ('group letter', group_letter, 'rank in group', rank_in_group, team.name)
+                            # Match 1 (left): D1 vs C2
+                            if group_letter == 'D' and rank_in_group == 1:
+                                team.rank = 1  # Match 1 top
+                            elif group_letter == 'C' and rank_in_group == 2:
+                                team.rank = 2  # Match 1 bottom
+                            # Match 2 (left): B1 vs A2  
+                            elif group_letter == 'B' and rank_in_group == 1:
+                                team.rank = 3  # Match 2 top
+                            elif group_letter == 'A' and rank_in_group == 2:
+                                team.rank = 4  # Match 2 bottom
+                            # Match 3 (right): A1 vs B2
+                            elif group_letter == 'A' and rank_in_group == 1:
+                                team.rank = 5  # Match 3 top
+                            elif group_letter == 'B' and rank_in_group == 2:
+                                team.rank = 6  # Match 3 bottom
+                            # Match 4 (right): C1 vs D2
+                            elif group_letter == 'C' and rank_in_group == 1:
+                                team.rank = 7  # Match 4 top
+                            elif group_letter == 'D' and rank_in_group == 2:
+                                team.rank = 8  # Match 4 bottom
+                            else:
+                                raise Exception('Error group: ' + str(group_letter) + ' rank: ' + str(rank_in_group))
+                            
                             team.flag_link = t_data.flag_link
-                            if stage.event.data.get('early_ko_games'):
-                                pool = [x for x in stage.event.data.get('early_ko_games') if x.split('_')[0] == t_data.group.group]
-                                print ('Early Game POOL ', pool)
-                            if pool and int(pool[0].split('_')[1]) == int(x[1]):
-                                team.early_game=True
+                            print ('save team', team, 'rank:', team.rank)
                             team.save()
                 else:
                     for x in d:
@@ -690,7 +742,14 @@ class CreateKOTeamsAPI(APIView):
         return JsonResponse(d, status=200, safe=False)
 
 
-
+def fix_team_name(team_name):
+    if team_name == 'USA':
+        team_name = 'United States'
+    elif team_name == 'Korea':
+        team_name = 'South Korea'
+    elif team_name == 'Dominican Rep.':
+        team_name = 'Dominican Republic'
+    return team_name
 
 
 
