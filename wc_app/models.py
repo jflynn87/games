@@ -52,6 +52,10 @@ class Stage(models.Model):
         else:
             return []
 
+    def total_picks(self):
+        if self.event.event_type and self.name == 'Knockout Stage':
+            return 7
+
 
 class Group(models.Model):
     #event = models.ForeignKey(Event, on_delete=models.CASCADE)

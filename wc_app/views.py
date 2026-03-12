@@ -458,10 +458,10 @@ class KnockoutPicksView(LoginRequiredMixin, TemplateView):
     
     def get_template_names(self):
         #t_name = super().get_template_names()
-        if self.stage().event.data.get('event_type') == 'wbc':
-            return ['wc_app/wbc_ko_picks.html',]
-        else:
-            return ['wc_app/knockout_picks.html',]
+        #if self.stage().event.event_type == 'wbc':
+        #    return ['wc_app/wbc_ko_picks.html',]
+        #else:
+        return ['wc_app/knockout_picks.html',]
 
     def get_context_data(self, **kwargs):
         context = super(KnockoutPicksView, self).get_context_data(**kwargs)

@@ -414,16 +414,16 @@ function checkComplete() {
     //console.log(picks)
     //console.log('picks len ', picks.length)
     if ($('#early_picks_period').text() == 'True') {
-        if (picks.length == parseInt($('#early_picks').text()) +1) {  //19 to skip token
+        if (picks.length == parseInt($('#early_picks').text())  ) {  //19 to skip token
             $('#sub_btn').text('Submit Picks').attr('disabled', false)
         }
         else {
-            $('#sub_btn').text(picks.length -1 + ' of ' + $('#_early_picks').text() + ' picks').attr('disabled', true)
+            $('#sub_btn').text(picks.length  + ' of ' + $('#_early_picks').text() + ' picks').attr('disabled', true)
         }
     
     }
     else {
-    if (picks.length == parseInt($('#picks').text()) +1) {  //19 to skip token
+    if (picks.length -1 == parseInt($('#picks').text()) ) {  //19 to skip token
         $('#sub_btn').text('Submit Picks').attr('disabled', false)
     }
     else {
