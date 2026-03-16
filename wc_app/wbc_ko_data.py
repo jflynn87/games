@@ -1,11 +1,9 @@
 from datetime import datetime
 from urllib import request
-from bs4 import BeautifulSoup
 from wc_app.models import Event, Stage, Group, Team, Data
 import json
 from requests import get
 from urllib.request import urlopen
-from bs4 import BeautifulSoup
 
 class ESPNData(object):
     '''espn data and function for WBC.  Takes an optional list of dates for the espn payload and optional stage'''
@@ -74,8 +72,11 @@ class ESPNData(object):
         return d
 
     def stage_complete(self):
-        status = [game.get('status') for game in self.data if game.get('group').get('name') == 'Finals'][0]
-        if status == 'post':
+        status = [game.get('status') for game in self.data if game.get('group').get('name') == 'Finals']
+        if len(status) == 0:
+            return False
+        
+        if status[0] == 'post':
             return True
         return False
 

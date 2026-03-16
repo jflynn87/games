@@ -39,11 +39,13 @@ $(document).ready(function () {
                                                     '<td id=' + user + '_champ_cell></td>' +
                                                     '</tr>'
                                                     )
-        addPicks(user, d.picks, data.results)
+        //addPicks(user, d.picks, data.results)
+        addWBCPicks(user, d.picks, data.results)
       }
     })
   
-    sort_table('score_table')    
+    sort_table('score_table')
+    $('#status').remove()    
     }}
   })
 
@@ -179,7 +181,8 @@ function addPicks(user, data, results) {
 
 function addWBCPicks(user, data, results) {
       $.each(data, function(i, info) {
-
+        console.log('A', results)
+        console.log(results['2nd Round'], i)
             if (i + 1 < 5) {
                 if (results['2nd Round'].losers.indexOf(info[0]) != -1) {
                 

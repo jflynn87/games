@@ -1,7 +1,7 @@
 from django.shortcuts import render
 from django.views.generic import TemplateView
 from django.contrib.auth.mixins import LoginRequiredMixin
-from wc_app.models import Event, Group, Team, Picks, Stage, AccessLog, TotalScore, Data
+from wc_app.models import Event, Group, Team, Picks, Stage, AccessLog, TotalScore, Data, fix_team_name
 from django.contrib.auth.models import User
 from wc_app import wc_group_data, wc_ko_data, wbc_group_standings, mlb_group_stage, wbc_ko_data
 from django.core import serializers
@@ -141,7 +141,7 @@ class ScoresAPI(APIView):
             data_obj, created = Data.objects.get_or_create(stage=stage)
 
             if 'baseball' in stage.event.name.lower():
-                print ('baseball')
+                print ('baseballx')
                 score = wbc_scores(stage, users, data_obj)
             else:
                 print ('soccer')
@@ -239,7 +239,7 @@ def wbc_scores(stage, users, data_obj):
             #winners_losers = espn.api_winners_losers()
             espn = wbc_ko_data.ESPNData()
             winners_losers = espn.winners()
-            
+
             for u, stats in d.items():
                 score = 0
                 best_score = 0
@@ -250,7 +250,7 @@ def wbc_scores(stage, users, data_obj):
                     #    fix = p.ko_fix_picks()
                     #    p = fix
                     p_score = p.calc_score(winners_losers, 'wbc_api')
-
+                    print ('calc good', p_score)
                     pick_list.append([p.team.name, p.team.flag_link, p.rank, p_score[0], p.in_out(winners_losers)])
                     score += p_score[0]
                     best_score += p_score[1]
@@ -260,8 +260,10 @@ def wbc_scores(stage, users, data_obj):
                                 'best_score': best_score + group_ts.score,
                                 'picks': pick_list})
 
-            d['results'] = winners_losers    
+            d['results'] = winners_losers
+
             if espn.stage_complete():
+                print ('complete')
                 stage.complete = True
                 stage.save()
                 max_score = max([v.get('Score') for k, v in d.items() if k != 'results'])
@@ -275,7 +277,7 @@ def wbc_scores(stage, users, data_obj):
                 data_obj.save()
             except Exception as e1:
                     print ('WBC KO data save failed', stage, e1)
-
+    print (d)
     print ('WC scores duration: ', datetime.now() - start)
     return d
 
@@ -742,14 +744,14 @@ class CreateKOTeamsAPI(APIView):
         return JsonResponse(d, status=200, safe=False)
 
 
-def fix_team_name(team_name):
-    if team_name == 'USA':
-        team_name = 'United States'
-    elif team_name == 'Korea':
-        team_name = 'South Korea'
-    elif team_name == 'Dominican Rep.':
-        team_name = 'Dominican Republic'
-    return team_name
+# def fix_team_name(team_name):
+#     if team_name == 'USA':
+#         team_name = 'United States'
+#     elif team_name == 'Korea':
+#         team_name = 'South Korea'
+#     elif team_name == 'Dominican Rep.':
+#         team_name = 'Dominican Republic'
+#     return team_name
 
 
 

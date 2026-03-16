@@ -192,20 +192,21 @@ class Picks (models.Model):
                 best_score += 20
 
         elif source == 'wbc_api':
-            if self.rank < 5 and self.team.full_name in data.get('2nd Round').get('winners'):
+            team_name = fix_team_name(self.team.full_name)
+            if self.rank < 5 and team_name in data.get('2nd Round').get('winners'):
                 p_score += 10
-            elif self.rank < 7 and self.team.full_name in data.get('Semi-Finals').get('winners'):
+            elif self.rank < 7 and team_name in data.get('Semi-Finals').get('winners'):
                 p_score += 15
-            elif self.rank == 7 and self.team.full_name in data.get('Finals').get('winners'):
+            elif self.rank == 7 and team_name in data.get('Finals').get('winners'):
                 p_score +=30
-            print (self, self.rank, self.team.full_name)
-            if self.rank < 5 and not self.team.full_name in data.get('2nd Round').get('losers'):
+            print (self, self.rank, team_name)
+            if self.rank < 5 and not team_name in data.get('2nd Round').get('losers'):
                 print ('A')
                 best_score += 10
-            elif self.rank in [5, 6] and not (self.team.full_name in data.get('2nd Round').get('losers') or self.team.full_name in data.get('Semi-Finals').get('losers')):
+            elif self.rank in [5, 6] and not (team_name in data.get('2nd Round').get('losers') or team_name in data.get('Semi-Finals').get('losers')):
                 print ('B')
                 best_score += 15
-            elif self.rank == 7 and not (self.team.full_name in data.get('2nd Round').get('losers') or self.team.full_name in data.get('Semi-Finals').get('losers') or self.team.full_name in data.get('Finals').get('losers')):
+            elif self.rank == 7 and not (team_name in data.get('2nd Round').get('losers') or team_name in data.get('Semi-Finals').get('losers') or team_name in data.get('Finals').get('losers')):
                 print ('C')
                 best_score += 30
 
@@ -271,3 +272,11 @@ class TotalScore(models.Model):
     def __str__(self):
         return str(self.stage) + str(self.user) + str(self.score)
 
+def fix_team_name(team_name):
+    if team_name == 'USA':
+        team_name = 'United States'
+    elif team_name == 'Korea':
+        team_name = 'South Korea'
+    elif team_name == 'Dominican Rep.':
+        team_name = 'Dominican Republic'
+    return team_name
