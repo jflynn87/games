@@ -15,10 +15,14 @@ from urllib.request import Request, urlopen
 from datetime import datetime
 
 start = datetime.now()
+e = Event.objects.get(current=True)
+print (e.name, e.current)
+stage = Stage.objects.get(current=True)
+print (stage.name, stage.current)
 
-e = wbc_ko_data.ESPNData()
-data = e.data
-print (e.data)
+wc = wc_group_data.ESPNData().get_group_data(create=True)
+exit()
+
 
 exit()
 

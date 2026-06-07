@@ -301,13 +301,15 @@ function create_post() {
                             'pick_list': pick_list, 
                             'men_countries': men_countries,
                             'women_countries': women_countries,
-                            'ryder_cup': ryder_cup
+                            'ryder_cup': ryder_cup,
+                            'source': 'UI'
                              })
  })
     .then((response) => response.json())
     .then((responseJSON) => {
      d = responseJSON
-     if (d.status == 1) {
+     console.log('response from submit picks: ', d)
+     if (d.status == 200) {
          window.location = d.url
      }
      else {

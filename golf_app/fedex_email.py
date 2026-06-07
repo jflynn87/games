@@ -1,5 +1,4 @@
 from email.message import EmailMessage
-import imp
 from multiprocessing.spawn import import_main_path
 import django
 from django.core.mail import send_mail

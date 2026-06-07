@@ -1,12 +1,9 @@
 from datetime import datetime
-from urllib import request
-from bs4 import BeautifulSoup
-from wc_app.models import Event, Stage, Group, Team, Data
-#from selenium import webdriver
-#from webdriver_manager.chrome import ChromeDriverManager
-#from selenium.webdriver.chrome.options import Options
-#from selenium.webdriver.common.by import By
+from wc_app.models import Stage, Group, Team, Data
 import json
+import os
+
+JSON_FILE = os.path.join(os.path.dirname(__file__), 'wc_groups.json')
 
 
 
@@ -18,74 +15,53 @@ class ESPNData(object):
         field_data is the actual golfers in the tournament'''
 
     #only use event_data for match play events, other data not reliable.
-    def __init__(self, url=None, stage=None):
+    def __init__(self, stage=None):
         start = datetime.now()
 
-        if url:
-            self.url = url
-        else:
-            self.url ='https://www.espn.com/soccer/table/_/league/fifa.world'
-        
-        html = request.urlopen(self.url)
-        self.soup = BeautifulSoup(html, 'html.parser')
+        with open(JSON_FILE) as f:
+            self.wc_data = json.load(f)
 
         if stage:
             self.stage = stage
-        elif Stage.objects.filter(current=True).count() ==1:
+        elif Stage.objects.filter(current=True).count() == 1:
             self.stage = Stage.objects.get(current=True)
         else:
-            self.stage = Stage.objects.get(name="Group Stage",event__current=True)
+            self.stage = Stage.objects.get(name="Group Stage", event__current=True)
 
-        print ('WC Init duration: ', datetime.now() - start)
-
-        # is this updated as games start?  https://site.api.espn.com/apis/site/v2/sports/soccer/fifa.world/scoreboard
-
+        print('WC Init duration: ', datetime.now() - start)
 
 
     def get_group_data(self, create=False):
-        t_body = self.soup.find_all('tbody', {'class': "Table__TBODY"})[0]
-        data = {}
-        for i, row in enumerate(t_body.find_all('tr')):
-            if 'subgroup-headers' in row['class']:
-                data[row.text] = {}
-                g = row.text
-            else:    
-                #print (row.find_all('a')[1].text)
-                #print (row.find_all('a')[2].text)#, row.find_all('td')[1].text)
-                team =  row.find_all('a')[1].text
-                full_name = str(row.find_all('a')[2].text)
-                team_info =  'https://www.espn.com' + str(row.find('a')['href'])
-                flag = 'https://a.espncdn.com/combiner/i?img=/i/teamlogos/countries/500/' + str(row.find('img')['alt'].lower()) + '.png&h=40&w=40' 
-                data.get(g).update({team: { 
-                                'info': team_info, 
-                                'flag': flag,
-                                'full_name': full_name,
-                                'rank': row.find_all('td')[0].find_all('span')[0].text,
-                                'index': i}})
+        teams_lookup = self.wc_data['teams']
+        data = {
+            g['name']: {
+                abbr: {
+                    'full_name': teams_lookup[abbr]['name'],
+                    'flag': teams_lookup[abbr]['flag_url'],
+                    'rank': teams_lookup[abbr]['fifa_ranking'],
+                    'info': '',
+                }
+                for abbr in g['teams']
+            }
+            for g in self.wc_data['groups']
+        }
 
         if create:
-            rankings = self.get_rankings(use_file=True)
-            print ('len rankings; ', len(rankings))
-    
-            stage = Stage.objects.get(current=True)
+            stage = self.stage
             Group.objects.filter(stage=stage).delete()
             Team.objects.filter(group__stage=stage).delete()
 
-            for group, teams in data.items():
-                g, g_created = Group.objects.get_or_create(stage=stage, group=group)
-                for team, data in teams.items():
-                    if rankings.get(team):
-                        t, t_created = Team.objects.get_or_create(group=g, name=team,\
-                                        rank=rankings.get(team).get('rank'), flag_link=data.get('flag'), \
-                                        info_link=data.get('info'), full_name=data.get('full_name')) 
-                    else:
-                        t, t_created = Team.objects.get_or_create(group=g, name=team,\
-                                        flag_link=data.get('flag'), \
-                                        info_link=data.get('info'), full_name=data.get('full_name'), rank=65) 
-                        print ("NO RANKING :", team)
+            for group_name, teams in data.items():
+                g, _ = Group.objects.get_or_create(stage=stage, group=group_name)
+                for abbr, td in teams.items():
+                    Team.objects.get_or_create(
+                        group=g, name=abbr,
+                        defaults=dict(full_name=td['full_name'], flag_link=td['flag'],
+                                      info_link=td['info'], rank=td['rank'])
+                    )
 
-            print ('Created WC Groups: ', Group.objects.filter(stage=stage).count(), ' Teams: ', Team.objects.filter(group__stage=stage).count())        
-
+            print('Created WC Groups: ', Group.objects.filter(stage=stage).count(),
+                  ' Teams: ', Team.objects.filter(group__stage=stage).count())
 
         return data
 

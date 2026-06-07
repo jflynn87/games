@@ -78,7 +78,8 @@ urlpatterns= [
     path('golfer_results_updates/<int:min_key>/<int:max_key>', views.UpdateGolferResultsAPI.as_view(), name='golfer_results_update'),
     path('setup_summary_stats/<str:pga_t_num>/<str:espn_t_num>', views.SetupStatsAPI.as_view(), name='setup_summary_stats'),
     path('sds_status/', views.SDStatusAPI.as_view(), name='sds_status'),
-    path('get_field/<int:pk>', views.GetFieldAPI.as_view(), name='get_field'),
+    #path('get_field/<int:pk>', views.GetFieldAPI.as_view(), name='get_field'),
+    path('get_field/', views.GetFieldAPI.as_view()),
     path('get_golfers_obj/<int:pk>', views.GetGolfersOBJAPI.as_view(), name='get_golfers_obj'),
     path('get_started_data/<int:pk>', views.StartedDataAPI.as_view(), name='get_started_data'),
     path('fedex_summary/<int:pk>', views.FedExSummaryView.as_view(), name='fedex_summary'),
@@ -98,5 +99,7 @@ urlpatterns= [
     path('create_field_csv', views.CreateFieldCSVAPI().as_view(), name='create_field_csv'),
     path('async_create_field_csv', views.AsyncCreateFieldCSV().as_view(), name='async_create_field_csv'),
     path('field_csv_signed_url', views.FieldCSVSignedURL().as_view(), name='field_csv_signed_url'),
-
+    path('all_time_best_scores_api', views.AllTimeBestTotalScoresAPI().as_view()),
+    path('submit_picks/', views.SubmitPicksAPIView.as_view(), name='submit_picks'),
+    path('get_tournaments_api', views.GetTournamentsAPI.as_view(), name='get_tournament_api'),
 ]

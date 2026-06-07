@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 from requests import get
 import json
@@ -27,17 +27,18 @@ class ESPNSchedule(object):
 
 
         headers = {'User-Agent': 'Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.149 Mobile Safari/537.36'}
-        url = 'https://www.espn.com/golf/schedule/_/season/' + str(season_year) + '/tour/pga?_xhr=pageContent'
+        #url = 'https://www.espn.com/golf/schedule/_/season/' + str(season_year) + '/tour/pga?_xhr=pageContent'
+        url = 'https://site.api.espn.com/apis/site/v2/sports/golf/pga/scoreboard?dates=' + str(s.start_date().strftime('%Y%m%d')) + '-' + str(s.end_date().strftime('%Y%m%d'))
         self.schedule = get(url, headers=headers).json()
-
         self.events_to_exclude = ['The Match', 'Corales Puntacana Championship', 'Puerto Rico Open', 'Barracuda Championship', 'Barbasol Championship']
 
     def get_event_list(self):
         d = {}
         for event in self.schedule.get('events'):
+            #print (event)
             if event.get('name') not in self.events_to_exclude: 
                 d[event.get('name')] = {
-                                'start_date': datetime.strptime(event.get('startDate')[:-1], '%Y-%m-%dT%H:%M').strftime('%Y-%m-%d'),
+                                'start_date': datetime.strptime(event.get('date')[:-1], '%Y-%m-%dT%H:%M').strftime('%Y-%m-%d'),
                                 'status': event.get('status'),
                                 'link': event.get('link')
                                 }
@@ -45,14 +46,16 @@ class ESPNSchedule(object):
         return d
 
     def current_event(self):
-        if [v for v in self.schedule.get('events') if v.get('status')  == 'in']:
-            return [v for v in self.schedule.get('events') if v.get('status') == 'in']
+        if [v for v in self.schedule.get('events') if v.get('status').get('type').get('state')  == 'in']:
+            return [v for v in self.schedule.get('events') if v.get('status').get('type').get('state') == 'in']
 
         end_date = datetime.now() + timedelta(days=5)
-        start_date = datetime.utcnow()
+        start_date = datetime.now()
         
-        event = [v for v in self.schedule.get('events') if datetime.strptime(v.get('startDate')[:-1], '%Y-%m-%dT%H:%M') >= start_date \
-                    and  datetime.strptime(v.get('startDate')[:-1], '%Y-%m-%dT%H:%M') < end_date]
+        print (start_date, end_date)
+
+        event = [v for v in self.schedule.get('events') if datetime.strptime(v.get('date')[:-1], '%Y-%m-%dT%H:%M') >= start_date \
+                    and  datetime.strptime(v.get('date')[:-1], '%Y-%m-%dT%H:%M') < end_date]
         return event
 
     def complete_events(self):

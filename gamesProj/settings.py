@@ -15,11 +15,11 @@ from pathlib import Path
 from dotenv import load_dotenv
 
 if os.environ.get('env') == 'local_env':
-    basepath = Path()
+    #basepath = Path()
     #basedir = str(basepath.cwd())
-    envars = basepath.cwd() / '.env'
-    load_dotenv(envars)
-
+    #envars = basepath.cwd() / '.env'
+    #load_dotenv(envars)
+    load_dotenv()
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -27,10 +27,6 @@ TEMPLATE_DIR = os.path.join(BASE_DIR, 'templates')
 STATIC_DIR = os.path.join(BASE_DIR, 'static')
 MODULE_DIR = os.path.dirname(__file__)  # get current directory
 file_path = os.path.join(MODULE_DIR, 'name_fix.txt')
-
-
-
-
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/2.0/howto/deployment/checklist/
@@ -67,6 +63,7 @@ INSTALLED_APPS = [
     'corsheaders',
     'django_user_agents',
     'compressor',
+    'rest_framework.authtoken', 
     'fb_app',
     'golf_app',
     'run_app',
@@ -76,6 +73,15 @@ INSTALLED_APPS = [
     ]
 
 
+
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework.authentication.TokenAuthentication',
+    ],
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.IsAuthenticated',
+    ],
+}
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',

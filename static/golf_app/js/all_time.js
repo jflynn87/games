@@ -13,7 +13,7 @@ function update_all(season) {
   avg_points(season)
   avg_cuts(season)
   most_picked(season) 
-  
+  allTimeBestScores()
 }
 
   
@@ -144,4 +144,42 @@ function show_hide_rows(played)  {
     $('#' + user + '_stats_row').show()
 
   })
+}
+function allTimeBestScores() {
+  //$('#most_frequent_status').text('loading...').css('color', 'black')
+// 1. Use a valid absolute URL (or window.location.origin for relative paths)
+const baseURL = window.location.origin + '/golf_app/all_time_best_scores_api';
+const params = { count: '100' };
+
+// 2. Pass the object directly to the constructor
+const url = new URL(baseURL);
+url.search = new URLSearchParams(params).toString();
+
+const finalURL = url.toString();
+console.log(finalURL);
+
+// 3. Match variable casing
+fetch(finalURL)
+  .then(response => response.json())
+  .then(JSONdata => {
+    data = JSONdata
+    if (data.error) {
+      $('#best_total_scores_msg').append('<p class=alert-danger>Error caclulating  All Time Best Total Score: ' + data.error.msg + '<p>')
+        }
+    else {
+          $('#best_total_scores_msg').html('<h4>Best All Time Tournament Scores</h4>')
+          $.each(data, function(i,d) {
+            console.log(d)
+            $('#best_total_scores').append('<li class=list-group-item> #' + (i +1) + ' ' +
+                                                  d.user__username + ': ' +
+                                                  d.score +  ': ' +
+                                                  d.tournament__season__season + ' ' +
+                                                  d.tournament__name + 
+                                                       '</li>')
+            })
+  }
+  //$('#most_frequent_status').html('<i class="fas fa-check"></i>').css('color', 'green')
+  })
+
+
 }

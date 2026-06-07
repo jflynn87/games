@@ -1,9 +1,10 @@
 $(document).ready(function () {
     start = new Date()
     var t_key = $('#tournament_key').text()
+    params = new URLSearchParams({t_pk: t_key})
     Promise.all([
     fetch("/golf_app/get_info/" + t_key).then(response => response.json()),
-    fetch("/golf_app/get_field/" + t_key).then(response => response.json()),
+    fetch("/golf_app/get_field?t_pk="  + t_key).then(response => response.json()),
     fetch("/golf_app/get_golfers_obj/" + t_key).then(response => response.json()),
     fetch("/golf_app/get_started_data/" + t_key).then(response => response.json()),
     fetch("/golf_app/field_get_picks/").then(response => response.json()),
@@ -12,14 +13,14 @@ $(document).ready(function () {
        ])
     .then((responseJSON) => {
          info = $.parseJSON(responseJSON[0])
-         f_data = $.parseJSON(responseJSON[1])
-         field = $.parseJSON(f_data.field)
-         groups = $.parseJSON(f_data.groups)
+         f_data = responseJSON[1]
+         field = f_data.field
+         groups = f_data.groups
          g_data = $.parseJSON(responseJSON[2])
          golfers = g_data.golfers
          partners = g_data.partners
          s_data = $.parseJSON(responseJSON[3])
-         //console.log(s_data)
+         console.log(groups.length, field.length, golfers.length)    
          //g_links = $.parseJSON(responseJSON[4])
          startedGolfers = s_data.started_golfers
          tStarted = s_data.t_started
@@ -83,15 +84,14 @@ $(document).ready(function () {
 function buildForm(info, groups, field, golfers, partners, picks, tStarted, startedGolfers, lockedGroups) {
     return new Promise(function (resolve) {
         fieldLen = field.length
-
         for (let i=0; i < fieldLen; i++) {
-            f = field[i]
+            const f = field[i]
+            console.log('building form for golfer ', f)
             var group = groups.filter(grp => {
-                return Number(grp.pk) == Number(f.fields.group)})
-        
-            if (i==0 || f.fields.group != field[i-1].fields.group) {
-                
-                table_grp_num = group[0].fields.number
+                return Number(grp.number) == Number(f.group.number)})
+            
+            if (i==0 || f.group.number != field[i-1].group.number) {
+                table_grp_num = group[0].number
                 frag = new DocumentFragment()
                 table = document.createElement('table')
                 table.id = 'tbl-group-' + table_grp_num 
@@ -103,7 +103,7 @@ function buildForm(info, groups, field, golfers, partners, picks, tStarted, star
                 th = document.createElement('th')
                 th.classList.add('text-white', 'fw-bold', 'bg-primary')
                 th.colSpan = 2
-                th.innerHTML = 'Group ' + group[0].fields.number + ' - Pick ' + info[group[0].fields.number] + ' Golfers'
+                th.innerHTML = 'Group ' + group[0].number + ' - Pick ' + info[group[0].number] + ' Golfers'
                 span = document.createElement('span')
                 spanP = document.createElement('p')
                 spanP.innerHTML = 'Click anywhere on player info area to see stats'
@@ -117,16 +117,16 @@ function buildForm(info, groups, field, golfers, partners, picks, tStarted, star
         
             }
             
-            numPicks = info[group[0].fields.number]
+            numPicks = info[group[0].number]
             if (numPicks == '1') {selectType = 'radio'}
             else {selectType = 'checkbox'}
             
             golferTr = document.createElement('tr')
-            golferTr.id = 'golfer-' + f.pk
+            golferTr.id = 'golfer-' + f.id
             golferTr.classList = ['border rounded border-2']
 
             inputTd = document.createElement('td')
-            inputTd.id = 'input-' + f.pk
+            inputTd.id = 'input-' + f.id
             inputTd.width = '2%'
 
             csrfP = document.createElement('p')
@@ -138,21 +138,21 @@ function buildForm(info, groups, field, golfers, partners, picks, tStarted, star
             selectP = document.createElement('p')
             selectI = document.createElement('input')
             selectI.type = selectType
-            selectI.id = f.pk
+            selectI.id = f.id
             selectI.style.cssFloat  = 'right'
             selectI.classList = ['my-checkbox form-check-input']
-            selectI.name = 'group-' + group[0].fields.number  //can i make the group not an array?
-            selectI.value = f.pk
-            if (picks.indexOf(f.pk) != -1) {
+            selectI.name = 'group-' + group[0].number  //can i make the group not an array?
+            selectI.value = f.id
+            if (picks.indexOf(f.id) != -1) {
                 selectI.checked = true
             }
             selectI.addEventListener('change', function() {validatePicks(info, this)})
-
+            //console.log('golfer  ', f.golfer)
             var golfer = golfers.filter(g => {
-                return Number(g.id) == Number(f.fields.golfer)
+                return Number(g.id) == Number(f.golfer.id)
             })
-
-            if (f.fields.withdrawn == true) {
+            //console.log('golfer obj: ', f, golfer)
+            if (f.withdrawn == true) {
                   
                     selectMsg = document.createElement('p')
                     selectMsg.innerHTML = "WD"
@@ -170,7 +170,7 @@ function buildForm(info, groups, field, golfers, partners, picks, tStarted, star
                 selectI.disabled = true
                 }
             
-            else if (lockedGroups.indexOf(f.fields.group) != -1) {
+            else if (lockedGroups.indexOf(f.group) != -1) {
                 selectMsg = document.createElement('p')
                 selectMsg.innerHTML = "Locked"
                 inputTd.style.backgroundColor = 'lightgray'
@@ -181,7 +181,7 @@ function buildForm(info, groups, field, golfers, partners, picks, tStarted, star
     
 
             golferTd = document.createElement('td')
-            golferTd.id = 'playerInfo' + f.pk
+            golferTd.id = 'playerInfo' + f.id
             golferTd.addEventListener('click', function() {getStatsData(this.parentNode)})
             
             golferP1 = document.createElement('p')
@@ -196,10 +196,10 @@ function buildForm(info, groups, field, golfers, partners, picks, tStarted, star
             golferPic.style.borderRadius = '40%'         
             golferPic.style.backgroundColor = 'lightgray'
             
-            if (f.fields.partner) {
-                golferName.innerHTML = f.fields.playerName + '(' + (Number(f.fields.currentWGR) - Number(f.fields.partner_owgr)).toString() + ')'
+            if (f.partner) {
+                golferName.innerHTML = f.playerName + '(' + (Number(f.currentWGR) - Number(f.partner_owgr)).toString() + ')'
             }
-            else {golferName.innerHTML = f.fields.playerName}
+            else {golferName.innerHTML = f.playerName}
             golferName.style.fontWeight = 'bold'
 
             golferFlag.src = golfer[0].flag_link
@@ -210,11 +210,11 @@ function buildForm(info, groups, field, golfers, partners, picks, tStarted, star
             golferP1.append(golferName)
             golferP1.append(golferFlag)
 
-            if (f.fields.partner) {
+            if (f.partner) { 
                 p = document.createElement('span')
                 
                 var partner = partners.filter(p => {
-                    return Number(p.id) == Number(f.fields.partner_golfer)})
+                    return Number(p.id) == Number(f.partner_golfer)})
                 p_golferPic = document.createElement('img')
                 p_golferName = document.createElement('span')
                 p_golferFlag = document.createElement('img')
@@ -223,7 +223,7 @@ function buildForm(info, groups, field, golfers, partners, picks, tStarted, star
                 p_golferPic.alt = ''
                 p_golferPic.style.height = '200px'
                 
-                p_golferName.innerHTML = partner[0].golfer_name + '('+ f.fields.partner_owgr + ')'
+                p_golferName.innerHTML = partner[0].golfer_name + '('+ f.partner_owgr + ')'
                 p_golferName.style.fontWeight = 'bold'
     
                 p_golferFlag.src = partner[0].flag_link
@@ -243,7 +243,7 @@ function buildForm(info, groups, field, golfers, partners, picks, tStarted, star
 
             golferP2 = document.createElement('p')
             google = document.createElement('a')
-            google.href = "https://www.google.com/search?q=" + f.fields.playerName
+            google.href = "https://www.google.com/search?q=" + f.playerName
             google.target="_blank"
             google.innerHTML = "Google"
             espn = document.createElement('a')
@@ -268,8 +268,8 @@ function buildForm(info, groups, field, golfers, partners, picks, tStarted, star
 
             golferP3 = document.createElement('p')
 
-            golferP3.innerHTML = 'OWGR: ' + f.fields.currentWGR + '; Handicap: ' + f.fields.handi +
-                                '; Prior Year: ' + f.fields.prior_year
+            golferP3.innerHTML = 'OWGR: ' + f.currentWGR + '; Handicap: ' + f.handi +
+                                '; Prior Year: ' + f.prior_year
             golferP3.style.fontWeight = 'bold'
             
             golferTd.append(golferP3)
@@ -764,7 +764,8 @@ function checkComplete(info) {
     .then((response) => response.json())
     .then((responseJSON) => {
      d = responseJSON
-     if (d.status == 1) {
+     console.log('post response ', d)
+     if (d.status == 200) {
          window.location = d.url
      }
      else {
@@ -797,7 +798,7 @@ function create_post_random() {
     .then((response) => response.json())
     .then((responseJSON) => {
      d = responseJSON
-     if (d.status == 1) {
+     if (d.status == 200) {
          window.location = d.url
      }
      else {

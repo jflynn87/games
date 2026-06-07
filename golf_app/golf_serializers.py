@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from golf_app.models import Field, ScoreDetails, Golfer, CountryPicks, Picks, Tournament, FedExField, Season, FedExPicks, BonusDetails, PickMethod
+from golf_app.models import Field, Group, ScoreDetails, Golfer, CountryPicks, Picks, Tournament, FedExField, Season, FedExPicks, BonusDetails, PickMethod
 from golf_app import espn_api
 from datetime import datetime
 
@@ -73,6 +73,8 @@ class NewFieldSerializer(serializers.ModelSerializer):
         return field.golfer.get_pga_player_link()
 
     def get_started(self, field):
+        if not self.context.get('espn_data'):
+            return False
         start = datetime.now()
         espn = self.context.get('espn_data')
         started = espn.player_started(field.golfer.espn_number)
@@ -96,6 +98,12 @@ class NewFieldSerializer(serializers.ModelSerializer):
     def get_fedex(self, field):
         user = self.context.get('user')
         return field.fedex_pick(user)
+
+class GroupSerializer(serializers.ModelSerializer):
+        class Meta:
+            model = Group
+            fields = '__all__'
+            depth = 1
 
 
 class ScoreDetailsSerializer(serializers.ModelSerializer):

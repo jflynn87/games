@@ -133,13 +133,18 @@ class Season(models.Model):
         return Tournament.objects.all().order_by('pk').exclude(pga_tournament_num__in=['468', '500', '018' '999']) \
                 .exclude(current=True).reverse()[1:5]
 
+    def start_date(self):
+        return Tournament.objects.filter(season=self).order_by('start_date').first().start_date
+    
+    def end_date(self):
+        return datetime(self.season, 9, 10)
 
 class Tournament(models.Model):
     season = models.ForeignKey(Season, on_delete=models.CASCADE)
     name = models.CharField(max_length=264)
     start_date = models.DateField(null=True)
-    field_json_url = models.URLField(null=True)
-    score_json_url = models.URLField(null=True)
+    field_json_url = models.URLField(null=True, blank=True)
+    score_json_url = models.URLField(null=True, blank=True)
     current = models.BooleanField(default=False)
     complete = models.BooleanField(default=False)
     pga_tournament_num = models.CharField(max_length=10, null=True)

@@ -3,8 +3,14 @@ from unidecode import unidecode as decode
 from datetime import datetime
 import os
 from decimal import Decimal
-
-
+from re import split
+from unidecode import unidecode as decode
+from datetime import datetime
+import os
+from decimal import Decimal
+import json
+from django.db import transaction
+from django.core.mail import send_mail
 
 def format_score(score):
     '''takes in a sting and returns a string formatted for the right display or calc'''
@@ -103,7 +109,7 @@ def fix_name(player, owgr_rankings, log=None):
     
     if Name.objects.filter(PGA_name=player).exists():
         if log:
-            print ('player mathc')
+            print ('DB player match')
         name = Name.objects.get(PGA_name=player)
         if owgr_rankings.get(name.OWGR_name):
             if log:
@@ -278,112 +284,132 @@ def convert_floats_to_decimal(data):
         return Decimal(str(data))  # Convert to string first for better precision
     return data
 
-# #try this later, Q suggestion for more robust process
-# def normalize_name(name: str, remove_suffixes: bool = True) -> str:
-#     """
-#     Normalizes a player name by applying consistent formatting rules.
+@transaction.atomic
+def submit_picks(user, data):
+    from django.contrib.auth.models import User
+    from golf_app.models import Tournament, Picks, Group, Field, ScoreDetails, CountryPicks, UserProfile
+    from golf_app import espn_api
+
+    start = datetime.now()
+    print ('start of picks submit: ', user, data)
+    pick_list = data.get('pick_list')
+    print ('pick_list', pick_list)
+    tournament = Tournament.objects.get(current=True)
+
+    if 'random' not in pick_list:
+        if len(pick_list) != tournament.total_required_picks():
+            print ('total picks mismatch: ', len(pick_list), tournament.total_required_picks())
+            msg = 'Something went wrong, wrong number of picks.  Expected: ' + str(tournament.total_required_picks()) + ' received: ' + str(len(pick_list)) + ' Please try again'
+            response = {'status': 400, 'message': msg} 
+            return response
+
+        for group in Group.objects.filter(tournament=tournament):
+            count = Field.objects.filter(group=group, pk__in=pick_list).count()
+            if count == group.num_of_picks():
+                print ('group ok: ', group, ' : count: ', count)
+            else:
+                print ('group ERROR: ', group, ' : count: ', count)
+                msg = 'Pick error: Group - ' + str(group.number) + ' expected' + str(group.num_of_picks()) + ' picks.  Actual Picks: ' + str(count)
+                response = {'status': 400, 'message': msg} 
+                return response
+
+    if tournament.pga_tournament_num not in ['500', '468'] and \
+        tournament.started() and not tournament.late_picks:
+        espn = espn_api.ESPNData()
+        msg = 'Golfer already playing: '
+        error = False
+        for p in pick_list:
+            if not Picks.objects.filter(playerName__pk=p).exists():  #only check new picks, front end should prevent new picks so just a saftey net
+                f = Field.objects.get(pk=p)
+                if espn.player_started(f.golfer.espn_number):
+                    print ('picked started golfer: ', user, f)
+                    msg = msg + ' ' + f.playerName 
+                    error = True
+        if error:
+            response = {'status': 400, 'message': msg} 
+            return response
+      
     
-#     Args:
-#         name: The player name to normalize
-#         remove_suffixes: Whether to remove common suffixes like Jr., III, etc.
+    if Picks.objects.filter(playerName__tournament=tournament, user=user).count()>0:
+        Picks.objects.filter(playerName__tournament=tournament, user=user).delete()
+        ScoreDetails.objects.filter(pick__playerName__tournament=tournament, user=user).delete()
+
+    if CountryPicks.objects.filter(user=user, tournament=tournament).count() > 0:
+        CountryPicks.objects.filter(user=user, tournament=tournament).delete()
+
+    if 'random' in pick_list:
+        picks = tournament.create_picks(user, 'random')    
+        print ('random picks submitted', user, datetime.now(), picks)
+    else:
+        field_list = []
+        for id in pick_list:
+            field_list.append(Field.objects.get(pk=id))                    
+        tournament.save_picks(field_list, user, 'self')
     
-#     Returns:
-#         Normalized name string
+    if tournament.pga_tournament_num == '999' and 'random' not in pick_list:
+        for mens_pick in  data.get('men_countries'):
+            cp = CountryPicks()
+            cp.user = user
+            cp.tournament = tournament
+            cp.country = mens_pick
+            cp.gender = "men"
+            cp.save()
+
+        for womens_pick in  data.get('women_countries'):
+            cp = CountryPicks()
+            cp.user = user
+            cp.tournament = tournament
+            cp.country = womens_pick
+            cp.gender = 'women'
+            cp.save()
+
+    if tournament.pga_tournament_num in ['468', '500']:  #Ryder/Pres Cup
+        cp = CountryPicks()
+        cp.user = user
+        cp.tournament = tournament
+        if data.get('ryder_cup')[0] == "USA":
+            cp.country = 'USA'
+        elif tournament.pga_tournament_num == '468':
+            cp.country = "EUR"
+        elif tournament.pga_tournament_num == '500':
+            cp.country = 'INTL'
+        else:
+            cp.country = 'bad data'
+
+        cp.ryder_cup_score = data.get('ryder_cup')[1]
+        cp.gender = 'men'
+        cp.save()
         
-#     Examples:
-#         >>> normalize_name("TIGER WOODS")
-#         "Tiger Woods"
-#         >>> normalize_name("de la Cruz, José-María")
-#         "Jose-Maria de la Cruz"
-#         >>> normalize_name("JOHNSON, Dustin (Jr.)")
-#         "Dustin Johnson"
-#         >>> normalize_name("JOHNSON, Dustin (Jr.)", remove_suffixes=False)
-#         "Dustin Johnson Jr."
-#     """
-#     if not name:
-#         return ""
 
-#     # Common suffixes to handle
-#     SUFFIXES = {
-#         'JR', 'JR.', 'SR', 'SR.', 'II', 'III', 'IV', 
-#         '(A)', '(A.)', '(AM)', '(AM.)', '(AMATEUR)'
-#     }
+    print ('user submitting picks', datetime.now(), user, Picks.objects.filter(playerName__tournament=tournament, user=user))
+    print ('submit picks duration: ',  datetime.now() - start)
 
-#     # Special case prefixes that should remain lowercase
-#     NAME_PREFIXES = {'de', 'van', 'von', 'del', 'della', 'la', 'das', 'dos'}
+    if UserProfile.objects.filter(user=user).exists():
+        profile = UserProfile.objects.get(user=user)
+        if profile.email_picks:
+            email_picks(tournament, user)
 
-#     def clean_string(text: str) -> str:
-#         """Remove extra whitespace and standardize separators"""
-#         # Replace multiple spaces with single space
-#         text = ' '.join(text.split())
-#         # Remove parentheses
-#         text = text.replace('(', '').replace(')', '')
-#         return text.strip()
-
-#     def handle_suffix(name_parts: list) -> tuple[list, str]:
-#         """Separate name and suffix"""
-#         suffix = ''
-#         clean_parts = []
-        
-#         for part in name_parts:
-#             part = part.strip('(),')
-#             if part.upper() in SUFFIXES:
-#                 suffix = part
-#             else:
-#                 clean_parts.append(part)
-                
-#         return clean_parts, suffix
-
-#     # First, decode any special characters
-#     name = decode(name)
-    
-#     # Handle "lastname, firstname" format
-#     if ',' in name:
-#         last_name, first_name = name.split(',', 1)
-#         name = f"{first_name.strip()} {last_name.strip()}"
-    
-#     # Clean and split the name
-#     name = clean_string(name)
-#     parts = name.split()
-    
-#     # Handle suffixes
-#     name_parts, suffix = handle_suffix(parts)
-    
-#     # Properly capitalize each part
-#     normalized_parts = []
-#     for part in name_parts:
-#         # Handle hyphenated names
-#         if '-' in part:
-#             normalized_parts.append('-'.join(p.capitalize() for p in part.split('-')))
-#         # Handle prefixes
-#         elif part.lower() in NAME_PREFIXES:
-#             normalized_parts.append(part.lower())
-#         # Normal capitalization
-#         else:
-#             normalized_parts.append(part.capitalize())
-    
-#     # Reconstruct the name
-#     normalized_name = ' '.join(normalized_parts)
-    
-#     # Add suffix if requested
-#     if not remove_suffixes and suffix:
-#         normalized_name = f"{normalized_name} {suffix.title()}"
-    
-#     return normalized_name
+    msg = 'Picks Submitted'
+    response = {'status': 200, 'message': msg, 'url': '/golf_app/picks_list'} 
+    return response
 
 
-# def fix_name(player, d, log=None):
-#     """takes a string and a dict and returns a tuple"""
+def email_picks(tournament, user):
+    from golf_app.models import Picks, CountryPicks
+    mail_picks = "\r"
+    for pick in Picks.objects.filter(playerName__tournament=tournament, user=user):
+        mail_picks = mail_picks + 'Group: ' + str(pick.playerName.group.number) + ' Golfer: ' + pick.playerName.playerName + "\r"
+    if tournament.pga_tournament_num in ['500', '468']:
+        cp = CountryPicks.objects.get(tournament=tournament, user=user)
+        mail_picks = mail_picks + 'Winning Team: ' + str(cp.country) + ' Points: ' + str(cp.ryder_cup_score) + "\r"
+
+    mail_sub = "Golf Game Picks Submittted: " + tournament.name 
+    mail_t = "Tournament: " + tournament.name + "\r"
     
-#     # Normalize both the player name and all OWGR names for comparison
-#     normalized_player = normalize_name(player)
-#     normalized_rankings = {
-#         normalize_name(k): v 
-#         for k, v in d.items()
-#     }
+
+    mail_url = "Website to make changes or picks: " + "http://jflynn87.pythonanywhere.com/golf_app/new_field_list_1"
+    mail_content = mail_t + "\r" + "\r" +mail_picks + "\r"+ mail_url
+    mail_recipients = [user.email]
+    send_mail(mail_sub, mail_content, 'jflynn87g@gmail.com', mail_recipients)  #add fail silently
     
-#     # Direct match with normalized names
-#     if normalized_player in normalized_rankings:
-#         return (player, normalized_rankings[normalized_player])
-    
-    # Continue with other matching strategies...
+    return

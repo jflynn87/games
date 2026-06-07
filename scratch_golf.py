@@ -41,16 +41,41 @@ import string
 import boto3
 from boto3.dynamodb.conditions import Key
 from golf_app.data_golf import DataGolf, GolferSG
+from rest_framework.authtoken.models import Token
 
 
-t = Tournament.objects.get(current=True)
-picks = Picks.objects.filter(playerName__playerName='Jake Knapp', playerName__tournament=t)
-f = Field.objects.get(tournament=t, playerName='Pierceson Coody')
+get_token = Token.objects.get(user__username='Hiro')
+header = {"Authorization": 'Token ' + get_token.key,
+          "Content-Type": "application/json"}
+params = {'current': 'true'}
+t = json.loads(requests.get('http://127.0.0.1:8000/golf_app/get_tournaments_api', headers=header, params=params).json())
 
-for p in picks:
-    p.pick = f
-    p.save()
+print (t)
+f_params = {'t_pk': t[0].get('pk')}
+print (f_params)
+f = requests.get('http://127.0.0.1:8000/golf_app/get_field', headers=header, params=f_params)
+field =f.json()
+print (f'Field Object: {len(field.get("field"))}')
 
+info_req = requests.get('http://127.0.0.1:8000/golf_app/get_info/', headers=header, params={'pk': t[0].get('pk')})
+info = info_req.json()
+
+pick_list = []
+for k,v in info.items():
+    if k not in ['total', 't_num']:
+        picks = int(v)
+        for i in range(int(picks)):
+            p = [f for f in field.get('field') if f.get('group').get('number') == int(k)]
+            pick_list.append(p[1].get('id'))
+
+print (f'Pick List: {pick_list}')
+
+r = requests.post('http://127.0.0.1:8000/golf_app/submit_picks/',
+     headers=header,
+     data=json.dumps({'pick_list': pick_list})
+)
+
+print (r.status_code, r.text)
 exit()
 
 t = Tournament.objects.get(current=True)
