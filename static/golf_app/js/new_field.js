@@ -12,7 +12,7 @@ $(document).ready(function () {
     fetch("/golf_app/get_country_picks/" + $('#pga_t_num').text() + '/user').then(response => response.json()),  //warp in an if?         
        ])
     .then((responseJSON) => {
-         info = $.parseJSON(responseJSON[0])
+         info = responseJSON[0]
          f_data = responseJSON[1]
          field = f_data.field
          groups = f_data.groups
