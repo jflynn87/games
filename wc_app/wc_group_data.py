@@ -25,9 +25,7 @@ class ESPNData(object):
             self.stage = Stage.objects.get(name="Group Stage", event__current=True)
 
         if self.stage.score_url:
-            headers = {
-                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
-            }
+            headers = {'User-Agent': 'Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.149 Mobile Safari/537.36'}
 
             response = requests.get(self.stage.score_url, headers=headers)
 
