@@ -109,12 +109,11 @@ function buildGroupTable(pick, user, group, tableId) {
   return new Promise(function (resolve,reject) {
   $.each(pick, function(team, team_d) {
     if (team_d == 'perfect picks') {
-        
         $('#' + user + group.substr(-1) + '_cell_tbl').css('background-color', 'lightgreen')}
     else {
     $('#' + user + group.substr(-1) + '_cell_tbl').append(
     '<tr><td hidden>' + team_d.rank + '</td><td><img src=' + team_d.flag +' style=height:20; width:20;>' + 
-      team  + '(' + team_d.team_world_rank + ')'
+      team  + '(' + team_d.rank + ')'
       + '</td><td>' +
       team_d.pick_rank + '</td><td>' + team_d.points +  '</td>' +
       //'<td>' + team_d.team_rank + '</td>' +
@@ -161,7 +160,8 @@ function sortGroup(tableId) {
 
 function buildStandingTable(data) {
   toggleTableDisplay()
-  if ($('.card').length != 8) {
+  console.log('build standing table', $('.card').length)
+  if ($('.card').length == 0) {
     $('#table_div').append('<p id=standing_tbl_status>Loading <span class=status>...</span></p>')
     fetch("/wc_app/wc_group_stage_table_api",         
     {method: "GET",
@@ -169,10 +169,9 @@ function buildStandingTable(data) {
     .then((response) => response.json())
     .then((responseJSON) => {
       data = responseJSON
-
-    
-    standings = data
-    console.log(data)
+   
+      standings = data
+      console.log(data)
       if (data.type == 'WBC') {
         console.log('WBC')
         $.each(standings, function(group, teams) {
@@ -190,27 +189,26 @@ function buildStandingTable(data) {
                                                                 '<td>' + stat.against + '</td></tr>')})
                             }
         
-      })
-    
+        })    
       }
       else {
-    $.each(standings, function(group, teams) {
-      if (group != 'Score' && group != 'Bonus') {
-      $('#stand_tbl_cards').append('<div class=card>' +
-                          '<table id=stand_tbl_' + group[6] +'><thead><tr style=text-align:center;background-color:lightblue;><th colspan=9>' + group +  '</th></tr></thead>' + 
-                          '<tr class=small><th>Team</th><th>GP</th><th>W</th><th>D</th><th>L</th><th>F</th><th>A</th><th>GD</th><th>P</th>' + 
-                          '</table>' +
-                        '</div>')
-                        $.each(teams, function(label, stat) {
-                          $('#stand_tbl_' + group[6]).append('<tr><td>' + label + '</td><td>' + stat.played + '</td>' +
-                                                            '<td>' + stat.wins + '</td><td>' + stat.draw + '</td>' +
-                                                            '<td>' + stat.loss + '</td><td>' + stat.for + '</td>' +
-                                                            '<td>' + stat.against + '</td><td>' + stat.goal_diff + '</td>' + 
-                                                            '<td>' + stat.points + '</tr>')})
-                        }
-    
-  })
-  }
+        $.each(standings, function(group, teams) {
+          if (group != 'Score' && group != 'Bonus') {
+          $('#stand_tbl_cards').append('<div class=card>' +
+                              '<table id=stand_tbl_' + group[6] +'><thead><tr style=text-align:center;background-color:lightblue;><th colspan=9>' + group +  '</th></tr></thead>' + 
+                              '<tr class=small><th>Team</th><th>GP</th><th>W</th><th>D</th><th>L</th><th>F</th><th>A</th><th>GD</th><th>P</th>' + 
+                              '</table>' +
+                            '</div>')
+                            $.each(teams, function(label, stat) {
+                              $('#stand_tbl_' + group[6]).append('<tr><td>' + label + '</td><td>' + stat.played + '</td>' +
+                                                                '<td>' + stat.wins + '</td><td>' + stat.draw + '</td>' +
+                                                                '<td>' + stat.loss + '</td><td>' + stat.for + '</td>' +
+                                                                '<td>' + stat.against + '</td><td>' + stat.goal_diff + '</td>' + 
+                                                                '<td>' + stat.points + '</tr>')})
+                            }
+        
+         })
+      }
   
   $('#table_div').append('<br>')
   $('#standing_tbl_status').remove()

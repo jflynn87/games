@@ -2,10 +2,9 @@ from datetime import datetime
 from wc_app.models import Stage, Group, Team, Data
 import json
 import os
+import requests
 
 JSON_FILE = os.path.join(os.path.dirname(__file__), 'wc_groups.json')
-
-
 
 class ESPNData(object):
     '''takes an optinal dict and provides funcitons to retrieve espn golf data,
@@ -18,9 +17,6 @@ class ESPNData(object):
     def __init__(self, stage=None):
         start = datetime.now()
 
-        with open(JSON_FILE) as f:
-            self.wc_data = json.load(f)
-
         if stage:
             self.stage = stage
         elif Stage.objects.filter(current=True).count() == 1:
@@ -28,23 +24,41 @@ class ESPNData(object):
         else:
             self.stage = Stage.objects.get(name="Group Stage", event__current=True)
 
+        if self.stage.score_url:
+            headers = {
+                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
+            }
+
+            response = requests.get(self.stage.score_url, headers=headers)
+
+            print(f"Status Code: {response.status_code}")
+            if response.status_code == 200:
+                self.wc_data = response.json()
+                print("Success! Data loaded.")
+                # Print the tournament name to verify
+            else:
+                print('ESPN Group Stage Data Error:', response.text)
+        else:   
+            with open(JSON_FILE) as f:
+                self.wc_data = json.load(f)
+
         print('WC Init duration: ', datetime.now() - start)
 
 
     def get_group_data(self, create=False):
-        teams_lookup = self.wc_data['teams']
-        data = {
-            g['name']: {
-                abbr: {
-                    'full_name': teams_lookup[abbr]['name'],
-                    'flag': teams_lookup[abbr]['flag_url'],
-                    'rank': teams_lookup[abbr]['fifa_ranking'],
+        data = {}
+        for child in self.wc_data.get('children', []):
+            group_name = child.get('name')
+            entries = child.get('standings', {}).get('entries', [])
+            data[group_name] = {
+                team.get('team', {}).get('abbreviation'): {
+                    'full_name': team.get('team', {}).get('displayName'),
+                    'flag': team.get('team', {}).get('flag', ''),
+                    'rank': next((x.get('value') for x in team.get('stats', []) if x.get('name') == 'rank'), None),
                     'info': '',
                 }
-                for abbr in g['teams']
+                for team in entries
             }
-            for g in self.wc_data['groups']
-        }
 
         if create:
             stage = self.stage
@@ -66,39 +80,24 @@ class ESPNData(object):
         return data
 
     def get_group_records(self, data=None):
-        if not data:
-            data = self.get_group_data()
-
+        stat_keys = ['gamesPlayed', 'wins', 'ties', 'losses', 'pointsFor', 'pointsAgainst', 'pointDifferential', 'points']
         score_dict = {}
-        for i, r in enumerate(self.soup.find_all('tbody', {'class': "Table__TBODY"})[1]):
-            #print (r.find_all('td')[0]['class'])
-            if 'tar' not in r.find_all('td')[0]['class']:
-                team = {k:team for k,v in data.items() for team,d  in v.items() if d.get('index') == i} #[0]
-                print (team, [k for k,v in team.items()][0])
-                #score_dict[team] = {'played': r.find_all('td')[0].text,
-                if score_dict.get([k for k,v in team.items()][0]):
-                    score_dict.get([k for k,v in team.items()][0]).update({[v for k,v in team.items()][0]: {'played': r.find_all('td')[0].text,
-                                    'wins': r.find_all('td')[1].text,
-                                    'draw': r.find_all('td')[2].text,
-                                    'loss': r.find_all('td')[3].text,
-                                    'for': r.find_all('td')[4].text,
-                                    'against': r.find_all('td')[5].text,
-                                    'goal_diff': r.find_all('td')[6].text,
-                                    'points': r.find_all('td')[7].text,
-                                    }})
-
-                else:
-
-                    score_dict[[k for k,v in team.items()][0]] = {[v for k,v in team.items()][0]: {'played': r.find_all('td')[0].text,
-                                    'wins': r.find_all('td')[1].text,
-                                    'draw': r.find_all('td')[2].text,
-                                    'loss': r.find_all('td')[3].text,
-                                    'for': r.find_all('td')[4].text,
-                                    'against': r.find_all('td')[5].text,
-                                    'goal_diff': r.find_all('td')[6].text,
-                                    'points': r.find_all('td')[7].text,
-                                    }}
-
+        for child in self.wc_data.get('children', []):
+            group_name = child.get('name')
+            score_dict[group_name] = {}
+            for team in child.get('standings', {}).get('entries', []):
+                abbr = team.get('team', {}).get('abbreviation')
+                stats = {x.get('name'): x.get('value') for x in team.get('stats', [])}
+                score_dict[group_name][abbr] = {
+                    'played': stats.get('gamesPlayed'),
+                    'wins': stats.get('wins'),
+                    'draw': stats.get('ties'),
+                    'loss': stats.get('losses'),
+                    'for': stats.get('pointsFor'),
+                    'against': stats.get('pointsAgainst'),
+                    'goal_diff': stats.get('pointDifferential'),
+                    'points': stats.get('points'),
+                }
         return score_dict
 
     

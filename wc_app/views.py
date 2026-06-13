@@ -294,7 +294,7 @@ def wc_scores(stage, users, data_obj):  ## fix this, just copied during wbc
             print ('WC Group stage complete use saved data')
             return JsonResponse(data_obj.display_data, status=200, safe=False)
         
-        e = wc_group_data.ESPNData(url=stage.score_url, stage=stage)
+        e = wc_group_data.ESPNData(stage=stage)
         espn = e.get_group_data()
         
         if e.new_data() or data_obj.display_data in [None, '', {}]:
@@ -307,14 +307,14 @@ def wc_scores(stage, users, data_obj):  ## fix this, just copied during wbc
         for team in Team.objects.filter(group__stage=stage): 
             rank = [data.get('rank') for k,v in espn.items() for t, data  in v.items() if t == team.name][0]
             
-            #print (team, rank)
+            #print (team, rank, type(rank))
             for p in Picks.objects.filter(team=team):
-                
-                if p.rank == 1 and rank == '1':
+                if p.rank == 1 and rank == 1.0:
                     score = round(5 + p.team.upset_bonus(),2)
-                elif p.rank in [1,2] and rank in ['1','2']:
+                elif p.rank in [1,2] and rank in [1.0, 2.0]:
                     score = round(3 + p.team.upset_bonus(),2)
                 else:
+                    #print ('no points', p.team.name, p.rank, rank)
                     score = 0
             
                 d.get(p.user.username).update({'Score': d.get(p.user.username).get('Score') + score})
@@ -394,7 +394,7 @@ def wc_scores(stage, users, data_obj):  ## fix this, just copied during wbc
                 print ('WC data save failed', stage, e1)
 
     print ('WC scores duration: ', datetime.now() - start)
-    return JsonResponse(d, status=200, safe=False)
+    return d
 
 
 class GroupBonusAPI(APIView):

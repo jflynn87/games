@@ -20,9 +20,32 @@ print (e.name, e.current)
 stage = Stage.objects.get(current=True)
 print (stage.name, stage.current)
 
-wc = wc_group_data.ESPNData().get_group_data(create=True)
-exit()
+stage = Stage.objects.get(name="Group Stage", event__current=True)
+import requests
+from bs4 import BeautifulSoup
+import requests
 
+# Notice the URL change: /apis/v2/ instead of /apis/site/v2/
+api_url = "https://site.api.espn.com/apis/v2/sports/soccer/fifa.world/standings"
+
+headers = {
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
+}
+
+response = requests.get(api_url, headers=headers)
+
+print(f"Status Code: {response.status_code}")
+if response.status_code == 200:
+    data = response.json()
+    print("Success! Data loaded.")
+    # Print the tournament name to verify
+    for child in data.get('children', []):
+        print(child.get('name'))
+        standings = [x for x in child.get('standings', {}).get('entries', [])]
+        for team in standings:
+            print(team.get('team', {}).get('displayName'), [x.get('value') for x in team.get('stats') if x.get('name') in ['rank']])
+else:
+    print(response.text)
 
 exit()
 

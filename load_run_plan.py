@@ -4,7 +4,6 @@ os.environ.setdefault("DJANGO_SETTINGS_MODULE","gamesProj.settings")
 import django
 django.setup()
 import urllib
-#import urllib
 from run_app.models import Plan, Schedule
 from datetime import datetime, timedelta
 from bs4 import BeautifulSoup
