@@ -36,6 +36,7 @@ class ESPNData(object):
                 self.wc_data = response.json()
                 print("Success! Data loaded.")
                 # Print the tournament name to verify
+                print("Tournament Name:", self.wc_data.get('name'))
             else:
                 print('ESPN Group Stage Data Error:', response.text)
         else:   
