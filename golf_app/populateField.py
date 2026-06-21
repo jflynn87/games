@@ -15,6 +15,8 @@ from requests import get
 from unidecode import unidecode as decode
 from user_app.services import DynamoStatsTable
 from golf_app.data_golf import DataGolf, GolferSG
+import requests
+import time
 
 
 @transaction.atomic
@@ -139,7 +141,7 @@ def get_womans_rankings():
 
 
 def get_worldrank():
-    '''Goes to OWGR web site takes no input, goes to web to get world golf rankings and returns a dictionary with player name as a string and key, ranking as a string in values'''
+    # '''Goes to OWGR web site takes no input, goes to web to get world golf rankings and returns a dictionary with player name as a string and key, ranking as a string in values'''
 
     print ('start owgr.com lookp')
     
@@ -147,9 +149,105 @@ def get_worldrank():
     with urllib.request.urlopen(url) as schedule_json_url:
         data = json.loads(schedule_json_url.read().decode())
 
-    d = {x.get('player').get('fullName').split('(')[0]: [x.get('rank'), x.get('lastWeekRank'), x.get('endLastYearRank')] for x in data.get('rankingsList')}
+    d = {x.get('player').get('fullName'): [x.get('rank'), x.get('lastWeekRank'), x.get('endLastYearRank')] for x in data.get('rankingsList')}
 
     return d
+    # """Queries the live OWGR database using defensive, small-page pagination
+
+    # to guarantee no golfers are dropped mid-stream.
+
+    # Returns:
+    #     dict: {"Player Name": [start_of_year_rank, current_rank]}
+    # """
+    # base_url = "https://apiweb.owgr.com/api/owgr/rankings/getRankings"
+    # page = 1
+    # page_size = 200  # Small chunks ensure the fragile backend doesn't drop records
+    # rankings_dict = {}
+
+    # print("Connecting to live OWGR database...")
+
+    # while True:
+    #     params = {
+    #         "pageSize": page_size,
+    #         "pageNumber": page,
+    #         "regionId": 0,
+    #         "countryId": 0,
+    #         "sortString": "Rank ASC",
+    #     }
+
+    #     try:
+    #         response = requests.get(base_url, params=params, timeout=15)
+
+    #         # If the site is throwing an error, catch it immediately
+    #         if response.status_code != 200:
+    #             print(
+    #                 f"Server returned status {response.status_code} on page {page}. Stopping pull."
+    #             )
+    #             break
+    #         else:
+    #             print(f"Successfully retrieved page {page} of OWGR data.")
+
+    #         data = response.json()
+    #         print(f"Processing page {page} with {len(data.get('rankingsList', []))} golfers...")
+    #         players = data.get("data", []) or data.get("rankingsList", [])
+
+    #         # Break out if we hit a completely empty page
+    #         if not players:
+    #             print (f"No players found on page {page}. Assuming end of data and stopping pull.")
+    #             break
+
+    #         for player in players:
+    #             # 1. Cleanly format the player's full name
+    #             first_name = player.get("firstName", "").strip()
+    #             last_name = player.get("lastName", "").strip()
+    #             full_name = f"{first_name} {last_name}".strip()
+
+    #             # Fallback if names are smashed into a single field
+    #             if not full_name:
+    #                 full_name = player.get("playerName", "").strip()
+
+    #             if not full_name or full_name.lower() == "unknown player":
+    #                 continue
+
+    #             # 2. Extract and cast the actual ranks safely
+    #             try:
+    #                 current_rank = int(player.get("rank", 0))
+    #             except (ValueError, TypeError):
+    #                 current_rank = None
+
+    #             try:
+    #                 sow_rank = int(player.get("lastWeekRank", 0))
+    #             except (ValueError, TypeError):
+    #                 sow_rank = None
+
+    #             try:
+    #                 soy_rank = int(player.get("endLastYearRank", 0))
+    #             except (ValueError, TypeError):
+    #                 soy_rank = None
+
+    #             # 3. Append to our tracking map
+    #             rankings_dict[full_name] = [sow_rank, current_rank]
+    #             # d = {x.get('player').get('fullName'): [x.get('rank'), x.get('lastWeekRank'), x.get('endLastYearRank')] for x in data.get('rankingsList')}
+
+    #         # If the server sends fewer players than our page limit, we've hit the absolute bottom
+    #         if len(players) < page_size:
+    #             break
+
+    #         # Print a progress indicator every 5 pages so you know it's working
+    #         if page % 5 == 0:
+    #             print(f"Collected {len(rankings_dict)} golfers so far...")
+
+    #         page += 1
+    #         time.sleep(0.2)  # Short pause to be a good internet neighbor
+
+    #     except Exception as e:
+    #         print(f"Extraction halted due to an unexpected error: {e}")
+    #         break
+
+    # print(
+    #     f"\nMapping successfully complete! Processed {len(rankings_dict)} active golfers."
+    # )
+    # return rankings_dict
 
 
 def setup_t(tournament_number, espn_t_num=None):

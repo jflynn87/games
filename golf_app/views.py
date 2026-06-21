@@ -154,6 +154,7 @@ class NewFieldListView(LoginRequiredMixin,TemplateView):
         return context
 
     def post(self, request):
+        log = utils.save_access_log(request, 'submit_picks_ui')
         data = json.loads(self.request.body)
         user = User.objects.get(username=request.user)
         response = utils.submit_picks(user, data)
@@ -272,6 +273,7 @@ class SubmitPicksAPIView(APIView):
     permission_classes = [IsAuthenticated]
     def post(self, request):
         print ('**** Submitting picks via API ****', request.user, request.data)
+        log = utils.save_access_log(request, 'api_submit_picks')
         t = Tournament.objects.get(current=True)
         if t.started() and not t.late_picks:
             print ('tournament started, picks closed: ', t.name, t.started(), t.late_picks)

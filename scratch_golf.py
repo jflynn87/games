@@ -42,7 +42,21 @@ import boto3
 from boto3.dynamodb.conditions import Key
 from golf_app.data_golf import DataGolf, GolferSG
 from rest_framework.authtoken.models import Token
+import csv
+from datetime import datetime
+import io
+import requests
 
+start = datetime.now()
+
+owgr = populateField.get_worldrank()
+for f in Field.objects.filter(tournament__current=True):
+    fixed = utils.fix_name(f.playerName, owgr)
+    print (f.playerName, fixed)
+
+#print ({k: v for k, v in owgr.items() if 'Mason' in k})
+print (datetime.now() - start)
+exit()
 
 get_token = Token.objects.get(user__username='Hiro')
 header = {"Authorization": 'Token ' + get_token.key,
@@ -59,6 +73,7 @@ print (f'Field Object: {len(field.get("field"))}')
 
 info_req = requests.get('http://127.0.0.1:8000/golf_app/get_info/', headers=header, params={'pk': t[0].get('pk')})
 info = info_req.json()
+print (info)
 
 pick_list = []
 for k,v in info.items():
@@ -66,7 +81,7 @@ for k,v in info.items():
         picks = int(v)
         for i in range(int(picks)):
             p = [f for f in field.get('field') if f.get('group').get('number') == int(k)]
-            pick_list.append(p[1].get('id'))
+            pick_list.append(p[i+2].get('id'))
 
 print (f'Pick List: {pick_list}')
 

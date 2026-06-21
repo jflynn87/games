@@ -86,7 +86,7 @@ function buildForm(info, groups, field, golfers, partners, picks, tStarted, star
         fieldLen = field.length
         for (let i=0; i < fieldLen; i++) {
             const f = field[i]
-            console.log('building form for golfer ', f)
+            //console.log('building form for golfer ', f)
             var group = groups.filter(grp => {
                 return Number(grp.number) == Number(f.group.number)})
             
@@ -255,7 +255,7 @@ function buildForm(info, groups, field, golfers, partners, picks, tStarted, star
             pga.target="_blank"
             pga.innerHTML = "/PGA"
             expand = document.createElement('i')
-            expand.id = 'expand-' + f.pk
+            expand.id = 'expand-' + f.id
             expand.classList = ['fa fa-plus-circle expand']
             expand.style.float = 'right'
             expand.innerHTML = "Show Golfer Stats"
@@ -283,7 +283,7 @@ function buildForm(info, groups, field, golfers, partners, picks, tStarted, star
             table.append(golferTr)
 
             statsRow = document.createElement('tr')
-            statsRow.id = 'stats_row-' + f.pk
+            statsRow.id = 'stats_row-' + f.id
             statsRow.classList = ['stats_row']
             statsRow.hidden = true
             statsRow.colSpan = '2'
@@ -304,10 +304,12 @@ function buildForm(info, groups, field, golfers, partners, picks, tStarted, star
 }
 
 function getStatsData(ele) {
-    golfer_id = ele.cells[1].id.replace('playerInfo', '')
-    field_id = ele.id.replace('golfer-', '')
+    console.log('getting stats for ', ele.id)
+    const golfer_id = ele.cells[1].id.replace('playerInfo', '')
+    const field_id = ele.id.replace('golfer-', '')
+    console.log('golfer id: ', golfer_id, 'field id: ', field_id)
     return new Promise(function (resolve) {
-    row = document.getElementById('stats_row-' + field_id)
+    row = document.getElementById('stats_row-' + field_id.toString())
     console.log(row)
     td = row.getElementsByTagName('td')
     if (row.hidden == false) {
@@ -354,6 +356,7 @@ function getStatsData(ele) {
   
 
 function build_stats_row(field) {
+    console.log('building stats row for ', field)
     let stats_row = document.createElement('tr');
     stats_row.id = 'stats_row-' + field.id
     stats_row.style.width = 100%

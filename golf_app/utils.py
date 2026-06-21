@@ -80,7 +80,6 @@ def format_name(name):
 def fix_name(player, owgr_rankings, log=None):
     '''takes a string and a dict and returns a tuple'''
 
-    log = False
     if log:
         print ('FIX: ', player, len(owgr_rankings))
     if owgr_rankings.get(player.replace('.', '').replace('-', '').replace(' ', '')) != None:
@@ -200,6 +199,7 @@ def check_t_names(espn_t, t):
         #return True
         return False
 
+    
 def reverse_names(name):
     #print (name, len(name.rstrip(' ').split(' ')), name.rstrip(' ').split(' '))
     work_list = name.rstrip(' ').split(' ')
