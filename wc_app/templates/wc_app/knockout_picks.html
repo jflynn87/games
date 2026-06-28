@@ -12,13 +12,11 @@
   <link href='https://fonts.googleapis.com/css?family=Abel' rel='stylesheet' type='text/css'>
   <link href='https://fonts.googleapis.com/css?family=Istok+Web|Roboto+Condensed:700' rel='stylesheet' type='text/css'>
   <link rel="stylesheet" href={%static "wc_app/css/ko_picks.css" %}>
-
-  
 </head>
 <body>
   <p id="picks_user" hidden>{{picks_user.username}}</p>
   <p id="event_type" hidden>{{stage.event.event_type|default:"wc"}}</p>
-  <p id="picks" hidden>{{stage.total_picks|default:"18"}}</p>
+  <p id="picks" hidden>{{stage.total_picks|default:"31"}}</p>
   <p id="early_picks" hidden>{{stage.early_picks|default:"0"}}</p>
   <p id="early_picks_period" hidden>{{stage.early_picks_period|default:"False"}}</p>
   <header class="hero">
@@ -26,20 +24,21 @@
 {%if user.is_superuser%}
       <button id="create_teams" class="btn btn-primary" onclick="createTeams()">Create Teams</button>
 {%endif%}
- 
       <h1 id="headline">{{stage.event.name}} Knockout Round</h1>
-     <p class="year"><i class="fa fa-star"></i> {{stage.event.year}} <i class="fa fa-star"></i></p>
-     <p>{{stage.event.location}}</p>
-   </div>
+      <p class="year"><i class="fa fa-star"></i> {{stage.event.year}} <i class="fa fa-star"></i></p>
+      <p>{{stage.event.location}}</p>
+    </div>
   </header>
-<form method="POST">     
-   {%csrf_token%}
+<form method="POST">
+  {%csrf_token%}
   <div class="hero">
-   <p>To fill in the bracket, click on a team to select as the winner</p>
-   <p>When all picks complete, click the submit button to save your picks.  Good Luck!</p>
+    <p>To fill in the bracket, click on a team to select as the winner</p>
+    <p>When all picks complete, click the submit button to save your picks.  Good Luck!</p>
   </div>
   <section id="bracket">
   <div class="container">
+
+  <!-- ===== LEFT SPLIT ===== -->
   <div class="split split-one">
     {%if stage.event.event_type == 'wbc'%}
     <div class="round round-one current">
@@ -51,161 +50,225 @@
       <ul class="matchup" id="match_3">
         <li id='m3_fav' class="team team-top" onclick="teamPicked(this)"></li>
         <li id='m3_dog' class="team team-bottom" onclick="teamPicked(this)"></li>
-      </ul>     
+      </ul>
     </div>  <!-- END QUARTERFINALS -->
-    {%else%}
-    <div class="round round-one current">
-      <div class="round-details">Round 1<br/><span class="date">correct: 5pts</span></div>
-      <ul class="matchup" id="match_1">
-        <li id='m1_fav' class="team team-top"></li>
-        <li id='m1_dog' class="team team-bottom"></li>
-      </ul>
-      <ul class="matchup" id="match_2">
-        <li id='m2_fav' class="team team-top"></li>
-        <li id='m2_dog' class="team team-bottom"></li>
-      </ul>
-      <ul class="matchup" id="match_3">
-        <li id='m3_fav' class="team team-top"></li>
-        <li id='m3_dog' class="team team-bottom"></li>
-      </ul>
-      <ul class="matchup" id="match_4">
-        <li id='m4_fav' class="team team-top"></li>
-        <li id='m4_dog' class="team team-bottom"></span></li>
-      </ul>     
-    </div>  <!-- END ROUND ONE -->
-    {%endif%}
-
-    {%if stage.event.event_type == 'wbc'%}
     <div class="round round-two current">
-      <div class="round-details">Semifinals<br/><span class="date">correct: 15pts</span></div>     
+      <div class="round-details">Semifinals<br/><span class="date">correct: 15pts</span></div>
       <ul class="matchup">
         <li id='m5_fav' class="team team-top" onclick="teamPicked(this)"></li>
         <li id='m5_dog' class="team team-bottom" onclick="teamPicked(this)"></li>
-      </ul> 
+      </ul>
     </div>  <!-- END SEMIFINALS -->
     {%else%}
-    <div class="round round-two current">
-      <div class="round-details">Round 2<br/><span class="date">correct: 10pts</span></div>     
-      <ul class="matchup">
-        <li id='m9_fav' class="team team-top" onclick="teamPicked(this)"></li>
-        <li id='m9_dog' class="team team-bottom" onclick="teamPicked(this)"></li>
-      </ul> 
-      <ul class="matchup">
-        <li id='m10_fav' class="team team-top" onclick="teamPicked(this)"></li>
-        <li id='m10_dog' class="team team-bottom" onclick="teamPicked(this)"></li>
-      </ul> 
-    </div>  <!-- END ROUND TWO -->
-    {%endif%}
-    
-    {%if stage.event.event_type != 'wbc'%}
-    <div class="round round-three current">
-      <div class="round-details">Round 3<br/><span class="date">correct: 15pts</span></div>     
-      <ul class="matchup">
-        <li id='m13_fav' class="team team-top" onclick="teamPicked(this)"></li>
-        <li id='m13_dog' class="team team-bottom" onclick="teamPicked(this)"></li>
-      </ul> 
-    </div>  <!-- END ROUND THREE -->
-    {%endif%}    
-  </div> 
+    <div class="round round-one current">
+      <div class="round-details">Round of 32<br/><span class="date">correct: 5pts</span></div>
+      <ul class="matchup" id="match_74">
+        <li id='m74_fav' class="team team-top"></li>
+        <li id='m74_dog' class="team team-bottom"></li>
+      </ul>
+      <ul class="matchup" id="match_77">
+        <li id='m77_fav' class="team team-top"></li>
+        <li id='m77_dog' class="team team-bottom"></li>
+      </ul>
+      <ul class="matchup" id="match_73">
+        <li id='m73_fav' class="team team-top"></li>
+        <li id='m73_dog' class="team team-bottom"></li>
+      </ul>
+      <ul class="matchup" id="match_75">
+        <li id='m75_fav' class="team team-top"></li>
+        <li id='m75_dog' class="team team-bottom"></li>
+      </ul>
+      <ul class="matchup" id="match_81">
+        <li id='m81_fav' class="team team-top"></li>
+        <li id='m81_dog' class="team team-bottom"></li>
+      </ul>
+      <ul class="matchup" id="match_82">
+        <li id='m82_fav' class="team team-top"></li>
+        <li id='m82_dog' class="team team-bottom"></li>
+      </ul>
+      <ul class="matchup" id="match_83">
+        <li id='m83_fav' class="team team-top"></li>
+        <li id='m83_dog' class="team team-bottom"></li>
+      </ul>
+      <ul class="matchup" id="match_84">
+        <li id='m84_fav' class="team team-top"></li>
+        <li id='m84_dog' class="team team-bottom"></li>
+      </ul>
+    </div>  <!-- END ROUND OF 32 -->
 
-<div class="champion">
+    <div class="round round-two current">
+      <div class="round-details">Round of 16<br/><span class="date">correct: 10pts</span></div>
+      <ul class="matchup">
+        <li id='m90_fav' class="team team-top" onclick="teamPicked(this)"></li>
+        <li id='m90_dog' class="team team-bottom" onclick="teamPicked(this)"></li>
+      </ul>
+      <ul class="matchup">
+        <li id='m89_fav' class="team team-top" onclick="teamPicked(this)"></li>
+        <li id='m89_dog' class="team team-bottom" onclick="teamPicked(this)"></li>
+      </ul>
+      <ul class="matchup">
+        <li id='m94_fav' class="team team-top" onclick="teamPicked(this)"></li>
+        <li id='m94_dog' class="team team-bottom" onclick="teamPicked(this)"></li>
+      </ul>
+      <ul class="matchup">
+        <li id='m93_fav' class="team team-top" onclick="teamPicked(this)"></li>
+        <li id='m93_dog' class="team team-bottom" onclick="teamPicked(this)"></li>
+      </ul>
+    </div>  <!-- END ROUND OF 16 -->
+
+    <div class="round round-three current">
+      <div class="round-details">Quarterfinals<br/><span class="date">correct: 15pts</span></div>
+      <ul class="matchup">
+        <li id='m97_fav' class="team team-top" onclick="teamPicked(this)"></li>
+        <li id='m97_dog' class="team team-bottom" onclick="teamPicked(this)"></li>
+      </ul>
+      <ul class="matchup">
+        <li id='m98_fav' class="team team-top" onclick="teamPicked(this)"></li>
+        <li id='m98_dog' class="team team-bottom" onclick="teamPicked(this)"></li>
+      </ul>
+    </div>  <!-- END QUARTERFINALS -->
+
+    <div class="round round-four current">
+      <div class="round-details">Semifinal<br/><span class="date">correct: 20pts</span></div>
+      <ul class="matchup">
+        <li id='m101_fav' class="team team-top" onclick="teamPicked(this)"></li>
+        <li id='m101_dog' class="team team-bottom" onclick="teamPicked(this)"></li>
+      </ul>
+    </div>  <!-- END SEMIFINAL LEFT -->
+    {%endif%}
+  </div>
+
+  <!-- ===== CENTER ===== -->
+  <div class="champion">
     <div class="final">
       <i class="fa fa-trophy"></i>
       {%if stage.event.event_type == 'wbc'%}
-      <div class="round-details">Championship<br/><span class="date">{{stage.event.championship_date|default:"TBD"}}</span></div>    
-      <ul class ="matchup championship current">
+      <div class="round-details">Championship<br/><span class="date">{{stage.event.championship_date|default:"TBD"}}</span></div>
+      <ul class="matchup championship current">
         <li id='m7_fav' class="team team-top" onclick="teamPicked(this)"></li>
         <li id='m7_dog' class="team team-bottom" onclick="teamPicked(this)"></li>
       </ul>
       <br>
-      <div class="round-details">Champion<br/><span class="date">correct: 25pts</span></div>    
+      <div class="round-details">Champion<br/><span class="date">correct: 25pts</span></div>
       <p></p>
-      <ul class ="matchup championship current">
+      <ul class="matchup championship current">
         <li id='m8_fav' class="team team-top" onclick="teamPicked(this)"></li>
-        
       </ul>
       {%else%}
-      <div class="round-details">championship <br/><span class="date">Dec 19</span></div>    
-      <ul class ="matchup championship current">
-        <li id='m15_fav' class="team team-top" onclick="teamPicked(this)"></li>
-        <li id='m15_dog' class="team team-bottom" onclick="teamPicked(this)"></li>
+      <div class="round-details">Final<br/><span class="date">Jul 19</span></div>
+      <ul class="matchup championship current">
+        <li id='m104_fav' class="team team-top" onclick="teamPicked(this)"></li>
+        <li id='m104_dog' class="team team-bottom" onclick="teamPicked(this)"></li>
       </ul>
       <br>
-      <div class="round-details">Champion<br/><span class="date">correct: 30pts</span></div>    
+      <div class="round-details">Champion<br/><span class="date">correct: 30pts</span></div>
       <p></p>
-      <ul class ="matchup championship current">
+      <ul class="matchup championship current">
         <li id='champion' class="team team-top" onclick="teamPicked(this)"></li>
-        
       </ul>
       {%endif%}
-
     </div>
     {%if stage.event.event_type != 'wbc'%}
-    <div class="semis-r">   
-      <div class="round-details">Consolation<br/><span class="date">Dec 18</span></div>   
-      <ul class ="matchup championship current">
-        <li id='m16_fav' class="team team-top" onclick="teamPicked(this)"></li>
-        <li id='m16_dog' class="team team-bottom" onclick="teamPicked(this)"></li>
+    <div class="semis-r">
+      <div class="round-details">Consolation<br/><span class="date">Jul 17</span></div>
+      <ul class="matchup championship current">
+        <li id='m103_fav' class="team team-top" onclick="teamPicked(this)"></li>
+        <li id='m103_dog' class="team team-bottom" onclick="teamPicked(this)"></li>
       </ul>
       <br>
-      <div class="round-details">Consolation Winner<br/><span class="date">correct: 20pts</span></div>    
-      <ul class ="matchup championship current">
+      <div class="round-details">Consolation Winner<br/><span class="date">correct: 20pts</span></div>
+      <ul class="matchup championship current">
         <li id='third_place' class="team team-top" onclick="teamPicked(this)"></li>
-        
       </ul>
-
     </div>
-    {%endif%}  
+    {%endif%}
   </div>
 
-
+  <!-- ===== RIGHT SPLIT ===== -->
   <div class="split split-two">
     {%if stage.event.event_type != 'wbc'%}
-    <div class="round round-three current">
-      <div class="round-details">Round 3<br/><span class="date">correct: 15pts</span></div>           
+    <div class="round round-four current">
+      <div class="round-details">Semifinal<br/><span class="date">correct: 20pts</span></div>
       <ul class="matchup">
-        <li id='m14_fav' class="team team-top" onclick="teamPicked(this)"></li>
-        <li id='m14_dog' class="team team-bottom" onclick="teamPicked(this)"></li>
-      </ul> 
-    </div>  <!-- END ROUND THREE -->  
+        <li id='m102_fav' class="team team-top" onclick="teamPicked(this)"></li>
+        <li id='m102_dog' class="team team-bottom" onclick="teamPicked(this)"></li>
+      </ul>
+    </div>  <!-- END SEMIFINAL RIGHT -->
+
+    <div class="round round-three current">
+      <div class="round-details">Quarterfinals<br/><span class="date">correct: 15pts</span></div>
+      <ul class="matchup">
+        <li id='m99_fav' class="team team-top" onclick="teamPicked(this)"></li>
+        <li id='m99_dog' class="team team-bottom" onclick="teamPicked(this)"></li>
+      </ul>
+      <ul class="matchup">
+        <li id='m100_fav' class="team team-top" onclick="teamPicked(this)"></li>
+        <li id='m100_dog' class="team team-bottom" onclick="teamPicked(this)"></li>
+      </ul>
+    </div>  <!-- END QUARTERFINALS -->
 
     <div class="round round-two current">
-      <div class="round-details">Round 2<br/><span class="date">correct: 10pts</span></div>           
+      <div class="round-details">Round of 16<br/><span class="date">correct: 10pts</span></div>
       <ul class="matchup">
-        <li id='m11_fav' class="team team-top" onclick="teamPicked(this)"></li>
-        <li id='m11_dog' class="team team-bottom" onclick="teamPicked(this)"></li>
-      </ul> 
+        <li id='m91_fav' class="team team-top" onclick="teamPicked(this)"></li>
+        <li id='m91_dog' class="team team-bottom" onclick="teamPicked(this)"></li>
+      </ul>
       <ul class="matchup">
-        <li id='m12_fav' class="team team-top" onclick="teamPicked(this)"></li>
-        <li id='m12_dog' class="team team-bottom" onclick="teamPicked(this)"></li>
-      </ul> 
-    </div>  <!-- END ROUND TWO -->
+        <li id='m92_fav' class="team team-top" onclick="teamPicked(this)"></li>
+        <li id='m92_dog' class="team team-bottom" onclick="teamPicked(this)"></li>
+      </ul>
+      <ul class="matchup">
+        <li id='m95_fav' class="team team-top" onclick="teamPicked(this)"></li>
+        <li id='m95_dog' class="team team-bottom" onclick="teamPicked(this)"></li>
+      </ul>
+      <ul class="matchup">
+        <li id='m96_fav' class="team team-top" onclick="teamPicked(this)"></li>
+        <li id='m96_dog' class="team team-bottom" onclick="teamPicked(this)"></li>
+      </ul>
+    </div>  <!-- END ROUND OF 16 -->
+
     <div class="round round-one current">
-      <div class="round-details">Round 1<br/><span class="date">correct: 5pts</span></div>
-      <ul class="matchup" id="match_5">
-        <li id='m5_fav' class="team team-top"></li>
-        <li id='m5_dog' class="team team-bottom"></li>
+      <div class="round-details">Round of 32<br/><span class="date">correct: 5pts</span></div>
+      <ul class="matchup" id="match_76">
+        <li id='m76_fav' class="team team-top"></li>
+        <li id='m76_dog' class="team team-bottom"></li>
       </ul>
-      <ul class="matchup" id="match_6">
-        <li id='m6_fav' class="team team-top"></li>
-        <li id='m6_dog' class="team team-bottom"></li>
+      <ul class="matchup" id="match_78">
+        <li id='m78_fav' class="team team-top"></li>
+        <li id='m78_dog' class="team team-bottom"></li>
       </ul>
-      <ul class="matchup" id="match_7">
-        <li id='m7_fav' class="team team-top"></li>
-        <li id='m7_dog' class="team team-bottom"></li>
+      <ul class="matchup" id="match_79">
+        <li id='m79_fav' class="team team-top"></li>
+        <li id='m79_dog' class="team team-bottom"></li>
       </ul>
-      <ul class="matchup" id="match_8">
-        <li id='m8_fav' class="team team-top"></li>
-        <li id='m8_dog' class="team team-bottom"></li>
-      </ul>     
-    </div>  <!-- END ROUND ONE -->
+      <ul class="matchup" id="match_80">
+        <li id='m80_fav' class="team team-top"></li>
+        <li id='m80_dog' class="team team-bottom"></li>
+      </ul>
+      <ul class="matchup" id="match_86">
+        <li id='m86_fav' class="team team-top"></li>
+        <li id='m86_dog' class="team team-bottom"></li>
+      </ul>
+      <ul class="matchup" id="match_88">
+        <li id='m88_fav' class="team team-top"></li>
+        <li id='m88_dog' class="team team-bottom"></li>
+      </ul>
+      <ul class="matchup" id="match_85">
+        <li id='m85_fav' class="team team-top"></li>
+        <li id='m85_dog' class="team team-bottom"></li>
+      </ul>
+      <ul class="matchup" id="match_87">
+        <li id='m87_fav' class="team team-top"></li>
+        <li id='m87_dog' class="team team-bottom"></li>
+      </ul>
+    </div>  <!-- END ROUND OF 32 -->
     {%else%}
     <div class="round round-two current">
-      <div class="round-details">Semifinals<br/><span class="date">correct: 15pts</span></div>           
+      <div class="round-details">Semifinals<br/><span class="date">correct: 15pts</span></div>
       <ul class="matchup">
         <li id='m6_fav' class="team team-top" onclick="teamPicked(this)"></li>
         <li id='m6_dog' class="team team-bottom" onclick="teamPicked(this)"></li>
-      </ul> 
+      </ul>
     </div>  <!-- END SEMIFINALS -->
     <div class="round round-one current">
       <div class="round-details">Quarterfinals<br/><span class="date">correct: 10pts</span></div>
@@ -216,35 +279,24 @@
       <ul class="matchup" id="match_4">
         <li id='m4_fav' class="team team-top" onclick="teamPicked(this)"></li>
         <li id='m4_dog' class="team team-bottom" onclick="teamPicked(this)"></li>
-      </ul>     
+      </ul>
     </div>  <!-- END QUARTERFINALS -->
-    {%endif%}                  
+    {%endif%}
   </div>
+
   </div>
-  
   </section>
   <section class="share">
-      <div class="share-wrap">
-        {%if stage.started or not stage.current%}
-        <p style="color: white;">Picks not available</p>
-        {%else%}
-        <p><button class="btn btn-primary" type="submit" id="sub_btn" disabled>0 of {{stage.total_picks|default:"18"}} picks</button></p>
-        {%endif%}
-      </div>
+    <div class="share-wrap">
+      {%if stage.started or not stage.current%}
+      <p style="color: white;">Picks not available</p>
+      {%else%}
+      <p><button class="btn btn-primary" type="submit" id="sub_btn" disabled>0 of {{stage.total_picks|default:"31"}} picks</button></p>
+      {%endif%}
+    </div>
   </section>
 </form>
 
-
-
-
-<!-- <h1>2022 World Cup - {{stage.name}} Stage Picks</h1>
-<h3>Rules</h3>
-<ul>
-    <li>Bracket Style, pick winners of each game/round</li>
-    
-</ul>
-<script type="text/javascript" src="{%static 'wc_app/js/ko_picks.js'%}"></script>
-<div id="bracket"></div> -->
 <script type="text/javascript" src="{%static 'wc_app/js/ko_picks.js'%}"></script>
 <script type="text/javascript" src="{%static 'wc_app/js/create_teams.js'%}"></script>
 {%endblock%}

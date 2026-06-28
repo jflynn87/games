@@ -54,7 +54,7 @@ class Stage(models.Model):
 
     def total_picks(self):
         if self.event.event_type and self.name == 'Knockout Stage':
-            return 7
+            return 34
 
 
 class Group(models.Model):

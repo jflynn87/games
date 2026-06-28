@@ -579,28 +579,37 @@ class KOBracketAPI(APIView):
                 except Exception as e:
                     print(f"Error creating match {match}: {e}")
                 
-        else:    
-            # Bracket matchups: positions that will meet in next round
-            matchups = [(1, 2), (3, 4), (5, 6), (7, 8), (9, 10), (11, 12), (13, 14), (15, 16)]
-            
-            for i, (fav_rank, dog_rank) in enumerate(matchups):
+        else:
+            # Build R32 matches keyed by ko_data.json match_id.
+            # Teams are stored with rank = sequential position in round_of_32
+            # (home=odd rank, away=even rank) set by CreateKOTeamsAPI.
+            import os
+            ko_data_path = os.path.join(os.path.dirname(__file__), 'ko_data.json')
+            with open(ko_data_path) as f:
+                ko_data = json.load(f)
+
+            round_of_32 = next(r for r in ko_data['rounds'] if r['round_name'] == 'Round of 32')
+
+            for i, match in enumerate(round_of_32['matches']):
+                fav_rank = i * 2 + 1   # home team rank (odd)
+                dog_rank = i * 2 + 2   # away team rank (even)
+                match_key = 'match_' + str(match['match_id'])
+
                 fav = Team.objects.get(group__stage=stage, rank=fav_rank)
                 dog = Team.objects.get(group__stage=stage, rank=dog_rank)
-                
-                match = 'match_' + str(i + 1)
-                
+
                 fav_data = Team.objects.get(name=fav.name, group__stage__name="Group Stage", group__stage__event__current=True)
                 dog_data = Team.objects.get(name=dog.name, group__stage__name="Group Stage", group__stage__event__current=True)
 
-                d[match] = {'fav': fav.name, 
-                            'fav_pk': fav.pk, 
-                            'fav_flag': fav_data.flag_link,
-                            'fav_fifa_rank': fav_data.rank,
-                            'dog': dog.name,
-                            'dog_pk': dog.pk, 
-                            'dog_flag': dog_data.flag_link,
-                            'dog_fifa_rank': dog_data.rank,
-                            }
+                d[match_key] = {'fav': fav.name,
+                                'fav_pk': fav.pk,
+                                'fav_flag': fav_data.flag_link,
+                                'fav_fifa_rank': fav_data.rank,
+                                'dog': dog.name,
+                                'dog_pk': dog.pk,
+                                'dog_flag': dog_data.flag_link,
+                                'dog_fifa_rank': dog_data.rank,
+                                }
 
         print ('picks user ', username)
         if username:
@@ -648,10 +657,9 @@ class CreateKOTeamsAPI(APIView):
         d = {}
 
         try:
-            group = Group.objects.get(stage__event__current=True, group__in=['Final 16', 'Final 8'])
+            group = Group.objects.get(stage__event__current=True, group__in=['Final 32', 'Final 16', 'Final 8'])
             stage = group.stage
-            
-            
+                        
             if  Picks.objects.filter(team__group__stage__event__current=True, team__group=group).exclude(team__early_game=True).exists():
                 print ('CReate KO Team - too late picks already exist')
                 d['error'] = 'too late picks already exist'
@@ -669,10 +677,10 @@ class CreateKOTeamsAPI(APIView):
             for g in Group.objects.filter(stage=Stage.objects.get(current=True, name="Group Stage")):
                 #rank = [data.get('rank') for k,v in espn.items() for t, data  in v.items() if t == team.name][0]
                 #print ('Data obj: ', data_obj.group_data)
-                d = [(t,data.get('rank')) for k,v in data_obj.group_data.items() for t, data in v.items() if data.get('rank') in ['1', '2', 1, 2] and k == g.group ]
+                #d = [(t,data.get('rank')) for k,v in data_obj.group_data.items() for t, data in v.items() if data.get('rank') in ['1', '2', 1, 2] and k == g.group ]
                 
                 #print (g.group[-1].lower(),ord(g.group[-1].lower()) -96, d)
-                print ('DD ', d)
+                #print ('DD ', d)
                 if stage.event.event_type == 'wbc':
                     
                     for i, x in enumerate(d):
@@ -720,21 +728,54 @@ class CreateKOTeamsAPI(APIView):
                             print ('save team', team, 'rank:', team.rank)
                             team.save()
                 else:
-                    for x in d:
-                        if int(x[1]) == 1:
-                            rank = ord(g.group[-1].lower()) -96
-                        else:
-                            rank = (ord(g.group[-1].lower()) -96) + 8
-                        t_data = Team.objects.get(name=x[0], group__stage__name="Group Stage", group__stage__event__current=True)
-                        team = Team()
-                        team.group = ko_group
-                        team.name = x[0]
-                        team.rank = rank
-                        team.flag_link = t_data.flag_link
+                    print ('WORLDCUP KO TEAMS')
+                    import os
+                    ko_data_path = os.path.join(os.path.dirname(__file__), 'ko_data.json')
+                    with open(ko_data_path) as f:
+                        ko_data = json.load(f)
 
-                        team.save()
+                    round_of_32 = next(r for r in ko_data['rounds'] if r['round_name'] == 'Round of 32')
+                    ordinal_map = {'1st': '1', '2nd': '2', '3rd': '3'}
 
-                        print (g, x[0], rank)
+                    for i, match in enumerate(round_of_32['matches']):
+                        for j, side in enumerate([match['home_team'], match['away_team']]):
+                            print (side)
+                            rank = i * 2 + j + 1
+                            print(f"Match {i+1}: {side['code']} (Rank {rank})")
+                            #qualifier = side['qualifier_source']  # e.g. "1st Group A"
+                            #parts = qualifier.split()             # ['1st', 'Group', 'A']
+                            #group_rank = ordinal_map[parts[0]]
+                            #group_letter = parts[2]
+
+                            #team_name = next(
+                            #    t for t, data in data_obj.group_data.get(group_letter, {}).items()
+                            #    if str(data.get('rank')) == group_rank
+                            #)
+                            team_name = side['code']
+                            t_data = Team.objects.get(name=team_name, group__stage__name="Group Stage", group__stage__event__current=True)
+                            team = Team()
+                            team.group = ko_group
+                            team.name = team_name
+                            team.rank = rank
+                            team.flag_link = t_data.flag_link
+                            team.save()
+                            print(team_name, rank)
+                    break
+                    # for x in d:
+                    #     if int(x[1]) == 1:
+                    #         rank = ord(g.group[-1].lower()) -96
+                    #     else:
+                    #         rank = (ord(g.group[-1].lower()) -96) + 8
+                    #     t_data = Team.objects.get(name=x[0], group__stage__name="Group Stage", group__stage__event__current=True)
+                    #     team = Team()
+                    #     team.group = ko_group
+                    #     team.name = x[0]
+                    #     team.rank = rank
+                    #     team.flag_link = t_data.flag_link
+
+                    #     team.save()
+
+                    #     print (g, x[0], rank)
                         
         except Exception as e:
             print ('CreateKOTeamsAPI error: ', e)

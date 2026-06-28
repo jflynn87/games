@@ -1,0 +1,200 @@
+{
+  "tournament": "FIFA World Cup Knockout Stage",
+  "year": 2026,
+  "format": "Single Elimination",
+  "total_rounds": 5,
+  "rounds": [
+    {
+      "round_name": "Round of 32",
+      "matches": [
+        {
+          "match_id": 73,
+          "date": "2026-06-28",
+          "venue": "Los Angeles Stadium",
+          "home_team": { "code": "RSA", "qualifier_source": "2nd Group A", "score": null, "penalties": null },
+          "away_team": { "code": "CAN", "qualifier_source": "2nd Group B", "score": null, "penalties": null },
+          "status": "SCHEDULED",
+          "next_match_id": 90
+        },
+        {
+          "match_id": 74,
+          "date": "2026-06-29",
+          "venue": "Boston Stadium",
+          "home_team": { "code": "GER", "qualifier_source": "1st Group E", "score": null, "penalties": null },
+          "away_team": { "code": "PAR", "qualifier_source": "3rd Group D", "score": null, "penalties": null },
+          "status": "SCHEDULED",
+          "next_match_id": 89
+        },
+        {
+          "match_id": 75,
+          "date": "2026-06-29",
+          "venue": "Estadio Monterrey",
+          "home_team": { "code": "NED", "qualifier_source": "1st Group F", "score": null, "penalties": null },
+          "away_team": { "code": "MAR", "qualifier_source": "2nd Group C", "score": null, "penalties": null },
+          "status": "SCHEDULED",
+          "next_match_id": 90
+        },
+        {
+          "match_id": 76,
+          "date": "2026-06-29",
+          "venue": "Houston Stadium",
+          "home_team": { "code": "BRA", "qualifier_source": "1st Group C", "score": null, "penalties": null },
+          "away_team": { "code": "JPN", "qualifier_source": "2nd Group F", "score": null, "penalties": null },
+          "status": "SCHEDULED",
+          "next_match_id": 91
+        },
+        {
+          "match_id": 77,
+          "date": "2026-06-30",
+          "venue": "New York New Jersey Stadium",
+          "home_team": { "code": "FRA", "qualifier_source": "1st Group I", "score": null, "penalties": null },
+          "away_team": { "code": "SWE", "qualifier_source": "3rd Group F", "score": null, "penalties": null },
+          "status": "SCHEDULED",
+          "next_match_id": 89
+        },
+        {
+          "match_id": 78,
+          "date": "2026-06-30",
+          "venue": "Dallas Stadium",
+          "home_team": { "code": "CIV", "qualifier_source": "2nd Group E", "score": null, "penalties": null },
+          "away_team": { "code": "NOR", "qualifier_source": "2nd Group I", "score": null, "penalties": null },
+          "status": "SCHEDULED",
+          "next_match_id": 91
+        },
+        {
+          "match_id": 79,
+          "date": "2026-06-30",
+          "venue": "Mexico City Stadium",
+          "home_team": { "code": "MEX", "qualifier_source": "1st Group A", "score": null, "penalties": null },
+          "away_team": { "code": "ECU", "qualifier_source": "3rd Group E", "score": null, "penalties": null },
+          "status": "SCHEDULED",
+          "next_match_id": 92
+        },
+        {
+          "match_id": 80,
+          "date": "2026-07-01",
+          "venue": "Atlanta Stadium",
+          "home_team": { "code": "ENG", "qualifier_source": "1st Group L", "score": null, "penalties": null },
+          "away_team": { "code": "COD", "qualifier_source": "3rd Group K", "score": null, "penalties": null },
+          "status": "SCHEDULED",
+          "next_match_id": 92
+        },
+        {
+          "match_id": 81,
+          "date": "2026-07-01",
+          "venue": "San Francisco Bay Area Stadium",
+          "home_team": { "code": "USA", "qualifier_source": "1st Group D", "score": null, "penalties": null },
+          "away_team": { "code": "BIH", "qualifier_source": "3rd Group B", "score": null, "penalties": null },
+          "status": "SCHEDULED",
+          "next_match_id": 94
+        },
+        {
+          "match_id": 82,
+          "date": "2026-07-01",
+          "venue": "Seattle Stadium",
+          "home_team": { "code": "BEL", "qualifier_source": "1st Group G", "score": null, "penalties": null },
+          "away_team": { "code": "SEN", "qualifier_source": "3rd Group I", "score": null, "penalties": null },
+          "status": "SCHEDULED",
+          "next_match_id": 94
+        },
+        {
+          "match_id": 83,
+          "date": "2026-07-02",
+          "venue": "Toronto Stadium",
+          "home_team": { "code": "POR", "qualifier_source": "2nd Group K", "score": null, "penalties": null },
+          "away_team": { "code": "CRO", "qualifier_source": "2nd Group L", "score": null, "penalties": null },
+          "status": "SCHEDULED",
+          "next_match_id": 93
+        },
+        {
+          "match_id": 84,
+          "date": "2026-07-02",
+          "venue": "Los Angeles Stadium",
+          "home_team": { "code": "ESP", "qualifier_source": "1st Group H", "score": null, "penalties": null },
+          "away_team": { "code": "AUT", "qualifier_source": "2nd Group J", "score": null, "penalties": null },
+          "status": "SCHEDULED",
+          "next_match_id": 93
+        },
+        {
+          "match_id": 85,
+          "date": "2026-07-02",
+          "venue": "BC Place Vancouver",
+          "home_team": { "code": "SUI", "qualifier_source": "1st Group B", "score": null, "penalties": null },
+          "away_team": { "code": "ALG", "qualifier_source": "3rd Group J", "score": null, "penalties": null },
+          "status": "SCHEDULED",
+          "next_match_id": 96
+        },
+        {
+          "match_id": 86,
+          "date": "2026-07-03",
+          "venue": "Miami Stadium",
+          "home_team": { "code": "ARG", "qualifier_source": "1st Group J", "score": null, "penalties": null },
+          "away_team": { "code": "CPV", "qualifier_source": "2nd Group H", "score": null, "penalties": null },
+          "status": "SCHEDULED",
+          "next_match_id": 95
+        },
+        {
+          "match_id": 87,
+          "date": "2026-07-03",
+          "venue": "Kansas City Stadium",
+          "home_team": { "code": "COL", "qualifier_source": "1st Group K", "score": null, "penalties": null },
+          "away_team": { "code": "GHA", "qualifier_source": "3rd Group L", "score": null, "penalties": null },
+          "status": "SCHEDULED",
+          "next_match_id": 96
+        },
+        {
+          "match_id": 88,
+          "date": "2026-07-03",
+          "venue": "Dallas Stadium",
+          "home_team": { "code": "AUS", "qualifier_source": "2nd Group D", "score": null, "penalties": null },
+          "away_team": { "code": "EGY", "qualifier_source": "2nd Group G", "score": null, "penalties": null },
+          "status": "SCHEDULED",
+          "next_match_id": 95
+        }
+      ]
+    },
+    {
+      "round_name": "Round of 16",
+      "matches": [
+        { "match_id": 89, "date": "2026-07-04", "venue": "Philadelphia Stadium", "home_team": { "code": "TBD", "qualifier_source": "Winner Match 74" }, "away_team": { "code": "TBD", "qualifier_source": "Winner Match 77" }, "next_match_id": 97 },
+        { "match_id": 90, "date": "2026-07-04", "venue": "Houston Stadium", "home_team": { "code": "TBD", "qualifier_source": "Winner Match 73" }, "away_team": { "code": "TBD", "qualifier_source": "Winner Match 75" }, "next_match_id": 97 },
+        { "match_id": 91, "date": "2026-07-05", "venue": "New York New Jersey Stadium", "home_team": { "code": "TBD", "qualifier_source": "Winner Match 76" }, "away_team": { "code": "TBD", "qualifier_source": "Winner Match 78" }, "next_match_id": 99 },
+        { "match_id": 92, "date": "2026-07-05", "venue": "Mexico City Stadium", "home_team": { "code": "TBD", "qualifier_source": "Winner Match 79" }, "away_team": { "code": "TBD", "qualifier_source": "Winner Match 80" }, "next_match_id": 99 },
+        { "match_id": 93, "date": "2026-07-06", "venue": "Dallas Stadium", "home_team": { "code": "TBD", "qualifier_source": "Winner Match 83" }, "away_team": { "code": "TBD", "qualifier_source": "Winner Match 84" }, "next_match_id": 98 },
+        { "match_id": 94, "date": "2026-07-06", "venue": "Seattle Stadium", "home_team": { "code": "TBD", "qualifier_source": "Winner Match 81" }, "away_team": { "code": "TBD", "qualifier_source": "Winner Match 82" }, "next_match_id": 98 },
+        { "match_id": 95, "date": "2026-07-07", "venue": "Atlanta Stadium", "home_team": { "code": "TBD", "qualifier_source": "Winner Match 86" }, "away_team": { "code": "TBD", "qualifier_source": "Winner Match 88" }, "next_match_id": 100 },
+        { "match_id": 96, "date": "2026-07-07", "venue": "BC Place Vancouver", "home_team": { "code": "TBD", "qualifier_source": "Winner Match 85" }, "away_team": { "code": "TBD", "qualifier_source": "Winner Match 87" }, "next_match_id": 100 }
+      ]
+    },
+    {
+      "round_name": "Quarterfinals",
+      "matches": [
+        { "match_id": 97, "date": "2026-07-09", "venue": "Boston Stadium", "home_team": { "code": "TBD", "qualifier_source": "Winner Match 89" }, "away_team": { "code": "TBD", "qualifier_source": "Winner Match 90" }, "next_match_id": 101 },
+        { "match_id": 98, "date": "2026-07-10", "venue": "Los Angeles Stadium", "home_team": { "code": "TBD", "qualifier_source": "Winner Match 93" }, "away_team": { "code": "TBD", "qualifier_source": "Winner Match 94" }, "next_match_id": 101 },
+        { "match_id": 99, "date": "2026-07-11", "venue": "Miami Stadium", "home_team": { "code": "TBD", "qualifier_source": "Winner Match 91" }, "away_team": { "code": "TBD", "qualifier_source": "Winner Match 92" }, "next_match_id": 102 },
+        { "match_id": 100, "date": "2026-07-11", "venue": "Kansas City Stadium", "home_team": { "code": "TBD", "qualifier_source": "Winner Match 95" }, "away_team": { "code": "TBD", "qualifier_source": "Winner Match 96" }, "next_match_id": 102 }
+      ]
+    },
+    {
+      "round_name": "Semifinals",
+      "matches": [
+        { "match_id": 101, "date": "2026-07-14", "venue": "Dallas Stadium", "home_team": { "code": "TBD", "qualifier_source": "Winner Match 97" }, "away_team": { "code": "TBD", "qualifier_source": "Winner Match 98" }, "next_match_id": 104 },
+        { "match_id": 102, "date": "2026-07-15", "venue": "Atlanta Stadium", "home_team": { "code": "TBD", "qualifier_source": "Winner Match 99" }, "away_team": { "code": "TBD", "qualifier_source": "Winner Match 100" }, "next_match_id": 104 }
+      ]
+    },
+    {
+      "round_name": "Final",
+      "matches": [
+        {
+          "match_id": 104,
+          "date": "2026-07-19",
+          "venue": "New York New Jersey Stadium",
+          "home_team": { "code": "TBD", "qualifier_source": "Winner Match 101" },
+          "away_team": { "code": "TBD", "qualifier_source": "Winner Match 102" },
+          "status": "SCHEDULED",
+          "next_match_id": null
+        }
+      ]
+    }
+  ]
+}

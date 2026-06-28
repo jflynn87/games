@@ -14,16 +14,19 @@ from bs4 import BeautifulSoup
 from urllib.request import Request, urlopen
 from datetime import datetime
 
-start = datetime.now()
-e = Event.objects.get(current=True)
-print (e.name, e.current)
-stage = Stage.objects.get(current=True)
-print (stage.name, stage.current)
 
-stage = Stage.objects.get(name="Group Stage", event__current=True)
-import requests
-from bs4 import BeautifulSoup
-import requests
+
+event = Event.objects.get(name='2022 FIFA World Cup')
+stage = Stage.objects.get(name="Knockout Stage", event=event)
+for g in Group.objects.filter(stage=stage):
+    print (g)
+    for t in Team.objects.filter(group=g):
+        print ('   ', t, t.rank)
+
+for p in Picks.objects.filter(team__group__stage=stage, user__username='john'):
+    print (p.team.name, p.rank)
+exit()
+
 
 # Notice the URL change: /apis/v2/ instead of /apis/site/v2/
 api_url = "https://site.api.espn.com/apis/v2/sports/soccer/fifa.world/standings"
