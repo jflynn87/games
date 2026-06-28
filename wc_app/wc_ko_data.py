@@ -44,8 +44,8 @@ class ESPNData(object):
 
             self.data = data
         else:
-            #url = 'https://site.api.espn.com/apis/site/v2/sports/soccer/fifa.world/scoreboard'
-            url = 'https://site.api.espn.com/apis/site/v2/sports/soccer/fifa.world/scoreboard?limit=950&dates=20221203-20221227'
+            url = 'https://site.api.espn.com/apis/site/v2/sports/soccer/fifa.world/scoreboard'
+            #url = 'https://site.api.espn.com/apis/site/v2/sports/soccer/fifa.world/scoreboard?limit=950&dates=20221203-20221227'
             headers = {'User-Agent': 'Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.149 Mobile Safari/537.36'}
             self.api_data = get(url, headers=headers).json()
 
@@ -63,7 +63,7 @@ class ESPNData(object):
         else:
             self.stage = Stage.objects.get(name="Knockout Stage",event__current=True)
 
-        self.rounds = ['round-of-16','quarterfinals', 'semifinals', '3rd-place', 'final']
+        self.rounds = ['round-of-32', 'round-of-16','quarterfinals', 'semifinals', '3rd-place', 'final']
 
         print ('WC KO Init duration: ', datetime.now() - start)
 

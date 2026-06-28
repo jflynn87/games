@@ -16,6 +16,13 @@ from datetime import datetime
 
 
 
+stage = Stage.objects.get(event__current=True, name="Group Stage")
+print (stage)
+data = Data.objects.get(stage=stage)
+print (data.group_data)
+
+exit()
+
 event = Event.objects.get(name='2022 FIFA World Cup')
 stage = Stage.objects.get(name="Knockout Stage", event=event)
 for g in Group.objects.filter(stage=stage):

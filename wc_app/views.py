@@ -292,7 +292,8 @@ def wc_scores(stage, users, data_obj):  ## fix this, just copied during wbc
     if stage.pick_type == '1': #rank style
         if not stage.current:
             print ('WC Group stage complete use saved data')
-            return JsonResponse(data_obj.display_data, status=200, safe=False)
+            #return JsonResponse(data_obj.display_data, status=200, safe=False)
+            return data_obj.display_data
         
         e = wc_group_data.ESPNData(stage=stage)
         espn = e.get_group_data()
@@ -302,7 +303,8 @@ def wc_scores(stage, users, data_obj):  ## fix this, just copied during wbc
         else:
             print ('no updates, use saved data')
             print ('WC scores duration: ', datetime.now() - start)
-            return JsonResponse(data_obj.display_data, status=200, safe=False)
+            #return JsonResponse(data_obj.display_data, status=200, safe=False)
+            return data_obj.display_data
         
         for team in Team.objects.filter(group__stage=stage): 
             rank = [data.get('rank') for k,v in espn.items() for t, data  in v.items() if t == team.name][0]
@@ -346,6 +348,13 @@ def wc_scores(stage, users, data_obj):  ## fix this, just copied during wbc
                 ts, created = TotalScore.objects.get_or_create(stage=stage, user=u)
                 ts.score = d.get(u.username).get('Score')
                 ts.save()
+        try: 
+            #data_obj.group_data = e.api_data
+            data_obj.display_data = d
+            data_obj.save()
+        except Exception as e1:
+            print ('WC data save failed', stage, e1)
+
 
         #print ('score data: ', d)
     elif stage.pick_type == '2': #braket
@@ -386,12 +395,12 @@ def wc_scores(stage, users, data_obj):  ## fix this, just copied during wbc
                 winner  = [k for k, v in d.items() if k != 'results' and v.get('Score') == max_score]
                 d.get('results').update({'complete': True, 'winner': winner})
         
-            try: 
-                data_obj.group_data = espn.api_data
-                data_obj.display_data = d
-                data_obj.save()
-            except Exception as e1:
-                print ('WC data save failed', stage, e1)
+        try: 
+            #data_obj.group_data = espn.api_data
+            data_obj.display_data = d
+            data_obj.save()
+        except Exception as e1:
+            print ('WC data save failed', stage, e1)
 
     print ('WC scores duration: ', datetime.now() - start)
     return d
