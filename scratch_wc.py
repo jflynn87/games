@@ -5,6 +5,7 @@ django.setup()
 
 from wc_app import wc_group_data, wc_ko_data, wbc_group, wbc_group_standings, mlb_group_stage, wbc_ko_data
 from wc_app.models import Event, Group, Team, Picks, Stage, Data
+from wc_app.views import build_ko_picks_dict
 from django.contrib.auth.models import User
 from django.db.models import Min, Q, Count, Sum, Max
 from datetime import datetime
@@ -15,11 +16,76 @@ from urllib.request import Request, urlopen
 from datetime import datetime
 
 
+stage = Stage.objects.get(event__current=True, name="Knockout Stage")
 
-stage = Stage.objects.get(event__current=True, name="Group Stage")
+picks = build_ko_picks_dict(stage=stage, user='john')
+espn = wc_ko_data.ESPNData(source='api')
+winners_losers = espn.api_winners_losers()
+
+for group, p_list in picks.items():
+    for p in p_list:
+        p_score = p.calc_score(winners_losers, 'wc_api', group=group)
+        print (group, p, p_score)
+
+exit()
+
+def build_ko_picks_dict(user, stage):
+    picks_qs = (
+        Picks.objects
+        .filter(user=user, team__group__stage=stage)
+        .select_related('team')
+    )
+
+    result = {
+        'round-of-32':   [],
+        'round-of-16':   [],
+        'quarterfinals': [],
+        'semifinals':    [],
+        'consolation':   [],
+        'final':         [],
+    }
+
+    consolation_participants = []
+
+    for pick in picks_qs:
+        match_id = int(pick.rank)
+
+        if 73 <= match_id <= 88:
+            result['round-of-32'].append(pick.team.name)
+        elif 89 <= match_id <= 96:
+            result['round-of-16'].append(pick.team.name)
+        elif 97 <= match_id <= 100:
+            result['quarterfinals'].append(pick.team.name)
+        elif match_id in (101, 102):
+            consolation_participants.append(pick.team.name)
+        elif match_id == 103:
+            result['consolation'].append(pick.team.name)
+        elif match_id == 104:
+            result['final'].append(pick.team.name)
+
+    # SF winners = QF picks that didn't lose their SF (not consolation participants)
+    result['semifinals'] = [t for t in result['quarterfinals'] 
+                            if t not in consolation_participants]
+
+    return result
+
+
+
+print (build_ko_picks_dict(User.objects.get(username='john'), Stage.objects.get(event__current=True, name="Knockout Stage")))
+
+exit()
+stage = Stage.objects.get(event__current=True, name="Knockout Stage")
 print (stage)
-data = Data.objects.get(stage=stage)
-print (data.group_data)
+
+ko_data = wc_ko_data.ESPNData(stage=stage)
+print (ko_data.api_winners_losers())
+
+
+for i, p in enumerate(Picks.objects.filter(team__group__stage=stage, user__username='john').order_by('rank')):
+    print (p.team.name, p.rank)
+
+#for t in Team.objects.filter(group__stage=stage):
+    #print (t, t.rank, t.group.group)
 
 exit()
 

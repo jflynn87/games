@@ -14,7 +14,7 @@ $(document).ready(function () {
     else {
       if (data.results.complete) {$('#stage_name').text('Tournament Complete. Congrats to the winner ' + data.results.winner)}
 
-      $('#scores_div').append('<p><a href=wc_scores/group>Group Stage Scores</a></p>')
+    $('#scores_div').append('<p><a href=wc_scores/group>Group Stage Scores</a></p>')
     $('#scores_div').append('<table id=score_table class="table table-bordered table-sm"></table>')
     $('#score_table').append('<thead></thead>')
     if ($('#event_type').text() == 'wbc') {
@@ -22,8 +22,14 @@ $(document).ready(function () {
       t.then(sort_table('score_table')    )
     }
     else {
-    $('#score_table').find('thead').append('<th class=border>Player</th><th class=border>Total Score</th><th class=border>Rd of 16</th>' + 
-                                            '<th class=border>Quarters</th><th class=border>Semis</th><th class=border>Third</th><th class=border>Champion</th> ')
+    $('#score_table').find('thead').append('<th class=border>Player</th>' +
+                                            '<th class=border>Total Score</th>' +
+                                            '<th class=border>Rd of 32 (5)</th>' +
+                                            '<th class=border>Rd of 16 (10)</th>' + 
+                                            '<th class=border>Quarters (15)</th>' + 
+                                            '<th class=border>Semis (20) </th>' +
+                                            '<th class=border>Consolation (20)</th>' +
+                                            '<th class=border>Champion (30)</th> ')
     $('#score_table').append('<tbody id=score_table_body></tbody>')
     
     $.each(data, function(user, d) {
@@ -34,13 +40,16 @@ $(document).ready(function () {
                                                     '<p>Group Stage: ' + d.group_stage_score  + '</p>' + 
                                                     '<p>Best possible score: ' + d.best_score  + '</p>' + 
                                                     '</td>' + 
-                                                    '<td id=' + user + '_rof16_cell></td><td id=' + user + '_quarters_cell></td>' +
-                                                    '<td id=' + user + '_semis_cell></td><td id=' + user + '_third_cell></td>' + 
-                                                    '<td id=' + user + '_champ_cell></td>' +
+                                                    '<td id=' + user + '_round-of-32_cell></td>' +
+                                                    '<td id=' + user + '_round-of-16_cell></td>' +
+                                                    '<td id=' + user + '_quarterfinals_cell></td>' +
+                                                    '<td id=' + user + '_semifinals_cell></td>' + 
+                                                    '<td id=' + user + '_3rd-place_cell></td>' + 
+                                                    '<td id=' + user + '_final_cell></td>' +
                                                     '</tr>'
                                                     )
-        //addPicks(user, d.picks, data.results)
-        addWBCPicks(user, d.picks, data.results)
+        addPicks(user, d.picks, data.results)
+        //addWBCPicks(user, d.picks, data.results)
       }
     })
   
@@ -56,7 +65,8 @@ function buildWBCTable(data) {
   return new Promise(function (resolve,reject) {
   $('#score_table').find('thead').append('<th class=border>Player</th><th class=border>Total Score</th>' + 
   '<th class=border>Quarters</th><th class=border>Semis</th><th class=border>Champion</th> ')
-  $('#score_table').append('<tbody id=score_table_body></tbody>')
+  
+ $('#score_table').append('<tbody id=score_table_body></tbody>')
 
   $.each(data, function(user, d) {
   if (user != 'results') {
@@ -112,71 +122,88 @@ function sort_table(tableId) {
     }
 
 function addPicks(user, data, results) {
-      $.each(data, function(i, info) {
+      $.each(data, function(group, pickList) {
+        $.each(pickList, function(i, pick) {
+          console.log(group, pick)
+          if (pick[4] == 'out') {
+            var eleClass = 'loser'
+          }
+          else {
             
-            if (i + 1 < 9) {
-                if (results['round-of-16'].losers.indexOf(info[0]) != -1) {
-                
-                  c = 'loser'
-                }
-                else if (results['round-of-16'].winners.indexOf(info[0]) != -1) {
-                  c= 'winner'
-                }
-                else {c = ''}
+            var eleClass = 'winner'
 
-                $('#' + user + '_rof16_cell').append('<p><img src=' + info[1] + ' style=height:20;width:20;><span class=' + c +  ' >' + info[0] + ' : ' + info[3] +' pts</span></p>')
-              }
-            else if (i + 1 < 13) {
-              if (results['quarterfinals'].losers.indexOf(info[0]) != -1 || info[4] == 'out') {
-                
-                c = 'loser'
-              }
-              else if (results['quarterfinals'].winners.indexOf(info[0]) != -1) {
-                c= 'winner'
-              }
-              else {c = ''}
+          }
 
-                $('#' + user + '_quarters_cell').append('<p><img src=' + info[1] + ' style=height:20;width:20;><span class=' + c +  ' >' + info[0] + ' : ' + info[3] +' pts</span></p>')
-            }
-            else if (i + 1 ==13 || i+1 ==14) {
-              if (results['semifinals'].losers.indexOf(info[0]) != -1 || info[4] == 'out') {
-                
-                c = 'loser'
-              }
-              else if (results['semifinals'].winners.indexOf(info[0]) != -1) {
-                c= 'winner'
-              }
-              else {c = ''}
-
-              $('#' + user + '_semis_cell').append('<p><img src=' + info[1] + ' style=height:20;width:20;><span class=' + c +  ' >' + info[0] + ' : ' + info[3] +' pts</span></p>')
-            }
-            else if (i + 1 == 16) {
-              if (results['3rd-place'].losers.indexOf(info[0]) != -1 || info[4] == 'out' || results['semifinals'].winners.indexOf(info[0]) != -1) {
-                
-                c = 'loser'
-              }
-              else if (results['3rd-place'].winners.indexOf(info[0]) != -1) {
-                c= 'winner'
-              }
-              else {c = ''}
-
-                $('#' + user + '_third_cell').append('<p><img src=' + info[1] + ' style=height:20;width:20;><span class=' + c +  ' >' + info[0] + ' : ' + info[3] +' pts</span></p>')
-            }
-            else if (i + 1 == 15) {
-              if (results['final'].losers.indexOf(info[0]) != -1 || info[4] == 'out') {
-                
-                c = 'loser'
-              }
-              else if (results['final'].winners.indexOf(info[0]) != -1) {
-                c= 'winner'
-              }
-              else {c = ''}
-
-                $('#' + user + '_champ_cell').append('<p><img src=' + info[1] + ' style=height:20;width:20;><span class=' + c +  ' >' + info[0] + ' : ' + info[3] +' pts</span></p>')
-            }
-
-            
+          $('#' + user + '_' + group + '_cell')
+          .append('<p><img src=' + pick[1] + ' style=height:20;width:20;>' + '<span class=' + eleClass + '>' + pick[0] + ' : ' + pick[3] + ' pts</span></p>')
+          
         })
+      })
+      // $.each(data, function(i, info) {
+      //       console.log('add pick', info)
+      //       if (i + 1 < 9) {
+      //           if (results['round-of-16'].losers.indexOf(info[0]) != -1) {
+                
+      //             c = 'loser'
+      //           }
+      //           else if (results['round-of-16'].winners.indexOf(info[0]) != -1) {
+      //             c= 'winner'
+      //           }
+      //           else {c = ''}
+
+      //           $('#' + user + '_rof16_cell').append('<p><img src=' + info[1] + ' style=height:20;width:20;><span class=' + c +  ' >' + info[0] + ' : ' + info[3] +' pts</span></p>')
+      //         }
+      //       else if (i + 1 < 13) {
+      //         if (results['quarterfinals'].losers.indexOf(info[0]) != -1 || info[4] == 'out') {
+                
+      //           c = 'loser'
+      //         }
+      //         else if (results['quarterfinals'].winners.indexOf(info[0]) != -1) {
+      //           c= 'winner'
+      //         }
+      //         else {c = ''}
+
+      //           $('#' + user + '_quarters_cell').append('<p><img src=' + info[1] + ' style=height:20;width:20;><span class=' + c +  ' >' + info[0] + ' : ' + info[3] +' pts</span></p>')
+      //       }
+      //       else if (i + 1 ==13 || i+1 ==14) {
+      //         if (results['semifinals'].losers.indexOf(info[0]) != -1 || info[4] == 'out') {
+                
+      //           c = 'loser'
+      //         }
+      //         else if (results['semifinals'].winners.indexOf(info[0]) != -1) {
+      //           c= 'winner'
+      //         }
+      //         else {c = ''}
+
+      //         $('#' + user + '_semis_cell').append('<p><img src=' + info[1] + ' style=height:20;width:20;><span class=' + c +  ' >' + info[0] + ' : ' + info[3] +' pts</span></p>')
+      //       }
+      //       else if (i + 1 == 16) {
+      //         if (results['3rd-place'].losers.indexOf(info[0]) != -1 || info[4] == 'out' || results['semifinals'].winners.indexOf(info[0]) != -1) {
+                
+      //           c = 'loser'
+      //         }
+      //         else if (results['3rd-place'].winners.indexOf(info[0]) != -1) {
+      //           c= 'winner'
+      //         }
+      //         else {c = ''}
+
+      //           $('#' + user + '_third_cell').append('<p><img src=' + info[1] + ' style=height:20;width:20;><span class=' + c +  ' >' + info[0] + ' : ' + info[3] +' pts</span></p>')
+      //       }
+      //       else if (i + 1 == 15) {
+      //         if (results['final'].losers.indexOf(info[0]) != -1 || info[4] == 'out') {
+                
+      //           c = 'loser'
+      //         }
+      //         else if (results['final'].winners.indexOf(info[0]) != -1) {
+      //           c= 'winner'
+      //         }
+      //         else {c = ''}
+
+      //           $('#' + user + '_champ_cell').append('<p><img src=' + info[1] + ' style=height:20;width:20;><span class=' + c +  ' >' + info[0] + ' : ' + info[3] +' pts</span></p>')
+      //       }
+
+            
+      //   })
     }
 
 function addWBCPicks(user, data, results) {

@@ -355,11 +355,8 @@ def wc_scores(stage, users, data_obj):  ## fix this, just copied during wbc
         except Exception as e1:
             print ('WC data save failed', stage, e1)
 
-
         #print ('score data: ', d)
     elif stage.pick_type == '2': #braket
-        #espn  = wc_ko_data.ESPNData(source='web')
-        #data = espn.web_get_data()
         if stage.complete:
             d = data_obj.display_data
         else:
@@ -369,23 +366,33 @@ def wc_scores(stage, users, data_obj):  ## fix this, just copied during wbc
             for u, stats in d.items():
                 score = 0
                 best_score = 0
-                pick_list = []
+                pick_list = {}
                 group_ts = TotalScore.objects.get(user__username=u, stage=Stage.objects.get(event__current=True, name='Group Stage'))
-                for p in Picks.objects.filter(team__group__stage=stage, user=User.objects.get(username=u)).order_by('team__group', 'rank'):
-                    #if p.rank in [13, 14]:
-                    #    fix = p.ko_fix_picks()
-                    #    p = fix
-                    p_score = p.calc_score(winners_losers, 'api')
+                #for p in Picks.objects.filter(team__group__stage=stage, user=User.objects.get(username=u)).order_by('team__group', 'rank'):
+                picks_dict = build_ko_picks_dict(u, stage)
+                for r, picks in picks_dict.items():
+                    for p in picks:
+                        p_score = p.calc_score(winners_losers, 'wc_api', group=r)
+                        print (p.team, p_score)
+                        #pick_list.append([p.team.name, p.team.flag_link, p.rank, p_score[0], p.in_out(winners_losers)])
+                        if pick_list.get(r):
+                           pick_list.get(r).append([p.team.name, p.team.flag_link, p.rank, p_score[0], p.in_out(winners_losers)])
+                        else:
+                           pick_list.update({r: [[p.team.name, p.team.flag_link, p.rank, p_score[0], p.in_out(winners_losers)]]})
 
-                    pick_list.append([p.team.name, p.team.flag_link, p.rank, p_score[0], p.in_out(winners_losers)])
-                    score += p_score[0]
-                    best_score += p_score[1]
+                        score += p_score[0]
+                        best_score += p_score[1]
+                        print (p.team, p_score, score, r)
+                
+                print('U', d)
+                print ('S', group_ts.score)
+                print ('S1', score)
                 d.get(u).update({'group_stage_score': group_ts.score,
                                 'ko_stage_score': score,
                                 'Score': group_ts.score + score,
                                 'best_score': best_score + group_ts.score,
                                 'picks': pick_list})
-
+                print ('D', d)
             d['results'] = winners_losers    
             if espn.stage_complete():
                 stage.complete = True
@@ -405,6 +412,46 @@ def wc_scores(stage, users, data_obj):  ## fix this, just copied during wbc
     print ('WC scores duration: ', datetime.now() - start)
     return d
 
+def build_ko_picks_dict(user, stage):
+    u_obj = User.objects.get(username=user)
+    picks_qs = (
+        Picks.objects
+        .filter(user=u_obj, team__group__stage=stage)
+        .select_related('team')
+    )
+
+    result = {
+        'round-of-32':   [],
+        'round-of-16':   [],
+        'quarterfinals': [],
+        'semifinals':    [],
+        '3rd-place':   [],
+        'final':         [],
+    }
+
+    consolation_participants = []
+
+    for pick in picks_qs:
+        match_id = int(pick.rank)
+
+        if 73 <= match_id <= 88:
+            result['round-of-32'].append(pick)
+        elif 89 <= match_id <= 96:
+            result['round-of-16'].append(pick)
+        elif 97 <= match_id <= 100:
+            result['quarterfinals'].append(pick)
+        elif match_id in (101, 102):
+            consolation_participants.append(pick)
+        elif match_id == 103:
+            result['3rd-place'].append(pick)
+        elif match_id == 104:
+            result['final'].append(pick)
+
+    # SF winners = QF picks that didn't lose their SF (not consolation participants)
+    result['semifinals'] = [t for t in result['quarterfinals'] 
+                            if t.team not in [c.team for c in consolation_participants]]
+    #print (user, result)
+    return result
 
 class GroupBonusAPI(APIView):
 
