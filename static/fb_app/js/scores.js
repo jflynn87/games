@@ -55,13 +55,11 @@ function get_picks() {
                  p =player.replace(filler, '')
                 if (pick['loser']) {
                 $('#pick-' + p + num).text(pick['team']).removeClass('status').addClass('loser_abbr')
-                //$('#pick-' + p + num).html('<img src=' + pick['logo'] + ' height=40 width=40 class=loser></img> <p>X</p>').addClass('loser').addClass('fs-2').removeClass('status')
-                
                 }
                 else {
-                //$('#pick-' + p + num).html('<img src=' + pick['logo'] + ' height=40 width=40">').addClass('tbl_center').removeClass('status')
                 $('#pick-' + p + num).text(pick['team']).removeClass('status')
                 }
+                if (window.updateMobilePickRow) { window.updateMobilePickRow(player, num, pick['team'], pick['loser'], pick['logo']); }
              })
         })
         })
@@ -127,6 +125,7 @@ $.each(picks_data, function(player, data) {
 $('#loading').hide()
 $('#score-tbl').empty()
 $('#sub-btn').remove()
+if (window.buildMobileCards) { window.buildMobileCards(picks_data, parseInt($('#game_cnt').text())); }
 
 $('#nfl-scores').append('<button id=sub-btn type="button" class="btn btn-primary">Project Scores</button>')
 
@@ -167,7 +166,8 @@ $.each(picks_data, function(player, data) {
     $('#score-' + p).text(data['score'])
     $('#proj_score-' + p).text(data['proj_score'])
     $('#proj_rank-' +p).text(data['proj_rank'])
-}) 
+})
+if (window.updateMobileScores) { window.updateMobileScores(picks_data); }
 
 
 $.each(picks_data, function(player, data) {

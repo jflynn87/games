@@ -46,11 +46,11 @@ class Stage(models.Model):
             return True
         return False
 
-    def ko_match_order(self):
-        if self.name == 'Knockout Stage':
-            return [1,10, 3, 12, 5, 14, 7, 16, 2, 9, 4, 11, 6, 13, 8, 15]
-        else:
-            return []
+    # def ko_match_order(self):
+    #     if self.name == 'Knockout Stage':
+    #         return [1,10, 3, 12, 5, 14, 7, 16, 2, 9, 4, 11, 6, 13, 8, 15]
+    #     else:
+    #         return []
 
     def total_picks(self):
         if self.event.event_type and self.name == 'Knockout Stage':
@@ -166,35 +166,6 @@ class Picks (models.Model):
             elif self.rank == 16 and len([v for k, v in data.items() if k == 'stage_6' and self.team.full_name in v]) > 0:  # need to figure out how to make this winners
                 p_score += 20
         elif source == 'wc_api':
-            # if self.rank < 9 and self.team.name in data.get('round-of-16').get('winners'):
-            #     p_score += 5
-            # elif self.rank in [9, 10, 11, 12] and self.team.name in data.get('quarterfinals').get('winners'):
-            #     p_score += 10
-            # elif self.rank in [13, 14] and self.team.name in data.get('semifinals').get('winners'):
-            #     p_score += 15
-            # elif self.rank == 15 and self.team.name in data.get('final').get('winners'):
-            #     p_score += 30
-            # elif self.rank == 16 and self.team.name in data.get('3rd-place').get('winners'):
-            #     p_score += 20
-
-            # if p_score > 0:
-            #     best_score = p_score
-            # elif self.rank < 9 and self.team.name not in data.get('round-of-16').get('losers'):
-            #     best_score += 5
-            # elif self.rank in [9, 10, 11, 12] and not (self.team.name in data.get('round-of-16').get('losers') or self.team.name in data.get('quarterfinals').get('losers')):
-            #     best_score += 10
-            # elif self.rank in [13, 14] and not (self.team.name in data.get('round-of-16').get('losers') or self.team.name in data.get('quarterfinals').get('losers') or self.team.name in data.get('semifinals').get('losers')):
-            #     best_score += 15
-            # elif self.rank == 15 and not (self.team.name in data.get('round-of-16').get('losers') or self.team.name in data.get('quarterfinals').get('losers') or self.team.name in data.get('semifinals').get('losers') or self.team.name in data.get('final').get('losers')):
-            #     best_score += 30
-            # elif self.rank == 16 and not (self.team.name in data.get('round-of-16').get('losers') or self.team.name in data.get('quarterfinals').get('losers') or self.team.name in data.get('semifinals').get('losers') or self.team.name in data.get('3rd-place').get('losers')):
-            #     best_score += 20
-            # 32-team tournament, ranks 72-104
-            # ranks 72-88: round-of-32 group picks, always eligible until knocked out there
-            #if self.rank < 89:
-            #    return result
-            # ranks 89-96: survived round-of-32, out if lost in round-of-16
-            #round of 32
             print (group, self.team.name, data)
             if group == 'round-of-32' and self.team.name in data.get('round-of-32').get('winners'):
                 p_score += 5
@@ -215,32 +186,40 @@ class Picks (models.Model):
             elif group == '3rd-place' and self.team.name in data.get('3rd-place').get('winners'):
                 p_score += 20
             print ('DONE')
+            in_out = 'out'
             if p_score > 0:
                 best_score = p_score
+                in_out = 'in'
             elif group == 'round-of-32' and not self.team.name in data.get('round-of-32').get('losers'):
                 best_score += 5
+                in_out = 'in'
             elif group == 'round-of-16' and not (self.team.name in data.get('round-of-32').get('losers') or self.team.name in data.get('round-of-16').get('losers')):
                 best_score += 10
+                in_out = 'in'
             elif group == 'quarterfinals' and not (self.team.name in data.get('round-of-32').get('losers') or
                                                 self.team.name in data.get('round-of-16').get('losers') or
                                                 self.team.name in data.get('quarterfinals').get('losers')):
                 best_score += 15
+                in_out = 'in'
             elif group == 'semifinals' and not (self.team.name in data.get('round-of-32').get('losers') or
                                                 self.team.name in data.get('round-of-16').get('losers') or
                                                 self.team.name in data.get('quarterfinals').get('losers') or
                                                 self.team.name in data.get('semifinals').get('losers')):
                 best_score += 20
+                in_out = 'in'
             elif group == 'final' and not (self.team.name in data.get('round-of-32').get('losers') or
                                                 self.team.name in data.get('round-of-16').get('losers') or
                                                 self.team.name in data.get('quarterfinals').get('losers') or
                                                 self.team.name in data.get('semifinals').get('losers') or
                                                 self.team.name in data.get('final').get('losers')):
                 best_score += 30
+                in_out = 'in'
             elif group == '3rd-place' and not (self.team.name in data.get('round-of-32').get('losers') or
                                                 self.team.name in data.get('round-of-16').get('losers') or
                                                 self.team.name in data.get('quarterfinals').get('losers') or
                                                 self.team.name in data.get('3rd-place').get('losers')):
                 best_score += 20
+                in_out = 'in'
 
 
         elif source == 'wbc_api':
@@ -268,27 +247,8 @@ class Picks (models.Model):
 
         #print (self.user, self.team, self.rank, p_score, best_score)
         #print (data)
-        return (p_score, best_score)
+        return (p_score, best_score, in_out)
 
-    # def in_out(self, data):
-    #     result = 'in'
-        
-    #     if self.team.group.stage.event.data.get('event_type') == 'wbc':
-    #         if self.rank < 5:
-    #             return result
-    #         elif self.rank in [5, 6] and self.team.name in data.get('2nd Round').get('losers'):
-    #             result = 'out'
-    #         elif self.team.name in data.get('2nd Round').get('losers') or self.team.name in data.get('Semi-Finals').get('losers'):
-    #             result = 'out'
-    #     else:            
-    #         if self.rank < 89:
-    #             return result
-    #         elif (self.rank > 88 and self.rank < 98) and self.team.name in data.get('round-of-32').get('losers'):
-    #             result = 'out'
-    #         elif self.team.name in data.get('round-of-16').get('losers') or self.team.name in data.get('quarterfinals').get('losers'):
-    #             result = 'out'
-            
-    #     return result
 
     def in_out(self, data):
         result = 'in'
@@ -309,8 +269,8 @@ class Picks (models.Model):
             if self.rank < 97 and self.team.name in data.get('round-of-32').get('losers'):
                 result = 'out'
             # ranks 97-100: quarterfinal picks, out if lost in round-of-32 or round-of-16
-            elif self.rank < 101 and (self.team.name in data.get('round-of-32').get('losers') or
-                                    self.team.name in data.get('round-of-16').get('losers')):
+            elif self.rank >= 97 and self.rank < 101 and (self.team.name in data.get('round-of-32').get('losers')): # or
+                                    #self.team.name in data.get('round-of-16').get('losers')):
                 result = 'out'
             # ranks 101-102: semifinal picks, out if lost before semis
             elif self.rank < 103 and (self.team.name in data.get('round-of-32').get('losers') or
@@ -329,6 +289,7 @@ class Picks (models.Model):
                                         self.team.name in data.get('quarterfinals').get('losers') or
                                         self.team.name in data.get('semifinals').get('losers')):
                 result = 'out'
+        print (self.team, self.rank, result)
 
         return result
 

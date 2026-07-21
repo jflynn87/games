@@ -42,9 +42,16 @@ import pprint
 from docx.api import Document   
 
 
-for k,v in os.environ.items():
-    print (k,v)
+for week in Week.objects.all():
+    #print (week, week.game_cnt, Games.objects.filter(week=week).count())
+    duplicates = (
+        Games.objects.filter(week=week).values('home', 'away')
+    .annotate(game_count=Count('id'))
+    .filter(game_count__gt=1)
+    )
 
+    if duplicates:
+        print (week.season, week, duplicates)
 exit()
 
 week = Week.objects.get(season_model__current=True, week=2)

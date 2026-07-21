@@ -104,7 +104,7 @@
             fetch("/golf_app/get_info/", { method: "GET" })
                 .then(response => response.json())
                 .then(data => {
-                  info = $.parseJSON(data);
+                  info = data;
                   console.log(info.t_num);
                     if (info.t_num == '468') {
                       $('#golf_scores').append("<a class='dropdown-item' href='{% url 'golf_app:ryder_cup_scores' %}'>Ryder Cup Scores</a>");

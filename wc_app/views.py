@@ -238,8 +238,8 @@ def wbc_scores(stage, users, data_obj):
             #espn = wc_ko_data.ESPNData(source='api')
             #winners_losers = espn.api_winners_losers()
             espn = wbc_ko_data.ESPNData()
-            winners_losers = espn.winners()
-
+            #winners_losers = espn.winners()
+            winners_losers = None
             for u, stats in d.items():
                 score = 0
                 best_score = 0
@@ -251,7 +251,8 @@ def wbc_scores(stage, users, data_obj):
                     #    p = fix
                     p_score = p.calc_score(winners_losers, 'wbc_api')
                     print ('calc good', p_score)
-                    pick_list.append([p.team.name, p.team.flag_link, p.rank, p_score[0], p.in_out(winners_losers)])
+                    #pick_list.append([p.team.name, p.team.flag_link, p.rank, p_score[0], p.in_out(winners_losers)])
+                    pick_list.append([p.team.name, p.team.flag_link, p.rank, p_score[0], p_score[2]])
                     score += p_score[0]
                     best_score += p_score[1]
                 d.get(u).update({'group_stage_score': group_ts.score,
@@ -376,23 +377,24 @@ def wc_scores(stage, users, data_obj):  ## fix this, just copied during wbc
                         print (p.team, p_score)
                         #pick_list.append([p.team.name, p.team.flag_link, p.rank, p_score[0], p.in_out(winners_losers)])
                         if pick_list.get(r):
-                           pick_list.get(r).append([p.team.name, p.team.flag_link, p.rank, p_score[0], p.in_out(winners_losers)])
+                           #pick_list.get(r).append([p.team.name, p.team.flag_link, p.rank, p_score[0], p.in_out(winners_losers)])
+                           pick_list.get(r).append([p.team.name, p.team.flag_link, p.rank, p_score[0], p_score[2]])
                         else:
-                           pick_list.update({r: [[p.team.name, p.team.flag_link, p.rank, p_score[0], p.in_out(winners_losers)]]})
+                           pick_list.update({r: [[p.team.name, p.team.flag_link, p.rank, p_score[0], p_score[2]]]})
 
                         score += p_score[0]
                         best_score += p_score[1]
                         print (p.team, p_score, score, r)
                 
-                print('U', d)
-                print ('S', group_ts.score)
-                print ('S1', score)
+                #print('U', d)
+                #print ('S', group_ts.score)
+                #print ('S1', score)
                 d.get(u).update({'group_stage_score': group_ts.score,
                                 'ko_stage_score': score,
                                 'Score': group_ts.score + score,
                                 'best_score': best_score + group_ts.score,
                                 'picks': pick_list})
-                print ('D', d)
+                #print ('D', d)
             d['results'] = winners_losers    
             if espn.stage_complete():
                 stage.complete = True
@@ -425,7 +427,7 @@ def build_ko_picks_dict(user, stage):
         'round-of-16':   [],
         'quarterfinals': [],
         'semifinals':    [],
-        '3rd-place':   [],
+        '3rd-place-match':   [],
         'final':         [],
     }
 
@@ -443,7 +445,7 @@ def build_ko_picks_dict(user, stage):
         elif match_id in (101, 102):
             consolation_participants.append(pick)
         elif match_id == 103:
-            result['3rd-place'].append(pick)
+            result['3rd-place-match'].append(pick)
         elif match_id == 104:
             result['final'].append(pick)
 
@@ -545,7 +547,7 @@ class KnockoutPicksView(LoginRequiredMixin, TemplateView):
         print (self.request.user, request.POST)
 
         stage = Stage.objects.get(event__current=True, name="Knockout Stage")
-        picks_valid = validate_ko_picks(self.request.user, stage, request.POST)
+        #picks_valid = validate_ko_picks(self.request.user, stage, request.POST)
         #add if to check and error processing
         Picks.objects.filter(user=self.request.user, team__group__stage=stage).delete()
         #Picks.objects.filter(user=self.request.user, team__group__stage__name="Knockout Stage", team__group__stage__event__current=True).delete()
@@ -698,12 +700,12 @@ class KOPicksSummaryView(LoginRequiredMixin, TemplateView):
         
         return context
 
-def validate_ko_picks(user, stage, picks):
-    '''takes a user obj and a dict of picks returns a tuple with a bool and a string'''
-    if stage.started():
-        return (False, 'Stage started too late for picks')
+# def validate_ko_picks(user, stage, picks):
+#     '''takes a user obj and a dict of picks returns a tuple with a bool and a string'''
+#     if stage.started():
+#         return (False, 'Stage started too late for picks')
     
-    order = stage.ko_match_order()
+#     order = stage.ko_match_order()
 
 
 class CreateKOTeamsAPI(APIView):

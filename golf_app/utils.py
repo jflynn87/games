@@ -70,11 +70,13 @@ def formatRank(rank, tournament=None):
 
 def format_name(name):
     '''take a name string and match pga conventions '''
-    if len(name.split(' ')) == 2:
+    if len(name.split(' ')) == 2 and ')' not in name:
         return name
     else:
         #print (name.split(' '))
-        return (name.strip(', Jr.').strip(',Jr ').strip('(a)').strip(',').strip('Jr.').strip('.'))
+        #print ('format name: ', name)
+        strips = name.strip(', Jr.').strip(',Jr ').strip('(a)').strip(',').strip('Jr.').strip('.')
+        return strips.split('(')[0]
 
 
 def fix_name(player, owgr_rankings, log=None):
@@ -84,6 +86,9 @@ def fix_name(player, owgr_rankings, log=None):
         print ('FIX: ', player, len(owgr_rankings))
     if owgr_rankings.get(player.replace('.', '').replace('-', '').replace(' ', '')) != None:
         return (player, owgr_rankings.get(player.replace('.', '').replace('-', '')))
+
+    if owgr_rankings.get(format_name(player)):
+        return (player, owgr_rankings.get(format_name(player)))
 
     if owgr_rankings.get(decode(player)):
         if log:
@@ -161,6 +166,17 @@ def fix_name(player, owgr_rankings, log=None):
             if log:
                 print ('last name, first two letter match', player, owgr_name)
             return k, v
+
+    # if {k:v for k,v in owgr_rankings.items() if format_name(player) == format_name(k)}:
+    #     print ('fix names expensive match', player, {k:v for k,v in owgr_rankings.items() if format_name(player) == format_name(k)})
+    #     matches = {k:v for k,v in owgr_rankings.items() if format_name(player) == format_name(k)}
+    #     if len(matches) == 1:
+    #         return list(matches.keys())[0], list(matches.values())[0]
+    #     else:
+    #         print ('multiple matches for name: ', player, matches)
+    #         low_rank = min([v for k,v in matches.items()])
+    #         return {k:v for k,v in matches.items() if v == low_rank}.popitem()  
+        
 
     if log or os.environ.get("DEBUG") != "True":
         print ('fix names didnt find match', player)

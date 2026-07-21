@@ -3712,3 +3712,36 @@ class AllTimeBestTotalScoresAPI(APIView):
         except Exception as e:
             print (f"All time best scores error: {e}")
             return (JsonResponse({'error': {'msg': str(e)}}, status=400, safe=False))
+
+class FixFieldAPI(APIView):
+    def post(self, request):
+        try:
+            print (f'FixFieldAPI params {request.data}')
+            t = Tournament.objects.get(pk=request.data.get('tournament_pk'))
+            f = Field.objects.get(pk=request.data.get('field_pk'))
+            current_rank = int(request.data.get('currentWGR'))
+            soy_rank = int(request.data.get('soy_WGR'))
+            sow_rank = int(request.data.get('sow_WGR'))
+            groups = {}
+            for g in Group.objects.filter(tournament=t):
+                min_rank = min([f.currentWGR for f in Field.objects.filter(group=g)])
+                max_rank = max([f.currentWGR for f in Field.objects.filter(group=g)])
+
+                groups[g.number] = {'min': min_rank, 'max': max_rank}
+
+            group = {k:v for k,v in groups.items() if v['min'] <= current_rank <= v['max']}
+
+            f.currentWGR = current_rank
+            f.soy_WGR = soy_rank
+            f.sow_WGR = sow_rank
+            f.handi = f.handicap()
+             
+            f.group = Group.objects.get(tournament=t, number=list(group.keys())[0])
+            f.save()
+            data = serializers.serialize('json', [f])
+            print (f.playerName, 'ranking: ', current_rank, 'group: ', f.group, 'handi: ', f.handi)
+
+            return JsonResponse(data, status=200, safe=False)
+        except Exception as e:
+            print (f"FixFieldAPI error: {e}")
+            return (JsonResponse({'message': str(e)}, status=400, safe=False))

@@ -59,23 +59,177 @@
 
 {%if view == 'scores_view'%}
 
+<style>
+  .loser_abbr { text-decoration: line-through; color: #cc0000; }
+  .player-card { border: 1px solid #dee2e6; border-radius: 6px; margin-bottom: 8px; }
+  .player-summary {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 10px 14px; cursor: pointer; background: #f8f9fa; border-radius: 6px;
+  }
+  .player-summary:hover { background: #e9ecef; }
+  .player-name { font-weight: 600; }
+  .summary-scores { font-size: 0.9rem; color: #555; }
+  .player-picks { display: none; padding: 8px 14px 12px; }
+  .player-picks.open { display: block; }
+  .player-picks table { width: 100%; font-size: 0.85rem; }
+  #mobile-controls { margin-bottom: 10px; }
+  #mobile-controls button { margin-right: 6px; }
+</style>
+
 {%compress js%}
 <script src="{% static 'fb_app/js/scores.js'%}" type="text/javascript" ></script> 
 {%endcompress%}
 
-<div id='picks-sect'>
-
+<div id='table-controls' style='display:block;'>
+  <button class='btn btn-sm btn-outline-primary mb-2' id='card-view-btn'>Card View</button>
 </div>
+<div id='picks-sect'></div>
+
+<div id='mobile-card-view' style='display:none;'>
+  <div id='mobile-controls'>
+    <button class='btn btn-sm btn-outline-secondary' id='expand-all-btn'>Expand All</button>
+    <button class='btn btn-sm btn-outline-primary' id='toggle-view-btn'>Table View</button>
+  </div>
+  <div id='player-cards'></div>
+</div>
+
 {%compress js%}
   <script src="{% static "fb_app/js/ranks.js"%}" type="text/javascript"></script>
 {%endcompress%}
 
+<script>
+(function(){
+  var isMobile = window.matchMedia('(max-width: 767px)').matches;
+  var allExpanded = false;
+
+  // Called from scores.js after build_page completes on first load
+  window.buildMobileCards = function(picksData, gameCnt) {
+    if (!isMobile) return;
+    document.getElementById('picks-sect').style.display = 'none';
+    document.getElementById('table-controls').style.display = 'none';
+    var cardView = document.getElementById('mobile-card-view');
+    var container = document.getElementById('player-cards');
+    container.innerHTML = '';
+    var filler = /[\s\.\'\']/g;
+
+    // sort players by rank ascending
+    var sortedPlayers = Object.keys(picksData).sort(function(a, b) {
+      return picksData[a].rank - picksData[b].rank;
+    });
+
+    sortedPlayers.forEach(function(player) {
+      var data = picksData[player];
+      var p = player.replace(filler, '');
+      var card = document.createElement('div');
+      card.className = 'player-card';
+      card.innerHTML =
+        '<div class="player-summary" data-player="' + p + '">' +
+          '<span class="player-name">' + player + '</span>' +
+          '<span class="summary-scores">' +
+            'Rank: <strong id="ms-rank-' + p + '">' + data.rank + '</strong>' +
+            ' &nbsp;|&nbsp; Score: <strong id="ms-score-' + p + '">' + data.score + '</strong>' +
+            ' &nbsp;|&nbsp; Proj: <strong id="ms-proj-' + p + '">' + data.proj_score + '</strong>' +
+            ' &nbsp;|&nbsp; PR: <strong id="ms-prank-' + p + '">' + data.proj_rank + '</strong>' +
+          '</span>' +
+          '<span class="toggle-icon">&#9660;</span>' +
+        '</div>' +
+        '<div class="player-picks" id="mc-picks-' + p + '">' +
+          '<table>' +
+            '<tbody id="mc-pick-rows-' + p + '"></tbody>' +
+            '<tr><td>Season Total</td><td id="ms-stotal-' + p + '">' + data.season_total + '</td></tr>' +
+            '<tr><td>Season Rank</td><td id="ms-srank-' + p + '">' + data.season_rank + '</td></tr>' +
+          '</table>' +
+        '</div>';
+      container.appendChild(card);
+    });
+
+    cardView.style.display = 'block';
+
+    container.querySelectorAll('.player-summary').forEach(function(el) {
+      el.addEventListener('click', function() {
+        var pp = this.dataset.player;
+        var picks = document.getElementById('mc-picks-' + pp);
+        var icon = this.querySelector('.toggle-icon');
+        picks.classList.toggle('open');
+        icon.innerHTML = picks.classList.contains('open') ? '&#9650;' : '&#9660;';
+      });
+    });
+  };
+
+  // Called from scores.js get_picks — inserts rows sorted high-to-low by pickNum
+  window.updateMobilePickRow = function(player, pickNum, team, isLoser, logo) {
+    if (!isMobile) return;
+    var filler = /[\s\.\'\']/g;
+    var p = player.replace(filler, '');
+    var tbody = document.getElementById('mc-pick-rows-' + p);
+    if (!tbody) return;
+    var rowId = 'mc-pr-' + p + '-' + pickNum;
+    if (document.getElementById(rowId)) return; // already added
+    var row = document.createElement('tr');
+    row.id = rowId;
+    row.dataset.picknum = pickNum;
+    var logoHtml = logo ? '<img src="' + logo + '" height="24" width="24" style="margin-right:4px;vertical-align:middle;">' : '';
+    var teamClass = isLoser ? 'loser_abbr' : '';
+    row.innerHTML = '<td>' + pickNum + '</td><td class="' + teamClass + '">' + logoHtml + team + '</td>';
+    // insert sorted high-to-low
+    var inserted = false;
+    var rows = tbody.querySelectorAll('tr');
+    for (var i = 0; i < rows.length; i++) {
+      if (parseInt(rows[i].dataset.picknum) < pickNum) {
+        tbody.insertBefore(row, rows[i]);
+        inserted = true;
+        break;
+      }
+    }
+    if (!inserted) tbody.appendChild(row);
+  };
+
+  // Update summary scores on refresh
+  window.updateMobileScores = function(picksData) {
+    if (!isMobile) return;
+    var filler = /[\s\.\'\']/g;
+    Object.keys(picksData).forEach(function(player) {
+      var data = picksData[player];
+      var p = player.replace(filler, '');
+      var el;
+      if ((el = document.getElementById('ms-rank-' + p))) el.textContent = data.rank;
+      if ((el = document.getElementById('ms-score-' + p))) el.textContent = data.score;
+      if ((el = document.getElementById('ms-proj-' + p))) el.textContent = data.proj_score;
+      if ((el = document.getElementById('ms-prank-' + p))) el.textContent = data.proj_rank;
+      if ((el = document.getElementById('ms-stotal-' + p))) el.textContent = data.season_total;
+      if ((el = document.getElementById('ms-srank-' + p))) el.textContent = data.season_rank;
+    });
+  };
+
+  document.addEventListener('click', function(e) {
+    if (e.target.id === 'expand-all-btn') {
+      allExpanded = !allExpanded;
+      document.querySelectorAll('.player-picks').forEach(function(el) {
+        el.classList.toggle('open', allExpanded);
+      });
+      document.querySelectorAll('.toggle-icon').forEach(function(el) {
+        el.innerHTML = allExpanded ? '&#9650;' : '&#9660;';
+      });
+      e.target.textContent = allExpanded ? 'Collapse All' : 'Expand All';
+    }
+    if (e.target.id === 'toggle-view-btn') {
+      document.getElementById('mobile-card-view').style.display = 'none';
+      var sect = document.getElementById('picks-sect');
+      sect.style.display = 'block';
+      sect.style.overflowX = 'auto';
+      document.getElementById('table-controls').style.display = 'block';
+    }
+    if (e.target.id === 'card-view-btn') {
+      document.getElementById('picks-sect').style.display = 'none';
+      document.getElementById('table-controls').style.display = 'none';
+      document.getElementById('mobile-card-view').style.display = 'block';
+    }
+  });
+})();
+</script>
+
     <div id='nfl-scores'> 
-      <!-- <form id='winners-form' method='post'>
-        {%csrf_token%}  -->
        <table id='score-tbl' class='table'> </table>    
-       
-       <!-- </form> -->
        </div>
 
 {%endif%}

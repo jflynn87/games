@@ -49,12 +49,39 @@ import requests
 
 start = datetime.now()
 
-owgr = populateField.get_worldrank()
-for f in Field.objects.filter(tournament__current=True):
-    fixed = utils.fix_name(f.playerName, owgr)
-    print (f.playerName, fixed)
+golfers = [
+('Daniel Brown', 136),	
+('Jack McDonald', 9999),	
+]	
 
-#print ({k: v for k, v in owgr.items() if 'Mason' in k})
+groups = {}
+for g in Group.objects.filter(tournament__current=True):
+    min_rank = min([f.currentWGR for f in Field.objects.filter(group=g)])
+    max_rank = max([f.currentWGR for f in Field.objects.filter(group=g)])
+
+    groups[g.number] = {'min': min_rank, 'max': max_rank}
+
+
+for f in Field.objects.filter(tournament__current=True, playerName__in=[x[0] for x in golfers]):
+    if f.playerName in [x[0] for x in golfers]:
+        ranking = [x[1] for x in golfers if x[0] == f.playerName][0]
+        if ranking != 9999:
+            group = {k:v for k,v in groups.items() if v['min'] <= ranking <= v['max']}
+            f.handi = f.handicap()
+            f.currentWGR = ranking 
+            f.group = Group.objects.get(tournament__current=True, number=list(group.keys())[0])
+            f.save()
+            print (f.playerName, 'ranking: ', ranking, 'group: ', f.group, 'handi: ', f.handi)
+exit()
+
+owgr = populateField.get_worldrank()
+for f in Field.objects.filter(tournament__current=True, currentWGR=9999):
+    fixed = utils.fix_name(f.playerName, owgr)
+    print ('Fixed ', f.playerName, fixed)
+
+print (utils.fix_name('Adam Scott', owgr))
+print ('-'*50)
+print ({k: v for k, v in owgr.items() if 'Mason' in k})
 print (datetime.now() - start)
 exit()
 

@@ -420,21 +420,6 @@ def get_field(t, owgr_rankings):
             for golfer in data:
                 name = golfer.get('athlete').get('displayName')
                 ranks = utils.fix_name(name, owgr_rankings)
-                #need this for now, fix rest of code to use ESPN
-                #try:
-                #g_obj = Golfer.objects.get(espn_number=golfer.get('athlete').get('id'))
-                #print ('build field found golfer', g_obj)
-                #except Exception as f:
-                #print ('build field cant find: ', name, ' trying setup')
-                #pga_num = find_pga_num(name)
-                #pga_num = None
-                
-                #if not pga_num:
-                #    g_obj = get_golfer(player=name, pga_num=None, espn_num=golfer.get('athlete').get('id'))
-                #elif len(pga_num) == 1:
-                #    g_obj = get_golfer(player=name, pga_num=pga_num[0], espn_num=golfer.get('athlete').get('id') )
-                #else:
-                #g_obj = get_golfer(player=name, pga_num=None, espn_num=golfer.get('athlete').get('id'))
 
                 g_obj = get_golfer(player=name, pga_num=None, espn_num=golfer.get('athlete').get('id'))
                 ranks = utils.fix_name(name, owgr_rankings)

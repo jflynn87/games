@@ -16,4 +16,15 @@ def check_final(qtr):
     else:
         return False
 
+@register.filter
+def index(lst, i):
+    try:
+        return lst[i]
+    except (IndexError, KeyError):
+        return ''
+
+@register.filter(name='enumerate')
+def enumerate_filter(lst):
+    return list(__import__('builtins').enumerate(lst))
+
 

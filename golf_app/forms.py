@@ -30,9 +30,9 @@ class FieldForm(forms.ModelForm):
 
     class Meta:
         model = Field    
-        fields = ['playerName', 'handi', 'group',]
+        fields = ['playerName', 'soy_WGR', 'sow_WGR', 'currentWGR', 'handi', 'group',]
 
-FieldFormSet = modelformset_factory(Field, form=FieldForm, min_num=1, max_num=156, extra=0)
+FieldFormSet = modelformset_factory(Field, form=FieldForm, min_num=1, max_num=160, extra=0)
 
 
 class AuctionPickForm(forms.ModelForm):

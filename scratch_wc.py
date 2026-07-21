@@ -18,9 +18,11 @@ from datetime import datetime
 
 stage = Stage.objects.get(event__current=True, name="Knockout Stage")
 
-picks = build_ko_picks_dict(stage=stage, user='john')
 espn = wc_ko_data.ESPNData(source='api')
-winners_losers = espn.api_winners_losers()
+s = espn.current_stage()
+print ('current stage: ', s)
+exit()
+
 
 for group, p_list in picks.items():
     for p in p_list:

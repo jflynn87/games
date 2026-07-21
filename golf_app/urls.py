@@ -22,10 +22,6 @@ urlpatterns= [
     #url(r'^get_info/$',views.GetInfo.as_view(),name='get_info'),
     path('get_info/<int:pk>/',views.GetInfo.as_view(),name='get_info'),
     path('get_info/',views.GetInfo.as_view(),name='get_info'),
-
-    #url(r'^cbs_scores/$',views.CBSScores.as_view(),name='cbs_scores'),
-    #path('get_field_csv/<str:num>',views.GetFieldCSV.as_view()),
-    #url(r'^get_group_num/$',views.GetGroupNum.as_view(),name='get_group_num'),
     path('golf_leaderboard/', views.GolfLeaderboard.as_view()),
     path('golf_withdraw/', views.Withdraw.as_view()),
     path('field_get_picks/', views.GetPicks.as_view(), name='field_get_picks'),
@@ -45,8 +41,6 @@ urlpatterns= [
     path('season_stats/', views.SeasonStats.as_view(), name='season_stats'),
     path('new_field_list/', views.NewFieldListView.as_view(), name='new_field_list'),
     path('get_golfer_links/<int:pk>', views.GetGolferLinks.as_view(), name='get_golfer_links'),
-    #path('auction_picks/', views.AuctionPickCreateView.as_view(), name='auction_picks'),
-    #path('auction_scores/', views.AuctionScores.as_view(), name='auction_scores'),
     path('get_golfers/', views.GetGolfers.as_view(), name='get_golfers'),
     path('get_picks_summary/<int:pk>', views.PicksSummaryData.as_view(), name='get_picks_summary'),
     path('get_country_counts/', views.OlympicGolfersByCountry.as_view(), name='get_country_counts'),
@@ -60,7 +54,6 @@ urlpatterns= [
     path('ryder_cup_scores/', views.RyderCupScoresView.as_view(), name='ryder_cup_scores'),
     path('ryder_cup_score_api/', views.RyderCupScoresAPI.as_view(), name='ryder_cup_score_api'),
     path('get_api_scores/<int:pk>', views.EspnApiScores.as_view(), name='get_api_scores'),
-    #path('get_api_scores_reun/<int:pk>/<str:rerun>', views.EspnApiScores.as_view(), name='get_api_scores_rerun'),
     path('api_scores_view/', views.ApiScoresView.as_view(), name='api_scores_view'),
     path('api_scores_view/<int:pk>', views.ApiScoresView.as_view(), name='api_scores_view'),
     path('total_played_api/<str:season>', views.TotalPlayedAPI.as_view(), name='total_played_api'),
@@ -102,4 +95,5 @@ urlpatterns= [
     path('all_time_best_scores_api', views.AllTimeBestTotalScoresAPI().as_view()),
     path('submit_picks/', views.SubmitPicksAPIView.as_view(), name='submit_picks'),
     path('get_tournaments_api', views.GetTournamentsAPI.as_view(), name='get_tournament_api'),
+    path('fix_field_api/', views.FixFieldAPI.as_view(), name='fix_field_api'),
 ]

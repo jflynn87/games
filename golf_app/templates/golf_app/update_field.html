@@ -4,9 +4,8 @@
 
 {%block body_block%}
 
-<script type="text/javascript" src="{%static 'golf_app/js/update_field.js'%}"></script>
-
 <h3>Tournament:  {{t.name}}</h3>
+<h5>Change current owgr to auto update or manually update and sub at bottom</h5>
 <p id='t_key' hidden>{{t.pk}}</p>
   
 <div class='container'>
@@ -25,14 +24,84 @@
 {%endfor%}
 {%endif%}
 
+<script type="text/javascript">
+function updateGroup(ele) {
+    console.log('updateGroup called', ele);
+    
+    const row = ele.closest('tr');
+    const idInput = ele.dataset.fieldId;
+    const msgCell = idInput ? document.getElementById(`${idInput}_msg`) : null;
+
+    // 1. STASH THE REFS IMMEDIATELY AT THE TOP
+    const soyInput = row.querySelector('input[name$="-soy_WGR"]');
+    const sowInput = row.querySelector('input[name$="-sow_WGR"]');
+    const currentWGRInput = row.querySelector('input[name$="-currentWGR"]');
+    const groupInput = row.querySelector('select[name$="-group"]');
+    const handiInput = row.querySelector('input[name$="-handi"]');
+    const inputField = ele.querySelector('input');
+
+    if (!inputField) return; 
+    if (msgCell) msgCell.innerText = 'Updating...';
+
+    fetch("{%url 'golf_app:fix_field_api'%}", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            "X-CSRFToken": "{{csrf_token}}"
+        },
+        body: JSON.stringify({
+            "tournament_pk": document.getElementById('t_key').innerText,
+            "field_pk": idInput ? idInput: null,
+            "currentWGR": inputField.value, 
+            "soy_WGR": soyInput.value,  // Reusing stashed reference
+            "sow_WGR": sowInput.value   // Reusing stashed reference
+        })
+    })
+    .then(response => {
+        if (!response.ok) {
+            return response.json().then(errData => {
+                throw new Error(errData.error || `Server returned status ${response.status}`);
+            });
+        }
+        return response.json();
+    })
+    .then(data => {
+        const d = $.parseJSON(data);
+        console.log('Success:', d);
+        // 2. SAFE UPDATE USING STASHED REFS
+
+        soyInput.value = d[0].fields.soy_WGR;
+        sowInput.value = d[0].fields.sow_WGR;
+        currentWGRInput.value = d[0].fields.currentWGR;
+        groupInput.value = d[0].fields.group;
+        handiInput.value = d[0].fields.handi;
+        if (msgCell) {
+            msgCell.innerText = 'Saved! - updated group to ' + d[0].fields.group;
+            msgCell.style.color = 'green';
+        }
+    })  
+    .catch(error => {
+        console.error('Error caught:', error);
+        if (msgCell) {
+            msgCell.innerText = error.message || 'Error updating group';
+        }
+    });
+}
+
+</script>
+
 
 <form method="post">
     {%csrf_token%}
     <table class='table' id='field_table'>
         <thead>
             <th>Golfer</th>
+            <th>SOY OWGR</th>
+            <th>Prior week OWGR</th>
+            <th>Current OWGR</th>
             <th>Handicap</th>
             <th>Group</th>
+            <th>Msg</th>
         </thead>    
         <tbody>
             {{formset.management_form}}
@@ -41,11 +110,15 @@
             {{hidden}}
             {%endfor%}
             <tr> 
-                
+            
                 <td>{{form.playerName}}</td>
+                <td>{{form.soy_WGR}}</td>
+                <td>{{form.sow_WGR}}</td>
+                <td onchange="updateGroup(this)" data-field-id="{{ form.id.value }}"">{{form.currentWGR}}</td>
                 <td>{{form.handi}}</td>
-                <td>{{form.group}}</td>  
-                    </tr>
+                <td>{{form.group}}</td>
+                <td id="{{ form.id.value }}_msg"></td>
+            </tr>
             {%endfor%}
             <!-- {%for f in field%}
             <tr>
