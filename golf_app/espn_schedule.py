@@ -26,16 +26,20 @@ class ESPNSchedule(object):
             season_year = s.season
 
 
+        #headers = {'User-Agent': 'Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.149 Mobile Safari/537.36'}
         headers = {'User-Agent': 'Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.149 Mobile Safari/537.36'}
-        #url = 'https://www.espn.com/golf/schedule/_/season/' + str(season_year) + '/tour/pga?_xhr=pageContent'
-        url = 'https://site.api.espn.com/apis/site/v2/sports/golf/pga/scoreboard?dates=' + str(s.start_date().strftime('%Y%m%d')) + '-' + str(s.end_date().strftime('%Y%m%d'))
-        self.schedule = get(url, headers=headers).json()
+
+        url = 'https://site.web.api.espn.com/apis/site/v2/sports/golf/pga/scoreboard?dates=' + str(s.start_date().strftime('%Y%m%d')) + '-' + str(s.end_date().strftime('%Y%m%d'))
+
+        schedule = get(url, headers=headers)
+        self.schedule = schedule.json()
+
         self.events_to_exclude = ['The Match', 'Corales Puntacana Championship', 'Puerto Rico Open', 'Barracuda Championship', 'Barbasol Championship']
 
     def get_event_list(self):
         d = {}
         for event in self.schedule.get('events'):
-            #print (event)
+            print (event)
             if event.get('name') not in self.events_to_exclude: 
                 d[event.get('name')] = {
                                 'start_date': datetime.strptime(event.get('date')[:-1], '%Y-%m-%dT%H:%M').strftime('%Y-%m-%d'),

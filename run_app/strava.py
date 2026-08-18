@@ -30,7 +30,7 @@ class StravaData(object):
         res = requests.post(self.auth_url, data=payload, verify=True)
         self.access_token = res.json()['access_token']
         
-        print (self.access_token)
+        #print (self.access_token)
 
         if start_date == None:
             run = Run.objects.latest('date')
@@ -53,13 +53,14 @@ class StravaData(object):
             #start = int(time.mktime(last_run.date.timetuple()))
             start = int(time.mktime(last_run.timetuple()))
             now = int(time.time())
-            
+            print ("Getting Strava Data from: ", start, " to ", now)
             activities_url = "https://www.strava.com/api/v3/athlete/activities"
             header = {'Authorization': 'Bearer ' + self.access_token}
             param = {'per_page': 100, 'page': 1, 'after': start, 'before': now}
 
-            dataset = requests.get(activities_url, headers=header, params=param).json()
-
+            req = requests.get(activities_url, headers=header, params=param)
+            dataset = req.json()
+            print (req.status_code, req.reason, req.text)
 
             for activity in dataset:
                 #print ('activity loop')

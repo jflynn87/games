@@ -30,6 +30,14 @@ import time
 import json
 
 
+
+runs = strava.StravaData(datetime.strptime('Jan 1 2026', '%b %d %Y'))
+run_dict =  runs.get_runs()
+
+
+print (run_dict.get('errors'))
+exit()
+
 #r = HttpRequest()
 plan = Plan.objects.get(pk=3)
 print (plan)

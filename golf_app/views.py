@@ -507,7 +507,6 @@ def setup(request):
                 espn_sched = {}
                 next_pga_t_num = ''
             
-
             return render(request, 'golf_app/setup.html', {'status': '',
                                                             'tournament': t,
                                                             'espn_sched': espn_sched,
@@ -1295,9 +1294,9 @@ class UpdateFieldView(LoginRequiredMixin, TemplateView):
         t = Tournament.objects.get(current=True)
         context.update({
             't': t,
-            'field': Field.objects.filter(tournament=t).order_by('group', 'currentWGR'),
+            'field': Field.objects.filter(tournament=t).order_by( '-currentWGR'),
             #'form': FieldForm(),
-            'formset': FieldFormSet(queryset=Field.objects.filter(tournament=t))
+            'formset': FieldFormSet(queryset=Field.objects.filter(tournament=t).order_by( '-currentWGR')),
 
         })
         return context

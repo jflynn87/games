@@ -2,14 +2,18 @@ function createFieldCSV(pk) {
     console.log('Create CSV')
     $('#create_csv').attr('disabled', true).text('Creating...')
 
-    const isLocalhost = window.location.hostname === 'localhost' || 
-                       window.location.hostname === '127.0.0.1';
+    //const isLocalhost = window.location.hostname === 'localhost' || 
+    //                   window.location.hostname === '127.0.0.1';
     
-    const endpoint = isLocalhost 
-        ? '/golf_app/create_field_csv' 
-        : '/golf_app/async_create_field_csv';
+    //const endpoint = isLocalhost 
+    //    ? '/golf_app/create_field_csv' 
+    //    : '/golf_app/async_create_field_csv';
 
-    const mode = isLocalhost ? '' : 'async';
+    //const mode = isLocalhost ? '' : 'async';
+
+    const endpoint = '/golf_app/async_create_field_csv';
+    const mode = 'async';
+    const isLocalhost = false; // Set to false for production
 
     fetch(`${endpoint}?pk=${pk}&mode=${mode}`)
     .then((response) => {
@@ -79,7 +83,7 @@ function pollStatus(taskId, token, lambdaUrl) {
                 handleError('CSV creation failed');
                 return;
             }
-            $('#create_csv').text(status.progress);
+            $('#create_csv').text('Status: ' + status.progress);
             attempts++;
             if (attempts < maxAttempts) {
                 setTimeout(checkStatus, pollInterval);
