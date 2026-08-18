@@ -39,7 +39,7 @@ class ESPNSchedule(object):
     def get_event_list(self):
         d = {}
         for event in self.schedule.get('events'):
-            print (event)
+            #print (event)
             if event.get('name') not in self.events_to_exclude: 
                 d[event.get('name')] = {
                                 'start_date': datetime.strptime(event.get('date')[:-1], '%Y-%m-%dT%H:%M').strftime('%Y-%m-%d'),
@@ -56,16 +56,16 @@ class ESPNSchedule(object):
         end_date = datetime.now() + timedelta(days=5)
         start_date = datetime.now()
         
-        print (start_date, end_date)
+        #print (start_date, end_date)
 
         event = [v for v in self.schedule.get('events') if datetime.strptime(v.get('date')[:-1], '%Y-%m-%dT%H:%M') >= start_date \
                     and  datetime.strptime(v.get('date')[:-1], '%Y-%m-%dT%H:%M') < end_date]
         return event
 
     def complete_events(self):
-        print ({k for k,v in self.get_event_list().items() if v.get('status') == 'post'})
+        #print ({k for k,v in self.get_event_list().items() if v.get('status') == 'post'})
         return len([v for k,v in self.get_event_list().items() if v.get('status') == 'post'])
 
     def remaining_events(self):
-        print ({k for k,v in self.get_event_list().items() if v.get('status') == 'pre'})
+        #print ({k for k,v in self.get_event_list().items() if v.get('status') == 'pre'})
         return len([v for k,v in self.get_event_list().items() if v.get('status') == 'pre']) # removed plus 1 on 8/10/22 +1  #+1 for in progress current tornament
