@@ -42,6 +42,15 @@ import pprint
 from docx.api import Document   
 
 
+
+e = espn_data.ESPNData()
+games = e.game_spread('401872656')
+#print (games.get('competitions')[0].get('odds')[0].get('details'))
+print (games)
+print (e.game_home_team('401872656'), e.game_away_team('401872656'), e.game_fav('401872656'), e.game_spread('401872656'), e.game_dog('401872656'))
+exit()
+
+
 for week in Week.objects.all():
     #print (week, week.game_cnt, Games.objects.filter(week=week).count())
     duplicates = (

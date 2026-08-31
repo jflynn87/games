@@ -60,10 +60,11 @@ class ESPNData(object):
                         
                     if c.get('homeAway') == 'home':
                         #home = Teams.objects.get(long_name=t_name)
-                        if c.get('team').get('abbreviation') == "WSH":
-                            home_abbr = "WAS"
-                        else:
-                            home_abbr = c.get('team').get('abbreviation')
+                        #if c.get('team').get('abbreviation') == "WSH":
+                        #    home_abbr = "WAS"
+                        #else:
+                        #    home_abbr = c.get('team').get('abbreviation')
+                        home_abbr = self.fix_team_abbr(c.get('team').get('abbreviation'))
                         home_score = c.get('score')
                         if c.get('winner'): 
                             winner = home_abbr
@@ -195,3 +196,38 @@ class ESPNData(object):
     #def game_score(self, game_id):
     #    return [competitor.get('home') for competitor in [competition for competition in [x.get('competitions') for x in [game for game in self.data.get('events')] if str(x.get('id')) == str(game_id)]]]
 
+    def game_spread(self, game_id):
+        game = self.game_data(game_id)
+        for c in game.get('competitions'):
+            spread = c.get('odds')[0].get('spread')
+            return spread if '-' in str(spread) else '-' + str(spread)
+
+    def game_home_team(self, game_id):
+        return self.get_team(game_id, 'home')
+
+    def game_away_team(self, game_id):
+        return self.get_team(game_id, 'away')
+
+    def game_fav(self, game_id):
+        game = self.game_data(game_id)
+        for c in game.get('competitions'):
+            if c.get('odds')[0].get('homeTeamOdds').get('favorite') == True:
+                return c.get('odds')[0].get('homeTeamOdds').get('team').get('abbreviation')
+            elif c.get('odds')[0].get('awayTeamOdds').get('favorite') == True:
+                return c.get('odds')[0].get('awayTeamOdds').get('team').get('abbreviation')
+        return None
+
+    def game_dog(self, game_id):
+        game = self.game_data(game_id)
+        for c in game.get('competitions'):
+            if c.get('odds')[0].get('homeTeamOdds').get('favorite') == False:
+                return self.fix_team_abbr(c.get('odds')[0].get('homeTeamOdds').get('team').get('abbreviation'))
+            elif c.get('odds')[0].get('awayTeamOdds').get('favorite') == False:
+                return self.fix_team_abbr(c.get('odds')[0].get('awayTeamOdds').get('team').get('abbreviation'))
+        return None
+
+    def fix_team_abbr(self, team_abbr):
+        if team_abbr == "WSH":
+            return "WAS"
+        else:
+            return team_abbr

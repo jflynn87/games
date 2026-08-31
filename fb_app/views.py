@@ -41,63 +41,86 @@ class GetSpreads(generics.ListAPIView):
 
 
     def get(self, request, **kwargs):
-            try:
-                #print ('kwargs', request.Request)
-                print ('kwargs1', self.kwargs)
-                html = urllib.request.urlopen("https://www.sportsline.com/nfl/odds/")
-                soup = BeautifulSoup(html, 'html.parser')
-                nfl_sect = (soup.find("div", {'class':'table-container'}))
-                games_dict = []
-                
-                week = Week.objects.get(pk=self.kwargs.get('pk'))
-                print ('spreads weeek: ', week)
+        try:
+            e = espn_data.ESPNData()
+            games = []
+            for g in Games.objects.filter(week=Week.objects.get(pk=self.kwargs.get('pk'))):
                 try:
-                    for row in nfl_sect.find_all('tbody'):
-                        away_data = row.find('tr', {'class': 'away-team'})
-                        away_team = away_data.find('div', {'class': 'team'}).text
-                        away_line = away_data.find_all('td')[2].find('span', {'class': 'primary'}).text
-                        away_line_1 = away_data.find_all('td')[2].find('span', {'class': 'secondary'}).text
-                        home_data = row.find('tr', {'class': 'home-team'})
-                        print (home_data.text)
-                        home_team = home_data.find('div', {'class': 'team'}).text
-                        home_line = home_data.find_all('td')[2].find('span', {'class': 'primary'}).text
-                        home_line_1 = home_data.find_all('td')[2].find('span', {'class': 'secondary'}).text
+                    g.spread = e.game_spread(g.eid)
+                    g.fav = Teams.objects.get(nfl_abbr=e.game_fav(g.eid))
+                    g.dog = Teams.objects.get(nfl_abbr=e.game_dog(g.eid))
+                    g.save()
+                    if g.fav == g.home:
+                        games.append((g.eid, g.fav.nfl_abbr, str(g.fav.get_record()), g.dog.nfl_abbr.lower(), str(g.dog.get_record()), g.spread))
+                    else:
+                        games.append((g.eid, g.fav.nfl_abbr.lower(), str(g.fav.get_record()), g.dog.nfl_abbr, str(g.dog.get_record()), g.spread))
+                except Exception as inner_e:
+                    print ('spreads espn data error', inner_e, 'home team: ', g.home, 'away team: ', g.away, 'eid: ', g.eid)
+                    print (e.game_fav(g.eid), e.game_dog(g.eid), e.game_spread(g.eid))
+                    continue        
+        except Exception as e:
+            print ('Spreads espn data error', e)
+        finally:
+            d = json.dumps(games)
+            return Response(d, status=200)
 
-                        if home_line[0] == '-':
-                            fav_obj = Teams.objects.get(long_name__iexact=home_team)
-                            dog_obj = Teams.objects.get(long_name__iexact=away_team)
-                            spread = home_line + ' ' + home_line_1
-                        else:
-                            fav_obj = Teams.objects.get(long_name__iexact=away_team)
-                            dog_obj = Teams.objects.get(long_name__iexact=home_team)
-                            spread = away_line + ' ' + away_line_1
+            # try:
+            #     #print ('kwargs', request.Request)
+            #     print ('kwargs1', self.kwargs)
+            #     html = urllib.request.urlopen("https://www.sportsline.com/nfl/odds/")
+            #     soup = BeautifulSoup(html, 'html.parser')
+            #     nfl_sect = (soup.find("div", {'class':'table-container'}))
+            #     games_dict = []
+                
+            #     week = Week.objects.get(pk=self.kwargs.get('pk'))
+            #     print ('spreads weeek: ', week)
+            #     try:
+            #         for row in nfl_sect.find_all('tbody'):
+            #             away_data = row.find('tr', {'class': 'away-team'})
+            #             away_team = away_data.find('div', {'class': 'team'}).text
+            #             away_line = away_data.find_all('td')[2].find('span', {'class': 'primary'}).text
+            #             away_line_1 = away_data.find_all('td')[2].find('span', {'class': 'secondary'}).text
+            #             home_data = row.find('tr', {'class': 'home-team'})
+            #             print (home_data.text)
+            #             home_team = home_data.find('div', {'class': 'team'}).text
+            #             home_line = home_data.find_all('td')[2].find('span', {'class': 'primary'}).text
+            #             home_line_1 = home_data.find_all('td')[2].find('span', {'class': 'secondary'}).text
 
-                        home_obj = Teams.objects.get(long_name__iexact=home_team)
-                        away_obj = Teams.objects.get(long_name__iexact=away_team)
+            #             if home_line[0] == '-':
+            #                 fav_obj = Teams.objects.get(long_name__iexact=home_team)
+            #                 dog_obj = Teams.objects.get(long_name__iexact=away_team)
+            #                 spread = home_line + ' ' + home_line_1
+            #             else:
+            #                 fav_obj = Teams.objects.get(long_name__iexact=away_team)
+            #                 dog_obj = Teams.objects.get(long_name__iexact=home_team)
+            #                 spread = away_line + ' ' + away_line_1
+
+            #             home_obj = Teams.objects.get(long_name__iexact=home_team)
+            #             away_obj = Teams.objects.get(long_name__iexact=away_team)
 
 
-                        if Games.objects.filter(week=week, home=home_obj, away=away_obj).exists():
-                            game = Games.objects.get(week=week, home=home_obj, away=away_obj)
-                            game.fav = fav_obj
-                            game.dog = dog_obj
-                            game.spread = spread
-                            game.save()
-                            if game.fav == game.home:
-                                game = Games()
-                                games_dict.append((game.eid, game.fav.nfl_abbr, str(game.fav.get_record()), game.dog.nfl_abbr.lower(), str(game.dog.get_record()), spread))
-                            else:
-                                game = Games
-                                games_dict.append((game.eid, game.fav.nfl_abbr.lower(), str(fav_obj.get_record()), game.dog.nfl_abbr, str(dog_obj.get_record()), spread))
-                        else:
-                            print ('game not found:', home_team, away_team)
+            #             if Games.objects.filter(week=week, home=home_obj, away=away_obj).exists():
+            #                 game = Games.objects.get(week=week, home=home_obj, away=away_obj)
+            #                 game.fav = fav_obj
+            #                 game.dog = dog_obj
+            #                 game.spread = spread
+            #                 game.save()
+            #                 if game.fav == game.home:
+            #                     game = Games()
+            #                     games_dict.append((game.eid, game.fav.nfl_abbr, str(game.fav.get_record()), game.dog.nfl_abbr.lower(), str(game.dog.get_record()), spread))
+            #                 else:
+            #                     game = Games
+            #                     games_dict.append((game.eid, game.fav.nfl_abbr.lower(), str(fav_obj.get_record()), game.dog.nfl_abbr, str(dog_obj.get_record()), spread))
+            #             else:
+            #                 print ('game not found:', home_team, away_team)
                             
-                except Exception as e:
-                            print ('spread look up error', e, game, home_team, away_team)
-            except Exception as f:
-                    print ('NY Post error', f)
-                    games_dict = {}
-            data = json.dumps(games_dict)
-            return Response(data, 200)
+            #     except Exception as e:
+            #                 print ('spread look up error', e, game, home_team, away_team)
+            # except Exception as f:
+            #         print ('NY Post error', f)
+            #         games_dict = {}
+            # data = json.dumps(games_dict)
+            # return Response(data, 200)
 
 
 class GameListView(LoginRequiredMixin,ListView):
