@@ -47,6 +47,8 @@ class Run(models.Model):
     cals = models.PositiveIntegerField()
     shoes = models.ForeignKey(Shoes, on_delete=models.CASCADE,related_name='run')
     location = models.CharField(choices=LOCATION_CHOICES, max_length=30)
+    average_heart_rate = models.PositiveIntegerField(null=True)
+    max_heart_rate = models.PositiveIntegerField(null=True)
 
 
     def __str__(self):

@@ -16,8 +16,9 @@ class ESPNData(object):
             week = Week.objects.get(current=True)
 
         headers = {'User-Agent': 'Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.149 Mobile Safari/537.36'}
-        url = "http://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard"
+        url = f"http://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard?week={str(week.week)}"
         #payload = {'week':'1'}
+        print ('url', url)
 
         if not nfl_season_type:
             nfl_seaon_type = 'REG'
@@ -32,7 +33,12 @@ class ESPNData(object):
             self.data = requests.get(url, headers=headers, params=payload).json() 
         except Exception as e:
             print ('EPSN GET DATA Execptin', e)
-            self.data = {}
+            try:
+                url = f"http://site.api.espn.com/apis/site/v2/sports/football/nfl/scoreboard"
+                self.data = requests.get(url, headers=headers, params=payload).json()
+            except Exception as e:
+                print('EPSN GET DATA Exception', e)
+                self.data = {}
 
 
     def get_orig_data(self):

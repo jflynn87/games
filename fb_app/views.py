@@ -42,9 +42,11 @@ class GetSpreads(generics.ListAPIView):
 
     def get(self, request, **kwargs):
         try:
-            e = espn_data.ESPNData()
+            print ('kwargs', self.kwargs)
+            week = Week.objects.get(pk=self.kwargs.get('pk'))
+            e = espn_data.ESPNData(week=week)
             games = []
-            for g in Games.objects.filter(week=Week.objects.get(pk=self.kwargs.get('pk'))):
+            for g in Games.objects.filter(week=week):
                 try:
                     g.spread = e.game_spread(g.eid)
                     g.fav = Teams.objects.get(nfl_abbr=e.game_fav(g.eid))

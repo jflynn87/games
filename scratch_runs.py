@@ -19,7 +19,7 @@ import urllib3
 
 #import urllib3.request
 #from bs4 import BeautifulSoup
-#from run_app import scrape_runs
+from run_app import scrape_runs
 
 import requests
 from django.http import HttpRequest
@@ -29,14 +29,48 @@ from run_app import strava
 import time
 import json
 
+from run_app import intervals_icu
+from dotenv import load_dotenv
 
+env = load_dotenv()
 
-runs = strava.StravaData(datetime.strptime('Jan 1 2026', '%b %d %Y'))
-run_dict =  runs.get_runs()
+i_obj = intervals_icu.Intervals_icu()
+i = i_obj.activities
 
+dates = set(item.get('start_date_local', '').split('T')[0] for item in i)
 
-print (run_dict.get('errors'))
+for date in dates:
+    print (json.dumps(i_obj.daily_activity(date), indent=4))
+
 exit()
+
+# API_KEY = os.getenv("INTERNAL_ICU_API_KEY")
+
+# url = "https://intervals.icu/api/v1/athlete/0/activities"
+
+# response = requests.get(
+#     url,
+#     auth=HTTPBasicAuth("API_KEY", API_KEY),
+#     params={
+#         "oldest": "2025-12-01",
+#         "newest": "2026-12-31",
+#     },
+# )
+
+# response.raise_for_status()
+
+# activities = response.json()
+
+# for activity in activities:
+#     print (activity)
+#     print(
+#         activity.get("id"),
+#         activity.get("start_date_local"),
+#         activity.get("type"),
+#         activity.get("distance"),
+#     )
+#     print ('-'*50)
+
 
 #r = HttpRequest()
 plan = Plan.objects.get(pk=3)

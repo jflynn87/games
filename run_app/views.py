@@ -17,7 +17,8 @@ from django.db.models.functions import ExtractWeek, ExtractYear
 from django.core.exceptions import ObjectDoesNotExist
 from django.db.models import Q
 from django.db.models.functions import Coalesce
-from run_app import scrape_runs, strava 
+#from run_app import scrape_runs, strava 
+from run_app import intervals_icu
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from django.core import serializers
@@ -301,48 +302,46 @@ class getRunKeeperData(APIView):
     def get(self, num):
         
         try:
-            print ('get')
-            #try:
-            run_data = strava.StravaData()
-            run_dict = run_data.get_runs()
-
-            print ('-----')
-            print (run_dict, len(run_dict))
-            #activities = run_dict['activities']
-            for data in json.loads(run_dict):
-                print ('starting 4 loop', data)
-                if data['activity'] == "Run":
-                    date = data['date'].split('T')[0]
-                    dist = round(data['distance']/1000,2)
-                    time = timedelta(seconds=data['time'])
-                    cals = data['calories']
-                    #shoe = Shoes.objects.get(main_shoe=True)
-                    #location = 1
-
-                    print ('shoes', type(Shoes.objects.get(main_shoe=True)))
-
-                    if Run.objects.filter(date=datetime.datetime.strptime(date, '%Y-%m-%d'), dist = dist).exists():
-                        pass
-                    else:
-                        run = Run()
-
-                        run.date=datetime.datetime.strptime(date, '%Y-%m-%d')
-                        run.dist = dist 
-                        run.time = time
-                        run.cals = cals
-                        
-                        run.shoes = Shoes.objects.get(main_shoe=True)
-                        run.location = 1
-
-                        run.save()
-
-                        update_plan_actual(run)
-                else:
-                    print ('not a run: ', data)
+            runs = intervals_icu.Intervals_icu()
+            dates = runs.run_dates()
+            print ('****Run Dates: ', dates)
+            runs_list = []
             
-            return JsonResponse(run_dict, status=200, safe=False)
+            for day in dates:
+                data = runs.daily_activity(day)
 
-                #return JsonResponse(json.dumps(run_dict), 200)
+                #print ('-'*100)
+                #print ('starting 4 loop', data)
+                
+                run_date = data['run_date'].split('T')[0]
+                dist = round(data['distance_km'], 2)
+                time = timedelta(seconds=data['time'])
+                cals = data['calories']     
+
+                if Run.objects.filter(date=datetime.datetime.strptime(run_date, '%Y-%m-%d')).exists():
+                    run = Run.objects.get(date=datetime.datetime.strptime(run_date, '%Y-%m-%d'))
+                else:
+                    run = Run()
+                    run.date = datetime.datetime.strptime(run_date, '%Y-%m-%d')
+
+                #run.date=datetime.datetime.strptime(run_date, '%Y-%m-%d')
+                print ('^^^^^ DIST', dist)
+                run.dist = dist 
+                run.time = time
+                run.cals = cals
+                run.average_heart_rate = data.get('avg_heart_rate')
+                run.max_heart_rate = data.get('max_heart_rate')
+
+                run.shoes = Shoes.objects.get(main_shoe=True)
+                run.location = 1
+
+                run.save()
+
+                update_plan_actual(run)
+                runs_list.append(data)
+            
+                return JsonResponse(runs_list, status=200, safe=False)
+
 
         except Exception as e:
             print ('api error', e)
@@ -351,9 +350,10 @@ class getRunKeeperData(APIView):
 def update_plan_actual(run):
     #today = datetime.datetime.now()
     try:
-        plan = Plan.objects.all().order_by('-pk')[0]
+        plan = Plan.objects.filter(current=True).order_by('-pk').first()
+        print ('Activity update plan: ', plan)
         for day in Schedule.objects.filter(plan=plan, run=None, date__lte=datetime.datetime.today()):
-            print ('updating plan', day)
+            #print ('updating plan', day)
             if Run.objects.filter(date=day.date).exists():
                 print (day.date)
                 run = Run.objects.get(date=day.date)
