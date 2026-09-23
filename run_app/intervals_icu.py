@@ -6,6 +6,7 @@ from run_app.models import Run
 from django.db.models import Min
 from statistics import mean
 
+
 class Intervals_icu(object):
     def __init__(self, start_date=None, end_date=None):
         self.start_date = start_date if start_date else Run.objects.aggregate(Min('date'))['date__min'].strftime('%Y-%m-%d')

@@ -59,8 +59,8 @@ class PickMethodAdmin(admin.ModelAdmin):
         return qs.filter(tournament__season__current=True)
 
 class GolferAdmin(admin.ModelAdmin):
-    list_display = ['golfer_name,',]
-    search_fields = ['golfer_name']
+    list_display = ['golfer_name',]
+    search_fields = ['golfer_name',]
 
 class PGAWebScoresAdmin(admin.ModelAdmin):
     list_filter = ['tournament']
@@ -129,7 +129,7 @@ admin.site.register(Season)
 admin.site.register(mpScores)
 admin.site.register(PickMethod, PickMethodAdmin)
 admin.site.register(PGAWebScores, PGAWebScoresAdmin)
-admin.site.register(Golfer)
+admin.site.register(Golfer, GolferAdmin)
 admin.site.register(ScoreDict, ScoreDictAdmin)
 admin.site.register(UserProfile, UserProfileAdmin)
 admin.site.register(AccessLog, AccessLogAdmin)

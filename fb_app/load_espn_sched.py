@@ -34,7 +34,8 @@ def load_sched(payload=None, nfl_season_type=None):
     if payload:
         max_week = payload
     else:
-        max_week = week_cnt + 1
+       #max_week = week_cnt + 1
+       max_week = week_cnt
 
     if not nfl_season_type:
         nfl_season_type = "REG"
@@ -61,16 +62,22 @@ def load_sched(payload=None, nfl_season_type=None):
                 else:
                     p = None
 
-                espn =  espn_data.ESPNData(payload=p, nfl_season_type=nfl_season_type)
+                espn =  espn_data.ESPNData(payload=p, nfl_season_type=nfl_season_type, week=week)
                 print ('espn data len', len(espn.get_data()))
                 for k, v in espn.get_data().items():
                         print (k, v, week)
-                        game, created = Games.objects.get_or_create(eid=k, week=week)
-                        game.away = Teams.objects.get(nfl_abbr=v.get('away'))
-                        game.home = Teams.objects.get(nfl_abbr=v.get('home'))
-                        game.game_time = v.get('game_date')
-                        game.qtr = 'pregame'
-                        game.save()
+                        if Games.objects.filter(eid=k).exists():
+                            game = Games.objects.filter(eid=k).first()
+                            print ('game already exists, skipping', game.home, game.away)
+                            pass
+                        else:
+                            game, created = Games.objects.get_or_create(eid=k, week=week)
+                            if game:
+                                game.away = Teams.objects.get(nfl_abbr=v.get('away'))
+                                game.home = Teams.objects.get(nfl_abbr=v.get('home'))
+                                game.game_time = v.get('game_date')
+                                game.qtr = 'pregame'
+                                game.save()
 
                 if Games.objects.filter(week=week).exists():  #this doesnt work, fix at some point so not saving bad weeks.
                     week.game_cnt = Games.objects.filter(week=week).count()

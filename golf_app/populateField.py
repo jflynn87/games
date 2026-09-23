@@ -363,31 +363,31 @@ def get_field(t, owgr_rankings):
         #field_dict['info'] = mens_field.get('info')
     #elif t.pga_tournament_num == 'RYDCUP':
     elif t.pga_tournament_num in ['468', '500']:
-        us_team = ['Scottie Scheffler',
-            'Sam Burns',
-            'Patrick Cantlay',
-            'Bryson DeChambeau',
-            'Harris English',
-            'Xander Schauffele',
-            'Ben Griffin',
-            'Russell Henley',
-            'J.J. Spaun',
-            'Collin Morikawa',
-            'Justin Thomas',
-            'Cameron Young']
+        us_team = ["Scottie Scheffler",
+    "Cameron Young",
+    "Wyndham Clark",
+    "Sam Burns",
+    "Russell Henley",
+    "Collin Morikawa",
+    "Christopher Gotterup",
+    "Xander Schauffele",
+    "Justin Thomas",
+    "Jacob Bridgeman",
+    "Patrick Cantlay",
+    "Jackson Koivun",]
         
-        euro_team = ['Rory McIlroy',
-                     'Ludvig Aberg',
-                     'Matt Fitzpatrick',
-                     'Tommy Fleetwood',
-                     'Tyrrell Hatton',
-                     'Rasmus Hojgaard',
-                     'Viktor Hovland',
-                     'Shane Lowry',
-                     'Robert MacIntyre',
-                     'Jon Rahm',
-                     'Justin Rose',
-                     'Sepp Straka']
+        euro_team = ["Si Woo Kim",
+    "Ryan Fox",
+    "Hideki Matsuyama",
+    "Min Woo Lee",
+    "Joohyung Kim",
+    "Adam Scott",
+    "Corey Conners",
+    "Nicolas Echavarria",
+    "Sungjae Im",
+    "Ryo Hisatsune",
+    "Nick Taylor",
+    "Christiaan Bezuidenhout",]
         
         for u in us_team:
             print ('RYDER player: ', u)
