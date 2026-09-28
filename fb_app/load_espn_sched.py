@@ -13,29 +13,30 @@ def load_sched(payload=None, nfl_season_type=None):
 
     #changing weeks to load preseason weeks (make week 0 and cnt 1)
     season = Season.objects.get(current=True)
-    if Week.objects.filter(season_model__current=True, current=True).exists():
-        current_week = Week.objects.get(current=True)
-        week_cnt = current_week.week + 1
-    elif Week.objects.filter(season_model=season).exists():  #figure out if this is best way , especially for playoffs
-        w = Week.objects.filter(season_model=season).last()
-        week_cnt = w.week + 1
-    else:
-        if Week.objects.filter(current=True).exists():
-            w = Week.objects.get(current=True)
-            w.current = False
-            w.save()
+    # if Week.objects.filter(season_model__current=True, current=True).exists():
+    #     current_week = Week.objects.get(current=True)
+    #     week_cnt = current_week.week + 1
+    # elif Week.objects.filter(season_model=season).exists():  #figure out if this is best way , especially for playoffs
+    #     w = Week.objects.filter(season_model=season).last()
+    #     week_cnt = w.week + 1
+    # else:
+    #     if Week.objects.filter(current=True).exists():
+    #         w = Week.objects.get(current=True)
+    #         w.current = False
+    #         w.save()
             
-        week_cnt = 1
+    #     week_cnt = 1
 
-    print (season, week_cnt)
+    # print (season, week_cnt)
     
     #week_cnt = current_week.week + 1
-    
+    current_week = Week.objects.get(current=True)
+    week_cnt = current_week.week
     if payload:
         max_week = payload
     else:
        #max_week = week_cnt + 1
-       max_week = week_cnt
+       max_week = current_week.week + 1
 
     if not nfl_season_type:
         nfl_season_type = "REG"

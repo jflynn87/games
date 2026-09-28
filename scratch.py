@@ -41,7 +41,12 @@ import pprint
 #import docx2txt 
 from docx.api import Document   
 
+games = Games.objects.filter(eid='401326628')
 
+for g in games:
+    print (g.eid, g.week, g.home, g.away)
+
+exit()  
 
 e = espn_data.ESPNData()
 games = e.game_spread('401872656')

@@ -416,7 +416,7 @@ class Teams(models.Model):
 
 
 class Games(models.Model):
-    eid = models.CharField(max_length=30)
+    eid = models.CharField(max_length=100)
     week = models.ForeignKey(Week,on_delete=models.CASCADE, db_index=True)
     fav = models.ForeignKey(Teams, on_delete=models.CASCADE,null=True, related_name='fav')
     dog = models.ForeignKey(Teams, on_delete=models.CASCADE,null=True, related_name='dog')
