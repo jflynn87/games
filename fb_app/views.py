@@ -32,7 +32,9 @@ import pytz
 from django.utils import dateformat
 from math import ceil
 from django.core.mail import send_mail
-
+from fb_app.load_sheet import SheetLoader
+import boto3
+from django.conf import settings
 
 
 # Create your views here.
@@ -1552,6 +1554,61 @@ class RollWeekAPI(APIView):
         d['duration'] = str(datetime.datetime.now() - start)
         return Response(json.dumps(d), 200)
 
+class LoadSheetAPI(APIView):
+    
+    def get(self, request):
+        print ('Load Sheet API')
+        start = datetime.datetime.now()
+        try:    
+            season = Season.objects.get(current=True)
+            file = request.GET.get('file') if request.GET.get('file') else f'Football Sheet {season.season}.docx'
+            print ('file: ', file)
+            etag = request.GET.get('etag') if request.GET.get('etag') else None
+            results = SheetLoader(file, season.fools_players, etag=etag).load()
+            print (results)
+            status = 200
+        except Exception as e:
+            print ('load sheet api issue: ', e)
+            results = {'error': {'msg': str(e)}}
+            status = 400
+        #results['duration'] = str(datetime.datetime.now() - start)
+        return JsonResponse(results, status=status, safe=False)
+
+
+class LoadSheetView(LoginRequiredMixin, TemplateView):
+    template_name = 'fb_app/load_sheet.html'
+    login_url = 'login'
+
+    def get_context_data(self, **kwargs):
+        start = datetime.datetime.now()
+        context = super(LoadSheetView, self).get_context_data(**kwargs)
+        season = Season.objects.get(current=True)
+        context.update(
+                {'season': season,
+                'weeks': Week.objects.get(season_model=season, current=True),})
+        print ('LOAD SHEET DUR: ', datetime.datetime.now() - start)
+        return context
+
+class ListS3FilesAPI(APIView):
+    
+    def get(self, request):
+        print ('List S3 Files API')
+        start = datetime.datetime.now()
+        try:    
+            d = {}
+            s3 = boto3.client('s3' , aws_access_key_id=settings.AWS_ACCESS_KEY_ID, aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY)
+            bucket_name = 'jflynn87-games-files'
+            prefix = f'fools/'
+            response = s3.list_objects_v2(Bucket=bucket_name, Prefix=prefix)
+            #files = [{'key': obj['Key'], 'etag': obj['ETag']} for obj in response.get('Contents', [])]
+            files = [{'key': obj['Key'], 'etag': obj['ETag']} for obj in sorted(response.get('Contents', []), key=lambda x: x['LastModified'], reverse=True)]
+            d.update({'files': files})
+        except Exception as e:
+            print ('list s3 files api issue: ', e)
+            d.update({'error': {'msg': str(e)}})
+        
+        d['duration'] = str(datetime.datetime.now() - start)
+        return Response(json.dumps(d), 200)
 
 class PickAllGames(LoginRequiredMixin, TemplateView):
     template_name = 'fb_app/all_games_form.html'

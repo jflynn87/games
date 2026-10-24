@@ -51,7 +51,9 @@ urlpatterns = [
     path('all_games_score', views.AllGamesScore.as_view(), name='all_games_score'),
     path('sp_weekly_scores/<str:player>', views.SPDetailsAPI.as_view()),
     path('validate_picks_api/<int:week>', views.ValidatePicksAPI.as_view()),
-    path('sp_week_dtl/<str:player>/<int:w>', views.SPWeekDetailAPI.as_view())
-    
+    path('sp_week_dtl/<str:player>/<int:w>', views.SPWeekDetailAPI.as_view()),
+    path('load_sheet_api/', views.LoadSheetAPI.as_view(), name='load_sheet'),
+    path('load_sheet_view/', views.LoadSheetView.as_view(), name='load_sheet_view'),
+    path('list_s3_files/', views.ListS3FilesAPI.as_view(), name='list_s3_files'),
     
     ]

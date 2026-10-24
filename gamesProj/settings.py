@@ -107,6 +107,9 @@ CORS_ORIGIN_WHITELIST = (
 #    'your-bucket-here.s3-us-west-2.amazonaws.com',
 )
 
+AWS_ACCESS_KEY_ID = os.environ.get('AWS_GAMES_KEY')
+AWS_SECRET_ACCESS_KEY = os.environ.get('AWS_GAMES_SECRET')
+
 REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': 
         ['rest_framework.permissions.IsAuthenticatedOrReadOnly'],

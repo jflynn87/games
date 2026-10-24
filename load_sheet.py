@@ -1,5 +1,7 @@
 import os
-os.environ.setdefault("DJANGO_SETTINGS_MODULE","gamesProj.settings")
+import io
+import json
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "gamesProj.settings")
 
 import django
 django.setup()
@@ -7,158 +9,254 @@ from fb_app.models import Week, Player, Picks, Teams, MikeScore, WeekScore, Leag
 from django.contrib.auth.models import User
 from django.core.exceptions import ObjectDoesNotExist
 from fb_app import validate_picks
-from docx.api import Document   
- 
+from docx.api import Document
 
-def readSheet(file,numPlayers,override_week=None):
-        '''takes a pick file and updates week, owner list and picsk'''
-        from bs4 import BeautifulSoup
 
-        #xml = open(file,encoding="utf8")
-        #soup = BeautifulSoup(xml,"xml")
-        #document = Document('ff_test.docx')
-        document = Document(file)
-        table = document.tables[0]
+class SheetLoader:
 
-        sheet = []
-        picks = {}
+    S3_BUCKET = 'jflynn87-games-files'
+    S3_PREFIX = 'fools'
 
-        #test this for a single digit week....This gets the week from the start of the shhet
-        #week = []
-        #print (soup.findAll('t'))
-        #for data in soup.findAll('t')[0:1]:
-        ##for data in soup.findAll('t')[1]:
-        #    week.append(data.text)
-        #week_str = ''.join(week)
-        week_str = table.rows[0].cells[0].text.strip()
-        print ('Sheet Week: ' + week_str)
+    def __init__(self, file, num_players, override_week=None):
+        self.file = file
+        self.num_players = num_players
+        self.app_week = override_week or Week.objects.get(current=True)
+        self.season = self.app_week.season_model.season
+        self.week = self.app_week.week
+        self.mike_score_week = (
+            self.app_week if self.week == 1
+            else Week.objects.get(season_model__current=True, week=self.week - 1)
+        )
+        self.document = None
+        self.sheet_data = None
+        self.results = {'week': self.week, 'season': self.season, 'errors': [], 'players': {}}
 
-        if not override_week:
-            app_week = Week.objects.get(current=True)
-        else:
-            app_week = override_week
-
-        if app_week.week == 1:
-            mike_score_week = app_week
-        else:
-            mike_score_week = Week.objects.get(season_model__current=True, week=app_week.week - 1)
-        
-        if str(app_week.week) != week_str:
-            print ("sheet week doesn't match model")
-            print ('sheet weeK: ', week_str, 'db week: ', app_week.week)
-            exit()
-        elif Picks.objects.filter(player__league__league="Football Fools", week=app_week):
-            print ('deleting picks')
-            Picks.objects.filter(player__league__league="Football Fools", week=app_week).delete()
-            MikeScore.objects.filter(player__league__league="Football Fools", week=app_week).delete()
-
-        #create a sheet with just players, picks and totals (totals assumes that the total is 2 digits and more than 16).
-        for row in table.rows:
-            for cell in row.cells[1:]:
-                # if len(cell.text) > 1 \
-                #     and len(cell.text.strip().split(' ')) ==1:
-                    
-                #     sheet.append(cell.text.strip())
-                # elif len(cell.text.strip().split(' ')) > 1:
-                #     sheet.append(cell.text.strip().split(' ')[0] + ' ' + cell.text.strip().split(' ')[len(cell.text.strip().split(' '))-1])
-                if cell.text.strip() != '' and len(cell.text.strip()) > 1:
-                    sheet.append(cell.text.strip())
-                elif len(cell.text.strip()) == 1 and cell.text.strip().isdigit():
-                    sheet.append(cell.text.strip())
-        print (sheet)
-        sheet_scores = True
-        print (len(sheet))
-        print ('sheet len: ',  len(sheet))
-        print ('numPlayers :', numPlayers)
-        print ('Game count ', app_week.game_cnt)
-        print ('expected: ', len(sheet)/numPlayers)
-        if len(sheet)/numPlayers == app_week.game_cnt + 2:
-            print ('full sheet')
-        elif len(sheet)/numPlayers == app_week.game_cnt +1:
-            print ('scores missing')
-            sheet_scores = False
-        else:
-            print ('bad sheet')
-            print ('expected: ', len(sheet)/numPlayers)
-            exit()
-
+    def load(self):
         try:
-            league = League.objects.get(league="Football Fools")
-            Picks.objects.filter(week=app_week, player__league=league).delete()
-            print ('deleting picks on rerun')
-        except Exception as e:
-            print ("no picks exists, proceeding", e)
-            exit()
+            self._open_document()
+        except FileNotFoundError as e:
+            self.results['errors'].append(str(e))
+            return self.results
 
-        player_i = 0
+        self.sheet_data = self._parse_sheet()
+        valid, errors = self._validate_sheet()
+        if not valid:
+            self.results['errors'] = errors
+            return self.results
+
+        self._delete_existing_picks()
+        self._save_picks()
+        return self.results
+
+    # --- Document loading ---
+
+    def _open_document(self):
+        for candidate in self._local_candidates():
+            if os.path.exists(candidate):
+                print(f"Opening local file: {candidate}")
+                self.document = Document(candidate)
+                return
+        print("No document found locally, checking S3...")
+        self._open_from_s3()
+        if self.document is None:
+            raise FileNotFoundError(
+                f"Could not find football sheet for season {self.season} week {self.week} locally or in S3"
+            )
+
+    def _local_candidates(self):
+        s, w = self.season, self.week
+        return [
+            self.file,
+            f"Football sheet {s}.docx",
+            f"football sheet {s}.docx",
+            f"Football Sheet {s} Week {w}.docx",
+            f"football Sheet {s} Week {w}.docx",
+            f"Football sheet {s} Week {w}.docx",
+            f"football sheet {s} Week {w}.docx",
+        ]
+
+    def _open_from_s3(self):
+        import boto3
+        s3 = boto3.client(
+            's3',
+            aws_access_key_id=os.environ.get('AWS_GAMES_KEY'),
+            aws_secret_access_key=os.environ.get('AWS_GAMES_SECRET'),
+        )
+        response = s3.list_objects_v2(Bucket=self.S3_BUCKET, Prefix=self.S3_PREFIX)
+        if 'Contents' not in response:
+            return
+
+        keys = [obj['Key'] for obj in response['Contents'] if obj['Key'].endswith('.docx')]
+        match = self._find_best_s3_key(keys)
+        if match is None:
+            return
+
+        print(f"Trying S3: s3://{self.S3_BUCKET}/{match}")
+        obj = s3.get_object(Bucket=self.S3_BUCKET, Key=match)
+        self.document = Document(io.BytesIO(obj['Body'].read()))
+        print(f"Opened from S3: {match}")
+
+    def _find_best_s3_key(self, keys):
+        tokens = ['football', 'sheet', str(self.season), str(self.week)]
+
+        def score(key):
+            lower = key.lower()
+            return sum(t.lower() in lower for t in tokens)
+
+        candidates = [k for k in keys if score(k) >= 3]
+        return max(candidates, key=score, default=None)
+
+    # --- Parsing ---
+
+    def _parse_sheet(self):
+        table = self.document.tables[0]
+        rows = table.rows
+
+        week_str = rows[0].cells[0].text.strip()
+        print(f"Sheet Week: {week_str}")
+        players = [c.text.strip() for c in rows[0].cells[1:] if c.text.strip()]
+
+        data = {p: {'picks': [], 'score': None} for p in players}
+
+        pick_rows = []
+        for row in rows[1:]:
+            cells = [c.text.strip() for c in row.cells]
+            if any(cells[1:len(players) + 1]):
+                pick_rows.append(cells)
+
+        has_scores = all(
+            v.isdigit() and int(v) > 16
+            for v in pick_rows[-1][1:len(players) + 1] if v
+        )
+        score_row = pick_rows.pop() if has_scores else None
+
+        for i, player in enumerate(players):
+            data[player]['picks'] = [
+                {'pick_num': row[0], 'team': row[i + 1]}
+                for row in pick_rows if i + 1 < len(row) and row[i + 1]
+            ]
+            if score_row:
+                data[player]['score'] = score_row[i + 1] if i + 1 < len(score_row) else None
+
+        return {'week': week_str, 'has_scores': has_scores, 'players': data}
+
+    # --- Validation ---
+
+    def _validate_sheet(self):
+        errors = []
+        week_str = self.sheet_data['week']
+
+        if str(self.week) != week_str:
+            errors.append(f"Sheet week {week_str} doesn't match DB week {self.week}")
+            return False, errors
+
+        expected_picks = self.app_week.game_cnt
+        has_scores = self.week > 1
+
+        for player, data in self.sheet_data['players'].items():
+            valid_picks = [p for p in data['picks'] if p['pick_num'].isdigit()]
+            if len(valid_picks) != expected_picks:
+                errors.append(f"{player}: expected {expected_picks} picks, found {len(valid_picks)}")
+            if has_scores and data['score'] is None:
+                errors.append(f"{player}: missing season score")
+
+        if errors:
+            for e in errors:
+                print(f"VALIDATION ERROR: {e}")
+            return False, errors
+
+        print("Sheet validated OK")
+        return True, []
+
+    # --- DB writes ---
+
+    def _delete_existing_picks(self):
+        league = League.objects.get(league="Football Fools")
+        if Picks.objects.filter(week=self.app_week, player__league=league).exists():
+            Picks.objects.filter(week=self.app_week, player__league=league).delete()
+            MikeScore.objects.filter(week=self.app_week, player__league=league).delete()
+            print("Deleted existing picks")
+
+    def _save_picks(self):
+        for player_name, data in self.sheet_data['players'].items():
+            try:
+                user = User.objects.get(username=player_name.replace(' ', ''))
+                player = Player.objects.get(name=user)
+            except Exception as e:
+                self.results['errors'].append(f"Player lookup failed for '{player_name}': {e}")
+                continue
+            self.results['players'][str(player)] = {}
+            self._save_score(player, data)
+            self._save_player_picks(player, data['picks'])
+
+    def _save_score(self, player, data):
+        player_result = self.results['players'][str(player)]
+        if not self.sheet_data['has_scores']:
+            player_result['score_status'] = 'not applicable'
+            return
+        scores = MikeScore()
+        scores.week = self.mike_score_week
+        scores.player = player
+        scores.total = data['score']
+        scores.save()
+
+        my_total = sum(
+            s.score for s in WeekScore.objects.filter(
+                week__lte=self.mike_score_week,
+                player=player,
+                week__season_model__current=True,
+            )
+        )
+        if int(my_total) != int(scores.total):
+            player_result['score_status'] = 'mismatch'
+            player_result['score_calc'] = my_total
+            player_result['score_sheet'] = int(scores.total)
+        else:
+            player_result['score_status'] = 'ok'
+            player_result['score_total'] = my_total
+
+    def _save_player_picks(self, player, picks):
+        player_result = self.results['players'][str(player)]
         pick_list = []
-        while player_i < numPlayers:
-            player = sheet[player_i]
-            #print (player)
-            #winner = 1
-            print ('player', player)
-            user = User.objects.get(username=player.replace(' ', ''))
-            player = Player.objects.get(name=user)
-            if sheet_scores:
-                scores = MikeScore()
-                scores.week = mike_score_week
-                scores.player = player
-                scores.total = sheet[(player_i + (numPlayers * app_week.game_cnt) + numPlayers)]
-                scores.save()
+        team_errors = []
+        for pick in picks:
+            if not pick['pick_num'].isdigit():
+                continue
+            pick_team = self._lookup_team(pick['team'], player)
+            if pick_team is None:
+                team_errors.append(pick['team'])
+                continue
+            sheet_pick = Picks()
+            sheet_pick.player = player
+            sheet_pick.week = self.app_week
+            sheet_pick.pick_num = pick['pick_num']
+            sheet_pick.team = pick_team
+            sheet_pick.save()
+            pick_list.append(str(pick_team))
 
-                my_total = 0
-                for score in WeekScore.objects.filter(week__lte=mike_score_week, player=player, week__season_model__current=True):
-                    my_total += score.score
+        picks_check = validate_picks.validate(pick_list, self.app_week)
+        player_result['picks_valid'] = picks_check[0]
+        player_result['picks_saved'] = pick_list
+        if team_errors:
+            player_result['team_lookup_errors'] = team_errors
+        if not picks_check[0]:
+            player_result['picks_errors'] = picks_check[1]
 
-
-                if int(my_total) != int(scores.total):
-                    print ("score mismatch", player, my_total, scores.total)
-                else:
-                    print ("score good", player, my_total, scores.total)
-
-
-            i = 1
-            while i <= app_week.game_cnt:
-                pick = sheet[(player_i + (numPlayers * i))]
-                #game.append(sheet[(player_i + (numPlayers * i))])
-                #picks[player] = game
-
-                try:
-                    pick_team = Teams.objects.get(mike_abbr=pick)
-                except ObjectDoesNotExist:
-                    #print ('mike abbr not found', player, pick)
-                    try:
-                        pick_team = Teams.objects.get(typo_name=pick)
-                    except ObjectDoesNotExist:
-                        print (str(pick) + str(player))
-                        pick_team = Teams.objects.get(typo_name1=pick)
-                except Exception as e:
-                        print (e)
-                        print ('pick exception' + str(player) + str(pick))
+    def _lookup_team(self, abbr, player):
+        try:
+            return Teams.objects.get(mike_abbr=abbr)
+        except ObjectDoesNotExist:
+            pass
+        try:
+            return Teams.objects.get(typo_name=abbr)
+        except ObjectDoesNotExist:
+            pass
+        try:
+            return Teams.objects.get(typo_name1=abbr)
+        except ObjectDoesNotExist:
+            print(f"Team not found: {abbr} for {player}")
+            return None
 
 
-
-                sheet_picks = Picks()
-                sheet_picks.player = player
-                sheet_picks.week = app_week
-                sheet_picks.pick_num = (17 - i)
-                sheet_picks.team = pick_team
-                sheet_picks.save()
-                pick_list.append(str(pick_team))
-                #print (player, pick_list)
-                i += 1
-
-            picks_check = validate_picks.validate(pick_list, app_week)
-            if not picks_check[0]:
-                print (str(player), picks_check[0], picks_check[1])
-            else:
-                print ('picks valid', str(player))
-
-            pick_list = []
-            player_i +=1
-
-
-
-readSheet('Football sheet 2026.docx', 27)
-#readSheet('ff_test.docx', 26)
-
+result = SheetLoader('Football sheet 2026.docx', 27).load()
+print(json.dumps(result, indent=2))

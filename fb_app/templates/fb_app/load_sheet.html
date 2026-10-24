@@ -1,0 +1,81 @@
+{%extends "fb_app/base.html"%}
+{% block body_block %}
+    <h1>Load Sheet</h1>
+    <p>Current Season: {{ season.season }}</p>
+    <p>Current Week: {{ weeks.week }}</p>
+
+    <div id="load-sheet-container">
+    <div id="file-list">Loading s3 files <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span></div>
+    <div id="load-sheet-result"></div>
+    <script>
+        function listS3Files() {           
+            const url = "{% url 'fb_app:list_s3_files' %}";
+            console.log('Fetching S3 files from:', url);
+            fetch(url)
+                .then(response => response.json())
+                .then(data => {
+                    console.log('S3 files fetched:', data);
+                    data = $.parseJSON(data);
+                    if (data.error) {
+                        console.error('Error fetching S3 files:', data.error.msg);
+                        $('#file-list').html('<p class="text-danger">Error fetching S3 files: ' + data.error.msg + '</p>');
+                        return;
+                    }
+                    const fileList = document.getElementById('file-list');
+                    fileList.innerHTML = '';
+                    data.files.forEach(file => {
+                        if (!file.key.endsWith('.docx')) return; // Only show .docx files
+                        
+                        const li = document.createElement('li');
+                        li.classList.add('d-flex', 'align-items-center', 'mb-2');   // flex row
+
+                        // Load button (left side)
+                        const btn = document.createElement('button');
+                        btn.textContent = 'Load';
+                        btn.classList.add('btn', 'btn-primary', 'me-3');    // margin-right for spacing
+                        btn.dataset.file = file.key;
+                        btn.dataset.etag = file.etag;
+                        btn.id = 'load-btn-' + file.etag.replace(/"/g, '');
+
+                        // Filename (right side)
+                        const nameSpan = document.createElement('span');
+                        nameSpan.classList.add('flex-grow-1', 'text-truncate');
+                        nameSpan.textContent = file.key;
+
+                        li.appendChild(btn);
+                        li.appendChild(nameSpan);
+                      btn.addEventListener('click', () => {
+                            $('#load-sheet-result').html('Loading sheet <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>');
+                            $('#load-btn-' + file.etag.replace(/"/g, '')).prop('disabled', true); // Disable button while loading
+                            const loadUrl = "{% url 'fb_app:load_sheet' %}?file=" + encodeURIComponent(file.key) + "&etag=" + encodeURIComponent(file.etag);
+                            console.log('Loading sheet from:', loadUrl);
+                            fetch(loadUrl)
+                                .then(response => response.json())
+                                .then(loadData => {
+                                    console.log('Load sheet response:', loadData);
+                                    if (loadData.error) {
+                                        $('#load-sheet-result').html('<div class="alert alert-danger">Error loading sheet: ' + loadData.error.msg + '</div>');
+                                    } else {
+                                        $('#load-sheet-result').html('<div class="alert alert-success">Sheet loaded successfully!</div>');
+                                        loadData.forEach(result => {
+                                            $('#load-sheet-result').append('<p>' + result.player_name + ': ' + result.score_msg + ', ' + result.picks_msg + '</p>');
+                                        });
+                                    }
+                                })
+                                .catch(error => {
+                                    console.error('Error loading sheet:', error);
+                                    $('#load-sheet-result').html('<div class="alert alert-danger">Error loading sheet: ' + error.message + '</div>');
+                                });
+                        });
+                        fileList.appendChild(li);
+                    });
+                })
+                .catch(error => {console.error('Error fetching S3 files:', error);
+                                $('#file-list').html('<p class="text-danger">Error fetching S3 files ' + error.message + '. Please try again later.</p>')
+                });
+        }
+
+        listS3Files();
+    </script>
+        </div>
+{% endblock %}

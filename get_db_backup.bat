@@ -1,0 +1,1 @@
+aws s3 cp s3://jflynn87-games-files/backups/db_backup.sql.gz .

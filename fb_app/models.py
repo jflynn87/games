@@ -24,6 +24,7 @@ from django.dispatch import receiver
 class Season(models.Model):
     season = models.CharField(max_length=30,unique=True)
     current = models.BooleanField(default=False)
+    fools_players = models.PositiveIntegerField(default=0)
 
     def __str__(self):
         return (str)(self.season)
