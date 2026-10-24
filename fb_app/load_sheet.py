@@ -1,9 +1,5 @@
 import os
 import io
-os.environ.setdefault("DJANGO_SETTINGS_MODULE", "gamesProj.settings")
-
-import django
-django.setup()
 from fb_app.models import Week, Player, Picks, Teams, MikeScore, WeekScore, League
 from django.contrib.auth.models import User
 from django.core.exceptions import ObjectDoesNotExist
