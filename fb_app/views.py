@@ -1561,11 +1561,18 @@ class LoadSheetAPI(APIView):
         start = datetime.datetime.now()
         try:    
             season = Season.objects.get(current=True)
+            week = Week.objects.get(season_model=season, current=True)
             file = request.GET.get('file') if request.GET.get('file') else f'Football Sheet {season.season}.docx'
             print ('file: ', file)
             etag = request.GET.get('etag') if request.GET.get('etag') else None
             results = SheetLoader(file, season.fools_players, etag=etag).load()
             print (results)
+            dyn = boto3.resource('dynamodb',
+                                aws_access_key_id=settings.AWS_ACCESS_KEY_ID,
+                                aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY,
+                                region_name='us-west-2')
+            table = dyn.Table('fools-sheets')
+            table.put_item(Item={'results': results, 'pk': 'sheet-load-results', 'sk': f'{season.season}_week_{week.week}'})
             status = 200
         except Exception as e:
             print ('load sheet api issue: ', e)
@@ -1601,8 +1608,20 @@ class ListS3FilesAPI(APIView):
             prefix = f'fools/'
             response = s3.list_objects_v2(Bucket=bucket_name, Prefix=prefix)
             #files = [{'key': obj['Key'], 'etag': obj['ETag']} for obj in response.get('Contents', [])]
-            files = [{'key': obj['Key'], 'etag': obj['ETag']} for obj in sorted(response.get('Contents', []), key=lambda x: x['LastModified'], reverse=True)]
+            files = [{'key': obj['Key'], 'etag': obj['ETag']} for obj in sorted(response.get('Contents', []), key=lambda x: x['LastModified'], reverse=True)][0:20]
             d.update({'files': files})
+            dyn = boto3.resource('dynamodb',
+                                aws_access_key_id=settings.AWS_ACCESS_KEY_ID,
+                                aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY,
+                                region_name='us-west-2')
+            table = dyn.Table('fools-sheets')
+            print ('table: ', table.table_name)
+            season = Season.objects.get(current=True)
+            week = Week.objects.get(season_model=season, current=True)
+            item = table.query(KeyConditionExpression=
+                               boto3.dynamodb.conditions.Key('pk').eq('sheet-load-results') &
+                               boto3.dynamodb.conditions.Key('sk').eq(f'{season.season}_week_{week.week}'))
+            d.update({'last_load': item.get('Items', [])})
         except Exception as e:
             print ('list s3 files api issue: ', e)
             d.update({'error': {'msg': str(e)}})

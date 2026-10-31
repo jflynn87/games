@@ -44,7 +44,8 @@
 
                         li.appendChild(btn);
                         li.appendChild(nameSpan);
-                      btn.addEventListener('click', () => {
+                        
+                        btn.addEventListener('click', () => {
                             $('#load-sheet-result').html('Loading sheet <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>');
                             $('#load-btn-' + file.etag.replace(/"/g, '')).prop('disabled', true); // Disable button while loading
                             const loadUrl = "{% url 'fb_app:load_sheet' %}?file=" + encodeURIComponent(file.key) + "&etag=" + encodeURIComponent(file.etag);
@@ -56,10 +57,7 @@
                                     if (loadData.error) {
                                         $('#load-sheet-result').html('<div class="alert alert-danger">Error loading sheet: ' + loadData.error.msg + '</div>');
                                     } else {
-                                        $('#load-sheet-result').html('<div class="alert alert-success">Sheet loaded successfully!</div>');
-                                        loadData.forEach(result => {
-                                            $('#load-sheet-result').append('<p>' + result.player_name + ': ' + result.score_msg + ', ' + result.picks_msg + '</p>');
-                                        });
+                                        updatePlayerStatus(loadData);   
                                     }
                                 })
                                 .catch(error => {
@@ -69,11 +67,24 @@
                         });
                         fileList.appendChild(li);
                     });
+
+                    if (data.last_load && data.last_load.length > 0) {
+                     updatePlayerStatus(data.last_load[0].results);
+                    } else {
+                        $('#load-sheet-result').html('<p>No previous load results found.</p>');
+                    }
                 })
                 .catch(error => {console.error('Error fetching S3 files:', error);
                                 $('#file-list').html('<p class="text-danger">Error fetching S3 files ' + error.message + '. Please try again later.</p>')
                 });
         }
+
+        function updatePlayerStatus(loadData) {
+            $('#load-sheet-result').html('<div class="alert alert-success">Sheet loaded successfully!</div>');
+            loadData.forEach(result => {
+                $('#load-sheet-result').append('<p>' + result.player_name + ': ' + result.score_msg + ', ' + result.picks_msg + '</p>');
+                });
+                }
 
         listS3Files();
     </script>
